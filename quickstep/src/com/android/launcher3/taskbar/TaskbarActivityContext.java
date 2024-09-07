@@ -29,7 +29,6 @@ import static com.android.launcher3.AbstractFloatingView.TYPE_ON_BOARD_POPUP;
 import static com.android.launcher3.AbstractFloatingView.TYPE_REBIND_SAFE;
 import static com.android.launcher3.AbstractFloatingView.TYPE_TASKBAR_OVERLAY_PROXY;
 import static com.android.launcher3.Flags.enableCursorHoverStates;
-import static com.android.launcher3.Flags.enableTaskbarCustomization;
 import static com.android.launcher3.Utilities.calculateTextHeight;
 import static com.android.launcher3.Utilities.isRunningInTestHarness;
 import static com.android.launcher3.config.FeatureFlags.ENABLE_TASKBAR_NAVBAR_UNIFICATION;
@@ -230,15 +229,12 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         mNavigationBarPanelContext = navigationBarPanelContext;
         applyDeviceProfile(launcherDp);
         final Resources resources = getResources();
-
-        if (enableTaskbarCustomization()) {
-            mTaskbarFeatureEvaluator = TaskbarFeatureEvaluator.getInstance(this);
-            mTaskbarSpecsEvaluator = new TaskbarSpecsEvaluator(
-                    this,
-                    mTaskbarFeatureEvaluator,
-                    mDeviceProfile.inv.numRows,
-                    mDeviceProfile.inv.numColumns);
-        }
+        mTaskbarFeatureEvaluator = TaskbarFeatureEvaluator.getInstance(this);
+        mTaskbarSpecsEvaluator = new TaskbarSpecsEvaluator(
+                this,
+                mTaskbarFeatureEvaluator,
+                mDeviceProfile.inv.numRows,
+                mDeviceProfile.inv.numColumns);
 
         mImeDrawsImeNavBar = getBoolByName(IME_DRAWS_IME_NAV_BAR_RES_NAME, resources, false);
         mIsSafeModeEnabled = TraceHelper.allowIpcs("isSafeMode",
@@ -287,7 +283,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
             TaskbarHotseatDimensionsProvider dimensionsProvider =
                     new DeviceProfileDimensionsProviderAdapter(this);
             BubbleStashController bubbleStashController = isTransientTaskbar
-                    ? new TransientBubbleStashController(dimensionsProvider, getResources())
+                    ? new TransientBubbleStashController(dimensionsProvider, this)
                     : new PersistentBubbleStashController(dimensionsProvider);
             bubbleControllersOptional = Optional.of(new BubbleControllers(
                     new BubbleBarController(this, bubbleBarView),
@@ -348,8 +344,9 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                 new KeyboardQuickSwitchController(),
                 new TaskbarPinningController(this, () ->
                         DisplayController.isInDesktopMode(this)),
-                bubbleControllersOptional);
-
+                bubbleControllersOptional,
+                new TaskbarDesktopModeController(
+                        LauncherActivityInterface.INSTANCE::getDesktopVisibilityController));
         mLauncherPrefs = LauncherPrefs.get(this);
     }
 
@@ -1434,7 +1431,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                                 && !(foundTaskView instanceof DesktopTaskView)) {
                             TestLogging.recordEvent(
                                     TestProtocol.SEQUENCE_MAIN, "start: taskbarAppIcon");
-                            foundTaskView.launchTasks();
+                            foundTaskView.launchWithAnimation();
                             return;
                         }
                     }
@@ -1760,12 +1757,10 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         return mControllers.taskbarStashController.isInStashedLauncherState();
     }
 
-    @Nullable
     public TaskbarFeatureEvaluator getTaskbarFeatureEvaluator() {
         return mTaskbarFeatureEvaluator;
     }
 
-    @Nullable
     public TaskbarSpecsEvaluator getTaskbarSpecsEvaluator() {
         return mTaskbarSpecsEvaluator;
     }

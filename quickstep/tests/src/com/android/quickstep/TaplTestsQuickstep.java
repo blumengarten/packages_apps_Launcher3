@@ -266,9 +266,6 @@ public class TaplTestsQuickstep extends AbstractQuickStepTest {
         return launcher.<RecentsView>getOverviewPanel().getBottomRowTaskCountForTablet();
     }
 
-    // Staging; will be promoted to presubmit if stable
-    @TestStabilityRule.Stability(flavors = LOCAL | PLATFORM_POSTSUBMIT)
-
     @Test
     @NavigationModeSwitch
     @PortraitLandscape
@@ -292,9 +289,6 @@ public class TaplTestsQuickstep extends AbstractQuickStepTest {
             mLauncher.setIgnoreTaskbarVisibility(false);
         }
     }
-
-    // Staging; will be promoted to presubmit if stable
-    @TestStabilityRule.Stability(flavors = LOCAL | PLATFORM_POSTSUBMIT)
 
     @Test
     @NavigationModeSwitch
@@ -484,7 +478,8 @@ public class TaplTestsQuickstep extends AbstractQuickStepTest {
 //        assertTrue("Launcher internal state didn't remain in Overview",
 //                isInState(() -> LauncherState.OVERVIEW));
 //        overview.getCurrentTask().dismiss();
-//        executeOnLauncher(launcher -> assertTrue("Grid did not rebalance after multiple dismissals",
+//        executeOnLauncher(launcher -> assertTrue("Grid did not rebalance after multiple
+//        dismissals",
 //                (Math.abs(getTopRowTaskCountForTablet(launcher) - getBottomRowTaskCountForTablet(
 //                        launcher)) <= 1)));
 
@@ -595,7 +590,8 @@ public class TaplTestsQuickstep extends AbstractQuickStepTest {
         if (overview.hasTasks()) {
             currentTask = overview.getCurrentTask();
             assertFalse("Found ExcludeFromRecentsTestActivity after entering Overview from Home",
-                    currentTask.containsContentDescription("ExcludeFromRecents")
+                    currentTask.containsContentDescription(
+                            "ExcludeFromRecents")
                             || currentTask.containsContentDescription(null));
         } else {
             // Presumably the test started with 0 tasks and remains that way after going home.

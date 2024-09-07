@@ -27,7 +27,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.launcher3.R
-import com.android.wm.shell.common.bubbles.BubbleInfo
+import com.android.wm.shell.shared.bubbles.BubbleInfo
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -65,7 +65,7 @@ class BubbleViewTest {
             overflowView.setOverflow(BubbleBarOverflow(overflowView), bitmap)
 
             val bubbleInfo =
-                BubbleInfo("key", 0, null, null, 0, context.packageName, null, null, false)
+                BubbleInfo("key", 0, null, null, 0, context.packageName, null, null, false, true)
             bubbleView = inflater.inflate(R.layout.bubblebar_item_view, null, false) as BubbleView
             bubble =
                 BubbleBarBubble(bubbleInfo, bubbleView, bitmap, bitmap, Color.WHITE, Path(), "")

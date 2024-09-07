@@ -22,7 +22,6 @@ import static android.view.accessibility.AccessibilityEvent.TYPE_VIEW_FOCUSED;
 
 import static com.android.app.animation.Interpolators.EMPHASIZED;
 import static com.android.internal.jank.Cuj.CUJ_LAUNCHER_LAUNCH_APP_PAIR_FROM_WORKSPACE;
-import static com.android.launcher3.Flags.enablePredictiveBackGesture;
 import static com.android.launcher3.Flags.enableUnfoldStateAnimation;
 import static com.android.launcher3.LauncherConstants.SavedInstanceKeys.PENDING_SPLIT_SELECT_INFO;
 import static com.android.launcher3.LauncherConstants.SavedInstanceKeys.RUNTIME_STATE;
@@ -499,10 +498,8 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         boolean started = ((getActivityFlags() & ACTIVITY_STATE_STARTED)) != 0;
         if (started) {
             DeviceProfile profile = getDeviceProfile();
-            boolean willUserBeActive =
-                    (getActivityFlags() & ACTIVITY_STATE_USER_WILL_BE_ACTIVE) != 0;
             boolean visible = (state == NORMAL || state == OVERVIEW)
-                    && (willUserBeActive || isUserActive())
+                    && isUserActive()
                     && !profile.isVerticalBarLayout()
                     && !mIsOverlayVisible;
             SystemUiProxy.INSTANCE.get(this)
@@ -613,7 +610,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
                                         .append(" is missing."),
                                 QUICK_SWITCH_FROM_HOME_FALLBACK);
                     }
-                    taskToLaunch.launchTask(success -> {
+                    taskToLaunch.launchWithoutAnimation(success -> {
                         if (!success) {
                             getStateManager().goToState(OVERVIEW);
                         } else {
@@ -696,9 +693,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         // Back dispatcher is registered in {@link BaseActivity#onCreate}. For predictive back to
         // work, we must opt-in BEFORE registering back dispatcher. So we need to call
         // setEnableOnBackInvokedCallback() before super.onCreate()
-        if (Utilities.ATLEAST_U && enablePredictiveBackGesture()) {
-            getApplicationInfo().setEnableOnBackInvokedCallback(true);
-        }
+        getApplicationInfo().setEnableOnBackInvokedCallback(true);
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
             mPendingSplitSelectInfo = ObjectWrapper.unwrap(
@@ -910,8 +905,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         // event won't go through ViewRootImpl#InputStage#onProcess.
         // So when receive back key, try to do the same check thing in
         // ViewRootImpl#NativePreImeInputStage#onProcess
-        if (!Utilities.ATLEAST_U || !enablePredictiveBackGesture()
-                || event.getKeyCode() != KeyEvent.KEYCODE_BACK
+        if (event.getKeyCode() != KeyEvent.KEYCODE_BACK
                 || event.getAction() != KeyEvent.ACTION_UP || event.isCanceled()) {
             return false;
         }
@@ -922,10 +916,6 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
     @Override
     protected void registerBackDispatcher() {
-        if (!enablePredictiveBackGesture()) {
-            super.registerBackDispatcher();
-            return;
-        }
         getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                 OnBackInvokedDispatcher.PRIORITY_DEFAULT,
                 new OnBackAnimationCallback() {
@@ -1277,10 +1267,6 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
                 return ObjectWrapper.wrap(NO_MATCHING_ID);
         }
         return ObjectWrapper.wrap(new Integer(info.id));
-    }
-
-    public void setHintUserWillBeActive() {
-        addActivityFlags(ACTIVITY_STATE_USER_WILL_BE_ACTIVE);
     }
 
     @Override

@@ -25,7 +25,7 @@ import android.util.PathParser
 import android.view.LayoutInflater
 import androidx.test.core.app.ApplicationProvider
 import com.android.launcher3.R
-import com.android.wm.shell.common.bubbles.BubbleInfo
+import com.android.wm.shell.shared.bubbles.BubbleInfo
 import com.google.android.apps.nexuslauncher.imagecomparison.goldenpathmanager.ViewScreenshotGoldenPathManager
 import org.junit.Rule
 import org.junit.Test
@@ -99,7 +99,7 @@ class BubbleViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
         val flags =
             if (suppressNotification) Notification.BubbleMetadata.FLAG_SUPPRESS_NOTIFICATION else 0
         val bubbleInfo =
-            BubbleInfo("key", flags, null, null, 0, context.packageName, null, null, false)
+            BubbleInfo("key", flags, null, null, 0, context.packageName, null, null, false, true)
         val bubbleView = inflater.inflate(R.layout.bubblebar_item_view, null) as BubbleView
         val dotPath =
             PathParser.createPathFromPathData(

@@ -16,7 +16,6 @@
 
 package com.android.quickstep.views
 
-import com.android.quickstep.RecentsAnimationController
 import com.android.quickstep.ViewUtils
 import com.android.quickstep.recents.viewmodel.RecentsViewModel
 import com.android.systemui.shared.recents.model.ThumbnailData
@@ -42,18 +41,6 @@ class RecentsViewModelHelper(private val recentsViewModel: RecentsViewModel) {
 
     fun switchToScreenshot(
         taskView: TaskView,
-        recentsAnimationController: RecentsAnimationController,
-        onFinishRunnable: Runnable,
-    ) {
-        val updatedThumbnails =
-            taskView.taskContainers.associate {
-                it.task.key.id to recentsAnimationController.screenshotTask(it.task.key.id)
-            }
-        switchToScreenshot(taskView, updatedThumbnails, onFinishRunnable)
-    }
-
-    fun switchToScreenshot(
-        taskView: TaskView,
         updatedThumbnails: Map<Int, ThumbnailData>?,
         onFinishRunnable: Runnable,
     ) {
@@ -67,9 +54,5 @@ class RecentsViewModelHelper(private val recentsViewModel: RecentsViewModel) {
             }
             ViewUtils.postFrameDrawn(taskView, onFinishRunnable)
         }
-    }
-
-    fun onTaskThumbnailChanged(taskId: Int, thumbnailData: ThumbnailData) {
-        recentsViewModel.addOrUpdateThumbnailOverride(mapOf(taskId to thumbnailData))
     }
 }

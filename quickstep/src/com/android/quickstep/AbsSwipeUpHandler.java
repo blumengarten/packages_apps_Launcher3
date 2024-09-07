@@ -97,6 +97,7 @@ import android.window.PictureInPictureSurfaceTransaction;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
+import androidx.annotation.VisibleForTesting;
 
 import com.android.internal.jank.Cuj;
 import com.android.internal.util.LatencyTracker;
@@ -170,10 +171,12 @@ import java.util.function.Consumer;
 /**
  * Handles the navigation gestures when Launcher is the default home activity.
  */
-public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
-        Q extends RecentsView, S extends BaseState<S>>
-        extends SwipeUpAnimationLogic implements OnApplyWindowInsetsListener,
-        RecentsAnimationCallbacks.RecentsAnimationListener {
+public abstract class AbsSwipeUpHandler<
+        RECENTS_CONTAINER extends Context & RecentsViewContainer,
+        RECENTS_VIEW extends RecentsView<RECENTS_CONTAINER, STATE>,
+        STATE extends BaseState<STATE>>
+        extends SwipeUpAnimationLogic
+        implements OnApplyWindowInsetsListener, RecentsAnimationCallbacks.RecentsAnimationListener {
     private static final String TAG = "AbsSwipeUpHandler";
 
     private static final ArrayList<String> STATE_NAMES = new ArrayList<>();
@@ -181,7 +184,7 @@ public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
     // Fraction of the scroll and transform animation in which the current task fades out
     private static final float KQS_TASK_FADE_ANIMATION_FRACTION = 0.4f;
 
-    protected final BaseContainerInterface<S, T> mContainerInterface;
+    protected final BaseContainerInterface<STATE, RECENTS_CONTAINER> mContainerInterface;
     protected final InputConsumerProxy mInputConsumerProxy;
     protected final ActivityInitListener mActivityInitListener;
     // Callbacks to be made once the recents animation starts
@@ -192,8 +195,8 @@ public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
     protected @Nullable RecentsAnimationController mRecentsAnimationController;
     protected @Nullable RecentsAnimationController mDeferredCleanupRecentsAnimationController;
     protected RecentsAnimationTargets mRecentsAnimationTargets;
-    protected @Nullable T mContainer;
-    protected @Nullable Q mRecentsView;
+    protected @Nullable RECENTS_CONTAINER mContainer;
+    protected @Nullable RECENTS_VIEW mRecentsView;
     protected Runnable mGestureEndCallback;
     protected MultiStateCallback mStateCallback;
     protected boolean mCanceled;
@@ -486,11 +489,11 @@ public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
             return false;
         }
 
-        T createdContainer = (T) mContainerInterface.getCreatedContainer();
+        RECENTS_CONTAINER createdContainer = mContainerInterface.getCreatedContainer();
         if (createdContainer != null) {
             initTransitionEndpoints(createdContainer.getDeviceProfile());
         }
-        final T container = (T) mContainerInterface.getCreatedContainer();
+        final RECENTS_CONTAINER container = mContainerInterface.getCreatedContainer();
         if (mContainer == container) {
             return true;
         }
@@ -564,7 +567,7 @@ public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
     }
 
     private void onLauncherStart() {
-        final T container = (T) mContainerInterface.getCreatedContainer();
+        final RECENTS_CONTAINER container = mContainerInterface.getCreatedContainer();
         if (container == null || mContainer != container) {
             return;
         }
@@ -734,11 +737,18 @@ public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
     }
 
     private void maybeUpdateRecentsAttachedState() {
-        maybeUpdateRecentsAttachedState(true /* animate */);
+        maybeUpdateRecentsAttachedState(/* animate= */ true);
     }
 
     protected void maybeUpdateRecentsAttachedState(boolean animate) {
-        maybeUpdateRecentsAttachedState(animate, false /* moveRunningTask */);
+        maybeUpdateRecentsAttachedState(animate, /* moveRunningTask= */ false);
+    }
+
+    protected void maybeUpdateRecentsAttachedState(boolean animate, boolean moveRunningTask) {
+        maybeUpdateRecentsAttachedState(
+                animate,
+                moveRunningTask,
+                mRecentsView != null && mRecentsView.shouldUpdateRunningTaskAlpha());
     }
 
     /**
@@ -749,8 +759,10 @@ public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
      * Note this method has no effect unless the navigation mode is NO_BUTTON.
      * @param animate whether to animate when attaching RecentsView
      * @param moveRunningTask whether to move running task to front when attaching
+     * @param updateRunningTaskAlpha Whether to update the running task's attached alpha
      */
-    private void maybeUpdateRecentsAttachedState(boolean animate, boolean moveRunningTask) {
+    private void maybeUpdateRecentsAttachedState(
+            boolean animate, boolean moveRunningTask, boolean updateRunningTaskAlpha) {
         if ((!mDeviceState.isFullyGesturalNavMode() && !mGestureState.isTrackpadGesture())
                 || mRecentsView == null) {
             return;
@@ -781,7 +793,8 @@ public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
             // TaskView jumping to new position as we move the tasks.
             mRecentsView.moveRunningTaskToFront();
         }
-        mAnimationFactory.setRecentsAttachedToAppWindow(recentsAttachedToAppWindow, animate);
+        mAnimationFactory.setRecentsAttachedToAppWindow(
+                recentsAttachedToAppWindow, animate, updateRunningTaskAlpha);
 
         // Reapply window transform throughout the attach animation, as the animation affects how
         // much the window is bound by overscroll (vs moving freely).
@@ -939,7 +952,6 @@ public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
             // We will handle the sysui flags based on the centermost task view.
             mRecentsAnimationController.setUseLauncherSystemBarFlags(swipeUpThresholdPassed
                     ||  (quickswitchThresholdPassed && centermostTaskFlags != 0));
-            mRecentsAnimationController.setSplitScreenMinimized(mContext, swipeUpThresholdPassed);
             // Provide a hint to WM the direction that we will be settling in case the animation
             // needs to be canceled
             mRecentsAnimationController.setWillFinishToHome(swipeUpThresholdPassed);
@@ -1087,7 +1099,7 @@ public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
      */
     @UiThread
     private void notifyGestureStarted() {
-        final T curActivity = mContainer;
+        final RECENTS_CONTAINER curActivity = mContainer;
         if (curActivity != null) {
             // Once the gesture starts, we can no longer transition home through the button, so
             // reset the force override of the activity visibility
@@ -1158,7 +1170,8 @@ public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
     /**
      * Called if the end target has been set and the recents animation is started.
      */
-    private void onCalculateEndTarget() {
+    @VisibleForTesting
+    protected void onCalculateEndTarget() {
         final GestureEndTarget endTarget = mGestureState.getEndTarget();
 
         switch (endTarget) {
@@ -1171,7 +1184,8 @@ public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
         }
     }
 
-    private void onSettledOnEndTarget() {
+    @VisibleForTesting
+    protected void onSettledOnEndTarget() {
         // Fast-finish the attaching animation if it's still running.
         maybeUpdateRecentsAttachedState(false);
         final GestureEndTarget endTarget = mGestureState.getEndTarget();
@@ -1407,7 +1421,7 @@ public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
             }
         }
         Interpolator interpolator;
-        S state = mContainerInterface.stateFromGestureEndTarget(endTarget);
+        STATE state = mContainerInterface.stateFromGestureEndTarget(endTarget);
         if (isKeyboardTaskFocusPending()) {
             interpolator = EMPHASIZED;
         } else if (state.displayOverviewTasksAsGrid(mDp)) {
@@ -1757,8 +1771,7 @@ public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
 
     private int calculateWindowRotation(RemoteAnimationTarget runningTaskTarget,
             RecentsOrientedState orientationState) {
-        if (runningTaskTarget.rotationChange != 0
-                && TaskAnimationManager.ENABLE_SHELL_TRANSITIONS) {
+        if (runningTaskTarget.rotationChange != 0) {
             return Math.abs(runningTaskTarget.rotationChange) == ROTATION_90
                     ? ROTATION_270 : ROTATION_90;
         } else {
@@ -2357,7 +2370,7 @@ public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
                     ActiveGestureLog.INSTANCE.trackEvent(EXPECTING_TASK_APPEARED);
                 }
                 ActiveGestureLog.INSTANCE.addLog(nextTaskLog);
-                nextTask.launchTask(success -> {
+                nextTask.launchWithoutAnimation(true, success -> {
                     resultCallback.accept(success);
                     if (success) {
                         if (hasTaskPreviouslyAppeared) {
@@ -2370,7 +2383,7 @@ public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
                         }
                     }
                     return Unit.INSTANCE;
-                }, true /* freezeTaskList */);
+                }  /* freezeTaskList */);
             } else {
                 mContainerInterface.onLaunchTaskFailed();
                 Toast.makeText(mContext, R.string.activity_not_available, LENGTH_SHORT).show();
@@ -2489,7 +2502,7 @@ public abstract class AbsSwipeUpHandler<T extends RecentsViewContainer,
     }
 
     private void animateSplashScreenExit(
-            @NonNull T activity,
+            @NonNull RECENTS_CONTAINER activity,
             @NonNull RemoteAnimationTarget[] appearedTaskTargets,
             @NonNull RemoteAnimationTarget[] animatingTargets) {
         ViewGroup splashView = activity.getDragLayer();

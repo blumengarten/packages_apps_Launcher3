@@ -30,8 +30,8 @@ import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController.Comp
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController.ControllersAfterInitAction
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController.TaskbarHotseatDimensionsProvider
 import com.android.launcher3.util.MultiPropertyFactory
-import com.android.wm.shell.common.bubbles.BubbleBarLocation
 import com.android.wm.shell.shared.animation.PhysicsAnimator
+import com.android.wm.shell.shared.bubbles.BubbleBarLocation
 
 class PersistentBubbleStashController(
     private val taskbarHotseatDimensionsProvider: TaskbarHotseatDimensionsProvider,
@@ -116,7 +116,7 @@ class PersistentBubbleStashController(
         bubbleBarTranslationYAnimator = bubbleBarViewController.bubbleBarTranslationY
         // bubble bar has only alpha property, getting it at index 0
         bubbleBarAlphaAnimator = bubbleBarViewController.bubbleBarAlpha.get(/* index= */ 0)
-        bubbleBarScaleAnimator = bubbleBarViewController.bubbleBarScale
+        bubbleBarScaleAnimator = bubbleBarViewController.bubbleBarScaleY
     }
 
     private fun animateAfterUnlock() {

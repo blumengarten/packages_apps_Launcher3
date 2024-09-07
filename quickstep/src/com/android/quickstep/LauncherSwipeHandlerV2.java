@@ -62,8 +62,8 @@ import java.util.List;
 /**
  * Temporary class to allow easier refactoring
  */
-public class LauncherSwipeHandlerV2 extends
-        AbsSwipeUpHandler<QuickstepLauncher, RecentsView, LauncherState> {
+public class LauncherSwipeHandlerV2 extends AbsSwipeUpHandler<
+        QuickstepLauncher, RecentsView<QuickstepLauncher, LauncherState>, LauncherState> {
 
     public LauncherSwipeHandlerV2(Context context, RecentsAnimationDeviceState deviceState,
             TaskAnimationManager taskAnimationManager, GestureState gestureState, long touchTimeMs,
@@ -107,9 +107,6 @@ public class LauncherSwipeHandlerV2 extends
                 || !mContainer.getDesktopVisibilityController().areDesktopTasksVisible());
 
         mContainer.getRootView().setForceHideBackArrow(true);
-        if (!TaskAnimationManager.ENABLE_SHELL_TRANSITIONS) {
-            mContainer.setHintUserWillBeActive();
-        }
 
         if (!canUseWorkspaceView || appCanEnterPip || mIsSwipeForSplit) {
             return new LauncherHomeAnimationFactory() {

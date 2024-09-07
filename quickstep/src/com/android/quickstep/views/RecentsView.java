@@ -36,6 +36,7 @@ import static com.android.launcher3.AbstractFloatingView.TYPE_TASK_MENU;
 import static com.android.launcher3.AbstractFloatingView.getTopOpenViewWithType;
 import static com.android.launcher3.BaseActivity.STATE_HANDLER_INVISIBILITY_FLAGS;
 import static com.android.launcher3.Flags.enableAdditionalHomeAnimations;
+import static com.android.launcher3.Flags.enableDesktopTaskAlphaAnimation;
 import static com.android.launcher3.Flags.enableGridOnlyOverview;
 import static com.android.launcher3.Flags.enableLargeDesktopWindowingTile;
 import static com.android.launcher3.Flags.enableRefactorTaskThumbnail;
@@ -317,6 +318,27 @@ public abstract class RecentsView<
                 @Override
                 public Float get(RecentsView recentsView) {
                     return recentsView.mAdjacentPageHorizontalOffset;
+                }
+            };
+
+    public static final FloatProperty<RecentsView> RUNNING_TASK_ATTACH_ALPHA =
+            new FloatProperty<RecentsView>("runningTaskAttachAlpha") {
+                @Override
+                public void setValue(RecentsView recentsView, float v) {
+                    TaskView runningTask = recentsView.getRunningTaskView();
+                    if (runningTask == null) {
+                        return;
+                    }
+                    runningTask.setAttachAlpha(v);
+                }
+
+                @Override
+                public Float get(RecentsView recentsView) {
+                    TaskView runningTask = recentsView.getRunningTaskView();
+                    if (runningTask == null) {
+                        return null;
+                    }
+                    return runningTask.getAttachAlpha();
                 }
             };
 
@@ -613,13 +635,16 @@ public abstract class RecentsView<
         @Override
         public void onTaskRemoved(int taskId) {
             if (!mHandleTaskStackChanges) {
+                Log.d(TAG, "onTaskRemoved: " + taskId + ", not handling task stack changes");
                 return;
             }
 
             TaskView taskView = getTaskViewByTaskId(taskId);
             if (taskView == null) {
+                Log.d(TAG, "onTaskRemoved: " + taskId + ", no associated TaskView");
                 return;
             }
+            Log.d(TAG, "onTaskRemoved: " + taskId);
             Task.TaskKey taskKey = taskView.getFirstTask().key;
             UI_HELPER_EXECUTOR.execute(new CancellableTask<>(
                     () -> PackageManagerWrapper.getInstance()
@@ -1057,7 +1082,6 @@ public abstract class RecentsView<
     @Nullable
     public Task onTaskThumbnailChanged(int taskId, ThumbnailData thumbnailData) {
         if (enableRefactorTaskThumbnail()) {
-            mHelper.onTaskThumbnailChanged(taskId, thumbnailData);
             return null;
         }
         if (mHandleTaskStackChanges) {
@@ -1078,8 +1102,7 @@ public abstract class RecentsView<
     }
 
     @Override
-    public void onTaskIconChanged(String pkg, UserHandle user) {
-        // TODO(b/342560598): Listen in TaskRepository and reload.
+    public void onTaskIconChanged(@NonNull String pkg, @NonNull UserHandle user) {
         for (int i = 0; i < getTaskViewCount(); i++) {
             TaskView tv = requireTaskViewAt(i);
             Task task = tv.getFirstTask();
@@ -2118,6 +2141,7 @@ public abstract class RecentsView<
         boolean handleTaskStackChanges = mOverviewStateEnabled && isAttachedToWindow()
                 && getWindowVisibility() == VISIBLE;
         if (handleTaskStackChanges != mHandleTaskStackChanges) {
+            Log.d(TAG, "updateTaskStackListenerState: " + handleTaskStackChanges);
             mHandleTaskStackChanges = handleTaskStackChanges;
             if (handleTaskStackChanges) {
                 reloadIfNeeded();
@@ -2527,7 +2551,6 @@ public abstract class RecentsView<
         }
 
         if (enableRefactorTaskThumbnail()) {
-            // TODO(b/342560598): Listen in TaskRepository and reload.
             return;
         }
 
@@ -2712,9 +2735,12 @@ public abstract class RecentsView<
         if (!mModel.isTaskListValid(mTaskListChangeId)) {
             mTaskListChangeId = mModel.getTasks(this::applyLoadPlan, RecentsFilterState
                     .getFilter(mFilterState.getPackageNameToFilter()));
+            Log.d(TAG, "reloadIfNeeded - getTasks: " + mTaskListChangeId);
             if (enableRefactorTaskThumbnail()) {
                 mRecentsViewModel.refreshAllTaskData();
             }
+        } else {
+            Log.d(TAG, "reloadIfNeeded - task list still valid: " + mTaskListChangeId);
         }
     }
 
@@ -2737,8 +2763,15 @@ public abstract class RecentsView<
         showCurrentTask(mActiveGestureRunningTasks);
         setEnableFreeScroll(false);
         setEnableDrawingLiveTile(false);
-        setRunningTaskHidden(true);
+        setRunningTaskHidden(!shouldUpdateRunningTaskAlpha());
         setTaskIconScaledDown(true);
+    }
+
+    /**
+     * Returns whether the running task's attach alpha should be updated during the attach animation
+     */
+    public boolean shouldUpdateRunningTaskAlpha() {
+        return enableDesktopTaskAlphaAnimation() && getRunningTaskView() instanceof DesktopTaskView;
     }
 
     private boolean isGestureActive() {
@@ -3021,24 +3054,26 @@ public abstract class RecentsView<
     public void setRunningTaskHidden(boolean isHidden) {
         mRunningTaskTileHidden = isHidden;
         TaskView runningTask = getRunningTaskView();
-        if (runningTask != null) {
-            runningTask.setStableAlpha(isHidden ? 0 : mContentAlpha);
-            if (!isHidden) {
-                AccessibilityManagerCompat.sendCustomAccessibilityEvent(runningTask,
-                        AccessibilityEvent.TYPE_VIEW_FOCUSED, null);
-            }
+        if (runningTask == null) {
+            return;
+        }
+        runningTask.setStableAlpha(isHidden ? 0 : mContentAlpha);
+        if (!isHidden) {
+            AccessibilityManagerCompat.sendCustomAccessibilityEvent(
+                    runningTask, AccessibilityEvent.TYPE_VIEW_FOCUSED, null);
         }
     }
 
     private void setRunningTaskViewShowScreenshot(boolean showScreenshot) {
+        setRunningTaskViewShowScreenshot(showScreenshot, /*updatedThumbnails=*/null);
+    }
+
+    private void setRunningTaskViewShowScreenshot(boolean showScreenshot,
+            @Nullable Map<Integer, ThumbnailData> updatedThumbnails) {
         mRunningTaskShowScreenshot = showScreenshot;
         TaskView runningTaskView = getRunningTaskView();
         if (runningTaskView != null) {
-            runningTaskView.setShouldShowScreenshot(mRunningTaskShowScreenshot);
-            if (!enableRefactorTaskThumbnail()) {
-                runningTaskView.getTaskContainers().forEach(
-                        taskContainer -> taskContainer.getThumbnailViewDeprecated().refresh());
-            }
+            runningTaskView.setShouldShowScreenshot(mRunningTaskShowScreenshot, updatedThumbnails);
         }
         if (enableRefactorTaskThumbnail()) {
             mRecentsViewModel.setRunningTaskShowScreenshot(showScreenshot);
@@ -4354,8 +4389,10 @@ public abstract class RecentsView<
     private void dismissTask(int taskId) {
         TaskView taskView = getTaskViewByTaskId(taskId);
         if (taskView == null) {
+            Log.d(TAG, "dismissTask: " + taskId + ",  no associated TaskView");
             return;
         }
+        Log.d(TAG, "dismissTask: " + taskId);
         dismissTask(taskView, true /* animate */, false /* removeTask */);
     }
 
@@ -4701,8 +4738,11 @@ public abstract class RecentsView<
                     : showAsGrid
                             ? gridOffsetSize
                             : i < modalMidpoint ? modalLeftOffsetSize : modalRightOffsetSize;
-            float totalTranslationX = translation + modalTranslation;
             View child = getChildAt(i);
+            boolean skipTranslationOffset = enableDesktopTaskAlphaAnimation()
+                    && i == getRunningTaskIndex()
+                    && child instanceof DesktopTaskView;
+            float totalTranslationX = (skipTranslationOffset ? 0f : translation) + modalTranslation;
             FloatProperty translationPropertyX = child instanceof TaskView
                     ? ((TaskView) child).getPrimaryTaskOffsetTranslationProperty()
                     : getPagedOrientationHandler().getPrimaryViewTranslate();
@@ -5454,7 +5494,7 @@ public abstract class RecentsView<
                     finishRecentsAnimation(false /* toRecents */, null);
                     onTaskLaunchAnimationEnd(true /* success */);
                 } else {
-                    taskView.launchTask(this::onTaskLaunchAnimationEnd);
+                    taskView.launchWithoutAnimation(this::onTaskLaunchAnimationEnd);
                 }
                 mContainer.getStatsLogManager().logger().withItemInfo(taskView.getFirstItemInfo())
                         .log(LAUNCHER_TASK_LAUNCH_SWIPE_DOWN);
@@ -6124,20 +6164,12 @@ public abstract class RecentsView<
             return;
         }
 
+        Map<Integer, ThumbnailData> updatedThumbnails = mRecentsViewUtils.screenshotTasks(taskView,
+                mRecentsAnimationController);
         if (enableRefactorTaskThumbnail()) {
-            mHelper.switchToScreenshot(taskView, mRecentsAnimationController, onFinishRunnable);
+            mHelper.switchToScreenshot(taskView, updatedThumbnails, onFinishRunnable);
         } else {
-            setRunningTaskViewShowScreenshot(true);
-            for (TaskContainer container : taskView.getTaskContainers()) {
-                ThumbnailData thumbnailData =
-                        mRecentsAnimationController.screenshotTask(container.getTask().key.id);
-                TaskThumbnailViewDeprecated thumbnailView = container.getThumbnailViewDeprecated();
-                if (thumbnailData != null) {
-                    thumbnailView.setThumbnail(container.getTask(), thumbnailData);
-                } else {
-                    thumbnailView.refresh();
-                }
-            }
+            setRunningTaskViewShowScreenshot(true, updatedThumbnails);
             ViewUtils.postFrameDrawn(taskView, onFinishRunnable);
         }
     }
@@ -6156,8 +6188,7 @@ public abstract class RecentsView<
             if (enableRefactorTaskThumbnail()) {
                 mHelper.switchToScreenshot(taskView, thumbnailDatas, onFinishRunnable);
             } else {
-                taskView.setShouldShowScreenshot(true);
-                taskView.refreshThumbnails(thumbnailDatas);
+                taskView.setShouldShowScreenshot(true, thumbnailDatas);
                 ViewUtils.postFrameDrawn(taskView, onFinishRunnable);
             }
         } else {
