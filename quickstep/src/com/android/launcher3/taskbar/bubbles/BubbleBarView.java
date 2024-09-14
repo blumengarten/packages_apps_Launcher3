@@ -187,6 +187,9 @@ public class BubbleBarView extends FrameLayout {
     private BubbleView mDismissedByDragBubbleView;
     private float mAlphaDuringDrag = 1f;
 
+    /** Additional translation in the y direction that is applied to each bubble */
+    private float mBubbleOffsetY;
+
     private Controller mController;
 
     private int mPreviousLayoutDirection = LayoutDirection.UNDEFINED;
@@ -205,7 +208,6 @@ public class BubbleBarView extends FrameLayout {
 
     public BubbleBarView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        setAlpha(0);
         setVisibility(INVISIBLE);
         mIconOverlapAmount = getResources().getDimensionPixelSize(R.dimen.bubblebar_icon_overlap);
         mBubbleBarPadding = getResources().getDimensionPixelSize(R.dimen.bubblebar_icon_spacing);
@@ -306,6 +308,46 @@ public class BubbleBarView extends FrameLayout {
     }
 
     /**
+     * Set scale for bubble bar background in x direction
+     */
+    public void setBackgroundScaleX(float scaleX) {
+        mBubbleBarBackground.setScaleX(scaleX);
+    }
+
+    /**
+     * Set scale for bubble bar background in y direction
+     */
+    public void setBackgroundScaleY(float scaleY) {
+        mBubbleBarBackground.setScaleY(scaleY);
+    }
+
+    /**
+     * Set alpha for bubble views
+     */
+    public void setBubbleAlpha(float alpha) {
+        for (int i = 0; i < getChildCount(); i++) {
+            getChildAt(i).setAlpha(alpha);
+        }
+    }
+
+    /**
+     * Set alpha for bar background
+     */
+    public void setBackgroundAlpha(float alpha) {
+        mBubbleBarBackground.setAlpha((int) (255 * alpha));
+    }
+
+    /**
+     * Sets offset of each bubble view in the y direction from the base position in the bar.
+     */
+    public void setBubbleOffsetY(float offsetY) {
+        mBubbleOffsetY = offsetY;
+        for (int i = 0; i < getChildCount(); i++) {
+            getChildAt(i).setTranslationY(getBubbleTranslationY());
+        }
+    }
+
+    /**
      * Sets new icon sizes and newBubbleBarPadding between icons and bubble bar borders.
      *
      * @param newIconSize         new icon size
@@ -322,7 +364,7 @@ public class BubbleBarView extends FrameLayout {
         int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
             View childView = getChildAt(i);
-            childView.setScaleY(mIconScale);
+            childView.setScaleX(mIconScale);
             childView.setScaleY(mIconScale);
             FrameLayout.LayoutParams params = (LayoutParams) childView.getLayoutParams();
             params.height = (int) mIconSize;
@@ -770,6 +812,9 @@ public class BubbleBarView extends FrameLayout {
             removeView(removedBubble);
             int index = addingOverflow ? getChildCount() : 0;
             addView(addedBubble, index, lp);
+            if (onEndRunnable != null) {
+                onEndRunnable.run();
+            }
             return;
         }
         int index = addingOverflow ? getChildCount() : 0;
@@ -965,10 +1010,7 @@ public class BubbleBarView extends FrameLayout {
         final float expandedWidth = expandedWidth();
         final float collapsedWidth = collapsedWidth();
         int childCount = getChildCount();
-        float viewBottom = mBubbleBarBounds.height() + (isExpanded() ? mPointerSize : 0);
-        float bubbleBarAnimatedTop = viewBottom - getBubbleBarHeight();
-        // When translating X & Y the scale is ignored, so need to deduct it from the translations
-        final float ty = bubbleBarAnimatedTop + mBubbleBarPadding - getScaleIconShift();
+        final float ty = getBubbleTranslationY();
         final boolean onLeft = bubbleBarLocation.isOnLeft(isLayoutRtl());
         // elevation state is opposite to widthState - when expanded all icons are flat
         float elevationState = (1 - widthState);
@@ -1015,7 +1057,7 @@ public class BubbleBarView extends FrameLayout {
                 // where the bubble will end up when the animation ends
                 final float targetX = expandedX + expandedBarShift;
                 bv.setTranslationX(widthState * (targetX - collapsedX) + collapsedX);
-                bv.setAlpha(1);
+                bv.setVisibility(VISIBLE);
             } else {
                 // If bar is on the right, account for bubble bar expanding and shifting left
                 final float collapsedBarShift = onLeft ? 0 : currentWidth - collapsedWidth;
@@ -1025,9 +1067,9 @@ public class BubbleBarView extends FrameLayout {
                 // the overflow.
                 if (widthState == 0) {
                     if (bv.isOverflow() || i > MAX_VISIBLE_BUBBLES_COLLAPSED - 1) {
-                        bv.setAlpha(0);
+                        bv.setVisibility(INVISIBLE);
                     } else {
-                        bv.setAlpha(1);
+                        bv.setVisibility(VISIBLE);
                     }
                 }
             }
@@ -1100,6 +1142,13 @@ public class BubbleBarView extends FrameLayout {
             }
         }
         return mBubbleBarPadding + translationX - getScaleIconShift();
+    }
+
+    private float getBubbleTranslationY() {
+        float viewBottom = mBubbleBarBounds.height() + (isExpanded() ? mPointerSize : 0);
+        float bubbleBarAnimatedTop = viewBottom - getBubbleBarHeight();
+        // When translating X & Y the scale is ignored, so need to deduct it from the translations
+        return mBubbleOffsetY + bubbleBarAnimatedTop + mBubbleBarPadding - getScaleIconShift();
     }
 
     /**
@@ -1335,7 +1384,7 @@ public class BubbleBarView extends FrameLayout {
      * touch bounds.
      */
     public boolean isEventOverAnyItem(MotionEvent ev) {
-        if (getVisibility() == View.VISIBLE) {
+        if (getVisibility() == VISIBLE) {
             getBoundsOnScreen(mTempRect);
             return mTempRect.contains((int) ev.getX(), (int) ev.getY());
         }

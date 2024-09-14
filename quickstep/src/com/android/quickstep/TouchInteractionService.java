@@ -30,7 +30,6 @@ import static com.android.launcher3.Launcher.INTENT_ACTION_ALL_APPS_TOGGLE;
 import static com.android.launcher3.LauncherPrefs.backedUpItem;
 import static com.android.launcher3.MotionEventsUtils.isTrackpadMotionEvent;
 import static com.android.launcher3.MotionEventsUtils.isTrackpadMultiFingerSwipe;
-import static com.android.launcher3.config.FeatureFlags.ENABLE_TRACKPAD_GESTURE;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 import static com.android.launcher3.util.OnboardingPrefs.HOME_BOUNCE_SEEN;
@@ -94,6 +93,7 @@ import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.anim.AnimatedFloat;
 import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.provider.RestoreDbTask;
+import com.android.launcher3.statehandlers.DesktopVisibilityController;
 import com.android.launcher3.statemanager.StatefulActivity;
 import com.android.launcher3.taskbar.TaskbarActivityContext;
 import com.android.launcher3.taskbar.TaskbarManager;
@@ -227,7 +227,6 @@ public class TouchInteractionService extends Service {
         @BinderThread
         @Override
         public void onTaskbarToggled() {
-            if (!FeatureFlags.ENABLE_KEYBOARD_TASKBAR_TOGGLE.get()) return;
             MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(tis -> {
                 TaskbarActivityContext activityContext =
                         tis.mTaskbarManager.getCurrentActivityContext();
@@ -379,6 +378,15 @@ public class TouchInteractionService extends Service {
             ));
         }
 
+        @BinderThread
+        @Override
+        public void appTransitionPending(boolean pending) {
+            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(tis ->
+                    executeForTaskbarManager(
+                            taskbarManager -> taskbarManager.appTransitionPending(pending))
+            ));
+        }
+
         /**
          * Preloads the Overview activity.
          * <p>
@@ -451,6 +459,18 @@ public class TouchInteractionService extends Service {
             TouchInteractionService tis = mTis.get();
             if (tis == null) return null;
             return tis.mTaskbarManager;
+        }
+
+        /**
+         * Returns the {@link DesktopVisibilityController}
+         * <p>
+         * Returns {@code null} if TouchInteractionService is not connected
+         */
+        @Nullable
+        public DesktopVisibilityController getDesktopVisibilityController() {
+            TouchInteractionService tis = mTis.get();
+            if (tis == null) return null;
+            return tis.mDesktopVisibilityController;
         }
 
         @VisibleForTesting
@@ -628,6 +648,8 @@ public class TouchInteractionService extends Service {
 
     private NavigationMode mGestureStartNavMode = null;
 
+    private DesktopVisibilityController mDesktopVisibilityController;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -640,15 +662,15 @@ public class TouchInteractionService extends Service {
         mAllAppsActionManager = new AllAppsActionManager(
                 this, UI_HELPER_EXECUTOR, this::createAllAppsPendingIntent);
         mInputManager = getSystemService(InputManager.class);
-        if (ENABLE_TRACKPAD_GESTURE.get()) {
-            mInputManager.registerInputDeviceListener(mInputDeviceListener,
-                    UI_HELPER_EXECUTOR.getHandler());
-            int [] inputDevices = mInputManager.getInputDeviceIds();
-            for (int inputDeviceId : inputDevices) {
-                mInputDeviceListener.onInputDeviceAdded(inputDeviceId);
-            }
+        mInputManager.registerInputDeviceListener(mInputDeviceListener,
+                UI_HELPER_EXECUTOR.getHandler());
+        int [] inputDevices = mInputManager.getInputDeviceIds();
+        for (int inputDeviceId : inputDevices) {
+            mInputDeviceListener.onInputDeviceAdded(inputDeviceId);
         }
-        mTaskbarManager = new TaskbarManager(this, mAllAppsActionManager, mNavCallbacks);
+        mDesktopVisibilityController = new DesktopVisibilityController(this);
+        mTaskbarManager = new TaskbarManager(
+                this, mAllAppsActionManager, mNavCallbacks, mDesktopVisibilityController);
         mInputConsumer = InputConsumerController.getRecentsAnimationInputConsumer();
 
         // Call runOnUserUnlocked() before any other callbacks to ensure everything is initialized.
@@ -677,7 +699,7 @@ public class TouchInteractionService extends Service {
 
         if (mDeviceState.isButtonNavMode()
                 && !mDeviceState.supportsAssistantGestureInButtonNav()
-                && (!ENABLE_TRACKPAD_GESTURE.get() || mTrackpadsConnected.isEmpty())) {
+                && (mTrackpadsConnected.isEmpty())) {
             return;
         }
 
@@ -743,8 +765,8 @@ public class TouchInteractionService extends Service {
     private void onOverviewTargetChange(boolean isHomeAndOverviewSame) {
         mAllAppsActionManager.setHomeAndOverviewSame(isHomeAndOverviewSame);
 
-        StatefulActivity newOverviewActivity = mOverviewComponentObserver.getActivityInterface()
-                .getCreatedContainer();
+        StatefulActivity<?> newOverviewActivity =
+                mOverviewComponentObserver.getActivityInterface().getCreatedContainer();
         if (newOverviewActivity != null) {
             mTaskbarManager.setActivity(newOverviewActivity);
         }
@@ -808,6 +830,7 @@ public class TouchInteractionService extends Service {
         mTrackpadsConnected.clear();
 
         mTaskbarManager.destroy();
+        mDesktopVisibilityController.onDestroy();
         sConnected = false;
 
         ScreenOnTracker.INSTANCE.get(this).removeListener(mScreenOnListener);
@@ -1244,7 +1267,7 @@ public class TouchInteractionService extends Service {
                         getBaseContext(), mDeviceState, mInputMonitorCompat);
             }
 
-            if (ENABLE_TRACKPAD_GESTURE.get() && mGestureState.isTrackpadGesture()
+            if (mGestureState.isTrackpadGesture()
                     && canStartSystemGesture && !previousGestureState.isRecentsAnimationRunning()) {
                 reasonString = newCompoundString(reasonPrefix)
                         .append(SUBSTRING_PREFIX)
@@ -1654,6 +1677,7 @@ public class TouchInteractionService extends Service {
             createdOverviewActivity.getDeviceProfile().dump(this, "", pw);
         }
         mTaskbarManager.dumpLogs("", pw);
+        mDesktopVisibilityController.dumpLogs("", pw);
         pw.println("AssistStateManager:");
         AssistStateManager.INSTANCE.get(this).dump("\t", pw);
         SystemUiProxy.INSTANCE.get(this).dump(pw);

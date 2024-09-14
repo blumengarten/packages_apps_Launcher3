@@ -20,6 +20,7 @@ import android.app.Notification;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
@@ -110,6 +111,10 @@ public class BubbleView extends ConstraintLayout {
 
         setFocusable(true);
         setClickable(true);
+
+        // We manage the shadow ourselves when creating the bitmap
+        setOutlineAmbientShadowColor(Color.TRANSPARENT);
+        setOutlineSpotShadowColor(Color.TRANSPARENT);
     }
 
     private void updateBubbleSizeAndDotRender() {
@@ -152,14 +157,14 @@ public class BubbleView extends ConstraintLayout {
         applyDragTranslation();
     }
 
+    private void applyDragTranslation() {
+        setTranslationX(mDragTranslationX + mOffsetX);
+    }
+
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         updateBubbleSizeAndDotRender();
-    }
-
-    private void applyDragTranslation() {
-        setTranslationX(mDragTranslationX + mOffsetX);
     }
 
     @Override

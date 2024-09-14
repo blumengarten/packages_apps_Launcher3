@@ -48,7 +48,6 @@ import com.android.launcher3.anim.AnimatorListeners;
 import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.statemanager.StateManager;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
-import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
 import com.android.quickstep.RecentsAnimationCallbacks;
 import com.android.quickstep.RecentsAnimationController;
@@ -375,7 +374,7 @@ public class TaskbarLauncherStateController {
     private void updateOverviewDragState(LauncherState launcherState) {
         boolean disallowLongClick =
                 FeatureFlags.enableSplitContextually()
-                        ? mLauncher.isSplitSelectionActive()
+                        ? mLauncher.isSplitSelectionActive() || mIsAnimatingToLauncher
                         : launcherState == LauncherState.OVERVIEW_SPLIT_SELECT;
         com.android.launcher3.taskbar.Utilities.setOverviewDragState(
                 mControllers, launcherState.disallowTaskbarGlobalDrag(),
@@ -463,7 +462,8 @@ public class TaskbarLauncherStateController {
             controllers.bubbleStashController.setBubblesShowingOnOverview(onOverview);
         });
 
-        mControllers.taskbarStashController.updateStateForFlag(FLAG_IN_OVERVIEW,
+        TaskbarStashController stashController = mControllers.taskbarStashController;
+        stashController.updateStateForFlag(FLAG_IN_OVERVIEW,
                 mLauncherState == LauncherState.OVERVIEW);
 
         AnimatorSet animatorSet = new AnimatorSet();
@@ -495,8 +495,6 @@ public class TaskbarLauncherStateController {
                 public void onAnimationStart(Animator animation) {
                     mIsAnimatingToLauncher = isInLauncher;
 
-                    TaskbarStashController stashController =
-                            mControllers.taskbarStashController;
                     if (DEBUG) {
                         Log.d(TAG, "onAnimationStart - FLAG_IN_APP: " + !isInLauncher);
                     }
@@ -512,6 +510,8 @@ public class TaskbarLauncherStateController {
 
             // Handle closing open popups when going home/overview
             handleOpenFloatingViews = true;
+        } else {
+            stashController.applyState();
         }
 
         if (handleOpenFloatingViews && isInLauncher) {
@@ -592,7 +592,8 @@ public class TaskbarLauncherStateController {
 
         float cornerRoundness = isInLauncher ? 0 : 1;
 
-        if (DisplayController.isInDesktopMode(mLauncher) && mControllers.getSharedState() != null) {
+        if (mControllers.taskbarDesktopModeController.getAreDesktopTasksVisible()
+                && mControllers.getSharedState() != null) {
             cornerRoundness =
                     mControllers.taskbarDesktopModeController.getTaskbarCornerRoundness(
                             mControllers.getSharedState().showCornerRadiusInDesktopMode);

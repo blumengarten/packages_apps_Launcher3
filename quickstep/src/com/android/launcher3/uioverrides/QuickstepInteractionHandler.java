@@ -22,7 +22,6 @@ import android.app.ActivityOptions;
 import android.app.ActivityTaskManager;
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import android.util.Pair;
@@ -66,13 +65,7 @@ class QuickstepInteractionHandler implements RemoteViews.InteractionHandler {
         }
         Pair<Intent, ActivityOptions> options = remoteResponse.getLaunchOptions(view);
         ActivityOptionsWrapper activityOptions = mLauncher.getAppTransitionManager()
-                .getActivityLaunchOptions(hostView);
-        Object itemInfo = hostView.getTag();
-        IBinder launchCookie = null;
-        if (itemInfo instanceof ItemInfo) {
-            launchCookie = mLauncher.getLaunchCookie((ItemInfo) itemInfo);
-            activityOptions.options.setLaunchCookie(launchCookie);
-        }
+                .getActivityLaunchOptions(hostView, (ItemInfo) hostView.getTag());
         if (Utilities.ATLEAST_S && !pendingIntent.isActivity()) {
             // In the event this pending intent eventually launches an activity, i.e. a trampoline,
             // use the Quickstep transition animation.
@@ -81,7 +74,7 @@ class QuickstepInteractionHandler implements RemoteViews.InteractionHandler {
                         .registerRemoteAnimationForNextActivityStart(
                                 pendingIntent.getCreatorPackage(),
                                 activityOptions.options.getRemoteAnimationAdapter(),
-                                launchCookie);
+                                activityOptions.options.getLaunchCookie());
             } catch (RemoteException e) {
                 // Do nothing.
             }
@@ -92,7 +85,7 @@ class QuickstepInteractionHandler implements RemoteViews.InteractionHandler {
                 ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED);
         options = Pair.create(options.first, activityOptions.options);
         if (pendingIntent.isActivity()) {
-            logAppLaunch(itemInfo);
+            logAppLaunch(hostView.getTag());
         }
         return RemoteViews.startPendingIntent(hostView, pendingIntent, options);
     }

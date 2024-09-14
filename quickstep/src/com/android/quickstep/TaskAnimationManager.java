@@ -289,37 +289,9 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
                             true /*shown*/, null /* animatorHandler */);
                 }
                 if (mController != null) {
-                    if (mLastAppearedTaskTargets != null) {
-                        for (RemoteAnimationTarget lastTarget : mLastAppearedTaskTargets) {
-                            for (RemoteAnimationTarget appearedTarget : appearedTaskTargets) {
-                                if (lastTarget != null &&
-                                        appearedTarget.taskId != lastTarget.taskId) {
-                                    mController.removeTaskTarget(lastTarget.taskId);
-                                }
-                            }
-                        }
-                    }
                     mLastAppearedTaskTargets = appearedTaskTargets;
                     mLastGestureState.updateLastAppearedTaskTargets(mLastAppearedTaskTargets);
                 }
-            }
-
-            @Override
-            public boolean onSwitchToScreenshot(Runnable onFinished) {
-                if (!containerInterface.isInLiveTileMode()
-                        || containerInterface.getCreatedContainer() == null) {
-                    // No need to switch since tile is already a screenshot.
-                    onFinished.run();
-                } else {
-                    final RecentsView recentsView =
-                            containerInterface.getCreatedContainer().getOverviewPanel();
-                    if (recentsView != null) {
-                        recentsView.switchToScreenshot(onFinished);
-                    } else {
-                        onFinished.run();
-                    }
-                }
-                return true;
             }
         });
         final long eventTime = gestureState.getSwipeUpStartTimeMs();
@@ -329,10 +301,7 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
         final ActivityOptions options = ActivityOptions.makeBasic();
         options.setPendingIntentBackgroundActivityStartMode(
                 ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOW_ALWAYS);
-        // Use regular (non-transient) launch for all apps page to control IME.
-        if (!containerInterface.allowAllAppsFromOverview()) {
-            options.setTransientLaunch();
-        }
+        options.setTransientLaunch();
         options.setSourceInfo(ActivityOptions.SourceInfo.TYPE_RECENTS_ANIMATION, eventTime);
 
         // Notify taskbar that we should skip reacting to launcher visibility change to

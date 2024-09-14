@@ -18,6 +18,8 @@ package com.android.launcher3.taskbar.bubbles;
 import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
 
+import android.animation.Animator;
+import android.animation.AnimatorSet;
 import android.content.res.Resources;
 import android.graphics.Point;
 import android.graphics.PointF;
@@ -34,6 +36,7 @@ import androidx.annotation.Nullable;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.R;
 import com.android.launcher3.anim.AnimatedFloat;
+import com.android.launcher3.anim.RoundedRectRevealOutlineProvider;
 import com.android.launcher3.taskbar.TaskbarActivityContext;
 import com.android.launcher3.taskbar.TaskbarControllers;
 import com.android.launcher3.taskbar.TaskbarInsetsController;
@@ -80,10 +83,19 @@ public class BubbleBarViewController {
 
     // These are exposed to {@link BubbleStashController} to animate for stashing/un-stashing
     private final MultiValueAlpha mBubbleBarAlpha;
+    private final AnimatedFloat mBubbleBarBubbleAlpha = new AnimatedFloat(this::updateBubbleAlpha);
+    private final AnimatedFloat mBubbleBarBackgroundAlpha = new AnimatedFloat(
+            this::updateBackgroundAlpha);
     private final AnimatedFloat mBubbleBarScaleX = new AnimatedFloat(this::updateScaleX);
     private final AnimatedFloat mBubbleBarScaleY = new AnimatedFloat(this::updateScaleY);
+    private final AnimatedFloat mBubbleBarBackgroundScaleX = new AnimatedFloat(
+            this::updateBackgroundScaleX);
+    private final AnimatedFloat mBubbleBarBackgroundScaleY = new AnimatedFloat(
+            this::updateBackgroundScaleY);
     private final AnimatedFloat mBubbleBarTranslationY = new AnimatedFloat(
             this::updateTranslationY);
+    private final AnimatedFloat mBubbleOffsetY = new AnimatedFloat(
+            this::updateBubbleOffsetY);
 
     // Modified when swipe up is happening on the bubble bar or task bar.
     private float mBubbleBarSwipeUpTranslationY;
@@ -258,6 +270,14 @@ public class BubbleBarViewController {
         return mBubbleBarAlpha;
     }
 
+    public AnimatedFloat getBubbleBarBubbleAlpha() {
+        return mBubbleBarBubbleAlpha;
+    }
+
+    public AnimatedFloat getBubbleBarBackgroundAlpha() {
+        return mBubbleBarBackgroundAlpha;
+    }
+
     public AnimatedFloat getBubbleBarScaleX() {
         return mBubbleBarScaleX;
     }
@@ -266,8 +286,20 @@ public class BubbleBarViewController {
         return mBubbleBarScaleY;
     }
 
+    public AnimatedFloat getBubbleBarBackgroundScaleX() {
+        return mBubbleBarBackgroundScaleX;
+    }
+
+    public AnimatedFloat getBubbleBarBackgroundScaleY() {
+        return mBubbleBarBackgroundScaleY;
+    }
+
     public AnimatedFloat getBubbleBarTranslationY() {
         return mBubbleBarTranslationY;
+    }
+
+    public AnimatedFloat getBubbleOffsetY() {
+        return mBubbleOffsetY;
     }
 
     public float getBubbleBarCollapsedWidth() {
@@ -533,6 +565,26 @@ public class BubbleBarViewController {
 
     private void updateScaleY(float scale) {
         mBarView.setScaleY(scale);
+    }
+
+    private void updateBackgroundScaleX(float scale) {
+        mBarView.setBackgroundScaleX(scale);
+    }
+
+    private void updateBackgroundScaleY(float scale) {
+        mBarView.setBackgroundScaleY(scale);
+    }
+
+    private void updateBubbleAlpha(float alpha) {
+        mBarView.setBubbleAlpha(alpha);
+    }
+
+    private void updateBubbleOffsetY(float transY) {
+        mBarView.setBubbleOffsetY(transY);
+    }
+
+    private void updateBackgroundAlpha(float alpha) {
+        mBarView.setBackgroundAlpha(alpha);
     }
 
     //
@@ -817,6 +869,48 @@ public class BubbleBarViewController {
      */
     public void setBoundsChangeListener(@Nullable BubbleBarBoundsChangeListener listener) {
         mBoundsChangeListener = listener;
+    }
+
+    /**
+     * Create an animator for showing or hiding bubbles when stashed state changes
+     *
+     * @param isStashed {@code true} when bubble bar should be stashed to the handle
+     */
+    public Animator createRevealAnimatorForStashChange(boolean isStashed) {
+        Rect stashedHandleBounds = new Rect();
+        mBubbleStashController.getHandleBounds(stashedHandleBounds);
+        int childCount = mBarView.getChildCount();
+        float newChildWidth = (float) stashedHandleBounds.width() / childCount;
+        AnimatorSet animatorSet = new AnimatorSet();
+        for (int i = 0; i < childCount; i++) {
+            BubbleView child = (BubbleView) mBarView.getChildAt(i);
+            animatorSet.play(
+                    createRevealAnimForBubble(child, isStashed, stashedHandleBounds,
+                            newChildWidth));
+        }
+        return animatorSet;
+    }
+
+    private Animator createRevealAnimForBubble(BubbleView bubbleView, boolean isStashed,
+            Rect stashedHandleBounds, float newWidth) {
+        Rect viewBounds = new Rect(0, 0, bubbleView.getWidth(), bubbleView.getHeight());
+
+        int viewCenterY = viewBounds.centerY();
+        int halfHandleHeight = stashedHandleBounds.height() / 2;
+        int widthDelta = Math.max(0, (int) (viewBounds.width() - newWidth) / 2);
+
+        Rect stashedViewBounds = new Rect(
+                viewBounds.left + widthDelta,
+                viewCenterY - halfHandleHeight,
+                viewBounds.right - widthDelta,
+                viewCenterY + halfHandleHeight
+        );
+
+        float viewRadius = 0f; // Use 0 to not clip the new message dot or the app icon
+        float stashedRadius = stashedViewBounds.height() / 2f;
+
+        return new RoundedRectRevealOutlineProvider(viewRadius, stashedRadius, viewBounds,
+                stashedViewBounds).createRevealAnimator(bubbleView, !isStashed, 0);
     }
 
     /**

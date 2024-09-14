@@ -16,6 +16,10 @@
 
 package com.android.launcher3.dagger;
 
+import android.content.Context;
+
+import dagger.BindsInstance;
+
 /**
  * Launcher base component for Dagger injection.
  *
@@ -27,6 +31,7 @@ package com.android.launcher3.dagger;
 public interface LauncherBaseAppComponent {
     /** Builder for LauncherBaseAppComponent. */
     interface Builder {
+        @BindsInstance Builder appContext(@ApplicationContext Context context);
         LauncherBaseAppComponent build();
     }
 }

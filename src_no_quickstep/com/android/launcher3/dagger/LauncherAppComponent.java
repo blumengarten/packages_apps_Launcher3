@@ -18,12 +18,10 @@ package com.android.launcher3.dagger;
 
 import dagger.Component;
 
-import javax.inject.Singleton;
-
 /**
  * Root component for Dagger injection for Launcher AOSP.
  */
-@Singleton
+@LauncherAppSingleton
 @Component
 public interface LauncherAppComponent extends LauncherBaseAppComponent {
     /** Builder for aosp LauncherAppComponent. */
