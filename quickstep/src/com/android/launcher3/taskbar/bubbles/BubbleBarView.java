@@ -95,11 +95,11 @@ public class BubbleBarView extends FrameLayout {
 
     private static final long FADE_OUT_ANIM_ALPHA_DURATION_MS = 50L;
     private static final long FADE_OUT_ANIM_ALPHA_DELAY_MS = 50L;
-    private static final long FADE_OUT_ANIM_POSITION_DURATION_MS = 100L;
+    public static final long FADE_OUT_ANIM_POSITION_DURATION_MS = 100L;
     // During fade out animation we shift the bubble bar 1/80th of the screen width
     private static final float FADE_OUT_ANIM_POSITION_SHIFT = 1 / 80f;
 
-    private static final long FADE_IN_ANIM_ALPHA_DURATION_MS = 100L;
+    public static final long FADE_IN_ANIM_ALPHA_DURATION_MS = 100L;
     // Use STIFFNESS_MEDIUMLOW which is not defined in the API constants
     private static final float FADE_IN_ANIM_POSITION_SPRING_STIFFNESS = 400f;
     // During fade in animation we shift the bubble bar 1/60th of the screen width
@@ -689,7 +689,7 @@ public class BubbleBarView extends FrameLayout {
         }
         setAlphaDuringBubbleDrag(1f);
         setTranslationX(0f);
-        if (getBubbleChildCount() > 0) {
+        if (mIsBarExpanded && getBubbleChildCount() > 0) {
             setAlpha(1f);
         }
     }
@@ -1135,10 +1135,13 @@ public class BubbleBarView extends FrameLayout {
                 translationX = 0f;
             }
         } else {
-            if (bubbleIndex == 1 && getBubbleChildCount() >= MAX_VISIBLE_BUBBLES_COLLAPSED) {
-                translationX = mIconOverlapAmount;
-            } else {
+            // when the bar is on the right, the first bubble always has translation 0. the only
+            // case where another bubble has translation 0 is when we only have 1 bubble and the
+            // overflow. otherwise all other bubbles should be shifted by the overlap amount.
+            if (bubbleIndex == 0 || getBubbleChildCount() == 1) {
                 translationX = 0f;
+            } else {
+                translationX = mIconOverlapAmount;
             }
         }
         return mBubbleBarPadding + translationX - getScaleIconShift();

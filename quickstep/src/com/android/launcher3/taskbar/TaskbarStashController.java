@@ -101,6 +101,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
     public static final int FLAG_IN_OVERVIEW = 1 << 11; // launcher is in overview
     // An internal no-op flag to determine whether we should delay the taskbar background animation
     private static final int FLAG_DELAY_TASKBAR_BG_TAG = 1 << 12;
+    public static final int FLAG_STASHED_FOR_BUBBLES = 1 << 13; // show handle for stashed hotseat
 
     // If any of these flags are enabled, isInApp should return true.
     private static final int FLAGS_IN_APP = FLAG_IN_APP | FLAG_IN_SETUP;
@@ -122,7 +123,8 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
 
     // If any of these flags are enabled, the taskbar must be stashed.
     private static final int FLAGS_FORCE_STASHED = FLAG_STASHED_SYSUI | FLAG_STASHED_DEVICE_LOCKED
-            | FLAG_STASHED_IN_TASKBAR_ALL_APPS | FLAG_STASHED_SMALL_SCREEN;
+            | FLAG_STASHED_IN_TASKBAR_ALL_APPS | FLAG_STASHED_SMALL_SCREEN
+            | FLAG_STASHED_FOR_BUBBLES;
 
     /**
      * How long to stash/unstash when manually invoked via long press.
@@ -395,6 +397,16 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         return mIsStashed;
     }
 
+    /** Sets the hotseat stashed. */
+    public void stashHotseat(boolean stash) {
+        mControllers.uiController.stashHotseat(stash);
+    }
+
+    /** Instantly un-stashes the hotseat. */
+    public void unStashHotseatInstantly() {
+        mControllers.uiController.unStashHotseatInstantly();
+    }
+
     /**
      * Returns whether the taskbar should be stashed in apps (e.g. user long pressed to stash).
      */
@@ -432,6 +444,11 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
     /** Returns whether the taskbar is currently in overview screen. */
     public boolean isInOverview() {
         return hasAnyFlag(FLAG_IN_OVERVIEW);
+    }
+
+    /** Returns whether taskbar is hidden for bubbles. */
+    public boolean isHiddenForBubbles() {
+        return hasAnyFlag(FLAG_STASHED_FOR_BUBBLES);
     }
 
     /**
@@ -995,13 +1012,29 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
     }
 
     public void applyState() {
-        applyState(hasAnyFlag(FLAG_IN_SETUP) ? 0 : TASKBAR_STASH_DURATION);
+        applyState(/* postApplyAction = */ null);
+    }
+
+    /** Applies state and performs action after state is applied. */
+    public void applyState(@Nullable Runnable postApplyAction) {
+        applyState(hasAnyFlag(FLAG_IN_SETUP) ? 0 : TASKBAR_STASH_DURATION, postApplyAction);
     }
 
     public void applyState(long duration) {
+        applyState(duration, /* postApplyAction = */ null);
+    }
+
+    private void applyState(long duration, @Nullable Runnable postApplyAction) {
         Animator animator = createApplyStateAnimator(duration);
         if (animator != null) {
+            if (postApplyAction != null) {
+                // performs action on animation end
+                animator.addListener(AnimatorListeners.forEndCallback(postApplyAction));
+            }
             animator.start();
+        } else if (postApplyAction != null) {
+            // animator was not created, just execute the action
+            postApplyAction.run();
         }
     }
 
@@ -1019,6 +1052,9 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
      */
     @Nullable
     public Animator createApplyStateAnimator(long duration) {
+        if (mActivity.isPhoneMode()) {
+            return null;
+        }
         return mStatePropertyHolder.createSetStateAnimator(mState, duration);
     }
 
@@ -1064,10 +1100,6 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
 
     /** Called when some system ui state has changed. (See SYSUI_STATE_... in QuickstepContract) */
     public void updateStateForSysuiFlags(long systemUiStateFlags, boolean skipAnim) {
-        if (mActivity.isPhoneMode()) {
-            return;
-        }
-
         long animDuration = TASKBAR_STASH_DURATION;
         long startDelay = 0;
 

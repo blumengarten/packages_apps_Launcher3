@@ -15,11 +15,12 @@
  */
 package com.android.launcher3.taskbar;
 
+import static android.window.flags.DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY;
+
 import static com.android.launcher3.QuickstepTransitionManager.TRANSIENT_TASKBAR_TRANSITION_DURATION;
 import static com.android.launcher3.statemanager.BaseState.FLAG_NON_INTERACTIVE;
 import static com.android.launcher3.taskbar.TaskbarEduTooltipControllerKt.TOOLTIP_STEP_FEATURES;
 import static com.android.launcher3.taskbar.TaskbarLauncherStateController.FLAG_VISIBLE;
-import static com.android.wm.shell.shared.desktopmode.DesktopModeFlags.WALLPAPER_ACTIVITY;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
@@ -50,6 +51,7 @@ import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.TISBindHelper;
 import com.android.quickstep.views.RecentsView;
 import com.android.systemui.shared.system.QuickStepContract.SystemUiStateFlags;
+import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -126,18 +128,13 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
 
     @Override
     protected void onDestroy() {
-        onLauncherVisibilityChanged(false);
+        onLauncherVisibilityChanged(false /* isVisible */, true /* fromInitOrDestroy */);
         super.onDestroy();
         mTaskbarLauncherStateController.onDestroy();
 
         mLauncher.setTaskbarUIController(null);
         mLauncher.removeOnDeviceProfileChangeListener(mOnDeviceProfileChangeListener);
         mHomeState.removeListener(mVisibilityChangeListener);
-    }
-
-    /** Returns {@code true} if launcher is currently presenting the home screen. */
-    public boolean isOnHome() {
-        return mTaskbarLauncherStateController.isOnHome();
     }
 
     private void onInAppDisplayProgressChanged() {
@@ -161,6 +158,16 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
     public void setShouldDelayLauncherStateAnim(boolean shouldDelayLauncherStateAnim) {
         mTaskbarLauncherStateController.setShouldDelayLauncherStateAnim(
                 shouldDelayLauncherStateAnim);
+    }
+
+    @Override
+    public void stashHotseat(boolean stash) {
+        mTaskbarLauncherStateController.stashHotseat(stash);
+    }
+
+    @Override
+    public void unStashHotseatInstantly() {
+        mTaskbarLauncherStateController.unStashHotseatInstantly();
     }
 
     /**
@@ -205,13 +212,16 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
      */
     @Override
     public void onLauncherVisibilityChanged(boolean isVisible) {
+        if (DesktopModeStatus.enterDesktopByDefaultOnFreeformDisplay(mLauncher)) {
+            DisplayController.handleInfoChangeForLauncherVisibilityChanged(mLauncher);
+        }
         onLauncherVisibilityChanged(isVisible, false /* fromInit */);
     }
 
-    private void onLauncherVisibilityChanged(boolean isVisible, boolean fromInit) {
+    private void onLauncherVisibilityChanged(boolean isVisible, boolean fromInitOrDestroy) {
         onLauncherVisibilityChanged(
                 isVisible,
-                fromInit,
+                fromInitOrDestroy,
                 /* startAnimation= */ true,
                 DisplayController.isTransientTaskbar(mLauncher)
                         ? TRANSIENT_TASKBAR_TRANSITION_DURATION
@@ -222,7 +232,7 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
 
     @Nullable
     private Animator onLauncherVisibilityChanged(
-            boolean isVisible, boolean fromInit, boolean startAnimation, int duration) {
+            boolean isVisible, boolean fromInitOrDestroy, boolean startAnimation, int duration) {
         // Launcher is resumed during the swipe-to-overview gesture under shell-transitions, so
         // avoid updating taskbar state in that situation (when it's non-interactive -- or
         // "background") to avoid premature animations.
@@ -233,14 +243,14 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
             return null;
         }
 
-        if (!WALLPAPER_ACTIVITY.isEnabled(mLauncher)
+        if (!ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY.isTrue()
                 && mControllers.taskbarDesktopModeController.getAreDesktopTasksVisible()) {
             // TODO: b/333533253 - Remove after flag rollout
             isVisible = false;
         }
 
         mTaskbarLauncherStateController.updateStateForFlag(FLAG_VISIBLE, isVisible);
-        if (fromInit || mControllers == null) {
+        if (fromInitOrDestroy) {
             duration = 0;
         }
         return mTaskbarLauncherStateController.applyState(duration, startAnimation);
@@ -475,5 +485,14 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
     @Override
     protected String getTaskbarUIControllerName() {
         return "LauncherTaskbarUIController";
+    }
+
+    @Override
+    public void onSwipeToUnstashTaskbar() {
+        // Once taskbar is unstashed, the user cannot return back to the overlay. We can
+        // clear it here to set the expected state once the user goes home.
+        if (mLauncher.getWorkspace().isOverlayShown()) {
+            mLauncher.getWorkspace().onOverlayScrollChanged(0);
+        }
     }
 }

@@ -18,6 +18,7 @@ package com.android.launcher3.dagger;
 
 
 import com.android.quickstep.dagger.QuickStepModule;
+import com.android.quickstep.dagger.QuickstepBaseAppComponent;
 
 import dagger.Component;
 
@@ -26,7 +27,7 @@ import dagger.Component;
  */
 @LauncherAppSingleton
 @Component(modules = QuickStepModule.class)
-public interface LauncherAppComponent extends LauncherBaseAppComponent {
+public interface LauncherAppComponent extends QuickstepBaseAppComponent {
     /** Builder for quickstep LauncherAppComponent. */
     @Component.Builder
     interface Builder extends LauncherBaseAppComponent.Builder {

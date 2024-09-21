@@ -29,6 +29,7 @@ import static com.android.launcher3.AbstractFloatingView.TYPE_ON_BOARD_POPUP;
 import static com.android.launcher3.AbstractFloatingView.TYPE_REBIND_SAFE;
 import static com.android.launcher3.AbstractFloatingView.TYPE_TASKBAR_OVERLAY_PROXY;
 import static com.android.launcher3.Flags.enableCursorHoverStates;
+import static com.android.launcher3.Flags.taskbarOverflow;
 import static com.android.launcher3.Utilities.calculateTextHeight;
 import static com.android.launcher3.Utilities.isRunningInTestHarness;
 import static com.android.launcher3.config.FeatureFlags.ENABLE_TASKBAR_NAVBAR_UNIFICATION;
@@ -688,6 +689,11 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         return mNavMode == NavigationMode.THREE_BUTTONS;
     }
 
+    /** Returns whether taskbar should start align. */
+    public boolean shouldStartAlignTaskbar() {
+        return isThreeButtonNav() && mDeviceProfile.startAlignTaskbar;
+    }
+
     public boolean isGestureNav() {
         return mNavMode == NavigationMode.NO_BUTTON;
     }
@@ -1216,6 +1222,11 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         RecentsView recents = taskbarUIController.getRecentsView();
         boolean shouldCloseAllOpenViews = true;
         Object tag = view.getTag();
+
+        if (taskbarOverflow()) {
+            mControllers.keyboardQuickSwitchController.closeQuickSwitchView(false);
+        }
+
         if (tag instanceof GroupTask groupTask) {
             handleGroupTaskLaunch(
                     groupTask,
@@ -1554,6 +1565,8 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
      * @param delayTaskbarBackground whether we will delay the taskbar background animation
      */
     public void onSwipeToUnstashTaskbar(boolean delayTaskbarBackground) {
+        mControllers.uiController.onSwipeToUnstashTaskbar();
+
         boolean wasStashed = mControllers.taskbarStashController.isStashed();
         mControllers.taskbarStashController.updateAndAnimateTransientTaskbar(/* stash= */ false,
                 SHOULD_BUBBLES_FOLLOW_DEFAULT_VALUE, delayTaskbarBackground);
@@ -1690,7 +1703,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                 duration);
 
         View allAppsButton = mControllers.taskbarViewController.getAllAppsButtonView();
-        if (allAppsButton != null && !FeatureFlags.ENABLE_ALL_APPS_BUTTON_IN_HOTSEAT.get()) {
+        if (allAppsButton != null && !FeatureFlags.enableAllAppsButtonInHotseat()) {
             ValueAnimator alphaOverride = ValueAnimator.ofFloat(0, 1);
             alphaOverride.setDuration(duration);
             alphaOverride.addUpdateListener(a -> {

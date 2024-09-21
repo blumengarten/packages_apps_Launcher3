@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.quickstep.logging;
+package com.android.launcher3.icons
 
-import android.content.Context;
+import com.android.launcher3.icons.cache.CachedObject
 
-import com.android.launcher3.dagger.ApplicationContext;
-import com.android.launcher3.dagger.LauncherAppSingleton;
+/**
+ * This files contains some definitions used during refactoring to avoid breaking changes.
+ *
+ * TODO(b/366237794) remove this file once refactoring is complete
+ */
 
-import dagger.Module;
-import dagger.Provides;
+/** Temporary interface to allow easier refactoring */
+interface ComponentWithLabel : CachedObject<IconCache>
 
-@Module
-public class LoggingModule {
-    @Provides
-    @LauncherAppSingleton
-    SettingsChangeLogger provideSettingsChangeLogger(@ApplicationContext Context context) {
-        return SettingsChangeLogger.INSTANCE.get(context);
-    }
-}
+/** Temporary interface to allow easier refactoring */
+interface ComponentWithLabelAndIcon : ComponentWithLabel

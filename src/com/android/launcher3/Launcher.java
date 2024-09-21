@@ -76,7 +76,6 @@ import static com.android.launcher3.logging.KeyboardStateManager.KeyboardState.S
 import static com.android.launcher3.logging.StatsLogManager.EventEnum;
 import static com.android.launcher3.logging.StatsLogManager.LAUNCHER_STATE_BACKGROUND;
 import static com.android.launcher3.logging.StatsLogManager.LAUNCHER_STATE_HOME;
-import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_ALLAPPS_ENTRY;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_ALLAPPS_ENTRY_WITH_DEVICE_SEARCH;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_ALLAPPS_EXIT;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_ONRESUME;
@@ -449,12 +448,10 @@ public class Launcher extends StatefulActivity<LauncherState>
                 .logStart(LAUNCHER_LATENCY_STARTUP_TOTAL_DURATION)
                 .logStart(LAUNCHER_LATENCY_STARTUP_ACTIVITY_ON_CREATE);
         // Only use a hard-coded cookie since we only want to trace this once.
-        if (Utilities.ATLEAST_S) {
-            Trace.beginAsyncSection(
-                    DISPLAY_WORKSPACE_TRACE_METHOD_NAME, DISPLAY_WORKSPACE_TRACE_COOKIE);
-            Trace.beginAsyncSection(DISPLAY_ALL_APPS_TRACE_METHOD_NAME,
-                    DISPLAY_ALL_APPS_TRACE_COOKIE);
-        }
+        Trace.beginAsyncSection(
+                DISPLAY_WORKSPACE_TRACE_METHOD_NAME, DISPLAY_WORKSPACE_TRACE_COOKIE);
+        Trace.beginAsyncSection(DISPLAY_ALL_APPS_TRACE_METHOD_NAME,
+                DISPLAY_ALL_APPS_TRACE_COOKIE);
         TraceHelper.INSTANCE.beginSection(ON_CREATE_EVT);
         if (DEBUG_STRICT_MODE) {
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
@@ -733,13 +730,6 @@ public class Launcher extends StatefulActivity<LauncherState>
     public void onEnterAnimationComplete() {
         super.onEnterAnimationComplete();
         mRotationHelper.setCurrentTransitionRequest(REQUEST_NONE);
-        // Starting with Android S, onEnterAnimationComplete is sent immediately
-        // causing the surface to get removed before the animation completed (b/175345344).
-        // Instead we rely on next user touch event to remove the view and optionally a callback
-        // from system from Android T onwards.
-        if (!Utilities.ATLEAST_S) {
-            AbstractFloatingView.closeOpenViews(this, false, TYPE_ICON_SURFACE);
-        }
     }
 
     @Override
@@ -1251,9 +1241,7 @@ public class Launcher extends StatefulActivity<LauncherState>
      * Returns {@link EventEnum} that should be logged when Launcher enters into AllApps state.
      */
     protected Optional<EventEnum> getAllAppsEntryEvent() {
-        return Optional.of(FeatureFlags.ENABLE_DEVICE_SEARCH.get()
-                ? LAUNCHER_ALLAPPS_ENTRY_WITH_DEVICE_SEARCH
-                : LAUNCHER_ALLAPPS_ENTRY);
+        return Optional.of(LAUNCHER_ALLAPPS_ENTRY_WITH_DEVICE_SEARCH);
     }
 
     @Override
@@ -2582,10 +2570,8 @@ public class Launcher extends StatefulActivity<LauncherState>
     public void bindAllApplications(AppInfo[] apps, int flags,
             Map<PackageUserKey, Integer> packageUserKeytoUidMap) {
         mModelCallbacks.bindAllApplications(apps, flags, packageUserKeytoUidMap);
-        if (Utilities.ATLEAST_S) {
-            Trace.endAsyncSection(DISPLAY_ALL_APPS_TRACE_METHOD_NAME,
-                    DISPLAY_ALL_APPS_TRACE_COOKIE);
-        }
+        Trace.endAsyncSection(DISPLAY_ALL_APPS_TRACE_METHOD_NAME,
+                DISPLAY_ALL_APPS_TRACE_COOKIE);
     }
 
     /**
@@ -2678,6 +2664,7 @@ public class Launcher extends StatefulActivity<LauncherState>
             }
 
             writer.println(prefix + "  Hotseat");
+            mHotseat.dump(prefix, writer);
             ViewGroup layout = mHotseat.getShortcutsAndWidgets();
             for (int j = 0; j < layout.getChildCount(); j++) {
                 Object tag = layout.getChildAt(j).getTag();

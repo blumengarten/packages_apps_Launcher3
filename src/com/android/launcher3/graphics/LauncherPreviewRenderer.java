@@ -23,6 +23,7 @@ import static android.view.View.VISIBLE;
 import static com.android.launcher3.BubbleTextView.DISPLAY_TASKBAR;
 import static com.android.launcher3.BubbleTextView.DISPLAY_WORKSPACE;
 import static com.android.launcher3.DeviceProfile.DEFAULT_SCALE;
+import static com.android.launcher3.Hotseat.ALPHA_CHANNEL_PREVIEW_RENDERER;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT_PREDICTION;
 import static com.android.launcher3.Utilities.SHOULD_SHOW_FIRST_PAGE_WIDGET;
 import static com.android.launcher3.model.ModelUtils.filterCurrentWorkspaceItems;
@@ -68,7 +69,6 @@ import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherSettings.Favorites;
 import com.android.launcher3.R;
-import com.android.launcher3.Utilities;
 import com.android.launcher3.Workspace;
 import com.android.launcher3.WorkspaceLayoutManager;
 import com.android.launcher3.apppairs.AppPairIcon;
@@ -206,15 +206,12 @@ public class LauncherPreviewRenderer extends ContextWrapper
             mWorkspaceScreens.put(Workspace.SECOND_SCREEN_ID, rightPanel);
         }
 
-        if (Utilities.ATLEAST_S) {
-            WallpaperColors wallpaperColors = wallpaperColorsOverride != null
-                    ? wallpaperColorsOverride
-                    : WallpaperManager.getInstance(context).getWallpaperColors(FLAG_SYSTEM);
-            mWallpaperColorResources = wallpaperColors != null ? LocalColorExtractor.newInstance(
-                    context).generateColorsOverride(wallpaperColors) : null;
-        } else {
-            mWallpaperColorResources = null;
-        }
+        WallpaperColors wallpaperColors = wallpaperColorsOverride != null
+                ? wallpaperColorsOverride
+                : WallpaperManager.getInstance(context).getWallpaperColors(FLAG_SYSTEM);
+        mWallpaperColorResources = wallpaperColors != null
+                ? LocalColorExtractor.newInstance(context).generateColorsOverride(wallpaperColors)
+                : null;
         mAppWidgetHost = new LauncherPreviewAppWidgetHost(context);
     }
 
@@ -320,12 +317,12 @@ public class LauncherPreviewRenderer extends ContextWrapper
         mUiHandler.post(() -> {
             if (mDp.isTaskbarPresent) {
                 // hotseat icons on bottom
-                mHotseat.setIconsAlpha(hide ? 0 : 1);
+                mHotseat.setIconsAlpha(hide ? 0 : 1, ALPHA_CHANNEL_PREVIEW_RENDERER);
                 if (mDp.isQsbInline) {
-                    mHotseat.setQsbAlpha(hide ? 0 : 1);
+                    mHotseat.setQsbAlpha(hide ? 0 : 1, ALPHA_CHANNEL_PREVIEW_RENDERER);
                 }
             } else {
-                mHotseat.setQsbAlpha(hide ? 0 : 1);
+                mHotseat.setQsbAlpha(hide ? 0 : 1, ALPHA_CHANNEL_PREVIEW_RENDERER);
             }
         });
     }
