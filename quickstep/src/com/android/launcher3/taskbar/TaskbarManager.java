@@ -45,6 +45,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Trace;
 import android.provider.Settings;
+import android.util.ArraySet;
 import android.util.Log;
 import android.util.SparseArray;
 import android.util.SparseBooleanArray;
@@ -75,14 +76,20 @@ import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
 import com.android.quickstep.fallback.window.RecentsWindowManager;
 import com.android.quickstep.util.ContextualSearchInvoker;
+import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.views.RecentsViewContainer;
+import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.statusbar.phone.BarTransitions;
+import com.android.systemui.shared.system.ActivityManagerWrapper;
 import com.android.systemui.shared.system.QuickStepContract;
 import com.android.systemui.shared.system.QuickStepContract.SystemUiStateFlags;
+import com.android.systemui.shared.system.TaskStackChangeListener;
+import com.android.systemui.shared.system.TaskStackChangeListeners;
 import com.android.systemui.unfold.UnfoldTransitionProgressProvider;
 import com.android.systemui.unfold.util.ScopedUnfoldTransitionProgressProvider;
 
 import java.io.PrintWriter;
+import java.util.Set;
 import java.util.StringJoiner;
 
 /**
@@ -194,6 +201,65 @@ public class TaskbarManager {
         recreateTaskbar();
     };
 
+    private final PerceptibleTaskListener mTaskStackListener;
+
+    private class PerceptibleTaskListener implements TaskStackChangeListener {
+        private ArraySet<Integer> mPerceptibleTasks = new ArraySet<Integer>();
+
+        @Override
+        public void onTaskMovedToFront(int taskId) {
+            if (mPerceptibleTasks.contains(taskId)) {
+                return;
+            }
+
+            // This listens to any Task, so we filter them by the ones shown in the launcher.
+            // For Tasks restored after startup, they will by default not be Perceptible, and no
+            // need to until user interacts with it by bringing it to the foreground.
+            for (int i = 0; i < mTaskbars.size(); i++) {
+                // get pinned tasks
+                Set<Integer> taskbarPinnedTasks =
+                        mTaskbars.valueAt(i).getControllers().taskbarViewController
+                                .getTaskIdsForPinnedApps();
+
+                // mark as perceptible if the foregrounded task is in the list of apps shown in
+                // the launcher.
+                if (taskbarPinnedTasks.contains(taskId)
+                        && ActivityManagerWrapper.getInstance()
+                        .setTaskIsPerceptible(taskId, true)
+                ) {
+                    mPerceptibleTasks.add(taskId);
+                }
+            }
+        }
+
+        /**
+         * Launcher also can display recently launched tasks that are not pinned. Also add
+         * these as perceptible
+         */
+        @Override
+        public void onRecentTaskListUpdated() {
+            for (int i = 0; i < mTaskbars.size(); i++) {
+                for (GroupTask gTask : mTaskbars.valueAt(i).getControllers()
+                        .taskbarRecentAppsController.getShownTasks()) {
+                    for (Task task : gTask.getTasks()) {
+                        int taskId = task.key.id;
+
+                        if (!mPerceptibleTasks.contains(taskId)) {
+                            ActivityManagerWrapper.getInstance()
+                                    .setTaskIsPerceptible(taskId, true);
+                            mPerceptibleTasks.add(taskId);
+                        }
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void onTaskRemoved(int taskId) {
+            mPerceptibleTasks.remove(taskId);
+        }
+    };
+
     private boolean mUserUnlocked = false;
 
     private final SimpleBroadcastReceiver mTaskbarBroadcastReceiver;
@@ -296,6 +362,12 @@ public class TaskbarManager {
             mTaskbarBroadcastReceiver.register(RECEIVER_NOT_EXPORTED, ACTION_SHOW_TASKBAR);
         });
 
+        if (ActivityManagerWrapper.usePerceptibleTasks(getPrimaryWindowContext())) {
+            mTaskStackListener = new PerceptibleTaskListener();
+            TaskStackChangeListeners.getInstance().registerTaskStackListener(mTaskStackListener);
+        } else {
+            mTaskStackListener = null;
+        }
         debugTaskbarManager("TaskbarManager created");
         recreateTaskbar();
     }
@@ -784,6 +856,12 @@ public class TaskbarManager {
         Log.d(TASKBAR_NOT_DESTROYED_TAG, "unregistering component callbacks from destroy().");
         removeAndUnregisterComponentCallbacks(getDefaultDisplayId());
         mShutdownReceiver.unregisterReceiverSafely();
+        if (ActivityManagerWrapper.usePerceptibleTasks(getPrimaryWindowContext())) {
+            for (Integer taskId: mTaskStackListener.mPerceptibleTasks) {
+                ActivityManagerWrapper.getInstance().setTaskIsPerceptible(taskId, false);
+            }
+        }
+        TaskStackChangeListeners.getInstance().unregisterTaskStackListener(mTaskStackListener);
         destroyAllTaskbars();
     }
 
