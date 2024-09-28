@@ -66,6 +66,9 @@ class RecentsViewUtils {
     fun getLargeTaskViewIds(taskViews: Iterable<TaskView>): List<Int> =
         taskViews.filter { it.isLargeTile }.map { it.taskViewId }
 
+    /** Counts [TaskView]s that are large tiles. */
+    fun getLargeTileCount(taskViews: Iterable<TaskView>): Int = taskViews.count { it.isLargeTile }
+
     /**
      * Returns the first TaskView that should be displayed as a large tile.
      *

@@ -213,8 +213,8 @@ public class DatabaseWidgetPreviewLoader {
 
                 // Draw icon in the center.
                 try {
-                    Drawable icon = LauncherAppState.getInstance(mContext).getIconCache()
-                            .getFullResIcon(info.provider.getPackageName(), info.icon);
+                    Drawable icon = info.getFullResIcon(
+                            LauncherAppState.getInstance(mContext).getIconCache());
                     if (icon != null) {
                         int appIconSize = dp.iconSizePx;
                         int iconSize = (int) Math.min(appIconSize * scale,

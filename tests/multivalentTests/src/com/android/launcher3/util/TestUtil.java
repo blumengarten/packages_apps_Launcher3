@@ -26,6 +26,7 @@ import static com.android.launcher3.LauncherSettings.Settings.LAYOUT_DIGEST_TAG;
 
 import static org.junit.Assert.assertTrue;
 
+import android.Manifest;
 import android.app.Instrumentation;
 import android.app.blob.BlobHandle;
 import android.app.blob.BlobStoreManager;
@@ -169,6 +170,8 @@ public class TestUtil {
         }
 
         String key = Base64.encodeToString(digest, NO_WRAP | NO_PADDING);
+
+        grantWriteSecurePermission();
         Settings.Secure.putString(context.getContentResolver(), LAYOUT_DIGEST_KEY, key);
         wait.await();
         return () ->
@@ -222,6 +225,14 @@ public class TestUtil {
             failed = true;
         }
         assertTrue(message, failed);
+    }
+
+    /**
+     * Grants [WRITE_SECURE_SETTINGS] permission in runtime.
+     */
+    public static void grantWriteSecurePermission() {
+        getInstrumentation().getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_SECURE_SETTINGS);
     }
 
     /** Interface to indicate a runnable which can throw any exception. */

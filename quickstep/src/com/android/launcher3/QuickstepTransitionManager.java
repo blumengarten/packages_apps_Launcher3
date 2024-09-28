@@ -1353,8 +1353,13 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                             ? null
                             : mLauncher.getTaskbarUIController().findMatchingView(launcherView),
                     true /* hideOriginal */, targetRect, false /* isOpening */);
-            isInHotseat = launcherView.getTag() instanceof ItemInfo
-                    && ((ItemInfo) launcherView.getTag()).isInHotseat();
+            if (launcherView.getTag() instanceof ItemInfo itemInfo) {
+                isInHotseat = itemInfo.isInHotseat();
+                if (isInHotseat) {
+                    int dx = mLauncher.getHotseatItemTranslationX(itemInfo);
+                    targetRect.offset(dx, 0);
+                }
+            }
         } else {
             targetRect.set(getDefaultWindowTargetRect());
         }

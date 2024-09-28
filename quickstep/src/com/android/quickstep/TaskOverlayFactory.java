@@ -173,9 +173,8 @@ public class TaskOverlayFactory implements ResourceBasedOverride {
 
         protected T getActionsView() {
             if (mActionsView == null) {
-                mActionsView = BaseActivity.fromContext(
-                        mTaskContainer.getTaskView().getContext()).findViewById(
-                        R.id.overview_actions_view);
+                mActionsView = (T) RecentsViewContainer.containerFromContext(
+                        mTaskContainer.getTaskView().getContext()).getActionsView();
             }
             return mActionsView;
         }

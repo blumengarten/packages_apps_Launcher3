@@ -24,6 +24,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession
 import com.android.dx.mockito.inline.extended.StaticMockitoSession
 import com.android.launcher3.AbstractFloatingView
 import com.android.launcher3.AbstractFloatingViewHelper
+import com.android.launcher3.Flags.enableRefactorTaskThumbnail
 import com.android.launcher3.logging.StatsLogManager
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent
 import com.android.launcher3.model.data.WorkspaceItemInfo
@@ -31,6 +32,7 @@ import com.android.launcher3.uioverrides.QuickstepLauncher
 import com.android.launcher3.util.SplitConfigurationOptions
 import com.android.launcher3.util.TransformingTouchDelegate
 import com.android.quickstep.TaskOverlayFactory.TaskOverlay
+import com.android.quickstep.task.thumbnail.TaskThumbnailView
 import com.android.quickstep.views.LauncherRecentsView
 import com.android.quickstep.views.TaskContainer
 import com.android.quickstep.views.TaskThumbnailViewDeprecated
@@ -67,7 +69,6 @@ class DesktopSystemShortcutTest {
     private val taskView: TaskView = mock()
     private val workspaceItemInfo: WorkspaceItemInfo = mock()
     private val abstractFloatingViewHelper: AbstractFloatingViewHelper = mock()
-    private val thumbnailViewDeprecated: TaskThumbnailViewDeprecated = mock()
     private val iconView: TaskViewIcon = mock()
     private val transformingTouchDelegate: TransformingTouchDelegate = mock()
     private val factory: TaskShortcutFactory =
@@ -175,7 +176,7 @@ class DesktopSystemShortcutTest {
             .moveTaskToDesktop(
                 eq(taskContainer),
                 eq(DesktopModeTransitionSource.APP_FROM_OVERVIEW),
-                any()
+                any(),
             )
         verify(statsLogger).withItemInfo(workspaceItemInfo)
         verify(statsLogger).log(LauncherEvent.LAUNCHER_SYSTEM_SHORTCUT_DESKTOP_TAP)
@@ -188,16 +189,19 @@ class DesktopSystemShortcutTest {
     }
 
     private fun createTaskContainer(task: Task): TaskContainer {
+        val snapshotView =
+            if (enableRefactorTaskThumbnail()) mock<TaskThumbnailView>()
+            else mock<TaskThumbnailViewDeprecated>()
         return TaskContainer(
             taskView,
             task,
-            thumbnailViewDeprecated,
+            snapshotView,
             iconView,
             transformingTouchDelegate,
             SplitConfigurationOptions.STAGE_POSITION_UNDEFINED,
             digitalWellBeingToast = null,
             showWindowsView = null,
-            overlayFactory
+            overlayFactory,
         )
     }
 }

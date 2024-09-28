@@ -17,6 +17,7 @@
 package com.android.quickstep.recents.data
 
 import android.graphics.drawable.Drawable
+import android.util.Log
 import com.android.launcher3.util.coroutines.DispatcherProvider
 import com.android.quickstep.recents.data.TaskVisualsChangedDelegate.TaskIconChangedCallback
 import com.android.quickstep.recents.data.TaskVisualsChangedDelegate.TaskThumbnailChangedCallback
@@ -106,7 +107,7 @@ class TasksRepository(
                 }
             }
             .flowOn(dispatcherProvider.io)
-            .shareIn(recentsCoroutineScope, SharingStarted.WhileSubscribed(), replay = 1)
+            .shareIn(recentsCoroutineScope, SharingStarted.WhileSubscribed(5000), replay = 1)
 
     override fun getAllTaskData(forceRefresh: Boolean): Flow<List<Task>> {
         if (forceRefresh) {
@@ -122,6 +123,7 @@ class TasksRepository(
         getTaskDataById(taskId).map { it?.thumbnail }.distinctUntilChangedBy { it?.snapshotId }
 
     override fun setVisibleTasks(visibleTaskIdList: List<Int>) {
+        Log.d(TAG, "setVisibleTasks: $visibleTaskIdList")
         this.visibleTaskIds.value = visibleTaskIdList.toSet()
     }
 
@@ -185,7 +187,7 @@ class TasksRepository(
                                 TaskIconQueryResponse(
                                     it.newDrawable().mutate(),
                                     contentDescription,
-                                    title
+                                    title,
                                 )
                             )
                         }
@@ -193,12 +195,16 @@ class TasksRepository(
                 continuation.invokeOnCancellation { cancellableTask?.cancel() }
             }
         }
+
+    companion object {
+        private const val TAG = "TasksRepository"
+    }
 }
 
 data class TaskIconQueryResponse(
     val icon: Drawable,
     val contentDescription: String,
-    val title: String
+    val title: String,
 )
 
 private fun Task.getTaskIconQueryResponse(): TaskIconQueryResponse? {

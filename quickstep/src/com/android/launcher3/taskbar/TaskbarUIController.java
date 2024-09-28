@@ -36,6 +36,7 @@ import com.android.launcher3.Utilities;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
 import com.android.launcher3.popup.SystemShortcut;
+import com.android.launcher3.taskbar.bubbles.BubbleBarController;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.SplitConfigurationOptions;
 import com.android.quickstep.OverviewCommandHelper;
@@ -47,6 +48,7 @@ import com.android.quickstep.views.TaskContainer;
 import com.android.quickstep.views.TaskView;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.system.QuickStepContract.SystemUiStateFlags;
+import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
 
 import java.io.PrintWriter;
 import java.util.Collections;
@@ -55,7 +57,7 @@ import java.util.stream.Stream;
 /**
  * Base class for providing different taskbar UI
  */
-public class TaskbarUIController {
+public class TaskbarUIController implements BubbleBarController.BubbleBarLocationListener {
     public static final TaskbarUIController DEFAULT = new TaskbarUIController();
 
     // Initialized in init.
@@ -431,6 +433,14 @@ public class TaskbarUIController {
 
     /** Sets whether the hotseat is stashed */
     public void stashHotseat(boolean stash) {
+    }
+
+    @Override
+    public void onBubbleBarLocationAnimated(BubbleBarLocation location) {
+    }
+
+    @Override
+    public void onBubbleBarLocationUpdated(BubbleBarLocation location) {
     }
 
     /** Un-stash the hotseat instantly */

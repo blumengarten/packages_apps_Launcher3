@@ -22,6 +22,7 @@ import com.android.launcher3.ui.TestViewHelpers
 import com.android.launcher3.util.Executors.MODEL_EXECUTOR
 import com.android.launcher3.util.LauncherModelHelper.SandboxModelContext
 import com.android.launcher3.util.LooperIdleLock
+import com.android.launcher3.util.TestUtil
 import com.android.launcher3.util.UserIconInfo
 import com.google.common.truth.Truth
 import java.util.concurrent.CountDownLatch
@@ -116,6 +117,8 @@ class LoaderTaskTest {
         `when`(idleLock.awaitLocked(1000)).thenReturn(false)
         `when`(iconCache.updateHandler).thenReturn(iconCacheUpdateHandler)
         context.putObject(UserCache.INSTANCE, userCache)
+
+        TestUtil.grantWriteSecurePermission()
     }
 
     @After

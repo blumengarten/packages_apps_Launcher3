@@ -11,6 +11,7 @@ import android.view.WindowInsets;
 
 import com.android.launcher3.graphics.SysUiScrim;
 import com.android.launcher3.statemanager.StatefulActivity;
+import com.android.launcher3.statemanager.StatefulContainer;
 import com.android.launcher3.util.window.WindowManagerProxy;
 
 import java.util.Collections;
@@ -20,7 +21,7 @@ public class LauncherRootView extends InsettableFrameLayout {
 
     private final Rect mTempRect = new Rect();
 
-    private final StatefulActivity mActivity;
+    private final StatefulContainer mStatefulContainer;
 
     @ViewDebug.ExportedProperty(category = "launcher")
     private static final List<Rect> SYSTEM_GESTURE_EXCLUSION_RECT =
@@ -36,24 +37,25 @@ public class LauncherRootView extends InsettableFrameLayout {
 
     public LauncherRootView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mActivity = StatefulActivity.fromContext(context);
+        mStatefulContainer = StatefulContainer.fromContext(context);
         mSysUiScrim = new SysUiScrim(this);
     }
 
     private void handleSystemWindowInsets(Rect insets) {
         // Update device profile before notifying the children.
-        mActivity.getDeviceProfile().updateInsets(insets);
+        mStatefulContainer.getDeviceProfile().updateInsets(insets);
         boolean resetState = !insets.equals(mInsets);
         setInsets(insets);
 
         if (resetState) {
-            mActivity.getStateManager().reapplyState(true /* cancelCurrentAnimation */);
+            mStatefulContainer.getStateManager().reapplyState(true /* cancelCurrentAnimation */);
         }
     }
 
     @Override
     public WindowInsets onApplyWindowInsets(WindowInsets insets) {
-        mActivity.handleConfigurationChanged(mActivity.getResources().getConfiguration());
+        mStatefulContainer.handleConfigurationChanged(
+                mStatefulContainer.getContext().getResources().getConfiguration());
 
         insets = WindowManagerProxy.INSTANCE.get(getContext())
                 .normalizeWindowInsets(getContext(), insets, mTempRect);
@@ -72,7 +74,7 @@ public class LauncherRootView extends InsettableFrameLayout {
     }
 
     public void dispatchInsets() {
-        mActivity.getDeviceProfile().updateInsets(mInsets);
+        mStatefulContainer.getDeviceProfile().updateInsets(mInsets);
         super.setInsets(mInsets);
     }
 

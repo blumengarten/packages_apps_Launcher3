@@ -22,7 +22,6 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.UserHandle;
@@ -44,7 +43,7 @@ import com.android.launcher3.logging.StatsLogManager.StatsLogger;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
 import com.android.launcher3.pm.UserCache;
-import com.android.launcher3.util.PackageManagerHelper;
+import com.android.launcher3.util.ApplicationInfoWrapper;
 import com.android.launcher3.widget.LauncherAppWidgetProviderInfo;
 
 import java.net.URISyntaxException;
@@ -342,9 +341,8 @@ public class SecondaryDropTarget extends ButtonDropTarget implements OnAlarmList
         }
 
         public void onLauncherResume() {
-            // We use MATCH_UNINSTALLED_PACKAGES as the app can be on SD card as well.
-            if (PackageManagerHelper.INSTANCE.get(mContext).getApplicationInfo(mPackageName,
-                    mDragObject.dragInfo.user, PackageManager.MATCH_UNINSTALLED_PACKAGES) == null) {
+            if (new ApplicationInfoWrapper(mContext, mPackageName, mDragObject.dragInfo.user)
+                    .getInfo() == null) {
                 mDragObject.dragSource = mOriginal;
                 mOriginal.onDropCompleted(SecondaryDropTarget.this, mDragObject, true);
                 mStatsLogManager.logger().withInstanceId(mDragObject.logInstanceId)

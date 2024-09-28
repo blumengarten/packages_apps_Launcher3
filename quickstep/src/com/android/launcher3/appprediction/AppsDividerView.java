@@ -31,6 +31,7 @@ import android.view.View;
 import android.view.accessibility.AccessibilityManager;
 
 import androidx.annotation.ColorInt;
+import androidx.annotation.VisibleForTesting;
 
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
@@ -252,5 +253,10 @@ public class AppsDividerView extends View implements FloatingHeaderRow {
     @Override
     public View getFocusedChild() {
         return null;
+    }
+
+    @VisibleForTesting
+    public DividerType getDividerType() {
+        return mDividerType;
     }
 }

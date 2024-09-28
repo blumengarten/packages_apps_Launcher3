@@ -168,21 +168,14 @@ public class TestInformationHandler implements ResourceBasedOverride {
             }
 
             case TestProtocol.REQUEST_TARGET_INSETS: {
-                return getUIProperty(Bundle::putParcelable, activity -> {
-                    WindowInsets insets = activity.getWindow()
-                            .getDecorView().getRootWindowInsets();
-                    return Insets.max(
-                            insets.getSystemGestureInsets(),
-                            insets.getSystemWindowInsets());
-                }, this::getCurrentActivity);
+                return getUIProperty(Bundle::putParcelable, insets -> Insets.max(
+                        insets.getSystemGestureInsets(),
+                        insets.getSystemWindowInsets()), this::getWindowInsets);
             }
 
             case TestProtocol.REQUEST_WINDOW_INSETS: {
-                return getUIProperty(Bundle::putParcelable, activity -> {
-                    WindowInsets insets = activity.getWindow()
-                            .getDecorView().getRootWindowInsets();
-                    return insets.getSystemWindowInsets();
-                }, this::getCurrentActivity);
+                return getUIProperty(Bundle::putParcelable,
+                        WindowInsets::getSystemWindowInsets, this::getWindowInsets);
             }
 
             case TestProtocol.REQUEST_CELL_LAYOUT_BOARDER_HEIGHT: {
@@ -192,13 +185,13 @@ public class TestInformationHandler implements ResourceBasedOverride {
             }
 
             case TestProtocol.REQUEST_SYSTEM_GESTURE_REGION: {
-                return getUIProperty(Bundle::putParcelable, activity -> {
-                    WindowInsetsCompat insets = WindowInsetsCompat.toWindowInsetsCompat(
-                            activity.getWindow().getDecorView().getRootWindowInsets());
+                return getUIProperty(Bundle::putParcelable, windowInsets -> {
+                    WindowInsetsCompat insets =
+                            WindowInsetsCompat.toWindowInsetsCompat(windowInsets);
                     return insets.getInsets(WindowInsetsCompat.Type.ime()
                             | WindowInsetsCompat.Type.systemGestures())
                             .toPlatformInsets();
-                }, this::getCurrentActivity);
+                }, this::getWindowInsets);
             }
 
             case TestProtocol.REQUEST_ICON_HEIGHT: {
@@ -486,8 +479,9 @@ public class TestInformationHandler implements ResourceBasedOverride {
                 || LauncherAppState.getInstance(mContext).getModel().isModelLoaded();
     }
 
-    protected Activity getCurrentActivity() {
-        return Launcher.ACTIVITY_TRACKER.getCreatedActivity();
+    protected WindowInsets getWindowInsets(){
+        return Launcher.ACTIVITY_TRACKER.getCreatedActivity().getWindow().getDecorView()
+                .getRootWindowInsets();
     }
 
     /**

@@ -71,6 +71,7 @@ import com.android.launcher3.pm.InstallSessionTracker;
 import com.android.launcher3.pm.PackageInstallInfo;
 import com.android.launcher3.pm.UserCache;
 import com.android.launcher3.shortcuts.ShortcutRequest;
+import com.android.launcher3.util.ApplicationInfoWrapper;
 import com.android.launcher3.util.IntSet;
 import com.android.launcher3.util.ItemInfoMatcher;
 import com.android.launcher3.util.PackageManagerHelper;
@@ -446,8 +447,8 @@ public class LauncherModel implements InstallSessionTracker.Callback {
             IconCache iconCache = mApp.getIconCache();
             final IntSet removedIds = new IntSet();
             HashSet<WorkspaceItemInfo> archivedWorkspaceItemsToCacheRefresh = new HashSet<>();
-            boolean isAppArchived = PackageManagerHelper.INSTANCE.get(mApp.getContext())
-                    .isAppArchivedForUser(packageName, user);
+            boolean isAppArchived =
+                    new ApplicationInfoWrapper(mApp.getContext(), packageName, user).isArchived();
             synchronized (dataModel) {
                 if (isAppArchived) {
                     // Remove package icon cache entry for archived app in case of a session

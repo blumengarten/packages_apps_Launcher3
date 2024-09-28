@@ -30,7 +30,7 @@ import org.mockito.Mock;
 public class FallbackSwipeHandlerTestCase extends AbsSwipeUpHandlerTestCase<
         RecentsActivity,
         RecentsState,
-        FallbackRecentsView,
+        FallbackRecentsView<RecentsActivity>,
         RecentsActivity,
         FallbackActivityInterface,
         FallbackSwipeHandler> {

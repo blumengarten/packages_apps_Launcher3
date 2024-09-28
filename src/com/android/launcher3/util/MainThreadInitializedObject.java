@@ -108,6 +108,25 @@ public class MainThreadInitializedObject<T extends SafeCloseable> {
          */
         <T extends SafeCloseable> T getObject(MainThreadInitializedObject<T> object);
 
+
+        /**
+         * Put a value into cache, can be used to put mocked MainThreadInitializedObject
+         * instances.
+         */
+        <T extends SafeCloseable> void putObject(MainThreadInitializedObject<T> object, T value);
+
+        /**
+         * Returns whether this context should cleanup all objects when its destroyed or leave it
+         * to the GC.
+         * These objects can have listeners attached to the system server and mey not be able to get
+         * GCed themselves when running on a device.
+         * Some environments like Robolectric tear down the whole system at the end of the test,
+         * so manual cleanup may not be required.
+         */
+        default boolean shouldCleanUpOnDestroy() {
+            return true;
+        }
+
         @UiThread
         default <T extends SafeCloseable> T createObject(MainThreadInitializedObject<T> object) {
             return object.mProvider.get((Context) this);
@@ -138,7 +157,19 @@ public class MainThreadInitializedObject<T extends SafeCloseable> {
             return this;
         }
 
+        @Override
+        public boolean shouldCleanUpOnDestroy() {
+            return (getBaseContext().getApplicationContext() instanceof SandboxApplication sa)
+                    ? sa.shouldCleanUpOnDestroy() : true;
+        }
+
         public void onDestroy() {
+            if (shouldCleanUpOnDestroy()) {
+                cleanUpObjects();
+            }
+        }
+
+        protected void cleanUpObjects() {
             getAppComponent().getDaggerSingletonTracker().close();
             synchronized (mDestroyLock) {
                 // Destroy in reverse order
@@ -174,10 +205,7 @@ public class MainThreadInitializedObject<T extends SafeCloseable> {
             }
         }
 
-        /**
-         * Put a value into mObjectMap, can be used to put mocked MainThreadInitializedObject
-         * instances into SandboxContext.
-         */
+        @Override
         public <T extends SafeCloseable> void putObject(
                 MainThreadInitializedObject<T> object, T value) {
             mObjectMap.put(object, value);

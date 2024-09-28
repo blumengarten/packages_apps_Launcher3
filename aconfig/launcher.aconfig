@@ -426,3 +426,10 @@ flag {
     description: "Show recent apps in the taskbar overflow."
     bug: "368119679"
 }
+
+flag {
+    name: "enable_active_gesture_proto_log"
+    namespace: "launcher"
+    description: "Enables tracking active gesture logs in ProtoLog"
+    bug: "293182501"
+}

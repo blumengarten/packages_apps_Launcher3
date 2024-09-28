@@ -19,7 +19,9 @@ import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.animation.AnimationUtils;
 import android.window.RemoteTransition;
 
@@ -30,6 +32,8 @@ import com.android.internal.jank.Cuj;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.anim.AnimatorListeners;
 import com.android.launcher3.taskbar.overlay.TaskbarOverlayContext;
+import com.android.launcher3.taskbar.overlay.TaskbarOverlayDragLayer;
+import com.android.launcher3.views.BaseDragLayer;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.SlideInRemoteTransition;
@@ -83,7 +87,9 @@ public class KeyboardQuickSwitchViewController {
             int currentFocusIndexOverride,
             boolean onDesktop,
             boolean hasDesktopTask,
-            boolean wasDesktopTaskFilteredOut) {
+            boolean wasDesktopTaskFilteredOut,
+            boolean wasOpenedFromTaskbar) {
+        positionView(wasOpenedFromTaskbar);
         mOverlayContext.getDragLayer().addView(mKeyboardQuickSwitchView);
         mOnDesktop = onDesktop;
         mWasDesktopTaskFilteredOut = wasDesktopTaskFilteredOut;
@@ -96,6 +102,19 @@ public class KeyboardQuickSwitchViewController {
                 currentFocusIndexOverride,
                 mViewCallbacks,
                 /* useDesktopTaskView= */ !onDesktop && hasDesktopTask);
+    }
+
+    protected void positionView(boolean wasOpenedFromTaskbar) {
+        if (!wasOpenedFromTaskbar) {
+            // Keep the default positioning.
+            return;
+        }
+
+        BaseDragLayer.LayoutParams lp = new BaseDragLayer.LayoutParams(
+                mKeyboardQuickSwitchView.getLayoutParams());
+        lp.width = BaseDragLayer.LayoutParams.WRAP_CONTENT;
+        lp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        mKeyboardQuickSwitchView.setLayoutParams(lp);
     }
 
     boolean isCloseAnimationRunning() {
@@ -217,6 +236,13 @@ public class KeyboardQuickSwitchViewController {
         pw.println(prefix + "\tmCurrentFocusIndex=" + mCurrentFocusIndex);
         pw.println(prefix + "\tmOnDesktop=" + mOnDesktop);
         pw.println(prefix + "\tmWasDesktopTaskFilteredOut=" + mWasDesktopTaskFilteredOut);
+    }
+
+    /**
+     * @return True if the MotionEvent is over the {@link KeyboardQuickSwitchView}.
+     */
+    protected boolean isEventOverKeyboardQuickSwitch(TaskbarOverlayDragLayer dl, MotionEvent ev) {
+        return dl.isEventOverView(mKeyboardQuickSwitchView, ev);
     }
 
     class ViewCallbacks {

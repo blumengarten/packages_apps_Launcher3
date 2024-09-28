@@ -354,7 +354,7 @@ public class InvariantDeviceProfile implements SafeCloseable {
      */
     @Deprecated
     public void reset(Context context) {
-        initGrid(context, getCurrentGridName(context));
+        initGrid(context, getDefaultGridName(context));
     }
 
     @VisibleForTesting

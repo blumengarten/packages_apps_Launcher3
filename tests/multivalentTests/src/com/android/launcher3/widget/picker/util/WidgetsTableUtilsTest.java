@@ -296,7 +296,7 @@ public final class WidgetsTableUtilsTest {
     private final class TestShortcutConfigActivityInfo extends ShortcutConfigActivityInfo {
 
         TestShortcutConfigActivityInfo(ComponentName componentName, UserHandle user) {
-            super(componentName, user);
+            super(componentName, user, mContext);
         }
 
         @Override

@@ -196,7 +196,8 @@ public class BubbleBarController extends IBubblesListener.Stub {
             mBubbleBarViewController.setUpdateSelectedBubbleAfterCollapse(
                     key -> setSelectedBubbleInternal(mBubbles.get(key)));
             mBubbleBarViewController.setBoundsChangeListener(this::onBubbleBarBoundsChanged);
-
+            mBubbleBarLocationListener.onBubbleBarLocationUpdated(
+                    mBubbleBarViewController.getBubbleBarLocation());
             if (sBubbleBarEnabled) {
                 mSystemUiProxy.setBubblesListener(this);
             }

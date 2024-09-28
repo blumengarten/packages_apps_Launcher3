@@ -206,10 +206,15 @@ public class TopTaskTracker extends ISplitScreenListener.Stub
             Collections.addAll(mOrderedTaskList, tasks);
         }
 
-        // Strip the pinned task
         ArrayList<RunningTaskInfo> tasks = new ArrayList<>(mOrderedTaskList);
-        tasks.removeIf(t -> t.taskId == mPinnedTaskId);
+        // Strip the pinned task and recents task
+        tasks.removeIf(t -> t.taskId == mPinnedTaskId || isRecentsTask(t));
         return new CachedTaskInfo(tasks);
+    }
+
+    private static boolean isRecentsTask(RunningTaskInfo task) {
+        return task != null && task.configuration.windowConfiguration
+                .getActivityType() == ACTIVITY_TYPE_RECENTS;
     }
 
     /**
@@ -267,8 +272,7 @@ public class TopTaskTracker extends ISplitScreenListener.Stub
         }
 
         public boolean isRecentsTask() {
-            return mTopTask != null && mTopTask.configuration.windowConfiguration
-                    .getActivityType() == ACTIVITY_TYPE_RECENTS;
+            return TopTaskTracker.isRecentsTask(mTopTask);
         }
 
         /**

@@ -19,6 +19,7 @@ package com.android.launcher3.taskbar.bubbles.flyout
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.core.animation.ValueAnimator
 import com.android.launcher3.R
 
 /** Creates and manages the visibility of the [BubbleBarFlyoutView]. */
@@ -33,7 +34,7 @@ class BubbleBarFlyoutController(
 
     fun setUpFlyout(message: BubbleBarFlyoutMessage) {
         flyout?.let(container::removeView)
-        val flyout = BubbleBarFlyoutView(container.context, onLeft = positioner.isOnLeft)
+        val flyout = BubbleBarFlyoutView(container.context, positioner)
 
         flyout.translationY = positioner.targetTy
 
@@ -47,7 +48,11 @@ class BubbleBarFlyoutController(
         lp.marginEnd = horizontalMargin
         container.addView(flyout, lp)
 
-        flyout.setData(message)
+        val animator = ValueAnimator.ofFloat(0f, 1f)
+        animator.addUpdateListener { _ ->
+            flyout.updateExpansionProgress(animator.animatedValue as Float)
+        }
+        flyout.showFromCollapsed(message) { animator.start() }
         this.flyout = flyout
     }
 

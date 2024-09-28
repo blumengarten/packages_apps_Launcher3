@@ -17,6 +17,7 @@
 package com.android.launcher3.taskbar.bubbles.flyout
 
 import android.content.Context
+import android.graphics.PointF
 import android.view.Gravity
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -46,11 +47,12 @@ class BubbleBarFlyoutControllerTest {
         flyoutContainer = FrameLayout(context)
         val positioner =
             object : BubbleBarFlyoutPositioner {
-                override val isOnLeft: Boolean
+                override val isOnLeft
                     get() = onLeft
 
-                override val targetTy: Float
-                    get() = 50f
+                override val targetTy = 50f
+                override val distanceToCollapsedPosition = PointF(100f, 200f)
+                override val collapsedSize = 30f
             }
         flyoutController = BubbleBarFlyoutController(flyoutContainer, positioner)
     }

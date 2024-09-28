@@ -32,8 +32,8 @@ import com.android.launcher3.R
 import com.android.launcher3.anim.AnimatedFloat
 import com.android.launcher3.anim.SpringAnimationBuilder
 import com.android.launcher3.taskbar.TaskbarInsetsController
-import com.android.launcher3.taskbar.TaskbarStashController.TASKBAR_STASH_ALPHA_DURATION
 import com.android.launcher3.taskbar.TaskbarStashController.TASKBAR_STASH_ALPHA_START_DELAY
+import com.android.launcher3.taskbar.TaskbarStashController.TRANSIENT_TASKBAR_STASH_ALPHA_DURATION
 import com.android.launcher3.taskbar.bubbles.BubbleBarViewController
 import com.android.launcher3.taskbar.bubbles.BubbleStashedHandleViewController
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController.Companion.BAR_STASH_DURATION
@@ -305,7 +305,8 @@ class TransientBubbleStashController(
 
         animatorSet.play(
             createBackgroundAlphaAnimator(isStashed).apply {
-                val alphaDuration = if (isStashed) duration else TASKBAR_STASH_ALPHA_DURATION
+                val alphaDuration =
+                    if (isStashed) duration else TRANSIENT_TASKBAR_STASH_ALPHA_DURATION
                 val alphaDelay = if (isStashed) TASKBAR_STASH_ALPHA_START_DELAY else 0L
                 this.duration = max(0L, alphaDuration - alphaDelay)
                 this.startDelay = alphaDelay
@@ -317,7 +318,7 @@ class TransientBubbleStashController(
             bubbleBarBubbleAlpha
                 .animateToValue(getBarAlphaStart(isStashed), getBarAlphaEnd(isStashed))
                 .apply {
-                    this.duration = TASKBAR_STASH_ALPHA_DURATION
+                    this.duration = TRANSIENT_TASKBAR_STASH_ALPHA_DURATION
                     this.startDelay = TASKBAR_STASH_ALPHA_START_DELAY
                     this.interpolator = LINEAR
                 }

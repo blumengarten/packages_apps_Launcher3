@@ -39,9 +39,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 
+import com.android.launcher3.Flags;
 import com.android.launcher3.R;
 import com.android.launcher3.util.SimpleBroadcastReceiver;
-import com.android.quickstep.util.ActiveGestureLog;
+import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.systemui.shared.system.PackageManagerWrapper;
 
 import java.io.PrintWriter;
@@ -73,7 +74,7 @@ public final class OverviewComponentObserver {
     private Consumer<Boolean> mOverviewChangeListener = b -> { };
 
     private String mUpdateRegisteredPackage;
-    private BaseActivityInterface mActivityInterface;
+    private BaseContainerInterface mContainerInterface;
     private Intent mOverviewIntent;
     private boolean mIsHomeAndOverviewSame;
     private boolean mIsDefaultHome;
@@ -150,8 +151,8 @@ public final class OverviewComponentObserver {
         // Set assistant visibility to 0 from launcher's perspective, ensures any elements that
         // launcher made invisible become visible again before the new activity control helper
         // becomes active.
-        if (mActivityInterface != null) {
-            mActivityInterface.onAssistantVisibilityChanged(0.f);
+        if (mContainerInterface != null) {
+            mContainerInterface.onAssistantVisibilityChanged(0.f);
         }
 
         if (SEPARATE_RECENTS_ACTIVITY.get()) {
@@ -168,7 +169,7 @@ public final class OverviewComponentObserver {
 
         if (!mIsHomeDisabled && (defaultHome == null || mIsDefaultHome)) {
             // User default home is same as out home app. Use Overview integrated in Launcher.
-            mActivityInterface = LauncherActivityInterface.INSTANCE;
+            mContainerInterface = LauncherActivityInterface.INSTANCE;
             mIsHomeAndOverviewSame = true;
             mOverviewIntent = mMyHomeIntent;
             mCurrentHomeIntent.setComponent(mMyHomeIntent.getComponent());
@@ -178,7 +179,11 @@ public final class OverviewComponentObserver {
         } else {
             // The default home app is a different launcher. Use the fallback Overview instead.
 
-            mActivityInterface = FallbackActivityInterface.INSTANCE;
+            if (Flags.enableFallbackOverviewInWindow()) {
+                mContainerInterface = FallbackWindowInterface.getInstance();
+            } else {
+                mContainerInterface = FallbackActivityInterface.INSTANCE;
+            }
             mIsHomeAndOverviewSame = false;
             mOverviewIntent = mFallbackIntent;
             mCurrentHomeIntent.setComponent(defaultHome);
@@ -266,21 +271,12 @@ public final class OverviewComponentObserver {
     }
 
     /**
-     * Get the current activity control helper for managing interactions to the overview activity.
+     * Get the current control helper for managing interactions to the overview container.
      *
-     * @return the current activity control helper
+     * @return the current control helper
      */
-    public BaseActivityInterface getActivityInterface() {
-        return mActivityInterface;
-    }
-
-    /**
-     * Get the current container control helper for managing interactions to the overview activity.
-     *
-     * @return the current container control helper
-     */
-    public BaseContainerInterface<?, ?> getContainerInterface() {
-        return mActivityInterface;
+    public BaseContainerInterface<?,?> getContainerInterface() {
+        return mContainerInterface;
     }
 
     public void dump(PrintWriter pw) {
@@ -309,10 +305,11 @@ public final class OverviewComponentObserver {
      * Starts the intent for the current home activity.
      */
     public static void startHomeIntentSafely(
-            @NonNull Context context, @NonNull Intent homeIntent, @Nullable Bundle options,
+            @NonNull Context context,
+            @NonNull Intent homeIntent,
+            @Nullable Bundle options,
             @NonNull String reason) {
-        ActiveGestureLog.INSTANCE.addLog(new ActiveGestureLog.CompoundString(
-                "OverviewComponentObserver.startHomeIntent: ").append(reason));
+        ActiveGestureProtoLogProxy.logStartHomeIntent(reason);
         try {
             context.startActivity(homeIntent, options);
         } catch (NullPointerException | ActivityNotFoundException | SecurityException e) {

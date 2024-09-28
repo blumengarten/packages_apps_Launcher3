@@ -41,6 +41,7 @@ import android.view.VelocityTracker;
 
 import androidx.annotation.UiThread;
 
+import com.android.launcher3.Flags;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.testing.TestLogging;
@@ -424,7 +425,10 @@ public class OtherActivityInputConsumer extends ContextWrapper implements InputC
             mTaskAnimationManager.notifyRecentsAnimationState(mInteractionHandler);
             notifyGestureStarted(true /*isLikelyToStartNewTask*/);
         } else {
-            Intent intent = new Intent(mInteractionHandler.getLaunchIntent());
+            // todo differentiate intent based on if we are on home or in app for overview in window
+            Intent intent = new Intent(Flags.enableFallbackOverviewInWindow()
+                ? mInteractionHandler.getHomeIntent()
+                : mInteractionHandler.getLaunchIntent());
             intent.putExtra(INTENT_EXTRA_LOG_TRACE_ID, mGestureState.getGestureId());
             mActiveCallbacks = mTaskAnimationManager.startRecentsAnimation(mGestureState, intent,
                     mInteractionHandler);

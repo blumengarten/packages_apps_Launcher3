@@ -32,6 +32,7 @@ import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherSettings.Favorites
 import com.android.launcher3.backuprestore.LauncherRestoreEventLogger.RestoreError
 import com.android.launcher3.config.FeatureFlags
+import com.android.launcher3.icons.CacheableShortcutInfo
 import com.android.launcher3.logging.FileLog
 import com.android.launcher3.model.data.AppInfo
 import com.android.launcher3.model.data.AppPairInfo
@@ -44,6 +45,7 @@ import com.android.launcher3.pm.PackageInstallInfo
 import com.android.launcher3.pm.UserCache
 import com.android.launcher3.shortcuts.ShortcutKey
 import com.android.launcher3.util.ApiWrapper
+import com.android.launcher3.util.ApplicationInfoWrapper
 import com.android.launcher3.util.ComponentKey
 import com.android.launcher3.util.PackageManagerHelper
 import com.android.launcher3.util.PackageUserKey
@@ -75,7 +77,7 @@ class WorkspaceItemProcessor(
     private val pmHelper: PackageManagerHelper,
     private val iconRequestInfos: MutableList<IconRequestInfo<WorkspaceItemInfo>>,
     private val unlockedUsers: LongSparseArray<Boolean>,
-    private val allDeepShortcuts: MutableList<ShortcutInfo>,
+    private val allDeepShortcuts: MutableList<CacheableShortcutInfo>,
 ) {
 
     private val isSafeMode = app.isSafeModeEnabled
@@ -152,6 +154,7 @@ class WorkspaceItemProcessor(
             c.markDeleted("No target package for item id=${c.id}", RestoreError.MISSING_INFO)
             return
         }
+        val appInfoWrapper = ApplicationInfoWrapper(app.context, targetPkg, c.user)
         var validTarget = launcherApps.isPackageEnabled(targetPkg, c.user)
 
         // If it's a deep shortcut, we'll use pinned shortcuts to restore it
@@ -218,7 +221,7 @@ class WorkspaceItemProcessor(
                             }
                         }
                     }
-                    pmHelper.isAppOnSdcard(targetPkg, c.user) -> {
+                    appInfoWrapper.isOnSdCard() -> {
                         // Package is present but not available.
                         disabledState =
                             disabledState or WorkspaceItemInfo.FLAG_DISABLED_NOT_AVAILABLE
@@ -276,13 +279,14 @@ class WorkspaceItemProcessor(
                     info = WorkspaceItemInfo(pinnedShortcut, app.context)
                     // If the pinned deep shortcut is no longer published,
                     // use the last saved icon instead of the default.
-                    iconCache.getShortcutIcon(info, pinnedShortcut, c::loadIcon)
-                    if (pmHelper.isAppSuspended(pinnedShortcut.getPackage(), info.user)) {
+                    val csi = CacheableShortcutInfo(pinnedShortcut, appInfoWrapper)
+                    iconCache.getShortcutIcon(info, csi, c::loadIcon)
+                    if (appInfoWrapper.isSuspended()) {
                         info.runtimeStatusFlags =
                             info.runtimeStatusFlags or ItemInfoWithIcon.FLAG_DISABLED_SUSPENDED
                     }
                     intent = info.getIntent()
-                    allDeepShortcuts.add(pinnedShortcut)
+                    allDeepShortcuts.add(csi)
                 } else {
                     // Create a shortcut info in disabled mode for now.
                     info = c.loadSimpleWorkspaceItem()
@@ -294,7 +298,7 @@ class WorkspaceItemProcessor(
                 info = c.loadSimpleWorkspaceItem()
 
                 // Shortcuts are only available on the primary profile
-                if (!TextUtils.isEmpty(targetPkg) && pmHelper.isAppSuspended(targetPkg, c.user)) {
+                if (appInfoWrapper.isSuspended()) {
                     disabledState = disabledState or ItemInfoWithIcon.FLAG_DISABLED_SUSPENDED
                 }
                 info.options = c.options
@@ -325,7 +329,7 @@ class WorkspaceItemProcessor(
             info.spanX = 1
             info.spanY = 1
             info.runtimeStatusFlags = info.runtimeStatusFlags or disabledState
-            if (isSafeMode && !PackageManagerHelper.isSystemApp(app.context, intent)) {
+            if (isSafeMode && !appInfoWrapper.isSystem()) {
                 info.runtimeStatusFlags =
                     info.runtimeStatusFlags or ItemInfoWithIcon.FLAG_DISABLED_SAFEMODE
             }
@@ -486,7 +490,8 @@ class WorkspaceItemProcessor(
                         (si == null) &&
                         (lapi == null) &&
                         !(Flags.enableSupportForArchiving() &&
-                            pmHelper.isAppArchived(component.packageName))
+                            ApplicationInfoWrapper(app.context, component.packageName, c.user)
+                                .isArchived())
                 ) {
                     // Restore never started
                     c.markDeleted(

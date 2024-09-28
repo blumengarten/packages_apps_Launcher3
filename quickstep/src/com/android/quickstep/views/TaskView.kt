@@ -687,7 +687,6 @@ constructor(
         orientedState: RecentsOrientedState,
         taskOverlayFactory: TaskOverlayFactory,
     ) {
-
         cancelPendingLoadTasks()
         taskContainers =
             listOf(
@@ -720,6 +719,7 @@ constructor(
                 thumbnailViewDeprecated.visibility = GONE
                 val indexOfSnapshotView = indexOfChild(thumbnailViewDeprecated)
                 LayoutInflater.from(context).inflate(R.layout.task_thumbnail, this, false).also {
+                    it.id = thumbnailViewId
                     addView(it, indexOfSnapshotView, thumbnailViewDeprecated.layoutParams)
                 }
             } else {

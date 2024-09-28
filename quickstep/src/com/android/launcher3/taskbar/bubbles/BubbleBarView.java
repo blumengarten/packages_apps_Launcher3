@@ -15,13 +15,9 @@
  */
 package com.android.launcher3.taskbar.bubbles;
 
-import static com.android.app.animation.Interpolators.EMPHASIZED_ACCELERATE;
 import static com.android.launcher3.LauncherAnimUtils.VIEW_ALPHA;
-import static com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_X;
 
 import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.annotation.NonNull;
@@ -42,10 +38,9 @@ import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.FrameLayout;
 
-import androidx.dynamicanimation.animation.SpringForce;
-
 import com.android.launcher3.R;
-import com.android.launcher3.anim.SpringAnimationBuilder;
+import com.android.launcher3.anim.AnimatorListeners;
+import com.android.launcher3.taskbar.BarsLocationAnimatorHelper;
 import com.android.launcher3.taskbar.bubbles.animation.BubbleAnimator;
 import com.android.launcher3.util.DisplayController;
 import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
@@ -83,8 +78,9 @@ import java.util.function.Consumer;
  */
 public class BubbleBarView extends FrameLayout {
 
+    public static final long FADE_OUT_ANIM_POSITION_DURATION_MS = 100L;
+    public static final long FADE_IN_ANIM_ALPHA_DURATION_MS = 100L;
     private static final String TAG = "BubbleBarView";
-
     // TODO: (b/273594744) calculate the amount of space we have and base the max on that
     //  if it's smaller than 5.
     private static final int MAX_BUBBLES = 5;
@@ -92,18 +88,6 @@ public class BubbleBarView extends FrameLayout {
     private static final int ARROW_POSITION_ANIMATION_DURATION_MS = 200;
     private static final int WIDTH_ANIMATION_DURATION_MS = 200;
     private static final int SCALE_ANIMATION_DURATION_MS = 200;
-
-    private static final long FADE_OUT_ANIM_ALPHA_DURATION_MS = 50L;
-    private static final long FADE_OUT_ANIM_ALPHA_DELAY_MS = 50L;
-    public static final long FADE_OUT_ANIM_POSITION_DURATION_MS = 100L;
-    // During fade out animation we shift the bubble bar 1/80th of the screen width
-    private static final float FADE_OUT_ANIM_POSITION_SHIFT = 1 / 80f;
-
-    public static final long FADE_IN_ANIM_ALPHA_DURATION_MS = 100L;
-    // Use STIFFNESS_MEDIUMLOW which is not defined in the API constants
-    private static final float FADE_IN_ANIM_POSITION_SPRING_STIFFNESS = 400f;
-    // During fade in animation we shift the bubble bar 1/60th of the screen width
-    private static final float FADE_IN_ANIM_POSITION_SHIFT = 1 / 60f;
 
     /**
      * Custom property to set alpha value for the bar view while a bubble is being dragged.
@@ -578,75 +562,28 @@ public class BubbleBarView extends FrameLayout {
         // First animator hides the bar.
         // After it completes, bubble positions in the bar and arrow position is updated.
         // Second animator is started to show the bar.
-        mBubbleBarLocationAnimator = getLocationUpdateFadeOutAnimator(bubbleBarLocation);
-        mBubbleBarLocationAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                updateBubblesLayoutProperties(bubbleBarLocation);
-                mBubbleBarBackground.setAnchorLeft(bubbleBarLocation.isOnLeft(isLayoutRtl()));
+        ObjectAnimator alphaOutAnim = ObjectAnimator.ofFloat(
+                this, getLocationAnimAlphaProperty(), 0f);
+        mBubbleBarLocationAnimator = BarsLocationAnimatorHelper.getBubbleBarLocationOutAnimator(
+                this,
+                bubbleBarLocation,
+                alphaOutAnim);
+        mBubbleBarLocationAnimator.addListener(AnimatorListeners.forEndCallback(() -> {
+            updateBubblesLayoutProperties(bubbleBarLocation);
+            mBubbleBarBackground.setAnchorLeft(bubbleBarLocation.isOnLeft(isLayoutRtl()));
+            ObjectAnimator alphaInAnim = ObjectAnimator.ofFloat(BubbleBarView.this,
+                    getLocationAnimAlphaProperty(), 1f);
 
-                // Animate it in
-                mBubbleBarLocationAnimator = getLocationUpdateFadeInAnimator(bubbleBarLocation);
-                mBubbleBarLocationAnimator.start();
-            }
-        });
+            // Animate it in
+            mBubbleBarLocationAnimator = BarsLocationAnimatorHelper.getBubbleBarLocationInAnimator(
+                    bubbleBarLocation,
+                    mBubbleBarLocation,
+                    getDistanceFromOtherSide(),
+                    alphaInAnim,
+                    BubbleBarView.this);
+            mBubbleBarLocationAnimator.start();
+        }));
         mBubbleBarLocationAnimator.start();
-    }
-
-    private Animator getLocationUpdateFadeOutAnimator(BubbleBarLocation newLocation) {
-        final float shift =
-                getResources().getDisplayMetrics().widthPixels * FADE_OUT_ANIM_POSITION_SHIFT;
-        final boolean onLeft = newLocation.isOnLeft(isLayoutRtl());
-        final float tx = getTranslationX() + (onLeft ? -shift : shift);
-
-        ObjectAnimator positionAnim = ObjectAnimator.ofFloat(this, VIEW_TRANSLATE_X, tx)
-                .setDuration(FADE_OUT_ANIM_POSITION_DURATION_MS);
-        positionAnim.setInterpolator(EMPHASIZED_ACCELERATE);
-
-        ObjectAnimator alphaAnim = ObjectAnimator.ofFloat(this, getLocationAnimAlphaProperty(), 0f)
-                .setDuration(FADE_OUT_ANIM_ALPHA_DURATION_MS);
-        alphaAnim.setStartDelay(FADE_OUT_ANIM_ALPHA_DELAY_MS);
-
-        AnimatorSet animatorSet = new AnimatorSet();
-        animatorSet.playTogether(positionAnim, alphaAnim);
-        return animatorSet;
-    }
-
-    private Animator getLocationUpdateFadeInAnimator(BubbleBarLocation newLocation) {
-        final float shift =
-                getResources().getDisplayMetrics().widthPixels * FADE_IN_ANIM_POSITION_SHIFT;
-
-        final boolean onLeft = newLocation.isOnLeft(isLayoutRtl());
-        final float startTx;
-        final float finalTx;
-        if (newLocation == mBubbleBarLocation) {
-            // Animated location matches layout location.
-            finalTx = 0;
-        } else {
-            // We are animating in to a transient location, need to move the bar accordingly.
-            finalTx = getDistanceFromOtherSide() * (onLeft ? -1 : 1);
-        }
-        if (onLeft) {
-            // Bar will be shown on the left side. Start point is shifted right.
-            startTx = finalTx + shift;
-        } else {
-            // Bar will be shown on the right side. Start point is shifted left.
-            startTx = finalTx - shift;
-        }
-
-        ValueAnimator positionAnim = new SpringAnimationBuilder(getContext())
-                .setStartValue(startTx)
-                .setEndValue(finalTx)
-                .setDampingRatio(SpringForce.DAMPING_RATIO_LOW_BOUNCY)
-                .setStiffness(FADE_IN_ANIM_POSITION_SPRING_STIFFNESS)
-                .build(this, VIEW_TRANSLATE_X);
-
-        ObjectAnimator alphaAnim = ObjectAnimator.ofFloat(this, getLocationAnimAlphaProperty(), 1f)
-                .setDuration(FADE_IN_ANIM_ALPHA_DURATION_MS);
-
-        AnimatorSet animatorSet = new AnimatorSet();
-        animatorSet.playTogether(positionAnim, alphaAnim);
-        return animatorSet;
     }
 
     /**

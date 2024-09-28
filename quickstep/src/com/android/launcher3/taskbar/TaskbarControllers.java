@@ -26,6 +26,7 @@ import com.android.launcher3.taskbar.allapps.TaskbarAllAppsController;
 import com.android.launcher3.taskbar.bubbles.BubbleControllers;
 import com.android.launcher3.taskbar.overlay.TaskbarOverlayController;
 import com.android.systemui.shared.rotation.RotationButtonController;
+import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -219,7 +220,11 @@ public class TaskbarControllers {
         uiController = newUiController;
         uiController.init(this);
         uiController.updateStateForSysuiFlags(mSharedState.sysuiStateFlags);
-
+        bubbleControllers.ifPresent(bubbleControllers -> {
+            BubbleBarLocation location =
+                    bubbleControllers.bubbleBarViewController.getBubbleBarLocation();
+            uiController.onBubbleBarLocationUpdated(location);
+        });
         // Notify that the ui controller has changed
         navbarButtonsViewController.onUiControllerChanged();
     }

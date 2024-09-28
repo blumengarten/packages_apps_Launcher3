@@ -123,10 +123,10 @@ public abstract class Background extends LauncherInstrumentation.VisibleContaine
                                     TASK_SELECTOR);
                             final int centerX = mLauncher.getDevice().getDisplayWidth() / 2;
                             mLauncher.assertTrue(
-                                    "All tasks not to the left of the swiped task",
-                                    tasks.stream()
-                                            .allMatch(
-                                                    t -> t.getVisibleBounds().right < centerX));
+                                    "Task(s) found to the right of the swiped task",
+                                    tasks.stream().allMatch(t ->
+                                            t.getVisibleBounds().right < centerX
+                                                    || t.getVisibleBounds().centerX() == centerX));
                         }
 
                     }

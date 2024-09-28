@@ -22,6 +22,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.PointF
 import android.view.LayoutInflater
 import android.widget.ImageView
 import android.widget.TextView
@@ -30,8 +31,13 @@ import com.android.launcher3.R
 import com.android.launcher3.popup.RoundedArrowDrawable
 
 /** The flyout view used to notify the user of a new bubble notification. */
-class BubbleBarFlyoutView(context: Context, private val onLeft: Boolean) :
+class BubbleBarFlyoutView(context: Context, private val positioner: BubbleBarFlyoutPositioner) :
     ConstraintLayout(context) {
+
+    private companion object {
+        // the minimum progress of the expansion animation before the triangle is made visible.
+        const val MIN_EXPANSION_PROGRESS_FOR_TRIANGLE = 0.1f
+    }
 
     private val sender: TextView by
         lazy(LazyThreadSafetyMode.NONE) { findViewById(R.id.bubble_flyout_name) }
@@ -82,6 +88,14 @@ class BubbleBarFlyoutView(context: Context, private val onLeft: Boolean) :
     private val cornerRadius: Float
     private val triangle: Path = Path()
     private var backgroundColor = Color.BLACK
+    /** Represents the progress of the expansion animation. 0 when collapsed. 1 when expanded. */
+    private var expansionProgress = 0f
+    /** Translation x-y values to move the flyout to its collapsed position. */
+    private var translationToCollapsedPosition = PointF(0f, 0f)
+    /** The size of the flyout when it's collapsed. */
+    private var collapsedSize = 0f
+    /** The corner radius of the flyout when it's collapsed. */
+    private var collapsedCornerRadius = 0f
 
     /**
      * The paint used to draw the background, whose color changes as the flyout transitions to the
@@ -116,7 +130,28 @@ class BubbleBarFlyoutView(context: Context, private val onLeft: Boolean) :
         applyConfigurationColors(resources.configuration)
     }
 
-    fun setData(flyoutMessage: BubbleBarFlyoutMessage) {
+    /** Sets the data for the flyout and starts playing the expand animation. */
+    fun showFromCollapsed(flyoutMessage: BubbleBarFlyoutMessage, expandAnimation: () -> Unit) {
+        setData(flyoutMessage)
+        val txToCollapsedPosition =
+            if (positioner.isOnLeft) {
+                positioner.distanceToCollapsedPosition.x
+            } else {
+                -positioner.distanceToCollapsedPosition.x
+            }
+        val tyToCollapsedPosition =
+            positioner.distanceToCollapsedPosition.y + triangleHeight - triangleOverlap
+        translationToCollapsedPosition = PointF(txToCollapsedPosition, tyToCollapsedPosition)
+
+        collapsedSize = positioner.collapsedSize
+        collapsedCornerRadius = collapsedSize / 2
+
+        // post the request to start the expand animation to the looper so the view can measure
+        // itself
+        post(expandAnimation)
+    }
+
+    private fun setData(flyoutMessage: BubbleBarFlyoutMessage) {
         // the avatar is only displayed in group chat messages
         if (flyoutMessage.senderAvatar != null && flyoutMessage.isGroupChat) {
             avatar.visibility = VISIBLE
@@ -151,24 +186,56 @@ class BubbleBarFlyoutView(context: Context, private val onLeft: Boolean) :
         message.text = flyoutMessage.message
     }
 
+    /** Updates the flyout view with the progress of the animation. */
+    fun updateExpansionProgress(fraction: Float) {
+        expansionProgress = fraction
+        invalidate()
+    }
+
     override fun onDraw(canvas: Canvas) {
+        // interpolate the width, height, corner radius and translation based on the progress of the
+        // animation
+
+        val currentWidth = collapsedSize + (width - collapsedSize) * expansionProgress
+        val rectBottom = height - triangleHeight + triangleOverlap
+        val currentHeight = collapsedSize + (rectBottom - collapsedSize) * expansionProgress
+        val currentCornerRadius =
+            collapsedCornerRadius + (cornerRadius - collapsedCornerRadius) * expansionProgress
+        val tx = translationToCollapsedPosition.x * (1 - expansionProgress)
+        val ty = translationToCollapsedPosition.y * (1 - expansionProgress)
+
+        canvas.save()
+        canvas.translate(tx, ty)
+        // draw the background starting from the bottom left if we're positioned left, or the bottom
+        // right if we're positioned right.
         canvas.drawRoundRect(
-            0f,
-            0f,
-            width.toFloat(),
+            if (positioner.isOnLeft) 0f else width.toFloat() - currentWidth,
+            height.toFloat() - triangleHeight + triangleOverlap - currentHeight,
+            if (positioner.isOnLeft) currentWidth else width.toFloat(),
             height.toFloat() - triangleHeight + triangleOverlap,
-            cornerRadius,
-            cornerRadius,
+            currentCornerRadius,
+            currentCornerRadius,
             backgroundPaint,
         )
-        drawTriangle(canvas)
+        if (expansionProgress >= MIN_EXPANSION_PROGRESS_FOR_TRIANGLE) {
+            drawTriangle(canvas, currentCornerRadius)
+        }
+        canvas.restore()
         super.onDraw(canvas)
     }
 
-    private fun drawTriangle(canvas: Canvas) {
+    private fun drawTriangle(canvas: Canvas, currentCornerRadius: Float) {
         canvas.save()
-        val triangleX = if (onLeft) cornerRadius else width - cornerRadius - triangleWidth
-        canvas.translate(triangleX, (height - triangleHeight).toFloat())
+        val triangleX =
+            if (positioner.isOnLeft) {
+                currentCornerRadius
+            } else {
+                width - currentCornerRadius - triangleWidth
+            }
+        // instead of scaling the triangle, increasingly reveal it from the background, starting
+        // with half the size. this has the effect of the triangle scaling.
+        val triangleY = height - triangleHeight - 0.5f * triangleHeight * (1 - expansionProgress)
+        canvas.translate(triangleX, triangleY)
         canvas.drawPath(triangle, backgroundPaint)
         canvas.restore()
     }

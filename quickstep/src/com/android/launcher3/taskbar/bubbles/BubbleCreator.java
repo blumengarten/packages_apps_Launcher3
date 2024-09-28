@@ -44,8 +44,6 @@ import android.util.PathParser;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
-import androidx.appcompat.content.res.AppCompatResources;
-
 import com.android.internal.graphics.ColorUtils;
 import com.android.launcher3.R;
 import com.android.launcher3.icons.BitmapInfo;
@@ -196,8 +194,7 @@ public class BubbleCreator {
     }
 
     private Bitmap createOverflowBitmap() {
-        Drawable iconDrawable = AppCompatResources.getDrawable(mContext,
-                R.drawable.bubble_ic_overflow_button);
+        Drawable iconDrawable = mContext.getDrawable(R.drawable.bubble_ic_overflow_button);
 
         final TypedArray ta = mContext.obtainStyledAttributes(
                 new int[]{

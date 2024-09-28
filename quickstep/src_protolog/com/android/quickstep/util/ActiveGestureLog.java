@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,10 @@ package com.android.quickstep.util;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.android.launcher3.util.Preconditions;
-
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -72,14 +71,6 @@ public class ActiveGestureLog {
         addLog(event, null);
     }
 
-    public void addLog(@NonNull String event, int extras) {
-        addLog(event, extras, null);
-    }
-
-    public void addLog(@NonNull String event, boolean extras) {
-        addLog(event, extras, null);
-    }
-
     /**
      * Adds a log to be printed at log-dump-time and track the associated event for error detection.
      *
@@ -88,20 +79,6 @@ public class ActiveGestureLog {
     public void addLog(
             @NonNull String event, @Nullable ActiveGestureErrorDetector.GestureEvent gestureEvent) {
         addLog(new CompoundString(event), gestureEvent);
-    }
-
-    public void addLog(
-            @NonNull String event,
-            int extras,
-            @Nullable ActiveGestureErrorDetector.GestureEvent gestureEvent) {
-        addLog(new CompoundString(event).append(": ").append(extras), gestureEvent);
-    }
-
-    public void addLog(
-            @NonNull String event,
-            boolean extras,
-            @Nullable ActiveGestureErrorDetector.GestureEvent gestureEvent) {
-        addLog(new CompoundString(event).append(": ").append(extras), gestureEvent);
     }
 
     public void addLog(@NonNull CompoundString compoundString) {
@@ -252,25 +229,27 @@ public class ActiveGestureLog {
     /** A buildable string stored as an array for memory efficiency. */
     public static class CompoundString {
 
-        public static final CompoundString NO_OP = new CompoundString();
+        public static final CompoundString NO_OP = new CompoundString(true);
 
         private final List<String> mSubstrings;
         private final List<Object> mArgs;
 
         private final boolean mIsNoOp;
 
-        private CompoundString() {
-            this(null);
+        public static CompoundString newEmptyString() {
+            return new CompoundString(false);
         }
 
-        public CompoundString(String substring) {
-            mIsNoOp = substring == null;
+        private CompoundString(boolean isNoOp) {
+            mIsNoOp = isNoOp;
             mSubstrings = mIsNoOp ? null : new ArrayList<>();
             mArgs = mIsNoOp ? null : new ArrayList<>();
+        }
 
-            if (!mIsNoOp) {
-                mSubstrings.add(substring);
-            }
+        public CompoundString(String substring, Object... args) {
+            this(substring == null);
+
+            append(substring, args);
         }
 
         public CompoundString append(CompoundString substring) {
@@ -283,80 +262,24 @@ public class ActiveGestureLog {
             return this;
         }
 
-        public CompoundString append(String substring) {
+        public CompoundString append(String substring, Object... args) {
             if (mIsNoOp) {
                 return this;
             }
             mSubstrings.add(substring);
+            mArgs.addAll(Arrays.stream(args).toList());
 
             return this;
         }
 
-        public CompoundString append(int num) {
-            if (mIsNoOp) {
-                return this;
-            }
-            mArgs.add(num);
-
-            return append("%d");
-        }
-
-        public CompoundString append(long num) {
-            if (mIsNoOp) {
-                return this;
-            }
-            mArgs.add(num);
-
-            return append("%d");
-        }
-
-        public CompoundString append(float num) {
-            if (mIsNoOp) {
-                return this;
-            }
-            mArgs.add(num);
-
-            return append("%.2f");
-        }
-
-        public CompoundString append(double num) {
-            if (mIsNoOp) {
-                return this;
-            }
-            mArgs.add(num);
-
-            return append("%.2f");
-        }
-
-        public CompoundString append(boolean bool) {
-            if (mIsNoOp) {
-                return this;
-            }
-            mArgs.add(bool);
-
-            return append("%b");
-        }
-
-        private Object[] getArgs() {
-            Preconditions.assertTrue(!mIsNoOp);
-
-            return mArgs.toArray();
-        }
-
         @Override
         public String toString() {
-            return String.format(toUnformattedString(), getArgs());
-        }
-
-        private String toUnformattedString() {
-            Preconditions.assertTrue(!mIsNoOp);
-
+            if (mIsNoOp) return null;
             StringBuilder sb = new StringBuilder();
             for (String substring : mSubstrings) {
                 sb.append(substring);
             }
-
-            return sb.toString();
+            return String.format(sb.toString(), mArgs.toArray());
         }
 
         @Override
@@ -366,10 +289,9 @@ public class ActiveGestureLog {
 
         @Override
         public boolean equals(Object obj) {
-            if (!(obj instanceof CompoundString)) {
+            if (!(obj instanceof CompoundString other)) {
                 return false;
             }
-            CompoundString other = (CompoundString) obj;
             return (mIsNoOp == other.mIsNoOp)
                     && Objects.equals(mSubstrings, other.mSubstrings)
                     && Objects.equals(mArgs, other.mArgs);

@@ -69,7 +69,8 @@ public class PinShortcutRequestActivityInfo extends ShortcutConfigActivityInfo {
 
     public PinShortcutRequestActivityInfo(
             ShortcutInfo si, Supplier<PinItemRequest> requestSupplier, Context context) {
-        super(new ComponentName(si.getPackage(), STUB_COMPONENT_CLASS), si.getUserHandle());
+        super(new ComponentName(si.getPackage(), STUB_COMPONENT_CLASS),
+                si.getUserHandle(), context);
         mRequestSupplier = requestSupplier;
         mInfo = si;
         mContext = context;

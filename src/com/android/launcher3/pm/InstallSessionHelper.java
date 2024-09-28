@@ -17,7 +17,6 @@
 package com.android.launcher3.pm;
 
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageInstaller.SessionInfo;
@@ -34,10 +33,10 @@ import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.SessionCommitReceiver;
 import com.android.launcher3.logging.FileLog;
 import com.android.launcher3.model.ItemInstallQueue;
+import com.android.launcher3.util.ApplicationInfoWrapper;
 import com.android.launcher3.util.IntArray;
 import com.android.launcher3.util.IntSet;
 import com.android.launcher3.util.MainThreadInitializedObject;
-import com.android.launcher3.util.PackageManagerHelper;
 import com.android.launcher3.util.PackageUserKey;
 import com.android.launcher3.util.Preconditions;
 import com.android.launcher3.util.SafeCloseable;
@@ -171,8 +170,7 @@ public class InstallSessionHelper implements SafeCloseable {
         synchronized (mSessionVerifiedMap) {
             if (!mSessionVerifiedMap.containsKey(pkg)) {
                 boolean hasSystemFlag = DEBUG || mAppContext.getPackageName().equals(pkg)
-                        || PackageManagerHelper.INSTANCE.get(mAppContext)
-                                .getApplicationInfo(pkg, user, ApplicationInfo.FLAG_SYSTEM) != null;
+                        || new ApplicationInfoWrapper(mAppContext, pkg, user).isSystem();
                 mSessionVerifiedMap.put(pkg, hasSystemFlag);
             }
         }
@@ -245,8 +243,8 @@ public class InstallSessionHelper implements SafeCloseable {
                 && sessionInfo.getInstallReason() == PackageManager.INSTALL_REASON_USER
                 && sessionInfo.getAppIcon() != null
                 && !TextUtils.isEmpty(sessionInfo.getAppLabel())
-                && !PackageManagerHelper.INSTANCE.get(mAppContext).isAppInstalled(
-                        sessionInfo.getAppPackageName(), getUserHandle(sessionInfo));
+                && !new ApplicationInfoWrapper(mAppContext, sessionInfo.getAppPackageName(),
+                        getUserHandle(sessionInfo)).isInstalled();
     }
 
     public InstallSessionTracker registerInstallTracker(

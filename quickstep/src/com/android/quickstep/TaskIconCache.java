@@ -226,7 +226,7 @@ public class TaskIconCache implements TaskIconDataSource, DisplayInfoChangeListe
         synchronized (mDefaultIcons) {
             if (mDefaultIconBase == null) {
                 try (BaseIconFactory bif = getIconFactory()) {
-                    mDefaultIconBase = bif.makeDefaultIcon();
+                    mDefaultIconBase = bif.makeDefaultIcon(mIconProvider);
                 }
             }
 

@@ -20,6 +20,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.launcher3.util.TestDispatcherProvider
 import com.android.quickstep.task.thumbnail.TaskThumbnailViewModelTest
 import com.android.quickstep.util.DesktopTask
@@ -36,17 +37,19 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(AndroidJUnit4::class)
 class TasksRepositoryTest {
     private val tasks = (0..5).map(::createTaskWithId)
     private val defaultTaskList =
         listOf(
             GroupTask(tasks[0]),
             GroupTask(tasks[1], tasks[2], null),
-            DesktopTask(tasks.subList(3, 6))
+            DesktopTask(tasks.subList(3, 6)),
         )
     private val recentsModel = FakeRecentTasksDataSource()
     private val taskThumbnailDataSource = FakeTaskThumbnailDataSource()
@@ -65,7 +68,7 @@ class TasksRepositoryTest {
             taskIconDataSource,
             taskVisualsChangedDelegate,
             testScope.backgroundScope,
-            TestDispatcherProvider(dispatcher)
+            TestDispatcherProvider(dispatcher),
         )
 
     @Test

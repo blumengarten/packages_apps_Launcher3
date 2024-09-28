@@ -34,8 +34,10 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import androidx.annotation.IntDef;
+import androidx.annotation.Nullable;
 
 import com.android.launcher3.util.HorizontalInsettableView;
+import com.android.launcher3.util.MultiPropertyFactory;
 import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
 import com.android.launcher3.util.MultiTranslateDelegate;
 import com.android.launcher3.util.MultiValueAlpha;
@@ -61,6 +63,14 @@ public class Hotseat extends CellLayout implements Insettable {
     public @interface HotseatQsbAlphaId {
     }
 
+    public static final int ICONS_TRANSLATION_X_NAV_BAR_ALIGNMENT = 0;
+    public static final int ICONS_TRANSLATION_X_CHANNELS_COUNT = 1;
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @IntDef({ICONS_TRANSLATION_X_NAV_BAR_ALIGNMENT})
+    public @interface IconsTranslationX {
+    }
+
     // Ratio of empty space, qsb should take up to appear visually centered.
     public static final float QSB_CENTER_FACTOR = .325f;
     private static final int BUBBLE_BAR_ADJUSTMENT_ANIMATION_DURATION_MS = 250;
@@ -71,6 +81,10 @@ public class Hotseat extends CellLayout implements Insettable {
     private boolean mSendTouchToWorkspace;
     private final MultiValueAlpha mIconsAlphaChannels;
     private final MultiValueAlpha mQsbAlphaChannels;
+
+    private @Nullable MultiProperty mQsbTranslationX;
+
+    private final MultiPropertyFactory mIconsTranslationXFactory;
 
     private final View mQsb;
 
@@ -88,7 +102,24 @@ public class Hotseat extends CellLayout implements Insettable {
         addView(mQsb);
         mIconsAlphaChannels = new MultiValueAlpha(getShortcutsAndWidgets(),
                 ALPHA_CHANNEL_CHANNELS_COUNT);
+        if (mQsb instanceof Reorderable qsbReorderable) {
+            mQsbTranslationX = qsbReorderable.getTranslateDelegate()
+                    .getTranslationX(MultiTranslateDelegate.INDEX_NAV_BAR_ANIM);
+        }
+        mIconsTranslationXFactory = new MultiPropertyFactory<>(getShortcutsAndWidgets(),
+                VIEW_TRANSLATE_X, ICONS_TRANSLATION_X_CHANNELS_COUNT, Float::sum);
         mQsbAlphaChannels = new MultiValueAlpha(mQsb, ALPHA_CHANNEL_CHANNELS_COUNT);
+    }
+
+    /** Provides translation X for hotseat icons for the channel. */
+    public MultiProperty getIconsTranslationX(@IconsTranslationX int channelId) {
+        return mIconsTranslationXFactory.get(channelId);
+    }
+
+    /** Provides translation X for hotseat Qsb. */
+    @Nullable
+    public MultiProperty getQsbTranslationX() {
+        return mQsbTranslationX;
     }
 
     /**

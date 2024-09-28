@@ -68,7 +68,7 @@ import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.PackageItemInfo;
 import com.android.launcher3.pm.PinRequestHelper;
 import com.android.launcher3.util.ApiWrapper;
-import com.android.launcher3.util.PackageManagerHelper;
+import com.android.launcher3.util.ApplicationInfoWrapper;
 import com.android.launcher3.util.SystemUiController;
 import com.android.launcher3.views.AbstractSlideInView;
 import com.android.launcher3.views.BaseDragLayer;
@@ -164,8 +164,8 @@ public class AddItemActivity extends BaseActivity
             finish();
             return;
         }
-        ApplicationInfo info = PackageManagerHelper.INSTANCE.get(this)
-                .getApplicationInfo(targetApp.packageName, targetApp.user, 0);
+        ApplicationInfo info = new ApplicationInfoWrapper(
+                this, targetApp.packageName, targetApp.user).getInfo();
         if (info == null) {
             finish();
             return;

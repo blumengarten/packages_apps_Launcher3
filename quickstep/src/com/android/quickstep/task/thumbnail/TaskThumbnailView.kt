@@ -22,6 +22,7 @@ import android.graphics.Color
 import android.graphics.Outline
 import android.graphics.Rect
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.view.ViewOutlineProvider
 import androidx.annotation.ColorInt
@@ -92,6 +93,7 @@ class TaskThumbnailView : ConstraintLayout, ViewPool.Reusable {
             CoroutineScope(SupervisorJob() + Dispatchers.Main + CoroutineName("TaskThumbnailView"))
         viewModel.uiState
             .onEach { viewModelUiState ->
+                Log.d(TAG, "viewModelUiState changed from $uiState to: $viewModelUiState")
                 uiState = viewModelUiState
                 resetViews()
                 when (viewModelUiState) {
@@ -211,6 +213,10 @@ class TaskThumbnailView : ConstraintLayout, ViewPool.Reusable {
         Utilities.mapRange(
             viewModel.cornerRadiusProgress.value,
             overviewCornerRadius,
-            fullscreenCornerRadius
+            fullscreenCornerRadius,
         ) / inheritedScale
+
+    private companion object {
+        const val TAG = "TaskThumbnailView"
+    }
 }

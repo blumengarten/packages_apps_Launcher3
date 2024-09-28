@@ -19,11 +19,14 @@ import static com.android.app.animation.Interpolators.EMPHASIZED;
 import static com.android.launcher3.Hotseat.ALPHA_CHANNEL_TASKBAR_ALIGNMENT;
 import static com.android.launcher3.Hotseat.ALPHA_CHANNEL_TASKBAR_STASH;
 import static com.android.launcher3.LauncherState.HOTSEAT_ICONS;
+import static com.android.launcher3.Utilities.isRtl;
 import static com.android.launcher3.taskbar.TaskbarStashController.FLAG_IN_APP;
 import static com.android.launcher3.taskbar.TaskbarStashController.FLAG_IN_OVERVIEW;
 import static com.android.launcher3.taskbar.TaskbarStashController.FLAG_IN_STASHED_LAUNCHER_STATE;
 import static com.android.launcher3.taskbar.TaskbarStashController.FLAG_STASHED_FOR_BUBBLES;
 import static com.android.launcher3.taskbar.TaskbarViewController.ALPHA_INDEX_HOME;
+import static com.android.launcher3.taskbar.bubbles.BubbleBarView.FADE_IN_ANIM_ALPHA_DURATION_MS;
+import static com.android.launcher3.taskbar.bubbles.BubbleBarView.FADE_OUT_ANIM_POSITION_DURATION_MS;
 import static com.android.launcher3.util.FlagDebugUtils.appendFlag;
 import static com.android.launcher3.util.FlagDebugUtils.formatFlagChange;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_AWAKE;
@@ -42,8 +45,10 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.app.animation.Interpolators;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.DeviceProfile;
+import com.android.launcher3.Hotseat;
 import com.android.launcher3.Hotseat.HotseatQsbAlphaId;
 import com.android.launcher3.LauncherState;
 import com.android.launcher3.QuickstepTransitionManager;
@@ -62,6 +67,7 @@ import com.android.quickstep.views.RecentsView;
 import com.android.systemui.animation.ViewRootSync;
 import com.android.systemui.shared.recents.model.ThumbnailData;
 import com.android.systemui.shared.system.QuickStepContract.SystemUiStateFlags;
+import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
 
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -151,6 +157,7 @@ public class TaskbarLauncherStateController {
     private AnimatedFloat mTaskbarAlpha;
     private AnimatedFloat mTaskbarCornerRoundness;
     private MultiProperty mTaskbarAlphaForHome;
+    private @Nullable Animator mHotseatTranslationXAnimation;
     private QuickstepLauncher mLauncher;
 
     private boolean mIsDestroyed = false;
@@ -167,6 +174,8 @@ public class TaskbarLauncherStateController {
     private boolean mIsAnimatingToLauncher;
 
     private boolean mShouldDelayLauncherStateAnim;
+
+    private @Nullable BubbleBarLocation mBubbleBarLocation;
 
     // We skip any view synchronizations during init/destroy.
     private boolean mCanSyncViews;
@@ -185,6 +194,8 @@ public class TaskbarLauncherStateController {
                     mIsQsbInline = dp.isQsbInline;
                     TaskbarLauncherStateController.this.updateIconAlphaForHome(
                             mTaskbarAlphaForHome.getValue(), ALPHA_CHANNEL_TASKBAR_ALIGNMENT);
+                    TaskbarLauncherStateController.this.onBubbleBarLocationChanged(
+                            mBubbleBarLocation, /* animate = */ false);
                 }
             };
 
@@ -832,6 +843,74 @@ public class TaskbarLauncherStateController {
             mLauncher.getHotseat().setQsbAlpha(targetAlpha, alphaChannel);
         }
     }
+
+    /** Updates launcher home screen appearance accordingly to the bubble bar location. */
+    public void onBubbleBarLocationChanged(BubbleBarLocation location, boolean animate) {
+        DeviceProfile deviceProfile = mLauncher.getDeviceProfile();
+        if (mBubbleBarLocation == location) return;
+        mBubbleBarLocation = location;
+        if (!deviceProfile.shouldAdjustHotseatOnBubblesLocationUpdate(
+                mControllers.taskbarActivityContext)) {
+            return;
+        }
+        int targetX = 0;
+        if (mBubbleBarLocation != null) {
+            boolean isBubblesOnLeft = location.isOnLeft(isRtl(mLauncher.getResources()));
+            targetX = deviceProfile.getHotseatTranslationXForBubbleBar(/* isNavbarOnRight= */
+                    isBubblesOnLeft);
+        }
+        updateHotseatAndQsbTranslationX(targetX, animate);
+    }
+
+    private void updateHotseatAndQsbTranslationX(float targetValue, boolean animate) {
+        // cancel existing animation
+        if (mHotseatTranslationXAnimation != null) {
+            mHotseatTranslationXAnimation.cancel();
+        }
+        Runnable alignTaskbar = new Runnable() {
+            @Override
+            public void run() {
+                // We only need to align the task bar when on launcher home screen
+                if (mControllers.taskbarStashController.isOnHome()) {
+                    DeviceProfile dp = mLauncher.getDeviceProfile();
+                    mControllers.taskbarViewController
+                            .setLauncherIconAlignment(/* alignmentRatio = */ 1, dp);
+                }
+            }
+        };
+        Hotseat hotseat = mLauncher.getHotseat();
+        AnimatorSet translationXAnimation = new AnimatorSet();
+        MultiProperty iconsTranslationX = hotseat.getIconsTranslationX(
+                Hotseat.ICONS_TRANSLATION_X_NAV_BAR_ALIGNMENT);
+        if (animate) {
+            translationXAnimation.playTogether(iconsTranslationX.animateToValue(targetValue));
+        } else {
+            iconsTranslationX.setValue(targetValue);
+        }
+        float qsbTargetX = 0;
+        if (mIsQsbInline) {
+            qsbTargetX = targetValue;
+        }
+        MultiProperty qsbTranslationX = hotseat.getQsbTranslationX();
+        if (qsbTranslationX != null) {
+            if (animate) {
+                translationXAnimation.playTogether(qsbTranslationX.animateToValue(qsbTargetX));
+            } else {
+                qsbTranslationX.setValue(qsbTargetX);
+            }
+        }
+        if (!animate) {
+            alignTaskbar.run();
+            return;
+        }
+        mHotseatTranslationXAnimation = translationXAnimation;
+        translationXAnimation.setStartDelay(FADE_OUT_ANIM_POSITION_DURATION_MS);
+        translationXAnimation.setDuration(FADE_IN_ANIM_ALPHA_DURATION_MS);
+        translationXAnimation.setInterpolator(Interpolators.EMPHASIZED);
+        translationXAnimation.addListener(AnimatorListeners.forEndCallback(alignTaskbar));
+        translationXAnimation.start();
+    }
+
 
     private final class TaskBarRecentsAnimationListener implements
             RecentsAnimationCallbacks.RecentsAnimationListener {

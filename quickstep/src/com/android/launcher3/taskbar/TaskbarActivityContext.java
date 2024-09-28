@@ -108,6 +108,7 @@ import com.android.launcher3.taskbar.TaskbarTranslationController.TransitionCall
 import com.android.launcher3.taskbar.allapps.TaskbarAllAppsController;
 import com.android.launcher3.taskbar.bubbles.BubbleBarController;
 import com.android.launcher3.taskbar.bubbles.BubbleBarPinController;
+import com.android.launcher3.taskbar.bubbles.BubbleBarSwipeController;
 import com.android.launcher3.taskbar.bubbles.BubbleBarView;
 import com.android.launcher3.taskbar.bubbles.BubbleBarViewController;
 import com.android.launcher3.taskbar.bubbles.BubbleControllers;
@@ -131,11 +132,11 @@ import com.android.launcher3.touch.ItemClickHandler;
 import com.android.launcher3.touch.ItemClickHandler.ItemClickProxy;
 import com.android.launcher3.util.ActivityOptionsWrapper;
 import com.android.launcher3.util.ApiWrapper;
+import com.android.launcher3.util.ApplicationInfoWrapper;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.Executors;
 import com.android.launcher3.util.NavigationMode;
-import com.android.launcher3.util.PackageManagerHelper;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.SettingsCache;
 import com.android.launcher3.util.SplitConfigurationOptions.SplitSelectSource;
@@ -279,9 +280,11 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         BubbleBarController.onTaskbarRecreated();
         if (BubbleBarController.isBubbleBarEnabled() && bubbleBarView != null) {
             Optional<BubbleStashedHandleViewController> bubbleHandleController = Optional.empty();
+            Optional<BubbleBarSwipeController> bubbleBarSwipeController = Optional.empty();
             if (isTransientTaskbar) {
                 bubbleHandleController = Optional.of(
                         new BubbleStashedHandleViewController(this, bubbleHandleView));
+                bubbleBarSwipeController = Optional.of(new BubbleBarSwipeController(this));
             }
             TaskbarHotseatDimensionsProvider dimensionsProvider =
                     new DeviceProfileDimensionsProviderAdapter(this);
@@ -299,6 +302,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                             () -> DisplayController.INSTANCE.get(this).getInfo().currentSize),
                     new BubblePinController(this, mDragLayer,
                             () -> DisplayController.INSTANCE.get(this).getInfo().currentSize),
+                    bubbleBarSwipeController,
                     new BubbleCreator(this)
             ));
         }
@@ -359,38 +363,6 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         setTaskbarWindowFullscreen(mIsFullscreen);
 
         dispatchDeviceProfileChanged();
-    }
-
-    /**
-     * Calculate the offsets needed to transform the transient taskbar bounds to the hotseat bounds.
-     * @return The offsets will be stored in a Rect
-     */
-    public Rect calculateTaskbarToHotseatOffsets(Rect hotseatBounds) {
-        Rect taskbar = getTransientTaskbarBounds();
-        Rect offsets = new Rect();
-
-        offsets.left = hotseatBounds.left - taskbar.left;
-        offsets.right = hotseatBounds.right - taskbar.right;
-
-        int heightDiff = hotseatBounds.height() - taskbar.height();
-        offsets.top = (taskbar.height() - heightDiff) / 2;
-
-        int gleanedTaskbarPadding = (mDeviceProfile.taskbarHeight
-                - getTransientTaskbarBounds().height()) / 2;
-        offsets.left -= gleanedTaskbarPadding;
-        offsets.top -= gleanedTaskbarPadding;
-        offsets.right += gleanedTaskbarPadding;
-
-        // Bottom is relative to the bottom of layout, so we can calculate it with padding included.
-        offsets.bottom = (hotseatBounds.height() - taskbar.height()) / 2;
-
-        // Update bounds in taskbar background
-        if (hotseatBounds.isEmpty()) {
-            mDragLayer.getTaskbarToHotseatOffsetRect().setEmpty();
-        } else {
-            mDragLayer.getTaskbarToHotseatOffsetRect().set(offsets);
-        }
-        return offsets;
     }
 
     /**
@@ -1265,7 +1237,8 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                     Intent intent = new Intent(info.getIntent())
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     try {
-                        if (mIsSafeModeEnabled && !PackageManagerHelper.isSystemApp(this, intent)) {
+                        if (mIsSafeModeEnabled
+                                && !new ApplicationInfoWrapper(this, intent).isSystem()) {
                             Toast.makeText(this, R.string.safemode_shortcut_error,
                                     Toast.LENGTH_SHORT).show();
                         } else if (info.isPromise()) {
@@ -1714,18 +1687,6 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         }
 
         return AnimatorPlaybackController.wrap(fullAnimation, duration);
-    }
-
-    /**
-     * Returns the bounds of launcher's hotseat (if exists).
-     */
-    public void getHotseatBounds(Rect hotseatBoundsOut) {
-        TaskbarUIController uiController = mControllers.uiController;
-        if (uiController instanceof LauncherTaskbarUIController launcherController) {
-            launcherController.getHotseatBounds(hotseatBoundsOut);
-        } else {
-            hotseatBoundsOut.setEmpty();
-        }
     }
 
     /**

@@ -23,6 +23,7 @@ import static com.android.launcher3.Flags.enableSmartspaceRemovalToggle;
 import static com.android.launcher3.LauncherPrefs.IS_FIRST_LOAD_AFTER_RESTORE;
 import static com.android.launcher3.LauncherPrefs.SHOULD_SHOW_SMARTSPACE;
 import static com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME;
+import static com.android.launcher3.icons.CacheableShortcutInfo.convertShortcutsToCacheableShortcuts;
 import static com.android.launcher3.model.BgDataModel.Callbacks.FLAG_HAS_SHORTCUT_PERMISSION;
 import static com.android.launcher3.model.BgDataModel.Callbacks.FLAG_PRIVATE_PROFILE_QUIET_MODE_ENABLED;
 import static com.android.launcher3.model.BgDataModel.Callbacks.FLAG_QUIET_MODE_CHANGE_PERMISSION;
@@ -69,9 +70,10 @@ import com.android.launcher3.folder.Folder;
 import com.android.launcher3.folder.FolderGridOrganizer;
 import com.android.launcher3.folder.FolderNameInfos;
 import com.android.launcher3.folder.FolderNameProvider;
+import com.android.launcher3.icons.CacheableShortcutCachingLogic;
+import com.android.launcher3.icons.CacheableShortcutInfo;
 import com.android.launcher3.icons.ComponentWithLabelAndIcon;
 import com.android.launcher3.icons.IconCache;
-import com.android.launcher3.icons.ShortcutCachingLogic;
 import com.android.launcher3.icons.cache.CachedObjectCachingLogic;
 import com.android.launcher3.icons.cache.IconCacheUpdateHandler;
 import com.android.launcher3.icons.cache.LauncherActivityCachingLogic;
@@ -246,7 +248,7 @@ public class LoaderTask implements Runnable {
         }
         try (LauncherModel.LoaderTransaction transaction = mApp.getModel().beginLoader(this)) {
 
-            List<ShortcutInfo> allShortcuts = new ArrayList<>();
+            List<CacheableShortcutInfo> allShortcuts = new ArrayList<>();
             loadWorkspace(allShortcuts, "", memoryLogger, restoreEventLogger);
 
             // Sanitize data re-syncs widgets/shortcuts based on the workspace loaded from db.
@@ -304,7 +306,7 @@ public class LoaderTask implements Runnable {
 
             verifyNotStopped();
             logASplit("save shortcuts in icon cache");
-            updateHandler.updateIcons(allShortcuts, new ShortcutCachingLogic(),
+            updateHandler.updateIcons(allShortcuts, CacheableShortcutCachingLogic.INSTANCE,
                     mApp.getModel()::onPackageIconsUpdated);
 
             // Take a break
@@ -322,8 +324,10 @@ public class LoaderTask implements Runnable {
 
             verifyNotStopped();
             logASplit("save deep shortcuts in icon cache");
-            updateHandler.updateIcons(allDeepShortcuts,
-                    new ShortcutCachingLogic(), (pkgs, user) -> { });
+            updateHandler.updateIcons(
+                    convertShortcutsToCacheableShortcuts(allDeepShortcuts, allActivityList),
+                    CacheableShortcutCachingLogic.INSTANCE,
+                    (pkgs, user) -> { });
 
             // Take a break
             waitForIdle();
@@ -397,7 +401,7 @@ public class LoaderTask implements Runnable {
     }
 
     protected void loadWorkspace(
-            List<ShortcutInfo> allDeepShortcuts,
+            List<CacheableShortcutInfo> allDeepShortcuts,
             String selection,
             LoaderMemoryLogger memoryLogger,
             @Nullable LauncherRestoreEventLogger restoreEventLogger
@@ -423,7 +427,7 @@ public class LoaderTask implements Runnable {
     }
 
     private void loadWorkspaceImpl(
-            List<ShortcutInfo> allDeepShortcuts,
+            List<CacheableShortcutInfo> allDeepShortcuts,
             String selection,
             @Nullable LoaderMemoryLogger memoryLogger,
             @Nullable LauncherRestoreEventLogger restoreEventLogger) {

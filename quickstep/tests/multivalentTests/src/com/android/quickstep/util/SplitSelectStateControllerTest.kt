@@ -22,7 +22,6 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Rect
-import android.os.Handler
 import android.os.UserHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.launcher3.LauncherState
@@ -39,8 +38,7 @@ import com.android.quickstep.SystemUiProxy
 import com.android.quickstep.util.SplitSelectStateController.SplitFromDesktopController
 import com.android.quickstep.views.RecentsViewContainer
 import com.android.systemui.shared.recents.model.Task
-import com.android.wm.shell.shared.split.SplitScreenConstants.SNAP_TO_50_50
-import java.util.function.Consumer
+import com.android.wm.shell.shared.split.SplitScreenConstants.SNAP_TO_2_50_50
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -54,6 +52,7 @@ import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import java.util.function.Consumer
 
 @RunWith(AndroidJUnit4::class)
 class SplitSelectStateControllerTest {
@@ -63,7 +62,6 @@ class SplitSelectStateControllerTest {
     private val statsLogManager: StatsLogManager = mock()
     private val statsLogger: StatsLogger = mock()
     private val stateManager: StateManager<LauncherState, StatefulActivity<LauncherState>> = mock()
-    private val handler: Handler = mock()
     private val context: RecentsViewContainer = mock()
     private val recentsModel: RecentsModel = mock()
     private val pendingIntent: PendingIntent = mock()
@@ -87,7 +85,6 @@ class SplitSelectStateControllerTest {
         splitSelectStateController =
             SplitSelectStateController(
                 context,
-                handler,
                 stateManager,
                 depthController,
                 statsLogManager,
@@ -645,7 +642,7 @@ class SplitSelectStateControllerTest {
         return GroupTask(
             task1,
             task2,
-            SplitConfigurationOptions.SplitBounds(Rect(), Rect(), -1, -1, SNAP_TO_50_50)
+            SplitConfigurationOptions.SplitBounds(Rect(), Rect(), -1, -1, SNAP_TO_2_50_50)
         )
     }
 
@@ -677,7 +674,7 @@ class SplitSelectStateControllerTest {
         return GroupTask(
             task1,
             task2,
-            SplitConfigurationOptions.SplitBounds(Rect(), Rect(), -1, -1, SNAP_TO_50_50)
+            SplitConfigurationOptions.SplitBounds(Rect(), Rect(), -1, -1, SNAP_TO_2_50_50)
         )
     }
 }

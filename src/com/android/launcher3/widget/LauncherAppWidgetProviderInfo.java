@@ -3,12 +3,15 @@ package com.android.launcher3.widget;
 import android.appwidget.AppWidgetProviderInfo;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Parcel;
 import android.os.UserHandle;
+
+import androidx.annotation.Nullable;
 
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.InvariantDeviceProfile;
@@ -223,6 +226,12 @@ public class LauncherAppWidgetProviderInfo extends AppWidgetProviderInfo
 
     @Override
     public Drawable getFullResIcon(IconCache cache) {
-        return cache.getFullResIcon(provider.getPackageName(), icon);
+        return cache.getFullResIcon(getActivityInfo());
+    }
+
+    @Nullable
+    @Override
+    public ApplicationInfo getApplicationInfo() {
+        return getActivityInfo().applicationInfo;
     }
 }

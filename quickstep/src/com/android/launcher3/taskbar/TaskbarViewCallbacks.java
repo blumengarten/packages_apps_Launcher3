@@ -140,7 +140,8 @@ public class TaskbarViewCallbacks {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mControllers.keyboardQuickSwitchController.openQuickSwitchView();
+                mControllers.keyboardQuickSwitchController.openQuickSwitchView(
+                        mControllers.taskbarViewController.getTaskIdsForPinnedApps());
             }
         };
     }
@@ -150,7 +151,8 @@ public class TaskbarViewCallbacks {
         return new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                mControllers.keyboardQuickSwitchController.openQuickSwitchView();
+                mControllers.keyboardQuickSwitchController.openQuickSwitchView(
+                        mControllers.taskbarViewController.getTaskIdsForPinnedApps());
                 return true;
             }
         };

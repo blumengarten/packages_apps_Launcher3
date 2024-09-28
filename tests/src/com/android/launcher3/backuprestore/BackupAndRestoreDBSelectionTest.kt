@@ -23,6 +23,7 @@ import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import com.android.launcher3.Flags
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.model.ModelDbController
+import com.android.launcher3.provider.RestoreDbTask
 import com.android.launcher3.util.Executors.MODEL_EXECUTOR
 import com.android.launcher3.util.TestUtil
 import com.android.launcher3.util.rule.BackAndRestoreRule
@@ -66,5 +67,14 @@ class BackupAndRestoreDBSelectionTest {
                 "RESTORE_DEVICE shouldn't be present after a backup and restore."
             }
         }
+    }
+
+    @Test
+    fun testExistingDbsAndRemovingDbs() {
+        var existingDbs = RestoreDbTask.existingDbs(getInstrumentation().targetContext)
+        assert(existingDbs.size == 4)
+        RestoreDbTask.removeOldDBs(getInstrumentation().targetContext, "launcher_4_by_4.db")
+        existingDbs = RestoreDbTask.existingDbs(getInstrumentation().targetContext)
+        assert(existingDbs.size == 1)
     }
 }

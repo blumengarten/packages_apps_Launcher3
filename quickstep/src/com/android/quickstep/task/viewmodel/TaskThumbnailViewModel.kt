@@ -19,6 +19,7 @@ package com.android.quickstep.task.viewmodel
 import android.annotation.ColorInt
 import android.app.ActivityTaskManager.INVALID_TASK_ID
 import android.graphics.Matrix
+import android.util.Log
 import androidx.core.graphics.ColorUtils
 import com.android.quickstep.recents.data.RecentTasksRepository
 import com.android.quickstep.recents.usecase.GetThumbnailPositionUseCase
@@ -82,7 +83,7 @@ class TaskThumbnailViewModel(
         combine(
                 task.flatMapLatest { it }.map { it?.key?.id }.distinctUntilChanged(),
                 recentsViewData.runningTaskIds,
-                recentsViewData.runningTaskShowScreenshot
+                recentsViewData.runningTaskShowScreenshot,
             ) { taskId, runningTaskIds, runningTaskShowScreenshot ->
                 runningTaskIds.contains(taskId) && !runningTaskShowScreenshot
             }
@@ -90,6 +91,13 @@ class TaskThumbnailViewModel(
 
     val uiState: Flow<TaskThumbnailUiState> =
         combine(task.flatMapLatest { it }, isLiveTile) { taskVal, isRunning ->
+                // TODO(b/369339561) This log is firing a lot. Reduce emissions from TasksRepository
+                //  then re-enable this log.
+                //                Log.d(
+                //                    TAG,
+                //                    "Received task and / or live tile update. taskVal: $taskVal"
+                //                    + " isRunning: $isRunning.",
+                //                )
                 when {
                     taskVal == null -> Uninitialized
                     isRunning -> LiveTile
@@ -103,6 +111,7 @@ class TaskThumbnailViewModel(
             .distinctUntilChanged()
 
     fun bind(taskId: Int) {
+        Log.d(TAG, "bind taskId: $taskId")
         this.taskId = taskId
         task.value = tasksRepository.getTaskDataById(taskId)
         splashProgress.value = splashAlphaUseCase.execute(taskId)
@@ -139,5 +148,6 @@ class TaskThumbnailViewModel(
 
     private companion object {
         const val MAX_SCRIM_ALPHA = 0.4f
+        const val TAG = "TaskThumbnailViewModel"
     }
 }

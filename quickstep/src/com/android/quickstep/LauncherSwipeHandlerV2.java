@@ -46,6 +46,7 @@ import com.android.launcher3.views.ClipIconView;
 import com.android.launcher3.views.FloatingIconView;
 import com.android.launcher3.views.FloatingView;
 import com.android.launcher3.widget.LauncherAppWidgetHostView;
+import com.android.quickstep.fallback.window.RecentsWindowManager;
 import com.android.quickstep.util.RectFSpringAnim;
 import com.android.quickstep.util.ScalingWorkspaceRevealAnim;
 import com.android.quickstep.util.StaggeredWorkspaceAnim;
@@ -68,7 +69,7 @@ public class LauncherSwipeHandlerV2 extends AbsSwipeUpHandler<
             TaskAnimationManager taskAnimationManager, GestureState gestureState, long touchTimeMs,
             boolean continuingLastGesture, InputConsumerController inputConsumer) {
         super(context, deviceState, taskAnimationManager, gestureState, touchTimeMs,
-                continuingLastGesture, inputConsumer);
+                continuingLastGesture, inputConsumer, null);
     }
 
 

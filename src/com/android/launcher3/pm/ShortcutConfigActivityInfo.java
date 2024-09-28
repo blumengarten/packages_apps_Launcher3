@@ -26,6 +26,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
@@ -43,6 +44,7 @@ import com.android.launcher3.R;
 import com.android.launcher3.icons.ComponentWithLabelAndIcon;
 import com.android.launcher3.icons.IconCache;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
+import com.android.launcher3.util.ApplicationInfoWrapper;
 import com.android.launcher3.util.PackageUserKey;
 
 import java.util.ArrayList;
@@ -58,10 +60,20 @@ public abstract class ShortcutConfigActivityInfo implements ComponentWithLabelAn
 
     private final ComponentName mCn;
     private final UserHandle mUser;
+    private final ApplicationInfoWrapper mInfoWrapper;
 
-    protected ShortcutConfigActivityInfo(ComponentName cn, UserHandle user) {
+    protected ShortcutConfigActivityInfo(
+            ComponentName cn, UserHandle user, ApplicationInfoWrapper infoWrapper) {
         mCn = cn;
         mUser = user;
+        mInfoWrapper = infoWrapper;
+    }
+
+    protected ShortcutConfigActivityInfo(
+            ComponentName cn, UserHandle user, Context context) {
+        mCn = cn;
+        mUser = user;
+        mInfoWrapper = new ApplicationInfoWrapper(context, cn.getPackageName(), user);
     }
 
     @Override
@@ -87,6 +99,12 @@ public abstract class ShortcutConfigActivityInfo implements ComponentWithLabelAn
      */
     public WorkspaceItemInfo createWorkspaceItemInfo() {
         return null;
+    }
+
+    @Nullable
+    @Override
+    public ApplicationInfo getApplicationInfo() {
+        return mInfoWrapper.getInfo();
     }
 
     public boolean startConfigActivity(Activity activity, int requestCode) {
@@ -120,7 +138,8 @@ public abstract class ShortcutConfigActivityInfo implements ComponentWithLabelAn
         private final LauncherActivityInfo mInfo;
 
         public ShortcutConfigActivityInfoVO(LauncherActivityInfo info) {
-            super(info.getComponentName(), info.getUser());
+            super(info.getComponentName(), info.getUser(),
+                    new ApplicationInfoWrapper(info.getApplicationInfo()));
             mInfo = info;
         }
 
@@ -131,7 +150,7 @@ public abstract class ShortcutConfigActivityInfo implements ComponentWithLabelAn
 
         @Override
         public Drawable getFullResIcon(IconCache cache) {
-            return cache.getFullResIcon(mInfo);
+            return cache.getFullResIcon(mInfo.getActivityInfo());
         }
 
         @Override

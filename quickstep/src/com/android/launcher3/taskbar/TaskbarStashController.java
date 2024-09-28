@@ -42,7 +42,6 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.app.RemoteAction;
-import android.graphics.Rect;
 import android.graphics.drawable.Icon;
 import android.os.SystemClock;
 import android.util.Log;
@@ -62,6 +61,7 @@ import com.android.launcher3.Alarm;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.R;
 import com.android.launcher3.anim.AnimatedFloat;
+import com.android.launcher3.anim.AnimationSuccessListener;
 import com.android.launcher3.anim.AnimatorListeners;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
@@ -81,6 +81,8 @@ import java.util.function.LongPredicate;
 public class TaskbarStashController implements TaskbarControllers.LoggableTaskbarController {
     private static final String TAG = "TaskbarStashController";
     private static final boolean DEBUG = false;
+
+    private static boolean sEnableSoftwareImeForTests = false;
 
     /**
      * Def. value for @param shouldBubblesFollow in
@@ -131,19 +133,22 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
      *
      * Use {@link #getStashDuration()} to query duration
      */
-    private static final long TASKBAR_STASH_DURATION = InsetsController.ANIMATION_DURATION_RESIZE;
+    @VisibleForTesting
+    static final long TASKBAR_STASH_DURATION = InsetsController.ANIMATION_DURATION_RESIZE;
 
     /**
      * How long to stash/unstash transient taskbar.
      *
      * Use {@link #getStashDuration()} to query duration.
      */
-    private static final long TRANSIENT_TASKBAR_STASH_DURATION = 417;
+    @VisibleForTesting
+    static final long TRANSIENT_TASKBAR_STASH_DURATION = 417;
 
     /**
      * How long to stash/unstash when keyboard is appearing/disappearing.
      */
-    private static final long TASKBAR_STASH_DURATION_FOR_IME = 80;
+    @VisibleForTesting
+    static final long TASKBAR_STASH_DURATION_FOR_IME = 80;
 
     /**
      * The scale TaskbarView animates to when being stashed.
@@ -164,7 +169,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
     /**
      * How long the icon/stash handle alpha animation plays.
      */
-    public static final long TASKBAR_STASH_ALPHA_DURATION = 50;
+    public static final long TRANSIENT_TASKBAR_STASH_ALPHA_DURATION = 50;
 
     /**
      * How long to delay the icon/stash handle alpha for the home to app taskbar animation.
@@ -209,7 +214,6 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
      * by not scaling the height of the taskbar background.
      */
     private static final int TRANSITION_UNSTASH_SUW_MANUAL = 3;
-    private static final Rect EMPTY_RECT = new Rect();
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef(value = {
@@ -254,7 +258,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
     private boolean mEnableBlockingTimeoutDuringTests = false;
 
     private Animator mTaskbarBackgroundAlphaAnimator;
-    private long mTaskbarBackgroundDuration;
+    private final long mTaskbarBackgroundDuration;
     private boolean mUserIsNotGoingHome = false;
 
     // Evaluate whether the handle should be stashed
@@ -444,6 +448,11 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
     /** Returns whether the taskbar is currently in overview screen. */
     public boolean isInOverview() {
         return hasAnyFlag(FLAG_IN_OVERVIEW);
+    }
+
+    /** Returns whether the taskbar is currently on launcher home screen. */
+    public boolean isOnHome() {
+        return !isInOverview() && !isInApp();
     }
 
     /** Returns whether taskbar is hidden for bubbles. */
@@ -771,7 +780,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         }
 
         fullLengthAnimatorSet.play(mControllers.stashedHandleViewController
-                .createRevealAnimToIsStashed(isStashed, EMPTY_RECT));
+                .createRevealAnimToIsStashed(isStashed));
         // Return the stashed handle to its default scale in case it was changed as part of the
         // feedforward hint. Note that the reveal animation above also visually scales it.
         fullLengthAnimatorSet.play(mTaskbarStashedHandleHintScale.animateToValue(1f));
@@ -801,14 +810,14 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
             if (animationType == TRANSITION_HANDLE_FADE) {
                 // When fading, the handle fades in/out at the beginning of the transition with
                 // TASKBAR_STASH_ALPHA_DURATION.
-                backgroundAndHandleAlphaDuration = TASKBAR_STASH_ALPHA_DURATION;
+                backgroundAndHandleAlphaDuration = TRANSIENT_TASKBAR_STASH_ALPHA_DURATION;
                 // The iconAlphaDuration must be set to duration for the skippable interpolators
                 // below to work.
                 iconAlphaDuration = duration;
             } else {
                 iconAlphaStartDelay = TASKBAR_STASH_ALPHA_START_DELAY;
-                iconAlphaDuration = TASKBAR_STASH_ALPHA_DURATION;
-                backgroundAndHandleAlphaDuration = TASKBAR_STASH_ALPHA_DURATION;
+                iconAlphaDuration = TRANSIENT_TASKBAR_STASH_ALPHA_DURATION;
+                backgroundAndHandleAlphaDuration = TRANSIENT_TASKBAR_STASH_ALPHA_DURATION;
 
                 if (isStashed) {
                     if (animationType == TRANSITION_HOME_TO_APP) {
@@ -819,19 +828,6 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
                 }
 
             }
-        }
-
-
-        Rect taskbarToHotseatOffsets = new Rect();
-        if (enableScalingRevealHomeAnimation() && animationType == TRANSITION_HOME_TO_APP) {
-            Rect hotseatRect = new Rect();
-            mActivity.getHotseatBounds(hotseatRect);
-
-            // Calculate and store offsets so that we can sync with the taskbar stashed handle
-            taskbarToHotseatOffsets.set(
-                    mActivity.calculateTaskbarToHotseatOffsets(hotseatRect));
-            as.addListener(AnimatorListeners.forEndCallback(
-                    () -> mActivity.calculateTaskbarToHotseatOffsets(EMPTY_RECT)));
         }
 
         play(as, mTaskbarStashedHandleAlpha.animateToValue(stashedHandleAlphaTarget),
@@ -882,12 +878,10 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         }
 
         mControllers.taskbarViewController.addRevealAnimToIsStashed(skippable, isStashed, duration,
-                EMPHASIZED, animationType == TRANSITION_UNSTASH_SUW_MANUAL,
-                animationType == TRANSITION_HOME_TO_APP);
+                EMPHASIZED, animationType == TRANSITION_UNSTASH_SUW_MANUAL);
 
         play(skippable, mControllers.stashedHandleViewController
-                .createRevealAnimToIsStashed(isStashed, taskbarToHotseatOffsets), 0, duration,
-                EMPHASIZED);
+                .createRevealAnimToIsStashed(isStashed), 0, duration, EMPHASIZED);
 
         // Return the stashed handle to its default scale in case it was changed as part of the
         // feedforward hint. Note that the reveal animation above also visually scales it.
@@ -968,7 +962,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         }
         int action = expanding ? InteractionJankMonitor.CUJ_TASKBAR_EXPAND :
                 InteractionJankMonitor.CUJ_TASKBAR_COLLAPSE;
-        animator.addListener(new AnimatorListenerAdapter() {
+        animator.addListener(new AnimationSuccessListener() {
             @Override
             public void onAnimationStart(@NonNull Animator animation) {
                 final Configuration.Builder builder =
@@ -980,8 +974,15 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
             }
 
             @Override
-            public void onAnimationEnd(@NonNull Animator animation) {
+            public void onAnimationSuccess(@NonNull Animator animator) {
                 InteractionJankMonitor.getInstance().end(action);
+            }
+
+            @Override
+            public void onAnimationCancel(@NonNull Animator animation) {
+                super.onAnimationCancel(animation);
+
+                InteractionJankMonitor.getInstance().cancel(action);
             }
         });
     }
@@ -1087,7 +1088,8 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
     /**
      * When hiding the IME, delay the unstash animation to align with the end of the transition.
      */
-    private long getTaskbarStashStartDelayForIme() {
+    @VisibleForTesting
+    long getTaskbarStashStartDelayForIme() {
         if (mIsImeShowing) {
             // Only delay when IME is exiting, not entering.
             return 0;
@@ -1143,13 +1145,13 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         }
 
         // Do not stash if pinned taskbar, hardware keyboard is attached and no IME is docked
-        if (mActivity.isHardwareKeyboard() && DisplayController.isPinnedTaskbar(mActivity)
+        if (isHardwareKeyboard() && DisplayController.isPinnedTaskbar(mActivity)
                 && !mActivity.isImeDocked()) {
             return false;
         }
 
         // Do not stash if hardware keyboard is attached, in 3 button nav and desktop windowing mode
-        if (mActivity.isHardwareKeyboard()
+        if (isHardwareKeyboard()
                 && mActivity.isThreeButtonNav()
                 && mControllers.taskbarDesktopModeController.getAreDesktopTasksVisible()) {
             return false;
@@ -1161,6 +1163,21 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         }
 
         return mIsImeShowing || mIsImeSwitcherShowing;
+    }
+
+    private boolean isHardwareKeyboard() {
+        return mActivity.isHardwareKeyboard() && !sEnableSoftwareImeForTests;
+    }
+
+    /**
+     * Overrides {@link #isHardwareKeyboard()} to {@code false} for testing, if enabled.
+     * <p>
+     * Virtual devices are sometimes in hardware keyboard mode, leading to an inconsistent
+     * testing environment.
+     */
+    @VisibleForTesting
+    static void enableSoftwareImeForTests(boolean enable) {
+        sEnableSoftwareImeForTests = enable;
     }
 
     /**
@@ -1288,7 +1305,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
     /**
      * Attempts to start timer to auto hide the taskbar based on time.
      */
-    public void tryStartTaskbarTimeout() {
+    private void tryStartTaskbarTimeout() {
         if (!DisplayController.isTransientTaskbar(mActivity)
                 || mIsStashed
                 || mEnableBlockingTimeoutDuringTests) {
@@ -1314,6 +1331,11 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
             return;
         }
         updateAndAnimateTransientTaskbarForTimeout();
+    }
+
+    @VisibleForTesting
+    Alarm getTimeoutAlarm() {
+        return mTimeoutAlarm;
     }
 
     @Override

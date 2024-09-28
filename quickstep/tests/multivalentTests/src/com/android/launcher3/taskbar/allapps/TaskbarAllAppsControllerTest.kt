@@ -199,8 +199,8 @@ class TaskbarAllAppsControllerTest {
         assertThat(editText?.hasFocus()).isTrue()
     }
 
-    private companion object {
-        private val TEST_APPS =
+    companion object {
+        val TEST_APPS =
             Array(16) {
                 AppInfo(
                     ComponentName(
@@ -213,6 +213,6 @@ class TaskbarAllAppsControllerTest {
                 )
             }
 
-        private val TEST_PREDICTED_APPS = TEST_APPS.take(4).map { WorkspaceItemInfo(it) }
+        val TEST_PREDICTED_APPS = TEST_APPS.take(4).map { WorkspaceItemInfo(it) }
     }
 }

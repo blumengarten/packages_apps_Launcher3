@@ -17,6 +17,7 @@
 package com.android.quickstep.views;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.LocusId;
@@ -31,7 +32,6 @@ import androidx.annotation.Nullable;
 import com.android.launcher3.BaseActivity;
 import com.android.launcher3.logger.LauncherAtom;
 import com.android.launcher3.statehandlers.DesktopVisibilityController;
-import com.android.launcher3.util.SystemUiController;
 import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.views.ScrimView;
 
@@ -44,7 +44,7 @@ public interface RecentsViewContainer extends ActivityContext {
      * Returns an instance of an implementation of RecentsViewContainer
      * @param context will find instance of recentsViewContainer from given context.
      */
-    static <T extends RecentsViewContainer> T containerFromContext(Context context) {
+    static <T extends Context & RecentsViewContainer> T containerFromContext(Context context) {
         if (context instanceof RecentsViewContainer) {
             return (T) context;
         } else if (context instanceof ContextWrapper) {
@@ -53,11 +53,6 @@ public interface RecentsViewContainer extends ActivityContext {
             throw new IllegalArgumentException("Cannot find RecentsViewContainer in parent tree");
         }
     }
-
-    /**
-     * Returns {@link SystemUiController} to manage various window flags to control system UI.
-     */
-    SystemUiController getSystemUiController();
 
     /**
      * Returns {@link ScrimView}
@@ -95,7 +90,7 @@ public interface RecentsViewContainer extends ActivityContext {
     /**
      * Returns overview actions view as a view
      */
-    View getActionsView();
+    OverviewActionsView getActionsView();
 
     /**
      * @see BaseActivity#addForceInvisibleFlag(int)
@@ -143,12 +138,6 @@ public interface RecentsViewContainer extends ActivityContext {
     void runOnBindToTouchInteractionService(Runnable r);
 
     /**
-     * @see Activity#getWindow()
-     * @return Window
-     */
-    Window getWindow();
-
-    /**
      * @see
      * BaseActivity#addMultiWindowModeChangedListener(BaseActivity.MultiWindowModeChangedListener)
      * @param listener {@link BaseActivity.MultiWindowModeChangedListener}
@@ -175,6 +164,25 @@ public interface RecentsViewContainer extends ActivityContext {
      * @return Boolean
      */
     boolean isRecentsViewVisible();
+
+    /**
+     * Begins transition to start home through container
+     */
+    default void startHome(){
+        // no op
+    }
+
+    /**
+     * Checks container to see if we can start home transition safely
+     */
+    boolean canStartHomeSafely();
+
+
+    /**
+     * Enter staged split directly from the current running app.
+     * @param leftOrTop if the staged split will be positioned left or top.
+     */
+    default void enterStageSplitFromRunningApp(boolean leftOrTop){}
 
     /**
      * Overwrites any logged item in Launcher that doesn't have a container with the
