@@ -110,8 +110,6 @@ object CacheableShortcutCachingLogic : CachingLogic<CacheableShortcutInfo> {
         info?.let { max(info.shortcutInfo.lastChangedTimestamp, packageInfo.lastUpdateTime) }
             ?: packageInfo.lastUpdateTime
 
-    override fun addToMemCache() = false
-
     override fun getApplicationInfo(info: CacheableShortcutInfo) = info.appInfo.getInfo()
 
     override fun loadIcon(context: Context, cache: BaseIconCache, info: CacheableShortcutInfo) =

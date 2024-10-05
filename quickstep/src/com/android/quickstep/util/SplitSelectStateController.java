@@ -77,6 +77,7 @@ import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.statehandlers.DepthController;
 import com.android.launcher3.statemanager.StateManager;
+import com.android.launcher3.taskbar.LauncherTaskbarUIController;
 import com.android.launcher3.testing.TestLogging;
 import com.android.launcher3.testing.shared.TestProtocol;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
@@ -743,6 +744,7 @@ public class SplitSelectStateController {
      */
     public void resetState() {
         mSplitSelectDataHolder.resetState();
+        mContainer.<RecentsView>getOverviewPanel().resetDesktopTaskFromSplitSelectState();
         dispatchOnSplitSelectionExit();
         mRecentsAnimationRunning = false;
         mLaunchingTaskView = null;
@@ -942,7 +944,16 @@ public class SplitSelectStateController {
                 anim.addListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationStart(Animator animation) {
-                        controller.finish(true /* toRecents */, null /* onFinishComplete */,
+                        controller.finish(
+                                true /* toRecents */,
+                                () -> {
+                                    LauncherTaskbarUIController controller =
+                                            mLauncher.getTaskbarUIController();
+                                    if (controller != null) {
+                                        controller.updateTaskbarLauncherStateGoingHome();
+                                    }
+
+                                },
                                 false /* sendUserLeaveHint */);
                     }
                     @Override
@@ -950,7 +961,16 @@ public class SplitSelectStateController {
                         SystemUiProxy.INSTANCE.get(mLauncher.getApplicationContext())
                                 .onDesktopSplitSelectAnimComplete(mTaskInfo);
                     }
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+                        mLauncher.getDragLayer().removeView(floatingTaskView);
+                        getSplitAnimationController()
+                                .removeSplitInstructionsView(mLauncher);
+                        resetState();
+                    }
                 });
+                anim.add(getSplitAnimationController()
+                        .getShowSplitInstructionsAnim(mLauncher).buildAnim());
                 anim.buildAnim().start();
             }
         }

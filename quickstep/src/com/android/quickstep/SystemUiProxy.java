@@ -161,6 +161,7 @@ public class SystemUiProxy implements ISystemUiProxy, NavHandle, SafeCloseable {
     private IRemoteAnimationRunner mBackToLauncherRunner;
     private IDragAndDrop mDragAndDrop;
     private final HomeVisibilityState mHomeVisibilityState = new HomeVisibilityState();
+    private final FocusState mFocusState = new FocusState();
 
     // Used to dedupe calls to SystemUI
     private int mLastShelfHeight;
@@ -300,6 +301,7 @@ public class SystemUiProxy implements ISystemUiProxy, NavHandle, SafeCloseable {
         registerSplitScreenListener(mSplitScreenListener);
         registerSplitSelectListener(mSplitSelectListener);
         mHomeVisibilityState.init(mShellTransitions);
+        mFocusState.init(mShellTransitions);
         setStartingWindowListener(mStartingWindowListener);
         setLauncherUnlockAnimationController(
                 mLauncherActivityClass, mLauncherUnlockAnimationController);
@@ -1144,6 +1146,10 @@ public class SystemUiProxy implements ISystemUiProxy, NavHandle, SafeCloseable {
         return mHomeVisibilityState;
     }
 
+    public FocusState getFocusState() {
+        return mFocusState;
+    }
+
     /**
      * Returns a surface which can be used to attach overlays to home task or null if
      * the task doesn't exist or sysui is not connected
@@ -1592,6 +1598,7 @@ public class SystemUiProxy implements ISystemUiProxy, NavHandle, SafeCloseable {
         pw.println("\tmOneHanded=" + mOneHanded);
         pw.println("\tmShellTransitions=" + mShellTransitions);
         pw.println("\tmHomeVisibilityState=" + mHomeVisibilityState);
+        pw.println("\tmFocusState=" + mFocusState);
         pw.println("\tmStartingWindow=" + mStartingWindow);
         pw.println("\tmStartingWindowListener=" + mStartingWindowListener);
         pw.println("\tmSysuiUnlockAnimationController=" + mSysuiUnlockAnimationController);

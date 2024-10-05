@@ -406,6 +406,12 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
             }
         };
         mSeparateWindowParent.recreateControllers();
+        if (BubbleBarController.isBubbleBarEnabled()) {
+            mNavButtonsView.addOnLayoutChangeListener(
+                    (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) ->
+                            onLayoutsUpdated()
+            );
+        }
     }
 
     private void initButtons(ViewGroup navContainer, ViewGroup endContainer,
@@ -1180,15 +1186,20 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
     /** Adjusts navigation buttons layout accordingly to the bubble bar position. */
     @Override
     public void onBubbleBarLocationUpdated(BubbleBarLocation location) {
-        cancelExistingNavBarAnimation();
-        mBubbleBarTargetLocation = location;
+        boolean locationUpdated = location != mBubbleBarTargetLocation;
+        if (locationUpdated) {
+            cancelExistingNavBarAnimation();
+        } else {
+            endExistingAnimation();
+        }
         mNavButtonContainer.setTranslationX(getNavBarTranslationX(location));
-        mNavButtonContainer.setAlpha(1);
+        mBubbleBarTargetLocation = location;
     }
 
     /** Animates navigation buttons accordingly to the bubble bar position. */
     @Override
     public void onBubbleBarLocationAnimated(BubbleBarLocation location) {
+        if (location == mBubbleBarTargetLocation) return;
         cancelExistingNavBarAnimation();
         mBubbleBarTargetLocation = location;
         int finalX = getNavBarTranslationX(location);
@@ -1197,6 +1208,13 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         teleportAnimator.addListener(forEndCallback(() -> mNavBarLocationAnimator = null));
         mNavBarLocationAnimator = teleportAnimator;
         mNavBarLocationAnimator.start();
+    }
+
+    private void endExistingAnimation() {
+        if (mNavBarLocationAnimator != null) {
+            mNavBarLocationAnimator.end();
+            mNavBarLocationAnimator = null;
+        }
     }
 
     private void cancelExistingNavBarAnimation() {
@@ -1240,12 +1258,18 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
     }
 
     /** Adjusts the navigation buttons layout position according to the bubble bar location. */
-    public void onTaskbarLayoutChanged() {
-        if (mControllers.taskbarViewController.getIconLayoutBounds().isEmpty()) return;
+    public void onLayoutsUpdated() {
+        // no need to do anything if on phone, or if taskbar or navbar views were not placed on
+        // screen.
+        if (mContext.getDeviceProfile().isPhone
+                || mControllers.taskbarViewController.getIconLayoutBounds().isEmpty()
+                || mNavButtonsView.getWidth() == 0) {
+            return;
+        }
         if (enableBubbleBarInPersistentTaskBar()
                 && mControllers.bubbleControllers.isPresent()) {
             if (mBubbleBarTargetLocation == null) {
-                // only set bubble bar location if it was not set before, e.g. at device boot
+                // only set bubble bar location if it was not set before
                 mBubbleBarTargetLocation = mControllers.bubbleControllers.get()
                         .bubbleBarViewController.getBubbleBarLocation();
             }

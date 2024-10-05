@@ -105,6 +105,10 @@ public interface SplitAnimationTimings {
     default Interpolator getGridSlidePrimaryInterpolator() { return LINEAR; }
     default Interpolator getGridSlideSecondaryInterpolator() { return LINEAR; }
 
+    default Interpolator getDesktopTaskFadeInterpolator() {
+        return LINEAR;
+    }
+
     // Defaults for HomeToSplit
     default float getScrimFadeInStartOffset() { return 0; }
     default float getScrimFadeInEndOffset() { return 0; }

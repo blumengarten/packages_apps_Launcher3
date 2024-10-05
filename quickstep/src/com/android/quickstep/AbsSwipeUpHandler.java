@@ -1149,12 +1149,18 @@ public abstract class AbsSwipeUpHandler<
 
         if (endTarget != NEW_TASK) {
             InteractionJankMonitorWrapper.cancel(Cuj.CUJ_LAUNCHER_QUICK_SWITCH);
+        } else {
+            InteractionJankMonitorWrapper.end(Cuj.CUJ_LAUNCHER_QUICK_SWITCH);
         }
         if (endTarget != HOME) {
             InteractionJankMonitorWrapper.cancel(Cuj.CUJ_LAUNCHER_APP_CLOSE_TO_HOME);
+        } else {
+            InteractionJankMonitorWrapper.end(Cuj.CUJ_LAUNCHER_APP_CLOSE_TO_HOME);
         }
         if (endTarget != RECENTS) {
             InteractionJankMonitorWrapper.cancel(Cuj.CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS);
+        } else {
+            InteractionJankMonitorWrapper.end(Cuj.CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS);
         }
 
         switch (endTarget) {

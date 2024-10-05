@@ -420,6 +420,25 @@ public final class Utilities {
         return mapRange(interpolator.getInterpolation(progress), toMin, toMax);
     }
 
+    /**
+     * Maps t from one range to another range.
+     * @param t The value to map.
+     * @param fromMin The lower bound of the range that t is being mapped from.
+     * @param fromMax The upper bound of the range that t is being mapped from.
+     * @param toMin The lower bound of the range that t is being mapped to.
+     * @param toMax The upper bound of the range that t is being mapped to.
+     * @return The mapped value of t.
+     */
+    public static int mapToRange(int t, int fromMin, int fromMax, int toMin, int toMax,
+            Interpolator interpolator) {
+        if (fromMin == fromMax || toMin == toMax) {
+            Log.e(TAG, "mapToRange: range has 0 length");
+            return toMin;
+        }
+        float progress = getProgress(t, fromMin, fromMax);
+        return (int) mapRange(interpolator.getInterpolation(progress), toMin, toMax);
+    }
+
     /** Bounds t between a lower and upper bound and maps the result to a range. */
     public static float mapBoundToRange(float t, float lowerBound, float upperBound,
             float toMin, float toMax, Interpolator interpolator) {

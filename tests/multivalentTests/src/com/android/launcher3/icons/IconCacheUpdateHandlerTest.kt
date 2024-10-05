@@ -25,6 +25,8 @@ import androidx.test.filters.SmallTest
 import com.android.launcher3.icons.cache.BaseIconCache
 import com.android.launcher3.icons.cache.CachingLogic
 import com.android.launcher3.icons.cache.IconCacheUpdateHandler
+import com.android.launcher3.util.RoboApiWrapper
+import java.util.concurrent.FutureTask
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -51,7 +53,7 @@ class IconCacheUpdateHandlerTest {
             System.currentTimeMillis(),
             1,
             1.0.toLong(),
-            "stateOfConfusion"
+            "stateOfConfusion",
         )
 
     @Before
@@ -81,10 +83,25 @@ class IconCacheUpdateHandlerTest {
                 componentMap,
                 ignorePackages,
                 user,
-                cachingLogic
+                cachingLogic,
             )
 
         assert(result == null)
+    }
+}
+
+/** Utility method to wait for the icon update handler to finish */
+fun IconCache.waitForUpdateHandlerToFinish() {
+    var cacheUpdateInProgress = true
+    while (cacheUpdateInProgress) {
+        val cacheCheck = FutureTask {
+            // Check for pending message on the worker thread itself as some task may be
+            // running currently
+            workerHandler.hasMessages(0, iconUpdateToken)
+        }
+        workerHandler.postDelayed(cacheCheck, 10)
+        RoboApiWrapper.waitForLooperSync(workerHandler.looper)
+        cacheUpdateInProgress = cacheCheck.get()
     }
 }
 
@@ -93,5 +110,5 @@ data class IconCacheRowData(
     val lastUpdated: Long,
     val version: Int,
     val row: Long,
-    val systemState: String
+    val systemState: String,
 )

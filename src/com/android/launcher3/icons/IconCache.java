@@ -110,8 +110,7 @@ public class IconCache extends BaseIconCache {
             IconProvider iconProvider) {
         super(context, dbFileName, MODEL_EXECUTOR.getLooper(),
                 idp.fillResIconDpi, idp.iconBitmapSize, true /* inMemoryCache */, iconProvider);
-        mComponentWithLabelCachingLogic = new CachedObjectCachingLogic(
-                context, false /* loadIcons */, false /* addToMemCache */);
+        mComponentWithLabelCachingLogic = new CachedObjectCachingLogic(context);
         mLauncherActivityInfoCachingLogic = LauncherActivityCachingLogic.INSTANCE;
         mLauncherApps = mContext.getSystemService(LauncherApps.class);
         mUserManager = UserCache.INSTANCE.get(mContext);
@@ -149,8 +148,7 @@ public class IconCache extends BaseIconCache {
                     PackageManager.GET_UNINSTALLED_PACKAGES);
             long userSerial = mUserManager.getSerialNumberForUser(user);
             for (LauncherActivityInfo app : mLauncherApps.getActivityList(packageName, user)) {
-                addIconToDBAndMemCache(app, mLauncherActivityInfoCachingLogic, info, userSerial,
-                        false /*replace existing*/);
+                addIconToDBAndMemCache(app, mLauncherActivityInfoCachingLogic, info, userSerial);
             }
         } catch (NameNotFoundException e) {
             Log.d(TAG, "Package not found", e);
@@ -205,7 +203,7 @@ public class IconCache extends BaseIconCache {
 
         CancellableTask<ItemInfoWithIcon> request = new CancellableTask<>(
                 task, MAIN_EXECUTOR, caller::reapplyItemInfo, endRunnable);
-        Utilities.postAsyncCallback(mWorkerHandler, request);
+        Utilities.postAsyncCallback(workerHandler, request);
         return request;
     }
 
@@ -257,6 +255,7 @@ public class IconCache extends BaseIconCache {
     /**
      * Fill in {@code info} with the icon and label for {@code si}. If the icon is not
      * available, and fallback check returns true, it keeps the old icon.
+     * Shortcut entries are not kept in memory since they are not frequently used
      */
     public <T extends ItemInfoWithIcon> void getShortcutIcon(T info, CacheableShortcutInfo si,
             @NonNull Predicate<T> fallbackIconCheck) {
@@ -266,7 +265,7 @@ public class IconCache extends BaseIconCache {
                 user,
                 () -> si,
                 CacheableShortcutCachingLogic.INSTANCE,
-                LookupFlag.DEFAULT).bitmap;
+                LookupFlag.SKIP_ADD_TO_MEM_CACHE).bitmap;
         if (bitmapInfo.isNullOrLowRes()) {
             bitmapInfo = getDefaultIcon(user);
         }
@@ -337,7 +336,8 @@ public class IconCache extends BaseIconCache {
      */
     public synchronized String getTitleNoCache(ComponentWithLabel info) {
         CacheEntry entry = cacheLocked(info.getComponent(), info.getUser(), () -> info,
-                mComponentWithLabelCachingLogic, LookupFlag.USE_LOW_RES);
+                mComponentWithLabelCachingLogic,
+                LookupFlag.USE_LOW_RES | LookupFlag.SKIP_ADD_TO_MEM_CACHE);
         return Utilities.trim(entry.title);
     }
 

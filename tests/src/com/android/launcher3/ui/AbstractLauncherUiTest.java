@@ -26,6 +26,7 @@ import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -103,6 +104,8 @@ public abstract class AbstractLauncherUiTest<LAUNCHER_TYPE extends Launcher> {
     public static final long DEFAULT_UI_TIMEOUT = TestUtil.DEFAULT_UI_TIMEOUT;
     private static final String TAG = "AbstractLauncherUiTest";
 
+    private static final long BYTES_PER_MEGABYTE = 1 << 20;
+
     private static boolean sDumpWasGenerated = false;
     private static boolean sActivityLeakReported = false;
     private static boolean sSeenKeyguard = false;
@@ -123,6 +126,10 @@ public abstract class AbstractLauncherUiTest<LAUNCHER_TYPE extends Launcher> {
     protected Context mTargetContext;
     protected String mTargetPackage;
     private int mLauncherPid;
+
+    private final ActivityManager.MemoryInfo mMemoryInfo = new ActivityManager.MemoryInfo();
+    private final ActivityManager mActivityManager;
+    private long mMemoryBefore;
 
     /** Detects activity leaks and throws an exception if a leak is found. */
     public static void checkDetectedLeaks(LauncherInstrumentation launcher) {
@@ -192,6 +199,8 @@ public abstract class AbstractLauncherUiTest<LAUNCHER_TYPE extends Launcher> {
     }
 
     protected AbstractLauncherUiTest() {
+        mActivityManager = InstrumentationRegistry.getContext()
+                .getSystemService(ActivityManager.class);
         mLauncher.enableCheckEventsForSuccessfulGestures();
         mLauncher.setAnomalyChecker(AbstractLauncherUiTest::verifyKeyguardInvisible);
         try {
@@ -309,6 +318,26 @@ public abstract class AbstractLauncherUiTest<LAUNCHER_TYPE extends Launcher> {
         onTestStart();
 
         initialize(this);
+    }
+
+    private long getAvailableMemory() {
+        mActivityManager.getMemoryInfo(mMemoryInfo);
+
+        return Math.divideExact(mMemoryInfo.availMem,  BYTES_PER_MEGABYTE);
+    }
+
+    @Before
+    public void saveMemoryBefore() {
+        mMemoryBefore = getAvailableMemory();
+    }
+
+    @After
+    public void logMemoryAfter() {
+        long memoryAfter = getAvailableMemory();
+
+        Log.d(TAG, "Available memory: before=" + mMemoryBefore
+                + "MB, after=" + memoryAfter
+                + "MB, delta=" + (memoryAfter - mMemoryBefore) + "MB");
     }
 
     /** Method that should be called when a test starts. */

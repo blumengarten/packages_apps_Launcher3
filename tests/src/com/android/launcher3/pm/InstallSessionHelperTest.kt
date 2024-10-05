@@ -28,6 +28,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherPrefs.Companion.PROMISE_ICON_IDS
+import com.android.launcher3.util.DaggerSingletonTracker
 import com.android.launcher3.util.Executors.MODEL_EXECUTOR
 import com.android.launcher3.util.IntArray
 import com.android.launcher3.util.LauncherModelHelper
@@ -53,6 +54,7 @@ class InstallSessionHelperTest {
     private val expectedAppPackage = "expectedAppPackage"
     private val expectedInstallerPackage = "expectedInstallerPackage"
     private val mockPackageInstaller: PackageInstaller = mock()
+    private val mTracker: DaggerSingletonTracker = mock()
 
     private lateinit var installSessionHelper: InstallSessionHelper
     private lateinit var launcherApps: LauncherApps
@@ -62,7 +64,7 @@ class InstallSessionHelperTest {
         whenever(packageManager.packageInstaller).thenReturn(mockPackageInstaller)
         whenever(sandboxContext.packageName).thenReturn(expectedInstallerPackage)
         launcherApps = sandboxContext.spyService(LauncherApps::class.java)
-        installSessionHelper = InstallSessionHelper(sandboxContext)
+        installSessionHelper = InstallSessionHelper(sandboxContext, mTracker)
     }
 
     @Test

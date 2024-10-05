@@ -402,6 +402,15 @@ constructor(
         }
         get() = taskViewAlpha.get(ALPHA_INDEX_ATTACH).value
 
+    var splitAlpha
+        set(value) {
+            splitAlphaProperty.value = value
+        }
+        get() = splitAlphaProperty.value
+
+    val splitAlphaProperty: MultiPropertyFactory<View>.MultiProperty
+        get() = taskViewAlpha.get(ALPHA_INDEX_SPLIT)
+
     protected var shouldShowScreenshot = false
         get() = !isRunningTask || field
         private set
@@ -606,6 +615,7 @@ constructor(
     override fun onRecycle() {
         resetPersistentViewTransforms()
         attachAlpha = 1f
+        splitAlpha = 1f
         // Clear any references to the thumbnail (it will be re-read either from the cache or the
         // system on next bind)
         if (!enableRefactorTaskThumbnail()) {
@@ -1687,8 +1697,9 @@ constructor(
 
         private const val ALPHA_INDEX_STABLE = 0
         private const val ALPHA_INDEX_ATTACH = 1
+        private const val ALPHA_INDEX_SPLIT = 2
 
-        private const val NUM_ALPHA_CHANNELS = 2
+        private const val NUM_ALPHA_CHANNELS = 3
 
         /** The maximum amount that a task view can be scrimmed, dimmed or tinted. */
         const val MAX_PAGE_SCRIM_ALPHA = 0.4f

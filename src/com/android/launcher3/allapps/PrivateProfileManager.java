@@ -66,6 +66,7 @@ import com.android.launcher3.BuildConfig;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Flags;
 import com.android.launcher3.R;
+import com.android.launcher3.Utilities;
 import com.android.launcher3.anim.AnimatedPropertySetter;
 import com.android.launcher3.anim.PropertySetter;
 import com.android.launcher3.icons.BitmapInfo;
@@ -699,7 +700,9 @@ public class PrivateProfileManager extends UserProfileManager {
                 mAllApps.mAH.get(MAIN).mRecyclerView.removeItemDecoration(
                         mPrivateAppsSectionDecorator);
                 // Call onAppsUpdated() because it may be canceled when this animation occurs.
-                mAllApps.getPersonalAppList().onAppsUpdated();
+                if (!Utilities.isRunningInTestHarness()) {
+                    mAllApps.getPersonalAppList().onAppsUpdated();
+                }
                 if (isPrivateSpaceHidden()) {
                     // TODO (b/325455879): Figure out if we can avoid this.
                     getMainRecyclerView().getAdapter().notifyDataSetChanged();

@@ -18,6 +18,7 @@ package com.android.quickstep.fallback;
 import static com.android.app.animation.Interpolators.FINAL_FRAME;
 import static com.android.app.animation.Interpolators.INSTANT;
 import static com.android.app.animation.Interpolators.LINEAR;
+import static com.android.launcher3.Flags.enableLargeDesktopWindowingTile;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_MODAL;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_SCALE;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_TRANSLATE_X;
@@ -26,6 +27,7 @@ import static com.android.launcher3.states.StateAnimationConfig.ANIM_SCRIM_FADE;
 import static com.android.launcher3.states.StateAnimationConfig.SKIP_OVERVIEW;
 import static com.android.quickstep.fallback.RecentsState.OVERVIEW_SPLIT_SELECT;
 import static com.android.quickstep.views.RecentsView.ADJACENT_PAGE_HORIZONTAL_OFFSET;
+import static com.android.quickstep.views.RecentsView.DESKTOP_CAROUSEL_DETACH_PROGRESS;
 import static com.android.quickstep.views.RecentsView.FULLSCREEN_PROGRESS;
 import static com.android.quickstep.views.RecentsView.RECENTS_GRID_PROGRESS;
 import static com.android.quickstep.views.RecentsView.RECENTS_SCALE_PROPERTY;
@@ -116,6 +118,11 @@ public class FallbackRecentsStateController implements StateHandler<RecentsState
                 getOverviewInterpolator(state));
         setter.setFloat(mRecentsView, TASK_THUMBNAIL_SPLASH_ALPHA,
                 state.showTaskThumbnailSplash() ? 1f : 0f, getOverviewInterpolator(state));
+        if (enableLargeDesktopWindowingTile()) {
+            setter.setFloat(mRecentsView, DESKTOP_CAROUSEL_DETACH_PROGRESS,
+                    state.detachDesktopCarousel() ? 1f : 0f,
+                    getOverviewInterpolator(state));
+        }
 
         setter.setViewBackgroundColor(mRecentsViewContainer.getScrimView(),
                 state.getScrimColor(mRecentsViewContainer.asContext()),

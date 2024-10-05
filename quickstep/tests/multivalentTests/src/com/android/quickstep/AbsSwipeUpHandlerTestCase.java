@@ -20,7 +20,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -38,14 +37,13 @@ import android.view.SurfaceControl;
 import android.view.ViewTreeObserver;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.launcher3.DeviceProfile;
-import com.android.launcher3.Flags;
 import com.android.launcher3.LauncherRootView;
 import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.statemanager.BaseState;
-import com.android.launcher3.statemanager.StatefulActivity;
 import com.android.launcher3.statemanager.StatefulContainer;
 import com.android.launcher3.util.SystemUiController;
 import com.android.quickstep.fallback.window.RecentsWindowManager;
@@ -65,11 +63,11 @@ import java.util.Collections;
 import java.util.HashMap;
 
 public abstract class AbsSwipeUpHandlerTestCase<
-        RECENTS_CONTAINER extends Context & RecentsViewContainer & StatefulContainer<STATE>,
-        STATE extends BaseState<STATE>, RECENTS_VIEW extends RecentsView<RECENTS_CONTAINER, STATE>,
-        ACTIVITY_TYPE extends  StatefulActivity<STATE> & RecentsViewContainer,
-        ACTIVITY_INTERFACE extends BaseActivityInterface<STATE, ACTIVITY_TYPE>,
-        SWIPE_HANDLER extends AbsSwipeUpHandler<RECENTS_CONTAINER, RECENTS_VIEW, STATE>> {
+        STATE_TYPE extends BaseState<STATE_TYPE>,
+        RECENTS_CONTAINER extends Context & RecentsViewContainer & StatefulContainer<STATE_TYPE>,
+        RECENTS_VIEW extends RecentsView<RECENTS_CONTAINER, STATE_TYPE>,
+        SWIPE_HANDLER extends AbsSwipeUpHandler<RECENTS_CONTAINER, RECENTS_VIEW, STATE_TYPE>,
+        CONTAINER_INTERFACE extends BaseContainerInterface<STATE_TYPE, RECENTS_CONTAINER>> {
 
     protected final Context mContext =
             InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -106,13 +104,12 @@ public abstract class AbsSwipeUpHandlerTestCase<
             /* minimizedHomeBounds= */ null,
             new Bundle());
 
-    protected RecentsWindowManager mRecentsWindowManager;
     protected TaskAnimationManager mTaskAnimationManager;
 
-    @Mock protected ACTIVITY_INTERFACE mActivityInterface;
+    @Mock protected CONTAINER_INTERFACE mActivityInterface;
     @Mock protected ActivityInitListener<?> mActivityInitListener;
     @Mock protected RecentsAnimationController mRecentsAnimationController;
-    @Mock protected STATE mState;
+    @Mock protected STATE_TYPE mState;
     @Mock protected ViewTreeObserver mViewTreeObserver;
     @Mock protected DragLayer mDragLayer;
     @Mock protected LauncherRootView mRootView;
@@ -121,16 +118,6 @@ public abstract class AbsSwipeUpHandlerTestCase<
 
     @Rule
     public final MockitoRule mMockitoRule = MockitoJUnit.rule();
-
-    @Before
-    public void setUpTaskAnimationManager() {
-        runOnMainSync(() -> {
-            if(Flags.enableFallbackOverviewInWindow()){
-                mRecentsWindowManager = new RecentsWindowManager(mContext);
-            }
-            mTaskAnimationManager = new TaskAnimationManager(mContext, mRecentsWindowManager);
-        });
-    }
 
     @Before
     public void setUpRunningTaskInfo() {
@@ -162,6 +149,7 @@ public abstract class AbsSwipeUpHandlerTestCase<
 
     @Before
     public void setUpRecentsContainer() {
+        mTaskAnimationManager = new TaskAnimationManager(mContext, getRecentsWindowManager());
         RecentsViewContainer recentsContainer = getRecentsContainer();
         RECENTS_VIEW recentsView = getRecentsView();
 
@@ -263,19 +251,23 @@ public abstract class AbsSwipeUpHandlerTestCase<
 
     private void onRecentsAnimationStart(SWIPE_HANDLER absSwipeUpHandler) {
         when(mActivityInterface.getOverviewWindowBounds(any(), any())).thenReturn(new Rect());
-        doNothing().when(mActivityInterface).setOnDeferredActivityLaunchCallback(any());
 
         runOnMainSync(() -> absSwipeUpHandler.onRecentsAnimationStart(
                 mRecentsAnimationController, mRecentsAnimationTargets));
     }
 
-    private static void runOnMainSync(Runnable runnable) {
+    protected static void runOnMainSync(Runnable runnable) {
         InstrumentationRegistry.getInstrumentation().runOnMainSync(runnable);
     }
 
     @NonNull
     private SWIPE_HANDLER createSwipeHandler() {
         return createSwipeHandler(SystemClock.uptimeMillis(), false);
+    }
+
+    @Nullable
+    protected RecentsWindowManager getRecentsWindowManager() {
+        return null;
     }
 
     @NonNull

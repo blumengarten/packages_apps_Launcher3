@@ -36,4 +36,16 @@ interface BubbleBarFlyoutPositioner {
 
     /** The size of the flyout when collapsed. */
     val collapsedSize: Float
+
+    /** The color of the flyout when collapsed. */
+    val collapsedColor: Int
+
+    /** The elevation of the flyout when collapsed. */
+    val collapsedElevation: Float
+
+    /**
+     * The distance the flyout must pass from its collapsed position until it can start revealing
+     * the triangle.
+     */
+    val distanceToRevealTriangle: Float
 }

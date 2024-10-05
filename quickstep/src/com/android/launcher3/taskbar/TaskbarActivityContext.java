@@ -278,7 +278,10 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         // If Bubble bar is present, TaskbarControllers depends on it so build it first.
         Optional<BubbleControllers> bubbleControllersOptional = Optional.empty();
         BubbleBarController.onTaskbarRecreated();
-        if (BubbleBarController.isBubbleBarEnabled() && bubbleBarView != null) {
+        if (BubbleBarController.isBubbleBarEnabled()
+                && !mDeviceProfile.isPhone
+                && bubbleBarView != null
+        ) {
             Optional<BubbleStashedHandleViewController> bubbleHandleController = Optional.empty();
             Optional<BubbleBarSwipeController> bubbleBarSwipeController = Optional.empty();
             if (isTransientTaskbar) {

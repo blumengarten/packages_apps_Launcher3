@@ -675,7 +675,8 @@ public class BubbleBarViewController {
                 // if the animation is suppressed, immediately stash or show the bubble bar to
                 // ensure they've been initialized.
                 if (mTaskbarStashController.isInApp()
-                        && mBubbleStashController.isTransientTaskBar()) {
+                        && mBubbleStashController.isTransientTaskBar()
+                        && mTaskbarStashController.isStashed()) {
                     mBubbleStashController.stashBubbleBarImmediate();
                 } else {
                     mBubbleStashController.showBubbleBarImmediate();

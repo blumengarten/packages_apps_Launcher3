@@ -26,6 +26,7 @@ import com.android.launcher3.anim.AnimatedFloat
 import com.android.launcher3.taskbar.TaskbarInsetsController
 import com.android.launcher3.taskbar.bubbles.BubbleBarViewController
 import com.android.launcher3.taskbar.bubbles.BubbleStashedHandleViewController
+import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController.BubbleLauncherState
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController.Companion.BAR_STASH_DURATION
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController.Companion.BAR_TRANSLATION_DURATION
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController.ControllersAfterInitAction
@@ -45,29 +46,21 @@ class PersistentBubbleStashController(
     private lateinit var bubbleBarScaleAnimator: AnimatedFloat
     private lateinit var controllersAfterInitAction: ControllersAfterInitAction
 
-    override var isBubblesShowingOnHome: Boolean = false
-        set(onHome) {
-            if (field == onHome) return
-            field = onHome
+    override var launcherState: BubbleLauncherState = BubbleLauncherState.IN_APP
+        set(state) {
+            if (field == state) return
+            val transitionFromHome = field == BubbleLauncherState.HOME
+            field = state
             if (!bubbleBarViewController.hasBubbles()) {
                 // if there are no bubbles, there's nothing to show, so just return.
                 return
             }
-            if (onHome) {
-                // When transition to home we should show collapse the bubble bar
-                updateExpandedState(expand = false)
-            }
-            animateBubbleBarY()
-            bubbleBarViewController.onBubbleBarConfigurationChanged(/* animate= */ true)
-        }
-
-    override var isBubblesShowingOnOverview: Boolean = false
-        set(onOverview) {
-            if (field == onOverview) return
-            field = onOverview
-            if (!onOverview) {
-                // When transition from overview we should show collapse the bubble bar
-                updateExpandedState(expand = false)
+            // If we're transitioning anywhere, bubble bar should be collapsed
+            updateExpandedState(expand = false)
+            if (transitionFromHome || field == BubbleLauncherState.HOME) {
+                // If we're transitioning to or from home, animate the Y because we're in hotseat
+                // on home but in persistent taskbar elsewhere so the position is different.
+                animateBubbleBarY()
             }
             bubbleBarViewController.onBubbleBarConfigurationChanged(/* animate= */ true)
         }

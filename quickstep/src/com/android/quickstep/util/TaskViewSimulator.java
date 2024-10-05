@@ -305,6 +305,14 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
     }
 
     /**
+     * Override the pivot used to apply scale changes.
+     */
+    public void setPivotOverride(PointF pivotOverride) {
+        mPivotOverride = pivotOverride;
+        getFullScreenScale();
+    }
+
+    /**
      * Adds animation for all the components corresponding to transition from an app to overview.
      */
     public void addAppToOverviewAnim(PendingAnimation pa, Interpolator interpolator) {

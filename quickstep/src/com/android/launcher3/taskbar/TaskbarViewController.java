@@ -159,7 +159,9 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
     private final View.OnLayoutChangeListener mTaskbarViewLayoutChangeListener =
             (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
                 updateTaskbarIconTranslationXForPinning();
-                mControllers.navbarButtonsViewController.onTaskbarLayoutChanged();
+                if (BubbleBarController.isBubbleBarEnabled()) {
+                    mControllers.navbarButtonsViewController.onLayoutsUpdated();
+                }
             };
 
     // Animation to align icons with Launcher, created lazily. This allows the controller to be
@@ -329,7 +331,8 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
      */
     public void setRecentsButtonDisabled(boolean isDisabled) {
         // TODO: check TaskbarStashController#supportsStashing(), to stash instead of setting alpha.
-        mTaskbarIconAlpha.get(ALPHA_INDEX_RECENTS_DISABLED).setValue(isDisabled ? 0 : 1);
+        mTaskbarIconAlpha.get(ALPHA_INDEX_RECENTS_DISABLED).animateToValue(isDisabled ? 0 : 1)
+                .start();
     }
 
     /**

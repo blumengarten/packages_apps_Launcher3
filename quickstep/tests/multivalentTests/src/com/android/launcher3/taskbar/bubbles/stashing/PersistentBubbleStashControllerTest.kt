@@ -27,6 +27,7 @@ import com.android.launcher3.anim.AnimatedFloat
 import com.android.launcher3.taskbar.TaskbarInsetsController
 import com.android.launcher3.taskbar.bubbles.BubbleBarView
 import com.android.launcher3.taskbar.bubbles.BubbleBarViewController
+import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController.BubbleLauncherState
 import com.android.launcher3.util.MultiValueAlpha
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
@@ -85,12 +86,12 @@ class PersistentBubbleStashControllerTest {
     fun setBubblesShowingOnHomeUpdatedToFalse_barPositionYUpdated_controllersNotified() {
         // Given bubble bar is on home and has bubbles
         whenever(bubbleBarViewController.hasBubbles()).thenReturn(false)
-        persistentTaskBarStashController.isBubblesShowingOnHome = true
+        persistentTaskBarStashController.launcherState = BubbleLauncherState.HOME
         whenever(bubbleBarViewController.hasBubbles()).thenReturn(true)
 
         // When switch out of the home screen
         getInstrumentation().runOnMainSync {
-            persistentTaskBarStashController.isBubblesShowingOnHome = false
+            persistentTaskBarStashController.launcherState = BubbleLauncherState.IN_APP
         }
 
         // Then translation Y is animating and the bubble bar controller is notified
@@ -110,7 +111,7 @@ class PersistentBubbleStashControllerTest {
 
         // When switch to home screen
         getInstrumentation().runOnMainSync {
-            persistentTaskBarStashController.isBubblesShowingOnHome = true
+            persistentTaskBarStashController.launcherState = BubbleLauncherState.HOME
         }
 
         // Then translation Y is animating and the bubble bar controller is notified
@@ -127,11 +128,11 @@ class PersistentBubbleStashControllerTest {
     @Test
     fun setBubblesShowingOnOverviewUpdatedToFalse_controllersNotified() {
         // Given bubble bar is on overview
-        persistentTaskBarStashController.isBubblesShowingOnOverview = true
+        persistentTaskBarStashController.launcherState = BubbleLauncherState.OVERVIEW
         clearInvocations(bubbleBarViewController)
 
         // When switch out of the overview screen
-        persistentTaskBarStashController.isBubblesShowingOnOverview = false
+        persistentTaskBarStashController.launcherState = BubbleLauncherState.IN_APP
 
         // Then bubble bar controller is notified
         verify(bubbleBarViewController).onBubbleBarConfigurationChanged(/* animate= */ true)
@@ -140,7 +141,7 @@ class PersistentBubbleStashControllerTest {
     @Test
     fun setBubblesShowingOnOverviewUpdatedToTrue_controllersNotified() {
         // When switch to the overview screen
-        persistentTaskBarStashController.isBubblesShowingOnOverview = true
+        persistentTaskBarStashController.launcherState = BubbleLauncherState.OVERVIEW
 
         // Then bubble bar controller is notified
         verify(bubbleBarViewController).onBubbleBarConfigurationChanged(/* animate= */ true)
@@ -150,7 +151,7 @@ class PersistentBubbleStashControllerTest {
     fun isSysuiLockedSwitchedToFalseForOverview_unlockAnimationIsShown() {
         // Given screen is locked and bubble bar has bubbles
         persistentTaskBarStashController.isSysuiLocked = true
-        persistentTaskBarStashController.isBubblesShowingOnOverview = true
+        persistentTaskBarStashController.launcherState = BubbleLauncherState.OVERVIEW
         whenever(bubbleBarViewController.hasBubbles()).thenReturn(true)
 
         // When switch to the overview screen
@@ -211,14 +212,14 @@ class PersistentBubbleStashControllerTest {
     fun bubbleBarTranslationYForTaskbar() {
         // Give bubble bar is on home
         whenever(bubbleBarViewController.hasBubbles()).thenReturn(false)
-        persistentTaskBarStashController.isBubblesShowingOnHome = true
+        persistentTaskBarStashController.launcherState = BubbleLauncherState.HOME
 
         // Then bubbleBarTranslationY would be HOTSEAT_TRANSLATION_Y
         assertThat(persistentTaskBarStashController.bubbleBarTranslationY)
             .isEqualTo(HOTSEAT_TRANSLATION_Y)
 
         // Give bubble bar is not on home
-        persistentTaskBarStashController.isBubblesShowingOnHome = false
+        persistentTaskBarStashController.launcherState = BubbleLauncherState.IN_APP
 
         // Then bubbleBarTranslationY would be TASK_BAR_TRANSLATION_Y
         assertThat(persistentTaskBarStashController.bubbleBarTranslationY)

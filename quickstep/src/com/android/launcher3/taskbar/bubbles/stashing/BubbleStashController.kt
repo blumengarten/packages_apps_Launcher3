@@ -56,14 +56,29 @@ interface BubbleStashController {
         fun runAfterInit(action: Runnable)
     }
 
+    /** Launcher states bubbles cares about */
+    enum class BubbleLauncherState {
+        /* When launcher is in overview */
+        OVERVIEW,
+        /* When launcher is on home */
+        HOME,
+        /* We're in an app */
+        IN_APP,
+    }
+
+    /** The current launcher state */
+    var launcherState: BubbleLauncherState
+
     /** Whether bubble bar is currently stashed */
     val isStashed: Boolean
 
     /** Whether launcher enters or exits the home page. */
-    var isBubblesShowingOnHome: Boolean
+    val isBubblesShowingOnHome: Boolean
+        get() = launcherState == BubbleLauncherState.HOME
 
     /** Whether launcher enters or exits the overview page. */
-    var isBubblesShowingOnOverview: Boolean
+    val isBubblesShowingOnOverview: Boolean
+        get() = launcherState == BubbleLauncherState.OVERVIEW
 
     /** Updated when sysui locked state changes, when locked, bubble bar is not shown. */
     var isSysuiLocked: Boolean

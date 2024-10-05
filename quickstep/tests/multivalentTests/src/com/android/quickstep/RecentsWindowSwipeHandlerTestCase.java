@@ -17,50 +17,61 @@
 package com.android.quickstep;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.filters.SmallTest;
 
 import com.android.launcher3.util.LauncherMultivalentJUnit;
 import com.android.quickstep.fallback.FallbackRecentsView;
 import com.android.quickstep.fallback.RecentsState;
+import com.android.quickstep.fallback.window.RecentsWindowManager;
+import com.android.quickstep.fallback.window.RecentsWindowSwipeHandler;
+import com.android.quickstep.views.RecentsViewContainer;
 
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 @SmallTest
 @RunWith(LauncherMultivalentJUnit.class)
-public class FallbackSwipeHandlerTestCase extends AbsSwipeUpHandlerTestCase<
+public class RecentsWindowSwipeHandlerTestCase extends AbsSwipeUpHandlerTestCase<
         RecentsState,
-        RecentsActivity,
-        FallbackRecentsView<RecentsActivity>,
-        FallbackSwipeHandler,
-        FallbackActivityInterface> {
+        RecentsWindowManager,
+        FallbackRecentsView<RecentsWindowManager>,
+        RecentsWindowSwipeHandler,
+        FallbackWindowInterface> {
 
-    @Mock private RecentsActivity mRecentsActivity;
-    @Mock private FallbackRecentsView<RecentsActivity> mRecentsView;
+    @Mock private RecentsWindowManager mRecentsWindowManager;
+    @Mock private FallbackRecentsView<RecentsWindowManager> mRecentsView;
 
-
+    @NonNull
     @Override
-    protected FallbackSwipeHandler createSwipeHandler(
-            long touchTimeMs, boolean continuingLastGesture) {
-        return new FallbackSwipeHandler(
+    protected RecentsWindowSwipeHandler createSwipeHandler(long touchTimeMs,
+            boolean continuingLastGesture) {
+        return new RecentsWindowSwipeHandler(
                 mContext,
                 mRecentsAnimationDeviceState,
                 mTaskAnimationManager,
                 mGestureState,
                 touchTimeMs,
                 continuingLastGesture,
-                mInputConsumerController);
+                mInputConsumerController,
+                mRecentsWindowManager);
+    }
+
+    @Nullable
+    @Override
+    protected RecentsWindowManager getRecentsWindowManager() {
+        return mRecentsWindowManager;
     }
 
     @NonNull
     @Override
-    protected RecentsActivity getRecentsContainer() {
-        return mRecentsActivity;
+    protected RecentsViewContainer getRecentsContainer() {
+        return mRecentsWindowManager;
     }
 
     @NonNull
     @Override
-    protected FallbackRecentsView<RecentsActivity> getRecentsView() {
+    protected FallbackRecentsView<RecentsWindowManager> getRecentsView() {
         return mRecentsView;
     }
 }

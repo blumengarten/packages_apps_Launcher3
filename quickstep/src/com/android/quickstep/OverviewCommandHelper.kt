@@ -27,6 +27,7 @@ import androidx.annotation.BinderThread
 import androidx.annotation.UiThread
 import androidx.annotation.VisibleForTesting
 import com.android.internal.jank.Cuj
+import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
 import com.android.launcher3.Flags.enableOverviewCommandHelperTimeout
 import com.android.launcher3.PagedView
 import com.android.launcher3.logger.LauncherAtom
@@ -215,19 +216,39 @@ constructor(
                 }
             }
             TOGGLE -> {
-                val taskView =
-                    if (recentsView.runningTaskView == null) {
-                        recentsView.getTaskViewAt(0)
-                    } else {
-                        recentsView.nextTaskView ?: recentsView.runningTaskView
-                    }
-                launchTask(recentsView, taskView, command, onCallbackResult)
+                launchTask(
+                    recentsView,
+                    getNextToggledTaskView(recentsView),
+                    command,
+                    onCallbackResult,
+                )
             }
             HOME -> {
                 recentsView.startHome()
                 true
             }
         }
+
+    private fun getNextToggledTaskView(recentsView: RecentsView<*, *>): TaskView? {
+        // When running task view is null we return last large taskView - typically focusView when
+        // grid only is not enabled else last desktop task view.
+        return if (recentsView.runningTaskView == null) {
+            recentsView.lastLargeTaskView ?: recentsView.getTaskViewAt(0)
+        } else {
+            if (
+                enableLargeDesktopWindowingTile() &&
+                    recentsView.getTaskViewCount() == recentsView.largeTilesCount &&
+                    recentsView.runningTaskView === recentsView.lastLargeTaskView
+            ) {
+                // Enables the toggle when only large tiles are in recents view.
+                // We return previous because unlike small tiles, large tiles are always
+                // on the right hand side.
+                recentsView.previousTaskView ?: recentsView.runningTaskView
+            } else {
+                recentsView.nextTaskView ?: recentsView.runningTaskView
+            }
+        }
+    }
 
     private fun launchTask(
         recents: RecentsView<*, *>,
