@@ -33,17 +33,15 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.ArgumentMatchers.anyList
-import org.mockito.ArgumentMatchers.anyMap
 import org.mockito.Mock
 import org.mockito.Mockito
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.MockitoSession
 import org.mockito.Spy
+import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.spy
@@ -67,7 +65,7 @@ class LoaderTaskTest {
             installedHotseatItems = mutableSetOf("installedHotseatItem"),
             installedWorkspaceItems = mutableSetOf("installedWorkspaceItem"),
             firstScreenInstalledWidgets = mutableSetOf("installedFirstScreenWidget"),
-            secondaryScreenInstalledWidgets = mutableSetOf("installedSecondaryScreenWidget")
+            secondaryScreenInstalledWidgets = mutableSetOf("installedSecondaryScreenWidget"),
         )
     private lateinit var mockitoSession: MockitoSession
 
@@ -75,7 +73,7 @@ class LoaderTaskTest {
     @Mock private lateinit var bgAllAppsList: AllAppsList
     @Mock private lateinit var modelDelegate: ModelDelegate
     @Mock private lateinit var launcherBinder: BaseLauncherBinder
-    @Mock private lateinit var launcherModel: LauncherModel
+    private lateinit var launcherModel: LauncherModel
     @Mock private lateinit var transaction: LoaderTransaction
     @Mock private lateinit var iconCache: IconCache
     @Mock private lateinit var idleLock: LooperIdleLock
@@ -89,6 +87,7 @@ class LoaderTaskTest {
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
+        launcherModel = mock(LauncherModel::class.java)
         mockitoSession =
             ExtendedMockito.mockitoSession()
                 .strictness(Strictness.LENIENT)
@@ -105,15 +104,16 @@ class LoaderTaskTest {
 
         doReturn(TestViewHelpers.findWidgetProvider(false))
             .`when`(context.spyService(AppWidgetManager::class.java))
-            .getAppWidgetInfo(anyInt())
+            .getAppWidgetInfo(any())
         `when`(app.context).thenReturn(context)
         `when`(app.model).thenReturn(launcherModel)
-        `when`(launcherModel.beginLoader(any(LoaderTask::class.java))).thenReturn(transaction)
+
+        `when`(launcherModel.beginLoader(any())).thenReturn(transaction)
         `when`(app.iconCache).thenReturn(iconCache)
         `when`(launcherModel.modelDbController)
             .thenReturn(FactitiousDbController(context, INSERTION_STATEMENT_FILE))
         `when`(app.invariantDeviceProfile).thenReturn(idp)
-        `when`(launcherBinder.newIdleLock(any(LoaderTask::class.java))).thenReturn(idleLock)
+        `when`(launcherBinder.newIdleLock(any())).thenReturn(idleLock)
         `when`(idleLock.awaitLocked(1000)).thenReturn(false)
         `when`(iconCache.updateHandler).thenReturn(iconCacheUpdateHandler)
         context.putObject(UserCache.INSTANCE, userCache)
@@ -149,12 +149,12 @@ class LoaderTaskTest {
 
         verify(launcherBinder).bindWorkspace(true, false)
         verify(modelDelegate).workspaceLoadComplete()
-        verify(modelDelegate).loadAndBindAllAppsItems(any(), any(), any())
+        verify(modelDelegate).loadAndBindAllAppsItems(any(), anyOrNull(), any())
         verify(launcherBinder).bindAllApps()
         verify(iconCacheUpdateHandler, times(4)).updateIcons(any(), any<CachingLogic<Any>>(), any())
         verify(launcherBinder).bindDeepShortcuts()
         verify(launcherBinder).bindWidgets()
-        verify(modelDelegate).loadAndBindOtherItems(any())
+        verify(modelDelegate).loadAndBindOtherItems(anyOrNull())
         verify(iconCacheUpdateHandler).finish()
         verify(modelDelegate).modelLoadComplete()
         verify(transaction).commit()
@@ -209,10 +209,10 @@ class LoaderTaskTest {
         `when`(app.context).thenReturn(spyContext)
         whenever(
                 FirstScreenBroadcastHelper.createModelsForFirstScreenBroadcast(
-                    anyOrNull(),
-                    anyList(),
-                    anyMap(),
-                    anyList()
+                    any(),
+                    any(),
+                    any(),
+                    any(),
                 )
             )
             .thenReturn(listOf(expectedBroadcastModel))
@@ -220,7 +220,7 @@ class LoaderTaskTest {
         whenever(
                 FirstScreenBroadcastHelper.sendBroadcastsForModels(
                     spyContext,
-                    listOf(expectedBroadcastModel)
+                    listOf(expectedBroadcastModel),
                 )
             )
             .thenCallRealMethod()
@@ -239,34 +239,34 @@ class LoaderTaskTest {
         assertEquals(expectedBroadcastModel.installerPackage, actualBroadcastIntent.`package`)
         assertEquals(
             ArrayList(expectedBroadcastModel.installedWorkspaceItems),
-            actualBroadcastIntent.getStringArrayListExtra("workspaceInstalledItems")
+            actualBroadcastIntent.getStringArrayListExtra("workspaceInstalledItems"),
         )
         assertEquals(
             ArrayList(expectedBroadcastModel.installedHotseatItems),
-            actualBroadcastIntent.getStringArrayListExtra("hotseatInstalledItems")
+            actualBroadcastIntent.getStringArrayListExtra("hotseatInstalledItems"),
         )
         assertEquals(
             ArrayList(
                 expectedBroadcastModel.firstScreenInstalledWidgets +
                     expectedBroadcastModel.secondaryScreenInstalledWidgets
             ),
-            actualBroadcastIntent.getStringArrayListExtra("widgetInstalledItems")
+            actualBroadcastIntent.getStringArrayListExtra("widgetInstalledItems"),
         )
         assertEquals(
             ArrayList(expectedBroadcastModel.pendingCollectionItems),
-            actualBroadcastIntent.getStringArrayListExtra("folderItem")
+            actualBroadcastIntent.getStringArrayListExtra("folderItem"),
         )
         assertEquals(
             ArrayList(expectedBroadcastModel.pendingWorkspaceItems),
-            actualBroadcastIntent.getStringArrayListExtra("workspaceItem")
+            actualBroadcastIntent.getStringArrayListExtra("workspaceItem"),
         )
         assertEquals(
             ArrayList(expectedBroadcastModel.pendingHotseatItems),
-            actualBroadcastIntent.getStringArrayListExtra("hotseatItem")
+            actualBroadcastIntent.getStringArrayListExtra("hotseatItem"),
         )
         assertEquals(
             ArrayList(expectedBroadcastModel.pendingWidgetItems),
-            actualBroadcastIntent.getStringArrayListExtra("widgetItem")
+            actualBroadcastIntent.getStringArrayListExtra("widgetItem"),
         )
     }
 
@@ -277,10 +277,10 @@ class LoaderTaskTest {
         `when`(app.context).thenReturn(spyContext)
         whenever(
                 FirstScreenBroadcastHelper.createModelsForFirstScreenBroadcast(
-                    anyOrNull(),
-                    anyList(),
-                    anyMap(),
-                    anyList()
+                    any(),
+                    any(),
+                    any(),
+                    any(),
                 )
             )
             .thenReturn(listOf(expectedBroadcastModel))
@@ -288,7 +288,7 @@ class LoaderTaskTest {
         whenever(
                 FirstScreenBroadcastHelper.sendBroadcastsForModels(
                     spyContext,
-                    listOf(expectedBroadcastModel)
+                    listOf(expectedBroadcastModel),
                 )
             )
             .thenCallRealMethod()
@@ -300,7 +300,7 @@ class LoaderTaskTest {
             .runSyncOnBackgroundThread()
 
         // Then
-        verify(spyContext, times(0)).sendBroadcast(any(Intent::class.java))
+        verify(spyContext, times(0)).sendBroadcast(any())
     }
 
     @Test
@@ -310,10 +310,10 @@ class LoaderTaskTest {
         `when`(app.context).thenReturn(spyContext)
         whenever(
                 FirstScreenBroadcastHelper.createModelsForFirstScreenBroadcast(
-                    anyOrNull(),
-                    anyList(),
-                    anyMap(),
-                    anyList()
+                    any(),
+                    any(),
+                    any(),
+                    any(),
                 )
             )
             .thenReturn(listOf(expectedBroadcastModel))
@@ -321,7 +321,7 @@ class LoaderTaskTest {
         whenever(
                 FirstScreenBroadcastHelper.sendBroadcastsForModels(
                     spyContext,
-                    listOf(expectedBroadcastModel)
+                    listOf(expectedBroadcastModel),
                 )
             )
             .thenCallRealMethod()
@@ -334,7 +334,7 @@ class LoaderTaskTest {
             .runSyncOnBackgroundThread()
 
         // Then
-        verify(spyContext, times(0)).sendBroadcast(any(Intent::class.java))
+        verify(spyContext, times(0)).sendBroadcast(any())
     }
 }
 

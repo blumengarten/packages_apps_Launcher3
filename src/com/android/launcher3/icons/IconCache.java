@@ -29,10 +29,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageInstaller;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ShortcutInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
@@ -54,8 +51,8 @@ import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.icons.cache.BaseIconCache;
+import com.android.launcher3.icons.cache.CachedObject;
 import com.android.launcher3.icons.cache.CachedObjectCachingLogic;
-import com.android.launcher3.icons.cache.CachingLogic;
 import com.android.launcher3.icons.cache.LauncherActivityCachingLogic;
 import com.android.launcher3.logging.FileLog;
 import com.android.launcher3.model.data.AppInfo;
@@ -66,6 +63,7 @@ import com.android.launcher3.model.data.WorkspaceItemInfo;
 import com.android.launcher3.pm.InstallSessionHelper;
 import com.android.launcher3.pm.UserCache;
 import com.android.launcher3.util.CancellableTask;
+import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.InstantAppResolver;
 import com.android.launcher3.util.PackageUserKey;
 import com.android.launcher3.widget.WidgetSections;
@@ -94,9 +92,6 @@ public class IconCache extends BaseIconCache {
     private final Predicate<ItemInfoWithIcon> mIsUsingFallbackOrNonDefaultIconCheck = w ->
             w.bitmap != null && (w.bitmap.isNullOrLowRes() || !isDefaultIcon(w.bitmap, w.user));
 
-    private final CachingLogic<ComponentWithLabel> mComponentWithLabelCachingLogic;
-    private final CachingLogic<LauncherActivityInfo> mLauncherActivityInfoCachingLogic;
-
     private final LauncherApps mLauncherApps;
     private final UserCache mUserManager;
     private final InstantAppResolver mInstantAppResolver;
@@ -110,8 +105,6 @@ public class IconCache extends BaseIconCache {
             IconProvider iconProvider) {
         super(context, dbFileName, MODEL_EXECUTOR.getLooper(),
                 idp.fillResIconDpi, idp.iconBitmapSize, true /* inMemoryCache */, iconProvider);
-        mComponentWithLabelCachingLogic = new CachedObjectCachingLogic(context);
-        mLauncherActivityInfoCachingLogic = LauncherActivityCachingLogic.INSTANCE;
         mLauncherApps = mContext.getSystemService(LauncherApps.class);
         mUserManager = UserCache.INSTANCE.get(mContext);
         mInstantAppResolver = InstantAppResolver.newInstance(mContext);
@@ -143,15 +136,9 @@ public class IconCache extends BaseIconCache {
     public synchronized void updateIconsForPkg(@NonNull final String packageName,
             @NonNull final UserHandle user) {
         removeIconsForPkg(packageName, user);
-        try {
-            PackageInfo info = mPackageManager.getPackageInfo(packageName,
-                    PackageManager.GET_UNINSTALLED_PACKAGES);
-            long userSerial = mUserManager.getSerialNumberForUser(user);
-            for (LauncherActivityInfo app : mLauncherApps.getActivityList(packageName, user)) {
-                addIconToDBAndMemCache(app, mLauncherActivityInfoCachingLogic, info, userSerial);
-            }
-        } catch (NameNotFoundException e) {
-            Log.d(TAG, "Package not found", e);
+        long userSerial = mUserManager.getSerialNumberForUser(user);
+        for (LauncherActivityInfo app : mLauncherApps.getActivityList(packageName, user)) {
+            addIconToDBAndMemCache(app, LauncherActivityCachingLogic.INSTANCE, userSerial);
         }
     }
 
@@ -219,7 +206,7 @@ public class IconCache extends BaseIconCache {
      */
     public synchronized void updateTitleAndIcon(AppInfo application) {
         CacheEntry entry = cacheLocked(application.componentName,
-                application.user, () -> null, mLauncherActivityInfoCachingLogic,
+                application.user, () -> null, LauncherActivityCachingLogic.INSTANCE,
                 application.usingLowResIcon() ? LookupFlag.USE_LOW_RES : LookupFlag.DEFAULT);
         if (entry.bitmap != null || !isDefaultIcon(entry.bitmap, application.user)) {
             applyCacheEntry(entry, application);
@@ -334,9 +321,9 @@ public class IconCache extends BaseIconCache {
     /**
      * Loads and returns the icon for the provided object without adding it to memCache
      */
-    public synchronized String getTitleNoCache(ComponentWithLabel info) {
+    public synchronized String getTitleNoCache(CachedObject info) {
         CacheEntry entry = cacheLocked(info.getComponent(), info.getUser(), () -> info,
-                mComponentWithLabelCachingLogic,
+                CachedObjectCachingLogic.INSTANCE,
                 LookupFlag.USE_LOW_RES | LookupFlag.SKIP_ADD_TO_MEM_CACHE);
         return Utilities.trim(entry.title);
     }
@@ -352,7 +339,7 @@ public class IconCache extends BaseIconCache {
         if (usePkgIcon) lookupFlags |= LookupFlag.USE_PACKAGE_ICON;
         if (useLowResIcon) lookupFlags |= LookupFlag.USE_LOW_RES;
         CacheEntry entry = cacheLocked(infoInOut.getTargetComponent(), infoInOut.user,
-                activityInfoProvider, mLauncherActivityInfoCachingLogic, lookupFlags);
+                activityInfoProvider, LauncherActivityCachingLogic.INSTANCE, lookupFlags);
         applyCacheEntry(entry, infoInOut);
     }
 
@@ -453,7 +440,7 @@ public class IconCache extends BaseIconCache {
                                 cn,
                                 /* user = */ sectionKey.first,
                                 () -> duplicateIconRequests.get(0).launcherActivityInfo,
-                                mLauncherActivityInfoCachingLogic,
+                                LauncherActivityCachingLogic.INSTANCE,
                                 sectionKey.second ? LookupFlag.USE_LOW_RES : LookupFlag.DEFAULT,
                                 c);
 
@@ -502,7 +489,7 @@ public class IconCache extends BaseIconCache {
                     loadFallbackIcon(
                             lai,
                             entry,
-                            mLauncherActivityInfoCachingLogic,
+                            LauncherActivityCachingLogic.INSTANCE,
                             /* usePackageIcon= */ false,
                             /* usePackageTitle= */ loadFallbackTitle,
                             cn,
@@ -512,7 +499,7 @@ public class IconCache extends BaseIconCache {
                     loadFallbackTitle(
                             lai,
                             entry,
-                            mLauncherActivityInfoCachingLogic,
+                            LauncherActivityCachingLogic.INSTANCE,
                             sectionKey.first);
                 }
 
@@ -600,6 +587,11 @@ public class IconCache extends BaseIconCache {
     public void updateSessionCache(PackageUserKey key, PackageInstaller.SessionInfo info) {
         cachePackageInstallInfo(key.mPackageName, key.mUser, info.getAppIcon(),
                 info.getAppLabel());
+    }
+
+    @VisibleForTesting
+    synchronized boolean isItemInDb(ComponentKey cacheKey) {
+        return getEntryFromDBLocked(cacheKey, new CacheEntry(), false);
     }
 
     /**

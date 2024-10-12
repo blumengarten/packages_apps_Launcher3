@@ -195,11 +195,12 @@ public class TaskbarControllers {
         };
 
         if (taskbarDesktopModeController.getAreDesktopTasksVisible()) {
-            mCornerRoundness.updateValue(taskbarDesktopModeController.getTaskbarCornerRoundness(
-                    mSharedState.showCornerRadiusInDesktopMode));
+            mCornerRoundness.value = taskbarDesktopModeController.getTaskbarCornerRoundness(
+                    mSharedState.showCornerRadiusInDesktopMode);
         } else {
-            mCornerRoundness.updateValue(TaskbarBackgroundRenderer.MAX_ROUNDNESS);
+            mCornerRoundness.value = TaskbarBackgroundRenderer.MAX_ROUNDNESS;
         }
+        updateCornerRoundness();
         onPostInit();
     }
 

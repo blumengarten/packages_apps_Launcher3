@@ -32,23 +32,33 @@ import android.widget.TextClock.ClockEventDelegate;
 
 import androidx.annotation.WorkerThread;
 
+import com.android.launcher3.dagger.ApplicationContext;
+import com.android.launcher3.dagger.LauncherAppSingleton;
+import com.android.launcher3.dagger.LauncherBaseAppComponent;
+import com.android.launcher3.util.DaggerSingletonObject;
+import com.android.launcher3.util.DaggerSingletonTracker;
+import com.android.launcher3.util.ExecutorUtil;
 import com.android.launcher3.util.MainThreadInitializedObject;
 import com.android.launcher3.util.SafeCloseable;
 import com.android.launcher3.util.SettingsCache;
 import com.android.launcher3.util.SettingsCache.OnChangeListener;
 import com.android.launcher3.util.SimpleBroadcastReceiver;
+import com.android.quickstep.dagger.QuickstepBaseAppComponent;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * Extension of {@link ClockEventDelegate} to support async event registration
  */
+@LauncherAppSingleton
 public class AsyncClockEventDelegate extends ClockEventDelegate
         implements OnChangeListener, SafeCloseable {
 
-    public static final MainThreadInitializedObject<AsyncClockEventDelegate> INSTANCE =
-            new MainThreadInitializedObject<>(AsyncClockEventDelegate::new);
+    public static final DaggerSingletonObject<AsyncClockEventDelegate> INSTANCE =
+            new DaggerSingletonObject<>(QuickstepBaseAppComponent::getAsyncClockEventDelegate);
 
     private final Context mContext;
     private final SimpleBroadcastReceiver mReceiver =
@@ -61,10 +71,12 @@ public class AsyncClockEventDelegate extends ClockEventDelegate
     private boolean mFormatRegistered = false;
     private boolean mDestroyed = false;
 
-    private AsyncClockEventDelegate(Context context) {
+    @Inject
+    AsyncClockEventDelegate(@ApplicationContext Context context, DaggerSingletonTracker tracker) {
         super(context);
         mContext = context;
         mReceiver.register(mContext, ACTION_TIME_CHANGED, ACTION_TIMEZONE_CHANGED);
+        ExecutorUtil.executeSyncOnMainOrFail(() -> tracker.addCloseable(this));
     }
 
     @Override

@@ -29,11 +29,12 @@ import org.junit.runners.model.Statement
  * The original preference value is restored on teardown.
  */
 class TaskbarPreferenceRule<T : Any>(
-    context: TaskbarWindowSandboxContext,
-    private val constantItem: ConstantItem<T>
+    private val context: TaskbarWindowSandboxContext,
+    private val constantItem: ConstantItem<T>,
 ) : TestRule {
 
-    private val prefs = LauncherPrefs.get(context)
+    private val prefs: LauncherPrefs
+        get() = LauncherPrefs.get(context)
 
     var value: T
         get() = prefs.get(constantItem)

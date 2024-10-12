@@ -63,12 +63,7 @@ class BubbleBarFlyoutViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
             val flyout =
                 BubbleBarFlyoutView(context, FakeBubbleBarFlyoutPositioner(isOnLeft = false))
             flyout.showFromCollapsed(
-                BubbleBarFlyoutMessage(
-                    senderAvatar = null,
-                    senderName = "sender",
-                    message = "message",
-                    isGroupChat = false,
-                )
+                BubbleBarFlyoutMessage(icon = null, title = "sender", message = "message")
             ) {}
             flyout.updateExpansionProgress(1f)
             flyout
@@ -82,12 +77,7 @@ class BubbleBarFlyoutViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
             val flyout =
                 BubbleBarFlyoutView(context, FakeBubbleBarFlyoutPositioner(isOnLeft = true))
             flyout.showFromCollapsed(
-                BubbleBarFlyoutMessage(
-                    senderAvatar = null,
-                    senderName = "sender",
-                    message = "message",
-                    isGroupChat = false,
-                )
+                BubbleBarFlyoutMessage(icon = null, title = "sender", message = "message")
             ) {}
             flyout.updateExpansionProgress(1f)
             flyout
@@ -102,10 +92,9 @@ class BubbleBarFlyoutViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
                 BubbleBarFlyoutView(context, FakeBubbleBarFlyoutPositioner(isOnLeft = true))
             flyout.showFromCollapsed(
                 BubbleBarFlyoutMessage(
-                    senderAvatar = null,
-                    senderName = "sender",
+                    icon = null,
+                    title = "sender",
                     message = "really, really, really, really, really long message. like really.",
-                    isGroupChat = false,
                 )
             ) {}
             flyout.updateExpansionProgress(1f)
@@ -121,10 +110,9 @@ class BubbleBarFlyoutViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
                 BubbleBarFlyoutView(context, FakeBubbleBarFlyoutPositioner(isOnLeft = false))
             flyout.showFromCollapsed(
                 BubbleBarFlyoutMessage(
-                    senderAvatar = ColorDrawable(Color.RED),
-                    senderName = "sender",
+                    icon = ColorDrawable(Color.RED),
+                    title = "sender",
                     message = "message",
-                    isGroupChat = true,
                 )
             ) {}
             flyout.updateExpansionProgress(1f)
@@ -140,10 +128,9 @@ class BubbleBarFlyoutViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
                 BubbleBarFlyoutView(context, FakeBubbleBarFlyoutPositioner(isOnLeft = true))
             flyout.showFromCollapsed(
                 BubbleBarFlyoutMessage(
-                    senderAvatar = ColorDrawable(Color.RED),
-                    senderName = "sender",
+                    icon = ColorDrawable(Color.RED),
+                    title = "sender",
                     message = "message",
-                    isGroupChat = true,
                 )
             ) {}
             flyout.updateExpansionProgress(1f)
@@ -159,10 +146,9 @@ class BubbleBarFlyoutViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
                 BubbleBarFlyoutView(context, FakeBubbleBarFlyoutPositioner(isOnLeft = true))
             flyout.showFromCollapsed(
                 BubbleBarFlyoutMessage(
-                    senderAvatar = ColorDrawable(Color.RED),
-                    senderName = "sender",
+                    icon = ColorDrawable(Color.RED),
+                    title = "sender",
                     message = "really, really, really, really, really long message. like really.",
-                    isGroupChat = true,
                 )
             ) {}
             flyout.updateExpansionProgress(1f)
@@ -178,10 +164,9 @@ class BubbleBarFlyoutViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
                 BubbleBarFlyoutView(context, FakeBubbleBarFlyoutPositioner(isOnLeft = true))
             flyout.showFromCollapsed(
                 BubbleBarFlyoutMessage(
-                    senderAvatar = ColorDrawable(Color.RED),
-                    senderName = "sender",
+                    icon = ColorDrawable(Color.RED),
+                    title = "sender",
                     message = "collapsed on left",
-                    isGroupChat = true,
                 )
             ) {}
             flyout.updateExpansionProgress(0f)
@@ -197,10 +182,9 @@ class BubbleBarFlyoutViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
                 BubbleBarFlyoutView(context, FakeBubbleBarFlyoutPositioner(isOnLeft = false))
             flyout.showFromCollapsed(
                 BubbleBarFlyoutMessage(
-                    senderAvatar = ColorDrawable(Color.RED),
-                    senderName = "sender",
+                    icon = ColorDrawable(Color.RED),
+                    title = "sender",
                     message = "collapsed on right",
-                    isGroupChat = true,
                 )
             ) {}
             flyout.updateExpansionProgress(0f)
@@ -222,10 +206,9 @@ class BubbleBarFlyoutViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
                 )
             flyout.showFromCollapsed(
                 BubbleBarFlyoutMessage(
-                    senderAvatar = ColorDrawable(Color.RED),
-                    senderName = "sender",
+                    icon = ColorDrawable(Color.RED),
+                    title = "sender",
                     message = "expanded 90% on left",
-                    isGroupChat = true,
                 )
             ) {}
             flyout.updateExpansionProgress(0.9f)
@@ -247,10 +230,9 @@ class BubbleBarFlyoutViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
                 )
             flyout.showFromCollapsed(
                 BubbleBarFlyoutMessage(
-                    senderAvatar = ColorDrawable(Color.RED),
-                    senderName = "sender",
+                    icon = ColorDrawable(Color.RED),
+                    title = "sender",
                     message = "expanded 80% on right",
-                    isGroupChat = true,
                 )
             ) {}
             flyout.updateExpansionProgress(0.8f)

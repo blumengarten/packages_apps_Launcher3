@@ -22,7 +22,6 @@ import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.launcher3.util.TestDispatcherProvider
-import com.android.quickstep.task.thumbnail.TaskThumbnailViewModelTest
 import com.android.quickstep.util.DesktopTask
 import com.android.quickstep.util.GroupTask
 import com.android.systemui.shared.recents.model.Task
@@ -286,9 +285,14 @@ class TasksRepositoryTest {
 
     private fun createThumbnailData(): ThumbnailData {
         val bitmap = mock<Bitmap>()
-        whenever(bitmap.width).thenReturn(TaskThumbnailViewModelTest.THUMBNAIL_WIDTH)
-        whenever(bitmap.height).thenReturn(TaskThumbnailViewModelTest.THUMBNAIL_HEIGHT)
+        whenever(bitmap.width).thenReturn(THUMBNAIL_WIDTH)
+        whenever(bitmap.height).thenReturn(THUMBNAIL_HEIGHT)
 
         return ThumbnailData(thumbnail = bitmap)
+    }
+
+    companion object {
+        const val THUMBNAIL_WIDTH = 100
+        const val THUMBNAIL_HEIGHT = 200
     }
 }

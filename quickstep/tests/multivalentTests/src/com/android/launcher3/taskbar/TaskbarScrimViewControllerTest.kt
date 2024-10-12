@@ -42,11 +42,10 @@ import org.junit.runner.RunWith
 @RunWith(LauncherMultivalentJUnit::class)
 @EmulatedDevices(["pixelTablet2023"])
 class TaskbarScrimViewControllerTest {
-    private val context = TaskbarWindowSandboxContext.create(getInstrumentation().targetContext)
-
-    @get:Rule(order = 0) val taskbarModeRule = TaskbarModeRule(context)
-    @get:Rule(order = 1) val animatorTestRule = AnimatorTestRule(this)
-    @get:Rule(order = 2) val taskbarUnitTestRule = TaskbarUnitTestRule(this, context)
+    @get:Rule(order = 0) val context = TaskbarWindowSandboxContext.create()
+    @get:Rule(order = 1) val taskbarModeRule = TaskbarModeRule(context)
+    @get:Rule(order = 2) val animatorTestRule = AnimatorTestRule(this)
+    @get:Rule(order = 3) val taskbarUnitTestRule = TaskbarUnitTestRule(this, context)
 
     @InjectController lateinit var scrimViewController: TaskbarScrimViewController
 
@@ -132,7 +131,7 @@ class TaskbarScrimViewControllerTest {
     @TaskbarMode(PINNED)
     fun testOnClick_scrimShown_performsSystemBack() {
         var backPressed = false
-        context.applicationContext.putObject(
+        context.putObject(
             SystemUiProxy.INSTANCE,
             object : SystemUiProxy(context) {
                 override fun onBackPressed() {

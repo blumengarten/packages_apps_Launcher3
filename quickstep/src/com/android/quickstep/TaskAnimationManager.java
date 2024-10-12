@@ -298,7 +298,7 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
                 && Flags.enableFallbackOverviewInWindow()){
             mRecentsAnimationStartPending =
                     getSystemUiProxy().startRecentsActivity(intent, options, mCallbacks);
-            mRecentsWindowsManager.startRecentsWindow();
+            mRecentsWindowsManager.startRecentsWindow(mCallbacks);
         } else {
             options.setPendingIntentBackgroundActivityStartMode(
                     ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOW_ALWAYS);
@@ -485,10 +485,6 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
         mTargets = null;
         mLastGestureState = null;
         mLastAppearedTaskTargets = null;
-
-        if(Flags.enableFallbackOverviewInWindow()) {
-            mRecentsWindowsManager.cleanup();
-        }
     }
 
     @Nullable

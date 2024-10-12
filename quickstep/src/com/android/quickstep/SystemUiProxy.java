@@ -46,11 +46,11 @@ import android.view.IRemoteAnimationRunner;
 import android.view.MotionEvent;
 import android.view.RemoteAnimationTarget;
 import android.view.SurfaceControl;
+import android.window.DesktopModeFlags;
 import android.window.IOnBackInvokedCallback;
 import android.window.RemoteTransition;
 import android.window.TaskSnapshot;
 import android.window.TransitionFilter;
-import android.window.flags.DesktopModeFlags;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.Nullable;
@@ -1079,16 +1079,6 @@ public class SystemUiProxy implements ISystemUiProxy, NavHandle, SafeCloseable {
         }
     }
 
-    public void removeFromSideStage(int taskId) {
-        if (mSplitScreen != null) {
-            try {
-                mSplitScreen.removeFromSideStage(taskId);
-            } catch (RemoteException e) {
-                Log.w(TAG, "Failed call removeFromSideStage");
-            }
-        }
-    }
-
     //
     // One handed
     //
@@ -1488,6 +1478,17 @@ public class SystemUiProxy implements ISystemUiProxy, NavHandle, SafeCloseable {
                 mDesktopMode.moveToDesktop(taskId, transitionSource);
             } catch (RemoteException e) {
                 Log.w(TAG, "Failed call moveToDesktop", e);
+            }
+        }
+    }
+
+    /** Call shell to remove the desktop that is on given `displayId` */
+    public void removeDesktop(int displayId) {
+        if (mDesktopMode != null) {
+            try {
+                mDesktopMode.removeDesktop(displayId);
+            } catch (RemoteException e) {
+                Log.w(TAG, "Failed call removeDesktop", e);
             }
         }
     }

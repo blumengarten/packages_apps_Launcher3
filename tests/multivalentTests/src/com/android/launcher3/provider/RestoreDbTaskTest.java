@@ -101,7 +101,7 @@ public class RestoreDbTaskTest {
         mMockController = Mockito.mock(ModelDbController.class);
         mMockDb = mock(SQLiteDatabase.class);
         mMockCursor = mock(Cursor.class);
-        mPrefs = new LauncherPrefs(mContext);
+        mPrefs = LauncherPrefs.get(mContext);
         mMockRestoreEventLogger = mock(LauncherRestoreEventLogger.class);
     }
 

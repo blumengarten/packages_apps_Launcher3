@@ -116,8 +116,8 @@ public final class Widgets extends LauncherInstrumentation.VisibleContainer
     }
 
     /** Get widget with supplied text. */
-    public Widget getWidget(String labelText) {
-        return getWidget(labelText, null);
+    public Widget getWidget(CharSequence labelText) {
+        return getWidget(labelText.toString(), null);
     }
 
     /** Get widget with supplied text and app package */

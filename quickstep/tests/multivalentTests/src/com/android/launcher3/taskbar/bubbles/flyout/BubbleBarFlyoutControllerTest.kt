@@ -39,8 +39,7 @@ class BubbleBarFlyoutControllerTest {
     private lateinit var flyoutController: BubbleBarFlyoutController
     private lateinit var flyoutContainer: FrameLayout
     private val context = ApplicationProvider.getApplicationContext<Context>()
-    private val flyoutMessage =
-        BubbleBarFlyoutMessage(senderAvatar = null, "sender name", "message", isGroupChat = false)
+    private val flyoutMessage = BubbleBarFlyoutMessage(icon = null, "sender name", "message")
     private var onLeft = true
 
     @Before
@@ -87,7 +86,7 @@ class BubbleBarFlyoutControllerTest {
         flyoutController.setUpFlyout(flyoutMessage)
         assertThat(flyoutContainer.childCount).isEqualTo(1)
         val flyout = flyoutContainer.getChildAt(0)
-        val sender = flyout.findViewById<TextView>(R.id.bubble_flyout_name)
+        val sender = flyout.findViewById<TextView>(R.id.bubble_flyout_title)
         assertThat(sender.text).isEqualTo("sender name")
         val message = flyout.findViewById<TextView>(R.id.bubble_flyout_text)
         assertThat(message.text).isEqualTo("message")

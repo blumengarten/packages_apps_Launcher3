@@ -281,7 +281,7 @@ public class AddItemActivity extends BaseActivity
                 new PinShortcutRequestActivityInfo(mRequest, this);
         mWidgetCell.getWidgetView().setTag(new PendingAddShortcutInfo(shortcutInfo));
         applyWidgetItemAsync(
-                () -> new WidgetItem(shortcutInfo, mApp.getIconCache(), getPackageManager()));
+                () -> new WidgetItem(shortcutInfo, mApp.getIconCache()));
         return new PackageItemInfo(mRequest.getShortcutInfo().getPackage(),
                 mRequest.getShortcutInfo().getUserHandle());
     }

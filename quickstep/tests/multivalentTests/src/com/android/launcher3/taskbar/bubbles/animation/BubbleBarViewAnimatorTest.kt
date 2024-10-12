@@ -86,7 +86,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpandedNoOp,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -135,7 +135,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpandedNoOp,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -183,7 +183,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpandedNoOp,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -228,7 +228,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpandedNoOp,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -274,7 +274,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpandedNoOp,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -311,7 +311,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpanded,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -355,7 +355,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpanded,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -405,7 +405,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpanded,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -454,7 +454,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpandedNoOp,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -504,7 +504,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpanded,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -538,7 +538,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpandedNoOp,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -577,7 +577,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpanded,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -625,7 +625,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpanded,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -666,7 +666,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpandedNoOp,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -713,7 +713,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpanded,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -760,7 +760,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpanded,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -818,7 +818,7 @@ class BubbleBarViewAnimatorTest {
                 bubbleBarView,
                 bubbleStashController,
                 onExpanded,
-                animatorScheduler
+                animatorScheduler,
             )
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
@@ -870,11 +870,32 @@ class BubbleBarViewAnimatorTest {
             bubbleBarView.addView(overflowView)
 
             val bubbleInfo =
-                BubbleInfo("key", 0, null, null, 0, context.packageName, null, null, false, true)
+                BubbleInfo(
+                    "key",
+                    0,
+                    null,
+                    null,
+                    0,
+                    context.packageName,
+                    null,
+                    null,
+                    false,
+                    true,
+                    null,
+                )
             bubbleView =
                 inflater.inflate(R.layout.bubblebar_item_view, bubbleBarView, false) as BubbleView
             bubble =
-                BubbleBarBubble(bubbleInfo, bubbleView, bitmap, bitmap, Color.WHITE, Path(), "")
+                BubbleBarBubble(
+                    bubbleInfo,
+                    bubbleView,
+                    bitmap,
+                    bitmap,
+                    Color.WHITE,
+                    Path(),
+                    "",
+                    null,
+                )
             bubbleView.setBubble(bubble)
             bubbleBarView.addView(bubbleView)
         }

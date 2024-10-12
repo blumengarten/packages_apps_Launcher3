@@ -23,6 +23,7 @@ import android.content.IIntentReceiver
 import android.content.IIntentSender
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherActivityInfo
 import android.content.pm.LauncherApps
 import android.content.pm.ShortcutInfo
@@ -76,7 +77,7 @@ open class SystemApiWrapper(context: Context?) : ApiWrapper(context) {
                             UserManager.USER_TYPE_PROFILE_PRIVATE -> UserIconInfo.TYPE_PRIVATE
                             else -> UserIconInfo.TYPE_MAIN
                         },
-                        userSerialNumber.toLong()
+                        userSerialNumber.toLong(),
                     )
             }
         }
@@ -110,7 +111,7 @@ open class SystemApiWrapper(context: Context?) : ApiWrapper(context) {
                             )
                             .toBundle()
                     requireActivityResult = false
-                }
+                },
             )
         else super.getAppMarketActivityIntent(packageName, user)
 
@@ -131,7 +132,7 @@ open class SystemApiWrapper(context: Context?) : ApiWrapper(context) {
                             )
                             .toBundle()
                     requireActivityResult = false
-                }
+                },
             )
         else null
 
@@ -160,7 +161,7 @@ open class SystemApiWrapper(context: Context?) : ApiWrapper(context) {
                             allowlistToken: IBinder?,
                             finishedReceiver: IIntentReceiver?,
                             requiredPermission: String?,
-                            options: Bundle?
+                            options: Bundle?,
                         ) {
                             if (code != -1) {
                                 Executors.MAIN_EXECUTOR.execute {
@@ -168,9 +169,9 @@ open class SystemApiWrapper(context: Context?) : ApiWrapper(context) {
                                             context,
                                             context.getString(
                                                 R.string.set_default_home_app,
-                                                context.getString(R.string.derived_app_name)
+                                                context.getString(R.string.derived_app_name),
                                             ),
-                                            Toast.LENGTH_LONG
+                                            Toast.LENGTH_LONG,
                                         )
                                         .show()
                                 }
@@ -183,4 +184,7 @@ open class SystemApiWrapper(context: Context?) : ApiWrapper(context) {
             context.startActivity(ProxyActivityStarter.getLaunchIntent(context, params))
         }
     }
+
+    override fun getApplicationInfoHash(appInfo: ApplicationInfo): String =
+        (appInfo.sourceDir?.hashCode() ?: 0).toString() + " " + appInfo.longVersionCode
 }

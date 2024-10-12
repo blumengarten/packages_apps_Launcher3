@@ -95,6 +95,7 @@ public class GridCustomizationsProvider extends ContentProvider {
 
     private static final int MESSAGE_ID_UPDATE_PREVIEW = 1337;
     private static final int MESSAGE_ID_UPDATE_GRID = 7414;
+    private static final int MESSAGE_ID_UPDATE_COLOR = 856;
 
     // Set of all active previews used to track duplicate memory allocations
     private final Set<PreviewLifecycleObserver> mActivePreviews =
@@ -287,6 +288,11 @@ public class GridCustomizationsProvider extends ContentProvider {
                     String gridName = message.getData().getString(KEY_GRID_NAME);
                     if (!TextUtils.isEmpty(gridName)) {
                         renderer.updateGrid(gridName);
+                    }
+                    break;
+                case MESSAGE_ID_UPDATE_COLOR:
+                    if (Flags.newCustomizationPickerUi()) {
+                        renderer.previewColor(message.getData());
                     }
                     break;
                 default:

@@ -38,8 +38,8 @@ class GeneratedPreviewTest {
     @get:Rule val checkFlagsRule: CheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule()
     private val providerName =
         ComponentName(
-            "com.android.launcher3.tests",
-            "com.android.launcher3.testcomponent.AppWidgetNoConfig"
+            getInstrumentation().getContext().getPackageName(),
+            "com.android.launcher3.testcomponent.AppWidgetNoConfig",
         )
     private val generatedPreviewLayout =
         getInstrumentation().context.run {
@@ -61,7 +61,7 @@ class GeneratedPreviewTest {
                     ActivityContextWrapper(
                         ContextThemeWrapper(
                             context,
-                            com.android.launcher3.R.style.WidgetContainerTheme
+                            com.android.launcher3.R.style.WidgetContainerTheme,
                         )
                     )
                 )
@@ -78,7 +78,7 @@ class GeneratedPreviewTest {
             object : WidgetManagerHelper(context) {
                 override fun loadGeneratedPreview(
                     info: AppWidgetProviderInfo,
-                    widgetCategory: Int
+                    widgetCategory: Int,
                 ) =
                     generatedPreview.takeIf {
                         info === appWidgetProviderInfo &&

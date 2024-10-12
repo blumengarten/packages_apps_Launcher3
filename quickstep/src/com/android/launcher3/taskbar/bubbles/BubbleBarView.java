@@ -1492,6 +1492,38 @@ public class BubbleBarView extends FrameLayout {
         return bubbles;
     }
 
+    /**
+     * Returns the distance between the top left corner of the bubble bar to the center of the dot
+     * of the selected bubble.
+     */
+    PointF getSelectedBubbleDotDistanceFromTopLeft() {
+        if (mSelectedBubbleView == null) {
+            return new PointF(0, 0);
+        }
+        final int indexOfSelectedBubble = indexOfChild(mSelectedBubbleView);
+        final boolean onLeft = mBubbleBarLocation.isOnLeft(isLayoutRtl());
+        final float selectedBubbleTx = isExpanded()
+                ? getExpandedBubbleTranslationX(indexOfSelectedBubble, getChildCount(), onLeft)
+                : getCollapsedBubbleTranslationX(indexOfSelectedBubble, getChildCount(), onLeft);
+        PointF selectedBubbleDotCenter = mSelectedBubbleView.getDotCenter();
+
+        return new PointF(
+                selectedBubbleTx + selectedBubbleDotCenter.x,
+                mBubbleBarPadding + mPointerSize + selectedBubbleDotCenter.y);
+    }
+
+    int getSelectedBubbleDotColor() {
+        return mSelectedBubbleView == null ? 0 : mSelectedBubbleView.getDotColor();
+    }
+
+    int getPointerSize() {
+        return mPointerSize;
+    }
+
+    float getBubbleElevation() {
+        return mBubbleElevation;
+    }
+
     /** Interface for BubbleBarView to communicate with its controller. */
     interface Controller {
 

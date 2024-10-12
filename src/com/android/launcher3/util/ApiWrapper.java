@@ -24,6 +24,7 @@ import android.app.Person;
 import android.app.role.RoleManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.ShortcutInfo;
 import android.graphics.drawable.ColorDrawable;
@@ -32,6 +33,7 @@ import android.os.UserHandle;
 import android.os.UserManager;
 import android.util.ArrayMap;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.launcher3.BuildConfig;
@@ -154,6 +156,14 @@ public class ApiWrapper implements ResourceBasedOverride, SafeCloseable {
             Launcher launcher = Launcher.getLauncher(context);
             launcher.startActivityForResult(roleRequestIntent, REQUEST_HOME_ROLE);
         }
+    }
+
+    /**
+     * Returns a hash to uniquely identify a particular version of appInfo
+     */
+    public String getApplicationInfoHash(@NonNull ApplicationInfo appInfo) {
+        // The hashString in source dir changes with every install
+        return appInfo.sourceDir;
     }
 
     @Override

@@ -71,6 +71,7 @@ import android.view.Surface;
 import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 import android.window.RemoteTransition;
 
@@ -268,8 +269,10 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         NearestTouchFrame navButtonsView = mDragLayer.findViewById(R.id.navbuttons_view);
         StashedHandleView stashedHandleView = mDragLayer.findViewById(R.id.stashed_handle);
         BubbleBarView bubbleBarView = null;
+        FrameLayout bubbleBarContainer = null;
         if (isTransientTaskbar || Flags.enableBubbleBarInPersistentTaskBar()) {
             bubbleBarView = mDragLayer.findViewById(R.id.taskbar_bubbles);
+            bubbleBarContainer = mDragLayer.findViewById(R.id.taskbar_bubbles_container);
         }
         StashedHandleView bubbleHandleView = mDragLayer.findViewById(R.id.stashed_bubble_handle);
 
@@ -296,7 +299,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                     : new PersistentBubbleStashController(dimensionsProvider);
             bubbleControllersOptional = Optional.of(new BubbleControllers(
                     new BubbleBarController(this, bubbleBarView),
-                    new BubbleBarViewController(this, bubbleBarView),
+                    new BubbleBarViewController(this, bubbleBarView, bubbleBarContainer),
                     bubbleStashController,
                     bubbleHandleController,
                     new BubbleDragController(this),
@@ -946,7 +949,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
     }
 
     /**
-     * Hides the taskbar icons and background when the notication shade is expanded.
+     * Hides the taskbar icons and background when the notification shade is expanded.
      */
     private void onNotificationShadeExpandChanged(boolean isExpanded, boolean skipAnim) {
         float alpha = isExpanded ? 0 : 1;
@@ -955,6 +958,12 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                 TaskbarViewController.ALPHA_INDEX_NOTIFICATION_EXPANDED).animateToValue(alpha));
         anim.play(mControllers.taskbarDragLayerController.getNotificationShadeBgTaskbar()
                 .animateToValue(alpha));
+
+        mControllers.bubbleControllers.ifPresent(controllers -> {
+            BubbleBarViewController bubbleBarViewController = controllers.bubbleBarViewController;
+            anim.play(bubbleBarViewController.getBubbleBarAlpha().get(0).animateToValue(alpha));
+        });
+
         anim.start();
         if (skipAnim) {
             anim.end();
@@ -981,8 +990,8 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
     }
 
     public void onNavButtonsDarkIntensityChanged(float darkIntensity) {
-        mControllers.navbarButtonsViewController.getTaskbarNavButtonDarkIntensity()
-                .updateValue(darkIntensity);
+        mControllers.navbarButtonsViewController.getTaskbarNavButtonDarkIntensity().updateValue(
+                darkIntensity);
     }
 
     public void onNavigationBarLumaSamplingEnabled(int displayId, boolean enable) {

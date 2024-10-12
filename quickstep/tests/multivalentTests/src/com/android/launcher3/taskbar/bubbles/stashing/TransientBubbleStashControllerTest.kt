@@ -49,6 +49,7 @@ import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import org.mockito.kotlin.any
 import org.mockito.kotlin.atLeastOnce
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -307,6 +308,44 @@ class TransientBubbleStashControllerTest {
     }
 
     @Test
+    fun updateStashedAndExpandedState_stash_updateBarVisibilityAfterAnimation() {
+        // Given bubble bar has bubbles and is unstashed
+        mTransientBubbleStashController.isStashed = false
+        whenever(bubbleBarViewController.isHiddenForNoBubbles).thenReturn(false)
+
+        // When stash
+        getInstrumentation().runOnMainSync {
+            mTransientBubbleStashController.updateStashedAndExpandedState(
+                stash = true,
+                expand = false,
+            )
+        }
+
+        // Hides bubble bar only after animation completes
+        verify(bubbleBarViewController, never()).setHiddenForStashed(true)
+        advanceTimeBy(BubbleStashController.BAR_STASH_DURATION)
+        verify(bubbleBarViewController).setHiddenForStashed(true)
+    }
+
+    @Test
+    fun updateStashedAndExpandedState_unstash_updateBarVisibilityBeforeAnimation() {
+        // Given bubble bar has bubbles and is stashed
+        mTransientBubbleStashController.isStashed = true
+        whenever(bubbleBarViewController.isHiddenForNoBubbles).thenReturn(false)
+
+        // When unstash
+        getInstrumentation().runOnMainSync {
+            mTransientBubbleStashController.updateStashedAndExpandedState(
+                stash = false,
+                expand = false,
+            )
+        }
+
+        // Shows bubble bar immediately
+        verify(bubbleBarViewController).setHiddenForStashed(false)
+    }
+
+    @Test
     fun isSysuiLockedSwitchedToFalseForOverview_unlockAnimationIsShown() {
         // Given screen is locked and bubble bar has bubbles
         getInstrumentation().runOnMainSync {
@@ -358,6 +397,8 @@ class TransientBubbleStashControllerTest {
         assertThat(stashedHandleView.alpha).isEqualTo(0)
         // Insets controller is notified
         verify(taskbarInsetsController).onTaskbarOrBubblebarWindowHeightOrInsetsChanged()
+        // Bubble bar visibility updated
+        verify(bubbleBarViewController).setHiddenForStashed(false)
     }
 
     @Test
@@ -375,6 +416,8 @@ class TransientBubbleStashControllerTest {
         assertThat(stashedHandleView.translationY).isEqualTo(0)
         // Insets controller is notified
         verify(taskbarInsetsController).onTaskbarOrBubblebarWindowHeightOrInsetsChanged()
+        // Bubble bar visibility updated
+        verify(bubbleBarViewController).setHiddenForStashed(true)
     }
 
     @Test

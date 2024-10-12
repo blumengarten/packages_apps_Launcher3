@@ -7,7 +7,6 @@ import static android.appwidget.AppWidgetProviderInfo.WIDGET_CATEGORY_SEARCHBOX;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.util.SparseArray;
 import android.widget.RemoteViews;
@@ -75,10 +74,10 @@ public class WidgetItem extends ComponentKey {
         this(info, idp, iconCache, context, new WidgetManagerHelper(context));
     }
 
-    public WidgetItem(ShortcutConfigActivityInfo info, IconCache iconCache, PackageManager pm) {
+    public WidgetItem(ShortcutConfigActivityInfo info, IconCache iconCache) {
         super(info.getComponent(), info.getUser());
         label = info.isPersistable() ? iconCache.getTitleNoCache(info) :
-                Utilities.trim(info.getLabel(pm));
+                Utilities.trim(info.getLabel());
         description = null;
         widgetInfo = null;
         activityInfo = info;

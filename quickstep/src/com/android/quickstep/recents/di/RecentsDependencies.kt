@@ -34,6 +34,7 @@ import com.android.quickstep.task.thumbnail.TaskThumbnailViewData
 import com.android.quickstep.task.viewmodel.TaskContainerData
 import com.android.quickstep.task.viewmodel.TaskOverlayViewModel
 import com.android.quickstep.task.viewmodel.TaskThumbnailViewModel
+import com.android.quickstep.task.viewmodel.TaskThumbnailViewModelImpl
 import com.android.quickstep.task.viewmodel.TaskViewData
 import com.android.quickstep.task.viewmodel.TaskViewModel
 import com.android.quickstep.views.TaskViewType
@@ -180,7 +181,7 @@ class RecentsDependencies private constructor(private val appContext: Context) {
                 TaskContainerData::class.java -> TaskContainerData()
                 TaskThumbnailViewData::class.java -> TaskThumbnailViewData()
                 TaskThumbnailViewModel::class.java ->
-                    TaskThumbnailViewModel(
+                    TaskThumbnailViewModelImpl(
                         recentsViewData = inject(),
                         taskViewData = inject(scopeId, extras),
                         taskContainerData = inject(scopeId),

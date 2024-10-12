@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.launcher3.icons
-
-import com.android.launcher3.icons.cache.CachedObject
+package com.android.launcher3.util;
 
 /**
- * This files contains some definitions used during refactoring to avoid breaking changes.
- *
- * TODO(b/366237794) remove this file once refactoring is complete
+ * Proxy class used for StateManager ProtoLog support.
  */
+public class StateManagerProtoLogProxy {
 
-/** Temporary interface to allow easier refactoring */
-interface ComponentWithLabel : CachedObject<IconCache>
+    public static void logGoToState(Object fromState, Object toState, String trace) { }
 
-/** Temporary interface to allow easier refactoring */
-interface ComponentWithLabelAndIcon : ComponentWithLabel
+    public static void logCreateAtomicAnimation(Object fromState, Object toState, String trace) { }
+
+    public static void logOnStateTransitionStart(Object state) { }
+
+    public static void logOnStateTransitionEnd(Object state) { }
+
+    public static void logCancelAnimation(boolean animationOngoing, String trace) { }
+}

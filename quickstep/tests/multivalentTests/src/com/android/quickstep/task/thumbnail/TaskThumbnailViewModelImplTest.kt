@@ -36,7 +36,7 @@ import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.Snapshot
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.SnapshotSplash
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.Uninitialized
 import com.android.quickstep.task.viewmodel.TaskContainerData
-import com.android.quickstep.task.viewmodel.TaskThumbnailViewModel
+import com.android.quickstep.task.viewmodel.TaskThumbnailViewModelImpl
 import com.android.quickstep.task.viewmodel.TaskViewData
 import com.android.quickstep.views.TaskViewType
 import com.android.systemui.shared.recents.model.Task
@@ -51,7 +51,7 @@ import org.mockito.kotlin.whenever
 
 /** Test for [TaskThumbnailView] */
 @RunWith(AndroidJUnit4::class)
-class TaskThumbnailViewModelTest {
+class TaskThumbnailViewModelImplTest {
     private var taskViewType = TaskViewType.SINGLE
     private val recentsViewData = RecentsViewData()
     private val taskViewData by lazy { TaskViewData(taskViewType) }
@@ -60,7 +60,7 @@ class TaskThumbnailViewModelTest {
     private val mGetThumbnailPositionUseCase = mock<GetThumbnailPositionUseCase>()
     private val splashAlphaUseCase: SplashAlphaUseCase = mock()
     private val systemUnderTest by lazy {
-        TaskThumbnailViewModel(
+        TaskThumbnailViewModelImpl(
             recentsViewData,
             taskViewData,
             taskContainerData,
@@ -109,7 +109,7 @@ class TaskThumbnailViewModelTest {
                         bitmap = expectedThumbnailData.thumbnail!!,
                         thumbnailRotation = Surface.ROTATION_0,
                     ),
-                    expectedIconData.icon
+                    expectedIconData.icon,
                 )
             )
     }
@@ -204,7 +204,7 @@ class TaskThumbnailViewModelTest {
                         bitmap = expectedThumbnailData.thumbnail!!,
                         thumbnailRotation = Surface.ROTATION_270,
                     ),
-                    expectedIconData.icon
+                    expectedIconData.icon,
                 )
             )
     }
@@ -230,7 +230,7 @@ class TaskThumbnailViewModelTest {
                         bitmap = expectedThumbnailData.thumbnail!!,
                         thumbnailRotation = Surface.ROTATION_0,
                     ),
-                    expectedIconData.icon
+                    expectedIconData.icon,
                 )
             )
     }

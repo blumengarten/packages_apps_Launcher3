@@ -50,7 +50,7 @@ public class MainThreadInitializedObject<T extends SafeCloseable> {
 
     public T get(Context context) {
         Context app = context.getApplicationContext();
-        if (app instanceof SandboxApplication sc) {
+        if (app instanceof ObjectSandbox sc) {
             return sc.getObject(this);
         }
 
@@ -100,7 +100,8 @@ public class MainThreadInitializedObject<T extends SafeCloseable> {
         T get(Context context);
     }
 
-    public interface SandboxApplication {
+    /** Sandbox for isolating {@link MainThreadInitializedObject} instances from Launcher. */
+    public interface ObjectSandbox {
 
         /**
          * Find a cached object from mObjectMap if we have already created one. If not, generate
@@ -116,7 +117,7 @@ public class MainThreadInitializedObject<T extends SafeCloseable> {
         <T extends SafeCloseable> void putObject(MainThreadInitializedObject<T> object, T value);
 
         /**
-         * Returns whether this context should cleanup all objects when its destroyed or leave it
+         * Returns whether this sandbox should cleanup all objects when its destroyed or leave it
          * to the GC.
          * These objects can have listeners attached to the system server and mey not be able to get
          * GCed themselves when running on a device.
@@ -137,7 +138,7 @@ public class MainThreadInitializedObject<T extends SafeCloseable> {
      * Abstract Context which allows custom implementations for
      * {@link MainThreadInitializedObject} providers
      */
-    public static class SandboxContext extends LauncherApplication implements SandboxApplication {
+    public static class SandboxContext extends LauncherApplication implements ObjectSandbox {
 
         private static final String TAG = "SandboxContext";
 
@@ -159,8 +160,8 @@ public class MainThreadInitializedObject<T extends SafeCloseable> {
 
         @Override
         public boolean shouldCleanUpOnDestroy() {
-            return (getBaseContext().getApplicationContext() instanceof SandboxApplication sa)
-                    ? sa.shouldCleanUpOnDestroy() : true;
+            return (getBaseContext().getApplicationContext() instanceof ObjectSandbox os)
+                    ? os.shouldCleanUpOnDestroy() : true;
         }
 
         public void onDestroy() {

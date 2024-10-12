@@ -176,7 +176,7 @@ public class LauncherAppState implements SafeCloseable {
                     () -> LauncherPrefs.get(mContext).removeListener(observer, THEMED_ICONS));
 
             InstallSessionTracker installSessionTracker =
-                    InstallSessionHelper.INSTANCE.get(context).registerInstallTracker(mModel);
+                    InstallSessionHelper.INSTANCE.get(context).registerInstallTracker(callbacks);
             mOnTerminateCallback.add(installSessionTracker::unregister);
         });
 
@@ -266,7 +266,7 @@ public class LauncherAppState implements SafeCloseable {
     }
 
     private class IconObserver
-            implements IconProvider.IconChangeListener, OnSharedPreferenceChangeListener {
+            implements IconProvider.IconChangeListener, LauncherPrefChangeListener {
 
         @Override
         public void onAppIconChanged(String packageName, UserHandle user) {
@@ -288,7 +288,7 @@ public class LauncherAppState implements SafeCloseable {
         }
 
         @Override
-        public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+        public void onPrefChanged(String key) {
             if (Themes.KEY_THEMED_ICONS.equals(key)) {
                 mIconProvider.setIconThemeSupported(Themes.isThemedIconEnabled(mContext));
                 verifyIconChanged();

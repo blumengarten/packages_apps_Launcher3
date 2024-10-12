@@ -16,7 +16,7 @@
 package com.android.launcher3.statehandlers;
 
 import static android.view.View.VISIBLE;
-import static android.window.flags.DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY;
+import static android.window.DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY;
 
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 

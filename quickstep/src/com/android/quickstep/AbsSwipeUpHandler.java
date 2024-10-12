@@ -88,8 +88,8 @@ import android.view.ViewTreeObserver.OnScrollChangedListener;
 import android.view.WindowInsets;
 import android.view.animation.Interpolator;
 import android.widget.Toast;
+import android.window.DesktopModeFlags;
 import android.window.PictureInPictureSurfaceTransaction;
-import android.window.flags.DesktopModeFlags;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -156,6 +156,8 @@ import com.android.wm.shell.shared.TransactionPool;
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 import com.android.wm.shell.shared.startingsurface.SplashScreenExitAnimationUtils;
 
+import kotlin.Unit;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -164,8 +166,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Consumer;
-
-import kotlin.Unit;
 
 /**
  * Handles the navigation gestures when Launcher is the default home activity.
@@ -237,6 +237,8 @@ public abstract class AbsSwipeUpHandler<
             getNextStateFlag("STATE_SCALED_CONTROLLER_HOME");
     private static final int STATE_SCALED_CONTROLLER_RECENTS =
             getNextStateFlag("STATE_SCALED_CONTROLLER_RECENTS");
+    private static final int STATE_PARALLEL_ANIM_FINISHED =
+            getNextStateFlag("STATE_PARALLEL_ANIM_FINISHED");
 
     protected static final int STATE_HANDLER_INVALIDATED =
             getNextStateFlag("STATE_HANDLER_INVALIDATED");
@@ -453,7 +455,8 @@ public abstract class AbsSwipeUpHandler<
         mStateCallback.runOnceAtState(STATE_SCREENSHOT_CAPTURED | STATE_GESTURE_COMPLETED
                         | STATE_SCALED_CONTROLLER_HOME,
                 this::finishCurrentTransitionToHome);
-        mStateCallback.runOnceAtState(STATE_SCALED_CONTROLLER_HOME | STATE_CURRENT_TASK_FINISHED,
+        mStateCallback.runOnceAtState(STATE_SCALED_CONTROLLER_HOME | STATE_CURRENT_TASK_FINISHED
+                        | STATE_PARALLEL_ANIM_FINISHED,
                 this::reset);
 
         mStateCallback.runOnceAtState(STATE_LAUNCHER_PRESENT | STATE_APP_CONTROLLER_RECEIVED
@@ -1544,9 +1547,12 @@ public abstract class AbsSwipeUpHandler<
                     @Override
                     public void onAnimationEnd(Animator animation) {
                         mParallelRunningAnim = null;
+                        mStateCallback.setStateOnUiThread(STATE_PARALLEL_ANIM_FINISHED);
                     }
                 });
                 mParallelRunningAnim.start();
+            } else {
+                mStateCallback.setStateOnUiThread(STATE_PARALLEL_ANIM_FINISHED);
             }
         }
 

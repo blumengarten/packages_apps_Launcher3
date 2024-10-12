@@ -41,15 +41,14 @@ import org.junit.runners.model.Statement
 @EmulatedDevices(["pixelTablet2023"])
 class TaskbarAutohideSuspendControllerTest {
 
-    private val context = TaskbarWindowSandboxContext.create(getInstrumentation().targetContext)
-
-    @get:Rule(order = 0) val animatorTestRule = AnimatorTestRule(this)
-    @get:Rule(order = 1)
+    @get:Rule(order = 0) val context = TaskbarWindowSandboxContext.create()
+    @get:Rule(order = 1) val animatorTestRule = AnimatorTestRule(this)
+    @get:Rule(order = 2)
     val systemUiProxyRule = TestRule { base, _ ->
         object : Statement() {
             override fun evaluate() {
                 getInstrumentation().runOnMainSync {
-                    context.applicationContext.putObject(
+                    context.putObject(
                         SystemUiProxy.INSTANCE,
                         object : SystemUiProxy(context) {
                             override fun notifyTaskbarAutohideSuspend(suspend: Boolean) {
@@ -62,8 +61,8 @@ class TaskbarAutohideSuspendControllerTest {
             }
         }
     }
-    @get:Rule(order = 2) val taskbarModeRule = TaskbarModeRule(context)
-    @get:Rule(order = 3) val taskbarUnitTestRule = TaskbarUnitTestRule(this, context)
+    @get:Rule(order = 3) val taskbarModeRule = TaskbarModeRule(context)
+    @get:Rule(order = 4) val taskbarUnitTestRule = TaskbarUnitTestRule(this, context)
 
     @InjectController lateinit var autohideSuspendController: TaskbarAutohideSuspendController
     @InjectController lateinit var stashController: TaskbarStashController

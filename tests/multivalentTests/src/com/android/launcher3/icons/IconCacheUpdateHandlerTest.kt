@@ -17,77 +17,107 @@
 package com.android.launcher3.icons
 
 import android.content.ComponentName
-import android.content.pm.PackageInfo
-import android.database.Cursor
-import android.os.UserHandle
+import android.content.pm.ApplicationInfo
+import android.database.MatrixCursor
+import android.os.Process.myUserHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.android.launcher3.icons.cache.BaseIconCache
-import com.android.launcher3.icons.cache.CachingLogic
+import com.android.launcher3.icons.cache.BaseIconCache.IconDB
+import com.android.launcher3.icons.cache.CachedObject
+import com.android.launcher3.icons.cache.CachedObjectCachingLogic
 import com.android.launcher3.icons.cache.IconCacheUpdateHandler
 import com.android.launcher3.util.RoboApiWrapper
+import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.FutureTask
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.whenever
 
 @SmallTest
 @RunWith(AndroidJUnit4::class)
 class IconCacheUpdateHandlerTest {
 
-    @Mock private lateinit var cursor: Cursor
-    @Mock private lateinit var user: UserHandle
-    @Mock private lateinit var cachingLogic: CachingLogic<String>
+    @Mock private lateinit var iconProvider: IconProvider
     @Mock private lateinit var baseIconCache: BaseIconCache
 
-    private var componentMap: HashMap<ComponentName, String> = hashMapOf()
-    private var ignorePackages: Set<String> = setOf()
-    private var packageInfoMap: HashMap<String, PackageInfo> = hashMapOf()
-
-    private val dummyRowData =
-        IconCacheRowData(
-            "com.android.fake/.FakeActivity",
-            System.currentTimeMillis(),
-            1,
-            1.0.toLong(),
-            "stateOfConfusion",
-        )
+    private var cursor: MatrixCursor? = null
+    private var cachingLogic = CachedObjectCachingLogic
 
     @Before
     fun setup() {
-
         MockitoAnnotations.initMocks(this)
-        // Load in a specific row to the database
-        doReturn(0).`when`(cursor).getColumnIndex(BaseIconCache.IconDB.COLUMN_COMPONENT)
-        doReturn(1).`when`(cursor).getColumnIndex(BaseIconCache.IconDB.COLUMN_LAST_UPDATED)
-        doReturn(2).`when`(cursor).getColumnIndex(BaseIconCache.IconDB.COLUMN_VERSION)
-        doReturn(3).`when`(cursor).getColumnIndex(BaseIconCache.IconDB.COLUMN_ROWID)
-        doReturn(4).`when`(cursor).getColumnIndex(BaseIconCache.IconDB.COLUMN_SYSTEM_STATE)
-        doReturn(dummyRowData.component).`when`(cursor).getString(0)
-        doReturn(dummyRowData.lastUpdated).`when`(cursor).getLong(1)
-        doReturn(dummyRowData.version).`when`(cursor).getInt(2)
-        doReturn(dummyRowData.row).`when`(cursor).getLong(3)
-        doReturn(dummyRowData.systemState).`when`(cursor).getString(4)
+        doReturn(iconProvider).whenever(baseIconCache).iconProvider
+    }
+
+    @After
+    fun tearDown() {
+        cursor?.close()
     }
 
     @Test
     fun `IconCacheUpdateHandler returns null if the component name is malformed`() {
-        val updateHandlerUnderTest = IconCacheUpdateHandler(packageInfoMap, baseIconCache)
+        val updateHandlerUnderTest = IconCacheUpdateHandler(baseIconCache)
+        val cn = ComponentName.unflattenFromString("com.android.fake/.FakeActivity")!!
 
         val result =
             updateHandlerUnderTest.updateOrDeleteIcon(
-                cursor,
-                componentMap,
-                ignorePackages,
-                user,
+                createCursor(1, cn.flattenToString() + "#", "freshId-old"),
+                hashMapOf(cn to TestCachedObject(cn, "freshId")),
+                setOf(),
+                myUserHandle(),
                 cachingLogic,
             )
-
-        assert(result == null)
+        assertThat(result).isNull()
     }
+
+    @Test
+    fun `IconCacheUpdateHandler returns null if the freshId match`() {
+        val updateHandlerUnderTest = IconCacheUpdateHandler(baseIconCache)
+        val cn = ComponentName.unflattenFromString("com.android.fake/.FakeActivity")!!
+
+        val result =
+            updateHandlerUnderTest.updateOrDeleteIcon(
+                createCursor(1, cn.flattenToString(), "freshId"),
+                hashMapOf(cn to TestCachedObject(cn, "freshId")),
+                setOf(),
+                myUserHandle(),
+                cachingLogic,
+            )
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `IconCacheUpdateHandler returns non-null if the freshId do not match`() {
+        val updateHandlerUnderTest = IconCacheUpdateHandler(baseIconCache)
+        val cn = ComponentName.unflattenFromString("com.android.fake/.FakeActivity")!!
+        val testObj = TestCachedObject(cn, "freshId")
+
+        val result =
+            updateHandlerUnderTest.updateOrDeleteIcon(
+                createCursor(1, cn.flattenToString(), "freshId-old"),
+                hashMapOf(cn to testObj),
+                setOf(),
+                myUserHandle(),
+                cachingLogic,
+            )
+        assertThat(result).isEqualTo(testObj)
+    }
+
+    private fun createCursor(row: Long, component: String, appState: String) =
+        MatrixCursor(
+                arrayOf(IconDB.COLUMN_ROWID, IconDB.COLUMN_COMPONENT, IconDB.COLUMN_FRESHNESS_ID)
+            )
+            .apply { addRow(arrayOf(row, component, appState)) }
+            .apply {
+                cursor = this
+                moveToNext()
+            }
 }
 
 /** Utility method to wait for the icon update handler to finish */
@@ -105,10 +135,15 @@ fun IconCache.waitForUpdateHandlerToFinish() {
     }
 }
 
-data class IconCacheRowData(
-    val component: String,
-    val lastUpdated: Long,
-    val version: Int,
-    val row: Long,
-    val systemState: String,
-)
+class TestCachedObject(val cn: ComponentName, val freshnessId: String) : CachedObject {
+
+    override fun getComponent() = cn
+
+    override fun getUser() = myUserHandle()
+
+    override fun getLabel(): CharSequence? = null
+
+    override fun getApplicationInfo(): ApplicationInfo? = null
+
+    override fun getFreshnessIdentifier(iconProvider: IconProvider): String? = freshnessId
+}

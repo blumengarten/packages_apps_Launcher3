@@ -22,7 +22,6 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.view.Surface
 import com.android.quickstep.recents.data.FakeTasksRepository
-import com.android.quickstep.task.thumbnail.TaskThumbnailViewModelTest
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.ThumbnailData
 import com.google.common.truth.Truth.assertThat
@@ -126,9 +125,14 @@ class RecentsViewModelTest {
 
     private fun createThumbnailData(rotation: Int = Surface.ROTATION_0): ThumbnailData {
         val bitmap = mock<Bitmap>()
-        whenever(bitmap.width).thenReturn(TaskThumbnailViewModelTest.THUMBNAIL_WIDTH)
-        whenever(bitmap.height).thenReturn(TaskThumbnailViewModelTest.THUMBNAIL_HEIGHT)
+        whenever(bitmap.width).thenReturn(THUMBNAIL_WIDTH)
+        whenever(bitmap.height).thenReturn(THUMBNAIL_HEIGHT)
 
         return ThumbnailData(thumbnail = bitmap, rotation = rotation)
+    }
+
+    companion object {
+        const val THUMBNAIL_WIDTH = 100
+        const val THUMBNAIL_HEIGHT = 200
     }
 }

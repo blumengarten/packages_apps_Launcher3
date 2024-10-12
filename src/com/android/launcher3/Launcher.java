@@ -412,6 +412,7 @@ public class Launcher extends StatefulActivity<LauncherState>
 
     private final List<BackPressHandler> mBackPressedHandlers = new ArrayList<>();
     private boolean mIsColdStartupAfterReboot;
+    private boolean mForceConfigUpdate;
 
     private boolean mIsNaturalScrollingEnabled;
 
@@ -756,7 +757,7 @@ public class Launcher extends StatefulActivity<LauncherState>
     protected void onHandleConfigurationChanged() {
         Trace.beginSection("Launcher#onHandleconfigurationChanged");
         try {
-            if (!initDeviceProfile(mDeviceProfile.inv)) {
+            if (!initDeviceProfile(mDeviceProfile.inv) && !mForceConfigUpdate) {
                 return;
             }
 
@@ -770,6 +771,7 @@ public class Launcher extends StatefulActivity<LauncherState>
             mModel.rebindCallbacks();
             updateDisallowBack();
         } finally {
+            mForceConfigUpdate = false;
             Trace.endSection();
         }
     }
@@ -1872,13 +1874,18 @@ public class Launcher extends StatefulActivity<LauncherState>
             }
         }
 
-        // Exit spring loaded mode if necessary after adding the widget
-        Runnable onComplete = MULTI_SELECT_EDIT_MODE.get() ? null
-                : () -> mStateManager.goToState(NORMAL, SPRING_LOADED_EXIT_DELAY);
+        // Exit spring loaded mode if necessary after adding the widget; unless config activity was
+        // started.
+        Runnable onComplete = MULTI_SELECT_EDIT_MODE.get() ? null : () -> mStateManager.goToState(
+                NORMAL, SPRING_LOADED_EXIT_DELAY);
         completeAddAppWidget(appWidgetId, info, boundWidget,
                 addFlowHandler.getProviderInfo(this), addFlowHandler.needsConfigure(),
                 false, widgetPreviewBitmap);
-        mWorkspace.removeExtraEmptyScreenDelayed(delay, false, onComplete);
+        // Remove extra screen if widget drop concluded. If a config activity was started, extra
+        // screen will be removed when we get back its result.
+        if (!isActivityStarted) {
+            mWorkspace.removeExtraEmptyScreenDelayed(delay, false, onComplete);
+        }
     }
 
     public void addPendingItem(PendingAddItemInfo info, int container, int screenId,
@@ -3144,6 +3151,13 @@ public class Launcher extends StatefulActivity<LauncherState>
      */
     public CannedAnimationCoordinator getAnimationCoordinator() {
         return mAnimationCoordinator;
+    }
+
+    /**
+     * Set to force config update when set to true next time onHandleConfigurationChanged is called.
+     */
+    public void setForceConfigUpdate(boolean forceConfigUpdate) {
+        mForceConfigUpdate = forceConfigUpdate;
     }
 
     @Override

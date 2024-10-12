@@ -20,11 +20,9 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.pm.LauncherActivityInfo
 import android.content.pm.LauncherApps
-import android.content.pm.PackageInfo
 import android.content.pm.ShortcutInfo
 import android.graphics.drawable.Drawable
 import android.os.UserHandle
-import android.text.TextUtils
 import android.util.Log
 import com.android.launcher3.BuildConfig
 import com.android.launcher3.LauncherAppState
@@ -35,7 +33,6 @@ import com.android.launcher3.shortcuts.ShortcutKey
 import com.android.launcher3.util.ApplicationInfoWrapper
 import com.android.launcher3.util.PackageUserKey
 import com.android.launcher3.util.Themes
-import kotlin.math.max
 
 /** Wrapper over ShortcutInfo to provide extra information related to ShortcutInfo */
 class CacheableShortcutInfo(val shortcutInfo: ShortcutInfo, val appInfo: ApplicationInfoWrapper) {
@@ -103,13 +100,6 @@ object CacheableShortcutCachingLogic : CachingLogic<CacheableShortcutInfo> {
 
     override fun getLabel(info: CacheableShortcutInfo): CharSequence? = info.shortcutInfo.shortLabel
 
-    override fun getDescription(info: CacheableShortcutInfo, fallback: CharSequence): CharSequence =
-        info.shortcutInfo.longLabel.let { if (TextUtils.isEmpty(it)) fallback else it!! }
-
-    override fun getLastUpdatedTime(info: CacheableShortcutInfo?, packageInfo: PackageInfo) =
-        info?.let { max(info.shortcutInfo.lastChangedTimestamp, packageInfo.lastUpdateTime) }
-            ?: packageInfo.lastUpdateTime
-
     override fun getApplicationInfo(info: CacheableShortcutInfo) = info.appInfo.getInfo()
 
     override fun loadIcon(context: Context, cache: BaseIconCache, info: CacheableShortcutInfo) =
@@ -126,4 +116,12 @@ object CacheableShortcutCachingLogic : CachingLogic<CacheableShortcutInfo> {
                     )
                 } ?: BitmapInfo.LOW_RES_INFO
         }
+
+    override fun getFreshnessIdentifier(
+        item: CacheableShortcutInfo,
+        provider: IconProvider,
+    ): String? =
+        item.shortcutInfo.lastChangedTimestamp.toString() +
+            "-" +
+            provider.getStateForApp(getApplicationInfo(item))
 }

@@ -346,17 +346,12 @@ public class AllAppsRecyclerView extends FastScrollRecyclerView {
                     (LetterListTextView) LayoutInflater.from(context).inflate(
                             R.layout.fast_scroller_letter_list_text_view, mLetterList, false);
             int viewId = View.generateViewId();
-            textView.setId(viewId);
+            textView.apply(sectionInfo /* FastScrollSectionInfo */, viewId /* viewId */);
             sectionInfo.setId(viewId);
-            textView.setText(sectionInfo.sectionName);
             if (i == fastScrollSections.size() - 1) {
                 // The last section info is just a duplicate so that user can scroll to the bottom.
                 textView.setVisibility(INVISIBLE);
             }
-            ConstraintLayout.LayoutParams lp = new ConstraintLayout.LayoutParams(
-                    MATCH_CONSTRAINT, WRAP_CONTENT);
-            lp.dimensionRatio = "v,1:1";
-            textView.setLayoutParams(lp);
             textViews.add(textView);
             mLetterList.addView(textView);
         }

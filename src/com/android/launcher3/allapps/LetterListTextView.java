@@ -16,6 +16,9 @@
 
 package com.android.launcher3.allapps;
 
+import static androidx.constraintlayout.widget.ConstraintSet.MATCH_CONSTRAINT;
+import static androidx.constraintlayout.widget.ConstraintSet.WRAP_CONTENT;
+
 import android.content.Context;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
@@ -23,6 +26,7 @@ import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.widget.TextView;
 
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.graphics.ColorUtils;
 
 import com.android.launcher3.R;
@@ -68,6 +72,20 @@ public class LetterListTextView extends TextView {
         setWidth(mLetterListTextWidthAndHeight);
         setTextSize(mLetterListTextWidthAndHeight);
         setVisibility(VISIBLE);
+    }
+
+    /**
+     * Applies a viewId to the letter list text view and sets the background and text based on the
+     * sectionInfo.
+     */
+    public void apply(AlphabeticalAppsList.FastScrollSectionInfo fastScrollSectionInfo,
+            int viewId) {
+        setId(viewId);
+        setText(fastScrollSectionInfo.sectionName);
+        ConstraintLayout.LayoutParams lp = new ConstraintLayout.LayoutParams(
+                MATCH_CONSTRAINT, WRAP_CONTENT);
+        lp.dimensionRatio = "v,1:1";
+        setLayoutParams(lp);
     }
 
     /**

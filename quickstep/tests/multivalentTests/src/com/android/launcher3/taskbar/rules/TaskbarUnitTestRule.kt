@@ -28,9 +28,11 @@ import androidx.test.rule.ServiceTestRule
 import com.android.launcher3.LauncherAppState
 import com.android.launcher3.statehandlers.DesktopVisibilityController
 import com.android.launcher3.taskbar.TaskbarActivityContext
+import com.android.launcher3.taskbar.TaskbarControllers
 import com.android.launcher3.taskbar.TaskbarManager
 import com.android.launcher3.taskbar.TaskbarNavButtonController.TaskbarNavButtonCallbacks
 import com.android.launcher3.taskbar.TaskbarViewController
+import com.android.launcher3.taskbar.bubbles.BubbleControllers
 import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule.InjectController
 import com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR
 import com.android.launcher3.util.LauncherMultivalentJUnit.Companion.isRunningInRobolectric
@@ -38,6 +40,9 @@ import com.android.launcher3.util.TestUtil
 import com.android.quickstep.AllAppsActionManager
 import com.android.quickstep.TouchInteractionService
 import com.android.quickstep.TouchInteractionService.TISBinder
+import java.lang.reflect.Field
+import java.lang.reflect.ParameterizedType
+import java.util.Optional
 import org.junit.Assume.assumeTrue
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
@@ -180,17 +185,36 @@ class TaskbarUnitTestRule(
     fun recreateTaskbar() = instrumentation.runOnMainSync { taskbarManager.recreateTaskbar() }
 
     private fun injectControllers() {
-        val controllers = activityContext.controllers
-        val controllerFieldsByType = controllers.javaClass.fields.associateBy { it.type }
+        val bubbleControllerTypes =
+            BubbleControllers::class.java.fields.map { f ->
+                if (f.type == Optional::class.java) {
+                    (f.genericType as ParameterizedType).actualTypeArguments[0] as Class<*>
+                } else {
+                    f.type
+                }
+            }
         testInstance.javaClass.fields
             .filter { it.isAnnotationPresent(InjectController::class.java) }
             .forEach {
-                it.set(
-                    testInstance,
-                    controllerFieldsByType[it.type]?.get(controllers)
-                        ?: throw NoSuchElementException("Failed to find controller for ${it.type}"),
-                )
+                val controllers: Any =
+                    if (it.type in bubbleControllerTypes) {
+                        activityContext.controllers.bubbleControllers.orElseThrow {
+                            NoSuchElementException("Bubble controllers are not initialized")
+                        }
+                    } else {
+                        activityContext.controllers
+                    }
+                injectController(it, testInstance, controllers)
             }
+    }
+
+    private fun injectController(field: Field, testInstance: Any, controllers: Any) {
+        val controllerFieldsByType = controllers.javaClass.fields.associateBy { it.type }
+        field.set(
+            testInstance,
+            controllerFieldsByType[field.type]?.get(controllers)
+                ?: throw NoSuchElementException("Failed to find controller for ${field.type}"),
+        )
     }
 
     /**

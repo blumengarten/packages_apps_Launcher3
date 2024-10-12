@@ -16,6 +16,7 @@
 package com.android.launcher3.taskbar;
 
 import static com.android.app.animation.Interpolators.EMPHASIZED;
+import static com.android.launcher3.Flags.enableScalingRevealHomeAnimation;
 import static com.android.launcher3.Hotseat.ALPHA_CHANNEL_TASKBAR_ALIGNMENT;
 import static com.android.launcher3.Hotseat.ALPHA_CHANNEL_TASKBAR_STASH;
 import static com.android.launcher3.LauncherState.HOTSEAT_ICONS;
@@ -42,6 +43,7 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.animation.Interpolator;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -64,6 +66,7 @@ import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
 import com.android.quickstep.RecentsAnimationCallbacks;
 import com.android.quickstep.RecentsAnimationController;
+import com.android.quickstep.util.ScalingWorkspaceRevealAnim;
 import com.android.quickstep.util.SystemUiFlagUtils;
 import com.android.quickstep.views.RecentsView;
 import com.android.systemui.animation.ViewRootSync;
@@ -682,7 +685,9 @@ public class TaskbarLauncherStateController {
             animatorSet.play(iconAlignAnim);
         }
 
-        animatorSet.setInterpolator(EMPHASIZED);
+        Interpolator interpolator = enableScalingRevealHomeAnimation()
+                ? ScalingWorkspaceRevealAnim.SCALE_INTERPOLATOR : EMPHASIZED;
+        animatorSet.setInterpolator(interpolator);
 
         if (start) {
             animatorSet.start();
@@ -781,6 +786,9 @@ public class TaskbarLauncherStateController {
     }
 
     protected void stashHotseat(boolean stash) {
+        // align taskbar with the hotseat icons before performing any animation
+        mControllers.taskbarViewController.setLauncherIconAlignment(/* alignmentRatio = */ 1,
+                mLauncher.getDeviceProfile());
         TaskbarStashController stashController = mControllers.taskbarStashController;
         stashController.updateStateForFlag(FLAG_STASHED_FOR_BUBBLES, stash);
         Runnable swapHotseatWithTaskbar = new Runnable() {
@@ -879,9 +887,10 @@ public class TaskbarLauncherStateController {
                 mControllers.taskbarActivityContext)) {
             return;
         }
-        boolean isBubblesOnLeft = location.isOnLeft(isRtl(mLauncher.getResources()));
+        boolean isRtl = isRtl(mLauncher.getResources());
+        boolean isBubblesOnLeft = location.isOnLeft(isRtl);
         int targetX = deviceProfile
-                .getHotseatTranslationXForBubbleBar(/* isNavbarOnRight= */ isBubblesOnLeft);
+                .getHotseatTranslationXForBubbleBar(isBubblesOnLeft, isRtl);
         updateHotseatAndQsbTranslationX(targetX, animate);
     }
 
@@ -892,19 +901,6 @@ public class TaskbarLauncherStateController {
             mHotseatTranslationXAnimation.cancel();
             mHotseatTranslationXAnimation = null;
         }
-        Runnable postAnimationAction = new Runnable() {
-            @Override
-            public void run() {
-                mHotseatTranslationXAnimation = null;
-                // We only need to align the task bar when on launcher home screen
-                if (mControllers.taskbarStashController.isOnHome()) {
-                    mControllers.taskbarViewController.setLauncherIconAlignment(
-                            /* alignmentRatio = */ 1,
-                            mLauncher.getDeviceProfile()
-                    );
-                }
-            }
-        };
         Hotseat hotseat = mLauncher.getHotseat();
         AnimatorSet translationXAnimation = new AnimatorSet();
         MultiProperty iconsTranslationX = mLauncher.getHotseat()
@@ -927,14 +923,12 @@ public class TaskbarLauncherStateController {
             }
         }
         if (!animate) {
-            postAnimationAction.run();
             return;
         }
         mHotseatTranslationXAnimation = translationXAnimation;
         translationXAnimation.setStartDelay(FADE_OUT_ANIM_POSITION_DURATION_MS);
         translationXAnimation.setDuration(FADE_IN_ANIM_ALPHA_DURATION_MS);
         translationXAnimation.setInterpolator(Interpolators.EMPHASIZED);
-        translationXAnimation.addListener(AnimatorListeners.forEndCallback(postAnimationAction));
         translationXAnimation.start();
     }
 

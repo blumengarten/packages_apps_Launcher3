@@ -44,11 +44,11 @@ class BubbleBarFlyoutView(context: Context, private val positioner: BubbleBarFly
         const val MIN_EXPANSION_PROGRESS_FOR_CONTENT_ALPHA = 0.75f
     }
 
-    private val sender: TextView by
-        lazy(LazyThreadSafetyMode.NONE) { findViewById(R.id.bubble_flyout_name) }
+    private val title: TextView by
+        lazy(LazyThreadSafetyMode.NONE) { findViewById(R.id.bubble_flyout_title) }
 
-    private val avatar: ImageView by
-        lazy(LazyThreadSafetyMode.NONE) { findViewById(R.id.bubble_flyout_avatar) }
+    private val icon: ImageView by
+        lazy(LazyThreadSafetyMode.NONE) { findViewById(R.id.bubble_flyout_icon) }
 
     private val message: TextView by
         lazy(LazyThreadSafetyMode.NONE) { findViewById(R.id.bubble_flyout_text) }
@@ -171,8 +171,8 @@ class BubbleBarFlyoutView(context: Context, private val positioner: BubbleBarFly
 
     /** Sets the data for the flyout and starts playing the expand animation. */
     fun showFromCollapsed(flyoutMessage: BubbleBarFlyoutMessage, expandAnimation: () -> Unit) {
-        avatar.alpha = 0f
-        sender.alpha = 0f
+        icon.alpha = 0f
+        title.alpha = 0f
         message.alpha = 0f
         setData(flyoutMessage)
         val txToCollapsedPosition =
@@ -202,18 +202,18 @@ class BubbleBarFlyoutView(context: Context, private val positioner: BubbleBarFly
 
     private fun setData(flyoutMessage: BubbleBarFlyoutMessage) {
         // the avatar is only displayed in group chat messages
-        if (flyoutMessage.senderAvatar != null && flyoutMessage.isGroupChat) {
-            avatar.visibility = VISIBLE
-            avatar.setImageDrawable(flyoutMessage.senderAvatar)
+        if (flyoutMessage.icon != null) {
+            icon.visibility = VISIBLE
+            icon.setImageDrawable(flyoutMessage.icon)
         } else {
-            avatar.visibility = GONE
+            icon.visibility = GONE
         }
 
         val minTextViewWidth: Int
         val maxTextViewWidth: Int
-        if (avatar.visibility == VISIBLE) {
-            minTextViewWidth = minFlyoutWidth - avatar.width - flyoutPadding * 2
-            maxTextViewWidth = maxFlyoutWidth - avatar.width - flyoutPadding * 2
+        if (icon.visibility == VISIBLE) {
+            minTextViewWidth = minFlyoutWidth - icon.width - flyoutPadding * 2
+            maxTextViewWidth = maxFlyoutWidth - icon.width - flyoutPadding * 2
         } else {
             // when there's no avatar, the width of the text view is constant, so we're setting the
             // min and max to the same value
@@ -221,13 +221,13 @@ class BubbleBarFlyoutView(context: Context, private val positioner: BubbleBarFly
             maxTextViewWidth = minTextViewWidth
         }
 
-        if (flyoutMessage.senderName.isEmpty()) {
-            sender.visibility = GONE
+        if (flyoutMessage.title.isEmpty()) {
+            title.visibility = GONE
         } else {
-            sender.minWidth = minTextViewWidth
-            sender.maxWidth = maxTextViewWidth
-            sender.text = flyoutMessage.senderName
-            sender.visibility = VISIBLE
+            title.minWidth = minTextViewWidth
+            title.maxWidth = maxTextViewWidth
+            title.text = flyoutMessage.title
+            title.visibility = VISIBLE
         }
 
         message.minWidth = minTextViewWidth
@@ -240,17 +240,17 @@ class BubbleBarFlyoutView(context: Context, private val positioner: BubbleBarFly
         expansionProgress = fraction
 
         updateTranslationForAnimation(message)
-        updateTranslationForAnimation(sender)
-        updateTranslationForAnimation(avatar)
+        updateTranslationForAnimation(title)
+        updateTranslationForAnimation(icon)
 
         // start fading in the content only after we're past the threshold
         val alpha =
             ((expansionProgress - MIN_EXPANSION_PROGRESS_FOR_CONTENT_ALPHA) /
                     (1f - MIN_EXPANSION_PROGRESS_FOR_CONTENT_ALPHA))
                 .coerceIn(0f, 1f)
-        sender.alpha = alpha
+        title.alpha = alpha
         message.alpha = alpha
-        avatar.alpha = alpha
+        icon.alpha = alpha
 
         translationZ =
             collapsedElevation + (flyoutElevation - collapsedElevation) * expansionProgress
@@ -368,7 +368,7 @@ class BubbleBarFlyoutView(context: Context, private val positioner: BubbleBarFly
                 )
             )
         backgroundColor = ta.getColor(0, defaultBackgroundColor)
-        sender.setTextColor(ta.getColor(1, defaultTextColor))
+        title.setTextColor(ta.getColor(1, defaultTextColor))
         message.setTextColor(ta.getColor(2, defaultTextColor))
         ta.recycle()
         backgroundPaint.color = backgroundColor

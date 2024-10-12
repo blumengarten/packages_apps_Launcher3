@@ -24,6 +24,7 @@ import static com.android.launcher3.icons.IconCacheUpdateHandlerTestKt.waitForUp
 import static com.android.launcher3.model.data.AppInfo.makeLaunchIntent;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
 import static com.android.launcher3.util.LauncherModelHelper.TEST_ACTIVITY;
+import static com.android.launcher3.util.LauncherModelHelper.TEST_ACTIVITY2;
 import static com.android.launcher3.util.LauncherModelHelper.TEST_PACKAGE;
 import static com.android.launcher3.util.TestUtil.runOnExecutorSync;
 
@@ -67,7 +68,6 @@ import com.android.launcher3.shortcuts.ShortcutKey;
 import com.android.launcher3.util.ApplicationInfoWrapper;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.PackageUserKey;
-import com.android.launcher3.util.RoboApiWrapper;
 
 import com.google.common.truth.Truth;
 
@@ -147,7 +147,6 @@ public class IconCacheTest {
 
     @Test
     public void launcherActivityInfo_cached_in_memory() {
-        RoboApiWrapper.INSTANCE.initialize();
         ComponentName cn = new ComponentName(TEST_PACKAGE, TEST_ACTIVITY);
         UserHandle user = myUserHandle();
         ComponentKey cacheKey = new ComponentKey(cn, user);
@@ -208,6 +207,67 @@ public class IconCacheTest {
                 new PackageUserKey(cacheKey.getPackageName(), cacheKey.user));
         runOnExecutorSync(MODEL_EXECUTOR,
                 () -> assertNull(mIconCache.getInMemoryEntryLocked(cacheKey)));
+    }
+
+    @Test
+    public void item_kept_in_db_if_nothing_changes() {
+        ComponentName cn = new ComponentName(TEST_PACKAGE, TEST_ACTIVITY);
+        UserHandle user = myUserHandle();
+
+        LauncherActivityInfo lai = mContext.getSystemService(LauncherApps.class)
+                .resolveActivity(makeLaunchIntent(cn), user);
+        assertNotNull(lai);
+
+        // Since this is a new update, there should not be any update
+        Truth.assertThat(executeIconUpdate(lai, LauncherActivityCachingLogic.INSTANCE)).isEmpty();
+        assertTrue(mIconCache.isItemInDb(new ComponentKey(cn, user)));
+
+        // Another update should not cause any changes
+        Truth.assertThat(executeIconUpdate(lai, LauncherActivityCachingLogic.INSTANCE)).isEmpty();
+        assertTrue(mIconCache.isItemInDb(new ComponentKey(cn, user)));
+    }
+
+    @Test
+    public void item_updated_in_db_if_appInfo_changes() {
+        ComponentName cn = new ComponentName(TEST_PACKAGE, TEST_ACTIVITY);
+        UserHandle user = myUserHandle();
+
+        LauncherActivityInfo lai = mContext.getSystemService(LauncherApps.class)
+                .resolveActivity(makeLaunchIntent(cn), user);
+        assertNotNull(lai);
+
+        // Since this is a new update, there should not be any update
+        Truth.assertThat(executeIconUpdate(lai, LauncherActivityCachingLogic.INSTANCE)).isEmpty();
+        assertTrue(mIconCache.isItemInDb(new ComponentKey(cn, user)));
+
+        // Another update should trigger an update
+        lai.getApplicationInfo().sourceDir = "some-random-source-dir";
+        Truth.assertThat(executeIconUpdate(lai, LauncherActivityCachingLogic.INSTANCE))
+                .containsExactly(new PackageUserKey(TEST_PACKAGE, user));
+        assertTrue(mIconCache.isItemInDb(new ComponentKey(cn, user)));
+    }
+
+    @Test
+    public void item_removed_in_db_if_item_removed() {
+        ComponentName cn = new ComponentName(TEST_PACKAGE, TEST_ACTIVITY);
+        UserHandle user = myUserHandle();
+
+        LauncherActivityInfo lai = mContext.getSystemService(LauncherApps.class)
+                .resolveActivity(makeLaunchIntent(cn), user);
+        assertNotNull(lai);
+
+        // Since this is a new update, there should not be any update
+        Truth.assertThat(executeIconUpdate(lai, LauncherActivityCachingLogic.INSTANCE)).isEmpty();
+        assertTrue(mIconCache.isItemInDb(new ComponentKey(cn, user)));
+
+        // Another update should trigger an update
+        ComponentName cn2 = new ComponentName(TEST_PACKAGE, TEST_ACTIVITY2);
+        LauncherActivityInfo lai2 = mContext.getSystemService(LauncherApps.class)
+                .resolveActivity(makeLaunchIntent(cn2), user);
+
+        Truth.assertThat(executeIconUpdate(lai2, LauncherActivityCachingLogic.INSTANCE)).isEmpty();
+        assertFalse(mIconCache.isItemInDb(new ComponentKey(cn, user)));
+        assertTrue(mIconCache.isItemInDb(new ComponentKey(cn2, user)));
     }
 
     /**

@@ -386,12 +386,12 @@ public class StatsLogCompatManager extends StatsLogManager {
                 // and then write to StatsLog.
                 app.getModel().enqueueModelUpdateTask((taskController, dataModel, apps) ->
                         write(event, applyOverwrites(mItemInfo.buildProto(
-                                dataModel.collections.get(mItemInfo.container)))));
+                                dataModel.collections.get(mItemInfo.container), mContext))));
             })) {
                 // Write log on the model thread so that logs do not go out of order
                 // (for eg: drop comes after drag)
                 Executors.MODEL_EXECUTOR.execute(
-                        () -> write(event, applyOverwrites(mItemInfo.buildProto())));
+                        () -> write(event, applyOverwrites(mItemInfo.buildProto(mContext))));
             }
         }
 

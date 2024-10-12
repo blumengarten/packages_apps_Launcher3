@@ -22,6 +22,7 @@ import static android.content.pm.LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC;
 import static android.content.pm.LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED_BY_ANY_LAUNCHER;
 
 import static com.android.launcher3.icons.FastBitmapDrawable.WHITE_SCRIM_ALPHA;
+import static com.android.wm.shell.shared.bubbles.FlyoutDrawableLoader.loadFlyoutDrawable;
 
 import android.annotation.Nullable;
 import android.content.Context;
@@ -49,7 +50,9 @@ import com.android.launcher3.R;
 import com.android.launcher3.icons.BitmapInfo;
 import com.android.launcher3.icons.BubbleIconFactory;
 import com.android.launcher3.shortcuts.ShortcutRequest;
+import com.android.launcher3.taskbar.bubbles.flyout.BubbleBarFlyoutMessage;
 import com.android.wm.shell.shared.bubbles.BubbleInfo;
+import com.android.wm.shell.shared.bubbles.ParcelableFlyoutMessage;
 
 /**
  * Loads the necessary info to populate / present a bubble (name, icon, shortcut).
@@ -157,13 +160,16 @@ public class BubbleCreator {
         dotColor = ColorUtils.blendARGB(badgeBitmapInfo.color,
                 Color.WHITE, WHITE_SCRIM_ALPHA / 255f);
 
+        final BubbleBarFlyoutMessage flyoutMessage =
+                getFlyoutMessage(info.getParcelableFlyoutMessage());
+
         if (existingBubble == null) {
             LayoutInflater inflater = LayoutInflater.from(context);
             BubbleView bubbleView = (BubbleView) inflater.inflate(
                     R.layout.bubblebar_item_view, barView, false /* attachToRoot */);
 
             BubbleBarBubble bubble = new BubbleBarBubble(info, bubbleView,
-                    badgeBitmap, bubbleBitmap, dotColor, dotPath, appName);
+                    badgeBitmap, bubbleBitmap, dotColor, dotPath, appName, flyoutMessage);
             bubbleView.setBubble(bubble);
             return bubble;
         } else {
@@ -174,8 +180,23 @@ public class BubbleCreator {
             existingBubble.setDotColor(dotColor);
             existingBubble.setDotPath(dotPath);
             existingBubble.setAppName(appName);
+            existingBubble.setFlyoutMessage(flyoutMessage);
             return existingBubble;
         }
+    }
+
+    @Nullable
+    private BubbleBarFlyoutMessage getFlyoutMessage(
+            @Nullable ParcelableFlyoutMessage parcelableFlyoutMessage) {
+        if (parcelableFlyoutMessage == null) {
+            return null;
+        }
+        String title = parcelableFlyoutMessage.getTitle();
+        String message = parcelableFlyoutMessage.getMessage();
+        return new BubbleBarFlyoutMessage(
+                loadFlyoutDrawable(parcelableFlyoutMessage.getIcon(), mContext),
+                title == null ? "" : title,
+                message == null ? "" : message);
     }
 
     /**

@@ -31,6 +31,7 @@ import static org.mockito.Mockito.spy;
 
 import android.content.ContentProvider;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageInstaller.SessionParams;
 import android.content.pm.PackageManager;
@@ -250,15 +251,16 @@ public class LauncherModelHelper {
         private final File mDbDir;
 
         public SandboxModelContext() {
-            super(ApplicationProvider.getApplicationContext());
+            this(ApplicationProvider.getApplicationContext());
+        }
+
+        public SandboxModelContext(Context context) {
+            super(context);
 
             // System settings cache content provider. Ensure that they are statically initialized
-            Settings.Secure.getString(
-                    ApplicationProvider.getApplicationContext().getContentResolver(), "test");
-            Settings.System.getString(
-                    ApplicationProvider.getApplicationContext().getContentResolver(), "test");
-            Settings.Global.getString(
-                    ApplicationProvider.getApplicationContext().getContentResolver(), "test");
+            Settings.Secure.getString(context.getContentResolver(), "test");
+            Settings.System.getString(context.getContentResolver(), "test");
+            Settings.Global.getString(context.getContentResolver(), "test");
 
             mPm = spy(getBaseContext().getPackageManager());
             mDbDir = new File(getCacheDir(), UUID.randomUUID().toString());

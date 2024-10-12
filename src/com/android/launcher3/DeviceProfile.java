@@ -69,7 +69,6 @@ import com.android.launcher3.util.CellContentDimensions;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.DisplayController.Info;
 import com.android.launcher3.util.IconSizeSteps;
-import com.android.launcher3.util.NavigationMode;
 import com.android.launcher3.util.ResourceHelper;
 import com.android.launcher3.util.WindowBounds;
 import com.android.launcher3.util.window.WindowManagerProxy;
@@ -2337,16 +2336,15 @@ public class DeviceProfile {
     public boolean shouldAdjustHotseatOnBubblesLocationUpdate(Context context) {
         return enableBubbleBar()
                 && enableBubbleBarInPersistentTaskBar()
-                && DisplayController.getNavigationMode(context)
-                == NavigationMode.THREE_BUTTONS;
+                && !DisplayController.getNavigationMode(context).hasGestures;
     }
 
     /** Returns hotseat translation X for the bubble bar position. */
-    public int getHotseatTranslationXForBubbleBar(boolean isNavbarOnRight) {
+    public int getHotseatTranslationXForBubbleBar(boolean isNavbarOnRight, boolean isRtl) {
         if (isNavbarOnRight) {
-            return 0;
+            return isRtl ? -navButtonsLayoutWidthPx : 0;
         } else {
-            return navButtonsLayoutWidthPx;
+            return isRtl ? 0 : navButtonsLayoutWidthPx;
         }
     }
 

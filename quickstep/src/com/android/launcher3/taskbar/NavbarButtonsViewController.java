@@ -173,9 +173,9 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
     // Used for IME+A11Y buttons
     private final ViewGroup mEndContextualContainer;
     private final ViewGroup mStartContextualContainer;
-    private final int mLightIconColorOnHome;
-    private final int mDarkIconColorOnHome;
-    /** Color to use for navigation bar buttons, if they are on on a Taskbar surface background. */
+    private final int mLightIconColorOnWorkspace;
+    private final int mDarkIconColorOnWorkspace;
+    /** Color to use for navbar buttons, if they are on on a Taskbar surface background. */
     private final int mOnBackgroundIconColor;
 
     private @Nullable Animator mNavBarLocationAnimator;
@@ -191,7 +191,10 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
     // Used for System UI state updates that should translate the nav button for in-app display.
     private final AnimatedFloat mNavButtonInAppDisplayProgressForSysui = new AnimatedFloat(
             this::updateNavButtonInAppDisplayProgressForSysui);
-    /** Expected nav button dark intensity communicated via the framework. */
+    /**
+     * Expected nav button dark intensity piped down from {@code LightBarController} in framework
+     * via {@code TaskbarDelegate}.
+     */
     private final AnimatedFloat mTaskbarNavButtonDarkIntensity = new AnimatedFloat(
             this::onDarkIntensityChanged);
     /** {@code 1} if the Taskbar background color is fully opaque. */
@@ -246,8 +249,8 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         mEndContextualContainer = mNavButtonsView.findViewById(R.id.end_contextual_buttons);
         mStartContextualContainer = mNavButtonsView.findViewById(R.id.start_contextual_buttons);
 
-        mLightIconColorOnHome = context.getColor(R.color.taskbar_nav_icon_light_color_on_home);
-        mDarkIconColorOnHome = context.getColor(R.color.taskbar_nav_icon_dark_color_on_home);
+        mLightIconColorOnWorkspace = context.getColor(R.color.taskbar_nav_icon_light_color_on_home);
+        mDarkIconColorOnWorkspace = context.getColor(R.color.taskbar_nav_icon_dark_color_on_home);
         mOnBackgroundIconColor = Utilities.isDarkTheme(context)
                 ? context.getColor(R.color.taskbar_nav_icon_light_color)
                 : context.getColor(R.color.taskbar_nav_icon_dark_color);
@@ -762,40 +765,68 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         mNavButtonsView.setTranslationY(mLastSetNavButtonTranslationY);
     }
 
+    /**
+     * Sets Taskbar 3-button mode icon colors based on the
+     * {@link #mTaskbarNavButtonDarkIntensity} value piped in from Framework. For certain cases
+     * in large screen taskbar where there may be opaque surfaces, the selected SystemUI button
+     * colors are intentionally overridden.
+     * <p>
+     * This method is also called when any of the AnimatedFloat instances change.
+     */
     private void updateNavButtonColor() {
         final ArgbEvaluator argbEvaluator = ArgbEvaluator.getInstance();
-        final int sysUiNavButtonIconColorOnHome = (int) argbEvaluator.evaluate(
-                mTaskbarNavButtonDarkIntensity.value,
-                mLightIconColorOnHome,
-                mDarkIconColorOnHome);
-
-        final int iconColor;
-        if (ENABLE_TASKBAR_NAVBAR_UNIFICATION && mContext.isPhoneMode()) {
-            iconColor = sysUiNavButtonIconColorOnHome;
-        } else {
-            // Override the color from framework if nav buttons are over an opaque Taskbar surface.
-            iconColor = (int) argbEvaluator.evaluate(
-                    mOnBackgroundNavButtonColorOverrideMultiplier.value * Math.max(
-                            mOnTaskbarBackgroundNavButtonColorOverride.value,
-                            mSlideInViewVisibleNavButtonColorOverride.value),
-                    sysUiNavButtonIconColorOnHome,
-                    mOnBackgroundIconColor);
+        int taskbarNavButtonColor = getSysUiIconColorOnHome(argbEvaluator);
+        // Only phone mode foldable button colors should be identical to SysUI navbar colors.
+        if (!(ENABLE_TASKBAR_NAVBAR_UNIFICATION && mContext.isPhoneMode())) {
+            taskbarNavButtonColor = getTaskbarButtonColor(argbEvaluator, taskbarNavButtonColor);
         }
+        applyButtonColors(taskbarNavButtonColor);
+    }
 
+    /**
+     * Taskbar 3-button mode icon colors based on the
+     * {@link #mTaskbarNavButtonDarkIntensity} value piped in from Framework.
+     */
+    private int getSysUiIconColorOnHome(ArgbEvaluator argbEvaluator) {
+        return (int) argbEvaluator.evaluate(getTaskbarNavButtonDarkIntensity().value,
+                mLightIconColorOnWorkspace, mDarkIconColorOnWorkspace);
+    }
+
+    /**
+     * If Taskbar background is opaque or slide in overlay is visible, the selected SystemUI button
+     * colors are intentionally overridden. The override can be disabled when
+     * {@link #mOnBackgroundNavButtonColorOverrideMultiplier} is {@code 0}.
+     */
+    private int getTaskbarButtonColor(ArgbEvaluator argbEvaluator, int sysUiIconColorOnHome) {
+        final float sysUIColorOverride =
+                mOnBackgroundNavButtonColorOverrideMultiplier.value * Math.max(
+                        mOnTaskbarBackgroundNavButtonColorOverride.value,
+                        mSlideInViewVisibleNavButtonColorOverride.value);
+        return (int) argbEvaluator.evaluate(sysUIColorOverride, sysUiIconColorOnHome,
+                mOnBackgroundIconColor);
+    }
+
+    /**
+     * Iteratively sets button colors for each button in {@link #mAllButtons}.
+     */
+    private void applyButtonColors(int iconColor) {
         for (ImageView button : mAllButtons) {
             button.setImageTintList(ColorStateList.valueOf(iconColor));
             Drawable background = button.getBackground();
             if (background instanceof KeyButtonRipple) {
                 ((KeyButtonRipple) background).setDarkIntensity(
-                        mTaskbarNavButtonDarkIntensity.value);
+                        getTaskbarNavButtonDarkIntensity().value);
             }
         }
     }
 
+    /**
+     * Updates Taskbar 3-Button icon colors as {@link #mTaskbarNavButtonDarkIntensity} changes.
+     */
     private void onDarkIntensityChanged() {
         updateNavButtonColor();
         if (mContext.isPhoneMode()) {
-            mTaskbarTransitions.onDarkIntensityChanged(mTaskbarNavButtonDarkIntensity.value);
+            mTaskbarTransitions.onDarkIntensityChanged(getTaskbarNavButtonDarkIntensity().value);
         }
     }
 

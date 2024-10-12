@@ -16,13 +16,13 @@
 
 package com.android.launcher3.taskbar.rules
 
-import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import com.android.launcher3.util.DisplayController
 import com.android.launcher3.util.LauncherMultivalentJUnit
 import com.android.launcher3.util.LauncherMultivalentJUnit.EmulatedDevices
 import com.android.launcher3.util.window.WindowManagerProxy
 import com.google.android.apps.nexuslauncher.deviceemulator.TestWindowManagerProxy
 import com.google.common.truth.Truth.assertThat
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.Description
 import org.junit.runner.RunWith
@@ -31,7 +31,7 @@ import org.junit.runners.model.Statement
 @RunWith(LauncherMultivalentJUnit::class)
 @EmulatedDevices(["pixelFoldable2023", "pixelTablet2023"])
 class TaskbarPinningPreferenceRuleTest {
-    private val context = TaskbarWindowSandboxContext.create(getInstrumentation().targetContext)
+    @get:Rule val context = TaskbarWindowSandboxContext.create()
 
     private val preferenceRule = TaskbarPinningPreferenceRule(context)
 
@@ -55,7 +55,7 @@ class TaskbarPinningPreferenceRuleTest {
 
     @Test
     fun testEnableDesktopPinning_verifyDisplayController() {
-        context.applicationContext.putObject(
+        context.putObject(
             WindowManagerProxy.INSTANCE,
             TestWindowManagerProxy(context).apply { isInDesktopMode = true },
         )
@@ -69,7 +69,7 @@ class TaskbarPinningPreferenceRuleTest {
 
     @Test
     fun testDisableDesktopPinning_verifyDisplayController() {
-        context.applicationContext.putObject(
+        context.putObject(
             WindowManagerProxy.INSTANCE,
             TestWindowManagerProxy(context).apply { isInDesktopMode = true },
         )

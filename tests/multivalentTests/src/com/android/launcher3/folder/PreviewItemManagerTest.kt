@@ -29,7 +29,6 @@ import com.android.launcher3.graphics.PreloadIconDrawable
 import com.android.launcher3.icons.BaseIconFactory
 import com.android.launcher3.icons.FastBitmapDrawable
 import com.android.launcher3.icons.UserBadgeDrawable
-import com.android.launcher3.model.ModelTestRule
 import com.android.launcher3.model.data.FolderInfo
 import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_ARCHIVED
@@ -45,7 +44,6 @@ import com.android.launcher3.util.UserIconInfo
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -53,8 +51,6 @@ import org.junit.runner.RunWith
 @SmallTest
 @RunWith(AndroidJUnit4::class)
 class PreviewItemManagerTest {
-
-    @get:Rule val modelTestRule = ModelTestRule()
 
     private lateinit var previewItemManager: PreviewItemManager
     private lateinit var context: Context
@@ -99,8 +95,8 @@ class PreviewItemManagerTest {
                 BaseIconFactory(
                     context,
                     context.resources.configuration.densityDpi,
-                    previewItemManager.mIconSize
-                )
+                    previewItemManager.mIconSize,
+                ),
             )
 
         // Set second icon to be non-themed.
@@ -111,8 +107,8 @@ class PreviewItemManagerTest {
                 BaseIconFactory(
                     context,
                     context.resources.configuration.densityDpi,
-                    previewItemManager.mIconSize
-                )
+                    previewItemManager.mIconSize,
+                ),
             )
 
         // Set third icon to be themed with badge.
@@ -123,8 +119,8 @@ class PreviewItemManagerTest {
                 BaseIconFactory(
                     context,
                     context.resources.configuration.densityDpi,
-                    previewItemManager.mIconSize
-                )
+                    previewItemManager.mIconSize,
+                ),
             )
         folderApps[2].bitmap = folderApps[2].bitmap.withFlags(profileFlagOp(UserIconInfo.TYPE_WORK))
 
@@ -137,8 +133,8 @@ class PreviewItemManagerTest {
                 BaseIconFactory(
                     context,
                     context.resources.configuration.densityDpi,
-                    previewItemManager.mIconSize
-                )
+                    previewItemManager.mIconSize,
+                ),
             )
 
         defaultThemedIcons = get(context).get(THEMED_ICONS)

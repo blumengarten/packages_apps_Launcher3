@@ -220,7 +220,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
     private CancellableTask mIconLoadRequest;
 
-    private boolean mEnableIconUpdateAnimation = false;
+    private boolean mHighResUpdateInProgress = false;
 
     public BubbleTextView(Context context) {
         this(context, null, 0);
@@ -1195,10 +1195,6 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         }
     }
 
-    protected boolean iconUpdateAnimationEnabled() {
-        return mEnableIconUpdateAnimation;
-    }
-
     protected void applyCompoundDrawables(Drawable icon) {
         if (icon == null) {
             // Icon can be null when we use the BubbleTextView for text only.
@@ -1216,7 +1212,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         // If the current icon is a placeholder color, animate its update.
         if (mIcon != null
                 && mIcon instanceof PlaceHolderIconDrawable
-                && iconUpdateAnimationEnabled()) {
+                && mHighResUpdateInProgress) {
             ((PlaceHolderIconDrawable) mIcon).animateIconUpdate(icon);
         }
 
@@ -1238,7 +1234,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         if (getTag() == info) {
             mIconLoadRequest = null;
             mDisableRelayout = true;
-            mEnableIconUpdateAnimation = true;
+            mHighResUpdateInProgress = true;
 
             // Optimization: Starting in N, pre-uploads the bitmap to RenderThread.
             info.bitmap.icon.prepareToDraw();
@@ -1253,7 +1249,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
             }
 
             mDisableRelayout = false;
-            mEnableIconUpdateAnimation = false;
+            mHighResUpdateInProgress = false;
         }
     }
 
@@ -1265,7 +1261,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
             mIconLoadRequest.cancel();
             mIconLoadRequest = null;
         }
-        if (getTag() instanceof ItemInfoWithIcon) {
+        if (getTag() instanceof ItemInfoWithIcon && !mHighResUpdateInProgress) {
             ItemInfoWithIcon info = (ItemInfoWithIcon) getTag();
             if (info.usingLowResIcon()) {
                 mIconLoadRequest = LauncherAppState.getInstance(getContext()).getIconCache()

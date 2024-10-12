@@ -16,7 +16,7 @@
 package com.android.launcher3.taskbar
 
 import android.content.Context
-import android.window.flags.DesktopModeFlags
+import android.window.DesktopModeFlags
 import androidx.annotation.VisibleForTesting
 import com.android.launcher3.Flags.enableRecentsInTaskbar
 import com.android.launcher3.model.data.ItemInfo

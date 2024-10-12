@@ -169,7 +169,11 @@ class TransientBubbleStashController(
             isStashed = true
             stashHandleViewAlpha?.let { animatorSet.playTogether(it.animateToValue(1f)) }
         }
-        animatorSet.updateTouchRegionOnAnimationEnd().setDuration(BAR_STASH_DURATION).start()
+        animatorSet
+            .updateBarVisibility(isStashed)
+            .updateTouchRegionOnAnimationEnd()
+            .setDuration(BAR_STASH_DURATION)
+            .start()
     }
 
     override fun showBubbleBarImmediate() {
@@ -186,6 +190,7 @@ class TransientBubbleStashController(
         bubbleBarBackgroundScaleX.updateValue(1f)
         bubbleBarBackgroundScaleY.updateValue(1f)
         isStashed = false
+        bubbleBarViewController.setHiddenForStashed(false)
         onIsStashedChanged()
     }
 
@@ -200,6 +205,7 @@ class TransientBubbleStashController(
         bubbleBarBackgroundScaleX.updateValue(getStashScaleX())
         bubbleBarBackgroundScaleY.updateValue(getStashScaleY())
         isStashed = true
+        bubbleBarViewController.setHiddenForStashed(true)
         onIsStashedChanged()
     }
 
@@ -481,6 +487,7 @@ class TransientBubbleStashController(
             animator?.cancel()
             animator =
                 createStashAnimator(isStashed, BAR_STASH_DURATION).apply {
+                    updateBarVisibility(isStashed)
                     updateTouchRegionOnAnimationEnd()
                     start()
                 }
@@ -492,6 +499,15 @@ class TransientBubbleStashController(
 
     private fun Animator.updateTouchRegionOnAnimationEnd(): Animator {
         doOnEnd { onIsStashedChanged() }
+        return this
+    }
+
+    private fun <T : Animator> T.updateBarVisibility(stashed: Boolean): T {
+        if (stashed) {
+            doOnEnd { bubbleBarViewController.setHiddenForStashed(true) }
+        } else {
+            doOnStart { bubbleBarViewController.setHiddenForStashed(false) }
+        }
         return this
     }
 

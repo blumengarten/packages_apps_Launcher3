@@ -22,6 +22,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Path;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
@@ -67,8 +68,7 @@ public class BubbleView extends ConstraintLayout {
     private float mAnimatingToDotScale;
     // The current scale value of the dot
     private float mDotScale;
-
-    private boolean mProvideShadowOutline = true;
+    private boolean mDotSuppressedForBubbleUpdate = false;
 
     // TODO: (b/273310265) handle RTL
     // Whether the bubbles are positioned on the left or right side of the screen
@@ -300,6 +300,10 @@ public class BubbleView extends ConstraintLayout {
     }
 
     void updateDotVisibility(boolean animate) {
+        if (mDotSuppressedForBubbleUpdate) {
+            // if the dot is suppressed for
+            return;
+        }
         final float targetScale = hasUnseenContent() ? 1f : 0f;
         if (animate) {
             animateDotScale(targetScale);
@@ -314,6 +318,20 @@ public class BubbleView extends ConstraintLayout {
         if (mAppIcon.getVisibility() == VISIBLE) {
             mAppIcon.setScaleX(fraction);
             mAppIcon.setScaleY(fraction);
+        }
+    }
+
+    /**
+     * Suppresses or un-suppresses drawing the dot due to an update for this bubble.
+     *
+     * <p>If the dot is being suppressed and is already visible, it remains visible because it is
+     * used as a starting point for the animation. If the dot is being unsuppressed, it is
+     * redrawn if needed.
+     */
+    public void suppressDotForBubbleUpdate(boolean suppress) {
+        mDotSuppressedForBubbleUpdate = suppress;
+        if (!suppress) {
+            showDotIfNeeded(/* animate= */ false);
         }
     }
 
@@ -353,8 +371,8 @@ public class BubbleView extends ConstraintLayout {
     }
 
     void showDotIfNeeded(boolean animate) {
-        // only show the dot if we have unseen content
-        if (!hasUnseenContent()) {
+        // only show the dot if we have unseen content and it's not suppressed
+        if (!hasUnseenContent() || mDotSuppressedForBubbleUpdate) {
             return;
         }
         if (animate) {
@@ -404,6 +422,23 @@ public class BubbleView extends ConstraintLayout {
                     setDotScale(showDot ? 1f : 0f);
                     mDotIsAnimating = false;
                 }).start();
+    }
+
+    /**
+     * Returns the distance from the top left corner of this bubble view to the center of its dot.
+     */
+    public PointF getDotCenter() {
+        float[] dotPosition =
+                mOnLeft ? mDotRenderer.getLeftDotPosition() : mDotRenderer.getRightDotPosition();
+        getDrawingRect(mTempBounds);
+        float dotCenterX = mTempBounds.width() * dotPosition[0];
+        float dotCenterY = mTempBounds.height() * dotPosition[1];
+        return new PointF(dotCenterX, dotCenterY);
+    }
+
+    /** Returns the dot color. */
+    public int getDotColor() {
+        return mDotColor;
     }
 
     @Override

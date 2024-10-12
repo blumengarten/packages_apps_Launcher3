@@ -72,8 +72,8 @@ import com.android.launcher3.folder.FolderNameInfos;
 import com.android.launcher3.folder.FolderNameProvider;
 import com.android.launcher3.icons.CacheableShortcutCachingLogic;
 import com.android.launcher3.icons.CacheableShortcutInfo;
-import com.android.launcher3.icons.ComponentWithLabelAndIcon;
 import com.android.launcher3.icons.IconCache;
+import com.android.launcher3.icons.cache.CachedObject;
 import com.android.launcher3.icons.cache.CachedObjectCachingLogic;
 import com.android.launcher3.icons.cache.IconCacheUpdateHandler;
 import com.android.launcher3.icons.cache.LauncherActivityCachingLogic;
@@ -335,8 +335,7 @@ public class LoaderTask implements Runnable {
             verifyNotStopped();
 
             // fourth step
-            List<ComponentWithLabelAndIcon> allWidgetsList =
-                    mBgDataModel.widgetsModel.update(mApp, null);
+            List<CachedObject> allWidgetsList = mBgDataModel.widgetsModel.update(mApp, null);
             logASplit("load widgets");
 
             verifyNotStopped();
@@ -364,7 +363,7 @@ public class LoaderTask implements Runnable {
             }
 
             updateHandler.updateIcons(allWidgetsList,
-                    new CachedObjectCachingLogic(mApp.getContext()),
+                    CachedObjectCachingLogic.INSTANCE,
                     mApp.getModel()::onWidgetLabelsUpdated);
             logASplit("save widgets in icon cache");
 

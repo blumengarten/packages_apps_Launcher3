@@ -25,7 +25,8 @@ import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE;
 import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APP_PAIR;
 import static com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME;
 import static com.android.launcher3.LauncherSettings.Favorites.addTableToDb;
-import static com.android.launcher3.LauncherSettings.Settings.LAYOUT_DIGEST_KEY;
+import static com.android.launcher3.LauncherSettings.Settings.BLOB_KEY_PREFIX;
+import static com.android.launcher3.LauncherSettings.Settings.LAYOUT_PROVIDER_KEY;
 import static com.android.launcher3.LauncherSettings.Settings.LAYOUT_DIGEST_LABEL;
 import static com.android.launcher3.LauncherSettings.Settings.LAYOUT_DIGEST_TAG;
 import static com.android.launcher3.provider.LauncherDbUtils.tableExists;
@@ -548,9 +549,15 @@ public class ModelDbController {
     private AutoInstallsLayout createWorkspaceLoaderFromAppRestriction(
             LauncherWidgetHolder widgetHolder) {
         ContentResolver cr = mContext.getContentResolver();
-        String blobHandlerDigest = Settings.Secure.getString(cr, LAYOUT_DIGEST_KEY);
-        if (!TextUtils.isEmpty(blobHandlerDigest)) {
+        String systemLayoutProvider = Settings.Secure.getString(cr, LAYOUT_PROVIDER_KEY);
+        if (TextUtils.isEmpty(systemLayoutProvider)) {
+            return null;
+        }
+
+        // Try the blob store first
+        if (systemLayoutProvider.startsWith(BLOB_KEY_PREFIX)) {
             BlobStoreManager blobManager = mContext.getSystemService(BlobStoreManager.class);
+            String blobHandlerDigest = systemLayoutProvider.substring(BLOB_KEY_PREFIX.length());
             try (InputStream in = new ParcelFileDescriptor.AutoCloseInputStream(
                     blobManager.openBlob(BlobHandle.createWithSha256(
                             Base64.decode(blobHandlerDigest, NO_WRAP | NO_PADDING),
@@ -562,25 +569,21 @@ public class ModelDbController {
             }
         }
 
-        String authority = Settings.Secure.getString(cr, "launcher3.layout.provider");
-        if (TextUtils.isEmpty(authority)) {
-            return null;
-        }
-
+        // Try contentProvider based provider
         PackageManager pm = mContext.getPackageManager();
-        ProviderInfo pi = pm.resolveContentProvider(authority, 0);
+        ProviderInfo pi = pm.resolveContentProvider(systemLayoutProvider, 0);
         if (pi == null) {
-            Log.e(TAG, "No provider found for authority " + authority);
+            Log.e(TAG, "No provider found for authority " + systemLayoutProvider);
             return null;
         }
-        Uri uri = getLayoutUri(authority, mContext);
+        Uri uri = getLayoutUri(systemLayoutProvider, mContext);
         try (InputStream in = cr.openInputStream(uri)) {
-            Log.d(TAG, "Loading layout from " + authority);
+            Log.d(TAG, "Loading layout from " + systemLayoutProvider);
 
             Resources res = pm.getResourcesForApplication(pi.applicationInfo);
             return getAutoInstallsLayoutFromIS(in, widgetHolder, SourceResources.wrap(res));
         } catch (Exception e) {
-            Log.e(TAG, "Error getting layout stream from: " + authority , e);
+            Log.e(TAG, "Error getting layout stream from: " + systemLayoutProvider , e);
             return null;
         }
     }

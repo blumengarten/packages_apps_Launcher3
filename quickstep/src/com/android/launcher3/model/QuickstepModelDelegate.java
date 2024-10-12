@@ -237,7 +237,7 @@ public class QuickstepModelDelegate extends ModelDelegate {
             InstanceId instanceId = new InstanceIdSequence().newInstanceId();
             for (ItemInfo info : itemsIdMap) {
                 CollectionInfo parent = getContainer(info, itemsIdMap);
-                StatsLogCompatManager.writeSnapshot(info.buildProto(parent), instanceId);
+                StatsLogCompatManager.writeSnapshot(info.buildProto(parent, mContext), instanceId);
             }
             additionalSnapshotEvents(instanceId);
             prefs.put(LAST_SNAPSHOT_TIME_MILLIS, now);
@@ -274,7 +274,7 @@ public class QuickstepModelDelegate extends ModelDelegate {
 
                         for (ItemInfo info : itemsIdMap) {
                             CollectionInfo parent = getContainer(info, itemsIdMap);
-                            LauncherAtom.ItemInfo itemInfo = info.buildProto(parent);
+                            LauncherAtom.ItemInfo itemInfo = info.buildProto(parent, mContext);
                             Log.d(TAG, itemInfo.toString());
                             StatsEvent statsEvent = StatsLogCompatManager.buildStatsEvent(itemInfo,
                                     instanceId);

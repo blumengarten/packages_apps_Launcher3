@@ -192,13 +192,44 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
     }
 
     /**
-     // @return the maximum number of 'icons' that can fit in the taskbar.
-     // TODO(368119679): Assumes that they are all the same size.
+     * @return the maximum number of 'icons' that can fit in the taskbar.
      */
     private int calculateMaxNumIcons() {
-        int availableWidth = mActivityContext.getDeviceProfile().widthPx
-                - (mActivityContext.getDeviceProfile().edgeMarginPx * 2);
-        return Math.floorDiv(availableWidth, mIconTouchSize);
+        DeviceProfile deviceProfile = mActivityContext.getDeviceProfile();
+        int availableWidth = deviceProfile.widthPx;
+
+        // Reserve space required for edge margins, or for navbar if shown. If task bar needs to be
+        // center aligned with nav bar shown, reserve space on both sides.
+        availableWidth -= Math.max(deviceProfile.edgeMarginPx, deviceProfile.hotseatBarEndOffset);
+        availableWidth -= Math.max(deviceProfile.edgeMarginPx,
+                mShouldTryStartAlign ? 0 : deviceProfile.hotseatBarEndOffset);
+
+        // The space taken by an item icon used during layout.
+        int iconSize = 2 * mItemMarginLeftRight + mIconTouchSize;
+
+        int additionalIcons = 0;
+
+        if (mTaskbarDividerContainer != null) {
+            // Space for divider icon is reduced during layout compared to normal icon size, reserve
+            // space for the divider separately.
+            availableWidth -= iconSize - 4 * mItemMarginLeftRight;
+            ++additionalIcons;
+        }
+
+        // All apps icon takes less space compared to normal icon size, reserve space for the icon
+        // separately.
+        if (mAllAppsButtonContainer != null) {
+            boolean forceTransientTaskbarSize =
+                    enableTaskbarPinning() && !mActivityContext.isThreeButtonNav();
+            availableWidth -= iconSize - (int) getResources().getDimension(
+                    mAllAppsButtonContainer.getAllAppsButtonTranslationXOffset(
+                            forceTransientTaskbarSize || (
+                                    DisplayController.isTransientTaskbar(mActivityContext)
+                                            && !mActivityContext.isPhoneMode())));
+            ++additionalIcons;
+        }
+
+        return Math.floorDiv(availableWidth, iconSize) + additionalIcons;
     }
 
     @Override

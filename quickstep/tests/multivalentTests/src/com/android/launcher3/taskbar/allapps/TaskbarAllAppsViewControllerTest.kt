@@ -47,13 +47,12 @@ import org.junit.runner.RunWith
 @EmulatedDevices(["pixelFoldable2023"])
 class TaskbarAllAppsViewControllerTest {
 
-    private val context = TaskbarWindowSandboxContext.create(getInstrumentation().targetContext)
-
-    @get:Rule(order = 0) val taskbarModeRule = TaskbarModeRule(context)
-    @get:Rule(order = 1)
+    @get:Rule(order = 0) val context = TaskbarWindowSandboxContext.create()
+    @get:Rule(order = 1) val taskbarModeRule = TaskbarModeRule(context)
+    @get:Rule(order = 2)
     val allAppsVisitedPreferenceRule =
         TaskbarPreferenceRule(context, ALL_APPS_VISITED_COUNT.prefItem)
-    @get:Rule(order = 2) val taskbarUnitTestRule = TaskbarUnitTestRule(this, context)
+    @get:Rule(order = 3) val taskbarUnitTestRule = TaskbarUnitTestRule(this, context)
 
     @InjectController lateinit var overlayController: TaskbarOverlayController
     @InjectController lateinit var stashController: TaskbarStashController

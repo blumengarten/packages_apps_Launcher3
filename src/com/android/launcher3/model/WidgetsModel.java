@@ -14,7 +14,6 @@ import static java.util.stream.Collectors.toList;
 import android.appwidget.AppWidgetProviderInfo;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.os.UserHandle;
 import android.util.Log;
 import android.util.Pair;
@@ -27,8 +26,8 @@ import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.config.FeatureFlags;
-import com.android.launcher3.icons.ComponentWithLabelAndIcon;
 import com.android.launcher3.icons.IconCache;
+import com.android.launcher3.icons.cache.CachedObject;
 import com.android.launcher3.model.data.PackageItemInfo;
 import com.android.launcher3.pm.ShortcutConfigActivityInfo;
 import com.android.launcher3.util.ComponentKey;
@@ -96,20 +95,18 @@ public class WidgetsModel {
      * @param packageUser If null, all widgets and shortcuts are updated and returned, otherwise
      *                    only widgets and shortcuts associated with the package/user are.
      */
-    public List<ComponentWithLabelAndIcon> update(
+    public List<CachedObject> update(
             LauncherAppState app, @Nullable PackageUserKey packageUser) {
         if (!WIDGETS_ENABLED) {
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
         Preconditions.assertWorkerThread();
 
         Context context = app.getContext();
         final ArrayList<WidgetItem> widgetsAndShortcuts = new ArrayList<>();
-        List<ComponentWithLabelAndIcon> updatedItems = new ArrayList<>();
+        List<CachedObject> updatedItems = new ArrayList<>();
         try {
             InvariantDeviceProfile idp = app.getInvariantDeviceProfile();
-            PackageManager pm = app.getContext().getPackageManager();
-
             // Widgets
             WidgetManagerHelper widgetManager = new WidgetManagerHelper(context);
             for (AppWidgetProviderInfo widgetInfo : widgetManager.getAllProviders(packageUser)) {
@@ -125,7 +122,7 @@ public class WidgetsModel {
             // Shortcuts
             for (ShortcutConfigActivityInfo info :
                     queryList(context, packageUser)) {
-                widgetsAndShortcuts.add(new WidgetItem(info, app.getIconCache(), pm));
+                widgetsAndShortcuts.add(new WidgetItem(info, app.getIconCache()));
                 updatedItems.add(info);
             }
             setWidgetsAndShortcuts(widgetsAndShortcuts, app, packageUser);
@@ -190,8 +187,7 @@ public class WidgetsModel {
                     WidgetItem item = items.get(i);
                     if (item.user.equals(user)) {
                         if (item.activityInfo != null) {
-                            items.set(i, new WidgetItem(item.activityInfo, app.getIconCache(),
-                                    app.getContext().getPackageManager()));
+                            items.set(i, new WidgetItem(item.activityInfo, app.getIconCache()));
                         } else {
                             items.set(i, new WidgetItem(item.widgetInfo,
                                     app.getInvariantDeviceProfile(), app.getIconCache(),

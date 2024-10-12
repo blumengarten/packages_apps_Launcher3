@@ -21,15 +21,14 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.core.animation.doOnEnd
 import androidx.dynamicanimation.animation.SpringForce
-import com.android.launcher3.R
 import com.android.launcher3.anim.AnimatedFloat
 import com.android.launcher3.anim.SpringAnimationBuilder
 import com.android.launcher3.taskbar.TaskbarActivityContext
 import com.android.launcher3.taskbar.TaskbarThresholdUtils
-import com.android.launcher3.taskbar.bubbles.BubbleBarSwipeController.StartState.COLLAPSED
-import com.android.launcher3.taskbar.bubbles.BubbleBarSwipeController.StartState.EXPANDED
-import com.android.launcher3.taskbar.bubbles.BubbleBarSwipeController.StartState.STASHED
-import com.android.launcher3.taskbar.bubbles.BubbleBarSwipeController.StartState.UNKNOWN
+import com.android.launcher3.taskbar.bubbles.BubbleBarSwipeController.BarState.COLLAPSED
+import com.android.launcher3.taskbar.bubbles.BubbleBarSwipeController.BarState.EXPANDED
+import com.android.launcher3.taskbar.bubbles.BubbleBarSwipeController.BarState.STASHED
+import com.android.launcher3.taskbar.bubbles.BubbleBarSwipeController.BarState.UNKNOWN
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController
 import com.android.launcher3.touch.OverScroll
 
@@ -46,11 +45,9 @@ class BubbleBarSwipeController {
     private val animatedSwipeTranslation = AnimatedFloat(this::onSwipeUpdate)
 
     private val unstashThreshold: Int
-    private val expandThreshold: Int
     private val maxOverscroll: Int
-    private val stashThreshold: Int
 
-    private var swipeState: SwipeState = SwipeState()
+    private var swipeState: SwipeState = SwipeState(startState = UNKNOWN)
 
     constructor(tac: TaskbarActivityContext) : this(tac, DefaultDimensionProvider(tac))
 
@@ -58,9 +55,7 @@ class BubbleBarSwipeController {
     constructor(context: Context, dimensionProvider: DimensionProvider) {
         this.context = context
         unstashThreshold = dimensionProvider.unstashThreshold
-        expandThreshold = dimensionProvider.expandThreshold
         maxOverscroll = dimensionProvider.maxOverscroll
-        stashThreshold = dimensionProvider.stashThreshold
     }
 
     fun init(bubbleControllers: BubbleControllers) {
@@ -80,7 +75,7 @@ class BubbleBarSwipeController {
                 bubbleStashController.isBubbleBarVisible() -> COLLAPSED
                 else -> UNKNOWN
             }
-        swipeState = SwipeState(startState = startState)
+        swipeState = SwipeState(startState = startState, currentState = startState)
     }
 
     /** Update swipe distance to [dy] */
@@ -90,46 +85,25 @@ class BubbleBarSwipeController {
         }
         animatedSwipeTranslation.updateValue(dy)
 
-        val prevState = swipeState
-        // We can pass unstash threshold once per gesture, keep it true if it happened once
-        val passedUnstashThreshold = isUnstash(dy) || prevState.passedUnstashThreshold
-        // Expand happens at the end of the gesture, always keep the current value
-        val passedExpandThreshold = isExpand(dy)
-        // Stash happens at the end of the gesture, always keep the current value
-        val passedStashThreshold = isStash(dy)
-
-        if (
-            passedUnstashThreshold != prevState.passedUnstashThreshold ||
-                passedExpandThreshold != prevState.passedExpandThreshold ||
-                passedStashThreshold != prevState.passedStashThreshold
-        ) {
-            swipeState =
-                swipeState.copy(
-                    passedUnstashThreshold = passedUnstashThreshold,
-                    passedExpandThreshold = passedExpandThreshold,
-                    passedStashThreshold = passedStashThreshold,
-                )
-        }
-
-        if (
-            swipeState.startState == STASHED &&
-                swipeState.passedUnstashThreshold &&
-                !prevState.passedUnstashThreshold
-        ) {
-            bubbleStashController.showBubbleBar(expandBubbles = false)
+        swipeState.passedUnstash = isUnstash(dy)
+        // Tracking swipe gesture if we pass unstash threshold at least once during gesture
+        swipeState.isSwipe = swipeState.isSwipe || swipeState.passedUnstash
+        when {
+            canUnstash() && swipeState.passedUnstash -> {
+                swipeState.currentState = COLLAPSED
+                bubbleStashController.showBubbleBar(expandBubbles = false)
+            }
+            canStash() && !swipeState.passedUnstash -> {
+                swipeState.currentState = STASHED
+                bubbleStashController.stashBubbleBar()
+            }
         }
     }
 
     /** Finish tracking swipe gesture. Animate views back to resting state */
     fun finish() {
-        when {
-            swipeState.passedExpandThreshold &&
-                swipeState.startState in setOf(STASHED, COLLAPSED) -> {
-                bubbleStashController.showBubbleBar(expandBubbles = true)
-            }
-            swipeState.passedStashThreshold && swipeState.startState == COLLAPSED -> {
-                bubbleStashController.stashBubbleBar()
-            }
+        if (swipeState.passedUnstash && swipeState.startState in setOf(STASHED, COLLAPSED)) {
+            bubbleStashController.showBubbleBar(expandBubbles = true)
         }
         if (animatedSwipeTranslation.value == 0f) {
             reset()
@@ -140,15 +114,21 @@ class BubbleBarSwipeController {
 
     /** Returns `true` if we are tracking a swipe gesture */
     fun isSwipeGesture(): Boolean {
-        return swipeState.passedUnstashThreshold ||
-            swipeState.passedExpandThreshold ||
-            swipeState.passedStashThreshold
+        return swipeState.isSwipe
     }
 
     private fun canHandleSwipe(dy: Float): Boolean {
         return when (swipeState.startState) {
-            STASHED -> dy < 0 // stashed bar only handles swipe up
-            COLLAPSED -> true // collapsed bar can be swiped in either direction
+            STASHED -> {
+                if (swipeState.currentState == COLLAPSED) {
+                    // if we have unstashed the bar, allow swipe in both directions
+                    true
+                } else {
+                    // otherwise, only allow swipe up on stash handle
+                    dy < 0
+                }
+            }
+            COLLAPSED -> dy < 0 // collapsed bar can only be swiped up
             UNKNOWN,
             EXPANDED -> false // expanded bar can't be swiped
         }
@@ -158,12 +138,13 @@ class BubbleBarSwipeController {
         return dy < -unstashThreshold
     }
 
-    private fun isExpand(dy: Float): Boolean {
-        return dy < -expandThreshold
+    private fun canStash(): Boolean {
+        // Only allow stashing if we started from stashed state
+        return swipeState.startState == STASHED && swipeState.currentState == COLLAPSED
     }
 
-    private fun isStash(dy: Float): Boolean {
-        return dy > stashThreshold
+    private fun canUnstash(): Boolean {
+        return swipeState.currentState == STASHED
     }
 
     private fun reset() {
@@ -175,7 +156,7 @@ class BubbleBarSwipeController {
             }
         }
         springAnimation = null
-        swipeState = SwipeState()
+        swipeState = SwipeState(startState = UNKNOWN)
     }
 
     private fun onSwipeUpdate(value: Float) {
@@ -197,13 +178,13 @@ class BubbleBarSwipeController {
     }
 
     internal data class SwipeState(
-        val startState: StartState = UNKNOWN,
-        val passedUnstashThreshold: Boolean = false,
-        val passedExpandThreshold: Boolean = false,
-        val passedStashThreshold: Boolean = false,
+        val startState: BarState,
+        var currentState: BarState = UNKNOWN,
+        var passedUnstash: Boolean = false,
+        var isSwipe: Boolean = false,
     )
 
-    internal enum class StartState {
+    internal enum class BarState {
         UNKNOWN,
         STASHED,
         COLLAPSED,
@@ -214,17 +195,13 @@ class BubbleBarSwipeController {
     @VisibleForTesting
     interface DimensionProvider {
         val unstashThreshold: Int
-        val expandThreshold: Int
         val maxOverscroll: Int
-        val stashThreshold: Int
     }
 
     private class DefaultDimensionProvider(taskbarActivityContext: TaskbarActivityContext) :
         DimensionProvider {
         override val unstashThreshold: Int
-        override val expandThreshold: Int
         override val maxOverscroll: Int
-        override val stashThreshold: Int
 
         init {
             val resources = taskbarActivityContext.resources
@@ -233,14 +210,7 @@ class BubbleBarSwipeController {
                     resources,
                     taskbarActivityContext.deviceProfile,
                 )
-            // TODO(325673340): review threshold with ux
-            expandThreshold =
-                TaskbarThresholdUtils.getAppWindowThreshold(
-                    resources,
-                    taskbarActivityContext.deviceProfile,
-                )
             maxOverscroll = taskbarActivityContext.deviceProfile.heightPx - unstashThreshold
-            stashThreshold = resources.getDimensionPixelSize(R.dimen.taskbar_to_nav_threshold)
         }
     }
 }

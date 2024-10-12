@@ -16,8 +16,8 @@ import androidx.annotation.Nullable;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
-import com.android.launcher3.icons.ComponentWithLabelAndIcon;
-import com.android.launcher3.icons.IconCache;
+import com.android.launcher3.icons.cache.BaseIconCache;
+import com.android.launcher3.icons.cache.CachedObject;
 import com.android.launcher3.model.data.LauncherAppWidgetInfo;
 
 /**
@@ -26,8 +26,7 @@ import com.android.launcher3.model.data.LauncherAppWidgetInfo;
  * (who's implementation is owned by the launcher). This object represents a widget type / class,
  * as opposed to a widget instance, and so should not be confused with {@link LauncherAppWidgetInfo}
  */
-public class LauncherAppWidgetProviderInfo extends AppWidgetProviderInfo
-        implements ComponentWithLabelAndIcon {
+public class LauncherAppWidgetProviderInfo extends AppWidgetProviderInfo implements CachedObject {
 
     public static final String CLS_CUSTOM_WIDGET_PREFIX = "#custom-widget-";
 
@@ -69,6 +68,8 @@ public class LauncherAppWidgetProviderInfo extends AppWidgetProviderInfo
 
     protected boolean mIsMinSizeFulfilled;
 
+    private PackageManager mPM;
+
     public static LauncherAppWidgetProviderInfo fromProviderInfo(Context context,
             AppWidgetProviderInfo info) {
         final LauncherAppWidgetProviderInfo launcherInfo;
@@ -97,13 +98,13 @@ public class LauncherAppWidgetProviderInfo extends AppWidgetProviderInfo
     }
 
     public void initSpans(Context context, InvariantDeviceProfile idp) {
+        mPM = context.getPackageManager();
         int minSpanX = 0;
         int minSpanY = 0;
         int maxSpanX = idp.numColumns;
         int maxSpanY = idp.numRows;
         int spanX = 0;
         int spanY = 0;
-
 
         Point cellSize = new Point();
         for (DeviceProfile dp : idp.supportedProfiles) {
@@ -188,8 +189,9 @@ public class LauncherAppWidgetProviderInfo extends AppWidgetProviderInfo
                 (widgetSize + widgetPadding + cellSpacing) / (cellSize + cellSpacing)));
     }
 
-    public String getLabel(PackageManager packageManager) {
-        return super.loadLabel(packageManager);
+    @Override
+    public CharSequence getLabel() {
+        return super.loadLabel(mPM);
     }
 
     public Point getMinSpans() {
@@ -225,7 +227,7 @@ public class LauncherAppWidgetProviderInfo extends AppWidgetProviderInfo
     }
 
     @Override
-    public Drawable getFullResIcon(IconCache cache) {
+    public Drawable getFullResIcon(BaseIconCache cache) {
         return cache.getFullResIcon(getActivityInfo());
     }
 

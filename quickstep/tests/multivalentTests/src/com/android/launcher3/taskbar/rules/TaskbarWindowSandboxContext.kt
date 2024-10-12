@@ -18,44 +18,59 @@ package com.android.launcher3.taskbar.rules
 
 import android.content.Context
 import android.content.ContextWrapper
-import android.os.Bundle
-import android.view.Display
-import com.android.launcher3.util.MainThreadInitializedObject
-import com.android.launcher3.util.MainThreadInitializedObject.SandboxContext
+import android.hardware.display.DisplayManager
+import android.hardware.display.VirtualDisplay
+import android.view.Display.DEFAULT_DISPLAY
+import androidx.test.core.app.ApplicationProvider
+import com.android.launcher3.util.MainThreadInitializedObject.ObjectSandbox
+import com.android.launcher3.util.SandboxApplication
+import org.junit.rules.ExternalResource
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
 
 /**
- * Sandbox wrapper where [createWindowContext] provides contexts that are still sandboxed within
- * [application].
+ * [SandboxApplication] for running Taskbar tests.
  *
- * Taskbar can create window contexts, which need to operate under the same sandbox application, but
- * [Context.getApplicationContext] by default returns the actual application. For this reason,
- * [SandboxContext] overrides [getApplicationContext] to return itself, which prevents leaving the
- * sandbox. [SandboxContext] and the real application have different sets of
- * [MainThreadInitializedObject] instances, so overriding the application prevents the latter set
- * from leaking into the sandbox. Similarly, this implementation overrides [getApplicationContext]
- * to return the original sandboxed [application], and it wraps created windowed contexts to
- * propagate this [application].
+ * Tests need to run on a [VirtualDisplay] to avoid conflicting with Launcher's Taskbar on the
+ * [DEFAULT_DISPLAY] (i.e. test is executing on a device).
  */
 class TaskbarWindowSandboxContext
-private constructor(private val application: SandboxContext, base: Context) : ContextWrapper(base) {
-
-    override fun createWindowContext(type: Int, options: Bundle?): Context {
-        return TaskbarWindowSandboxContext(application, super.createWindowContext(type, options))
-    }
-
-    override fun createWindowContext(display: Display, type: Int, options: Bundle?): Context {
-        return TaskbarWindowSandboxContext(
-            application,
-            super.createWindowContext(display, type, options),
-        )
-    }
-
-    override fun getApplicationContext(): SandboxContext = application
+private constructor(base: SandboxApplication, val virtualDisplay: VirtualDisplay) :
+    ContextWrapper(base),
+    ObjectSandbox by base,
+    TestRule by RuleChain.outerRule(virtualDisplayRule(virtualDisplay)).around(base) {
 
     companion object {
-        /** Creates a [TaskbarWindowSandboxContext] to sandbox [base] for Taskbar tests. */
-        fun create(base: Context): TaskbarWindowSandboxContext {
-            return SandboxContext(base).let { TaskbarWindowSandboxContext(it, it) }
+        private const val VIRTUAL_DISPLAY_NAME = "TaskbarSandboxDisplay"
+
+        /** Creates a [SandboxApplication] for Taskbar tests. */
+        fun create(): TaskbarWindowSandboxContext {
+            val base = ApplicationProvider.getApplicationContext<Context>()
+            val displayManager = checkNotNull(base.getSystemService(DisplayManager::class.java))
+
+            // Create virtual display to avoid clashing with Taskbar on default display.
+            val virtualDisplay =
+                base.resources.displayMetrics.let {
+                    displayManager.createVirtualDisplay(
+                        VIRTUAL_DISPLAY_NAME,
+                        it.widthPixels,
+                        it.heightPixels,
+                        it.densityDpi,
+                        /* surface= */ null,
+                        /* flags= */ 0,
+                    )
+                }
+
+            return TaskbarWindowSandboxContext(
+                SandboxApplication(base.createDisplayContext(virtualDisplay.display)),
+                virtualDisplay,
+            )
         }
+    }
+}
+
+private fun virtualDisplayRule(virtualDisplay: VirtualDisplay): TestRule {
+    return object : ExternalResource() {
+        override fun after() = virtualDisplay.release()
     }
 }
