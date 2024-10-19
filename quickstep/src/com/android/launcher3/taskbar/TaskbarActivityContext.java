@@ -952,6 +952,12 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
      * Hides the taskbar icons and background when the notification shade is expanded.
      */
     private void onNotificationShadeExpandChanged(boolean isExpanded, boolean skipAnim) {
+        // Close all floating views within the Taskbar window to make sure nothing is shown over
+        // the notification shade.
+        if (isExpanded) {
+            AbstractFloatingView.closeAllOpenViewsExcept(this, TYPE_TASKBAR_OVERLAY_PROXY);
+        }
+
         float alpha = isExpanded ? 0 : 1;
         AnimatorSet anim = new AnimatorSet();
         anim.play(mControllers.taskbarViewController.getTaskbarIconAlpha().get(
@@ -1234,7 +1240,8 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
             }
         } else if (tag instanceof TaskItemInfo info) {
             UI_HELPER_EXECUTOR.execute(() ->
-                    SystemUiProxy.INSTANCE.get(this).showDesktopApp(info.getTaskId()));
+                    SystemUiProxy.INSTANCE.get(this).showDesktopApp(
+                            info.getTaskId(), /* remoteTransition= */ null));
             mControllers.taskbarStashController.updateAndAnimateTransientTaskbar(
                     /* stash= */ true);
         } else if (tag instanceof WorkspaceItemInfo) {
@@ -1325,7 +1332,8 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
             GroupTask task,
             @Nullable RemoteTransition remoteTransition,
             boolean onDesktop) {
-        handleGroupTaskLaunch(task, remoteTransition, onDesktop, null, null);
+        handleGroupTaskLaunch(task, remoteTransition, onDesktop,
+                /* onStartCallback= */ null, /* onFinishCallback= */ null);
     }
 
     /**
@@ -1349,17 +1357,24 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
             UI_HELPER_EXECUTOR.execute(() ->
                     SystemUiProxy.INSTANCE.get(this).showDesktopApps(getDisplay().getDisplayId(),
                             remoteTransition));
-        } else if (onDesktop) {
+            return;
+        }
+        if (onDesktop) {
+            boolean useRemoteTransition = task.task1.isMinimized
+                    && com.android.window.flags.Flags.enableDesktopAppLaunchAlttabTransitions();
             UI_HELPER_EXECUTOR.execute(() -> {
                 if (onStartCallback != null) {
                     onStartCallback.run();
                 }
-                SystemUiProxy.INSTANCE.get(this).showDesktopApp(task.task1.key.id);
+                SystemUiProxy.INSTANCE.get(this).showDesktopApp(
+                        task.task1.key.id, useRemoteTransition ? remoteTransition : null);
                 if (onFinishCallback != null) {
                     onFinishCallback.run();
                 }
             });
-        } else if (task.task2 == null) {
+            return;
+        }
+        if (task.task2 == null) {
             UI_HELPER_EXECUTOR.execute(() -> {
                 ActivityOptions activityOptions =
                         makeDefaultActivityOptions(SPLASH_SCREEN_STYLE_UNDEFINED).options;
@@ -1368,9 +1383,9 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                 ActivityManagerWrapper.getInstance().startActivityFromRecents(
                         task.task1.key, activityOptions);
             });
-        } else {
-            mControllers.uiController.launchSplitTasks(task, remoteTransition);
+            return;
         }
+        mControllers.uiController.launchSplitTasks(task, remoteTransition);
     }
 
     /**
@@ -1547,6 +1562,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
 
     /**
      * Called when we want to unstash taskbar when user performs swipes up gesture.
+     *
      * @param delayTaskbarBackground whether we will delay the taskbar background animation
      */
     public void onSwipeToUnstashTaskbar(boolean delayTaskbarBackground) {
@@ -1688,7 +1704,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                 duration);
 
         View allAppsButton = mControllers.taskbarViewController.getAllAppsButtonView();
-        if (allAppsButton != null && !FeatureFlags.enableAllAppsButtonInHotseat()) {
+        if (!FeatureFlags.enableAllAppsButtonInHotseat()) {
             ValueAnimator alphaOverride = ValueAnimator.ofFloat(0, 1);
             alphaOverride.setDuration(duration);
             alphaOverride.addUpdateListener(a -> {

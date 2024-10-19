@@ -77,6 +77,7 @@ import com.android.launcher3.util.PackageManagerHelper;
 import com.android.launcher3.util.PersistedItemArray;
 import com.android.quickstep.logging.SettingsChangeLogger;
 import com.android.quickstep.logging.StatsLogCompatManager;
+import com.android.quickstep.util.ContextualSearchStateManager;
 import com.android.systemui.shared.system.SysUiStatsLog;
 
 import java.util.ArrayList;
@@ -209,6 +210,8 @@ public class QuickstepModelDelegate extends ModelDelegate {
     @Override
     public void workspaceLoadComplete() {
         super.workspaceLoadComplete();
+        // Initialize ContextualSearchStateManager.
+        ContextualSearchStateManager.INSTANCE.get(mContext);
         recreatePredictors();
     }
 

@@ -36,6 +36,7 @@ import android.view.RemoteAnimationTarget;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.launcher3.Flags;
 import com.android.launcher3.statemanager.BaseState;
 import com.android.launcher3.statemanager.StatefulContainer;
 import com.android.quickstep.TopTaskTracker.CachedTaskInfo;
@@ -299,6 +300,16 @@ public class GestureState implements RecentsAnimationCallbacks.RecentsAnimationL
 
     public boolean isFourFingerTrackpadGesture() {
         return mTrackpadGestureType == TrackpadGestureType.FOUR_FINGER;
+    }
+
+    /**
+     * Requests that handling for this gesture should use a synthetic transition, as in that it
+     * will need to start a recents transition that is not backed by a system transition.  This is
+     * generally only needed in scenarios where a system transition can not be created due to no
+     * changes in the WM hierarchy (ie. starting recents transition when you are already over home).
+     */
+    public boolean useSyntheticRecentsTransition() {
+        return mRunningTask.isHomeTask() && Flags.enableFallbackOverviewInWindow();
     }
 
     /**

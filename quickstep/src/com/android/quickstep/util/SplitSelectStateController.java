@@ -900,7 +900,7 @@ public class SplitSelectStateController {
                 SystemUiProxy.INSTANCE.get(mLauncher.getApplicationContext())
                         .startRecentsActivity(
                                 mOverviewComponentObserver.getOverviewIntent(), options,
-                                callbacks);
+                                callbacks, false /* useSyntheticRecentsTransition */);
             });
         }
 

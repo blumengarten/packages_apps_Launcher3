@@ -70,7 +70,6 @@ public class TaplWorkProfileTest extends AbstractLauncherUiTest<Launcher> {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        initialize(this);
         String output =
                 mDevice.executeShellCommand(
                         "pm create-user --profileOf 0 --managed TestProfile");

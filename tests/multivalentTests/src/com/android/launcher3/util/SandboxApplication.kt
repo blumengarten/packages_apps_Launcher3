@@ -73,9 +73,7 @@ class SandboxApplication private constructor(private val base: SandboxApplicatio
 
     override fun apply(statement: Statement, description: Description): Statement {
         return object : ExternalResource() {
-                override fun before() {
-                    base.app = this@SandboxApplication
-                }
+                override fun before() = init()
 
                 override fun after() = onDestroy()
             }

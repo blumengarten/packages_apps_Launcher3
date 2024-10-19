@@ -116,6 +116,7 @@ public class TaskOverlayFactory implements ResourceBasedOverride {
             TaskShortcutFactory.INSTALL,
             TaskShortcutFactory.FREE_FORM,
             DesktopSystemShortcut.Companion.createFactory(),
+            ExternalDisplaySystemShortcut.Companion.createFactory(),
             TaskShortcutFactory.WELLBEING,
             TaskShortcutFactory.SAVE_APP_PAIR,
             TaskShortcutFactory.SCREENSHOT,

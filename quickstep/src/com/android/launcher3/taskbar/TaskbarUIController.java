@@ -75,8 +75,14 @@ public class TaskbarUIController implements BubbleBarController.BubbleBarLocatio
         mControllers = null;
     }
 
-    protected boolean isTaskbarTouchable() {
-        return true;
+    /** Returns true if transition animation to launcher home is being played. */
+    public boolean isAnimatingToLauncher() {
+        return false;
+    }
+
+    /** Returns true if hotseat icons visible for the taskbar alignment. */
+    public boolean isHotseatVisibleForTaskBarAlignment() {
+        return false;
     }
 
     /**
@@ -89,6 +95,14 @@ public class TaskbarUIController implements BubbleBarController.BubbleBarLocatio
     }
 
     protected void onStashedInAppChanged() { }
+
+    /**
+     * Whether the Taskbar should use in-app layout.
+     * @return {@code true} iff in-app display progress > 0 or Launcher Activity paused.
+     */
+    public boolean shouldUseInAppLayout() {
+        return false;
+    }
 
     /**
      * Called when taskbar icon layout bounds change.

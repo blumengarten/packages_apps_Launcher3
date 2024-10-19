@@ -38,13 +38,10 @@ import com.android.launcher3.logging.FileLog;
 import com.android.launcher3.model.ItemInstallQueue;
 import com.android.launcher3.util.ApplicationInfoWrapper;
 import com.android.launcher3.util.DaggerSingletonObject;
-import com.android.launcher3.util.DaggerSingletonTracker;
-import com.android.launcher3.util.ExecutorUtil;
 import com.android.launcher3.util.IntArray;
 import com.android.launcher3.util.IntSet;
 import com.android.launcher3.util.PackageUserKey;
 import com.android.launcher3.util.Preconditions;
-import com.android.launcher3.util.SafeCloseable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,7 +56,7 @@ import javax.inject.Inject;
  */
 @SuppressWarnings("NewApi")
 @LauncherAppSingleton
-public class InstallSessionHelper implements SafeCloseable {
+public class InstallSessionHelper {
 
     @NonNull
     private static final String LOG = "InstallSessionHelper";
@@ -91,16 +88,11 @@ public class InstallSessionHelper implements SafeCloseable {
     private IntSet mPromiseIconIds;
 
     @Inject
-    public InstallSessionHelper(@NonNull @ApplicationContext final Context context,
-            DaggerSingletonTracker tracker) {
+    public InstallSessionHelper(@NonNull @ApplicationContext final Context context) {
         mInstaller = context.getPackageManager().getPackageInstaller();
         mAppContext = context.getApplicationContext();
         mLauncherApps = context.getSystemService(LauncherApps.class);
-        ExecutorUtil.executeSyncOnMainOrFail(() -> tracker.addCloseable(this));
     }
-
-    @Override
-    public void close() { }
 
     @WorkerThread
     @NonNull

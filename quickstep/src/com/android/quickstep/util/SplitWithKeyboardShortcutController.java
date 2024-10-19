@@ -99,7 +99,8 @@ public class SplitWithKeyboardShortcutController {
                 options.setTransientLaunch();
                 SystemUiProxy.INSTANCE.get(mLauncher.getApplicationContext())
                         .startRecentsActivity(mOverviewComponentObserver.getOverviewIntent(),
-                                ActivityOptions.makeBasic(), callbacks);
+                                ActivityOptions.makeBasic(), callbacks,
+                                false /* useSyntheticRecentsTransition */);
             });
         });
     }

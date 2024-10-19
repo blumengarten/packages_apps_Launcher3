@@ -378,9 +378,6 @@ public abstract class BaseContainerInterface<STATE_TYPE extends BaseState<STATE_
     public static void getTaskDimension(Context context, DeviceProfile dp, PointF out) {
         out.x = dp.widthPx;
         out.y = dp.heightPx;
-        if (dp.isTablet && !DisplayController.isTransientTaskbar(context)) {
-            out.y -= dp.taskbarHeight;
-        }
     }
 
     /**

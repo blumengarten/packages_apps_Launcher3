@@ -76,10 +76,10 @@ class TaskbarPinningController(private val context: TaskbarActivityContext) :
             }
     }
 
-    fun showPinningView(view: View) {
+    fun showPinningView(view: View, horizontalPosition: Float = -1f) {
         context.isTaskbarWindowFullscreen = true
         view.post {
-            val popupView = getPopupView(view)
+            val popupView = getPopupView(view, horizontalPosition)
             popupView.requestFocus()
             popupView.onCloseCallback = onCloseCallback
             context.onPopupVisibilityChanged(true)
@@ -89,8 +89,8 @@ class TaskbarPinningController(private val context: TaskbarActivityContext) :
     }
 
     @VisibleForTesting
-    fun getPopupView(view: View): TaskbarDividerPopupView<*> {
-        return createAndPopulate(view, context)
+    fun getPopupView(view: View, horizontalPosition: Float = -1f): TaskbarDividerPopupView<*> {
+        return createAndPopulate(view, context, horizontalPosition)
     }
 
     @VisibleForTesting

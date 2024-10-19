@@ -17,6 +17,7 @@
 package com.android.launcher3
 
 import android.content.Context
+import com.android.launcher3.util.Executors.MAIN_EXECUTOR
 
 /** Emulates Launcher preferences for a test environment. */
 class FakeLauncherPrefs(private val context: Context) : LauncherPrefs() {
@@ -69,5 +70,8 @@ class FakeLauncherPrefs(private val context: Context) : LauncherPrefs() {
 
     override fun close() = Unit
 
-    private fun notifyChange(key: String) = listeners.forEach { it.onPrefChanged(key) }
+    private fun notifyChange(key: String) {
+        // Mimics SharedPreferencesImpl#notifyListeners main thread dispatching.
+        MAIN_EXECUTOR.execute { listeners.forEach { it.onPrefChanged(key) } }
+    }
 }

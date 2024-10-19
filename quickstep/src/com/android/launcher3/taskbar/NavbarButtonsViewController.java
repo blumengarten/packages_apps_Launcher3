@@ -183,7 +183,7 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
 
     private final AnimatedFloat mTaskbarNavButtonTranslationY = new AnimatedFloat(
             this::updateNavButtonTranslationY);
-    private final AnimatedFloat mTaskbarNavButtonTranslationYForInAppDisplay = new AnimatedFloat(
+    private final AnimatedFloat mNavButtonTranslationYForInAppDisplay = new AnimatedFloat(
             this::updateNavButtonTranslationY);
     private final AnimatedFloat mTaskbarNavButtonTranslationYForIme = new AnimatedFloat(
             this::updateNavButtonTranslationY);
@@ -704,8 +704,8 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
     }
 
     /** Use to set the translationY for the all nav+contextual buttons when in Launcher */
-    public AnimatedFloat getTaskbarNavButtonTranslationYForInAppDisplay() {
-        return mTaskbarNavButtonTranslationYForInAppDisplay;
+    public AnimatedFloat getNavButtonTranslationYForInAppDisplay() {
+        return mNavButtonTranslationYForInAppDisplay;
     }
 
     /** Use to set the dark intensity for the all nav+contextual buttons */
@@ -751,18 +751,20 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         if (mContext.isPhoneButtonNavMode()) {
             return;
         }
-        final float normalTranslationY = mTaskbarNavButtonTranslationY.value;
-        final float imeAdjustmentTranslationY = mTaskbarNavButtonTranslationYForIme.value;
-        TaskbarUIController uiController = mControllers.uiController;
-        final float inAppDisplayAdjustmentTranslationY =
-                (uiController instanceof LauncherTaskbarUIController
-                        && ((LauncherTaskbarUIController) uiController).shouldUseInAppLayout())
-                        ? mTaskbarNavButtonTranslationYForInAppDisplay.value : 0;
-
-        mLastSetNavButtonTranslationY = normalTranslationY
-                + imeAdjustmentTranslationY
-                + inAppDisplayAdjustmentTranslationY;
+        mLastSetNavButtonTranslationY = calculateNavButtonTranslationY();
         mNavButtonsView.setTranslationY(mLastSetNavButtonTranslationY);
+    }
+
+    /**
+     * Calculates the translationY of the nav buttons based on the current device state.
+     */
+    private float calculateNavButtonTranslationY() {
+        float translationY =
+                mTaskbarNavButtonTranslationY.value + mTaskbarNavButtonTranslationYForIme.value;
+        if (mControllers.uiController.shouldUseInAppLayout()) {
+            translationY += mNavButtonTranslationYForInAppDisplay.value;
+        }
+        return translationY;
     }
 
     /**
@@ -1162,7 +1164,7 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         pw.println(prefix + "\t\tmTaskbarNavButtonTranslationY="
                 + mTaskbarNavButtonTranslationY.value);
         pw.println(prefix + "\t\tmTaskbarNavButtonTranslationYForInAppDisplay="
-                + mTaskbarNavButtonTranslationYForInAppDisplay.value);
+                + mNavButtonTranslationYForInAppDisplay.value);
         pw.println(prefix + "\t\tmTaskbarNavButtonTranslationYForIme="
                 + mTaskbarNavButtonTranslationYForIme.value);
         pw.println(prefix + "\t\tmTaskbarNavButtonDarkIntensity="

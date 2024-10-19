@@ -149,12 +149,9 @@ public class Hotseat extends CellLayout implements Insettable {
         DeviceProfile dp = mActivity.getDeviceProfile();
 
         if (bubbleBarEnabled) {
-            float adjustedBorderSpace = dp.getHotseatAdjustedBorderSpaceForBubbleBar(getContext());
-            if (hasBubbles && Float.compare(adjustedBorderSpace, 0f) != 0) {
-                getShortcutsAndWidgets().setTranslationProvider(cellX -> {
-                    float borderSpaceDelta = adjustedBorderSpace - dp.hotseatBorderSpace;
-                    return dp.iconSizePx + cellX * borderSpaceDelta;
-                });
+            if (dp.shouldAdjustHotseatForBubbleBar(getContext(), hasBubbles)) {
+                getShortcutsAndWidgets().setTranslationProvider(
+                        cellX -> dp.getHotseatAdjustedTranslation(getContext(), cellX));
                 if (mQsb instanceof HorizontalInsettableView) {
                     HorizontalInsettableView insettableQsb = (HorizontalInsettableView) mQsb;
                     final float insetFraction = (float) dp.iconSizePx / dp.hotseatQsbWidth;
@@ -189,25 +186,24 @@ public class Hotseat extends CellLayout implements Insettable {
      */
     public void adjustForBubbleBar(boolean isBubbleBarVisible) {
         DeviceProfile dp = mActivity.getDeviceProfile();
-        float adjustedBorderSpace = dp.getHotseatAdjustedBorderSpaceForBubbleBar(getContext());
-        if (Float.compare(adjustedBorderSpace, 0f) == 0) {
+        if (!dp.shouldAdjustHotseatForBubbleBar(getContext(), isBubbleBarVisible)) {
             return;
         }
 
         ShortcutAndWidgetContainer icons = getShortcutsAndWidgets();
         AnimatorSet animatorSet = new AnimatorSet();
-        float borderSpaceDelta = adjustedBorderSpace - dp.hotseatBorderSpace;
 
         // update the translation provider for future layout passes of hotseat icons.
         if (isBubbleBarVisible) {
-            icons.setTranslationProvider(cellX -> dp.iconSizePx + cellX * borderSpaceDelta);
+            icons.setTranslationProvider(
+                    cellX -> dp.getHotseatAdjustedTranslation(getContext(), cellX));
         } else {
             icons.setTranslationProvider(null);
         }
 
         for (int i = 0; i < icons.getChildCount(); i++) {
             View child = icons.getChildAt(i);
-            float tx = isBubbleBarVisible ? dp.iconSizePx + i * borderSpaceDelta : 0;
+            float tx = isBubbleBarVisible ? dp.getHotseatAdjustedTranslation(getContext(), i) : 0;
             if (child instanceof Reorderable) {
                 MultiTranslateDelegate mtd = ((Reorderable) child).getTranslateDelegate();
                 animatorSet.play(

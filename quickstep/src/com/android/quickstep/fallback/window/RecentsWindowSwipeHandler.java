@@ -27,7 +27,6 @@ import static com.android.launcher3.GestureNavContract.EXTRA_ON_FINISH_CALLBACK;
 import static com.android.launcher3.GestureNavContract.EXTRA_REMOTE_CALLBACK;
 import static com.android.launcher3.anim.AnimatorListeners.forEndCallback;
 
-import android.animation.ObjectAnimator;
 import android.app.ActivityManager.RunningTaskInfo;
 import android.content.Context;
 import android.content.Intent;
@@ -62,16 +61,15 @@ import com.android.launcher3.states.StateAnimationConfig;
 import com.android.launcher3.util.DisplayController;
 import com.android.quickstep.AbsSwipeUpHandler;
 import com.android.quickstep.GestureState;
+import com.android.quickstep.RecentsAnimationController;
 import com.android.quickstep.RecentsAnimationDeviceState;
-import com.android.quickstep.RemoteAnimationTargets;
+import com.android.quickstep.RecentsAnimationTargets;
 import com.android.quickstep.TaskAnimationManager;
 import com.android.quickstep.fallback.FallbackRecentsView;
 import com.android.quickstep.fallback.RecentsState;
-import com.android.quickstep.util.ActiveGestureLog;
 import com.android.quickstep.util.RectFSpringAnim;
 import com.android.quickstep.util.SurfaceTransaction.SurfaceProperties;
 import com.android.quickstep.util.TransformParams;
-import com.android.quickstep.util.TransformParams.BuilderProxy;
 import com.android.quickstep.views.TaskView;
 import com.android.systemui.shared.recents.model.Task.TaskKey;
 import com.android.systemui.shared.system.InputConsumerController;
@@ -115,12 +113,25 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
 
         mRunningOverHome = mGestureState.getRunningTask() != null
                 && mGestureState.getRunningTask().isHomeTask();
-        if (mRunningOverHome) {
-            runActionOnRemoteHandles(remoteTargetHandle ->
-                    remoteTargetHandle.getTransformParams().setHomeBuilderProxy(
-                            RecentsWindowSwipeHandler.
-                                    this::updateHomeActivityTransformDuringSwipeUp));
+
+        initTransformParams();
+    }
+
+    @Override
+    public void onRecentsAnimationStart(RecentsAnimationController controller,
+            RecentsAnimationTargets targets) {
+        super.onRecentsAnimationStart(controller, targets);
+        initTransformParams();
+    }
+
+    private void initTransformParams() {
+        if (mActiveAnimationFactory != null) {
+            mActiveAnimationFactory.initTransformParams();
+            return;
         }
+        runActionOnRemoteHandles(remoteTargetHandle ->
+                remoteTargetHandle.getTransformParams().setHomeBuilderProxy(
+                        RecentsWindowSwipeHandler.this::updateHomeActivityTransformDuringSwipeUp));
     }
 
     @Override
@@ -135,12 +146,17 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
 
     private void updateHomeActivityTransformDuringSwipeUp(SurfaceProperties builder,
             RemoteAnimationTarget app, TransformParams params) {
-        setHomeScaleAndAlpha(builder, app, mCurrentShift.value,
-                Utilities.boundToRange(1 - mCurrentShift.value, 0, 1));
+        if (mActiveAnimationFactory != null) {
+            return;
+        }
+        setHomeScaleAndAlpha(builder, app, mCurrentShift.value, 0);
     }
 
     private void setHomeScaleAndAlpha(SurfaceProperties builder,
             RemoteAnimationTarget app, float verticalShift, float alpha) {
+        if (app.windowConfiguration.getActivityType() != ACTIVITY_TYPE_HOME) {
+            return;
+        }
         float scale = Utilities.mapRange(verticalShift, 1, mMaxLauncherScale);
         mTmpMatrix.setScale(scale, scale,
                 app.localBounds.exactCenterX(), app.localBounds.exactCenterY());
@@ -163,22 +179,10 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
         mActiveAnimationFactory = new FallbackHomeAnimationFactory(duration);
         //todo: b/368410893 follow up on this as its intent focused and seems to cut immediately
         Intent intent = new Intent(mGestureState.getHomeIntent());
-        if (mActiveAnimationFactory != null && runningTaskTarget != null) {
+        if (runningTaskTarget != null) {
             mActiveAnimationFactory.addGestureContract(intent, runningTaskTarget.taskInfo);
         }
         return mActiveAnimationFactory;
-    }
-
-    @Override
-    protected boolean handleTaskAppeared(@NonNull RemoteAnimationTarget[] appearedTaskTargets,
-            @NonNull ActiveGestureLog.CompoundString failureReason) {
-        if (mActiveAnimationFactory != null
-                && mActiveAnimationFactory.handleHomeTaskAppeared(appearedTaskTargets)) {
-            mActiveAnimationFactory = null;
-            return false;
-        }
-
-        return super.handleTaskAppeared(appearedTaskTargets, failureReason);
     }
 
     @Override
@@ -236,11 +240,12 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
     private class FallbackHomeAnimationFactory extends HomeAnimationFactory
             implements Consumer<Message> {
         private final Rect mTempRect = new Rect();
-        private final TransformParams mHomeAlphaParams = new TransformParams();
-        private final AnimatedFloat mHomeAlpha;
 
-        private final AnimatedFloat mVerticalShiftForScale = new AnimatedFloat();
-        private final AnimatedFloat mRecentsAlpha = new AnimatedFloat();
+        private final TransformParams mTransformParams = new TransformParams();
+        private final AnimatedFloat mHomeAlpha = new AnimatedFloat(this::updateAppTransforms);
+        private final AnimatedFloat mVerticalShiftForScale =
+                new AnimatedFloat(this::updateAppTransforms);
+        private final AnimatedFloat mRecentsAlpha = new AnimatedFloat(this:: updateAppTransforms);
 
         private final RectF mTargetRect = new RectF();
         private SurfaceControl mSurfaceControl;
@@ -255,25 +260,12 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
             mDuration = duration;
 
             if (mRunningOverHome) {
-                mHomeAlpha = new AnimatedFloat();
-                mHomeAlpha.value = Utilities.boundToRange(1 - mCurrentShift.value, 0, 1);
                 mVerticalShiftForScale.value = mCurrentShift.value;
-                runActionOnRemoteHandles(remoteTargetHandle ->
-                        remoteTargetHandle.getTransformParams().setHomeBuilderProxy(
-                                FallbackHomeAnimationFactory.this
-                                        ::updateHomeActivityTransformDuringHomeAnim));
-            } else {
-                mHomeAlpha = new AnimatedFloat(this::updateHomeAlpha);
-                mHomeAlpha.value = 0;
-                mHomeAlphaParams.setHomeBuilderProxy(
-                        this::updateHomeActivityTransformDuringHomeAnim);
             }
-
             mRecentsAlpha.value = 1;
-            runActionOnRemoteHandles(remoteTargetHandle ->
-                    remoteTargetHandle.getTransformParams().setBaseBuilderProxy(
-                            FallbackHomeAnimationFactory.this
-                                    ::updateRecentsActivityTransformDuringHomeAnim));
+            mHomeAlpha.value = 0;
+
+            initTransformParams();
         }
 
         @NonNull
@@ -285,69 +277,64 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
             return mTargetRect;
         }
 
-        private void updateRecentsActivityTransformDuringHomeAnim(SurfaceProperties builder,
-                RemoteAnimationTarget app, TransformParams params) {
-            builder.setAlpha(mRecentsAlpha.value);
-        }
-
-        private void updateHomeActivityTransformDuringHomeAnim(SurfaceProperties builder,
-                RemoteAnimationTarget app, TransformParams params) {
-            setHomeScaleAndAlpha(builder, app, mVerticalShiftForScale.value, mHomeAlpha.value);
-        }
-
         @NonNull
         @Override
         public AnimatorPlaybackController createActivityAnimationToHome() {
             PendingAnimation pa = new PendingAnimation(mDuration);
             pa.setFloat(mRecentsAlpha, AnimatedFloat.VALUE, 0, ACCELERATE);
+            pa.setFloat(mHomeAlpha, AnimatedFloat.VALUE, 1, ACCELERATE);
             return pa.createPlaybackController();
-        }
-
-        private void updateHomeAlpha() {
-            if (mHomeAlphaParams.getTargetSet() != null) {
-                mHomeAlphaParams.applySurfaceParams(
-                        mHomeAlphaParams.createSurfaceParams(BuilderProxy.NO_OP));
-            }
-        }
-
-        public boolean handleHomeTaskAppeared(RemoteAnimationTarget[] appearedTaskTargets) {
-            RemoteAnimationTarget appearedTaskTarget = appearedTaskTargets[0];
-            if (appearedTaskTarget.windowConfiguration.getActivityType() == ACTIVITY_TYPE_HOME) {
-                RemoteAnimationTargets targets = new RemoteAnimationTargets(
-                        new RemoteAnimationTarget[] {appearedTaskTarget},
-                        new RemoteAnimationTarget[0], new RemoteAnimationTarget[0],
-                        appearedTaskTarget.mode);
-                mHomeAlphaParams.setTargetSet(targets);
-                updateHomeAlpha();
-                return true;
-            }
-            return false;
         }
 
         @Override
         public void playAtomicAnimation(float velocity) {
-            ObjectAnimator alphaAnim = mHomeAlpha.animateToValue(mHomeAlpha.value, 1);
-            alphaAnim.setDuration(mDuration).setInterpolator(ACCELERATE);
-            alphaAnim.start();
-
-            if (mRunningOverHome) {
-                // Spring back launcher scale
-                new SpringAnimationBuilder(mContext)
-                        .setStartValue(mVerticalShiftForScale.value)
-                        .setEndValue(0)
-                        .setStartVelocity(-velocity / mTransitionDragLength)
-                        .setMinimumVisibleChange(1f / mDp.heightPx)
-                        .setDampingRatio(0.6f)
-                        .setStiffness(800)
-                        .build(mVerticalShiftForScale, AnimatedFloat.VALUE)
-                        .start();
+            if (!mRunningOverHome) {
+                return;
             }
+            // Spring back launcher scale
+            new SpringAnimationBuilder(mContext)
+                    .setStartValue(mVerticalShiftForScale.value)
+                    .setEndValue(0)
+                    .setStartVelocity(-velocity / mTransitionDragLength)
+                    .setMinimumVisibleChange(1f / mDp.heightPx)
+                    .setDampingRatio(0.6f)
+                    .setStiffness(800)
+                    .build(mVerticalShiftForScale, AnimatedFloat.VALUE)
+                    .start();
         }
 
         @Override
         public void setAnimation(RectFSpringAnim anim) {
             mSpringAnim = anim;
             mSpringAnim.addAnimatorListener(forEndCallback(this::onRectAnimationEnd));
+        }
+
+        private void initTransformParams() {
+            runActionOnRemoteHandles(remoteTargetHandle ->
+                    remoteTargetHandle.getTransformParams().setHomeBuilderProxy(
+                            FallbackHomeAnimationFactory.this
+                                    ::updateHomeActivityTransformDuringHomeAnim));
+
+            mTransformParams.setTargetSet(mRecentsAnimationTargets);
+        }
+
+        private void updateRecentsActivityTransformDuringHomeAnim(SurfaceProperties builder,
+                RemoteAnimationTarget app, TransformParams params) {
+            if (app.mode != mRecentsAnimationTargets.targetMode) {
+                return;
+            }
+            builder.setAlpha(mRecentsAlpha.value);
+        }
+
+        private void updateAppTransforms() {
+            mTransformParams.applySurfaceParams(
+                    mTransformParams.createSurfaceParams(FallbackHomeAnimationFactory.this
+                            ::updateRecentsActivityTransformDuringHomeAnim));
+        }
+
+        private void updateHomeActivityTransformDuringHomeAnim(SurfaceProperties builder,
+                RemoteAnimationTarget app, TransformParams params) {
+            setHomeScaleAndAlpha(builder, app, mVerticalShiftForScale.value, mHomeAlpha.value);
         }
 
         private void onRectAnimationEnd() {

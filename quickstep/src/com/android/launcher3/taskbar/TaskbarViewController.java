@@ -23,7 +23,6 @@ import static com.android.launcher3.LauncherAnimUtils.SCALE_PROPERTY;
 import static com.android.launcher3.LauncherAnimUtils.VIEW_ALPHA;
 import static com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_X;
 import static com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_Y;
-import static com.android.launcher3.Utilities.isRtl;
 import static com.android.launcher3.Utilities.mapRange;
 import static com.android.launcher3.anim.AnimatedFloat.VALUE;
 import static com.android.launcher3.anim.AnimatorListeners.forEndCallback;
@@ -234,7 +233,7 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         mTaskbarNavButtonTranslationY =
                 controllers.navbarButtonsViewController.getTaskbarNavButtonTranslationY();
         mTaskbarNavButtonTranslationYForInAppDisplay = controllers.navbarButtonsViewController
-                .getTaskbarNavButtonTranslationYForInAppDisplay();
+                .getNavButtonTranslationYForInAppDisplay();
 
         mActivity.addOnDeviceProfileChangeListener(mDeviceProfileChangeListener);
 
@@ -368,7 +367,6 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         return mTaskbarView.getIconViews();
     }
 
-    @Nullable
     public View getAllAppsButtonView() {
         return mTaskbarView.getAllAppsButtonContainer();
     }
@@ -838,12 +836,11 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
 
         int firstRecentTaskIndex = -1;
         int hotseatNavBarTranslationX = 0;
-        if (mCurrentBubbleBarLocation != null
-                && taskbarDp.shouldAdjustHotseatOnBubblesLocationUpdate(mActivity)) {
-            boolean isRtl = mTaskbarView.isLayoutRtl();
-            boolean isBubblesOnLeft = mCurrentBubbleBarLocation.isOnLeft(isRtl);
+        if (mCurrentBubbleBarLocation != null) {
+            boolean isBubblesOnLeft = mCurrentBubbleBarLocation
+                    .isOnLeft(mTaskbarView.isLayoutRtl());
             hotseatNavBarTranslationX = taskbarDp
-                    .getHotseatTranslationXForBubbleBar(isBubblesOnLeft, isRtl);
+                    .getHotseatTranslationXForNavBar(mActivity, isBubblesOnLeft);
         }
         for (int i = 0; i < mTaskbarView.getChildCount(); i++) {
             View child = mTaskbarView.getChildAt(i);
@@ -938,10 +935,12 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
                     mTaskbarView.isDividerForRecents(), recentTaskIndex);
             if (positionInHotseat == ERROR_POSITION_IN_HOTSEAT_NOT_FOUND) continue;
 
-            float hotseatAdjustedBorderSpace =
-                    launcherDp.getHotseatAdjustedBorderSpaceForBubbleBar(child.getContext());
+
             float hotseatIconCenter;
-            if (bubbleBarHasBubbles() && hotseatAdjustedBorderSpace != 0) {
+            if (launcherDp.shouldAdjustHotseatForBubbleBar(child.getContext(),
+                    bubbleBarHasBubbles())) {
+                float hotseatAdjustedBorderSpace =
+                        launcherDp.getHotseatAdjustedBorderSpaceForBubbleBar(child.getContext());
                 hotseatIconCenter = hotseatPadding.left + hotseatCellSize
                         + (hotseatCellSize + hotseatAdjustedBorderSpace) * positionInHotseat
                         + hotseatCellSize / 2f;

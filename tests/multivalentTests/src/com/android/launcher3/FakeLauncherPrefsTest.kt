@@ -17,6 +17,7 @@
 package com.android.launcher3
 
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
+import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import com.android.launcher3.util.LauncherMultivalentJUnit
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -107,7 +108,7 @@ class FakeLauncherPrefsTest {
     fun testAddListener_changeItemInPrefs_callsListener() {
         var changedKey: String? = null
         launcherPrefs.addListener({ changedKey = it }, TEST_CONSTANT_ITEM)
-        launcherPrefs.put(TEST_CONSTANT_ITEM, true)
+        getInstrumentation().runOnMainSync { launcherPrefs.put(TEST_CONSTANT_ITEM, true) }
         assertThat(changedKey).isEqualTo(TEST_CONSTANT_ITEM.sharedPrefKey)
     }
 
@@ -117,7 +118,7 @@ class FakeLauncherPrefsTest {
         launcherPrefs.put(TEST_CONSTANT_ITEM, true)
         launcherPrefs.addListener({ changedKey = it }, TEST_CONSTANT_ITEM)
 
-        launcherPrefs.remove(TEST_CONSTANT_ITEM)
+        getInstrumentation().runOnMainSync { launcherPrefs.remove(TEST_CONSTANT_ITEM) }
         assertThat(changedKey).isEqualTo(TEST_CONSTANT_ITEM.sharedPrefKey)
     }
 
@@ -128,7 +129,7 @@ class FakeLauncherPrefsTest {
         launcherPrefs.addListener(listener, TEST_CONSTANT_ITEM)
 
         launcherPrefs.removeListener(listener)
-        launcherPrefs.put(TEST_CONSTANT_ITEM, true)
+        getInstrumentation().runOnMainSync { launcherPrefs.put(TEST_CONSTANT_ITEM, true) }
         assertThat(changedKey).isNull()
     }
 }

@@ -71,7 +71,7 @@ import com.android.launcher3.util.SimpleBroadcastReceiver;
 import com.android.quickstep.AllAppsActionManager;
 import com.android.quickstep.RecentsActivity;
 import com.android.quickstep.SystemUiProxy;
-import com.android.quickstep.util.AssistUtils;
+import com.android.quickstep.util.ContextualSearchInvoker;
 import com.android.systemui.shared.statusbar.phone.BarTransitions;
 import com.android.systemui.shared.system.QuickStepContract;
 import com.android.systemui.shared.system.QuickStepContract.SystemUiStateFlags;
@@ -249,7 +249,7 @@ public class TaskbarManager {
                 SystemUiProxy.INSTANCE.get(mContext),
                 ContextualEduStatsManager.INSTANCE.get(mContext),
                 new Handler(),
-                AssistUtils.newInstance(mContext));
+                ContextualSearchInvoker.newInstance(mContext));
         mComponentCallbacks = new ComponentCallbacks() {
             private Configuration mOldConfig = mContext.getResources().getConfiguration();
 

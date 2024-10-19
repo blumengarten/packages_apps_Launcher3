@@ -39,7 +39,7 @@ import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.taskbar.TaskbarNavButtonController.TaskbarNavButtonCallbacks;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.TouchInteractionService;
-import com.android.quickstep.util.AssistUtils;
+import com.android.quickstep.util.ContextualSearchInvoker;
 import com.android.systemui.contextualeducation.GestureType;
 
 import org.junit.Before;
@@ -64,7 +64,7 @@ public class TaskbarNavButtonControllerTest {
     @Mock
     Handler mockHandler;
     @Mock
-    AssistUtils mockAssistUtils;
+    ContextualSearchInvoker mockContextualSearchInvoker;
     @Mock
     StatsLogManager mockStatsLogManager;
     @Mock
@@ -109,7 +109,7 @@ public class TaskbarNavButtonControllerTest {
                 mockSystemUiProxy,
                 mockContextualEduStatsManager,
                 mockHandler,
-                mockAssistUtils);
+                mockContextualSearchInvoker);
     }
 
     @Test
@@ -166,40 +166,40 @@ public class TaskbarNavButtonControllerTest {
     @Test
     public void testLongPressHome_enabled_withoutOverride() {
         mNavButtonController.setAssistantLongPressEnabled(true /*assistantLongPressEnabled*/);
-        when(mockAssistUtils.tryStartAssistOverride(anyInt())).thenReturn(false);
+        when(mockContextualSearchInvoker.tryStartAssistOverride(anyInt())).thenReturn(false);
 
         mNavButtonController.onButtonLongClick(BUTTON_HOME, mockView);
-        verify(mockAssistUtils, times(1)).tryStartAssistOverride(anyInt());
+        verify(mockContextualSearchInvoker, times(1)).tryStartAssistOverride(anyInt());
         verify(mockSystemUiProxy, times(1)).startAssistant(any());
     }
 
     @Test
     public void testLongPressHome_enabled_withOverride() {
         mNavButtonController.setAssistantLongPressEnabled(true /*assistantLongPressEnabled*/);
-        when(mockAssistUtils.tryStartAssistOverride(anyInt())).thenReturn(true);
+        when(mockContextualSearchInvoker.tryStartAssistOverride(anyInt())).thenReturn(true);
 
         mNavButtonController.onButtonLongClick(BUTTON_HOME, mockView);
-        verify(mockAssistUtils, times(1)).tryStartAssistOverride(anyInt());
+        verify(mockContextualSearchInvoker, times(1)).tryStartAssistOverride(anyInt());
         verify(mockSystemUiProxy, never()).startAssistant(any());
     }
 
     @Test
     public void testLongPressHome_disabled_withoutOverride() {
         mNavButtonController.setAssistantLongPressEnabled(false /*assistantLongPressEnabled*/);
-        when(mockAssistUtils.tryStartAssistOverride(anyInt())).thenReturn(false);
+        when(mockContextualSearchInvoker.tryStartAssistOverride(anyInt())).thenReturn(false);
 
         mNavButtonController.onButtonLongClick(BUTTON_HOME, mockView);
-        verify(mockAssistUtils, never()).tryStartAssistOverride(anyInt());
+        verify(mockContextualSearchInvoker, never()).tryStartAssistOverride(anyInt());
         verify(mockSystemUiProxy, never()).startAssistant(any());
     }
 
     @Test
     public void testLongPressHome_disabled_withOverride() {
         mNavButtonController.setAssistantLongPressEnabled(false /*assistantLongPressEnabled*/);
-        when(mockAssistUtils.tryStartAssistOverride(anyInt())).thenReturn(true);
+        when(mockContextualSearchInvoker.tryStartAssistOverride(anyInt())).thenReturn(true);
 
         mNavButtonController.onButtonLongClick(BUTTON_HOME, mockView);
-        verify(mockAssistUtils, never()).tryStartAssistOverride(anyInt());
+        verify(mockContextualSearchInvoker, never()).tryStartAssistOverride(anyInt());
         verify(mockSystemUiProxy, never()).startAssistant(any());
     }
 

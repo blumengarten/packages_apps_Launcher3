@@ -37,7 +37,7 @@ import com.android.launcher3.util.Executors.MAIN_EXECUTOR
 import com.android.launcher3.views.ActivityContext
 import com.android.launcher3.views.IconButtonView
 import com.android.quickstep.DeviceConfigWrapper
-import com.android.quickstep.util.AssistStateManager
+import com.android.quickstep.util.ContextualSearchStateManager
 
 /** Taskbar all apps button container for customizable taskbar. */
 class TaskbarAllAppsButtonContainer
@@ -79,17 +79,18 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         setOnClickListener(this::onAllAppsButtonClick)
         setOnLongClickListener(this::onAllAppsButtonLongClick)
         setOnTouchListener(this::onAllAppsButtonTouch)
-        isHapticFeedbackEnabled = taskbarViewCallbacks.isAllAppsButtonHapticFeedbackEnabled()
+        isHapticFeedbackEnabled =
+            taskbarViewCallbacks.isAllAppsButtonHapticFeedbackEnabled(mContext)
         allAppsTouchRunnable = Runnable {
             taskbarViewCallbacks.triggerAllAppsButtonLongClick()
             allAppsTouchTriggered = true
         }
-        val assistStateManager = AssistStateManager.INSTANCE[mContext]
+        val contextualSearchStateManager = ContextualSearchStateManager.INSTANCE[mContext]
         if (
             DeviceConfigWrapper.get().customLpaaThresholds &&
-                assistStateManager.lpnhDurationMillis.isPresent
+                contextualSearchStateManager.lpnhDurationMillis.isPresent
         ) {
-            allAppsButtonTouchDelayMs = assistStateManager.lpnhDurationMillis.get()
+            allAppsButtonTouchDelayMs = contextualSearchStateManager.lpnhDurationMillis.get()
         }
     }
 

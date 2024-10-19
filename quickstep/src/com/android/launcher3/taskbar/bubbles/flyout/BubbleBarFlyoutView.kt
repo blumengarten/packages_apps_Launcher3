@@ -36,14 +36,18 @@ import com.android.launcher3.R
 import com.android.launcher3.popup.RoundedArrowDrawable
 
 /** The flyout view used to notify the user of a new bubble notification. */
-class BubbleBarFlyoutView(context: Context, private val positioner: BubbleBarFlyoutPositioner) :
-    ConstraintLayout(context) {
+class BubbleBarFlyoutView(
+    context: Context,
+    private val positioner: BubbleBarFlyoutPositioner,
+    scheduler: FlyoutScheduler? = null,
+) : ConstraintLayout(context) {
 
     private companion object {
         // the minimum progress of the expansion animation before the content starts fading in.
         const val MIN_EXPANSION_PROGRESS_FOR_CONTENT_ALPHA = 0.75f
     }
 
+    private val scheduler: FlyoutScheduler = scheduler ?: HandlerScheduler(this)
     private val title: TextView by
         lazy(LazyThreadSafetyMode.NONE) { findViewById(R.id.bubble_flyout_title) }
 
@@ -197,11 +201,10 @@ class BubbleBarFlyoutView(context: Context, private val positioner: BubbleBarFly
 
         // post the request to start the expand animation to the looper so the view can measure
         // itself
-        post(expandAnimation)
+        scheduler.runAfterLayout(expandAnimation)
     }
 
     private fun setData(flyoutMessage: BubbleBarFlyoutMessage) {
-        // the avatar is only displayed in group chat messages
         if (flyoutMessage.icon != null) {
             icon.visibility = VISIBLE
             icon.setImageDrawable(flyoutMessage.icon)

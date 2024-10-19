@@ -51,7 +51,7 @@ import com.android.launcher3.testing.TestLogging;
 import com.android.launcher3.testing.shared.TestProtocol;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.TaskUtils;
-import com.android.quickstep.util.AssistUtils;
+import com.android.quickstep.util.ContextualSearchInvoker;
 import com.android.systemui.contextualeducation.GestureType;
 import com.android.systemui.shared.system.QuickStepContract.SystemUiStateFlags;
 
@@ -113,7 +113,7 @@ public class TaskbarNavButtonController implements TaskbarControllers.LoggableTa
     private final SystemUiProxy mSystemUiProxy;
     private final ContextualEduStatsManager mContextualEduStatsManager;
     private final Handler mHandler;
-    private final AssistUtils mAssistUtils;
+    private final ContextualSearchInvoker mContextualSearchInvoker;
     @Nullable private StatsLogManager mStatsLogManager;
 
     private final Runnable mResetLongPress = this::resetScreenUnpin;
@@ -124,13 +124,13 @@ public class TaskbarNavButtonController implements TaskbarControllers.LoggableTa
             SystemUiProxy systemUiProxy,
             ContextualEduStatsManager contextualEduStatsManager,
             Handler handler,
-            AssistUtils assistUtils) {
+            ContextualSearchInvoker contextualSearchInvoker) {
         mContext = context;
         mCallbacks = callbacks;
         mSystemUiProxy = systemUiProxy;
         mContextualEduStatsManager = contextualEduStatsManager;
         mHandler = handler;
-        mAssistUtils = assistUtils;
+        mContextualSearchInvoker = contextualSearchInvoker;
     }
 
     public void onButtonClick(@TaskbarButton int buttonType, View view) {
@@ -344,8 +344,9 @@ public class TaskbarNavButtonController implements TaskbarControllers.LoggableTa
         if (mScreenPinned || !mAssistantLongPressEnabled) {
             return;
         }
-        // Attempt to start Assist with AssistUtils, otherwise fall back to SysUi's implementation.
-        if (!mAssistUtils.tryStartAssistOverride(INVOCATION_TYPE_HOME_BUTTON_LONG_PRESS)) {
+        // Attempt to start Contextual Search, otherwise fall back to SysUi's implementation.
+        if (!mContextualSearchInvoker.tryStartAssistOverride(
+                INVOCATION_TYPE_HOME_BUTTON_LONG_PRESS)) {
             Bundle args = new Bundle();
             args.putInt(INVOCATION_TYPE_KEY, INVOCATION_TYPE_HOME_BUTTON_LONG_PRESS);
             mSystemUiProxy.startAssistant(args);

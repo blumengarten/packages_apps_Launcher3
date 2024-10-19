@@ -29,7 +29,7 @@ import java.util.function.Function;
  * We should delete this class at the end and use @Inject to get dagger provided singletons.
  */
 
-public class DaggerSingletonObject<T extends SafeCloseable> {
+public class DaggerSingletonObject<T> {
     private final Function<LauncherAppComponent, T> mFunction;
 
     public DaggerSingletonObject(Function<LauncherAppComponent, T> function) {

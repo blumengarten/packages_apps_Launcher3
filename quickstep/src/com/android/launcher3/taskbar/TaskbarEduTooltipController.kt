@@ -49,6 +49,7 @@ import com.android.launcher3.util.OnboardingPrefs.TASKBAR_SEARCH_EDU_SEEN
 import com.android.launcher3.util.ResourceBasedOverride
 import com.android.launcher3.views.ActivityContext
 import com.android.launcher3.views.BaseDragLayer
+import com.android.quickstep.util.ContextualSearchInvoker
 import com.android.quickstep.util.LottieAnimationColorUtils
 import java.io.PrintWriter
 
@@ -80,7 +81,11 @@ open class TaskbarEduTooltipController(context: Context) :
     ResourceBasedOverride, LoggableTaskbarController {
 
     protected val activityContext: TaskbarActivityContext = ActivityContext.lookupContext(context)
-    open val shouldShowSearchEdu = false
+    open val shouldShowSearchEdu: Boolean
+        get() =
+            ContextualSearchInvoker.newInstance(activityContext)
+                .runContextualSearchInvocationChecksAndLogFailures()
+
     private val isTooltipEnabled: Boolean
         get() {
             return !Utilities.isRunningInTestHarness() &&
@@ -351,19 +356,19 @@ open class TaskbarEduTooltipController(context: Context) :
             overlayContext.layoutInflater.inflate(
                 R.layout.taskbar_edu_tooltip,
                 overlayContext.dragLayer,
-                false
+                false,
             ) as TaskbarEduTooltip
 
         controllers.taskbarAutohideSuspendController.updateFlag(
             FLAG_AUTOHIDE_SUSPEND_EDU_OPEN,
-            true
+            true,
         )
 
         tooltip.onCloseCallback = {
             this.tooltip = null
             controllers.taskbarAutohideSuspendController.updateFlag(
                 FLAG_AUTOHIDE_SUSPEND_EDU_OPEN,
-                false
+                false,
             )
             controllers.taskbarStashController.updateAndAnimateTransientTaskbar(true)
         }
@@ -378,7 +383,7 @@ open class TaskbarEduTooltipController(context: Context) :
             override fun performAccessibilityAction(
                 host: View,
                 action: Int,
-                args: Bundle?
+                args: Bundle?,
             ): Boolean {
                 if (action == R.id.close) {
                     hide()
@@ -396,13 +401,13 @@ open class TaskbarEduTooltipController(context: Context) :
 
             override fun onInitializeAccessibilityNodeInfo(
                 host: View,
-                info: AccessibilityNodeInfo
+                info: AccessibilityNodeInfo,
             ) {
                 super.onInitializeAccessibilityNodeInfo(host, info)
                 info.addAction(
                     AccessibilityNodeInfo.AccessibilityAction(
                         R.id.close,
-                        host.context?.getText(R.string.taskbar_edu_close)
+                        host.context?.getText(R.string.taskbar_edu_close),
                     )
                 )
             }
@@ -421,7 +426,7 @@ open class TaskbarEduTooltipController(context: Context) :
             return ResourceBasedOverride.Overrides.getObject(
                 TaskbarEduTooltipController::class.java,
                 context,
-                R.string.taskbar_edu_tooltip_controller_class
+                R.string.taskbar_edu_tooltip_controller_class,
             )
         }
     }

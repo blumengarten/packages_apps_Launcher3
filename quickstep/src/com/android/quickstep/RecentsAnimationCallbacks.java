@@ -15,7 +15,9 @@
  */
 package com.android.quickstep;
 
+import static android.app.WindowConfiguration.ACTIVITY_TYPE_HOME;
 import static android.view.RemoteAnimationTarget.MODE_CLOSING;
+import static android.view.RemoteAnimationTarget.MODE_OPENING;
 import static android.view.WindowManager.LayoutParams.TYPE_DOCK_DIVIDER;
 
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
@@ -29,6 +31,7 @@ import androidx.annotation.BinderThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.UiThread;
 
+import com.android.launcher3.Flags;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.util.Preconditions;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
@@ -102,7 +105,11 @@ public class RecentsAnimationCallbacks implements
         long appCount = Arrays.stream(appTargets)
                 .filter(app -> app.mode == MODE_CLOSING)
                 .count();
-        if (appCount == 0) {
+
+        boolean isOpeningHome = Arrays.stream(appTargets).filter(app -> app.mode == MODE_OPENING
+                        && app.windowConfiguration.getActivityType() == ACTIVITY_TYPE_HOME)
+                .count() > 0;
+        if (appCount == 0 && (!Flags.enableFallbackOverviewInWindow() || isOpeningHome)) {
             ActiveGestureProtoLogProxy.logOnRecentsAnimationStartCancelled();
             // Edge case, if there are no closing app targets, then Launcher has nothing to handle
             notifyAnimationCanceled();

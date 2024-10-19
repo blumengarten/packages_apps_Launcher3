@@ -18,10 +18,13 @@ package com.android.launcher3.taskbar
 
 import android.animation.AnimatorTestRule
 import android.platform.test.annotations.EnableFlags
+import android.platform.test.flag.junit.SetFlagsRule
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
+import com.android.launcher3.LauncherPrefs.Companion.TASKBAR_PINNING
 import com.android.launcher3.R
 import com.android.launcher3.taskbar.StashedHandleViewController.ALPHA_INDEX_STASHED
 import com.android.launcher3.taskbar.TaskbarAutohideSuspendController.FLAG_AUTOHIDE_SUSPEND_EDU_OPEN
+import com.android.launcher3.taskbar.TaskbarControllerTestUtil.asProperty
 import com.android.launcher3.taskbar.TaskbarStashController.FLAG_IN_APP
 import com.android.launcher3.taskbar.TaskbarStashController.FLAG_IN_OVERVIEW
 import com.android.launcher3.taskbar.TaskbarStashController.FLAG_IN_STASHED_LAUNCHER_STATE
@@ -42,7 +45,6 @@ import com.android.launcher3.taskbar.rules.TaskbarModeRule.Mode.PINNED
 import com.android.launcher3.taskbar.rules.TaskbarModeRule.Mode.THREE_BUTTONS
 import com.android.launcher3.taskbar.rules.TaskbarModeRule.Mode.TRANSIENT
 import com.android.launcher3.taskbar.rules.TaskbarModeRule.TaskbarMode
-import com.android.launcher3.taskbar.rules.TaskbarPinningPreferenceRule
 import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule
 import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule.InjectController
 import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule.UserSetupMode
@@ -63,11 +65,11 @@ import org.junit.runner.RunWith
 @EnableFlags(FLAG_ENABLE_BUBBLE_BAR)
 @EmulatedDevices(["pixelTablet2023"])
 class TaskbarStashControllerTest {
-    @get:Rule(order = 0) val context = TaskbarWindowSandboxContext.create()
-    @get:Rule(order = 1) val taskbarModeRule = TaskbarModeRule(context)
-    @get:Rule(order = 2) val taskbarPinningPreferenceRule = TaskbarPinningPreferenceRule(context)
-    @get:Rule(order = 3) val animatorTestRule = AnimatorTestRule(this)
-    @get:Rule(order = 4) val taskbarUnitTestRule = TaskbarUnitTestRule(this, context)
+    @get:Rule(order = 0) val setFlagsRule = SetFlagsRule()
+    @get:Rule(order = 1) val context = TaskbarWindowSandboxContext.create()
+    @get:Rule(order = 2) val taskbarModeRule = TaskbarModeRule(context)
+    @get:Rule(order = 4) val animatorTestRule = AnimatorTestRule(this)
+    @get:Rule(order = 5) val taskbarUnitTestRule = TaskbarUnitTestRule(this, context)
 
     @InjectController lateinit var stashController: TaskbarStashController
     @InjectController lateinit var viewController: TaskbarViewController
@@ -121,10 +123,11 @@ class TaskbarStashControllerTest {
 
     @Test
     fun testRecreateAsTransient_timeoutStarted() {
-        taskbarPinningPreferenceRule.isPinned = true
+        var isPinned by TASKBAR_PINNING.asProperty(context)
+        isPinned = true
         activityContext.controllers.sharedState?.taskbarWasPinned = true
 
-        taskbarPinningPreferenceRule.isPinned = false
+        isPinned = false
         assertThat(stashController.timeoutAlarm.alarmPending()).isTrue()
     }
 

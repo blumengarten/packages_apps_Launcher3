@@ -20,7 +20,6 @@ import static android.platform.test.flag.junit.SetFlagsRule.DefaultInitValueType
 import static androidx.test.InstrumentationRegistry.getInstrumentation;
 
 import static com.android.launcher3.testing.shared.TestProtocol.ICON_MISSING;
-import static com.android.launcher3.testing.shared.TestProtocol.WIDGET_CONFIG_NULL_EXTRA_INTENT;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 
 import static org.junit.Assert.assertEquals;
@@ -415,6 +414,7 @@ public abstract class AbstractLauncherUiTest<LAUNCHER_TYPE extends Launcher> {
     public void verifyLauncherState() {
         try {
             // Limits UI tests affecting tests running after them.
+            mDevice.pressHome();
             mLauncher.waitForLauncherInitialized();
             if (mLauncherPid != 0) {
                 assertEquals("Launcher crashed, pid mismatch:",
@@ -563,23 +563,13 @@ public abstract class AbstractLauncherUiTest<LAUNCHER_TYPE extends Launcher> {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(WIDGET_CONFIG_NULL_EXTRA_INTENT, intent == null
-                    ? "AbstractLauncherUiTest.onReceive(): inputted intent NULL"
-                    : "AbstractLauncherUiTest.onReceive(): inputted intent NOT NULL");
             mIntent = intent;
             latch.countDown();
-            Log.d(WIDGET_CONFIG_NULL_EXTRA_INTENT,
-                    "AbstractLauncherUiTest.onReceive() Countdown Latch started");
         }
 
         public Intent blockingGetIntent() throws InterruptedException {
-            Log.d(WIDGET_CONFIG_NULL_EXTRA_INTENT,
-                    "AbstractLauncherUiTest.blockingGetIntent()");
             assertTrue("Timed Out", latch.await(DEFAULT_BROADCAST_TIMEOUT_SECS, TimeUnit.SECONDS));
             mTargetContext.unregisterReceiver(this);
-            Log.d(WIDGET_CONFIG_NULL_EXTRA_INTENT, mIntent == null
-                    ? "AbstractLauncherUiTest.onReceive(): mIntent NULL"
-                    : "AbstractLauncherUiTest.onReceive(): mIntent NOT NULL");
             return mIntent;
         }
 

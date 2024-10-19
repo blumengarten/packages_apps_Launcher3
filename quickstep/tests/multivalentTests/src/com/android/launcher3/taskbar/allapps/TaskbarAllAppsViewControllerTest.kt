@@ -21,6 +21,7 @@ import com.android.launcher3.R
 import com.android.launcher3.appprediction.AppsDividerView
 import com.android.launcher3.appprediction.AppsDividerView.DividerType
 import com.android.launcher3.appprediction.PredictionRowView
+import com.android.launcher3.taskbar.TaskbarControllerTestUtil.asProperty
 import com.android.launcher3.taskbar.TaskbarStashController
 import com.android.launcher3.taskbar.TaskbarStashController.FLAG_STASHED_IN_APP_AUTO
 import com.android.launcher3.taskbar.allapps.TaskbarAllAppsControllerTest.Companion.TEST_PREDICTED_APPS
@@ -29,7 +30,6 @@ import com.android.launcher3.taskbar.rules.TaskbarModeRule
 import com.android.launcher3.taskbar.rules.TaskbarModeRule.Mode.PINNED
 import com.android.launcher3.taskbar.rules.TaskbarModeRule.Mode.TRANSIENT
 import com.android.launcher3.taskbar.rules.TaskbarModeRule.TaskbarMode
-import com.android.launcher3.taskbar.rules.TaskbarPreferenceRule
 import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule
 import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule.InjectController
 import com.android.launcher3.taskbar.rules.TaskbarWindowSandboxContext
@@ -49,14 +49,12 @@ class TaskbarAllAppsViewControllerTest {
 
     @get:Rule(order = 0) val context = TaskbarWindowSandboxContext.create()
     @get:Rule(order = 1) val taskbarModeRule = TaskbarModeRule(context)
-    @get:Rule(order = 2)
-    val allAppsVisitedPreferenceRule =
-        TaskbarPreferenceRule(context, ALL_APPS_VISITED_COUNT.prefItem)
-    @get:Rule(order = 3) val taskbarUnitTestRule = TaskbarUnitTestRule(this, context)
+    @get:Rule(order = 2) val taskbarUnitTestRule = TaskbarUnitTestRule(this, context)
 
     @InjectController lateinit var overlayController: TaskbarOverlayController
     @InjectController lateinit var stashController: TaskbarStashController
 
+    private var allAppsVisitedCount by ALL_APPS_VISITED_COUNT.prefItem.asProperty(context)
     private val searchSessionController =
         TestUtil.getOnUiThread { TaskbarSearchSessionController.newInstance(context) }
 
@@ -102,7 +100,7 @@ class TaskbarAllAppsViewControllerTest {
 
     @Test
     fun testShow_firstAllAppsVisit_hasAllAppsTextDivider() {
-        allAppsVisitedPreferenceRule.value = 0
+        allAppsVisitedCount = 0
         val viewController = createViewController()
         getInstrumentation().runOnMainSync { viewController.show(false) }
 
@@ -120,7 +118,7 @@ class TaskbarAllAppsViewControllerTest {
 
     @Test
     fun testShow_maxAllAppsVisitedCount_hasLineDivider() {
-        allAppsVisitedPreferenceRule.value = ALL_APPS_VISITED_COUNT.maxCount
+        allAppsVisitedCount = ALL_APPS_VISITED_COUNT.maxCount
         val viewController = createViewController()
         getInstrumentation().runOnMainSync { viewController.show(false) }
 

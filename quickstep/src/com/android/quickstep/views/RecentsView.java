@@ -1885,19 +1885,22 @@ public abstract class RecentsView<
         // taskGroups backwards populates the thumbnail grid from least recent to most recent.
         for (int i = taskGroups.size() - 1; i >= 0; i--) {
             GroupTask groupTask = taskGroups.get(i);
-            boolean isRemovalNeeded = stagedTaskIdToBeRemoved != INVALID_TASK_ID
+            boolean containsStagedTask = stagedTaskIdToBeRemoved != INVALID_TASK_ID
                     && groupTask.containsTask(stagedTaskIdToBeRemoved);
+            boolean shouldSkipGroupTask = containsStagedTask && !groupTask.hasMultipleTasks();
 
-            if (isRemovalNeeded && !groupTask.hasMultipleTasks()) {
-                // If the task we need to remove is not part of a pair, avoiding creating the
-                // TaskView.
+            if ((isSplitSelectionActive() && groupTask.taskViewType == TaskViewType.DESKTOP)
+                    || shouldSkipGroupTask) {
+                // To avoid these tasks from being chosen as the app pair, the creation of a
+                // TaskView is bypassed. The staged task is already selected for the app pair,
+                // and the Desktop task should be hidden when selecting a pair.
                 continue;
             }
 
             // If we need to remove half of a pair of tasks, force a TaskView with Type.SINGLE
             // to be a temporary container for the remaining task.
             TaskView taskView = getTaskViewFromPool(
-                    isRemovalNeeded ? TaskViewType.SINGLE : groupTask.taskViewType);
+                    containsStagedTask ? TaskViewType.SINGLE : groupTask.taskViewType);
             if (taskView instanceof GroupedTaskView) {
                 boolean firstTaskIsLeftTopTask =
                         groupTask.mSplitBounds.leftTopTaskId == groupTask.task1.key.id;
@@ -3807,7 +3810,7 @@ public abstract class RecentsView<
                 }
             } else if (!showAsGrid || (enableLargeDesktopWindowingTile()
                     && dismissedTaskView.isLargeTile()
-                    && nextFocusedTaskView == null)) {
+                    && nextFocusedTaskView == null && !dismissingForSplitSelection)) {
                 int offset = getOffsetToDismissedTask(scrollDiffPerPage, dismissedIndex, taskCount);
                 int scrollDiff = newScroll[i] - oldScroll[i] + offset;
                 if (scrollDiff != 0) {
@@ -5572,15 +5575,13 @@ public abstract class RecentsView<
                 remoteTargetHandle -> remoteTargetHandle.getTaskViewSimulator()
                         .addOverviewToAppAnim(mPendingAnimation, interpolator));
         mPendingAnimation.addOnFrameCallback(this::redrawLiveTile);
-        if (taskView instanceof DesktopTaskView && mRemoteTargetHandles != null) {
-            mPendingAnimation.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationStart(Animator animation) {
-                    runActionOnRemoteHandles(remoteTargetHandle ->
-                            remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(false));
-                }
-            });
-        }
+        mPendingAnimation.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                runActionOnRemoteHandles(remoteTargetHandle ->
+                        remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(false));
+            }
+        });
         mPendingAnimation.addEndListener(isSuccess -> {
             if (isSuccess) {
                 if (taskView instanceof GroupedTaskView && hasAllValidTaskIds(taskView.getTaskIds())
@@ -5612,6 +5613,13 @@ public abstract class RecentsView<
     protected Unit onTaskLaunchAnimationEnd(boolean success) {
         if (success) {
             resetTaskVisuals();
+        } else {
+            // If launch animation didn't complete i.e. user dragged live tile down and then
+            // back up and returned to Overview, then we need to ensure we reset the
+            // view to draw below recents so that it can't be interacted with.
+            runActionOnRemoteHandles(remoteTargetHandle ->
+                    remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(true));
+            redrawLiveTile();
         }
         return Unit.INSTANCE;
     }
@@ -6672,6 +6680,26 @@ public abstract class RecentsView<
                 transitionSource);
         successCallback.run();
     }
+
+    /**
+     * Move the provided task into external display and invoke {@code successCallback} if succeeded.
+     */
+    public void moveTaskToExternalDisplay(TaskContainer taskContainer, Runnable successCallback) {
+        if (!DesktopModeStatus.canEnterDesktopMode(mContext)) {
+            return;
+        }
+        switchToScreenshot(() -> finishRecentsAnimation(/* toRecents= */true, /* shouldPip= */false,
+                () -> moveTaskToDesktopInternal(taskContainer, successCallback)));
+    }
+
+    private void moveTaskToDesktopInternal(TaskContainer taskContainer, Runnable successCallback) {
+        if (mDesktopRecentsTransitionController == null) {
+            return;
+        }
+        mDesktopRecentsTransitionController.moveToExternalDisplay(taskContainer.getTask().key.id);
+        successCallback.run();
+    }
+
 
     // Logs when the orientation of Overview changes. We log both real and fake orientation changes.
     private void logOrientationChanged() {

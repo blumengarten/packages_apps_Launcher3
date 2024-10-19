@@ -424,6 +424,7 @@
     <!--- Taskbar Pinning -->
     <dimen name="taskbar_pinning_popup_menu_width">300dp</dimen>
     <dimen name="taskbar_pinning_popup_menu_vertical_margin">16dp</dimen>
+    <dimen name="taskbar_pinning_popup_menu_min_padding_from_screen_edge">16dp</dimen>
 
     <!--- Floating Ime Inset height-->
     <dimen name="floating_ime_inset_height">60dp</dimen>

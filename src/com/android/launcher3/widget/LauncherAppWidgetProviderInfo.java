@@ -98,7 +98,7 @@ public class LauncherAppWidgetProviderInfo extends AppWidgetProviderInfo impleme
     }
 
     public void initSpans(Context context, InvariantDeviceProfile idp) {
-        mPM = context.getPackageManager();
+        mPM = context.getApplicationContext().getPackageManager();
         int minSpanX = 0;
         int minSpanY = 0;
         int maxSpanX = idp.numColumns;

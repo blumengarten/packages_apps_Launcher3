@@ -43,6 +43,7 @@ import com.android.launcher3.taskbar.TaskbarControllers;
 import com.android.launcher3.taskbar.TaskbarInsetsController;
 import com.android.launcher3.taskbar.TaskbarStashController;
 import com.android.launcher3.taskbar.bubbles.animation.BubbleBarViewAnimator;
+import com.android.launcher3.taskbar.bubbles.flyout.BubbleBarFlyoutController;
 import com.android.launcher3.taskbar.bubbles.flyout.BubbleBarFlyoutPositioner;
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController;
 import com.android.launcher3.util.MultiPropertyFactory;
@@ -117,6 +118,8 @@ public class BubbleBarViewController {
     public boolean mOverflowAdded;
 
     private BubbleBarViewAnimator mBubbleBarViewAnimator;
+    private final FrameLayout mBubbleBarContainer;
+    private BubbleBarFlyoutController mBubbleBarFlyoutController;
 
     private final TimeSource mTimeSource = System::currentTimeMillis;
 
@@ -127,6 +130,7 @@ public class BubbleBarViewController {
             FrameLayout bubbleBarContainer) {
         mActivity = activity;
         mBarView = barView;
+        mBubbleBarContainer = bubbleBarContainer;
         mSystemUiProxy = SystemUiProxy.INSTANCE.get(mActivity);
         mBubbleBarAlpha = new MultiValueAlpha(mBarView, 1 /* num alpha channels */);
         mIconSize = activity.getResources().getDimensionPixelSize(
@@ -141,6 +145,8 @@ public class BubbleBarViewController {
         mBubbleDragController = bubbleControllers.bubbleDragController;
         mTaskbarStashController = controllers.taskbarStashController;
         mTaskbarInsetsController = controllers.taskbarInsetsController;
+        mBubbleBarFlyoutController = new BubbleBarFlyoutController(
+                mBubbleBarContainer, createFlyoutPositioner(), createFlyoutTopBoundaryListener());
         mBubbleBarViewAnimator = new BubbleBarViewAnimator(
                 mBarView, mBubbleStashController, mBubbleBarController::showExpandedView);
         mTaskbarViewPropertiesProvider = taskbarViewPropertiesProvider;
@@ -262,6 +268,21 @@ public class BubbleBarViewController {
             @Override
             public float getDistanceToRevealTriangle() {
                 return getDistanceToCollapsedPosition().y - mBarView.getPointerSize();
+            }
+        };
+    }
+
+    private BubbleBarFlyoutController.TopBoundaryListener createFlyoutTopBoundaryListener() {
+        return new BubbleBarFlyoutController.TopBoundaryListener() {
+            @Override
+            public void extendTopBoundary(int space) {
+                int defaultSize = mActivity.getDefaultTaskbarWindowSize();
+                mActivity.setTaskbarWindowSize(defaultSize + space);
+            }
+
+            @Override
+            public void resetTopBoundary() {
+                mActivity.setTaskbarWindowSize(mActivity.getDefaultTaskbarWindowSize());
             }
         };
     }

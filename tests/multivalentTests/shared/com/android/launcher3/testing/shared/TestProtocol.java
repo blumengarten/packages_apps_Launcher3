@@ -167,7 +167,6 @@ public final class TestProtocol {
 
     public static final String PERMANENT_DIAG_TAG = "TaplTarget";
     public static final String ICON_MISSING = "b/282963545";
-    public static final String WIDGET_CONFIG_NULL_EXTRA_INTENT = "b/324419890";
     public static final String REQUEST_FLAG_ENABLE_GRID_ONLY_OVERVIEW = "enable-grid-only-overview";
     public static final String REQUEST_FLAG_ENABLE_APP_PAIRS = "enable-app-pairs";
 

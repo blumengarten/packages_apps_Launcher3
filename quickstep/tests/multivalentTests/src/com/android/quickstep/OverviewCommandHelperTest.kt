@@ -41,7 +41,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.spy
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 
@@ -56,10 +55,12 @@ class OverviewCommandHelperTest {
     private val testScope = TestScope(dispatcher)
 
     private var pendingCallbacksWithDelays = mutableListOf<Long>()
+    private lateinit var pendingCommandsToExecute: MutableList<Runnable>
 
     @Suppress("UNCHECKED_CAST")
     @Before
     fun setup() {
+        pendingCommandsToExecute = mutableListOf()
         setFlagsRule.setFlags(true, Flags.FLAG_ENABLE_OVERVIEW_COMMAND_HELPER_TIMEOUT)
 
         sut =
@@ -68,7 +69,8 @@ class OverviewCommandHelperTest {
                     touchInteractionService = mock(),
                     overviewComponentObserver = mock(),
                     taskAnimationManager = mock(),
-                    dispatcherProvider = TestDispatcherProvider(dispatcher)
+                    dispatcherProvider = TestDispatcherProvider(dispatcher),
+                    uiExecutor = { runnable -> pendingCommandsToExecute += runnable },
                 )
             )
 
@@ -94,12 +96,21 @@ class OverviewCommandHelperTest {
         pendingCallbacksWithDelays.add(delayInMillis)
     }
 
+    /**
+     * This function runs all the pending commands from the Executor for testing purposes. Replacing
+     * the uiExecutor allows the test to execute the command queue manually, making it possible to
+     * assert each state of the commands in the queue individually.
+     */
+    private fun executePendingCommands() = pendingCommandsToExecute.forEach { it.run() }
+
     @Test
     fun whenFirstCommandIsAdded_executeCommandImmediately() =
         testScope.runTest {
             // Add command to queue
             val commandInfo: CommandInfo = sut.addCommand(CommandType.HOME)!!
             assertThat(commandInfo.status).isEqualTo(CommandStatus.IDLE)
+            executePendingCommands()
+            assertThat(commandInfo.status).isEqualTo(CommandStatus.PROCESSING)
             runCurrent()
             assertThat(commandInfo.status).isEqualTo(CommandStatus.COMPLETED)
         }
@@ -114,7 +125,7 @@ class OverviewCommandHelperTest {
             val commandInfo: CommandInfo = sut.addCommand(commandType)!!
             assertThat(commandInfo.status).isEqualTo(CommandStatus.IDLE)
 
-            runCurrent()
+            executePendingCommands()
             assertThat(commandInfo.status).isEqualTo(CommandStatus.PROCESSING)
 
             advanceTimeBy(200L)
@@ -135,12 +146,14 @@ class OverviewCommandHelperTest {
             val commandInfo2: CommandInfo = sut.addCommand(commandType2)!!
             assertThat(commandInfo2.status).isEqualTo(CommandStatus.IDLE)
 
-            runCurrent()
+            executePendingCommands()
             assertThat(commandInfo1.status).isEqualTo(CommandStatus.PROCESSING)
             assertThat(commandInfo2.status).isEqualTo(CommandStatus.IDLE)
 
             advanceTimeBy(101L)
             assertThat(commandInfo1.status).isEqualTo(CommandStatus.COMPLETED)
+
+            executePendingCommands()
             assertThat(commandInfo2.status).isEqualTo(CommandStatus.PROCESSING)
 
             advanceTimeBy(101L)
@@ -161,12 +174,14 @@ class OverviewCommandHelperTest {
             val commandInfo2: CommandInfo = sut.addCommand(commandType2)!!
             assertThat(commandInfo2.status).isEqualTo(CommandStatus.IDLE)
 
-            runCurrent()
+            executePendingCommands()
             assertThat(commandInfo1.status).isEqualTo(CommandStatus.PROCESSING)
             assertThat(commandInfo2.status).isEqualTo(CommandStatus.IDLE)
 
             advanceTimeBy(QUEUE_TIMEOUT)
             assertThat(commandInfo1.status).isEqualTo(CommandStatus.CANCELED)
+
+            executePendingCommands()
             assertThat(commandInfo2.status).isEqualTo(CommandStatus.PROCESSING)
 
             advanceTimeBy(101)

@@ -20,8 +20,10 @@ import android.content.Context;
 
 import com.android.launcher3.pm.InstallSessionHelper;
 import com.android.launcher3.util.DaggerSingletonTracker;
+import com.android.launcher3.util.PluginManagerWrapper;
 import com.android.launcher3.util.ScreenOnTracker;
 import com.android.launcher3.util.SettingsCache;
+import com.android.launcher3.widget.custom.CustomWidgetManager;
 
 import dagger.BindsInstance;
 
@@ -38,6 +40,8 @@ public interface LauncherBaseAppComponent {
     InstallSessionHelper getInstallSessionHelper();
     ScreenOnTracker getScreenOnTracker();
     SettingsCache getSettingsCache();
+    CustomWidgetManager getCustomWidgetManager();
+    PluginManagerWrapper getPluginManagerWrapper();
 
     /** Builder for LauncherBaseAppComponent. */
     interface Builder {

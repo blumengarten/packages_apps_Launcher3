@@ -66,6 +66,11 @@ class DesktopRecentsTransitionController(
         systemUiProxy.moveToDesktop(taskId, transitionSource)
     }
 
+    /** Move task to external display from recents view */
+    fun moveToExternalDisplay(taskId: Int) {
+        systemUiProxy.moveToExternalDisplay(taskId)
+    }
+
     private class RemoteDesktopLaunchTransitionRunner(
         private val desktopTaskView: DesktopTaskView,
         private val animated: Boolean,

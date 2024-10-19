@@ -30,6 +30,7 @@ import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 import static com.android.launcher3.util.FlagDebugUtils.appendFlag;
 import static com.android.launcher3.util.FlagDebugUtils.formatFlagChange;
 import static com.android.quickstep.util.SystemActionConstants.SYSTEM_ACTION_ID_TASKBAR;
+import static com.android.quickstep.util.SystemUiFlagUtils.isTaskbarHidden;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_BUBBLES_EXPANDED;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_DIALOG_SHOWING;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_SHOWING;
@@ -104,6 +105,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
     // An internal no-op flag to determine whether we should delay the taskbar background animation
     private static final int FLAG_DELAY_TASKBAR_BG_TAG = 1 << 12;
     public static final int FLAG_STASHED_FOR_BUBBLES = 1 << 13; // show handle for stashed hotseat
+    public static final int FLAG_TASKBAR_HIDDEN = 1 << 14; // taskbar hidden during dream, etc...
 
     // If any of these flags are enabled, isInApp should return true.
     private static final int FLAGS_IN_APP = FLAG_IN_APP | FLAG_IN_SETUP;
@@ -214,6 +216,13 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
      * by not scaling the height of the taskbar background.
      */
     private static final int TRANSITION_UNSTASH_SUW_MANUAL = 3;
+
+    /**
+     * total duration of entering dream state animation, which we use as start delay to
+     * applyState() when SYSUI_STATE_DEVICE_DREAMING flag is present. Keep this in sync with
+     * DreamAnimationController.TOTAL_ANIM_DURATION.
+     */
+    private static final int SKIP_TOTAL_DREAM_ANIM_DURATION = 450;
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef(value = {
@@ -1123,7 +1132,13 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
             startDelay = getTaskbarStashStartDelayForIme();
         }
 
-        applyState(skipAnim ? 0 : animDuration, skipAnim ? 0 : startDelay);
+        if (isTaskbarHidden(systemUiStateFlags) && !hasAnyFlag(FLAG_TASKBAR_HIDDEN)) {
+            updateStateForFlag(FLAG_TASKBAR_HIDDEN, isTaskbarHidden(systemUiStateFlags));
+            applyState(0, SKIP_TOTAL_DREAM_ANIM_DURATION);
+        } else {
+            updateStateForFlag(FLAG_TASKBAR_HIDDEN, isTaskbarHidden(systemUiStateFlags));
+            applyState(skipAnim ? 0 : animDuration, skipAnim ? 0 : startDelay);
+        }
     }
 
     /**

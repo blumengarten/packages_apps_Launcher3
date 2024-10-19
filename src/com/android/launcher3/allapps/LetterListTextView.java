@@ -42,8 +42,6 @@ public class LetterListTextView extends TextView {
     private final Drawable mLetterBackground;
     private final int mLetterListTextWidthAndHeight;
     private final int mTextColor;
-    private final int mBackgroundColor;
-    private final int mSelectedColor;
 
     public LetterListTextView(Context context) {
         this(context, null, 0);
@@ -59,8 +57,6 @@ public class LetterListTextView extends TextView {
         mLetterListTextWidthAndHeight = context.getResources().getDimensionPixelSize(
                 R.dimen.fastscroll_list_letter_size);
         mTextColor = Themes.getAttrColor(context, R.attr.materialColorOnSurface);
-        mBackgroundColor = Themes.getAttrColor(context, R.attr.materialColorSurfaceContainer);
-        mSelectedColor = Themes.getAttrColor(context, R.attr.materialColorOnSecondary);
     }
 
     @Override
@@ -101,24 +97,9 @@ public class LetterListTextView extends TextView {
         float cutOffMin = currentFingerY - (getHeight() * 2);
         float cutOffMax = currentFingerY + (getHeight() * 2);
         float cutOffDistance = cutOffMax - cutOffMin;
-        // Update the background blend color
         boolean isWithinAnimationBounds = getY() < cutOffMax && getY() > cutOffMin;
-        if (isWithinAnimationBounds) {
-            getBackground().setColorFilter(new PorterDuffColorFilter(
-                    getBlendColorBasedOnYPosition(currentFingerY, cutOffDistance),
-                    PorterDuff.Mode.MULTIPLY));
-        } else {
-            getBackground().setColorFilter(new PorterDuffColorFilter(
-                    mBackgroundColor, PorterDuff.Mode.MULTIPLY));
-        }
         translateBasedOnYPosition(currentFingerY, cutOffDistance, isWithinAnimationBounds);
         scaleBasedOnYPosition(currentFingerY, cutOffDistance, isWithinAnimationBounds);
-    }
-
-    private int getBlendColorBasedOnYPosition(int y, float cutOffDistance) {
-        float raisedCosineBlend = (float) Math.cos(((y - getY()) / (cutOffDistance)) * Math.PI);
-        float blendRatio = Utilities.boundToRange(raisedCosineBlend, 0f, 1f);
-        return ColorUtils.blendARGB(mBackgroundColor, mSelectedColor, blendRatio);
     }
 
     private void scaleBasedOnYPosition(int y, float cutOffDistance,

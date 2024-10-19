@@ -474,7 +474,8 @@ public class PrivateProfileManager extends UserProfileManager {
                 break;
             }
             // Make the private space apps gone to "collapse".
-            if (mFloatingMaskView == null && isPrivateSpaceItem(currentItem)) {
+            if ((mFloatingMaskView == null && isPrivateSpaceItem(currentItem)) ||
+                    currentItem.viewType == VIEW_TYPE_PRIVATE_SPACE_SYS_APPS_DIVIDER) {
                 RecyclerView.ViewHolder viewHolder =
                         allAppsRecyclerView.findViewHolderForAdapterPosition(i);
                 if (viewHolder != null) {

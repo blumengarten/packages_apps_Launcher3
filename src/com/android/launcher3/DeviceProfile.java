@@ -1829,25 +1829,47 @@ public class DeviceProfile {
      * Returns the new border space that should be used between hotseat icons after adjusting it to
      * the bubble bar.
      *
+     * <p>Does not check for visible bubbles persistence, so caller should call
+     * {@link #shouldAdjustHotseatForBubbleBar} first.
+     *
      * <p>If there's no adjustment needed, this method returns {@code 0}.
+     * @see #shouldAdjustHotseatForBubbleBar(Context, boolean)
      */
     public float getHotseatAdjustedBorderSpaceForBubbleBar(Context context) {
-        // only need to adjust when QSB is on top of the hotseat.
-        if (isQsbInline) {
-            return 0;
-        }
-
-        // no need to adjust if there's enough space for the bubble bar to the right of the hotseat.
-        if (getHotseatLayoutPadding(context).right > mBubbleBarSpaceThresholdPx) {
-            return 0;
-        }
-
+        if (!shouldAdjustHotseatForBubbleBar(context)) return 0;
         // The adjustment is shrinking the hotseat's width by 1 icon on either side.
         int iconsWidth =
                 iconSizePx * numShownHotseatIcons + hotseatBorderSpace * (numShownHotseatIcons - 1);
         int newWidth = iconsWidth - 2 * iconSizePx;
         // Evenly space the icons within the boundaries of the new width.
         return (float) (newWidth - iconSizePx * numShownHotseatIcons) / (numShownHotseatIcons - 1);
+    }
+
+    /**
+     * Returns the hotseat icon translation X for the cellX index.
+     *
+     * <p>Does not check for visible bubbles persistence, so caller should call
+     * {@link #shouldAdjustHotseatForBubbleBar} first.
+     *
+     * <p>If there's no adjustment needed, this method returns {@code 0}.
+     * @see #shouldAdjustHotseatForBubbleBar(Context, boolean)
+     */
+    public float getHotseatAdjustedTranslation(Context context, int cellX) {
+        if (!shouldAdjustHotseatForBubbleBar(context)) return 0;
+        float borderSpace = getHotseatAdjustedBorderSpaceForBubbleBar(context);
+        float borderSpaceDelta = borderSpace - hotseatBorderSpace;
+        return iconSizePx + cellX * borderSpaceDelta;
+    }
+
+    /** Returns whether hotseat should be adjusted for the bubble bar. */
+    public boolean shouldAdjustHotseatForBubbleBar(Context context, boolean hasBubbles) {
+        return hasBubbles && shouldAdjustHotseatForBubbleBar(context);
+    }
+
+    private boolean shouldAdjustHotseatForBubbleBar(Context context) {
+        // only need to adjust if bubble bar is enabled, when QSB is on top of the hotseat and
+        // there's not enough space for the bubble bar to the right of the hotseat.
+        return !isQsbInline && getHotseatLayoutPadding(context).right <= mBubbleBarSpaceThresholdPx;
     }
 
     /**
@@ -2333,18 +2355,23 @@ public class DeviceProfile {
     /**
      * Returns whether Taskbar and Hotseat should adjust horizontally on bubble bar location update.
      */
-    public boolean shouldAdjustHotseatOnBubblesLocationUpdate(Context context) {
+    public boolean shouldAdjustHotseatOnNavBarLocationUpdate(Context context) {
         return enableBubbleBar()
                 && enableBubbleBarInPersistentTaskBar()
                 && !DisplayController.getNavigationMode(context).hasGestures;
     }
 
     /** Returns hotseat translation X for the bubble bar position. */
-    public int getHotseatTranslationXForBubbleBar(boolean isNavbarOnRight, boolean isRtl) {
-        if (isNavbarOnRight) {
-            return isRtl ? -navButtonsLayoutWidthPx : 0;
+    public int getHotseatTranslationXForNavBar(Context context, boolean isBubblesOnLeft) {
+        if (shouldAdjustHotseatOnNavBarLocationUpdate(context)) {
+            boolean isRtl = Utilities.isRtl(context.getResources());
+            if (isBubblesOnLeft) {
+                return isRtl ? -navButtonsLayoutWidthPx : 0;
+            } else {
+                return isRtl ? 0 : navButtonsLayoutWidthPx;
+            }
         } else {
-            return isRtl ? 0 : navButtonsLayoutWidthPx;
+            return 0;
         }
     }
 

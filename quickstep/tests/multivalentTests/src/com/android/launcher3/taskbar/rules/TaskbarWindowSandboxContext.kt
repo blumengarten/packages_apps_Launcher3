@@ -22,6 +22,8 @@ import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.view.Display.DEFAULT_DISPLAY
 import androidx.test.core.app.ApplicationProvider
+import com.android.launcher3.FakeLauncherPrefs
+import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.util.MainThreadInitializedObject.ObjectSandbox
 import com.android.launcher3.util.SandboxApplication
 import org.junit.rules.ExternalResource
@@ -39,6 +41,10 @@ private constructor(base: SandboxApplication, val virtualDisplay: VirtualDisplay
     ContextWrapper(base),
     ObjectSandbox by base,
     TestRule by RuleChain.outerRule(virtualDisplayRule(virtualDisplay)).around(base) {
+
+    init {
+        putObject(LauncherPrefs.INSTANCE, FakeLauncherPrefs(this))
+    }
 
     companion object {
         private const val VIRTUAL_DISPLAY_NAME = "TaskbarSandboxDisplay"
