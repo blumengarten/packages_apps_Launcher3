@@ -116,6 +116,10 @@ public class TaskIconCache implements TaskIconDataSource, DisplayInfoChangeListe
                 () -> getCacheEntry(task),
                 MAIN_EXECUTOR,
                 result -> {
+                    task.icon = result.icon;
+                    task.titleDescription = result.contentDescription;
+                    task.title = result.title;
+
                     callback.onTaskIconReceived(
                             result.icon,
                             result.contentDescription,

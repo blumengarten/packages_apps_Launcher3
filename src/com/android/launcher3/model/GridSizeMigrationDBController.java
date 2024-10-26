@@ -28,7 +28,6 @@ import static com.android.launcher3.provider.LauncherDbUtils.dropTable;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
@@ -45,15 +44,12 @@ import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.config.FeatureFlags;
-import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.provider.LauncherDbUtils.SQLiteTransaction;
-import com.android.launcher3.util.ContentWriter;
 import com.android.launcher3.util.GridOccupancy;
 import com.android.launcher3.util.IntArray;
 import com.android.launcher3.widget.LauncherAppWidgetProviderInfo;
 import com.android.launcher3.widget.WidgetManagerHelper;
 
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -61,7 +57,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -69,12 +64,12 @@ import java.util.stream.Collectors;
  * This class takes care of shrinking the workspace (by maximum of one row and one column), as a
  * result of restoring from a larger device or device density change.
  */
-public class GridSizeMigrationUtil {
+public class GridSizeMigrationDBController {
 
-    private static final String TAG = "GridSizeMigrationUtil";
+    private static final String TAG = "GridSizeMigrationDBController";
     private static final boolean DEBUG = true;
 
-    private GridSizeMigrationUtil() {
+    private GridSizeMigrationDBController() {
         // Util class should not be instantiated
     }
 
@@ -85,7 +80,7 @@ public class GridSizeMigrationUtil {
         return needsToMigrate(new DeviceGridState(context), new DeviceGridState(idp));
     }
 
-    private static boolean needsToMigrate(
+    static boolean needsToMigrate(
             DeviceGridState srcDeviceState, DeviceGridState destDeviceState) {
         boolean needsToMigrate = !destDeviceState.isCompatible(srcDeviceState);
         if (needsToMigrate) {
@@ -95,6 +90,9 @@ public class GridSizeMigrationUtil {
         return needsToMigrate;
     }
 
+    /**
+     * @return all the workspace and hotseat entries in the db.
+     */
     @VisibleForTesting
     public static List<DbEntry> readAllEntries(SQLiteDatabase db, String tableName,
             Context context) {
@@ -198,7 +196,7 @@ public class GridSizeMigrationUtil {
                     Collectors.joining(",\n", "[", "]"))
                     + "\n Removing Items:"
                     + dstWorkspaceItems.stream().filter(entry ->
-                            toBeRemoved.contains(entry.id)).map(DbEntry::toString).collect(
+                    toBeRemoved.contains(entry.id)).map(DbEntry::toString).collect(
                     Collectors.joining(",\n", "[", "]"))
                     + "\n Adding Workspace Items:"
                     + workspaceToBeAdded.stream().map(DbEntry::toString).collect(
@@ -291,7 +289,7 @@ public class GridSizeMigrationUtil {
         });
     }
 
-    private static void insertEntryInDb(DatabaseHelper helper, DbEntry entry,
+    static void insertEntryInDb(DatabaseHelper helper, DbEntry entry,
             String srcTableName, String destTableName, List<Integer> idsInUse) {
         int id = copyEntryAndUpdate(helper, entry, srcTableName, destTableName, idsInUse);
         if (entry.itemType == LauncherSettings.Favorites.ITEM_TYPE_FOLDER
@@ -341,7 +339,7 @@ public class GridSizeMigrationUtil {
         return newId;
     }
 
-    private static void removeEntryFromDb(SQLiteDatabase db, String tableName, IntArray entryIds) {
+    static void removeEntryFromDb(SQLiteDatabase db, String tableName, IntArray entryIds) {
         db.delete(tableName,
                 Utilities.createDbSelectionQuery(LauncherSettings.Favorites._ID, entryIds), null);
     }
@@ -387,7 +385,7 @@ public class GridSizeMigrationUtil {
     private static boolean findPlacementForEntry(@NonNull final DbEntry entry,
             @NonNull final Point next, @NonNull final Point trg,
             @NonNull final GridOccupancy occupied, final int screenId) {
-        for (int y = next.y; y <  trg.y; y++) {
+        for (int y = next.y; y < trg.y; y++) {
             for (int x = next.x; x < trg.x; x++) {
                 boolean fits = occupied.isRegionVacant(x, y, entry.spanX, entry.spanY);
                 boolean minFits = occupied.isRegionVacant(x, y, entry.minSpanX,
@@ -413,7 +411,7 @@ public class GridSizeMigrationUtil {
     private static void solveHotseatPlacement(
             @NonNull final DatabaseHelper helper, final int hotseatSize,
             @NonNull final DbReader srcReader, @NonNull final DbReader destReader,
-            @NonNull final  List<DbEntry> placedHotseatItems,
+            @NonNull final List<DbEntry> placedHotseatItems,
             @NonNull final List<DbEntry> itemsToPlace, List<Integer> idsInUse) {
 
         final boolean[] occupied = new boolean[hotseatSize];
@@ -436,15 +434,26 @@ public class GridSizeMigrationUtil {
         }
     }
 
-    @VisibleForTesting
+    static void copyCurrentGridToNewGrid(
+            @NonNull Context context,
+            @NonNull DeviceGridState destDeviceState,
+            @NonNull DatabaseHelper target,
+            @NonNull SQLiteDatabase source) {
+        // Only use this strategy when comparing the previous grid to the new grid and the
+        // columns are the same and the destination has more rows
+        copyTable(source, TABLE_NAME, target.getWritableDatabase(), TABLE_NAME, context);
+        destDeviceState.writeToPrefs(context);
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
     public static class DbReader {
 
-        private final SQLiteDatabase mDb;
-        private final String mTableName;
-        private final Context mContext;
-        private int mLastScreenId = -1;
+        final SQLiteDatabase mDb;
+        final String mTableName;
+        final Context mContext;
+        int mLastScreenId = -1;
 
-        private final Map<Integer, ArrayList<DbEntry>> mWorkspaceEntriesByScreenId =
+        final Map<Integer, ArrayList<DbEntry>> mWorkspaceEntriesByScreenId =
                 new ArrayMap<>();
 
         public DbReader(SQLiteDatabase db, String tableName, Context context) {
@@ -529,7 +538,7 @@ public class GridSizeMigrationUtil {
                             LauncherSettings.Favorites.INTENT,               // 7
                             LauncherSettings.Favorites.APPWIDGET_PROVIDER,   // 8
                             LauncherSettings.Favorites.APPWIDGET_ID},        // 9
-                        LauncherSettings.Favorites.CONTAINER + " = "
+                    LauncherSettings.Favorites.CONTAINER + " = "
                             + LauncherSettings.Favorites.CONTAINER_DESKTOP);
             final int indexId = c.getColumnIndexOrThrow(LauncherSettings.Favorites._ID);
             final int indexItemType = c.getColumnIndexOrThrow(LauncherSettings.Favorites.ITEM_TYPE);
@@ -646,120 +655,6 @@ public class GridSizeMigrationUtil {
 
         private Cursor queryWorkspace(String[] columns, String where) {
             return mDb.query(mTableName, columns, where, null, null, null, null);
-        }
-    }
-
-    public static class DbEntry extends ItemInfo implements Comparable<DbEntry> {
-
-        private String mIntent;
-        private String mProvider;
-        private Map<String, Set<Integer>> mFolderItems = new HashMap<>();
-
-        /**
-         * Id of the specific widget.
-         */
-        public int appWidgetId = NO_ID;
-
-        /** Comparator according to the reading order */
-        @Override
-        public int compareTo(DbEntry another) {
-            if (screenId != another.screenId) {
-                return Integer.compare(screenId, another.screenId);
-            }
-            if (cellY != another.cellY) {
-                return Integer.compare(cellY, another.cellY);
-            }
-            return Integer.compare(cellX, another.cellX);
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            DbEntry entry = (DbEntry) o;
-            return Objects.equals(getEntryMigrationId(), entry.getEntryMigrationId());
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(getEntryMigrationId());
-        }
-
-        public void updateContentValues(ContentValues values) {
-            values.put(LauncherSettings.Favorites.SCREEN, screenId);
-            values.put(LauncherSettings.Favorites.CELLX, cellX);
-            values.put(LauncherSettings.Favorites.CELLY, cellY);
-            values.put(LauncherSettings.Favorites.SPANX, spanX);
-            values.put(LauncherSettings.Favorites.SPANY, spanY);
-        }
-
-        @Override
-        public void writeToValues(@NonNull ContentWriter writer) {
-            super.writeToValues(writer);
-            writer.put(LauncherSettings.Favorites.APPWIDGET_ID, appWidgetId);
-        }
-
-        @Override
-        public void readFromValues(@NonNull ContentValues values) {
-            super.readFromValues(values);
-            appWidgetId = values.getAsInteger(LauncherSettings.Favorites.APPWIDGET_ID);
-        }
-
-        /** This id is not used in the DB is only used while doing the migration and it identifies
-         * an entry on each workspace. For example two calculator icons would have the same
-         * migration id even thought they have different database ids.
-         */
-        public String getEntryMigrationId() {
-            switch (itemType) {
-                case LauncherSettings.Favorites.ITEM_TYPE_FOLDER:
-                case LauncherSettings.Favorites.ITEM_TYPE_APP_PAIR:
-                    return getFolderMigrationId();
-                case LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET:
-                    // mProvider is the app the widget belongs to and appWidgetId it's the unique
-                    // is of the widget, we need both because if you remove a widget and then add it
-                    // again, then it can change and the WidgetProvider would not know the widget.
-                    return mProvider + appWidgetId;
-                case LauncherSettings.Favorites.ITEM_TYPE_APPLICATION:
-                    final String intentStr = cleanIntentString(mIntent);
-                    try {
-                        Intent i = Intent.parseUri(intentStr, 0);
-                        return Objects.requireNonNull(i.getComponent()).toString();
-                    } catch (Exception e) {
-                        return intentStr;
-                    }
-                default:
-                    return cleanIntentString(mIntent);
-            }
-        }
-
-        /**
-         * This method should return an id that should be the same for two folders containing the
-         * same elements.
-         */
-        @NonNull
-        private String getFolderMigrationId() {
-            return mFolderItems.keySet().stream()
-                    .map(intentString -> mFolderItems.get(intentString).size()
-                            + cleanIntentString(intentString))
-                    .sorted()
-                    .collect(Collectors.joining(","));
-        }
-
-        /**
-         * This is needed because sourceBounds can change and make the id of two equal items
-         * different.
-         */
-        @NonNull
-        private String cleanIntentString(@NonNull String intentStr) {
-            try {
-                Intent i = Intent.parseUri(intentStr, 0);
-                i.setSourceBounds(null);
-                return i.toURI();
-            } catch (URISyntaxException e) {
-                Log.e(TAG, "Unable to parse Intent string", e);
-                return intentStr;
-            }
-
         }
     }
 }

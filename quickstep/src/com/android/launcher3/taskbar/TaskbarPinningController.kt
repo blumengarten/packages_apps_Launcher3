@@ -30,6 +30,7 @@ import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_TASK
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_TASKBAR_UNPINNED
 import com.android.launcher3.taskbar.TaskbarDividerPopupView.Companion.createAndPopulate
 import java.io.PrintWriter
+import kotlin.jvm.optionals.getOrNull
 
 /** Controls taskbar pinning through a popup view. */
 class TaskbarPinningController(private val context: TaskbarActivityContext) :
@@ -119,7 +120,11 @@ class TaskbarPinningController(private val context: TaskbarActivityContext) :
             taskbarViewController.taskbarIconScaleForPinning.animateToValue(animateToValue),
             taskbarViewController.taskbarIconTranslationXForPinning.animateToValue(animateToValue),
         )
-
+        controllers.bubbleControllers.getOrNull()?.bubbleBarViewController?.let {
+            // if bubble bar is not visible no need to add it`s animations
+            if (!it.isBubbleBarVisible) return@let
+            animatorSet.playTogether(it.bubbleBarPinning.animateToValue(animateToValue))
+        }
         animatorSet.interpolator = Interpolators.EMPHASIZED
         return animatorSet
     }

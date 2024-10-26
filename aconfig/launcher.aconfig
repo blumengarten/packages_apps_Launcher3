@@ -485,3 +485,17 @@ flag {
     description: "Enables launcher recents opening inside of a window instead of being hosted in launcher activity."
     bug: "292269949"
 }
+
+flag {
+   name: "enforce_system_radius_for_app_widgets"
+   namespace: "launcher"
+   description: "Enforce system radius for widget corners instead of a separate 16.dp value"
+   bug: "370950552"
+}
+
+flag {
+    name: "enable_launcher_pill"
+    namespace: "launcher"
+    description: "Enable Workspace Launcher Pill in Simple Mode View."
+    bug: "341217082"
+}

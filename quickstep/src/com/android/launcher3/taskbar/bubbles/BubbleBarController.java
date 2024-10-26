@@ -377,8 +377,6 @@ public class BubbleBarController extends IBubblesListener.Stub {
             // Updates mean the dot state may have changed; any other changes were updated in
             // the populateBubble step.
             BubbleBarBubble bb = mBubbles.get(update.updatedBubble.getKey());
-            // If we're not stashed, we're visible so animate
-            bb.getView().updateDotVisibility(!mBubbleStashController.isStashed() /* animate */);
             mBubbleBarViewController.animateBubbleNotification(
                     bb, /* isExpanding= */ false, /* isUpdate= */ true);
         }

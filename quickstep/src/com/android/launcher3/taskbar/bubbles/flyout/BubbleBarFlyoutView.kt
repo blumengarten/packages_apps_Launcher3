@@ -24,6 +24,7 @@ import android.graphics.Outline
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PointF
+import android.graphics.Rect
 import android.graphics.RectF
 import android.view.LayoutInflater
 import android.view.View
@@ -138,8 +139,12 @@ class BubbleBarFlyoutView(
      */
     private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
 
+    /** The bounds of the flyout relative to the parent view. */
+    val bounds = Rect()
+
     init {
         LayoutInflater.from(context).inflate(R.layout.bubblebar_flyout, this, true)
+        id = R.id.bubble_bar_flyout_view
 
         val ta = context.obtainStyledAttributes(intArrayOf(android.R.attr.dialogCornerRadius))
         cornerRadius = ta.getDimensionPixelSize(0, 0).toFloat()
@@ -171,6 +176,14 @@ class BubbleBarFlyoutView(
         clipToOutline = true
 
         applyConfigurationColors(resources.configuration)
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        bounds.left = left
+        bounds.top = top
+        bounds.right = right
+        bounds.bottom = bottom
     }
 
     /** Sets the data for the flyout and starts playing the expand animation. */

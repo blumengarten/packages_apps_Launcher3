@@ -41,15 +41,20 @@ import com.android.launcher3.Flags.privateSpaceAppInstallerButton
 import com.android.launcher3.Flags.privateSpaceSysAppsSeparation
 import com.android.launcher3.R
 import com.android.launcher3.Utilities
+import com.android.launcher3.dagger.ApplicationContext
+import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.proxy.ProxyActivityStarter
 import com.android.launcher3.util.ApiWrapper
 import com.android.launcher3.util.Executors
 import com.android.launcher3.util.StartActivityParams
 import com.android.launcher3.util.UserIconInfo
 import com.android.quickstep.util.FadeOutRemoteTransition
+import javax.inject.Inject
 
 /** A wrapper for the hidden API calls */
-open class SystemApiWrapper(context: Context?) : ApiWrapper(context) {
+@LauncherAppSingleton
+open class SystemApiWrapper @Inject constructor(@ApplicationContext context: Context?) :
+    ApiWrapper(context) {
 
     override fun getPersons(si: ShortcutInfo) = si.persons ?: Utilities.EMPTY_PERSON_ARRAY
 

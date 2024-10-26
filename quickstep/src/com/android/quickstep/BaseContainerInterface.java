@@ -47,8 +47,8 @@ import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.WindowBounds;
 import com.android.launcher3.views.ScrimView;
 import com.android.quickstep.orientation.RecentsPagedOrientationHandler;
-import com.android.quickstep.util.ActivityInitListener;
 import com.android.quickstep.util.AnimatorControllerWithResistance;
+import com.android.quickstep.util.ContextInitListener;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
 import com.android.systemui.shared.recents.model.ThumbnailData;
@@ -134,7 +134,7 @@ public abstract class BaseContainerInterface<STATE_TYPE extends BaseState<STATE_
             RecentsAnimationDeviceState deviceState, boolean activityVisible,
             Consumer<AnimatorControllerWithResistance> callback);
 
-    public abstract ActivityInitListener createActivityInitListener(
+    public abstract ContextInitListener createActivityInitListener(
             Predicate<Boolean> onInitListener);
     /**
      * Returns the expected STATE_TYPE from the provided GestureEndTarget.

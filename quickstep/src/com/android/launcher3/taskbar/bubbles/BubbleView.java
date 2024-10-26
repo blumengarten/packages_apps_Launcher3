@@ -301,7 +301,7 @@ public class BubbleView extends ConstraintLayout {
 
     void updateDotVisibility(boolean animate) {
         if (mDotSuppressedForBubbleUpdate) {
-            // if the dot is suppressed for
+            // if the dot is suppressed for an update, there's nothing to do
             return;
         }
         final float targetScale = hasUnseenContent() ? 1f : 0f;

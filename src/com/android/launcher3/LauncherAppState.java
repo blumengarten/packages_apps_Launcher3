@@ -163,8 +163,7 @@ public class LauncherAppState implements SafeCloseable {
 
         LockedUserState.get(context).runOnUserUnlocked(() -> {
             CustomWidgetManager cwm = CustomWidgetManager.INSTANCE.get(mContext);
-            cwm.setWidgetRefreshCallback(mModel::refreshAndBindWidgetsAndShortcuts);
-            mOnTerminateCallback.add(() -> cwm.setWidgetRefreshCallback(null));
+            mOnTerminateCallback.add(cwm.addWidgetRefreshCallback(mModel::rebindCallbacks)::close);
 
             IconObserver observer = new IconObserver();
             SafeCloseable iconChangeTracker = mIconProvider.registerIconChangeListener(

@@ -74,7 +74,6 @@ class TasksRepositoryTest {
     fun getAllTaskDataReturnsFlattenedListOfTasks() =
         testScope.runTest {
             recentsModel.seedTasks(defaultTaskList)
-
             assertThat(systemUnderTest.getAllTaskData(forceRefresh = true).first()).isEqualTo(tasks)
         }
 
@@ -95,7 +94,7 @@ class TasksRepositoryTest {
             val bitmap2 = taskThumbnailDataSource.taskIdToBitmap[2]
             systemUnderTest.getAllTaskData(forceRefresh = true)
 
-            systemUnderTest.setVisibleTasks(listOf(1, 2))
+            systemUnderTest.setVisibleTasks(setOf(1, 2))
 
             assertThat(systemUnderTest.getTaskDataById(1).first()!!.thumbnail!!.thumbnail)
                 .isEqualTo(bitmap1)
@@ -109,7 +108,7 @@ class TasksRepositoryTest {
             recentsModel.seedTasks(defaultTaskList)
             systemUnderTest.getAllTaskData(forceRefresh = true)
 
-            systemUnderTest.setVisibleTasks(listOf(1, 2))
+            systemUnderTest.setVisibleTasks(setOf(1, 2))
 
             systemUnderTest
                 .getTaskDataById(1)
@@ -128,14 +127,14 @@ class TasksRepositoryTest {
             val bitmap2 = taskThumbnailDataSource.taskIdToBitmap[2]
             systemUnderTest.getAllTaskData(forceRefresh = true)
 
-            systemUnderTest.setVisibleTasks(listOf(1, 2))
+            systemUnderTest.setVisibleTasks(setOf(1, 2))
 
             assertThat(systemUnderTest.getTaskDataById(2).first()!!.thumbnail!!.thumbnail)
                 .isEqualTo(bitmap2)
 
             // Prevent new loading of Bitmaps
             taskThumbnailDataSource.shouldLoadSynchronously = false
-            systemUnderTest.setVisibleTasks(listOf(2, 3))
+            systemUnderTest.setVisibleTasks(setOf(2, 3))
 
             assertThat(systemUnderTest.getTaskDataById(2).first()!!.thumbnail!!.thumbnail)
                 .isEqualTo(bitmap2)
@@ -147,7 +146,7 @@ class TasksRepositoryTest {
             recentsModel.seedTasks(defaultTaskList)
             systemUnderTest.getAllTaskData(forceRefresh = true)
 
-            systemUnderTest.setVisibleTasks(listOf(1, 2))
+            systemUnderTest.setVisibleTasks(setOf(1, 2))
 
             systemUnderTest
                 .getTaskDataById(2)
@@ -156,7 +155,7 @@ class TasksRepositoryTest {
 
             // Prevent new loading of Drawables
             taskThumbnailDataSource.shouldLoadSynchronously = false
-            systemUnderTest.setVisibleTasks(listOf(2, 3))
+            systemUnderTest.setVisibleTasks(setOf(2, 3))
 
             systemUnderTest
                 .getTaskDataById(2)
@@ -171,7 +170,7 @@ class TasksRepositoryTest {
             val bitmap2 = taskThumbnailDataSource.taskIdToBitmap[2]
             systemUnderTest.getAllTaskData(forceRefresh = true)
 
-            systemUnderTest.setVisibleTasks(listOf(1, 2))
+            systemUnderTest.setVisibleTasks(setOf(1, 2))
 
             val task2 = systemUnderTest.getTaskDataById(2).first()!!
             assertThat(task2.thumbnail!!.thumbnail).isEqualTo(bitmap2)
@@ -180,7 +179,7 @@ class TasksRepositoryTest {
             // Prevent new loading of Bitmaps
             taskThumbnailDataSource.shouldLoadSynchronously = false
             taskIconDataSource.shouldLoadSynchronously = false
-            systemUnderTest.setVisibleTasks(listOf(0, 1))
+            systemUnderTest.setVisibleTasks(setOf(0, 1))
 
             val task2AfterVisibleTasksChanged = systemUnderTest.getTaskDataById(2).first()!!
             assertThat(task2AfterVisibleTasksChanged.thumbnail).isNull()
@@ -199,7 +198,7 @@ class TasksRepositoryTest {
 
             // Setup TasksRepository
             systemUnderTest.getAllTaskData(forceRefresh = true)
-            systemUnderTest.setVisibleTasks(listOf(1, 2))
+            systemUnderTest.setVisibleTasks(setOf(1, 2))
 
             // Assert there is no bitmap in first emission
             assertThat(systemUnderTest.getTaskDataById(2).first()!!.thumbnail).isNull()
@@ -217,8 +216,7 @@ class TasksRepositoryTest {
         testScope.runTest {
             recentsModel.seedTasks(defaultTaskList)
             systemUnderTest.getAllTaskData(forceRefresh = true)
-
-            systemUnderTest.setVisibleTasks(listOf(1))
+            systemUnderTest.setVisibleTasks(setOf(1))
 
             val expectedThumbnailData = createThumbnailData()
             val expectedPreviousBitmap = taskThumbnailDataSource.taskIdToBitmap[1]
@@ -230,7 +228,7 @@ class TasksRepositoryTest {
             }
             taskVisualsChangedDelegate.onTaskThumbnailChanged(1, expectedThumbnailData)
 
-            assertThat(task1ThumbnailValues[1]!!.thumbnail).isEqualTo(expectedPreviousBitmap)
+            assertThat(task1ThumbnailValues.first()!!.thumbnail).isEqualTo(expectedPreviousBitmap)
             assertThat(task1ThumbnailValues.last()).isEqualTo(expectedThumbnailData)
         }
 
@@ -240,7 +238,7 @@ class TasksRepositoryTest {
             recentsModel.seedTasks(defaultTaskList)
             systemUnderTest.getAllTaskData(forceRefresh = true)
 
-            systemUnderTest.setVisibleTasks(listOf(1))
+            systemUnderTest.setVisibleTasks(setOf(1))
 
             val expectedBitmap = mock<Bitmap>()
             val expectedPreviousBitmap = taskThumbnailDataSource.taskIdToBitmap[1]
@@ -250,10 +248,11 @@ class TasksRepositoryTest {
             testScope.backgroundScope.launch {
                 taskDataFlow.map { it?.thumbnail?.thumbnail }.toList(task1ThumbnailValues)
             }
+
             taskThumbnailDataSource.taskIdToBitmap[1] = expectedBitmap
             taskVisualsChangedDelegate.onHighResLoadingStateChanged(true)
 
-            assertThat(task1ThumbnailValues[1]).isEqualTo(expectedPreviousBitmap)
+            assertThat(task1ThumbnailValues.first()).isEqualTo(expectedPreviousBitmap)
             assertThat(task1ThumbnailValues.last()).isEqualTo(expectedBitmap)
         }
 
@@ -263,7 +262,7 @@ class TasksRepositoryTest {
             recentsModel.seedTasks(defaultTaskList)
             systemUnderTest.getAllTaskData(forceRefresh = true)
 
-            systemUnderTest.setVisibleTasks(listOf(1))
+            systemUnderTest.setVisibleTasks(setOf(1))
 
             val expectedIcon = FakeTaskIconDataSource.mockCopyableDrawable()
             val expectedPreviousIcon = taskIconDataSource.taskIdToDrawable[1]
@@ -276,8 +275,32 @@ class TasksRepositoryTest {
             taskIconDataSource.taskIdToDrawable[1] = expectedIcon
             taskVisualsChangedDelegate.onTaskIconChanged(1)
 
-            assertThat(task1IconValues[1]).isEqualTo(expectedPreviousIcon)
+            assertThat(task1IconValues.first()).isEqualTo(expectedPreviousIcon)
             assertThat(task1IconValues.last()).isEqualTo(expectedIcon)
+        }
+
+    @Test
+    fun setVisibleTasks_multipleTimesWithDifferentTasks_reusesThumbnailRequests() =
+        testScope.runTest {
+            recentsModel.seedTasks(defaultTaskList)
+            systemUnderTest.getAllTaskData(forceRefresh = true)
+            taskThumbnailDataSource.shouldLoadSynchronously = false
+
+            val taskDataFlow = systemUnderTest.getTaskDataById(1)
+            val task1IconValues = mutableListOf<Drawable?>()
+            testScope.backgroundScope.launch {
+                taskDataFlow.map { it?.icon }.toList(task1IconValues)
+            }
+
+            systemUnderTest.setVisibleTasks(setOf(1))
+            val task1UpdatingTaskOld = taskThumbnailDataSource.taskIdToUpdatingTask[1]
+            println(task1UpdatingTaskOld)
+
+            systemUnderTest.setVisibleTasks(setOf(1, 2))
+            val task1UpdatingTaskNew = taskThumbnailDataSource.taskIdToUpdatingTask[1]
+            println(task1UpdatingTaskNew)
+
+            assertThat(task1UpdatingTaskNew).isEqualTo(task1UpdatingTaskOld)
         }
 
     private fun createTaskWithId(taskId: Int) =

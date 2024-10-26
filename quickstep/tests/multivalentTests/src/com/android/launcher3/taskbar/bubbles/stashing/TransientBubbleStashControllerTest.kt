@@ -60,6 +60,7 @@ class TransientBubbleStashControllerTest {
 
     companion object {
         const val TASKBAR_BOTTOM_SPACE = 5
+        const val HOTSEAT_VERTICAL_CENTER = 95
         const val BUBBLE_BAR_WIDTH = 200
         const val BUBBLE_BAR_HEIGHT = 100
         const val HOTSEAT_TRANSLATION_Y = -45f
@@ -108,6 +109,7 @@ class TransientBubbleStashControllerTest {
         setUpStashedHandleView()
         setUpBubbleStashedHandleViewController()
         PhysicsAnimatorTestUtils.prepareForTest()
+        mTransientBubbleStashController.setHotseatVerticalCenter(HOTSEAT_VERTICAL_CENTER)
         mTransientBubbleStashController.init(
             taskbarInsetsController,
             bubbleBarViewController,

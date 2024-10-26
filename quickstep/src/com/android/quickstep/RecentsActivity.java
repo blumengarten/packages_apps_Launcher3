@@ -71,7 +71,7 @@ import com.android.launcher3.statemanager.StatefulActivity;
 import com.android.launcher3.taskbar.FallbackTaskbarUIController;
 import com.android.launcher3.taskbar.TaskbarManager;
 import com.android.launcher3.util.ActivityOptionsWrapper;
-import com.android.launcher3.util.ActivityTracker;
+import com.android.launcher3.util.ContextTracker;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.SystemUiController;
 import com.android.launcher3.util.Themes;
@@ -102,8 +102,8 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
         RecentsViewContainer {
     private static final String TAG = "RecentsActivity";
 
-    public static final ActivityTracker<RecentsActivity> ACTIVITY_TRACKER =
-            new ActivityTracker<>();
+    public static final ContextTracker.ActivityTracker<RecentsActivity> ACTIVITY_TRACKER =
+            new ContextTracker.ActivityTracker<>();
 
     private Handler mUiHandler = new Handler(Looper.getMainLooper());
 
@@ -196,6 +196,7 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
 
     @Override
     public void onHandleConfigurationChanged() {
+        Trace.instant(Trace.TRACE_TAG_APP, "recentsActivity_onHandleConfigurationChanged");
         initDeviceProfile();
 
         AbstractFloatingView.closeOpenViews(this, true,
@@ -421,7 +422,7 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        ACTIVITY_TRACKER.onActivityDestroyed(this);
+        ACTIVITY_TRACKER.onContextDestroyed(this);
         mActivityLaunchAnimationRunner = null;
         mSplitSelectStateController.onDestroy();
         mTISBindHelper.onDestroy();

@@ -55,7 +55,7 @@ import com.android.launcher3.statemanager.BaseState;
 import com.android.launcher3.statemanager.StatefulContainer;
 import com.android.launcher3.util.SystemUiController;
 import com.android.quickstep.fallback.window.RecentsWindowManager;
-import com.android.quickstep.util.ActivityInitListener;
+import com.android.quickstep.util.ContextInitListener;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
 import com.android.systemui.shared.system.InputConsumerController;
@@ -116,7 +116,7 @@ public abstract class AbsSwipeUpHandlerTestCase<
     protected TaskAnimationManager mTaskAnimationManager;
 
     @Mock protected CONTAINER_INTERFACE mActivityInterface;
-    @Mock protected ActivityInitListener<?> mActivityInitListener;
+    @Mock protected ContextInitListener<?> mContextInitListener;
     @Mock protected RecentsAnimationController mRecentsAnimationController;
     @Mock protected STATE_TYPE mState;
     @Mock protected ViewTreeObserver mViewTreeObserver;
@@ -168,7 +168,7 @@ public abstract class AbsSwipeUpHandlerTestCase<
         when(recentsContainer.getRootView()).thenReturn(mRootView);
         when(recentsContainer.getSystemUiController()).thenReturn(mSystemUiController);
         when(mActivityInterface.createActivityInitListener(any()))
-                .thenReturn(mActivityInitListener);
+                .thenReturn(mContextInitListener);
         doReturn(recentsContainer).when(mActivityInterface).getCreatedContainer();
         doAnswer(answer -> {
             answer.<Runnable>getArgument(0).run();
@@ -181,7 +181,7 @@ public abstract class AbsSwipeUpHandlerTestCase<
         String reasonString = "because i said so";
 
         createSwipeHandler().initWhenReady(reasonString);
-        verify(mActivityInitListener).register(eq(reasonString));
+        verify(mContextInitListener).register(eq(reasonString));
     }
 
     @Test
@@ -189,7 +189,7 @@ public abstract class AbsSwipeUpHandlerTestCase<
         createSwipeHandler()
                 .onRecentsAnimationCanceled(new HashMap<>());
 
-        runOnMainSync(() -> verify(mActivityInitListener)
+        runOnMainSync(() -> verify(mContextInitListener)
                 .unregister(eq("AbsSwipeUpHandler.onRecentsAnimationCanceled")));
     }
 
@@ -197,7 +197,7 @@ public abstract class AbsSwipeUpHandlerTestCase<
     public void testOnConsumerAboutToBeSwitched_unregistersActivityInitListener() {
         createSwipeHandler().onConsumerAboutToBeSwitched();
 
-        runOnMainSync(() -> verify(mActivityInitListener)
+        runOnMainSync(() -> verify(mContextInitListener)
                 .unregister("AbsSwipeUpHandler.invalidateHandler"));
     }
 
@@ -206,7 +206,7 @@ public abstract class AbsSwipeUpHandlerTestCase<
         createSwipeUpHandlerForGesture(GestureState.GestureEndTarget.NEW_TASK)
                 .onConsumerAboutToBeSwitched();
 
-        runOnMainSync(() -> verify(mActivityInitListener)
+        runOnMainSync(() -> verify(mContextInitListener)
                 .unregister(eq("AbsSwipeUpHandler.cancelCurrentAnimation")));
     }
 

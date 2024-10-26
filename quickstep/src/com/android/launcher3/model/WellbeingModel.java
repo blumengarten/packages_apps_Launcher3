@@ -51,7 +51,6 @@ import com.android.launcher3.popup.RemoteActionShortcut;
 import com.android.launcher3.popup.SystemShortcut;
 import com.android.launcher3.util.DaggerSingletonObject;
 import com.android.launcher3.util.DaggerSingletonTracker;
-import com.android.launcher3.util.ExecutorUtil;
 import com.android.launcher3.util.Executors;
 import com.android.launcher3.util.Preconditions;
 import com.android.launcher3.util.SafeCloseable;
@@ -122,7 +121,7 @@ public final class WellbeingModel implements SafeCloseable {
             }
         };
         mWorkerHandler.post(this::initializeInBackground);
-        ExecutorUtil.executeSyncOnMainOrFail(() -> tracker.addCloseable(this));
+        tracker.addCloseable(this);
     }
 
     @WorkerThread

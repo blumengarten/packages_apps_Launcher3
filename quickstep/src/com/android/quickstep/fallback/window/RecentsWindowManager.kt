@@ -39,6 +39,7 @@ import com.android.launcher3.statehandlers.DesktopVisibilityController
 import com.android.launcher3.statemanager.StateManager
 import com.android.launcher3.statemanager.StateManager.AtomicAnimationFactory
 import com.android.launcher3.statemanager.StatefulContainer
+import com.android.launcher3.util.ContextTracker
 import com.android.launcher3.util.DisplayController
 import com.android.launcher3.util.RunnableList
 import com.android.launcher3.util.SystemUiController
@@ -89,6 +90,14 @@ class RecentsWindowManager(context: Context) :
     companion object {
         private const val HOME_APPEAR_DURATION: Long = 250
         private const val TAG = "RecentsWindowManager"
+
+        class RecentsWindowTracker : ContextTracker<RecentsWindowManager?>() {
+            override fun isHomeStarted(context: RecentsWindowManager?): Boolean {
+                return true
+            }
+        }
+
+        @JvmStatic val recentsWindowTracker = RecentsWindowTracker()
     }
 
     protected var recentsView: FallbackRecentsView<RecentsWindowManager>? = null
@@ -147,6 +156,7 @@ class RecentsWindowManager(context: Context) :
         FallbackWindowInterface.getInstance()?.destroy()
         TaskStackChangeListeners.getInstance().unregisterTaskStackListener(taskStackChangeListener)
         callbacks?.removeListener(recentsAnimationListener)
+        recentsWindowTracker.onContextDestroyed(this)
     }
 
     override fun startHome() {
@@ -254,7 +264,7 @@ class RecentsWindowManager(context: Context) :
         actionsView?.updateVerticalMargin(DisplayController.getNavigationMode(this))
 
         mSystemUiController = SystemUiController(windowView)
-        onInitListener?.test(true)
+        recentsWindowTracker.handleCreate(this)
 
         this.callbacks = callbacks
         callbacks?.addListener(recentsAnimationListener)

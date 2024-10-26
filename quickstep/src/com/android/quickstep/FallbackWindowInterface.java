@@ -37,8 +37,8 @@ import com.android.quickstep.GestureState.GestureEndTarget;
 import com.android.quickstep.fallback.RecentsState;
 import com.android.quickstep.fallback.window.RecentsWindowManager;
 import com.android.quickstep.orientation.RecentsPagedOrientationHandler;
-import com.android.quickstep.util.ActivityInitListener;
 import com.android.quickstep.util.AnimatorControllerWithResistance;
+import com.android.quickstep.util.ContextInitListener;
 import com.android.quickstep.views.RecentsView;
 
 import java.util.function.Consumer;
@@ -111,11 +111,11 @@ public final class FallbackWindowInterface extends BaseWindowInterface{
     }
 
     @Override
-    public ActivityInitListener createActivityInitListener(
+    public ContextInitListener<RecentsWindowManager> createActivityInitListener(
             Predicate<Boolean> onInitListener) {
-        //todo figure out how to properly replace this
-        return new ActivityInitListener<>((activity, alreadyOnHome) ->
-                onInitListener.test(alreadyOnHome), RecentsActivity.ACTIVITY_TRACKER);
+        return new ContextInitListener<>(
+                (activity, alreadyOnHome) -> onInitListener.test(alreadyOnHome),
+                RecentsWindowManager.getRecentsWindowTracker());
     }
 
     @Nullable

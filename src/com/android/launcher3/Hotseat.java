@@ -186,9 +186,6 @@ public class Hotseat extends CellLayout implements Insettable {
      */
     public void adjustForBubbleBar(boolean isBubbleBarVisible) {
         DeviceProfile dp = mActivity.getDeviceProfile();
-        if (!dp.shouldAdjustHotseatForBubbleBar(getContext(), isBubbleBarVisible)) {
-            return;
-        }
 
         ShortcutAndWidgetContainer icons = getShortcutsAndWidgets();
         AnimatorSet animatorSet = new AnimatorSet();

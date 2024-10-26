@@ -34,11 +34,8 @@ import androidx.annotation.WorkerThread;
 
 import com.android.launcher3.dagger.ApplicationContext;
 import com.android.launcher3.dagger.LauncherAppSingleton;
-import com.android.launcher3.dagger.LauncherBaseAppComponent;
 import com.android.launcher3.util.DaggerSingletonObject;
 import com.android.launcher3.util.DaggerSingletonTracker;
-import com.android.launcher3.util.ExecutorUtil;
-import com.android.launcher3.util.MainThreadInitializedObject;
 import com.android.launcher3.util.SafeCloseable;
 import com.android.launcher3.util.SettingsCache;
 import com.android.launcher3.util.SettingsCache.OnChangeListener;
@@ -61,6 +58,7 @@ public class AsyncClockEventDelegate extends ClockEventDelegate
             new DaggerSingletonObject<>(QuickstepBaseAppComponent::getAsyncClockEventDelegate);
 
     private final Context mContext;
+    private final SettingsCache mSettingsCache;
     private final SimpleBroadcastReceiver mReceiver =
             new SimpleBroadcastReceiver(UI_HELPER_EXECUTOR, this::onClockEventReceived);
 
@@ -72,11 +70,14 @@ public class AsyncClockEventDelegate extends ClockEventDelegate
     private boolean mDestroyed = false;
 
     @Inject
-    AsyncClockEventDelegate(@ApplicationContext Context context, DaggerSingletonTracker tracker) {
+    AsyncClockEventDelegate(@ApplicationContext Context context,
+            DaggerSingletonTracker tracker,
+            SettingsCache settingsCache) {
         super(context);
         mContext = context;
+        mSettingsCache = settingsCache;
         mReceiver.register(mContext, ACTION_TIME_CHANGED, ACTION_TIMEZONE_CHANGED);
-        ExecutorUtil.executeSyncOnMainOrFail(() -> tracker.addCloseable(this));
+        tracker.addCloseable(this);
     }
 
     @Override
@@ -100,7 +101,7 @@ public class AsyncClockEventDelegate extends ClockEventDelegate
         }
         synchronized (mFormatObservers) {
             if (!mFormatRegistered && !mDestroyed) {
-                SettingsCache.INSTANCE.get(mContext).register(mFormatUri, this);
+                mSettingsCache.register(mFormatUri, this);
                 mFormatRegistered = true;
             }
             mFormatObservers.add(observer);
@@ -136,7 +137,7 @@ public class AsyncClockEventDelegate extends ClockEventDelegate
     @Override
     public void close() {
         mDestroyed = true;
-        SettingsCache.INSTANCE.get(mContext).unregister(mFormatUri, this);
+        mSettingsCache.unregister(mFormatUri, this);
         mReceiver.unregisterReceiverSafely(mContext);
     }
 }

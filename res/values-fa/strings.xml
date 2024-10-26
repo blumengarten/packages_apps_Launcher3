@@ -102,7 +102,7 @@
     <string name="permdesc_write_settings" msgid="726859348127868466">"به برنامه اجازه می‌دهد تنظیمات و میان‌برهای صفحه اصلی را تغییر دهد."</string>
     <string name="gadget_error_text" msgid="740356548025791839">"ابزاره را نمی‌توان بار کرد"</string>
     <string name="gadget_setup_text" msgid="8348374825537681407">"تنظیمات ابزاره"</string>
-    <string name="gadget_complete_setup_text" msgid="309040266978007925">"برای تکمیل راه‌اندازی تک‌ضرب بزنید"</string>
+    <string name="gadget_complete_setup_text" msgid="309040266978007925">"برای تمام کردن راه‌اندازی تک‌ضرب بزنید"</string>
     <string name="uninstall_system_app_text" msgid="4172046090762920660">"این برنامه سیستمی است و حذف نصب نمی‌شود."</string>
     <string name="folder_hint_text" msgid="5174843001373488816">"ویرایش نام"</string>
     <string name="disabled_app_label" msgid="6673129024321402780">"<xliff:g id="APP_NAME">%1$s</xliff:g> غیرفعال شد"</string>

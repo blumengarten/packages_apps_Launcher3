@@ -142,7 +142,7 @@ public class FallbackRecentsTest {
         };
 
         final ViewCaptureRule viewCaptureRule = new ViewCaptureRule(
-                RecentsActivity.ACTIVITY_TRACKER::getCreatedActivity);
+                RecentsActivity.ACTIVITY_TRACKER::getCreatedContext);
         mOrderSensitiveRules = RuleChain
                 .outerRule(new SamplerRule())
                 .around(new TestStabilityRule())
@@ -208,7 +208,7 @@ public class FallbackRecentsTest {
         if (!TestHelpers.isInLauncherProcess()) return null;
         Object[] result = new Object[1];
         Wait.atMost("Failed to get from recents", () -> MAIN_EXECUTOR.submit(() -> {
-            RecentsActivity activity = RecentsActivity.ACTIVITY_TRACKER.getCreatedActivity();
+            RecentsActivity activity = RecentsActivity.ACTIVITY_TRACKER.getCreatedContext();
             if (activity == null) {
                 return false;
             }
@@ -231,7 +231,7 @@ public class FallbackRecentsTest {
     private void waitForRecentsActivityStop() {
         try {
             final boolean recentsActivityIsNull = MAIN_EXECUTOR.submit(
-                    () -> RecentsActivity.ACTIVITY_TRACKER.getCreatedActivity() == null).get();
+                    () -> RecentsActivity.ACTIVITY_TRACKER.getCreatedContext() == null).get();
             if (recentsActivityIsNull) {
                 // Null activity counts as a "stopped" one.
                 return;

@@ -68,7 +68,7 @@ public class ScreenOnTracker implements SafeCloseable {
     private void init(DaggerSingletonTracker tracker) {
         mIsScreenOn = true;
         mReceiver.register(mContext, ACTION_SCREEN_ON, ACTION_SCREEN_OFF, ACTION_USER_PRESENT);
-        ExecutorUtil.executeSyncOnMainOrFail(() -> tracker.addCloseable(this));
+        tracker.addCloseable(this);
     }
 
     @Override

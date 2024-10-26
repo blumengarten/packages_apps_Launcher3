@@ -25,7 +25,6 @@ import android.graphics.drawable.shapes.RoundRectShape
 import android.util.AttributeSet
 import android.util.Log
 import android.view.Gravity
-import android.view.LayoutInflater
 import android.view.View
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.updateLayoutParams
@@ -40,6 +39,7 @@ import com.android.launcher3.util.ViewPool
 import com.android.launcher3.util.rects.set
 import com.android.quickstep.BaseContainerInterface
 import com.android.quickstep.TaskOverlayFactory
+import com.android.quickstep.task.thumbnail.TaskThumbnailView
 import com.android.quickstep.util.RecentsOrientedState
 import com.android.systemui.shared.recents.model.Task
 
@@ -53,14 +53,29 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
             override fun computeTaskCornerRadius(context: Context) =
                 computeWindowCornerRadius(context)
         }
+
     private val taskThumbnailViewDeprecatedPool =
-        ViewPool<TaskThumbnailViewDeprecated>(
-            context,
-            this,
-            R.layout.task_thumbnail_deprecated,
-            VIEW_POOL_MAX_SIZE,
-            VIEW_POOL_INITIAL_SIZE,
-        )
+        if (!enableRefactorTaskThumbnail()) {
+            ViewPool<TaskThumbnailViewDeprecated>(
+                context,
+                this,
+                R.layout.task_thumbnail_deprecated,
+                VIEW_POOL_MAX_SIZE,
+                VIEW_POOL_INITIAL_SIZE,
+            )
+        } else null
+
+    private val taskThumbnailViewPool =
+        if (enableRefactorTaskThumbnail()) {
+            ViewPool<TaskThumbnailView>(
+                context,
+                this,
+                R.layout.task_thumbnail,
+                VIEW_POOL_MAX_SIZE,
+                VIEW_POOL_INITIAL_SIZE,
+            )
+        } else null
+
     private val tempPointF = PointF()
     private val tempRect = Rect()
     private lateinit var backgroundView: View
@@ -117,9 +132,9 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
             tasks.map { task ->
                 val snapshotView =
                     if (enableRefactorTaskThumbnail()) {
-                        LayoutInflater.from(context).inflate(R.layout.task_thumbnail, this, false)
+                        taskThumbnailViewPool!!.view
                     } else {
-                        taskThumbnailViewDeprecatedPool.view
+                        taskThumbnailViewDeprecatedPool!!.view
                     }
 
                 addView(
@@ -148,9 +163,11 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         super.onRecycle()
         visibility = VISIBLE
         taskContainers.forEach {
-            if (!enableRefactorTaskThumbnail()) {
-                removeView(it.thumbnailViewDeprecated)
-                taskThumbnailViewDeprecatedPool.recycle(it.thumbnailViewDeprecated)
+            removeView(it.snapshotView)
+            if (enableRefactorTaskThumbnail()) {
+                taskThumbnailViewPool!!.recycle(it.thumbnailView)
+            } else {
+                taskThumbnailViewDeprecatedPool!!.recycle(it.thumbnailViewDeprecated)
             }
         }
     }
@@ -299,7 +316,7 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
     companion object {
         private const val TAG = "DesktopTaskView"
         private const val DEBUG = false
-        private const val VIEW_POOL_MAX_SIZE = 10
+        private const val VIEW_POOL_MAX_SIZE = 5
 
         // As DesktopTaskView is inflated in background, use initialSize=0 to avoid initPool.
         private const val VIEW_POOL_INITIAL_SIZE = 0

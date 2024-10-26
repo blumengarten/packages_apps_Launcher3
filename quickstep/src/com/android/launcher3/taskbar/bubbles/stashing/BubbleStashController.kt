@@ -42,12 +42,6 @@ interface BubbleStashController {
 
         /** Provides taskbar height in pixels. */
         fun getTaskbarHeight(): Int
-
-        /** Provides hotseat bottom space in pixels. */
-        fun getHotseatBottomSpace(): Int
-
-        /** Provides hotseat height in pixels. */
-        fun getHotseatHeight(): Int
     }
 
     /** Execute passed action only after controllers are initiated. */
@@ -94,7 +88,7 @@ interface BubbleStashController {
         taskbarInsetsController: TaskbarInsetsController,
         bubbleBarViewController: BubbleBarViewController,
         bubbleStashedHandleViewController: BubbleStashedHandleViewController?,
-        controllersAfterInitAction: ControllersAfterInitAction
+        controllersAfterInitAction: ControllersAfterInitAction,
     )
 
     /** Shows the bubble bar at [bubbleBarTranslationY] position immediately without animation. */
@@ -126,6 +120,9 @@ interface BubbleStashController {
 
     /** Set a bubble bar location */
     fun setBubbleBarLocation(bubbleBarLocation: BubbleBarLocation)
+
+    /** Set the hotseat vertical center that bubble bar will align with. */
+    fun setHotseatVerticalCenter(hotseatVerticalCenter: Int)
 
     /**
      * Stashes the bubble bar (transform to the handle view), or just shrink width of the expanded

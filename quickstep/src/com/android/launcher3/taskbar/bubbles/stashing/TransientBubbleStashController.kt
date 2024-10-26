@@ -78,6 +78,7 @@ class TransientBubbleStashController(
         context.resources.getDimensionPixelSize(R.dimen.bubblebar_stashed_size) / 2f
 
     private var animator: AnimatorSet? = null
+    private var hotseatVerticalCenter: Int = 0
 
     override var isStashed: Boolean = false
         @VisibleForTesting set
@@ -118,10 +119,8 @@ class TransientBubbleStashController(
 
     override val bubbleBarTranslationYForHotseat: Float
         get() {
-            val hotseatBottomSpace = taskbarHotseatDimensionsProvider.getHotseatBottomSpace()
-            val hotseatCellHeight = taskbarHotseatDimensionsProvider.getHotseatHeight()
-            val bubbleBarHeight: Float = bubbleBarViewController.bubbleBarCollapsedHeight
-            return -hotseatBottomSpace - (hotseatCellHeight - bubbleBarHeight) / 2
+            val bubbleBarHeight = bubbleBarViewController.bubbleBarCollapsedHeight
+            return -hotseatVerticalCenter + bubbleBarHeight / 2
         }
 
     override val bubbleBarTranslationYForTaskbar: Float =
@@ -174,6 +173,10 @@ class TransientBubbleStashController(
             .updateTouchRegionOnAnimationEnd()
             .setDuration(BAR_STASH_DURATION)
             .start()
+    }
+
+    override fun setHotseatVerticalCenter(hotseatVerticalCenter: Int) {
+        this.hotseatVerticalCenter = hotseatVerticalCenter
     }
 
     override fun showBubbleBarImmediate() {

@@ -246,12 +246,12 @@ public class TestInformationHandler implements ResourceBasedOverride {
 
             case TestProtocol.REQUEST_GET_SPLIT_SELECTION_ACTIVE:
                 response.putBoolean(TEST_INFO_RESPONSE_FIELD, enableSplitContextually()
-                        && Launcher.ACTIVITY_TRACKER.getCreatedActivity().isSplitSelectionActive());
+                        && Launcher.ACTIVITY_TRACKER.getCreatedContext().isSplitSelectionActive());
                 return response;
 
             case TestProtocol.REQUEST_ENABLE_ROTATION:
                 MAIN_EXECUTOR.submit(() ->
-                        Launcher.ACTIVITY_TRACKER.getCreatedActivity().getRotationHelper()
+                        Launcher.ACTIVITY_TRACKER.getCreatedContext().getRotationHelper()
                                 .forceAllowRotationForTesting(Boolean.parseBoolean(arg)));
                 return response;
 
@@ -475,12 +475,12 @@ public class TestInformationHandler implements ResourceBasedOverride {
     }
 
     protected boolean isLauncherInitialized() {
-        return Launcher.ACTIVITY_TRACKER.getCreatedActivity() == null
+        return Launcher.ACTIVITY_TRACKER.getCreatedContext() == null
                 || LauncherAppState.getInstance(mContext).getModel().isModelLoaded();
     }
 
     protected WindowInsets getWindowInsets(){
-        return Launcher.ACTIVITY_TRACKER.getCreatedActivity().getWindow().getDecorView()
+        return Launcher.ACTIVITY_TRACKER.getCreatedContext().getWindow().getDecorView()
                 .getRootWindowInsets();
     }
 
@@ -489,7 +489,7 @@ public class TestInformationHandler implements ResourceBasedOverride {
      */
     public static <T> Bundle getLauncherUIProperty(
             BundleSetter<T> bundleSetter, Function<Launcher, T> provider) {
-        return getUIProperty(bundleSetter, provider, Launcher.ACTIVITY_TRACKER::getCreatedActivity);
+        return getUIProperty(bundleSetter, provider, Launcher.ACTIVITY_TRACKER::getCreatedContext);
     }
 
     /**

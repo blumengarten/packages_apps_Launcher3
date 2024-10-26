@@ -34,6 +34,7 @@ import android.content.res.XmlResourceParser;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.os.Trace;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -497,7 +498,11 @@ public class InvariantDeviceProfile implements SafeCloseable {
 
     public void setCurrentGrid(Context context, String gridName) {
         LauncherPrefs.get(context).put(GRID_NAME, gridName);
-        MAIN_EXECUTOR.execute(() -> onConfigChanged(context.getApplicationContext()));
+        MAIN_EXECUTOR.execute(() -> {
+            Trace.beginSection("InvariantDeviceProfile#setCurrentGrid");
+            onConfigChanged(context.getApplicationContext());
+            Trace.endSection();
+        });
     }
 
     private Object[] toModelState() {

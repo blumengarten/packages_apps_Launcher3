@@ -100,7 +100,6 @@ import com.android.internal.jank.Cuj;
 import com.android.internal.util.LatencyTracker;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.DeviceProfile;
-import com.android.launcher3.Flags;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.anim.AnimationSuccessListener;
@@ -125,8 +124,8 @@ import com.android.quickstep.fallback.window.RecentsWindowManager;
 import com.android.quickstep.util.ActiveGestureErrorDetector;
 import com.android.quickstep.util.ActiveGestureLog;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
-import com.android.quickstep.util.ActivityInitListener;
 import com.android.quickstep.util.AnimatorControllerWithResistance;
+import com.android.quickstep.util.ContextInitListener;
 import com.android.quickstep.util.InputConsumerProxy;
 import com.android.quickstep.util.InputProxyHandlerFactory;
 import com.android.quickstep.util.MotionPauseDetector;
@@ -156,8 +155,6 @@ import com.android.wm.shell.shared.TransactionPool;
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 import com.android.wm.shell.shared.startingsurface.SplashScreenExitAnimationUtils;
 
-import kotlin.Unit;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -166,6 +163,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Consumer;
+
+import kotlin.Unit;
 
 /**
  * Handles the navigation gestures when Launcher is the default home activity.
@@ -184,7 +183,7 @@ public abstract class AbsSwipeUpHandler<
 
     protected final BaseContainerInterface<STATE, RECENTS_CONTAINER> mContainerInterface;
     protected final InputConsumerProxy mInputConsumerProxy;
-    protected final ActivityInitListener mActivityInitListener;
+    protected final ContextInitListener mContextInitListener;
     // Callbacks to be made once the recents animation starts
     private final ArrayList<Runnable> mRecentsAnimationStartCallbacks = new ArrayList<>();
     private final OnScrollChangedListener mOnRecentsScrollListener = this::onRecentsViewScroll;
@@ -357,10 +356,7 @@ public abstract class AbsSwipeUpHandler<
             InputConsumerController inputConsumer, RecentsWindowManager recentsWindowManager) {
         super(context, deviceState, gestureState);
         mContainerInterface = gestureState.getContainerInterface();
-        if (recentsWindowManager != null && Flags.enableFallbackOverviewInWindow()) {
-            recentsWindowManager.registerInitListener(this::onActivityInit);
-        }
-        mActivityInitListener =
+        mContextInitListener =
                 mContainerInterface.createActivityInitListener(this::onActivityInit);
         mInputConsumerProxy =
                 new InputConsumerProxy(context, /* rotationSupplier = */ () -> {
@@ -482,7 +478,7 @@ public abstract class AbsSwipeUpHandler<
                 this::resetStateForAnimationCancel);
     }
 
-    protected boolean onActivityInit(Boolean alreadyOnHome) {
+    protected boolean onActivityInit(Boolean isHomeStarted) {
         if (mStateCallback.hasStates(STATE_HANDLER_INVALIDATED)) {
             return false;
         }
@@ -510,11 +506,11 @@ public abstract class AbsSwipeUpHandler<
             initStateCallbacks();
             mStateCallback.setState(oldState);
         }
-        mWasLauncherAlreadyVisible = alreadyOnHome;
+        mWasLauncherAlreadyVisible = isHomeStarted;
         mContainer = container;
         // Override the visibility of the activity until the gesture actually starts and we swipe
         // up, or until we transition home and the home animation is composed
-        if (alreadyOnHome) {
+        if (isHomeStarted) {
             mContainer.clearForceInvisibleFlag(STATE_HANDLER_INVISIBILITY_FLAGS);
         } else {
             mContainer.addForceInvisibleFlag(STATE_HANDLER_INVISIBILITY_FLAGS);
@@ -524,7 +520,7 @@ public abstract class AbsSwipeUpHandler<
         mRecentsView.setOnPageTransitionEndCallback(null);
 
         mStateCallback.setState(STATE_LAUNCHER_PRESENT);
-        if (alreadyOnHome) {
+        if (isHomeStarted) {
             onLauncherStart();
         } else {
             container.addEventCallback(EVENT_STARTED, mLauncherOnStartCallback);
@@ -985,7 +981,7 @@ public abstract class AbsSwipeUpHandler<
     @Override
     public void onRecentsAnimationCanceled(HashMap<Integer, ThumbnailData> thumbnailDatas) {
         ActiveGestureProtoLogProxy.logAbsSwipeUpHandlerOnRecentsAnimationCanceled();
-        mActivityInitListener.unregister("AbsSwipeUpHandler.onRecentsAnimationCanceled");
+        mContextInitListener.unregister("AbsSwipeUpHandler.onRecentsAnimationCanceled");
         mStateCallback.setStateOnUiThread(STATE_GESTURE_CANCELLED | STATE_HANDLER_INVALIDATED);
         // Defer clearing the controller and the targets until after we've updated the state
         mRecentsAnimationController = null;
@@ -1989,7 +1985,7 @@ public abstract class AbsSwipeUpHandler<
 
         // Cleanup when switching handlers
         mInputConsumerProxy.unregisterOnTouchDownCallback();
-        mActivityInitListener.unregister("AbsSwipeUpHandler.cancelCurrentAnimation");
+        mContextInitListener.unregister("AbsSwipeUpHandler.cancelCurrentAnimation");
         TaskStackChangeListeners.getInstance().unregisterTaskStackListener(
                 mActivityRestartListener);
         mTaskSnapshotCache.clear();
@@ -2007,7 +2003,7 @@ public abstract class AbsSwipeUpHandler<
             mGestureEndCallback.run();
         }
 
-        mActivityInitListener.unregister("AbsSwipeUpHandler.invalidateHandler");
+        mContextInitListener.unregister("AbsSwipeUpHandler.invalidateHandler");
         TaskStackChangeListeners.getInstance().unregisterTaskStackListener(
                 mActivityRestartListener);
         mTaskSnapshotCache.clear();
@@ -2516,7 +2512,7 @@ public abstract class AbsSwipeUpHandler<
         // Preload the plan
         RecentsModel.INSTANCE.get(mContext).getTasks(null);
 
-        mActivityInitListener.register(reasonString);
+        mContextInitListener.register(reasonString);
     }
 
     private boolean shouldFadeOutTargetsForKeyboardQuickSwitch(

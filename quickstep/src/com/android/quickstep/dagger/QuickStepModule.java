@@ -15,7 +15,9 @@
  */
 package com.android.quickstep.dagger;
 
+import com.android.launcher3.uioverrides.SystemApiWrapper;
 import com.android.launcher3.uioverrides.plugins.PluginManagerWrapperImpl;
+import com.android.launcher3.util.ApiWrapper;
 import com.android.launcher3.util.PluginManagerWrapper;
 
 import dagger.Binds;
@@ -25,4 +27,5 @@ import dagger.Module;
 public abstract class QuickStepModule {
 
     @Binds abstract PluginManagerWrapper bindPluginManagerWrapper(PluginManagerWrapperImpl impl);
+    @Binds abstract ApiWrapper bindApiWrapper(SystemApiWrapper systemApiWrapper);
 }

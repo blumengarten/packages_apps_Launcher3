@@ -36,7 +36,7 @@ import com.android.wm.shell.shared.animation.PhysicsAnimator
 import com.android.wm.shell.shared.bubbles.BubbleBarLocation
 
 class PersistentBubbleStashController(
-    private val taskbarHotseatDimensionsProvider: TaskbarHotseatDimensionsProvider,
+    private val taskbarHotseatDimensionsProvider: TaskbarHotseatDimensionsProvider
 ) : BubbleStashController {
 
     private lateinit var taskbarInsetsController: TaskbarInsetsController
@@ -45,6 +45,7 @@ class PersistentBubbleStashController(
     private lateinit var bubbleBarAlphaAnimator: MultiPropertyFactory<View>.MultiProperty
     private lateinit var bubbleBarScaleAnimator: AnimatedFloat
     private lateinit var controllersAfterInitAction: ControllersAfterInitAction
+    private var hotseatVerticalCenter: Int = 0
 
     override var launcherState: BubbleLauncherState = BubbleLauncherState.IN_APP
         set(state) {
@@ -92,17 +93,15 @@ class PersistentBubbleStashController(
 
     override val bubbleBarTranslationYForHotseat: Float
         get() {
-            val hotseatBottomSpace = taskbarHotseatDimensionsProvider.getHotseatBottomSpace()
-            val hotseatCellHeight = taskbarHotseatDimensionsProvider.getHotseatHeight()
-            val bubbleBarHeight: Float = bubbleBarViewController.bubbleBarCollapsedHeight
-            return -hotseatBottomSpace - (hotseatCellHeight - bubbleBarHeight) / 2
+            val bubbleBarHeight = bubbleBarViewController.bubbleBarCollapsedHeight
+            return -hotseatVerticalCenter + bubbleBarHeight / 2
         }
 
     override fun init(
         taskbarInsetsController: TaskbarInsetsController,
         bubbleBarViewController: BubbleBarViewController,
         bubbleStashedHandleViewController: BubbleStashedHandleViewController?,
-        controllersAfterInitAction: ControllersAfterInitAction
+        controllersAfterInitAction: ControllersAfterInitAction,
     ) {
         this.taskbarInsetsController = taskbarInsetsController
         this.bubbleBarViewController = bubbleBarViewController
@@ -119,11 +118,15 @@ class PersistentBubbleStashController(
             animatorSet.playTogether(
                 bubbleBarScaleAnimator.animateToValue(1f),
                 bubbleBarTranslationYAnimator.animateToValue(bubbleBarTranslationY),
-                bubbleBarAlphaAnimator.animateToValue(1f)
+                bubbleBarAlphaAnimator.animateToValue(1f),
             )
         }
         updateTouchRegionOnAnimationEnd(animatorSet)
         animatorSet.setDuration(BAR_STASH_DURATION).start()
+    }
+
+    override fun setHotseatVerticalCenter(hotseatVerticalCenter: Int) {
+        this.hotseatVerticalCenter = hotseatVerticalCenter
     }
 
     override fun showBubbleBarImmediate() = showBubbleBarImmediate(bubbleBarTranslationY)

@@ -121,7 +121,7 @@ public class ItemInstallQueue implements SafeCloseable {
 
     @WorkerThread
     private void flushQueueInBackground() {
-        Launcher launcher = Launcher.ACTIVITY_TRACKER.getCreatedActivity();
+        Launcher launcher = Launcher.ACTIVITY_TRACKER.getCreatedContext();
         if (launcher == null) {
             // Launcher not loaded
             return;

@@ -157,12 +157,13 @@ class TaskContainer(
 
     fun destroy() {
         digitalWellBeingToast?.destroy()
-        if (enableRefactorTaskThumbnail()) {
-            taskView.removeView(thumbnailView)
-        }
         snapshotView.scaleX = 1f
         snapshotView.scaleY = 1f
         overlay.destroy()
+        if (enableRefactorTaskThumbnail()) {
+            RecentsDependencies.getInstance().removeScope(snapshotView)
+            RecentsDependencies.getInstance().removeScope(this)
+        }
     }
 
     fun bindThumbnailView() {

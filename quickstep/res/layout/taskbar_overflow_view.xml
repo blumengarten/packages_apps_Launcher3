@@ -15,8 +15,7 @@
 -->
 
 <!-- Note: The actual size will match the taskbar icon sizes in TaskbarView#onLayout(). -->
-<com.android.launcher3.views.IconButtonView xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/BaseIcon.Workspace.Taskbar"
+<com.android.launcher3.taskbar.TaskbarOverflowView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="@dimen/taskbar_icon_min_touch_size"
     android:layout_height="@dimen/taskbar_icon_min_touch_size"
     android:backgroundTint="@android:color/transparent"

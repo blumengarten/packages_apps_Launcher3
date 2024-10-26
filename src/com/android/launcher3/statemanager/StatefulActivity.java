@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Trace;
 import android.view.LayoutInflater;
 import android.view.View;
 
@@ -176,8 +177,10 @@ public abstract class StatefulActivity<STATE_TYPE extends BaseState<STATE_TYPE>>
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
+        Trace.beginSection("statefulActivity#onConfigurationChanged");
         handleConfigurationChanged(newConfig);
         super.onConfigurationChanged(newConfig);
+        Trace.endSection();
     }
 
     /**

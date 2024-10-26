@@ -134,10 +134,31 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         super.orientAboutObject()
         x =
             if (Flags.showTaskbarPinningPopupFromAnywhere()) {
-                min(
-                    max(minPaddingFromScreenEdge, horizontalPosition - measuredWidth / 2f),
-                    popupContainer.getWidth() - measuredWidth - minPaddingFromScreenEdge,
-                )
+                val xForCenterAlignment = horizontalPosition - measuredWidth / 2f
+                val maxX = popupContainer.getWidth() - measuredWidth - minPaddingFromScreenEdge
+                when {
+                    // Left-aligned popup and its arrow pointing to the event position if there is
+                    // not enough space to center it.
+                    xForCenterAlignment < minPaddingFromScreenEdge ->
+                        max(
+                            minPaddingFromScreenEdge,
+                            horizontalPosition - mArrowOffsetHorizontal - mArrowWidth / 2,
+                        )
+
+                    // Right-aligned popup and its arrow pointing to the event position if there
+                    // is not enough space to center it.
+                    xForCenterAlignment > maxX ->
+                        min(
+                            horizontalPosition - measuredWidth +
+                                mArrowOffsetHorizontal +
+                                mArrowWidth / 2,
+                            popupContainer.getWidth() - measuredWidth - minPaddingFromScreenEdge,
+                        )
+
+                    // Default alignment where the popup and its arrow are centered relative to the
+                    // event position.
+                    else -> xForCenterAlignment
+                }
             } else {
                 mTempRect.centerX() - measuredWidth / 2f
             }
@@ -183,7 +204,17 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     override fun addArrow() {
         super.addArrow()
         if (Flags.showTaskbarPinningPopupFromAnywhere()) {
-            mArrow.x = horizontalPosition - mArrowWidth / 2
+            mArrow.x =
+                min(
+                    max(
+                        minPaddingFromScreenEdge + mArrowOffsetHorizontal,
+                        horizontalPosition - mArrowWidth / 2,
+                    ),
+                    popupContainer.getWidth() -
+                        minPaddingFromScreenEdge -
+                        mArrowOffsetHorizontal -
+                        mArrowWidth,
+                )
         } else {
             val location = IntArray(2)
             popupContainer.getLocationInDragLayer(dividerView, location)
@@ -232,7 +263,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 
     /** Aligning the view pivot to center for animation. */
     override fun setPivotForOpenCloseAnimation() {
-        pivotX = measuredWidth / 2f
+        pivotX = mArrow.x + mArrowWidth / 2 - x
         pivotY = measuredHeight.toFloat()
     }
 

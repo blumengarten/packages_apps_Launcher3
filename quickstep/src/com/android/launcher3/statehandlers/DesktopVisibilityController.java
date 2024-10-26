@@ -384,7 +384,7 @@ public class DesktopVisibilityController {
             Log.d(TAG, "markLauncherPaused " + Debug.getCaller());
         }
         StatefulActivity<LauncherState> activity =
-                QuickstepLauncher.ACTIVITY_TRACKER.getCreatedActivity();
+                QuickstepLauncher.ACTIVITY_TRACKER.getCreatedContext();
         if (activity != null) {
             activity.setPaused();
         }
@@ -404,7 +404,7 @@ public class DesktopVisibilityController {
             Log.d(TAG, "markLauncherResumed " + Debug.getCaller());
         }
         StatefulActivity<LauncherState> activity =
-                QuickstepLauncher.ACTIVITY_TRACKER.getCreatedActivity();
+                QuickstepLauncher.ACTIVITY_TRACKER.getCreatedContext();
         // Check activity state before calling setResumed(). Launcher may have been actually
         // paused (eg fullscreen task moved to front).
         // In this case we should not mark the activity as resumed.

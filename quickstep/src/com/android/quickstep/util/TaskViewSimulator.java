@@ -120,6 +120,7 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
     private boolean mScaleToCarouselTaskSize = false;
     private int mTaskRectTranslationX;
     private int mTaskRectTranslationY;
+    private int mDesktopTaskIndex = 0;
 
     public TaskViewSimulator(Context context, BaseContainerInterface sizeStrategy) {
         mContext = context;
@@ -290,8 +291,9 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
     /**
      * Sets whether this task is part of desktop tasks in overview.
      */
-    public void setIsDesktopTask(boolean desktop) {
+    public void setIsDesktopTask(boolean desktop, int index) {
         mIsDesktopTask = desktop;
+        mDesktopTaskIndex = index;
     }
 
     /**
@@ -545,9 +547,9 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
             // In shell transitions, the animation leashes are reparented to an animation container
             // so we can bump layers as needed.
             builder.setLayer(mDrawsBelowRecents
-                    ? Integer.MIN_VALUE + app.prefixOrderIndex
                     // 1000 is an arbitrary number to give room for multiple layers.
-                    : Integer.MAX_VALUE - 1000 + app.prefixOrderIndex);
+                    ? Integer.MIN_VALUE + 1000 + app.prefixOrderIndex - mDesktopTaskIndex
+                    : Integer.MAX_VALUE - 1000 + app.prefixOrderIndex - mDesktopTaskIndex);
         }
     }
 

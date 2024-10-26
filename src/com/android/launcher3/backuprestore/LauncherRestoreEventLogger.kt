@@ -24,9 +24,10 @@ open class LauncherRestoreEventLogger : ResourceBasedOverride {
         RestoreError.WIDGETS_DISABLED,
         RestoreError.PROFILE_NOT_RESTORED,
         RestoreError.WIDGET_REMOVED,
+        RestoreError.DATABASE_FILE_NOT_RESTORED,
         RestoreError.GRID_MIGRATION_FAILURE,
         RestoreError.NO_SEARCH_WIDGET,
-        RestoreError.INVALID_WIDGET_ID
+        RestoreError.INVALID_WIDGET_ID,
     )
     annotation class RestoreError {
         companion object {
@@ -38,6 +39,7 @@ open class LauncherRestoreEventLogger : ResourceBasedOverride {
             const val APP_NOT_INSTALLED = "app_not_installed"
             const val WIDGETS_DISABLED = "widgets_disabled"
             const val PROFILE_NOT_RESTORED = "profile_not_restored"
+            const val DATABASE_FILE_NOT_RESTORED = "db_file_not_restored"
             const val WIDGET_REMOVED = "widget_not_found"
             const val GRID_MIGRATION_FAILURE = "grid_migration_failed"
             const val NO_SEARCH_WIDGET = "no_search_widget"
@@ -52,7 +54,7 @@ open class LauncherRestoreEventLogger : ResourceBasedOverride {
             return ResourceBasedOverride.Overrides.getObject(
                 LauncherRestoreEventLogger::class.java,
                 context,
-                R.string.launcher_restore_event_logger_class
+                R.string.launcher_restore_event_logger_class,
             )
         }
     }
@@ -117,7 +119,7 @@ open class LauncherRestoreEventLogger : ResourceBasedOverride {
     open fun logFavoritesItemsRestoreFailed(
         favoritesId: Int,
         count: Int,
-        @RestoreError error: String?
+        @RestoreError error: String?,
     ) {
         // no-op
     }

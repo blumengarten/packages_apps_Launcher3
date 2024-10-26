@@ -97,7 +97,7 @@ class RecentsViewModelTest {
         )
         // setVisibleTasks forces FakeTasksRepository to update the flows returned by
         // getThumbnailById
-        tasksRepository.setVisibleTasks(listOf(1, 2))
+        tasksRepository.setVisibleTasks(setOf(1, 2))
 
         // Then wait for thumbnailData should complete, and the previous getThumbnailById flow
         // should return updated values

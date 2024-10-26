@@ -150,7 +150,6 @@ public class MainThreadInitializedObject<T extends SafeCloseable> {
 
         public SandboxContext(Context base) {
             attachBaseContext(base);
-            initDagger();
         }
 
         @Override

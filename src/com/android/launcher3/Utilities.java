@@ -616,6 +616,14 @@ public final class Utilities {
     }
 
     /**
+     * Utility method to know if a device's primary language is English.
+     */
+    public static boolean isEnglishLanguage(Context context) {
+        return context.getResources().getConfiguration().locale.getLanguage()
+                .equals(Locale.ENGLISH.getLanguage());
+    }
+
+    /**
      * Returns the full drawable for info as multiple layers of AdaptiveIconDrawable. The second
      * drawable in the Pair is the badge used with the icon.
      *

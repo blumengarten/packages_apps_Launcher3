@@ -94,7 +94,7 @@ public class SettingsCache extends ContentObserver implements SafeCloseable {
     SettingsCache(@ApplicationContext Context context, DaggerSingletonTracker tracker) {
         super(new Handler(Looper.getMainLooper()));
         mResolver = context.getContentResolver();
-        ExecutorUtil.executeSyncOnMainOrFail(() -> tracker.addCloseable(this));
+        tracker.addCloseable(this);
     }
 
     @Override

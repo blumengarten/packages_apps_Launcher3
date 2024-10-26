@@ -126,6 +126,9 @@ abstract class LauncherPrefs : SafeCloseable {
                 EncryptionType.ENCRYPTED,
             )
         @JvmField
+        val NO_DB_FILES_RESTORED =
+            nonRestorableItem("no_db_files_restored", false, EncryptionType.DEVICE_PROTECTED)
+        @JvmField
         val IS_FIRST_LOAD_AFTER_RESTORE =
             nonRestorableItem(FIRST_LOAD_AFTER_RESTORE_KEY, false, EncryptionType.ENCRYPTED)
         @JvmField val APP_WIDGET_IDS = backedUpItem(RestoreDbTask.APPWIDGET_IDS, "")

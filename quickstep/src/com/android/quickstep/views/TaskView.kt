@@ -82,6 +82,7 @@ import com.android.quickstep.TaskViewUtils
 import com.android.quickstep.orientation.RecentsPagedOrientationHandler
 import com.android.quickstep.recents.di.RecentsDependencies
 import com.android.quickstep.recents.di.get
+import com.android.quickstep.task.thumbnail.TaskThumbnailView
 import com.android.quickstep.task.viewmodel.TaskViewModel
 import com.android.quickstep.util.ActiveGestureErrorDetector
 import com.android.quickstep.util.ActiveGestureLog
@@ -723,20 +724,23 @@ constructor(
         @StagePosition stagePosition: Int,
         taskOverlayFactory: TaskOverlayFactory,
     ): TaskContainer {
-        val thumbnailViewDeprecated: TaskThumbnailViewDeprecated = findViewById(thumbnailViewId)!!
+        val existingThumbnailView: View = findViewById(thumbnailViewId)!!
         val snapshotView =
-            if (enableRefactorTaskThumbnail()) {
-                thumbnailViewDeprecated.visibility = GONE
-                val indexOfSnapshotView = indexOfChild(thumbnailViewDeprecated)
-                LayoutInflater.from(context).inflate(R.layout.task_thumbnail, this, false).also {
-                    it.id = thumbnailViewId
-                    addView(it, indexOfSnapshotView, thumbnailViewDeprecated.layoutParams)
+            when {
+                !enableRefactorTaskThumbnail() -> existingThumbnailView
+                existingThumbnailView is TaskThumbnailView -> existingThumbnailView
+                else -> {
+                    val indexOfSnapshotView = indexOfChild(existingThumbnailView)
+                    LayoutInflater.from(context)
+                        .inflate(R.layout.task_thumbnail, this, false)
+                        .also {
+                            it.id = thumbnailViewId
+                            addView(it, indexOfSnapshotView, existingThumbnailView.layoutParams)
+                            removeView(existingThumbnailView)
+                        }
                 }
-            } else {
-                thumbnailViewDeprecated
             }
         val iconView = getOrInflateIconView(iconViewId)
-        val digitalWellBeingToast = findViewById<DigitalWellBeingToast>(digitalWellbeingBannerId)!!
         return TaskContainer(
             this,
             task,
@@ -744,7 +748,7 @@ constructor(
             iconView,
             TransformingTouchDelegate(iconView.asView()),
             stagePosition,
-            digitalWellBeingToast,
+            findViewById(digitalWellbeingBannerId)!!,
             findViewById(showWindowViewId)!!,
             taskOverlayFactory,
         )

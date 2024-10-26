@@ -15,17 +15,17 @@
  */
 package com.android.quickstep.util;
 
-import com.android.launcher3.BaseActivity;
-import com.android.launcher3.util.ActivityTracker;
-import com.android.launcher3.util.ActivityTracker.SchedulerCallback;
+import com.android.launcher3.util.ContextTracker;
+import com.android.launcher3.util.ContextTracker.SchedulerCallback;
+import com.android.launcher3.views.ActivityContext;
 
 import java.util.function.BiPredicate;
 
-public class ActivityInitListener<T extends BaseActivity> implements
-        SchedulerCallback<T> {
+public class ContextInitListener<CONTEXT extends ActivityContext> implements
+        SchedulerCallback<CONTEXT> {
 
-    private BiPredicate<T, Boolean> mOnInitListener;
-    private final ActivityTracker<T> mActivityTracker;
+    private BiPredicate<CONTEXT, Boolean> mOnInitListener;
+    private final ContextTracker<CONTEXT> mContextTracker;
 
     private boolean mIsRegistered = false;
 
@@ -34,23 +34,23 @@ public class ActivityInitListener<T extends BaseActivity> implements
      *                       return true to continue receiving callbacks (ie. for if the activity is
      *                       recreated).
      */
-    public ActivityInitListener(BiPredicate<T, Boolean> onInitListener,
-            ActivityTracker<T> tracker) {
+    public ContextInitListener(BiPredicate<CONTEXT, Boolean> onInitListener,
+            ContextTracker<CONTEXT> tracker) {
         mOnInitListener = onInitListener;
-        mActivityTracker = tracker;
+        mContextTracker = tracker;
     }
 
     @Override
-    public final boolean init(T activity, boolean alreadyOnHome) {
+    public final boolean init(CONTEXT activity, boolean isHomeStarted) {
         if (!mIsRegistered) {
             // Don't receive any more updates
             return false;
         }
-        return handleInit(activity, alreadyOnHome);
+        return handleInit(activity, isHomeStarted);
     }
 
-    protected boolean handleInit(T activity, boolean alreadyOnHome) {
-        return mOnInitListener.test(activity, alreadyOnHome);
+    protected boolean handleInit(CONTEXT activity, boolean isHomeStarted) {
+        return mOnInitListener.test(activity, isHomeStarted);
     }
 
     /**
@@ -59,14 +59,14 @@ public class ActivityInitListener<T extends BaseActivity> implements
      */
     public void register(String reasonString) {
         mIsRegistered = true;
-        mActivityTracker.registerCallback(this, reasonString);
+        mContextTracker.registerCallback(this, reasonString);
     }
 
     /**
      * After calling this, we won't {@link #init} even when the activity is ready.
      */
     public void unregister(String reasonString) {
-        mActivityTracker.unregisterCallback(this, reasonString);
+        mContextTracker.unregisterCallback(this, reasonString);
         mIsRegistered = false;
         mOnInitListener = null;
     }

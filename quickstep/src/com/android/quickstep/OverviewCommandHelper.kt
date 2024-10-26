@@ -53,7 +53,6 @@ import com.android.systemui.shared.recents.model.ThumbnailData
 import com.android.systemui.shared.system.InteractionJankMonitorWrapper
 import java.io.PrintWriter
 import java.util.concurrent.ConcurrentLinkedDeque
-import java.util.concurrent.Executor
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -70,7 +69,6 @@ constructor(
     private val overviewComponentObserver: OverviewComponentObserver,
     private val taskAnimationManager: TaskAnimationManager,
     private val dispatcherProvider: DispatcherProvider = ProductionDispatchers,
-    private val uiExecutor: Executor = Executors.MAIN_EXECUTOR,
 ) {
     private val coroutineScope = CoroutineScope(SupervisorJob() + dispatcherProvider.default)
 
@@ -87,7 +85,7 @@ constructor(
         get() = overviewComponentObserver.containerInterface
 
     private val visibleRecentsView: RecentsView<*, *>?
-        get() = containerInterface.getVisibleRecentsView()
+        get() = containerInterface.getVisibleRecentsView<RecentsView<*, *>>()
 
     /**
      * Adds a command to be executed next, after all pending tasks are completed. Max commands that
@@ -107,7 +105,11 @@ constructor(
 
         if (commandQueue.size == 1) {
             Log.d(TAG, "execute: $command - queue size: ${commandQueue.size}")
-            uiExecutor.execute { processNextCommand() }
+            if (enableOverviewCommandHelperTimeout()) {
+                coroutineScope.launch(dispatcherProvider.main) { processNextCommand() }
+            } else {
+                Executors.MAIN_EXECUTOR.execute { processNextCommand() }
+            }
         } else {
             Log.d(TAG, "not executed: $command - queue size: ${commandQueue.size}")
         }

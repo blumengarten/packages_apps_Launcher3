@@ -265,7 +265,8 @@ open class TaskbarEduTooltipController(context: Context) :
                 !DisplayController.isPinnedTaskbar(activityContext) ||
                 !isTooltipEnabled ||
                 !shouldShowSearchEdu ||
-                userHasSeenSearchEdu
+                userHasSeenSearchEdu ||
+                !controllers.taskbarStashController.isTaskbarVisibleAndNotStashing
         ) {
             return
         }

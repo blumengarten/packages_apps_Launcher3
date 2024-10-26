@@ -410,12 +410,20 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         return mIsStashed;
     }
 
-    /** Sets the hotseat stashed. */
+    /**
+     * Sets the hotseat stashed.
+     * b/373429249 - we might change this behavior if we remove the scrim, that's why we're keeping
+     * this method
+     */
     public void stashHotseat(boolean stash) {
         mControllers.uiController.stashHotseat(stash);
     }
 
-    /** Instantly un-stashes the hotseat. */
+    /**
+     * Instantly un-stashes the hotseat.
+     * * b/373429249 - we might change this behavior if we remove the scrim, that's why we're
+     * keeping this method
+     */
     public void unStashHotseatInstantly() {
         mControllers.uiController.unStashHotseatInstantly();
     }

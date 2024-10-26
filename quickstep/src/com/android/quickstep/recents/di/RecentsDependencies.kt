@@ -113,6 +113,10 @@ class RecentsDependencies private constructor(private val appContext: Context) {
                 instance =
                     factory?.invoke(extras) as T ?: createDependency(modelClass, scopeId, extras)
                 scope[modelClass.simpleName] = instance!!
+                log(
+                    "instance of $modelClass" +
+                        " (${instance.hashCode()}) added to scope ${scope.scopeId}"
+                )
             }
         }
         return instance!!
@@ -147,6 +151,13 @@ class RecentsDependencies private constructor(private val appContext: Context) {
 
     fun getScope(scopeId: RecentsScopeId): RecentsDependenciesScope =
         scopes[scopeId] ?: createScope(scopeId)
+
+    fun removeScope(scope: Any) {
+        val scopeId: RecentsScopeId = scope as? RecentsScopeId ?: scope.hashCode().toString()
+        scopes[scopeId]?.close()
+        scopes.remove(scopeId)
+        log("Scope $scopeId removed")
+    }
 
     // TODO(b/353912757): Create a factory so we can prevent this method of growing indefinitely.
     //  Each class should be responsible for providing a factory function to create a new instance.

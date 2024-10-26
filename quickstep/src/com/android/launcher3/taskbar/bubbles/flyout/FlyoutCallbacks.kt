@@ -14,24 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.launcher3.util;
+package com.android.launcher3.taskbar.bubbles.flyout
 
-import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
+/** Callbacks that the flyout uses to notify of events. */
+interface FlyoutCallbacks {
+    /** Requests to extend the top boundary of the parent to fully include the flyout. */
+    fun extendTopBoundary(space: Int)
 
-import android.os.Looper;
+    /** Resets the top boundary of the parent. */
+    fun resetTopBoundary()
 
-import java.util.concurrent.ExecutionException;
-
-public final class ExecutorUtil {
-
-    /**
-     * Executes runnable on {@link Looper#getMainLooper()}, otherwise fails with an exception.
-     */
-    public static void executeSyncOnMainOrFail(Runnable runnable) {
-        try {
-            MAIN_EXECUTOR.submit(runnable).get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    /** The flyout was clicked. */
+    fun flyoutClicked()
 }

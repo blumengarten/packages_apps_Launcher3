@@ -31,7 +31,7 @@ class RecentsViewModel(
     }
 
     fun updateVisibleTasks(visibleTaskIdList: List<Int>) {
-        recentsTasksRepository.setVisibleTasks(visibleTaskIdList)
+        recentsTasksRepository.setVisibleTasks(visibleTaskIdList.toSet())
     }
 
     fun updateScale(scale: Float) {

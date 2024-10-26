@@ -25,7 +25,6 @@ import android.graphics.drawable.Drawable
 import android.view.Surface
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.quickstep.recents.data.FakeTasksRepository
-import com.android.quickstep.recents.data.TaskIconQueryResponse
 import com.android.quickstep.recents.usecase.GetThumbnailPositionUseCase
 import com.android.quickstep.recents.usecase.ThumbnailPositionState.MatrixScaling
 import com.android.quickstep.recents.usecase.ThumbnailPositionState.MissingThumbnail
@@ -81,7 +80,7 @@ class TaskThumbnailViewModelImplTest {
     fun bindRunningTask_thenStateIs_LiveTile() = runTest {
         val taskId = 1
         tasksRepository.seedTasks(tasks)
-        tasksRepository.setVisibleTasks(listOf(taskId))
+        tasksRepository.setVisibleTasks(setOf(taskId))
         recentsViewData.runningTaskIds.value = setOf(taskId)
         systemUnderTest.bind(taskId)
 
@@ -93,10 +92,10 @@ class TaskThumbnailViewModelImplTest {
         val taskId = 1
         val expectedThumbnailData = createThumbnailData()
         tasksRepository.seedThumbnailData(mapOf(taskId to expectedThumbnailData))
-        val expectedIconData = createIconData("Task 1")
-        tasksRepository.seedIconData(mapOf(taskId to expectedIconData))
+        val expectedIconData = mock<Drawable>()
+        tasksRepository.seedIconData(taskId, "Task $taskId", "", expectedIconData)
         tasksRepository.seedTasks(tasks)
-        tasksRepository.setVisibleTasks(listOf(taskId))
+        tasksRepository.setVisibleTasks(setOf(taskId))
         recentsViewData.runningTaskIds.value = setOf(taskId)
         recentsViewData.runningTaskShowScreenshot.value = true
         systemUnderTest.bind(taskId)
@@ -109,7 +108,7 @@ class TaskThumbnailViewModelImplTest {
                         bitmap = expectedThumbnailData.thumbnail!!,
                         thumbnailRotation = Surface.ROTATION_0,
                     ),
-                    expectedIconData.icon,
+                    expectedIconData,
                 )
             )
     }
@@ -151,7 +150,7 @@ class TaskThumbnailViewModelImplTest {
             val runningTaskId = 1
             val stoppedTaskId = 2
             tasksRepository.seedTasks(tasks)
-            tasksRepository.setVisibleTasks(listOf(runningTaskId, stoppedTaskId))
+            tasksRepository.setVisibleTasks(setOf(runningTaskId, stoppedTaskId))
             recentsViewData.runningTaskIds.value = setOf(runningTaskId)
             systemUnderTest.bind(runningTaskId)
             assertThat(systemUnderTest.uiState.first()).isEqualTo(LiveTile)
@@ -165,7 +164,7 @@ class TaskThumbnailViewModelImplTest {
     fun bindStoppedTaskWithoutThumbnail_thenStateIs_BackgroundOnly_withAlphaRemoved() = runTest {
         val stoppedTaskId = 2
         tasksRepository.seedTasks(tasks)
-        tasksRepository.setVisibleTasks(listOf(stoppedTaskId))
+        tasksRepository.setVisibleTasks(setOf(stoppedTaskId))
 
         systemUnderTest.bind(stoppedTaskId)
         assertThat(systemUnderTest.uiState.first())
@@ -178,7 +177,7 @@ class TaskThumbnailViewModelImplTest {
         tasksRepository.seedThumbnailData(mapOf(taskId to createThumbnailData()))
         tasks[taskId].isLocked = true
         tasksRepository.seedTasks(tasks)
-        tasksRepository.setVisibleTasks(listOf(taskId))
+        tasksRepository.setVisibleTasks(setOf(taskId))
 
         systemUnderTest.bind(taskId)
         assertThat(systemUnderTest.uiState.first())
@@ -190,10 +189,10 @@ class TaskThumbnailViewModelImplTest {
         val taskId = 2
         val expectedThumbnailData = createThumbnailData(rotation = Surface.ROTATION_270)
         tasksRepository.seedThumbnailData(mapOf(taskId to expectedThumbnailData))
-        val expectedIconData = createIconData("Task 2")
-        tasksRepository.seedIconData(mapOf(taskId to expectedIconData))
+        val expectedIconData = mock<Drawable>()
+        tasksRepository.seedIconData(taskId, "Task $taskId", "", expectedIconData)
         tasksRepository.seedTasks(tasks)
-        tasksRepository.setVisibleTasks(listOf(taskId))
+        tasksRepository.setVisibleTasks(setOf(taskId))
 
         systemUnderTest.bind(taskId)
         assertThat(systemUnderTest.uiState.first())
@@ -204,7 +203,7 @@ class TaskThumbnailViewModelImplTest {
                         bitmap = expectedThumbnailData.thumbnail!!,
                         thumbnailRotation = Surface.ROTATION_270,
                     ),
-                    expectedIconData.icon,
+                    expectedIconData,
                 )
             )
     }
@@ -214,14 +213,14 @@ class TaskThumbnailViewModelImplTest {
         val taskId = 2
         val expectedThumbnailData = createThumbnailData()
         tasksRepository.seedThumbnailData(mapOf(taskId to expectedThumbnailData))
-        val expectedIconData = createIconData("Task 2")
-        tasksRepository.seedIconData(mapOf(taskId to expectedIconData))
+        val expectedIconData = mock<Drawable>()
+        tasksRepository.seedIconData(taskId, "Task $taskId", "", expectedIconData)
         tasksRepository.seedTasks(tasks)
 
         systemUnderTest.bind(taskId)
         assertThat(systemUnderTest.uiState.first()).isEqualTo(Uninitialized)
 
-        tasksRepository.setVisibleTasks(listOf(taskId))
+        tasksRepository.setVisibleTasks(setOf(taskId))
         assertThat(systemUnderTest.uiState.first())
             .isEqualTo(
                 SnapshotSplash(
@@ -230,7 +229,7 @@ class TaskThumbnailViewModelImplTest {
                         bitmap = expectedThumbnailData.thumbnail!!,
                         thumbnailRotation = Surface.ROTATION_0,
                     ),
-                    expectedIconData.icon,
+                    expectedIconData,
                 )
             )
     }
@@ -294,8 +293,6 @@ class TaskThumbnailViewModelImplTest {
 
         return ThumbnailData(thumbnail = bitmap, rotation = rotation)
     }
-
-    private fun createIconData(title: String) = TaskIconQueryResponse(mock<Drawable>(), "", title)
 
     companion object {
         const val THUMBNAIL_WIDTH = 100

@@ -36,6 +36,7 @@ import com.android.launcher3.BaseActivity;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.LauncherPrefChangeListener;
 import com.android.launcher3.LauncherPrefs;
+import com.android.launcher3.util.ContextTracker;
 import com.android.launcher3.util.DisplayController;
 
 /**
@@ -72,7 +73,7 @@ public class RotationHelper implements LauncherPrefChangeListener,
 
     /**
      * Rotation request made by
-     * {@link com.android.launcher3.util.ActivityTracker.SchedulerCallback}.
+     * {@link ContextTracker.SchedulerCallback}.
      * This supersedes any other request.
      */
     private int mStateHandlerRequest = REQUEST_NONE;

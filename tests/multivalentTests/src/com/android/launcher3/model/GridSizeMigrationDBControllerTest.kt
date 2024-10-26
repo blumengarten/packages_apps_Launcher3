@@ -22,13 +22,16 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.graphics.Point
 import android.os.Process
+import android.platform.test.annotations.DisableFlags
+import android.platform.test.annotations.EnableFlags
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
+import com.android.launcher3.Flags
 import com.android.launcher3.InvariantDeviceProfile
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherPrefs.Companion.WORKSPACE_SIZE
 import com.android.launcher3.LauncherSettings.Favorites.*
-import com.android.launcher3.model.GridSizeMigrationUtil.DbReader
+import com.android.launcher3.model.GridSizeMigrationDBController.DbReader
 import com.android.launcher3.pm.UserCache
 import com.android.launcher3.provider.LauncherDbUtils
 import com.android.launcher3.util.LauncherModelHelper
@@ -82,8 +85,21 @@ class GridSizeMigrationUtilTest {
         modelHelper.destroy()
     }
 
-    /** Old migration logic, should be modified once is not needed anymore */
     @Test
+    @Throws(Exception::class)
+    @EnableFlags(Flags.FLAG_GRID_MIGRATION_REFACTOR)
+    fun testMigrationRefactorFlagOn() {
+        testMigration()
+    }
+
+    @Test
+    @Throws(Exception::class)
+    @DisableFlags(Flags.FLAG_GRID_MIGRATION_REFACTOR)
+    fun testMigrationRefactorFlagOff() {
+        testMigration()
+    }
+
+    /** Old migration logic, should be modified once is not needed anymore */
     @Throws(Exception::class)
     fun testMigration() {
         // Src Hotseat icons
@@ -113,15 +129,26 @@ class GridSizeMigrationUtilTest {
         idp.numRows = 4
         val srcReader = DbReader(db, TMP_TABLE, context)
         val destReader = DbReader(db, TABLE_NAME, context)
-        GridSizeMigrationUtil.migrate(
-            dbHelper,
-            srcReader,
-            destReader,
-            idp.numDatabaseHotseatIcons,
-            Point(idp.numColumns, idp.numRows),
-            DeviceGridState(context),
-            DeviceGridState(idp),
-        )
+        if (Flags.gridMigrationRefactor()) {
+            val gridSizeMigrationLogic = GridSizeMigrationLogic()
+            gridSizeMigrationLogic.migrateGrid(
+                context,
+                DeviceGridState(context),
+                DeviceGridState(idp),
+                dbHelper,
+                db,
+            )
+        } else {
+            GridSizeMigrationDBController.migrate(
+                dbHelper,
+                srcReader,
+                destReader,
+                idp.numDatabaseHotseatIcons,
+                Point(idp.numColumns, idp.numRows),
+                DeviceGridState(context),
+                DeviceGridState(idp),
+            )
+        }
 
         // Check hotseat items
         var c =
@@ -187,8 +214,21 @@ class GridSizeMigrationUtilTest {
         assertThat(locMap[testPackage9]).isEqualTo(Point(0, 2))
     }
 
-    /** Old migration logic, should be modified once is not needed anymore */
     @Test
+    @Throws(Exception::class)
+    @EnableFlags(Flags.FLAG_GRID_MIGRATION_REFACTOR)
+    fun testMigrationBackAndForthRefactorFlagOn() {
+        testMigrationBackAndForth()
+    }
+
+    @Test
+    @Throws(Exception::class)
+    @DisableFlags(Flags.FLAG_GRID_MIGRATION_REFACTOR)
+    fun testMigrationBackAndForthRefactorFlagOff() {
+        testMigrationBackAndForth()
+    }
+
+    /** Old migration logic, should be modified once is not needed anymore */
     @Throws(Exception::class)
     fun testMigrationBackAndForth() {
         // Hotseat items in grid A
@@ -224,15 +264,26 @@ class GridSizeMigrationUtilTest {
         val readerGridA = DbReader(db, TMP_TABLE, context)
         val readerGridB = DbReader(db, TABLE_NAME, context)
         // migrate from A -> B
-        GridSizeMigrationUtil.migrate(
-            dbHelper,
-            readerGridA,
-            readerGridB,
-            idp.numDatabaseHotseatIcons,
-            Point(idp.numColumns, idp.numRows),
-            DeviceGridState(context),
-            DeviceGridState(idp),
-        )
+        if (Flags.gridMigrationRefactor()) {
+            var gridSizeMigrationLogic = GridSizeMigrationLogic()
+            gridSizeMigrationLogic.migrateGrid(
+                context,
+                DeviceGridState(context),
+                DeviceGridState(idp),
+                dbHelper,
+                db,
+            )
+        } else {
+            GridSizeMigrationDBController.migrate(
+                dbHelper,
+                readerGridA,
+                readerGridB,
+                idp.numDatabaseHotseatIcons,
+                Point(idp.numColumns, idp.numRows),
+                DeviceGridState(context),
+                DeviceGridState(idp),
+            )
+        }
 
         // Check hotseat items in grid B
         var c =
@@ -280,15 +331,8 @@ class GridSizeMigrationUtilTest {
         addItem(ITEM_TYPE_APPLICATION, 0, CONTAINER_DESKTOP, 0, 2, testPackage9)
 
         // migrate from B -> A
-        GridSizeMigrationUtil.migrate(
-            dbHelper,
-            readerGridB,
-            readerGridA,
-            5,
-            Point(5, 5),
-            DeviceGridState(idp),
-            DeviceGridState(context),
-        )
+        migrateGrid(dbHelper, readerGridB, readerGridA, 5, 5, 5)
+
         // Check hotseat items in grid A
         c =
             db.query(
@@ -339,14 +383,13 @@ class GridSizeMigrationUtilTest {
         db.delete(TMP_TABLE, "$_ID=7", null)
 
         // migrate from A -> B
-        GridSizeMigrationUtil.migrate(
+        migrateGrid(
             dbHelper,
             readerGridA,
             readerGridB,
             idp.numDatabaseHotseatIcons,
-            Point(idp.numColumns, idp.numRows),
-            DeviceGridState(context),
-            DeviceGridState(idp),
+            idp.numColumns,
+            idp.numRows,
         )
 
         // Check hotseat items in grid B
@@ -392,6 +435,36 @@ class GridSizeMigrationUtilTest {
         assertThat(locMap[testPackage9]).isEqualTo(Triple(0, 0, 2))
     }
 
+    private fun migrateGrid(
+        dbHelper: DatabaseHelper,
+        srcReader: DbReader,
+        destReader: DbReader,
+        destHotseatSize: Int,
+        pointX: Int,
+        pointY: Int,
+    ) {
+        if (Flags.gridMigrationRefactor()) {
+            var gridSizeMigrationLogic = GridSizeMigrationLogic()
+            gridSizeMigrationLogic.migrateGrid(
+                context,
+                DeviceGridState(context),
+                DeviceGridState(idp),
+                dbHelper,
+                db,
+            )
+        } else {
+            GridSizeMigrationDBController.migrate(
+                dbHelper,
+                srcReader,
+                destReader,
+                destHotseatSize,
+                Point(pointX, pointY),
+                DeviceGridState(idp),
+                DeviceGridState(context),
+            )
+        }
+    }
+
     private fun verifyHotseat(c: Cursor, idp: InvariantDeviceProfile, expected: List<String?>) {
         assertThat(c.count).isEqualTo(idp.numDatabaseHotseatIcons)
         val screenIndex = c.getColumnIndex(SCREEN)
@@ -421,6 +494,17 @@ class GridSizeMigrationUtilTest {
     }
 
     @Test
+    @EnableFlags(Flags.FLAG_GRID_MIGRATION_REFACTOR)
+    fun migrateToLargerHotseatRefactorFlagOn() {
+        migrateToLargerHotseat()
+    }
+
+    @Test
+    @DisableFlags(Flags.FLAG_GRID_MIGRATION_REFACTOR)
+    fun migrateToLargerHotseatRefactorFlagOff() {
+        migrateToLargerHotseat()
+    }
+
     fun migrateToLargerHotseat() {
         val srcHotseatItems =
             intArrayOf(
@@ -471,14 +555,13 @@ class GridSizeMigrationUtilTest {
         idp.numRows = 4
         val srcReader = DbReader(db, TMP_TABLE, context)
         val destReader = DbReader(db, TABLE_NAME, context)
-        GridSizeMigrationUtil.migrate(
+        migrateGrid(
             dbHelper,
             srcReader,
             destReader,
             idp.numDatabaseHotseatIcons,
-            Point(idp.numColumns, idp.numRows),
-            DeviceGridState(context),
-            DeviceGridState(idp),
+            idp.numColumns,
+            idp.numRows,
         )
 
         // Check hotseat items
@@ -516,6 +599,17 @@ class GridSizeMigrationUtilTest {
     }
 
     @Test
+    @EnableFlags(Flags.FLAG_GRID_MIGRATION_REFACTOR)
+    fun migrateFromLargerHotseatRefactorFlagOn() {
+        migrateFromLargerHotseat()
+    }
+
+    @Test
+    @DisableFlags(Flags.FLAG_GRID_MIGRATION_REFACTOR)
+    fun migrateFromLargerHotseatRefactorFlagOff() {
+        migrateFromLargerHotseat()
+    }
+
     fun migrateFromLargerHotseat() {
         addItem(ITEM_TYPE_APPLICATION, 0, CONTAINER_HOTSEAT, 0, 0, testPackage1, 1, TMP_TABLE)
         addItem(ITEM_TYPE_DEEP_SHORTCUT, 2, CONTAINER_HOTSEAT, 0, 0, testPackage2, 2, TMP_TABLE)
@@ -528,14 +622,13 @@ class GridSizeMigrationUtilTest {
         idp.numRows = 4
         val srcReader = DbReader(db, TMP_TABLE, context)
         val destReader = DbReader(db, TABLE_NAME, context)
-        GridSizeMigrationUtil.migrate(
+        migrateGrid(
             dbHelper,
             srcReader,
             destReader,
             idp.numDatabaseHotseatIcons,
-            Point(idp.numColumns, idp.numRows),
-            DeviceGridState(context),
-            DeviceGridState(idp),
+            idp.numColumns,
+            idp.numRows,
         )
 
         // Check hotseat items
@@ -573,11 +666,24 @@ class GridSizeMigrationUtilTest {
         c.close()
     }
 
+    @Test
+    @Throws(Exception::class)
+    @EnableFlags(Flags.FLAG_GRID_MIGRATION_REFACTOR)
+    fun migrateFromSmallerGridBigDifferenceRefactorFlagOn() {
+        migrateFromSmallerGridBigDifference()
+    }
+
+    @Test
+    @Throws(Exception::class)
+    @DisableFlags(Flags.FLAG_GRID_MIGRATION_REFACTOR)
+    fun migrateFromSmallerGridBigDifferenceRefactorFlagOff() {
+        migrateFromSmallerGridBigDifference()
+    }
+
     /**
      * Migrating from a smaller grid to a large one should reflow the pages if the column difference
      * is more than 2
      */
-    @Test
     @Throws(Exception::class)
     fun migrateFromSmallerGridBigDifference() {
         enableNewMigrationLogic("2,2")
@@ -594,14 +700,13 @@ class GridSizeMigrationUtilTest {
         idp.numRows = 5
         val srcReader = DbReader(db, TMP_TABLE, context)
         val destReader = DbReader(db, TABLE_NAME, context)
-        GridSizeMigrationUtil.migrate(
+        migrateGrid(
             dbHelper,
             srcReader,
             destReader,
             idp.numDatabaseHotseatIcons,
-            Point(idp.numColumns, idp.numRows),
-            DeviceGridState(context),
-            DeviceGridState(idp),
+            idp.numColumns,
+            idp.numRows,
         )
 
         // Get workspace items
@@ -636,8 +741,21 @@ class GridSizeMigrationUtilTest {
         assertThat(locMap[testPackage5]).isEqualTo(0)
     }
 
-    /** Migrating from a larger grid to a smaller, we reflow from page 0 */
     @Test
+    @Throws(Exception::class)
+    @EnableFlags(Flags.FLAG_GRID_MIGRATION_REFACTOR)
+    fun migrateFromLargerGridRefactorFlagOn() {
+        migrateFromLargerGrid()
+    }
+
+    @Test
+    @Throws(Exception::class)
+    @DisableFlags(Flags.FLAG_GRID_MIGRATION_REFACTOR)
+    fun migrateFromLargerGridRefactorFlagOff() {
+        migrateFromLargerGrid()
+    }
+
+    /** Migrating from a larger grid to a smaller, we reflow from page 0 */
     @Throws(Exception::class)
     fun migrateFromLargerGrid() {
         enableNewMigrationLogic("5,5")
@@ -654,14 +772,13 @@ class GridSizeMigrationUtilTest {
         idp.numRows = 4
         val srcReader = DbReader(db, TMP_TABLE, context)
         val destReader = DbReader(db, TABLE_NAME, context)
-        GridSizeMigrationUtil.migrate(
+        migrateGrid(
             dbHelper,
             srcReader,
             destReader,
             idp.numDatabaseHotseatIcons,
-            Point(idp.numColumns, idp.numRows),
-            DeviceGridState(context),
-            DeviceGridState(idp),
+            idp.numColumns,
+            idp.numRows,
         )
 
         // Get workspace items

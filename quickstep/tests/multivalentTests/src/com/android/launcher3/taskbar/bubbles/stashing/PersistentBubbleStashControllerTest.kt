@@ -48,6 +48,7 @@ class PersistentBubbleStashControllerTest {
 
     companion object {
         const val BUBBLE_BAR_HEIGHT = 100f
+        const val HOTSEAT_VERTICAL_CENTER = 95
         const val HOTSEAT_TRANSLATION_Y = -45f
         const val TASK_BAR_TRANSLATION_Y = -5f
     }
@@ -74,11 +75,12 @@ class PersistentBubbleStashControllerTest {
             PersistentBubbleStashController(DefaultDimensionsProvider())
         setUpBubbleBarView()
         setUpBubbleBarController()
+        persistentTaskBarStashController.setHotseatVerticalCenter(HOTSEAT_VERTICAL_CENTER)
         persistentTaskBarStashController.init(
             taskbarInsetsController,
             bubbleBarViewController,
             null,
-            ImmediateAction()
+            ImmediateAction(),
         )
     }
 
