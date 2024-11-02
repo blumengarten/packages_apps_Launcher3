@@ -135,6 +135,15 @@ public class TopTaskTracker extends ISplitScreenListener.Stub
         }
     }
 
+    public void onTaskChanged(RunningTaskInfo taskInfo) {
+        for (int i = 0; i < mOrderedTaskList.size(); i++) {
+            if (mOrderedTaskList.get(i).taskId == taskInfo.taskId) {
+                mOrderedTaskList.set(i, taskInfo);
+                break;
+            }
+        }
+    }
+
     @Override
     public void onTaskStageChanged(int taskId, @StageType int stage, boolean visible) {
         // If a task is not visible anymore or has been moved to undefined, stop tracking it.

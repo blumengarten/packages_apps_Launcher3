@@ -39,6 +39,7 @@ public class MotionPauseDetector {
     // The percentage of the previous speed that determines whether this is a rapid deceleration.
     // The bigger this number, the easier it is to trigger the first pause.
     private static final float RAPID_DECELERATION_FACTOR = 0.6f;
+    private static final float RAPID_DECELERATION_FACTOR_TRACKPAD = 0.85f;
 
     /** If no motion is added for this amount of time, assume the motion has paused. */
     private static final long FORCE_PAUSE_TIMEOUT = 300;
@@ -57,6 +58,7 @@ public class MotionPauseDetector {
     private final float mSpeedVerySlow;
     private final float mSpeedSlow;
     private final float mSpeedSomewhatFast;
+    private final float mSpeedTrackpadSomewhatFast;
     private final float mSpeedFast;
     private final Alarm mForcePauseTimeout;
     private final boolean mMakePauseHarderToTrigger;
@@ -95,6 +97,8 @@ public class MotionPauseDetector {
         mSpeedVerySlow = res.getDimension(R.dimen.motion_pause_detector_speed_very_slow);
         mSpeedSlow = res.getDimension(R.dimen.motion_pause_detector_speed_slow);
         mSpeedSomewhatFast = res.getDimension(R.dimen.motion_pause_detector_speed_somewhat_fast);
+        mSpeedTrackpadSomewhatFast = res.getDimension(
+                R.dimen.motion_pause_detector_speed_trackpad_somewhat_fast);
         mSpeedFast = res.getDimension(R.dimen.motion_pause_detector_speed_fast);
         mForcePauseTimeout = new Alarm();
         mForcePauseTimeout.setOnAlarmListener(alarm -> {
@@ -183,7 +187,9 @@ public class MotionPauseDetector {
                     // takes too long, so also check for a rapid deceleration.
                     boolean isRapidDeceleration =
                             speed < previousSpeed * getRapidDecelerationFactor();
-                    isPaused = isRapidDeceleration && speed < mSpeedSomewhatFast;
+                    boolean notSuperFast = speed < mSpeedSomewhatFast
+                            || (mIsTrackpadGesture && speed < mSpeedTrackpadSomewhatFast);
+                    isPaused = isRapidDeceleration && notSuperFast;
                     isPausedReason = new ActiveGestureLog.CompoundString(
                             "Didn't have back to back slow speeds, checking for rapid "
                                     + " deceleration on first pause only");
@@ -265,7 +271,8 @@ public class MotionPauseDetector {
     private float getRapidDecelerationFactor() {
         return mIsTrackpadGesture ? Float.parseFloat(
                 Utilities.getSystemProperty("trackpad_in_app_swipe_up_deceleration_factor",
-                        String.valueOf(RAPID_DECELERATION_FACTOR))) : RAPID_DECELERATION_FACTOR;
+                        String.valueOf(RAPID_DECELERATION_FACTOR_TRACKPAD)))
+                : RAPID_DECELERATION_FACTOR;
     }
 
     public interface OnMotionPauseListener {

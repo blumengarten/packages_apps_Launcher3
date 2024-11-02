@@ -42,7 +42,18 @@ import org.junit.runner.RunWith
 @RunWith(LauncherMultivalentJUnit::class)
 @EmulatedDevices(["pixelTablet2023"])
 class TaskbarScrimViewControllerTest {
-    @get:Rule(order = 0) val context = TaskbarWindowSandboxContext.create()
+    @get:Rule(order = 0)
+    val context =
+        TaskbarWindowSandboxContext.create { builder ->
+            builder.bindSystemUiProxy(
+                object : SystemUiProxy(this) {
+                    override fun onBackPressed() {
+                        super.onBackPressed()
+                        backPressed = true
+                    }
+                }
+            )
+        }
     @get:Rule(order = 1) val taskbarModeRule = TaskbarModeRule(context)
     @get:Rule(order = 2) val animatorTestRule = AnimatorTestRule(this)
     @get:Rule(order = 3) val taskbarUnitTestRule = TaskbarUnitTestRule(this, context)
@@ -52,6 +63,8 @@ class TaskbarScrimViewControllerTest {
     // Default animation duration.
     private val animationDuration =
         context.resources.getInteger(android.R.integer.config_mediumAnimTime).toLong()
+
+    private var backPressed = false
 
     @Test
     @TaskbarMode(PINNED)
@@ -130,16 +143,6 @@ class TaskbarScrimViewControllerTest {
     @Test
     @TaskbarMode(PINNED)
     fun testOnClick_scrimShown_performsSystemBack() {
-        var backPressed = false
-        context.putObject(
-            SystemUiProxy.INSTANCE,
-            object : SystemUiProxy(context) {
-                override fun onBackPressed() {
-                    backPressed = true
-                }
-            },
-        )
-
         getInstrumentation().runOnMainSync {
             scrimViewController.updateStateForSysuiFlags(SYSUI_STATE_BUBBLES_EXPANDED, true)
             scrimViewController.onTaskbarVisibilityChanged(VISIBLE)

@@ -15,6 +15,7 @@
  */
 package com.android.quickstep.fallback;
 
+import static com.android.launcher3.Flags.enableDesktopWindowingCarouselDetach;
 import static com.android.launcher3.LauncherState.FLAG_CLOSE_POPUPS;
 import static com.android.launcher3.uioverrides.states.BackgroundAppState.getOverviewScaleAndOffsetForBackgroundState;
 import static com.android.launcher3.uioverrides.states.OverviewModalTaskState.getOverviewScaleAndOffsetForModalState;
@@ -152,7 +153,7 @@ public class RecentsState implements BaseState<RecentsState> {
 
     @Override
     public boolean detachDesktopCarousel() {
-        return hasFlag(FLAG_DETACH_DESKTOP_CAROUSEL);
+        return hasFlag(FLAG_DETACH_DESKTOP_CAROUSEL) && enableDesktopWindowingCarouselDetach();
     }
 
     /**

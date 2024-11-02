@@ -32,6 +32,8 @@ import android.window.TransitionInfo.Change
 import androidx.core.animation.addListener
 import com.android.app.animation.Interpolators
 import com.android.quickstep.RemoteRunnable
+import com.android.wm.shell.shared.animation.MinimizeAnimator
+import com.android.wm.shell.shared.animation.WindowAnimator
 import java.util.concurrent.Executor
 
 /**
@@ -77,7 +79,13 @@ class DesktopAppLaunchTransition(private val context: Context, private val mainE
         val launchAnimator =
             createLaunchAnimator(getLaunchChange(info), transaction, finishCallback)
         val minimizeChange = getMinimizeChange(info) ?: return listOf(launchAnimator)
-        val minimizeAnimator = createMinimizeAnimator(minimizeChange, transaction, finishCallback)
+        val minimizeAnimator =
+            MinimizeAnimator.create(
+                context.resources.displayMetrics,
+                minimizeChange,
+                transaction,
+                finishCallback,
+            )
         return listOf(launchAnimator, minimizeAnimator)
     }
 
@@ -96,7 +104,7 @@ class DesktopAppLaunchTransition(private val context: Context, private val mainE
     ): Animator {
         val boundsAnimator =
             WindowAnimator.createBoundsAnimator(
-                context,
+                context.resources.displayMetrics,
                 launchBoundsAnimationDef,
                 change,
                 transaction,
@@ -104,32 +112,6 @@ class DesktopAppLaunchTransition(private val context: Context, private val mainE
         val alphaAnimator =
             ValueAnimator.ofFloat(0f, 1f).apply {
                 duration = LAUNCH_ANIM_ALPHA_DURATION_MS
-                interpolator = Interpolators.LINEAR
-                addUpdateListener { animation ->
-                    transaction.setAlpha(change.leash, animation.animatedValue as Float).apply()
-                }
-            }
-        return AnimatorSet().apply {
-            playTogether(boundsAnimator, alphaAnimator)
-            addListener(onEnd = { animation -> onAnimFinish(animation) })
-        }
-    }
-
-    private fun createMinimizeAnimator(
-        change: Change,
-        transaction: Transaction,
-        onAnimFinish: (Animator) -> Unit,
-    ): Animator {
-        val boundsAnimator =
-            WindowAnimator.createBoundsAnimator(
-                context,
-                minimizeBoundsAnimationDef,
-                change,
-                transaction,
-            )
-        val alphaAnimator =
-            ValueAnimator.ofFloat(1f, 0f).apply {
-                duration = MINIMIZE_ANIM_ALPHA_DURATION_MS
                 interpolator = Interpolators.LINEAR
                 addUpdateListener { animation ->
                     transaction.setAlpha(change.leash, animation.animatedValue as Float).apply()
@@ -153,14 +135,6 @@ class DesktopAppLaunchTransition(private val context: Context, private val mainE
                 startOffsetYDp = 12f,
                 startScale = 0.97f,
                 interpolator = Interpolators.STANDARD_DECELERATE,
-            )
-
-        private val minimizeBoundsAnimationDef =
-            WindowAnimator.BoundsAnimationParams(
-                durationMs = 200,
-                endOffsetYDp = 12f,
-                endScale = 0.97f,
-                interpolator = Interpolators.STANDARD_ACCELERATE,
             )
     }
 }

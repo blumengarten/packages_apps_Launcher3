@@ -39,11 +39,14 @@ constructor(
     }
 
     private var flyout: BubbleBarFlyoutView? = null
+    private var animator: ValueAnimator? = null
     private val horizontalMargin =
         container.context.resources.getDimensionPixelSize(R.dimen.transient_taskbar_bottom_margin)
 
     private enum class AnimationType {
-        COLLAPSE,
+        /** Morphs the flyout between a dot and a rounded rectangle. */
+        MORPH,
+        /** Fades the flyout in or out. */
         FADE,
     }
 
@@ -56,7 +59,7 @@ constructor(
             return rect
         }
 
-    fun setUpAndShowFlyout(message: BubbleBarFlyoutMessage, onEnd: () -> Unit) {
+    fun setUpAndShowFlyout(message: BubbleBarFlyoutMessage, onInit: () -> Unit, onEnd: () -> Unit) {
         flyout?.let(container::removeView)
         val flyout = BubbleBarFlyoutView(container.context, positioner, flyoutScheduler)
 
@@ -72,55 +75,117 @@ constructor(
         lp.marginEnd = horizontalMargin
         container.addView(flyout, lp)
 
-        val animator = ValueAnimator.ofFloat(0f, 1f).setDuration(ANIMATION_DURATION_MS)
-        animator.addUpdateListener { _ ->
-            flyout.updateExpansionProgress(animator.animatedValue as Float)
-        }
-        animator.addListener(
-            onStart = {
-                val flyoutTop = flyout.top + flyout.translationY
-                // If the top position of the flyout is negative, then it's bleeding over the
-                // top boundary of its parent view
-                if (flyoutTop < 0) callbacks.extendTopBoundary(space = -flyoutTop.toInt())
-            },
-            onEnd = {
-                onEnd()
-                flyout.setOnClickListener { callbacks.flyoutClicked() }
-            },
-        )
-        flyout.showFromCollapsed(message) { animator.start() }
         this.flyout = flyout
+        flyout.showFromCollapsed(message) {
+            flyout.updateExpansionProgress(0f)
+            onInit()
+            showFlyout(AnimationType.MORPH, onEnd)
+        }
     }
 
-    fun cancelFlyout(endAction: () -> Unit) {
-        hideFlyout(AnimationType.FADE, endAction)
-    }
-
-    fun collapseFlyout(endAction: () -> Unit) {
-        hideFlyout(AnimationType.COLLAPSE, endAction)
-    }
-
-    private fun hideFlyout(animationType: AnimationType, endAction: () -> Unit) {
-        // TODO: b/277815200 - stop the current animation if it's running
+    private fun showFlyout(animationType: AnimationType, endAction: () -> Unit) {
         val flyout = this.flyout ?: return
-        val animator = ValueAnimator.ofFloat(1f, 0f).setDuration(ANIMATION_DURATION_MS)
+        val startValue = getCurrentAnimatedValueIfRunning() ?: 0f
+        val duration = (ANIMATION_DURATION_MS * (1f - startValue)).toLong()
+        animator?.cancel()
+        val animator = ValueAnimator.ofFloat(startValue, 1f).setDuration(duration)
+        this.animator = animator
         when (animationType) {
             AnimationType.FADE ->
                 animator.addUpdateListener { _ -> flyout.alpha = animator.animatedValue as Float }
-            AnimationType.COLLAPSE ->
+            AnimationType.MORPH ->
                 animator.addUpdateListener { _ ->
                     flyout.updateExpansionProgress(animator.animatedValue as Float)
                 }
         }
         animator.addListener(
-            onStart = { flyout.setOnClickListener(null) },
+            onStart = { extendTopBoundary() },
             onEnd = {
-                container.removeView(flyout)
-                this@BubbleBarFlyoutController.flyout = null
-                callbacks.resetTopBoundary()
                 endAction()
+                flyout.setOnClickListener { callbacks.flyoutClicked() }
             },
         )
         animator.start()
+    }
+
+    fun updateFlyoutFullyExpanded(message: BubbleBarFlyoutMessage, onEnd: () -> Unit) {
+        val flyout = flyout ?: return
+        hideFlyout(AnimationType.FADE) {
+            flyout.updateData(message) { showFlyout(AnimationType.FADE, onEnd) }
+        }
+    }
+
+    fun updateFlyoutWhileExpanding(message: BubbleBarFlyoutMessage) {
+        val flyout = flyout ?: return
+        flyout.updateData(message) { extendTopBoundary() }
+    }
+
+    fun updateFlyoutWhileCollapsing(message: BubbleBarFlyoutMessage, onEnd: () -> Unit) {
+        val flyout = flyout ?: return
+        animator?.pause()
+        animator?.removeAllListeners()
+        flyout.updateData(message) { showFlyout(AnimationType.MORPH, onEnd) }
+    }
+
+    private fun extendTopBoundary() {
+        val flyout = flyout ?: return
+        val flyoutTop = flyout.top + flyout.translationY
+        // If the top position of the flyout is negative, then it's bleeding over the
+        // top boundary of its parent view
+        if (flyoutTop < 0) callbacks.extendTopBoundary(space = -flyoutTop.toInt())
+    }
+
+    fun cancelFlyout(endAction: () -> Unit) {
+        hideFlyout(AnimationType.FADE) {
+            cleanupFlyoutView()
+            endAction()
+        }
+    }
+
+    fun collapseFlyout(endAction: () -> Unit) {
+        hideFlyout(AnimationType.MORPH) {
+            cleanupFlyoutView()
+            endAction()
+        }
+    }
+
+    private fun hideFlyout(animationType: AnimationType, endAction: () -> Unit) {
+        val flyout = this.flyout ?: return
+        val startValue = getCurrentAnimatedValueIfRunning() ?: 1f
+        val duration = (ANIMATION_DURATION_MS * startValue).toLong()
+        animator?.cancel()
+        val animator = ValueAnimator.ofFloat(startValue, 0f).setDuration(duration)
+        this.animator = animator
+        when (animationType) {
+            AnimationType.FADE ->
+                animator.addUpdateListener { _ -> flyout.alpha = animator.animatedValue as Float }
+            AnimationType.MORPH ->
+                animator.addUpdateListener { _ ->
+                    flyout.updateExpansionProgress(animator.animatedValue as Float)
+                }
+        }
+        animator.addListener(
+            onStart = {
+                flyout.setOnClickListener(null)
+                if (animationType == AnimationType.MORPH) {
+                    flyout.updateTranslationToCollapsedPosition()
+                }
+            },
+            onEnd = { endAction() },
+        )
+        animator.start()
+    }
+
+    private fun cleanupFlyoutView() {
+        container.removeView(flyout)
+        this@BubbleBarFlyoutController.flyout = null
+        callbacks.resetTopBoundary()
+    }
+
+    fun hasFlyout() = flyout != null
+
+    private fun getCurrentAnimatedValueIfRunning(): Float? {
+        val animator = animator ?: return null
+        return if (animator.isRunning) animator.animatedValue as Float else null
     }
 }

@@ -125,7 +125,8 @@ public class RestoreDbTask {
         LauncherPrefs.get(context).removeSync(RESTORE_DEVICE);
 
         if (Flags.enableNarrowGridRestore()) {
-            String oldPhoneFileName = idp.dbFile;
+            DeviceGridState deviceGridState = new DeviceGridState(context);
+            String oldPhoneFileName = deviceGridState.getDbFile();
             List<String> previousDbs = existingDbs(context);
             removeOldDBs(context, oldPhoneFileName);
             // The idp before this contains data about the old phone, after this it becomes the idp
@@ -148,6 +149,7 @@ public class RestoreDbTask {
                 context, oldPhoneDbFileName);
         // The grid option could be null if current phone doesn't support the previous db.
         if (oldPhoneGridOption != null) {
+
             /* If the user only used the default db on the previous phone and the new default db is
              * bigger than or equal to the previous one, then keep the new default db */
             if (previousDbs.size() == 1 && oldPhoneGridOption.numColumns <= idp.numColumns

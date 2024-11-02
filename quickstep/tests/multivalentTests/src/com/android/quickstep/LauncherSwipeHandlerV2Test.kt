@@ -20,9 +20,13 @@ import android.graphics.PointF
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.android.launcher3.R
+import com.android.launcher3.dagger.LauncherAppComponent
+import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.util.LauncherModelHelper
 import com.android.systemui.contextualeducation.GestureType
 import com.android.systemui.shared.system.InputConsumerController
+import dagger.BindsInstance
+import dagger.Component
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -58,7 +62,9 @@ class LauncherSwipeHandlerV2Test {
 
     @Before
     fun setup() {
-        sandboxContext.putObject(SystemUiProxy.INSTANCE, systemUiProxy)
+        sandboxContext.initDaggerComponent(
+            DaggerTestComponent.builder().bindSystemUiProxy(systemUiProxy)
+        )
         val deviceState = mock(RecentsAnimationDeviceState::class.java)
         whenever(deviceState.rotationTouchHelper).thenReturn(mock(RotationTouchHelper::class.java))
         gestureState = spy(GestureState(OverviewComponentObserver(sandboxContext, deviceState), 0))
@@ -71,7 +77,7 @@ class LauncherSwipeHandlerV2Test {
                 gestureState,
                 0,
                 false,
-                inputConsumerController
+                inputConsumerController,
             )
         underTest.onGestureStarted(/* isLikelyToStartNewTask= */ false)
     }
@@ -83,7 +89,7 @@ class LauncherSwipeHandlerV2Test {
         verify(systemUiProxy)
             .updateContextualEduStats(
                 /* isTrackpadGesture= */ eq(true),
-                eq(GestureType.HOME.toString())
+                eq(GestureType.HOME.toString()),
             )
     }
 
@@ -93,7 +99,18 @@ class LauncherSwipeHandlerV2Test {
         verify(systemUiProxy)
             .updateContextualEduStats(
                 /* isTrackpadGesture= */ eq(false),
-                eq(GestureType.HOME.toString())
+                eq(GestureType.HOME.toString()),
             )
+    }
+}
+
+@LauncherAppSingleton
+@Component
+interface TestComponent : LauncherAppComponent {
+    @Component.Builder
+    interface Builder : LauncherAppComponent.Builder {
+        @BindsInstance fun bindSystemUiProxy(proxy: SystemUiProxy): Builder
+
+        override fun build(): TestComponent
     }
 }

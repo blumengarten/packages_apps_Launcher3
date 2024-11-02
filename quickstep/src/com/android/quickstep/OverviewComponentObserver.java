@@ -155,7 +155,7 @@ public final class OverviewComponentObserver {
             mContainerInterface.onAssistantVisibilityChanged(0.f);
         }
 
-        if (SEPARATE_RECENTS_ACTIVITY.get()) {
+        if (SEPARATE_RECENTS_ACTIVITY.get() || Flags.enableLauncherOverviewInWindow()) {
             mIsDefaultHome = false;
             if (defaultHome == null) {
                 defaultHome = mMyHomeIntent.getComponent();
@@ -179,7 +179,7 @@ public final class OverviewComponentObserver {
         } else {
             // The default home app is a different launcher. Use the fallback Overview instead.
 
-            if (Flags.enableFallbackOverviewInWindow()) {
+            if (Flags.enableLauncherOverviewInWindow() || Flags.enableFallbackOverviewInWindow()) {
                 mContainerInterface = FallbackWindowInterface.getInstance();
             } else {
                 mContainerInterface = FallbackActivityInterface.INSTANCE;

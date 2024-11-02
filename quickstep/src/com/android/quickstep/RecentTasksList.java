@@ -119,6 +119,11 @@ public class RecentTasksList {
                     topTaskTracker.onTaskMovedToFront(taskInfo);
                 });
             }
+
+            @Override
+            public void onTaskInfoChanged(ActivityManager.RunningTaskInfo taskInfo) {
+                mMainThreadExecutor.execute(() -> topTaskTracker.onTaskChanged(taskInfo));
+            }
         });
         // We may receive onRunningTaskAppeared events later for tasks which have already been
         // included in the list returned by mSysUiProxy.getRunningTasks(), or may receive

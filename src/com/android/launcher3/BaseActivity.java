@@ -306,10 +306,6 @@ public abstract class BaseActivity extends Activity implements ActivityContext {
         removeActivityFlags(ACTIVITY_STATE_RESUMED | ACTIVITY_STATE_DEFERRED_RESUMED);
     }
 
-    public boolean isPaused() {
-        return !hasBeenResumed() && (mActivityFlags & ACTIVITY_STATE_DEFERRED_RESUMED) == 0;
-    }
-
     /**
      * Sets the activity to appear as resumed.
      */

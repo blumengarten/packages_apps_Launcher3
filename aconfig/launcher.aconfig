@@ -369,6 +369,13 @@ flag {
 }
 
 flag {
+    name: "work_scheduler_in_work_profile"
+    namespace: "launcher"
+    description: "Enables work scheduler view above the work pause button in work profile."
+    bug: "361589193"
+}
+
+flag {
     name: "one_grid_specs"
     namespace: "launcher"
     description: "Defines the new specs for grids based on OneGrid"
@@ -494,8 +501,8 @@ flag {
 }
 
 flag {
-    name: "enable_launcher_pill"
+    name: "enable_contrast_tiles"
     namespace: "launcher"
-    description: "Enable Workspace Launcher Pill in Simple Mode View."
+    description: "Enable launcher app contrast tiles."
     bug: "341217082"
 }

@@ -192,7 +192,7 @@
     <string name="private_space_label" msgid="2359721649407947001">"Espace privé"</string>
     <string name="private_space_secondary_label" msgid="9203933341714508907">"Touchez pour configurer ou ouvrir"</string>
     <string name="ps_container_title" msgid="4391796149519594205">"Privé"</string>
-    <string name="ps_container_settings" msgid="6059734123353320479">"Paramètres de l\'Espace privé"</string>
+    <string name="ps_container_settings" msgid="6059734123353320479">"Paramètres de l\'espace privé"</string>
     <string name="ps_container_unlock_button_content_description" msgid="9181551784092204234">"Privé, déverrouillé."</string>
     <string name="ps_container_lock_button_content_description" msgid="5961993384382649530">"Privé, verrouillé."</string>
     <string name="ps_container_lock_title" msgid="2640257399982364682">"Verrouiller"</string>

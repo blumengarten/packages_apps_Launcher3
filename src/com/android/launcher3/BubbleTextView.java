@@ -57,12 +57,14 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewDebug;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.TextView;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.annotation.VisibleForTesting;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 
 import com.android.launcher3.accessibility.BaseAccessibilityDelegate;
 import com.android.launcher3.dot.DotInfo;
@@ -516,6 +518,16 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
             setContentDescription(info.isDisabled()
                     ? getContext().getString(R.string.disabled_app_label, info.contentDescription)
                     : info.contentDescription);
+        }
+    }
+
+    @Override
+    public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
+        super.onInitializeAccessibilityNodeInfo(info);
+        if (getTag() instanceof ItemInfoWithIcon infoWithIcon && infoWithIcon.isInactiveArchive()) {
+            info.addAction(new AccessibilityNodeInfo.AccessibilityAction(
+                    AccessibilityNodeInfoCompat.ACTION_CLICK,
+                    getContext().getString(R.string.app_unarchiving_action)));
         }
     }
 

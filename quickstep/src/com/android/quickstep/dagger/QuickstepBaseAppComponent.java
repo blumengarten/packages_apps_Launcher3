@@ -19,6 +19,7 @@ package com.android.quickstep.dagger;
 import com.android.launcher3.dagger.LauncherAppComponent;
 import com.android.launcher3.dagger.LauncherBaseAppComponent;
 import com.android.launcher3.model.WellbeingModel;
+import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.util.AsyncClockEventDelegate;
 
 /**
@@ -34,4 +35,6 @@ public interface QuickstepBaseAppComponent extends LauncherBaseAppComponent {
     WellbeingModel getWellbeingModel();
 
     AsyncClockEventDelegate getAsyncClockEventDelegate();
+
+    SystemUiProxy getSystemUiProxy();
 }

@@ -111,6 +111,7 @@
     <dimen name="motion_pause_detector_speed_very_slow">0.0285dp</dimen>
     <dimen name="motion_pause_detector_speed_slow">0.15dp</dimen>
     <dimen name="motion_pause_detector_speed_somewhat_fast">0.285dp</dimen>
+    <dimen name="motion_pause_detector_speed_trackpad_somewhat_fast">0.7dp</dimen>
     <dimen name="motion_pause_detector_speed_fast">1.4dp</dimen>
     <dimen name="motion_pause_detector_min_displacement_from_app">36dp</dimen>
     <dimen name="quickstep_fling_threshold_speed">0.5dp</dimen>

@@ -136,12 +136,20 @@ class ValidGridMigrationUnitTest {
         LauncherDbUtils.SQLiteTransaction(dbHelper.writableDatabase).use {
             if (Flags.gridMigrationRefactor()) {
                 val gridSizeMigrationLogic = GridSizeMigrationLogic()
-                gridSizeMigrationLogic.migrateGrid(
-                    context,
-                    srcGrid.toGridState(),
-                    dstGrid.toGridState(),
+                val idsInUse = mutableListOf<Int>()
+                gridSizeMigrationLogic.migrateHotseat(
+                    dstGrid.size.x,
+                    GridSizeMigrationDBController.DbReader(it.db, srcGrid.tableName, context),
+                    GridSizeMigrationDBController.DbReader(it.db, dstGrid.tableName, context),
                     dbHelper,
-                    it.db,
+                    idsInUse,
+                )
+                gridSizeMigrationLogic.migrateWorkspace(
+                    GridSizeMigrationDBController.DbReader(it.db, srcGrid.tableName, context),
+                    GridSizeMigrationDBController.DbReader(it.db, dstGrid.tableName, context),
+                    dbHelper,
+                    dstGrid.size,
+                    idsInUse,
                 )
             } else {
                 GridSizeMigrationDBController.migrate(

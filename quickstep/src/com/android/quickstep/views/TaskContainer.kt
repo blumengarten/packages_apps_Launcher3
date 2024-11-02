@@ -29,6 +29,7 @@ import com.android.launcher3.util.SplitConfigurationOptions
 import com.android.launcher3.util.TransformingTouchDelegate
 import com.android.quickstep.TaskOverlayFactory
 import com.android.quickstep.TaskUtils
+import com.android.quickstep.ViewUtils.addAccessibleChildToList
 import com.android.quickstep.recents.di.RecentsDependencies
 import com.android.quickstep.recents.di.get
 import com.android.quickstep.recents.di.getScope
@@ -150,7 +151,7 @@ class TaskContainer(
         if (enableRefactorTaskThumbnail()) {
             bindThumbnailView()
         } else {
-            thumbnailViewDeprecated.bind(task, overlay)
+            thumbnailViewDeprecated.bind(task, overlay, taskView)
         }
         overlay.init()
     }
@@ -181,13 +182,5 @@ class TaskContainer(
         addAccessibleChildToList(snapshotView, outChildren)
         showWindowsView?.let { addAccessibleChildToList(it, outChildren) }
         digitalWellBeingToast?.let { addAccessibleChildToList(it, outChildren) }
-    }
-
-    private fun addAccessibleChildToList(view: View, outChildren: ArrayList<View>) {
-        if (view.includeForAccessibility()) {
-            outChildren.add(view)
-        } else {
-            view.addChildrenForAccessibility(outChildren)
-        }
     }
 }

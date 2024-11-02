@@ -1245,19 +1245,22 @@ public abstract class RecentsView<
         // - It's the focused task to be moved to the front, we immediately re-add the task
         if (child instanceof TaskView && child != mSplitHiddenTaskView
                 && child != mMovingTaskView) {
-            TaskView taskView = (TaskView) child;
-            for (int i : taskView.getTaskIds()) {
-                mHasVisibleTaskData.delete(i);
-            }
-            if (child instanceof GroupedTaskView) {
-                mGroupedTaskViewPool.recycle((GroupedTaskView) taskView);
-            } else if (child instanceof DesktopTaskView) {
-                mDesktopTaskViewPool.recycle((DesktopTaskView) taskView);
-            } else {
-                mTaskViewPool.recycle(taskView);
-            }
-            mActionsView.updateHiddenFlags(HIDDEN_NO_TASKS, getTaskViewCount() == 0);
+            clearAndRecycleTaskView((TaskView) child);
         }
+    }
+
+    private void clearAndRecycleTaskView(TaskView taskView) {
+        for (int taskId : taskView.getTaskIds()) {
+            mHasVisibleTaskData.delete(taskId);
+        }
+        if (taskView instanceof GroupedTaskView) {
+            mGroupedTaskViewPool.recycle((GroupedTaskView) taskView);
+        } else if (taskView instanceof DesktopTaskView) {
+            mDesktopTaskViewPool.recycle((DesktopTaskView) taskView);
+        } else {
+            mTaskViewPool.recycle(taskView);
+        }
+        mActionsView.updateHiddenFlags(HIDDEN_NO_TASKS, getTaskViewCount() == 0);
     }
 
     @Override
@@ -5058,7 +5061,8 @@ public abstract class RecentsView<
         mSplitHiddenTaskViewIndex = indexOfChild(mSplitHiddenTaskView);
         mSplitSelectStateController
                 .setAnimateCurrentTaskDismissal(splitSelectSource.animateCurrentTaskDismissal
-                        && mSplitHiddenTaskView != null);
+                        && mSplitHiddenTaskView != null
+                        && !(mSplitHiddenTaskView instanceof DesktopTaskView));
 
         // Prevent dismissing whole task if we're only initiating from one of 2 tasks in split pair
         mSplitSelectStateController.setDismissingFromSplitPair(mSplitHiddenTaskView != null
@@ -5302,6 +5306,13 @@ public abstract class RecentsView<
         mSplitHiddenTaskViewIndex = -1;
         if (mSplitHiddenTaskView != null) {
             mSplitHiddenTaskView.setThumbnailVisibility(VISIBLE, INVALID_TASK_ID);
+            // mSplitHiddenTaskView is set when split select animation starts. The TaskView is only
+            // removed when when the animation finishes. So in the case of overview being dismissed
+            // during the animation, we should not call clearAndRecycleTaskView() because it has
+            // not been removed yet.
+            if (mSplitHiddenTaskView.getParent() == null) {
+                clearAndRecycleTaskView(mSplitHiddenTaskView);
+            }
             mSplitHiddenTaskView = null;
         }
     }

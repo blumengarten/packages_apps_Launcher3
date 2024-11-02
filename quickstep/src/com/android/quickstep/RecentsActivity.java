@@ -70,6 +70,7 @@ import com.android.launcher3.statemanager.StateManager.StateHandler;
 import com.android.launcher3.statemanager.StatefulActivity;
 import com.android.launcher3.taskbar.FallbackTaskbarUIController;
 import com.android.launcher3.taskbar.TaskbarManager;
+import com.android.launcher3.taskbar.TaskbarUIController;
 import com.android.launcher3.util.ActivityOptionsWrapper;
 import com.android.launcher3.util.ContextTracker;
 import com.android.launcher3.util.RunnableList;
@@ -115,7 +116,7 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
     private FallbackRecentsView mFallbackRecentsView;
     private OverviewActionsView<?> mActionsView;
     private TISBindHelper mTISBindHelper;
-    private @Nullable FallbackTaskbarUIController mTaskbarUIController;
+    private @Nullable FallbackTaskbarUIController<RecentsActivity> mTaskbarUIController;
 
     private StateManager<RecentsState, RecentsActivity> mStateManager;
 
@@ -174,11 +175,14 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
         mTISBindHelper.runOnBindToTouchInteractionService(r);
     }
 
-    public void setTaskbarUIController(FallbackTaskbarUIController taskbarUIController) {
-        mTaskbarUIController = taskbarUIController;
+    @Override
+    public void setTaskbarUIController(@Nullable TaskbarUIController taskbarUIController) {
+        mTaskbarUIController = (FallbackTaskbarUIController<RecentsActivity>) taskbarUIController;
     }
 
-    public FallbackTaskbarUIController getTaskbarUIController() {
+    @Nullable
+    @Override
+    public FallbackTaskbarUIController<RecentsActivity> getTaskbarUIController() {
         return mTaskbarUIController;
     }
 
@@ -515,6 +519,7 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
     }
 
     @NonNull
+    @Override
     public TISBindHelper getTISBindHelper() {
         return mTISBindHelper;
     }

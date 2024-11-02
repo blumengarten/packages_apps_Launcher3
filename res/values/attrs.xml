@@ -208,8 +208,16 @@
         <attr name="layout_sticky" format="boolean" />
     </declare-styleable>
 
+    <declare-styleable name="NumRows">
+        <attr name="minDeviceWidthPx" format="float"/>
+        <attr name="minDeviceHeightPx" format="float"/>
+        <attr name="numRowsNew" format="integer"/>
+        <attr name="dbFile" />
+    </declare-styleable>
+
     <declare-styleable name="GridDisplayOption">
         <attr name="name" format="string" />
+        <attr name="title" />
 
         <attr name="numRows" format="integer" />
         <attr name="numColumns" format="integer" />
@@ -294,6 +302,7 @@
         <!-- File that contains the specs for all apps icon and text size.
         Needs FeatureFlags.ENABLE_RESPONSIVE_WORKSPACE enabled -->
         <attr name="allAppsCellSpecsId" format="reference" />
+        <attr name="rowCountSpecsId" format="reference" />
         <!-- defaults to allAppsCellSpecsId, if not specified -->
         <attr name="allAppsCellSpecsTwoPanelId" format="reference" />
 

@@ -139,6 +139,7 @@ import com.android.launcher3.statemanager.StateManager.AtomicAnimationFactory;
 import com.android.launcher3.statemanager.StateManager.StateHandler;
 import com.android.launcher3.taskbar.LauncherTaskbarUIController;
 import com.android.launcher3.taskbar.TaskbarManager;
+import com.android.launcher3.taskbar.TaskbarUIController;
 import com.android.launcher3.testing.TestLogging;
 import com.android.launcher3.testing.shared.TestProtocol;
 import com.android.launcher3.uioverrides.QuickstepWidgetHolder.QuickstepHolderFactory;
@@ -419,8 +420,10 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
             mDepthController.setActivityStarted(isStarted());
         }
 
-        if ((changeBits & ACTIVITY_STATE_RESUMED) != 0 && mTaskbarUIController != null) {
-            mTaskbarUIController.onLauncherPausedOrResumed(isPaused());
+        if ((changeBits & ACTIVITY_STATE_RESUMED) != 0) {
+            if (!FeatureFlags.enableHomeTransitionListener() && mTaskbarUIController != null) {
+                mTaskbarUIController.onLauncherVisibilityChanged(hasBeenResumed());
+            }
         }
 
         super.onActivityFlagsChanged(changeBits);
@@ -1087,10 +1090,12 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         );
     }
 
-    public void setTaskbarUIController(LauncherTaskbarUIController taskbarUIController) {
-        mTaskbarUIController = taskbarUIController;
+    @Override
+    public void setTaskbarUIController(@Nullable TaskbarUIController taskbarUIController) {
+        mTaskbarUIController = (LauncherTaskbarUIController) taskbarUIController;
     }
 
+    @Override
     public @Nullable LauncherTaskbarUIController getTaskbarUIController() {
         return mTaskbarUIController;
     }
@@ -1397,6 +1402,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     }
 
     @NonNull
+    @Override
     public TISBindHelper getTISBindHelper() {
         return mTISBindHelper;
     }

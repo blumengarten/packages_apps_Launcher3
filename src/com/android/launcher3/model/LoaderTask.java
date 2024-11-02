@@ -287,11 +287,6 @@ public class LoaderTask implements Runnable {
             }
             logASplit("loadAllApps");
 
-            if (FeatureFlags.CHANGE_MODEL_DELEGATE_LOADING_ORDER.get()) {
-                mModelDelegate.loadAndBindAllAppsItems(mUserManagerState,
-                        mLauncherBinder.mCallbacksList, mShortcutKeyToPinnedShortcuts);
-                logASplit("allAppsDelegateItems");
-            }
             verifyNotStopped();
             mLauncherBinder.bindAllApps();
             logASplit("bindAllApps");
@@ -356,12 +351,6 @@ public class LoaderTask implements Runnable {
                 prefs.putSync(SHOULD_SHOW_SMARTSPACE.to(true));
             }
 
-            if (FeatureFlags.CHANGE_MODEL_DELEGATE_LOADING_ORDER.get()) {
-                mModelDelegate.loadAndBindOtherItems(mLauncherBinder.mCallbacksList);
-                logASplit("otherDelegateItems");
-                verifyNotStopped();
-            }
-
             updateHandler.updateIcons(allWidgetsList,
                     CachedObjectCachingLogic.INSTANCE,
                     mApp.getModel()::onWidgetLabelsUpdated);
@@ -413,13 +402,6 @@ public class LoaderTask implements Runnable {
         }
         logASplit("loadWorkspace");
 
-        if (FeatureFlags.CHANGE_MODEL_DELEGATE_LOADING_ORDER.get()) {
-            verifyNotStopped();
-            mModelDelegate.loadAndBindWorkspaceItems(mUserManagerState,
-                    mLauncherBinder.mCallbacksList, mShortcutKeyToPinnedShortcuts);
-            mModelDelegate.markActive();
-            logASplit("workspaceDelegateItems");
-        }
         mBgDataModel.isFirstPagePinnedItemEnabled = FeatureFlags.QSB_ON_FIRST_SCREEN
                 && (!enableSmartspaceRemovalToggle() || LauncherPrefs.getPrefs(
                 mApp.getContext()).getBoolean(SMARTSPACE_ON_HOME_SCREEN, true));
@@ -490,14 +472,12 @@ public class LoaderTask implements Runnable {
                 IOUtils.closeSilently(c);
             }
 
-            if (!FeatureFlags.CHANGE_MODEL_DELEGATE_LOADING_ORDER.get()) {
-                mModelDelegate.loadAndBindWorkspaceItems(mUserManagerState,
-                        mLauncherBinder.mCallbacksList, mShortcutKeyToPinnedShortcuts);
-                mModelDelegate.loadAndBindAllAppsItems(mUserManagerState,
-                        mLauncherBinder.mCallbacksList, mShortcutKeyToPinnedShortcuts);
-                mModelDelegate.loadAndBindOtherItems(mLauncherBinder.mCallbacksList);
-                mModelDelegate.markActive();
-            }
+            mModelDelegate.loadAndBindWorkspaceItems(mUserManagerState,
+                    mLauncherBinder.mCallbacksList, mShortcutKeyToPinnedShortcuts);
+            mModelDelegate.loadAndBindAllAppsItems(mUserManagerState,
+                    mLauncherBinder.mCallbacksList, mShortcutKeyToPinnedShortcuts);
+            mModelDelegate.loadAndBindOtherItems(mLauncherBinder.mCallbacksList);
+            mModelDelegate.markActive();
 
             // Break early if we've stopped loading
             if (mStopped) {

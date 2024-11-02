@@ -78,7 +78,7 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
     }
 
     private static BaseContainerInterface<RecentsState, ?> getContainerInterface() {
-        return Flags.enableFallbackOverviewInWindow()
+        return (Flags.enableFallbackOverviewInWindow() || Flags.enableLauncherOverviewInWindow())
                 ? FallbackWindowInterface.getInstance()
                 : FallbackActivityInterface.INSTANCE;
     }
@@ -294,7 +294,8 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
         }
 
         // disabling this so app icons aren't drawn on top of recent tasks.
-        if (isOverlayEnabled && !Flags.enableFallbackOverviewInWindow()) {
+        if (isOverlayEnabled && !(Flags.enableFallbackOverviewInWindow()
+                || Flags.enableLauncherOverviewInWindow())) {
             runActionOnRemoteHandles(remoteTargetHandle ->
                     remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(true));
         }

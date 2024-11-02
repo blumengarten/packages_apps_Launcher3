@@ -54,15 +54,16 @@ import android.window.TransitionFilter;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
 import com.android.internal.logging.InstanceId;
 import com.android.internal.util.ScreenshotRequest;
 import com.android.internal.view.AppearanceRegion;
-import com.android.launcher3.util.MainThreadInitializedObject;
+import com.android.launcher3.dagger.ApplicationContext;
+import com.android.launcher3.dagger.LauncherAppSingleton;
+import com.android.launcher3.util.DaggerSingletonObject;
 import com.android.launcher3.util.Preconditions;
-import com.android.launcher3.util.SafeCloseable;
+import com.android.quickstep.dagger.QuickstepBaseAppComponent;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.quickstep.util.ContextualSearchInvoker;
 import com.android.quickstep.util.unfold.ProxyUnfoldTransitionProvider;
@@ -109,14 +110,17 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * Holds the reference to SystemUI.
  */
-public class SystemUiProxy implements ISystemUiProxy, NavHandle, SafeCloseable {
+@LauncherAppSingleton
+public class SystemUiProxy implements ISystemUiProxy, NavHandle {
     private static final String TAG = "SystemUiProxy";
 
-    public static final MainThreadInitializedObject<SystemUiProxy> INSTANCE =
-            new MainThreadInitializedObject<>(SystemUiProxy::new);
+    public static final DaggerSingletonObject<SystemUiProxy> INSTANCE =
+            new DaggerSingletonObject<>(QuickstepBaseAppComponent::getSystemUiProxy);
 
     private static final int MSG_SET_SHELF_HEIGHT = 1;
     private static final int MSG_SET_LAUNCHER_KEEP_CLEAR_AREA_HEIGHT = 2;
@@ -188,8 +192,8 @@ public class SystemUiProxy implements ISystemUiProxy, NavHandle, SafeCloseable {
     @Nullable
     private final ProxyUnfoldTransitionProvider mUnfoldTransitionProvider;
 
-    @VisibleForTesting
-    protected SystemUiProxy(Context context) {
+    @Inject
+    public SystemUiProxy(@ApplicationContext Context context) {
         mContext = context;
         mAsyncHandler = new Handler(UI_HELPER_EXECUTOR.getLooper(), this::handleMessageAsync);
         final Intent baseIntent = new Intent().setPackage(mContext.getPackageName());
@@ -204,9 +208,6 @@ public class SystemUiProxy implements ISystemUiProxy, NavHandle, SafeCloseable {
                 (enableUnfoldStateAnimation() && new ResourceUnfoldTransitionConfig().isEnabled())
                          ? new ProxyUnfoldTransitionProvider() : null;
     }
-
-    @Override
-    public void close() { }
 
     @Override
     public void onBackPressed() {

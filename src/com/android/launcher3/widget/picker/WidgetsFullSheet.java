@@ -145,7 +145,9 @@ public class WidgetsFullSheet extends BaseWidgetSheet
     protected DeviceProfile mDeviceProfile;
 
     protected TextView mNoWidgetsView;
-    protected StickyHeaderLayout mSearchScrollView;
+    protected LinearLayout mSearchScrollView;
+    // Reference to the mSearchScrollView when it is is a sticky header.
+    private @Nullable StickyHeaderLayout mStickyHeaderLayout;
     protected WidgetRecommendationsView mWidgetRecommendationsView;
     protected LinearLayout mWidgetRecommendationsContainer;
     protected View mTabBar;
@@ -220,7 +222,11 @@ public class WidgetsFullSheet extends BaseWidgetSheet
 
     protected void setupViews() {
         mSearchScrollView = findViewById(R.id.search_and_recommendations_container);
-        mSearchScrollView.setCurrentRecyclerView(findViewById(R.id.primary_widgets_list_view));
+        if (mSearchScrollView instanceof StickyHeaderLayout) {
+            mStickyHeaderLayout = (StickyHeaderLayout) mSearchScrollView;
+            mStickyHeaderLayout.setCurrentRecyclerView(
+                    findViewById(R.id.primary_widgets_list_view));
+        }
         mNoWidgetsView = findViewById(R.id.no_widgets_text);
         mFastScroller = findViewById(R.id.fast_scroller);
         mFastScroller.setPopupView(findViewById(R.id.fast_scroller_popup));
@@ -284,7 +290,9 @@ public class WidgetsFullSheet extends BaseWidgetSheet
             reset();
             resetExpandedHeaders();
             mCurrentWidgetsRecyclerView = recyclerView;
-            mSearchScrollView.setCurrentRecyclerView(recyclerView);
+            if (mStickyHeaderLayout != null) {
+                mStickyHeaderLayout.setCurrentRecyclerView(recyclerView);
+            }
         }
     }
 
@@ -313,7 +321,9 @@ public class WidgetsFullSheet extends BaseWidgetSheet
             mAdapters.get(AdapterHolder.WORK).mWidgetsRecyclerView.scrollToTop();
         }
         mAdapters.get(AdapterHolder.SEARCH).mWidgetsRecyclerView.scrollToTop();
-        mSearchScrollView.reset(/* animate= */ true);
+        if (mStickyHeaderLayout != null) {
+            mStickyHeaderLayout.reset(/* animate= */ true);
+        }
     }
 
     @VisibleForTesting
@@ -1051,7 +1061,7 @@ public class WidgetsFullSheet extends BaseWidgetSheet
         }
 
         private int getEmptySpaceHeight() {
-            return mSearchScrollView.getHeaderHeight();
+            return mStickyHeaderLayout != null ? mStickyHeaderLayout.getHeaderHeight() : 0;
         }
 
         void setup(WidgetsRecyclerView recyclerView) {

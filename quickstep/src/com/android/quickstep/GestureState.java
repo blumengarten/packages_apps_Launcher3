@@ -309,7 +309,9 @@ public class GestureState implements RecentsAnimationCallbacks.RecentsAnimationL
      * changes in the WM hierarchy (ie. starting recents transition when you are already over home).
      */
     public boolean useSyntheticRecentsTransition() {
-        return mRunningTask.isHomeTask() && Flags.enableFallbackOverviewInWindow();
+        return mRunningTask.isHomeTask()
+                && (Flags.enableFallbackOverviewInWindow()
+                        || Flags.enableLauncherOverviewInWindow());
     }
 
     /**

@@ -21,6 +21,7 @@ import android.graphics.Rect;
 import android.view.View;
 
 import com.android.launcher3.taskbar.TaskbarControllers;
+import com.android.launcher3.taskbar.TaskbarSharedState;
 import com.android.launcher3.taskbar.bubbles.BubbleBarViewController.TaskbarViewPropertiesProvider;
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleBarLocationOnDemandListener;
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController;
@@ -79,7 +80,7 @@ public class BubbleControllers {
      * BubbleControllers instance, but should be careful to only access things that were created
      * in constructors for now, as some controllers may still be waiting for init().
      */
-    public void init(TaskbarControllers taskbarControllers) {
+    public void init(TaskbarSharedState taskbarSharedState, TaskbarControllers taskbarControllers) {
         BubbleBarLocationCompositeListener bubbleBarLocationListeners =
                 new BubbleBarLocationCompositeListener(
                         taskbarControllers.navbarButtonsViewController,
@@ -88,7 +89,8 @@ public class BubbleControllers {
                 );
         bubbleBarController.init(this,
                 bubbleBarLocationListeners,
-                taskbarControllers.navbarButtonsViewController::isImeVisible);
+                taskbarControllers.navbarButtonsViewController::isImeVisible,
+                taskbarSharedState);
         bubbleStashedHandleViewController.ifPresent(
                 controller -> controller.init(/* bubbleControllers = */ this));
         bubbleStashController.init(

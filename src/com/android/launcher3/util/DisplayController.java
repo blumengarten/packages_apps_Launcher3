@@ -255,7 +255,9 @@ public class DisplayController implements ComponentCallbacks, SafeCloseable {
                 || config.fontScale != mInfo.fontScale
                 || !mInfo.mScreenSizeDp.equals(
                         new PortraitSize(config.screenHeightDp, config.screenWidthDp))
-                || mWindowContext.getDisplay().getRotation() != mInfo.rotation) {
+                || mWindowContext.getDisplay().getRotation() != mInfo.rotation
+                || WindowManagerProxy.INSTANCE.get(mContext).showLockedTaskbarOnHome(mWindowContext)
+                        != mInfo.showLockedTaskbarOnHome()) {
             notifyConfigChange();
         }
     }

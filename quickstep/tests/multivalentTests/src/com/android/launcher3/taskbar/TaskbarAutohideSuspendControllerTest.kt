@@ -33,36 +33,27 @@ import com.android.quickstep.SystemUiProxy
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import org.junit.runners.model.Statement
 
 @RunWith(LauncherMultivalentJUnit::class)
 @EmulatedDevices(["pixelTablet2023"])
 class TaskbarAutohideSuspendControllerTest {
 
-    @get:Rule(order = 0) val context = TaskbarWindowSandboxContext.create()
-    @get:Rule(order = 1) val animatorTestRule = AnimatorTestRule(this)
-    @get:Rule(order = 2)
-    val systemUiProxyRule = TestRule { base, _ ->
-        object : Statement() {
-            override fun evaluate() {
-                getInstrumentation().runOnMainSync {
-                    context.putObject(
-                        SystemUiProxy.INSTANCE,
-                        object : SystemUiProxy(context) {
-                            override fun notifyTaskbarAutohideSuspend(suspend: Boolean) {
-                                latestSuspendNotification = suspend
-                            }
-                        },
-                    )
+    @get:Rule(order = 0)
+    val context =
+        TaskbarWindowSandboxContext.create { builder ->
+            builder.bindSystemUiProxy(
+                object : SystemUiProxy(this) {
+                    override fun notifyTaskbarAutohideSuspend(suspend: Boolean) {
+                        super.notifyTaskbarAutohideSuspend(suspend)
+                        latestSuspendNotification = suspend
+                    }
                 }
-                base.evaluate()
-            }
+            )
         }
-    }
-    @get:Rule(order = 3) val taskbarModeRule = TaskbarModeRule(context)
-    @get:Rule(order = 4) val taskbarUnitTestRule = TaskbarUnitTestRule(this, context)
+    @get:Rule(order = 1) val animatorTestRule = AnimatorTestRule(this)
+    @get:Rule(order = 2) val taskbarModeRule = TaskbarModeRule(context)
+    @get:Rule(order = 3) val taskbarUnitTestRule = TaskbarUnitTestRule(this, context)
 
     @InjectController lateinit var autohideSuspendController: TaskbarAutohideSuspendController
     @InjectController lateinit var stashController: TaskbarStashController

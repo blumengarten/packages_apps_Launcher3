@@ -63,6 +63,11 @@ public final class KeyboardQuickSwitchController implements
     private int mTaskListChangeId = -1;
     // Only empty before the recent tasks list has been loaded the first time
     @NonNull private List<GroupTask> mTasks = new ArrayList<>();
+    // Set of task IDs filtered out of tasks in recents model to generate list of tasks to show in
+    // the Keyboard Quick Switch view. Non empty only if the view has been shown in response to
+    // toggling taskbar overflow button.
+    @NonNull private Set<Integer> mExcludedTaskIds = Collections.emptySet();
+
     private int mNumHiddenTasks = 0;
 
     // Initialized in init
@@ -90,10 +95,12 @@ public final class KeyboardQuickSwitchController implements
             return;
         }
         int currentFocusedIndex = mQuickSwitchViewController.getCurrentFocusedIndex();
+        boolean wasOpenedFromTaskbar = mQuickSwitchViewController.wasOpenedFromTaskbar();
         onDestroy();
         if (currentFocusedIndex != -1) {
             mControllers.taskbarActivityContext.getMainThreadHandler().post(
-                    () -> openQuickSwitchView(currentFocusedIndex));
+                    () -> openQuickSwitchView(currentFocusedIndex, mExcludedTaskIds,
+                            wasOpenedFromTaskbar));
         }
     }
 
@@ -102,10 +109,19 @@ public final class KeyboardQuickSwitchController implements
     }
 
     /**
-     * Opens the view with a filtered list of tasks.
+     * Opens or closes the view in response to taskbar action. The view shows a filtered list of
+     * tasks.
      * @param taskIdsToExclude A list of tasks to exclude in the opened view.
      */
-    void openQuickSwitchView(@NonNull Set<Integer> taskIdsToExclude) {
+    void toggleQuickSwitchViewForTaskbar(@NonNull Set<Integer> taskIdsToExclude) {
+        // Close the view if its shown, and was opened from the taskbar.
+        if (mQuickSwitchViewController != null
+                && !mQuickSwitchViewController.isCloseAnimationRunning()
+                && mQuickSwitchViewController.wasOpenedFromTaskbar()) {
+            closeQuickSwitchView(true);
+            return;
+        }
+
         openQuickSwitchView(-1, taskIdsToExclude, true);
     }
 
@@ -117,10 +133,16 @@ public final class KeyboardQuickSwitchController implements
             @NonNull Set<Integer> taskIdsToExclude,
             boolean wasOpenedFromTaskbar) {
         if (mQuickSwitchViewController != null) {
-            if (!mQuickSwitchViewController.isCloseAnimationRunning()) {
+            if (!mQuickSwitchViewController.isCloseAnimationRunning()
+                    && mQuickSwitchViewController.wasOpenedFromTaskbar() == wasOpenedFromTaskbar) {
                 return;
             }
-            // Allow the KQS to be reopened during the close animation to make it more responsive
+
+            // Allow the KQS to be reopened during the close animation to make it more responsive.
+            // Similarly, if KQS was opened in different mode (from taskbar vs. keyboard event),
+            // close it so it can be reopened in the correct mode.
+            // TODO(b/368119679) Consider updating list of shown tasks in place, or at least reopen
+            // the view in the same vertical location.
             closeQuickSwitchView(false);
         }
         mOverlayContext = mControllers.taskbarOverlayController.requestWindow();
@@ -139,9 +161,8 @@ public final class KeyboardQuickSwitchController implements
         final boolean onDesktop =
                 mControllers.taskbarDesktopModeController.getAreDesktopTasksVisible();
 
-        // TODO(b/368119679) For now we will re-process the task list every time, but this can be
-        // optimized if we have the same set of task ids to exclude.
-        if (mModel.isTaskListValid(mTaskListChangeId) && !Flags.taskbarOverflow()) {
+        if (mModel.isTaskListValid(mTaskListChangeId)
+                && taskIdsToExclude.equals(mExcludedTaskIds)) {
             // When we are opening the KQS with no focus override, check if the first task is
             // running. If not, focus that first task.
             mQuickSwitchViewController.openQuickSwitchView(
@@ -157,6 +178,7 @@ public final class KeyboardQuickSwitchController implements
             return;
         }
 
+        mExcludedTaskIds = taskIdsToExclude;
         mTaskListChangeId = mModel.getTasks((tasks) -> {
             mHasDesktopTask = false;
             mWasDesktopTaskFilteredOut = false;

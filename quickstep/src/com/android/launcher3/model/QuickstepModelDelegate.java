@@ -59,7 +59,6 @@ import com.android.launcher3.ConstantItem;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherPrefs;
-import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.logger.LauncherAtom;
 import com.android.launcher3.logging.InstanceId;
 import com.android.launcher3.logging.InstanceIdSequence;
@@ -156,9 +155,6 @@ public class QuickstepModelDelegate extends ModelDelegate {
                         state.containerId);
         FixedContainerItems fci = new FixedContainerItems(state.containerId,
                 state.storage.read(mApp.getContext(), factory, ums.allUsers::get));
-        if (FeatureFlags.CHANGE_MODEL_DELEGATE_LOADING_ORDER.get()) {
-            bindPredictionItems(callbacks, fci);
-        }
         mDataModel.extraItems.put(state.containerId, fci);
     }
 

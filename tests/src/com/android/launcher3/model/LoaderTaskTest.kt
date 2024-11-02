@@ -3,6 +3,8 @@ package com.android.launcher3.model
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.UserHandle
+import android.platform.test.annotations.DisableFlags
+import android.platform.test.annotations.EnableFlags
 import android.platform.test.flag.junit.SetFlagsRule
 import android.provider.Settings
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -203,7 +205,8 @@ class LoaderTaskTest {
         }
 
     @Test
-    fun `When launcher_broadcast_installed_apps and is restore then send installed item broadcast`() {
+    @DisableFlags(Flags.FLAG_ENABLE_FIRST_SCREEN_BROADCAST_ARCHIVING_EXTRAS)
+    fun `When secure setting true and is restore then send installed item broadcast`() {
         // Given
         val spyContext = spy(context)
         `when`(app.context).thenReturn(spyContext)
@@ -271,6 +274,76 @@ class LoaderTaskTest {
     }
 
     @Test
+    @EnableFlags(Flags.FLAG_ENABLE_FIRST_SCREEN_BROADCAST_ARCHIVING_EXTRAS)
+    fun `When broadcast flag true and is restore then send installed item broadcast`() {
+        // Given
+        val spyContext = spy(context)
+        `when`(app.context).thenReturn(spyContext)
+        whenever(
+                FirstScreenBroadcastHelper.createModelsForFirstScreenBroadcast(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            )
+            .thenReturn(listOf(expectedBroadcastModel))
+
+        whenever(
+                FirstScreenBroadcastHelper.sendBroadcastsForModels(
+                    spyContext,
+                    listOf(expectedBroadcastModel),
+                )
+            )
+            .thenCallRealMethod()
+
+        Settings.Secure.putInt(spyContext.contentResolver, "launcher_broadcast_installed_apps", 0)
+        RestoreDbTask.setPending(spyContext)
+
+        // When
+        LoaderTask(app, bgAllAppsList, BgDataModel(), modelDelegate, launcherBinder)
+            .runSyncOnBackgroundThread()
+
+        // Then
+        val argumentCaptor = ArgumentCaptor.forClass(Intent::class.java)
+        verify(spyContext).sendBroadcast(argumentCaptor.capture())
+        val actualBroadcastIntent = argumentCaptor.value
+        assertEquals(expectedBroadcastModel.installerPackage, actualBroadcastIntent.`package`)
+        assertEquals(
+            ArrayList(expectedBroadcastModel.installedWorkspaceItems),
+            actualBroadcastIntent.getStringArrayListExtra("workspaceInstalledItems"),
+        )
+        assertEquals(
+            ArrayList(expectedBroadcastModel.installedHotseatItems),
+            actualBroadcastIntent.getStringArrayListExtra("hotseatInstalledItems"),
+        )
+        assertEquals(
+            ArrayList(
+                expectedBroadcastModel.firstScreenInstalledWidgets +
+                    expectedBroadcastModel.secondaryScreenInstalledWidgets
+            ),
+            actualBroadcastIntent.getStringArrayListExtra("widgetInstalledItems"),
+        )
+        assertEquals(
+            ArrayList(expectedBroadcastModel.pendingCollectionItems),
+            actualBroadcastIntent.getStringArrayListExtra("folderItem"),
+        )
+        assertEquals(
+            ArrayList(expectedBroadcastModel.pendingWorkspaceItems),
+            actualBroadcastIntent.getStringArrayListExtra("workspaceItem"),
+        )
+        assertEquals(
+            ArrayList(expectedBroadcastModel.pendingHotseatItems),
+            actualBroadcastIntent.getStringArrayListExtra("hotseatItem"),
+        )
+        assertEquals(
+            ArrayList(expectedBroadcastModel.pendingWidgetItems),
+            actualBroadcastIntent.getStringArrayListExtra("widgetItem"),
+        )
+    }
+
+    @Test
+    @EnableFlags(Flags.FLAG_ENABLE_FIRST_SCREEN_BROADCAST_ARCHIVING_EXTRAS)
     fun `When not a restore then installed item broadcast not sent`() {
         // Given
         val spyContext = spy(context)
@@ -304,7 +377,8 @@ class LoaderTaskTest {
     }
 
     @Test
-    fun `When launcher_broadcast_installed_apps false then installed item broadcast not sent`() {
+    @DisableFlags(Flags.FLAG_ENABLE_FIRST_SCREEN_BROADCAST_ARCHIVING_EXTRAS)
+    fun `When broadcast flag and secure setting false then installed item broadcast not sent`() {
         // Given
         val spyContext = spy(context)
         `when`(app.context).thenReturn(spyContext)

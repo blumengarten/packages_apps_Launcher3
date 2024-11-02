@@ -20,6 +20,7 @@ import static android.util.Base64.NO_PADDING;
 import static android.util.Base64.NO_WRAP;
 
 import static com.android.launcher3.DefaultLayoutParser.RES_PARTNER_DEFAULT_LAYOUT;
+import static com.android.launcher3.LauncherPrefs.DB_FILE;
 import static com.android.launcher3.LauncherPrefs.NO_DB_FILES_RESTORED;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER;
 import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE;
@@ -128,16 +129,20 @@ public class ModelDbController {
 
     private synchronized void createDbIfNotExists() {
         if (mOpenHelper == null) {
-            mOpenHelper = createDatabaseHelper(false /* forMigration */);
+            String dbFile = LauncherPrefs.get(mContext).get(DB_FILE);
+            if (dbFile.isEmpty()) {
+                dbFile = InvariantDeviceProfile.INSTANCE.get(mContext).dbFile;
+            }
+            mOpenHelper = createDatabaseHelper(false /* forMigration */, dbFile);
             printDBs("before: ");
             RestoreDbTask.restoreIfNeeded(mContext, this);
             printDBs("after: ");
         }
     }
 
-    protected DatabaseHelper createDatabaseHelper(boolean forMigration) {
+    protected DatabaseHelper createDatabaseHelper(boolean forMigration, String dbFile) {
         boolean isSandbox = mContext instanceof SandboxContext;
-        String dbName = isSandbox ? null : InvariantDeviceProfile.INSTANCE.get(mContext).dbFile;
+        String dbName = isSandbox ? null : dbFile;
 
         // Set the flag for empty DB
         Runnable onEmptyDbCreateCallback = forMigration ? () -> { }
@@ -325,7 +330,7 @@ public class ModelDbController {
     private boolean isThereExistingDb() {
         if (LauncherPrefs.get(mContext).get(getEmptyDbCreatedKey())) {
             // If we already have a new DB, ignore migration
-            Log.d(TAG, "migrateGridIfNeeded: new DB already created, skipping migration");
+            FileLog.d(TAG, "migrateGridIfNeeded: new DB already created, skipping migration");
             return true;
         }
         return false;
@@ -336,7 +341,7 @@ public class ModelDbController {
         if (GridSizeMigrationDBController.needsToMigrate(mContext, idp)) {
             return true;
         }
-        Log.d(TAG, "migrateGridIfNeeded: no grid migration needed");
+        FileLog.d(TAG, "migrateGridIfNeeded: no grid migration needed");
         return false;
     }
 
@@ -344,7 +349,7 @@ public class ModelDbController {
         InvariantDeviceProfile idp = LauncherAppState.getIDP(mContext);
         String targetDbName = new DeviceGridState(idp).getDbFile();
         if (TextUtils.equals(targetDbName, mOpenHelper.getDatabaseName())) {
-            Log.e(TAG, "migrateGridIfNeeded: target db is same as current: " + targetDbName);
+            FileLog.e(TAG, "migrateGridIfNeeded: target db is same as current: " + targetDbName);
             return true;
         }
         return false;
@@ -364,7 +369,7 @@ public class ModelDbController {
         InvariantDeviceProfile idp = LauncherAppState.getIDP(mContext);
         DatabaseHelper oldHelper = mOpenHelper;
         mOpenHelper = (mContext instanceof SandboxContext) ? oldHelper
-                : createDatabaseHelper(true /* forMigration */);
+                : createDatabaseHelper(true, new DeviceGridState(idp).getDbFile());
         try {
             // This is the current grid we have, given by the mContext
             DeviceGridState srcDeviceState = new DeviceGridState(mContext);
@@ -388,7 +393,6 @@ public class ModelDbController {
      * Migrates the DB if needed. If the migration failed, it clears the DB.
      */
     public void tryMigrateDB(@Nullable LauncherRestoreEventLogger restoreEventLogger) {
-
         if (!migrateGridIfNeeded()) {
             if (restoreEventLogger != null) {
                 if (LauncherPrefs.get(mContext).get(NO_DB_FILES_RESTORED)) {
@@ -428,7 +432,7 @@ public class ModelDbController {
         }
         InvariantDeviceProfile idp = LauncherAppState.getIDP(mContext);
         if (!GridSizeMigrationDBController.needsToMigrate(mContext, idp)) {
-            Log.d(TAG, "migrateGridIfNeeded: no grid migration needed");
+            FileLog.d(TAG, "migrateGridIfNeeded: no grid migration needed");
             return true;
         }
         String targetDbName = new DeviceGridState(idp).getDbFile();
@@ -438,7 +442,7 @@ public class ModelDbController {
         }
         DatabaseHelper oldHelper = mOpenHelper;
         mOpenHelper = (mContext instanceof SandboxContext) ? oldHelper
-                : createDatabaseHelper(true /* forMigration */);
+                : createDatabaseHelper(true /* forMigration */, targetDbName);
         try {
             // This is the current grid we have, given by the mContext
             DeviceGridState srcDeviceState = new DeviceGridState(mContext);

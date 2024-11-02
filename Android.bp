@@ -66,6 +66,8 @@ filegroup {
     srcs: [
         "quickstep/src/**/*.kt",
         "quickstep/src/**/*.java",
+    ],
+    device_common_srcs: [
         ":launcher-quickstep-processed-protolog-src",
     ],
 }
@@ -90,7 +92,7 @@ java_library {
     ],
 }
 
-genrule {
+java_genrule {
     name: "launcher-quickstep-processed-protolog-src",
     srcs: [
         ":protolog-impl",
@@ -108,7 +110,7 @@ genrule {
     out: ["launcher.quickstep.protolog.srcjar"],
 }
 
-genrule {
+java_genrule {
     name: "gen-launcher.quickstep.protolog.pb",
     srcs: [
         ":launcher-quickstep-unprocessed-protolog-src",

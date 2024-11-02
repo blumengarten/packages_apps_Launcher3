@@ -296,6 +296,10 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             // Add the search box above everything else in this container (if the flag is enabled,
             // it's added to drag layer in onAttach instead).
             addView(mSearchContainer);
+            // The search container is visually at the top of the all apps UI, and should thus be
+            // focused by default. It's added to end of the children list, so it needs to be
+            // explicitly marked as focused by default.
+            mSearchContainer.setFocusedByDefault(true);
         }
         mSearchUiManager = (SearchUiManager) mSearchContainer;
     }

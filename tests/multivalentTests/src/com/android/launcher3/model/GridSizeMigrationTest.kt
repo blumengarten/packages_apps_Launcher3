@@ -41,10 +41,10 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** Unit tests for [GridSizeMigrationUtil] */
+/** Unit tests for [GridSizeMigrationDBController, GridSizeMigrationLogic] */
 @SmallTest
 @RunWith(AndroidJUnit4::class)
-class GridSizeMigrationUtilTest {
+class GridSizeMigrationTest {
 
     private lateinit var modelHelper: LauncherModelHelper
     private lateinit var context: Context
@@ -130,13 +130,21 @@ class GridSizeMigrationUtilTest {
         val srcReader = DbReader(db, TMP_TABLE, context)
         val destReader = DbReader(db, TABLE_NAME, context)
         if (Flags.gridMigrationRefactor()) {
-            val gridSizeMigrationLogic = GridSizeMigrationLogic()
-            gridSizeMigrationLogic.migrateGrid(
-                context,
-                DeviceGridState(context),
-                DeviceGridState(idp),
+            var gridSizeMigrationLogic = GridSizeMigrationLogic()
+            val idsInUse = mutableListOf<Int>()
+            gridSizeMigrationLogic.migrateHotseat(
+                idp.numDatabaseHotseatIcons,
+                srcReader,
+                destReader,
                 dbHelper,
-                db,
+                idsInUse,
+            )
+            gridSizeMigrationLogic.migrateWorkspace(
+                srcReader,
+                destReader,
+                dbHelper,
+                Point(idp.numColumns, idp.numRows),
+                idsInUse,
             )
         } else {
             GridSizeMigrationDBController.migrate(
@@ -266,12 +274,20 @@ class GridSizeMigrationUtilTest {
         // migrate from A -> B
         if (Flags.gridMigrationRefactor()) {
             var gridSizeMigrationLogic = GridSizeMigrationLogic()
-            gridSizeMigrationLogic.migrateGrid(
-                context,
-                DeviceGridState(context),
-                DeviceGridState(idp),
+            val idsInUse = mutableListOf<Int>()
+            gridSizeMigrationLogic.migrateHotseat(
+                idp.numDatabaseHotseatIcons,
+                readerGridA,
+                readerGridB,
                 dbHelper,
-                db,
+                idsInUse,
+            )
+            gridSizeMigrationLogic.migrateWorkspace(
+                readerGridA,
+                readerGridB,
+                dbHelper,
+                Point(idp.numColumns, idp.numRows),
+                idsInUse,
             )
         } else {
             GridSizeMigrationDBController.migrate(
@@ -445,12 +461,20 @@ class GridSizeMigrationUtilTest {
     ) {
         if (Flags.gridMigrationRefactor()) {
             var gridSizeMigrationLogic = GridSizeMigrationLogic()
-            gridSizeMigrationLogic.migrateGrid(
-                context,
-                DeviceGridState(context),
-                DeviceGridState(idp),
+            val idsInUse = mutableListOf<Int>()
+            gridSizeMigrationLogic.migrateHotseat(
+                idp.numDatabaseHotseatIcons,
+                srcReader,
+                destReader,
                 dbHelper,
-                db,
+                idsInUse,
+            )
+            gridSizeMigrationLogic.migrateWorkspace(
+                srcReader,
+                destReader,
+                dbHelper,
+                Point(idp.numColumns, idp.numRows),
+                idsInUse,
             )
         } else {
             GridSizeMigrationDBController.migrate(

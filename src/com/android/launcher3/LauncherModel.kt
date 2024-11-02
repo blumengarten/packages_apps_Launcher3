@@ -25,7 +25,6 @@ import android.util.Log
 import android.util.Pair
 import androidx.annotation.WorkerThread
 import com.android.launcher3.celllayout.CellPosMapper
-import com.android.launcher3.config.FeatureFlags
 import com.android.launcher3.icons.IconCache
 import com.android.launcher3.model.AddWorkspaceItemsTask
 import com.android.launcher3.model.AllAppsList
@@ -67,8 +66,8 @@ class LauncherModel(
     private val context: Context,
     private val mApp: LauncherAppState,
     private val iconCache: IconCache,
-    private val appFilter: AppFilter,
-    private val mPmHelper: PackageManagerHelper,
+    appFilter: AppFilter,
+    mPmHelper: PackageManagerHelper,
     isPrimaryInstance: Boolean,
 ) {
 
@@ -304,9 +303,6 @@ class LauncherModel(
                     launcherBinder.bindAllApps()
                     launcherBinder.bindDeepShortcuts()
                     launcherBinder.bindWidgets()
-                    if (FeatureFlags.CHANGE_MODEL_DELEGATE_LOADING_ORDER.get()) {
-                        this.modelDelegate.bindAllModelExtras(callbacksList)
-                    }
                     return true
                 } else {
                     mLoaderTask =

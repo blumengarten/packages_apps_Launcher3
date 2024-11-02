@@ -36,7 +36,6 @@ import com.android.launcher3.Flags;
 import com.android.launcher3.LauncherState;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.anim.AnimatedFloat;
-import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.logging.InstanceId;
 import com.android.launcher3.logging.InstanceIdSequence;
 import com.android.launcher3.model.data.ItemInfo;
@@ -69,17 +68,14 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
     public static final int ALL_APPS_PAGE_PROGRESS_INDEX = 1;
     public static final int WIDGETS_PAGE_PROGRESS_INDEX = 2;
     public static final int SYSUI_SURFACE_PROGRESS_INDEX = 3;
-    public static final int LAUNCHER_PAUSE_PROGRESS_INDEX = 4;
 
-    public static final int DISPLAY_PROGRESS_COUNT = 5;
+    public static final int DISPLAY_PROGRESS_COUNT = 4;
 
     private final AnimatedFloat mTaskbarInAppDisplayProgress = new AnimatedFloat(
             this::onInAppDisplayProgressChanged);
     private final MultiPropertyFactory<AnimatedFloat> mTaskbarInAppDisplayProgressMultiProp =
             new MultiPropertyFactory<>(mTaskbarInAppDisplayProgress,
                     AnimatedFloat.VALUE, DISPLAY_PROGRESS_COUNT, Float::max);
-    private final AnimatedFloat mLauncherPauseProgress = new AnimatedFloat(
-            this::launcherPauseProgressUpdate);
 
     private final QuickstepLauncher mLauncher;
     private final HomeVisibilityState mHomeState;
@@ -192,33 +188,6 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
                 /* fromInit= */ false,
                 /* startAnimation= */ false,
                 placeholderDuration));
-    }
-
-    /**
-     * Called when Launcher Activity is paused/resumed.
-     * <p>
-     * To avoid UI clash between taskbar & bottom sheet, shift nav buttons down on launcher
-     * pause/resume at home.
-     * @param paused if launcher is currently paused.
-     */
-    public void onLauncherPausedOrResumed(boolean paused) {
-        if (!FeatureFlags.enableHomeTransitionListener()) {
-            onLauncherVisibilityChanged(mLauncher.hasBeenResumed());
-            return;
-        }
-
-        // Animate navbar iff pause/resume from home, NOT to/from app (avoid overriding existing
-        // animations).
-        boolean launcherPauseOrResumeFromHome = mHomeState.isHomeVisible() && mControllers
-                .taskbarAutohideSuspendController.isSuspendedForTransientTaskbarInLauncher();
-        if (launcherPauseOrResumeFromHome) {
-            mLauncherPauseProgress.animateToValue(paused ? 1.0f : 0.0f).start();
-        }
-    }
-
-    private void launcherPauseProgressUpdate() {
-        onTaskbarInAppDisplayProgressUpdate(
-                mLauncherPauseProgress.value, LAUNCHER_PAUSE_PROGRESS_INDEX);
     }
 
     /**
@@ -395,20 +364,18 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
         }
         if (mControllers.uiController.isIconAlignedWithHotseat()
                 && !mTaskbarLauncherStateController.isAnimatingToLauncher()) {
-            // Only animate nav button position while home and not animating home, otherwise let
+            // Only animate the nav buttons while home and not animating home, otherwise let
             // the TaskbarViewController handle it.
             mControllers.navbarButtonsViewController
-                    .getNavButtonTranslationYForInAppDisplay()
+                    .getTaskbarNavButtonTranslationYForInAppDisplay()
                     .updateValue(mLauncher.getDeviceProfile().getTaskbarOffsetY()
                             * mTaskbarInAppDisplayProgress.value);
-            if (!mLauncher.isPaused()) {
-                mControllers.navbarButtonsViewController
-                        .getOnTaskbarBackgroundNavButtonColorOverride().updateValue(progress);
-            }
+            mControllers.navbarButtonsViewController
+                    .getOnTaskbarBackgroundNavButtonColorOverride().updateValue(progress);
         }
     }
 
-    @Override
+    /** Returns true iff any in-app display progress > 0. */
     public boolean shouldUseInAppLayout() {
         return mTaskbarInAppDisplayProgress.value > 0;
     }

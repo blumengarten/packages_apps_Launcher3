@@ -295,7 +295,8 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
 
         // TODO:(b/365777482) if flag is enabled, but on launcher it will crash.
         if(containerInterface.getCreatedContainer() instanceof RecentsWindowManager
-                && Flags.enableFallbackOverviewInWindow()){
+                && (Flags.enableFallbackOverviewInWindow()
+                        || Flags.enableLauncherOverviewInWindow())) {
             mRecentsAnimationStartPending = getSystemUiProxy().startRecentsActivity(intent, options,
                     mCallbacks, gestureState.useSyntheticRecentsTransition());
             mRecentsWindowsManager.startRecentsWindow(mCallbacks);

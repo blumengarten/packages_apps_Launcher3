@@ -24,11 +24,24 @@ import android.view.Display.DEFAULT_DISPLAY
 import androidx.test.core.app.ApplicationProvider
 import com.android.launcher3.FakeLauncherPrefs
 import com.android.launcher3.LauncherPrefs
+import com.android.launcher3.dagger.LauncherAppComponent
+import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.util.MainThreadInitializedObject.ObjectSandbox
 import com.android.launcher3.util.SandboxApplication
+import com.android.launcher3.util.SettingsCache
+import com.android.launcher3.util.SettingsCacheSandbox
+import com.android.quickstep.SystemUiProxy
+import dagger.BindsInstance
+import dagger.Component
 import org.junit.rules.ExternalResource
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
+import org.junit.runner.Description
+import org.junit.runners.model.Statement
+
+/** Include additional bindings when building a [TaskbarSandboxComponent]. */
+typealias TaskbarComponentBinder =
+    TaskbarWindowSandboxContext.(TaskbarSandboxComponent.Builder) -> Unit
 
 /**
  * [SandboxApplication] for running Taskbar tests.
@@ -37,20 +50,46 @@ import org.junit.rules.TestRule
  * [DEFAULT_DISPLAY] (i.e. test is executing on a device).
  */
 class TaskbarWindowSandboxContext
-private constructor(base: SandboxApplication, val virtualDisplay: VirtualDisplay) :
-    ContextWrapper(base),
-    ObjectSandbox by base,
-    TestRule by RuleChain.outerRule(virtualDisplayRule(virtualDisplay)).around(base) {
+private constructor(
+    private val base: SandboxApplication,
+    val virtualDisplay: VirtualDisplay,
+    private val componentBinder: TaskbarComponentBinder?,
+) : ContextWrapper(base), ObjectSandbox by base, TestRule {
 
-    init {
-        putObject(LauncherPrefs.INSTANCE, FakeLauncherPrefs(this))
+    val settingsCacheSandbox = SettingsCacheSandbox()
+
+    private val virtualDisplayRule =
+        object : ExternalResource() {
+            override fun after() = virtualDisplay.release()
+        }
+
+    private val singletonSetupRule =
+        object : ExternalResource() {
+            override fun before() {
+                val context = this@TaskbarWindowSandboxContext
+                val builder =
+                    DaggerTaskbarSandboxComponent.builder()
+                        .bindSystemUiProxy(SystemUiProxy(context))
+                        .bindSettingsCache(settingsCacheSandbox.cache)
+                componentBinder?.invoke(context, builder)
+                base.initDaggerComponent(builder)
+
+                putObject(LauncherPrefs.INSTANCE, FakeLauncherPrefs(context))
+            }
+        }
+
+    override fun apply(statement: Statement, description: Description): Statement {
+        return RuleChain.outerRule(virtualDisplayRule)
+            .around(base)
+            .around(singletonSetupRule)
+            .apply(statement, description)
     }
 
     companion object {
         private const val VIRTUAL_DISPLAY_NAME = "TaskbarSandboxDisplay"
 
         /** Creates a [SandboxApplication] for Taskbar tests. */
-        fun create(): TaskbarWindowSandboxContext {
+        fun create(componentBinder: TaskbarComponentBinder? = null): TaskbarWindowSandboxContext {
             val base = ApplicationProvider.getApplicationContext<Context>()
             val displayManager = checkNotNull(base.getSystemService(DisplayManager::class.java))
 
@@ -70,13 +109,21 @@ private constructor(base: SandboxApplication, val virtualDisplay: VirtualDisplay
             return TaskbarWindowSandboxContext(
                 SandboxApplication(base.createDisplayContext(virtualDisplay.display)),
                 virtualDisplay,
+                componentBinder,
             )
         }
     }
 }
 
-private fun virtualDisplayRule(virtualDisplay: VirtualDisplay): TestRule {
-    return object : ExternalResource() {
-        override fun after() = virtualDisplay.release()
+@LauncherAppSingleton
+@Component
+interface TaskbarSandboxComponent : LauncherAppComponent {
+    @Component.Builder
+    interface Builder : LauncherAppComponent.Builder {
+        @BindsInstance fun bindSystemUiProxy(proxy: SystemUiProxy): Builder
+
+        @BindsInstance fun bindSettingsCache(settingsCache: SettingsCache): Builder
+
+        override fun build(): TaskbarSandboxComponent
     }
 }

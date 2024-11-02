@@ -42,6 +42,9 @@ import androidx.annotation.Nullable;
 import com.android.launcher3.PendingAddItemInfo;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
+import com.android.launcher3.dagger.ApplicationContext;
+import com.android.launcher3.dagger.LauncherAppSingleton;
+import com.android.launcher3.dagger.LauncherBaseAppComponent;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
@@ -51,16 +54,19 @@ import com.android.launcher3.model.data.WorkspaceItemInfo;
 import java.util.List;
 import java.util.Objects;
 
+import javax.inject.Inject;
+
 /**
  * Utility methods using package manager
  */
-public class PackageManagerHelper implements SafeCloseable{
+@LauncherAppSingleton
+public class PackageManagerHelper {
 
     private static final String TAG = "PackageManagerHelper";
 
     @NonNull
-    public static final MainThreadInitializedObject<PackageManagerHelper> INSTANCE =
-            new MainThreadInitializedObject<>(PackageManagerHelper::new);
+    public static DaggerSingletonObject<PackageManagerHelper> INSTANCE =
+            new DaggerSingletonObject<>(LauncherBaseAppComponent::getPackageManagerHelper);
 
     @NonNull
     private final Context mContext;
@@ -73,16 +79,14 @@ public class PackageManagerHelper implements SafeCloseable{
 
     private final String[] mLegacyMultiInstanceSupportedApps;
 
-    public PackageManagerHelper(@NonNull final Context context) {
+    @Inject
+    public PackageManagerHelper(@ApplicationContext final Context context) {
         mContext = context;
         mPm = context.getPackageManager();
         mLauncherApps = Objects.requireNonNull(context.getSystemService(LauncherApps.class));
         mLegacyMultiInstanceSupportedApps = mContext.getResources().getStringArray(
-                R.array.config_appsSupportMultiInstancesSplit);
+                    R.array.config_appsSupportMultiInstancesSplit);
     }
-
-    @Override
-    public void close() { }
 
     /**
      * Returns the installing app package for the given package

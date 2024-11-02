@@ -331,6 +331,9 @@ public class AllAppsRecyclerView extends FastScrollRecyclerView {
 
     public void setLettersToScrollLayout(
             List<AlphabeticalAppsList.FastScrollSectionInfo> fastScrollSections) {
+        if (fastScrollSections.isEmpty()) {
+            return;
+        }
         if (mLetterList != null) {
             mLetterList.removeAllViews();
         }
@@ -364,6 +367,8 @@ public class AllAppsRecyclerView extends FastScrollRecyclerView {
         mLetterList.addView(lastLetterListTextView);
         constraintTextViewsVertically(mLetterList, textViews);
         mLetterList.setVisibility(VISIBLE);
+        // Set the alpha to 0 to avoid the letter list being shown when it shouldn't be.
+        mLetterList.setAlpha(0);
     }
 
     private void constraintTextViewsVertically(ConstraintLayout constraintLayout,

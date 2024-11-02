@@ -131,6 +131,15 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
     }
 
     @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+
+        if (mViewCallbacks != null) {
+            mViewCallbacks.onViewDetchedFromWindow();
+        }
+    }
+
+    @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
         mNoRecentItemsPane = findViewById(R.id.no_recent_items_pane);
@@ -279,6 +288,10 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
 
     int getDesktopTaskIndex() {
         return mDesktopTaskIndex;
+    }
+
+    void resetViewCallbacks() {
+        mViewCallbacks = null;
     }
 
     protected Animator getCloseAnimation() {

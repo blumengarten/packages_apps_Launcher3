@@ -233,7 +233,7 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         mTaskbarNavButtonTranslationY =
                 controllers.navbarButtonsViewController.getTaskbarNavButtonTranslationY();
         mTaskbarNavButtonTranslationYForInAppDisplay = controllers.navbarButtonsViewController
-                .getNavButtonTranslationYForInAppDisplay();
+                .getTaskbarNavButtonTranslationYForInAppDisplay();
 
         mActivity.addOnDeviceProfileChangeListener(mDeviceProfileChangeListener);
 

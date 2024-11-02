@@ -157,6 +157,7 @@ public class OtherActivityInputConsumer extends ContextWrapper implements InputC
         mStartDisplacement = continuingPreviousGesture ? 0 : -mTouchSlop;
         mDisableHorizontalSwipe = !mPassedPilferInputSlop && disableHorizontalSwipe;
         mRotationTouchHelper = mDeviceState.getRotationTouchHelper();
+
     }
 
     @Override
@@ -426,8 +427,9 @@ public class OtherActivityInputConsumer extends ContextWrapper implements InputC
             notifyGestureStarted(true /*isLikelyToStartNewTask*/);
         } else {
             // todo differentiate intent based on if we are on home or in app for overview in window
-            Intent intent = new Intent(Flags.enableFallbackOverviewInWindow()
-                ? mInteractionHandler.getHomeIntent()
+            boolean useHomeIntentForWindow = Flags.enableFallbackOverviewInWindow()
+                    || Flags.enableLauncherOverviewInWindow();
+            Intent intent = new Intent(useHomeIntentForWindow ? mInteractionHandler.getHomeIntent()
                 : mInteractionHandler.getLaunchIntent());
             intent.putExtra(INTENT_EXTRA_LOG_TRACE_ID, mGestureState.getGestureId());
             mActiveCallbacks = mTaskAnimationManager.startRecentsAnimation(mGestureState, intent,

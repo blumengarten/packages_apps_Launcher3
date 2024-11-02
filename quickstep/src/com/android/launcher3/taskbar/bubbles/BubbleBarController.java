@@ -35,6 +35,7 @@ import android.os.SystemProperties;
 import android.util.ArrayMap;
 import android.util.Log;
 
+import com.android.launcher3.taskbar.TaskbarSharedState;
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController;
 import com.android.launcher3.util.Executors.SimpleThreadFactory;
 import com.android.quickstep.SystemUiProxy;
@@ -47,6 +48,7 @@ import com.android.wm.shell.shared.bubbles.BubbleInfo;
 import com.android.wm.shell.shared.bubbles.RemovedBubble;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -112,6 +114,7 @@ public class BubbleBarController extends IBubblesListener.Stub {
 
     private BubbleBarItem mSelectedBubble;
 
+    private TaskbarSharedState mSharedState;
     private ImeVisibilityChecker mImeVisibilityChecker;
     private BubbleBarViewController mBubbleBarViewController;
     private BubbleStashController mBubbleStashController;
@@ -173,12 +176,25 @@ public class BubbleBarController extends IBubblesListener.Stub {
 
     public void onDestroy() {
         mSystemUiProxy.setBubblesListener(null);
+        // Saves bubble bar state
+        BubbleInfo[] bubbleInfoItems = new BubbleInfo[mBubbles.size()];
+        mBubbles.values().forEach(bubbleBarBubble -> {
+            int index = mBubbleBarViewController.bubbleViewIndex(bubbleBarBubble.getView());
+            if (index < 0 || index >= bubbleInfoItems.length) {
+                Log.e(TAG, "Found improper index: " + index + " for " + bubbleBarBubble);
+            } else {
+                bubbleInfoItems[index] = bubbleBarBubble.getInfo();
+            }
+        });
+        mSharedState.bubbleInfoItems = Arrays.asList(bubbleInfoItems);
     }
 
     /** Initializes controllers. */
     public void init(BubbleControllers bubbleControllers,
             BubbleBarLocationListener bubbleBarLocationListener,
-            ImeVisibilityChecker imeVisibilityChecker) {
+            ImeVisibilityChecker imeVisibilityChecker,
+            TaskbarSharedState sharedState) {
+        mSharedState = sharedState;
         mImeVisibilityChecker = imeVisibilityChecker;
         mBubbleBarViewController = bubbleControllers.bubbleBarViewController;
         mBubbleStashController = bubbleControllers.bubbleStashController;
@@ -188,6 +204,7 @@ public class BubbleBarController extends IBubblesListener.Stub {
         mBubbleBarLocationListener = bubbleBarLocationListener;
 
         bubbleControllers.runAfterInit(() -> {
+            restoreSavedState(sharedState);
             mBubbleBarViewController.setHiddenForBubbles(
                     !sBubbleBarEnabled || mBubbles.isEmpty());
             mBubbleStashedHandleViewController.ifPresent(
@@ -266,6 +283,26 @@ public class BubbleBarController extends IBubblesListener.Stub {
         }
     }
 
+    private void restoreSavedState(TaskbarSharedState sharedState) {
+        if (sharedState.bubbleBarLocation != null) {
+            updateBubbleBarLocationInternal(sharedState.bubbleBarLocation);
+        }
+        List<BubbleInfo> bubbleInfos = sharedState.bubbleInfoItems;
+        if (bubbleInfos == null || bubbleInfos.isEmpty()) return;
+        // Iterate in reverse because new bubbles are added in front and the list is in order.
+        for (int i = bubbleInfos.size() - 1; i >= 0; i--) {
+            BubbleBarBubble bubble = mBubbleCreator.populateBubble(mContext,
+                    bubbleInfos.get(i), mBarView, /* existingBubble = */ null);
+            if (bubble == null) {
+                Log.e(TAG, "Could not instantiate BubbleBarBubble for " + bubbleInfos.get(i));
+                continue;
+            }
+            addBubbleInternally(bubble,  /* showAppBadge = */
+                    mBubbleBarViewController.isExpanded() || i == 0,
+                    /* isExpanding = */ false,  /* suppressAnimation = */ true);
+        }
+    }
+
     private void applyViewChanges(BubbleBarViewUpdate update) {
         final boolean isCollapsed = (update.expandedChanged && !update.expanded)
                 || (!update.expandedChanged && !mBubbleBarViewController.isExpanded());
@@ -276,6 +313,12 @@ public class BubbleBarController extends IBubblesListener.Stub {
         final boolean suppressAnimation =
                 update.initialState || mBubbleBarViewController.isHiddenForSysui()
                         || mImeVisibilityChecker.isImeVisible();
+
+        if (update.initialState && mSharedState.hasSavedBubbles()) {
+            // clear restored state
+            mBubbleBarViewController.removeAllBubbles();
+            mBubbles.clear();
+        }
 
         BubbleBarBubble bubbleToSelect = null;
 
@@ -347,8 +390,8 @@ public class BubbleBarController extends IBubblesListener.Stub {
             for (int i = update.currentBubbles.size() - 1; i >= 0; i--) {
                 BubbleBarBubble bubble = update.currentBubbles.get(i);
                 if (bubble != null) {
-                    mBubbles.put(bubble.getKey(), bubble);
-                    mBubbleBarViewController.addBubble(bubble, isExpanding, suppressAnimation);
+                    addBubbleInternally(bubble, /* showAppBadge = */ !isCollapsed || i == 0,
+                            isExpanding, suppressAnimation);
                     if (isCollapsed) {
                         // If we're collapsed, the most recently added bubble will be selected.
                         bubbleToSelect = bubble;
@@ -420,6 +463,7 @@ public class BubbleBarController extends IBubblesListener.Stub {
             }
         }
         if (update.bubbleBarLocation != null) {
+            mSharedState.bubbleBarLocation = update.bubbleBarLocation;
             if (update.bubbleBarLocation != mBubbleBarViewController.getBubbleBarLocation()) {
                 updateBubbleBarLocationInternal(update.bubbleBarLocation);
             }
@@ -517,6 +561,14 @@ public class BubbleBarController extends IBubblesListener.Stub {
             mLastSentBubbleBarTop = newTop;
             mSystemUiProxy.updateBubbleBarTopOnScreen(newTop);
         }
+    }
+
+    private void addBubbleInternally(BubbleBarBubble bubble, boolean showAppBadge,
+            boolean isExpanding, boolean suppressAnimation) {
+        //TODO(b/360652359): remove setting scale to the app badge once issue is fixed
+        bubble.getView().setBadgeScale(showAppBadge ? 1 : 0);
+        mBubbles.put(bubble.getKey(), bubble);
+        mBubbleBarViewController.addBubble(bubble, isExpanding, suppressAnimation);
     }
 
     /** Interface for checking whether the IME is visible. */

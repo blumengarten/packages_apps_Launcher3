@@ -299,7 +299,8 @@ public class BubbleView extends ConstraintLayout {
         return mBubble;
     }
 
-    void updateDotVisibility(boolean animate) {
+    /** Updates the dot visibility if it's not suppressed based on whether it has unseen content. */
+    public void updateDotVisibility(boolean animate) {
         if (mDotSuppressedForBubbleUpdate) {
             // if the dot is suppressed for an update, there's nothing to do
             return;
@@ -321,16 +322,12 @@ public class BubbleView extends ConstraintLayout {
         }
     }
 
-    /**
-     * Suppresses or un-suppresses drawing the dot due to an update for this bubble.
-     *
-     * <p>If the dot is being suppressed and is already visible, it remains visible because it is
-     * used as a starting point for the animation. If the dot is being unsuppressed, it is
-     * redrawn if needed.
-     */
+    /** Suppresses or un-suppresses drawing the dot due to an update for this bubble. */
     public void suppressDotForBubbleUpdate(boolean suppress) {
         mDotSuppressedForBubbleUpdate = suppress;
-        if (!suppress) {
+        if (suppress) {
+            setDotScale(0);
+        } else {
             showDotIfNeeded(/* animate= */ false);
         }
     }

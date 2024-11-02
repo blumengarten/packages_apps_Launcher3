@@ -21,7 +21,6 @@ import android.graphics.Insets
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.Region
-import android.inputmethodservice.InputMethodService.ENABLE_HIDE_IME_CAPTION_BAR
 import android.os.Binder
 import android.os.IBinder
 import android.view.DisplayInfo
@@ -150,7 +149,7 @@ class TaskbarInsetsController(val context: TaskbarActivityContext) : LoggableTas
         }
         if (
             taskbarStashController.isInApp ||
-                taskbarStashController.isInOverview ||
+                controllers.uiController.isInOverviewUi ||
                 DisplayController.showLockedTaskbarOnHome(context)
         ) {
             // only add the taskbar touch region if not on home
@@ -259,7 +258,7 @@ class TaskbarInsetsController(val context: TaskbarActivityContext) : LoggableTas
         // When in gesture nav, report the stashed height to the IME, to allow hiding the
         // IME navigation bar.
         val imeInsetsSize =
-            if (ENABLE_HIDE_IME_CAPTION_BAR && context.isGestureNav) {
+            if (context.isGestureNav) {
                 getInsetsForGravity(controllers.taskbarStashController.stashedHeight, gravity)
             } else {
                 getInsetsForGravity(taskbarHeightForIme, gravity)

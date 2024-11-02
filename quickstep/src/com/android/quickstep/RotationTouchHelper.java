@@ -180,6 +180,7 @@ public class RotationTouchHelper implements DisplayInfoChangeListener, SafeClose
                 }
             }
         };
+        runOnDestroy(() -> mOrientationListener.disable());
         mNeedsInit = false;
     }
 
@@ -212,6 +213,7 @@ public class RotationTouchHelper implements DisplayInfoChangeListener, SafeClose
             r.run();
         }
         mNeedsInit = true;
+        mOnDestroyActions.clear();
     }
 
     public boolean isTaskListFrozen() {

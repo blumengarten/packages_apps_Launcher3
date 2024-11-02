@@ -396,15 +396,6 @@ public class WidgetsListAdapter extends Adapter<ViewHolder> implements OnHeaderC
         LinearLayoutManager layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
         if (layoutManager == null) return;
 
-        if (position == mVisibleEntries.size() - 2
-                && mVisibleEntries.get(mVisibleEntries.size() - 1)
-                instanceof WidgetsListContentEntry) {
-            // If the selected header is in the last position and its content is showing, then
-            // scroll to the final position so the last list of widgets will show.
-            layoutManager.scrollToPosition(mVisibleEntries.size() - 1);
-            return;
-        }
-
         // Scroll to the header view's current offset, accounting for the recycler view's padding.
         // If the header view couldn't be found, then it will appear at the top of the list.
         layoutManager.scrollToPositionWithOffset(
