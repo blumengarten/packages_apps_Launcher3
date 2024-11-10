@@ -18,6 +18,8 @@ import android.os.UserHandle;
 import android.util.Log;
 import android.util.Pair;
 
+import androidx.annotation.AnyThread;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.collection.ArrayMap;
 
@@ -65,6 +67,8 @@ public class WidgetsModel {
 
     /* Map of widgets and shortcuts that are tracked per package. */
     private final Map<PackageItemInfo, List<WidgetItem>> mWidgetsByPackageItem = new HashMap<>();
+    @Nullable private Predicate<WidgetItem> mDefaultWidgetsFilter = null;
+    @Nullable private Predicate<WidgetItem> mPredictedWidgetsFilter = null;
 
     /**
      * Returns all widgets keyed by their component key.
@@ -89,6 +93,37 @@ public class WidgetsModel {
             return Collections.emptyMap();
         }
         return new HashMap<>(mWidgetsByPackageItem);
+    }
+
+    /**
+     * Returns widget filter that can be applied to {@link WidgetItem}s to check if they can be
+     * shown in the default widgets list.
+     * <p>Returns null if filtering isn't available</p>
+     */
+    @AnyThread
+    public @Nullable Predicate<WidgetItem> getDefaultWidgetsFilter() {
+        return mDefaultWidgetsFilter;
+    }
+
+    /**
+     * Returns widget filter that can be applied to {@link WidgetItem}s to check if they can be
+     * part of widget predictions.
+     * <p>Returns null if filter isn't available</p>
+     */
+    @AnyThread
+    public @Nullable  Predicate<WidgetItem> getPredictedWidgetsFilter() {
+        return mPredictedWidgetsFilter;
+    }
+
+    /**
+     * Updates model with latest filter data in cache.
+     */
+    public void updateWidgetFilters(@NonNull WidgetsFilterDataProvider widgetsFilterDataProvider) {
+        if (!WIDGETS_ENABLED) {
+            return;
+        }
+        mDefaultWidgetsFilter = widgetsFilterDataProvider.getDefaultWidgetsFilter();
+        mPredictedWidgetsFilter = widgetsFilterDataProvider.getPredictedWidgetsFilter();
     }
 
     /**
@@ -299,7 +334,7 @@ public class WidgetsModel {
             if (pInfo == null) {
                 pInfo = new PackageItemInfo(key.mPackageName, key.mWidgetCategory, key.mUser);
                 pInfo.user = key.mUser;
-                mMap.put(key,  pInfo);
+                mMap.put(key, pInfo);
             }
             return pInfo;
         }

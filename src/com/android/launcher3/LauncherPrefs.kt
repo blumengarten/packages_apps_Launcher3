@@ -26,6 +26,7 @@ import com.android.launcher3.model.DeviceGridState
 import com.android.launcher3.pm.InstallSessionHelper
 import com.android.launcher3.provider.RestoreDbTask
 import com.android.launcher3.provider.RestoreDbTask.FIRST_LOAD_AFTER_RESTORE_KEY
+import com.android.launcher3.settings.SettingsActivity
 import com.android.launcher3.states.RotationHelper
 import com.android.launcher3.util.DisplayController
 import com.android.launcher3.util.MainThreadInitializedObject
@@ -133,6 +134,7 @@ abstract class LauncherPrefs : SafeCloseable {
             nonRestorableItem(FIRST_LOAD_AFTER_RESTORE_KEY, false, EncryptionType.ENCRYPTED)
         @JvmField val APP_WIDGET_IDS = backedUpItem(RestoreDbTask.APPWIDGET_IDS, "")
         @JvmField val OLD_APP_WIDGET_IDS = backedUpItem(RestoreDbTask.APPWIDGET_OLD_IDS, "")
+
         @JvmField
         val GRID_NAME =
             ConstantItem(
@@ -147,6 +149,9 @@ abstract class LauncherPrefs : SafeCloseable {
             backedUpItem(RotationHelper.ALLOW_ROTATION_PREFERENCE_KEY, Boolean::class.java) {
                 RotationHelper.getAllowRotationDefaultValue(DisplayController.INSTANCE.get(it).info)
             }
+
+        @JvmField
+        val FIXED_LANDSCAPE_MODE = backedUpItem(SettingsActivity.FIXED_LANDSCAPE_MODE, false)
 
         // Preferences for widget configurations
         @JvmField

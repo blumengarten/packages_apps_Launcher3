@@ -12,11 +12,9 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<com.android.launcher3.allapps.WorkModeSwitch
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/work_mode_toggle"
-    android:layout_alignParentBottom="true"
-    android:layout_alignParentEnd="true"
     android:layout_height="@dimen/work_fab_height"
     android:layout_width="wrap_content"
     android:minHeight="@dimen/work_fab_height"
@@ -31,7 +29,6 @@
         android:layout_marginVertical="@dimen/work_fab_icon_vertical_margin"
         android:importantForAccessibility="no"
         android:src="@drawable/ic_corp_off"
-        android:tint="@color/work_fab_icon_color"
         android:layout_marginStart="@dimen/work_fab_icon_start_margin_expanded"
         android:scaleType="center"/>
     <TextView
@@ -39,7 +36,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:maxWidth="@dimen/work_fab_width"
-        android:textColor="@color/work_fab_icon_color"
+        android:textColor="?attr/materialColorOnPrimary"
         android:textSize="14sp"
         android:includeFontPadding="false"
         android:textDirection="locale"
@@ -48,4 +45,4 @@
         android:layout_marginEnd="@dimen/work_fab_text_end_margin"
         android:maxLines="1"
         style="@style/TextHeadline"/>
-</com.android.launcher3.allapps.WorkModeSwitch>
+</LinearLayout>

@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"<xliff:g id="NAME">%1$s</xliff:g>-г суулгаж байна. <xliff:g id="PROGRESS">%2$s</xliff:g> дууссан"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"<xliff:g id="NAME">%1$s</xliff:g>-г татаж байна, <xliff:g id="PROGRESS">%2$s</xliff:g> татсан"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g> нь суулгахыг хүлээж байна"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"<xliff:g id="NAME">%1$s</xliff:g>-г архивласан. Татаж, сэргээхийн тулд товшино уу."</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"<xliff:g id="NAME">%1$s</xliff:g>-г архивласан."</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"татах, сэргээх"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"Аппын шинэчлэлт шаардлагатай"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"Энэ дүрс тэмдгийн аппыг шинэчлээгүй. Та энэ товчлолыг дахин идэвхжүүлэх эсвэл дүрсийг хасахын тулд гараар шинэчлэх боломжтой."</string>
     <string name="dialog_update" msgid="2178028071796141234">"Шинэчлэх"</string>

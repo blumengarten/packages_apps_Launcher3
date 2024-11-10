@@ -16,6 +16,8 @@
 
 package com.android.launcher3.graphics;
 
+import static android.content.res.Configuration.UI_MODE_NIGHT_NO;
+import static android.content.res.Configuration.UI_MODE_NIGHT_YES;
 import static android.view.Display.DEFAULT_DISPLAY;
 
 import static com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME;
@@ -25,6 +27,7 @@ import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
 import android.app.WallpaperColors;
 import android.appwidget.AppWidgetProviderInfo;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.hardware.display.DisplayManager;
 import android.os.Bundle;
@@ -84,6 +87,7 @@ public class PreviewSurfaceRenderer {
     private static final String KEY_COLORS = "wallpaper_colors";
     private static final String KEY_COLOR_RESOURCE_IDS = "color_resource_ids";
     private static final String KEY_COLOR_VALUES = "color_values";
+    private static final String KEY_DARK_MODE = "use_dark_mode";
 
     private Context mContext;
     private final IBinder mHostToken;
@@ -95,6 +99,7 @@ public class PreviewSurfaceRenderer {
     private final Display mDisplay;
     private final WallpaperColors mWallpaperColors;
     private SparseIntArray mPreviewColorOverride;
+    @Nullable private Boolean mDarkMode;
     private final RunnableList mLifeCycleTracker;
 
     private final SurfaceControlViewHost mSurfaceControlViewHost;
@@ -235,6 +240,8 @@ public class PreviewSurfaceRenderer {
     }
 
     private void updateColorOverrides(Bundle bundle) {
+        mDarkMode =
+                bundle.containsKey(KEY_DARK_MODE) ? bundle.getBoolean(KEY_DARK_MODE) : null;
         int[] ids = bundle.getIntArray(KEY_COLOR_RESOURCE_IDS);
         int[] colors = bundle.getIntArray(KEY_COLOR_VALUES);
         if (ids != null && colors != null) {
@@ -253,6 +260,18 @@ public class PreviewSurfaceRenderer {
      */
     private Context getPreviewContext() {
         Context context = mContext.createDisplayContext(mDisplay);
+        if (mDarkMode != null) {
+            Configuration configuration = new Configuration(
+                    context.getResources().getConfiguration());
+            if (mDarkMode) {
+                configuration.uiMode &= ~UI_MODE_NIGHT_NO;
+                configuration.uiMode |= UI_MODE_NIGHT_YES;
+            } else {
+                configuration.uiMode &= ~UI_MODE_NIGHT_YES;
+                configuration.uiMode |= UI_MODE_NIGHT_NO;
+            }
+            context = context.createConfigurationContext(configuration);
+        }
         if (Flags.newCustomizationPickerUi()) {
             if (mPreviewColorOverride != null) {
                 LocalColorExtractor.newInstance(context)
@@ -305,7 +324,9 @@ public class PreviewSurfaceRenderer {
                     bgModel,
                     LauncherAppState.getInstance(previewContext).getModel().getModelDelegate(),
                     new BaseLauncherBinder(LauncherAppState.getInstance(previewContext), bgModel,
-                            /* bgAllAppsList= */ null, new Callbacks[0])) {
+                            /* bgAllAppsList= */ null, new Callbacks[0]),
+                    LauncherAppState.getInstance(
+                            previewContext).getModel().getWidgetsFilterDataProvider()) {
 
                 @Override
                 public void run() {

@@ -73,13 +73,17 @@ class TasksRepository(
         getTaskDataById(taskId).map { it?.thumbnail }.distinctUntilChangedBy { it?.snapshotId }
 
     override fun setVisibleTasks(visibleTaskIdList: Set<Int>) {
-        Log.d(TAG, "setVisibleTasks: $visibleTaskIdList")
-
         // Remove tasks are no longer visible
         val tasksNoLongerVisible = taskRequests.keys.subtract(visibleTaskIdList)
         removeTasks(tasksNoLongerVisible)
         // Add new tasks to be requested
-        visibleTaskIdList.subtract(taskRequests.keys).forEach { taskId -> requestTaskData(taskId) }
+        val newlyVisibleTasks = visibleTaskIdList.subtract(taskRequests.keys)
+        newlyVisibleTasks.forEach { taskId -> requestTaskData(taskId) }
+
+        if (tasksNoLongerVisible.isNotEmpty() || newlyVisibleTasks.isNotEmpty()) {
+            Log.d(TAG, "setVisibleTasks to: $visibleTaskIdList, " +
+                    "removed: $tasksNoLongerVisible, added: $newlyVisibleTasks")
+        }
     }
 
     private fun requestTaskData(taskId: Int) {

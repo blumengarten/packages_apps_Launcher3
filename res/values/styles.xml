@@ -275,6 +275,12 @@
             @color/widget_picker_add_button_background_color_light</item>
         <item name="widgetPickerAddButtonTextColor">
             @color/widget_picker_add_button_text_color_light</item>
+        <item name="widgetPickerExpandButtonBackgroundColor">
+            @color/widget_picker_expand_button_background_color_light
+        </item>
+        <item name="widgetPickerExpandButtonTextColor">
+            @color/widget_picker_expand_button_text_color_light
+        </item>
         <item name="widgetCellTitleColor">
             @color/widget_cell_title_color_light</item>
         <item name="widgetCellSubtitleColor">
@@ -316,6 +322,12 @@
             @color/widget_picker_add_button_background_color_dark</item>
         <item name="widgetPickerAddButtonTextColor">
             @color/widget_picker_add_button_text_color_dark</item>
+        <item name="widgetPickerExpandButtonBackgroundColor">
+            @color/widget_picker_expand_button_background_color_dark
+        </item>
+        <item name="widgetPickerExpandButtonTextColor">
+            @color/widget_picker_expand_button_text_color_dark
+        </item>
         <item name="widgetCellTitleColor">
             @color/widget_cell_title_color_dark</item>
         <item name="widgetCellSubtitleColor">

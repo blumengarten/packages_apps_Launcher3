@@ -279,6 +279,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -761,7 +762,6 @@ public class Launcher extends StatefulActivity<LauncherState>
             if (!initDeviceProfile(mDeviceProfile.inv) && !mForceConfigUpdate) {
                 return;
             }
-
             dispatchDeviceProfileChanged();
             reapplyUi();
             mDragLayer.recreateControllers();
@@ -775,6 +775,15 @@ public class Launcher extends StatefulActivity<LauncherState>
             mForceConfigUpdate = false;
             Trace.endSection();
         }
+    }
+
+    private void updateFixedLandscape() {
+        if (!com.android.launcher3.Flags.oneGridSpecs()) {
+            return;
+        }
+        getRotationHelper().setFixedLandscape(
+                Objects.requireNonNull(mDeviceProfile.inv).isFixedLandscapeMode
+        );
     }
 
     public void onAssistantVisibilityChanged(float visibility) {
@@ -805,6 +814,7 @@ public class Launcher extends StatefulActivity<LauncherState>
                     mDeviceProfile.numShownHotseatIcons);
         }
         mModelWriter = mModel.getWriter(true, mCellPosMapper, this);
+        updateFixedLandscape();
         return true;
     }
 
@@ -2629,8 +2639,9 @@ public class Launcher extends StatefulActivity<LauncherState>
      * See {@code LauncherBindingDelegate}
      */
     @Override
-    public void bindAllWidgets(final List<WidgetsListBaseEntry> allWidgets) {
-        mModelCallbacks.bindAllWidgets(allWidgets);
+    public void bindAllWidgets(@NonNull final List<WidgetsListBaseEntry> allWidgets,
+            @NonNull final List<WidgetsListBaseEntry> defaultWidgets) {
+        mModelCallbacks.bindAllWidgets(allWidgets, defaultWidgets);
     }
 
     @Override

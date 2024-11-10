@@ -27,6 +27,7 @@ import static com.android.launcher3.util.SplitConfigurationOptions.STAGE_POSITIO
 
 import android.annotation.UserIdInt;
 import android.app.ActivityManager.RunningTaskInfo;
+import android.app.TaskInfo;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -67,7 +68,7 @@ public class TopTaskTracker extends ISplitScreenListener.Stub
     private static final int HISTORY_SIZE = 5;
 
     // Ordered list with first item being the most recent task.
-    private final LinkedList<RunningTaskInfo> mOrderedTaskList = new LinkedList<>();
+    private final LinkedList<TaskInfo> mOrderedTaskList = new LinkedList<>();
 
     private final Context mContext;
     private final SplitStageInfo mMainStagePosition = new SplitStageInfo();
@@ -96,6 +97,10 @@ public class TopTaskTracker extends ISplitScreenListener.Stub
 
     @Override
     public void onTaskMovedToFront(RunningTaskInfo taskInfo) {
+        handleTaskMovedToFront(taskInfo);
+    }
+
+    public void handleTaskMovedToFront(TaskInfo taskInfo) {
         mOrderedTaskList.removeIf(rto -> rto.taskId == taskInfo.taskId);
         mOrderedTaskList.addFirst(taskInfo);
 
@@ -103,7 +108,7 @@ public class TopTaskTracker extends ISplitScreenListener.Stub
         // display's task to the list, to avoid showing non-home display's task upon going to
         // Recents animation.
         if (taskInfo.displayId != DEFAULT_DISPLAY) {
-            final RunningTaskInfo topTaskOnHomeDisplay = mOrderedTaskList.stream()
+            final TaskInfo topTaskOnHomeDisplay = mOrderedTaskList.stream()
                     .filter(rto -> rto.displayId == DEFAULT_DISPLAY).findFirst().orElse(null);
             if (topTaskOnHomeDisplay != null) {
                 mOrderedTaskList.removeIf(rto -> rto.taskId == topTaskOnHomeDisplay.taskId);
@@ -113,9 +118,9 @@ public class TopTaskTracker extends ISplitScreenListener.Stub
 
         if (mOrderedTaskList.size() >= HISTORY_SIZE) {
             // If we grow in size, remove the last taskInfo which is not part of the split task.
-            Iterator<RunningTaskInfo> itr = mOrderedTaskList.descendingIterator();
+            Iterator<TaskInfo> itr = mOrderedTaskList.descendingIterator();
             while (itr.hasNext()) {
-                RunningTaskInfo info = itr.next();
+                TaskInfo info = itr.next();
                 if (info.taskId != taskInfo.taskId
                         && info.taskId != mMainStagePosition.taskId
                         && info.taskId != mSideStagePosition.taskId) {
@@ -215,13 +220,13 @@ public class TopTaskTracker extends ISplitScreenListener.Stub
             Collections.addAll(mOrderedTaskList, tasks);
         }
 
-        ArrayList<RunningTaskInfo> tasks = new ArrayList<>(mOrderedTaskList);
+        ArrayList<TaskInfo> tasks = new ArrayList<>(mOrderedTaskList);
         // Strip the pinned task and recents task
         tasks.removeIf(t -> t.taskId == mPinnedTaskId || isRecentsTask(t));
         return new CachedTaskInfo(tasks);
     }
 
-    private static boolean isRecentsTask(RunningTaskInfo task) {
+    private static boolean isRecentsTask(TaskInfo task) {
         return task != null && task.configuration.windowConfiguration
                 .getActivityType() == ACTIVITY_TYPE_RECENTS;
     }
@@ -233,10 +238,10 @@ public class TopTaskTracker extends ISplitScreenListener.Stub
     public static class CachedTaskInfo {
 
         @Nullable
-        private final RunningTaskInfo mTopTask;
-        public final List<RunningTaskInfo> mAllCachedTasks;
+        private final TaskInfo mTopTask;
+        public final List<TaskInfo> mAllCachedTasks;
 
-        CachedTaskInfo(List<RunningTaskInfo> allCachedTasks) {
+        CachedTaskInfo(List<TaskInfo> allCachedTasks) {
             mAllCachedTasks = allCachedTasks;
             mTopTask = allCachedTasks.isEmpty() ? null : allCachedTasks.get(0);
         }
@@ -262,7 +267,7 @@ public class TopTaskTracker extends ISplitScreenListener.Stub
                 // Not an excluded task.
                 return null;
             }
-            List<RunningTaskInfo> visibleNonExcludedTasks = mAllCachedTasks.stream()
+            List<TaskInfo> visibleNonExcludedTasks = mAllCachedTasks.stream()
                     .filter(t -> t.isVisible
                             && (t.baseIntent.getFlags() & FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS) == 0
                             && t.getActivityType() != ACTIVITY_TYPE_HOME

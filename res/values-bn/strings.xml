@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"<xliff:g id="NAME">%1$s</xliff:g> ইনস্টল করা হচ্ছে, <xliff:g id="PROGRESS">%2$s</xliff:g> সম্পূর্ণ হয়েছে"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"<xliff:g id="NAME">%1$s</xliff:g> ডাউনলোড হচ্ছে <xliff:g id="PROGRESS">%2$s</xliff:g> সম্পন্ন হয়েছে"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g> ইনস্টলের অপেক্ষায় রয়েছে"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"<xliff:g id="NAME">%1$s</xliff:g> আর্কাইভ করা হয়েছে। ডাউনলোড করতে এবং ফিরিয়ে আনতে ট্যাপ করুন।"</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"<xliff:g id="NAME">%1$s</xliff:g> আর্কাইভ করা হয়েছে।"</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"ডাউনলোড করুন ও ফিরিয়ে আনুন"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"অ্যাপটি আপডেট করা প্রয়োজন"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"এই আইকনের জন্য অ্যাপটি আপডেট করা নেই। এই শর্টকার্ট আবার চালু করতে, আপনি ম্যানুয়ালি আপডেট করতে বা সরিয়ে দিতে পারবেন।"</string>
     <string name="dialog_update" msgid="2178028071796141234">"আপডেট করুন"</string>

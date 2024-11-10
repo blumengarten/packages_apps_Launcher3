@@ -201,8 +201,7 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
                         // Only finish if the end target is RECENTS. Otherwise, if the target is
                         // NEW_TASK, startActivityFromRecents will be skipped.
                         if (mLastGestureState.getEndTarget() == RECENTS) {
-                            finishRunningRecentsAnimation(false /* toHome */,
-                                    true /* forceFinish */, null /* forceFinishCb */);
+                            finishRunningRecentsAnimation(false /* toHome */);
                         }
                     });
                 }

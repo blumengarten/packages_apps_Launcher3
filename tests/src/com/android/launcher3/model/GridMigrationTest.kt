@@ -101,6 +101,7 @@ class GridMigrationTest {
                 dst.gridState,
                 dst.dbHelper,
                 src.dbHelper.readableDatabase,
+                false,
             )
         } else {
             GridSizeMigrationDBController.migrateGridIfNeeded(
@@ -109,6 +110,7 @@ class GridMigrationTest {
                 dst.gridState,
                 dst.dbHelper,
                 src.dbHelper.readableDatabase,
+                false,
             )
         }
     }

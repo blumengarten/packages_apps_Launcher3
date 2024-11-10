@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"<xliff:g id="NAME">%1$s</xliff:g> dipasang, <xliff:g id="PROGRESS">%2$s</xliff:g> selesai"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"<xliff:g id="NAME">%1$s</xliff:g> memuat turun, <xliff:g id="PROGRESS">%2$s</xliff:g> selesai"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g> menunggu untuk dipasang"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"<xliff:g id="NAME">%1$s</xliff:g> diarkibkan. Ketik untuk memuat turun dan memulihkan apl tersebut."</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"<xliff:g id="NAME">%1$s</xliff:g> diarkibkan."</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"muat turun dan pulihkan"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"Kemas kini apl diperlukan"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"Apl untuk ikon ini tidak dikemas kini. Anda boleh mengemas kini secara manual untuk mendayakan semula pintasan atau mengalih keluar ikon."</string>
     <string name="dialog_update" msgid="2178028071796141234">"Kemas kini"</string>

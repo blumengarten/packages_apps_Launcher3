@@ -69,7 +69,7 @@
     <string name="home_gesture_intro_title" msgid="836590312858441830">"Əsas səhifəyə keçmək üçün sürüşdürün"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"Ekranın aşağısından yuxarısına sürüşdürün. Bu jest həmişə Əsas səhifəyə aparır."</string>
     <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"2 barmaqla ekranın aşağısından yuxarısına sürüşdürün. Bu jest həmişə Əsas səhifəyə aparır."</string>
-    <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Əsas səhifəyə qayıdın"</string>
+    <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Əsas səhifəyə keçin"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"Ekranın aşağısından yuxarı sürüşdürün"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"Əla!"</string>
     <string name="overview_gesture_feedback_swipe_too_far_from_edge" msgid="6402349235265407385">"Ekranın aşağı kənarından yuxarı sürüşdürün"</string>

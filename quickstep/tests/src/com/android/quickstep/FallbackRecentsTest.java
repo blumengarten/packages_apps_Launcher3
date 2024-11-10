@@ -22,9 +22,7 @@ import static androidx.test.InstrumentationRegistry.getInstrumentation;
 import static com.android.launcher3.tapl.LauncherInstrumentation.WAIT_TIME_MS;
 import static com.android.launcher3.tapl.TestHelpers.getHomeIntentInPackage;
 import static com.android.launcher3.tapl.TestHelpers.getLauncherInMyProcess;
-import static com.android.launcher3.ui.AbstractLauncherUiTest.DEFAULT_ACTIVITY_TIMEOUT;
 import static com.android.launcher3.ui.AbstractLauncherUiTest.DEFAULT_BROADCAST_TIMEOUT_SECS;
-import static com.android.launcher3.ui.AbstractLauncherUiTest.DEFAULT_UI_TIMEOUT;
 import static com.android.launcher3.ui.AbstractLauncherUiTest.resolveSystemApp;
 import static com.android.launcher3.ui.AbstractLauncherUiTest.startAppFast;
 import static com.android.launcher3.ui.AbstractLauncherUiTest.startTestActivity;
@@ -56,6 +54,7 @@ import com.android.launcher3.tapl.OverviewTask;
 import com.android.launcher3.tapl.TestHelpers;
 import com.android.launcher3.testcomponent.TestCommandReceiver;
 import com.android.launcher3.ui.AbstractLauncherUiTest;
+import com.android.launcher3.util.TestUtil;
 import com.android.launcher3.util.Wait;
 import com.android.launcher3.util.rule.ExtendedLongPressTimeoutRule;
 import com.android.launcher3.util.rule.FailureWatcher;
@@ -214,7 +213,7 @@ public class FallbackRecentsTest {
             }
             result[0] = f.apply(activity);
             return true;
-        }).get(), DEFAULT_UI_TIMEOUT, mLauncher);
+        }).get(), mLauncher);
         return (T) result[0];
     }
 
@@ -244,7 +243,7 @@ public class FallbackRecentsTest {
 
         Wait.atMost("Recents activity didn't stop",
                 () -> getFromRecents(recents -> !recents.isStarted()),
-                DEFAULT_UI_TIMEOUT, mLauncher);
+                mLauncher);
     }
 
     @Test
@@ -254,7 +253,8 @@ public class FallbackRecentsTest {
         startTestActivity(2);
         waitForRecentsActivityStop();
         Wait.atMost("Expected three apps in the task list",
-                () -> mLauncher.getRecentTasks().size() >= 3, DEFAULT_ACTIVITY_TIMEOUT, mLauncher);
+                () -> mLauncher.getRecentTasks().size() >= 3,
+                mLauncher);
 
         checkTestLauncher();
         BaseOverview overview = mLauncher.getLaunchedAppState().switchToOverview();
@@ -282,7 +282,7 @@ public class FallbackRecentsTest {
         assertNotNull("OverviewTask.open returned null", task.open());
         assertTrue("Test activity didn't open from Overview", TestHelpers.wait(Until.hasObject(
                 By.pkg(getAppPackageName()).text("TestActivity2")),
-                DEFAULT_UI_TIMEOUT));
+                TestUtil.DEFAULT_UI_TIMEOUT));
 
 
         // Test dismissing a task.

@@ -143,5 +143,13 @@
                 android:clipToPadding="false" />
 
         </com.android.launcher3.widget.picker.WidgetPagedView>
+
+        <com.android.launcher3.widget.picker.WidgetsRecyclerView
+            android:id="@+id/search_widgets_list_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingHorizontal="@dimen/widget_list_horizontal_margin_two_pane"
+            android:visibility="gone" />
     </LinearLayout>
 </merge>

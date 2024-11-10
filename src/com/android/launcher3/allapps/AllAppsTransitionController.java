@@ -16,7 +16,6 @@
 package com.android.launcher3.allapps;
 
 import static com.android.app.animation.Interpolators.DECELERATE_1_7;
-import static com.android.app.animation.Interpolators.INSTANT;
 import static com.android.app.animation.Interpolators.LINEAR;
 import static com.android.launcher3.LauncherAnimUtils.SCALE_PROPERTY;
 import static com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_Y;
@@ -28,7 +27,6 @@ import static com.android.launcher3.UtilitiesKt.CLIP_CHILDREN_FALSE_MODIFIER;
 import static com.android.launcher3.UtilitiesKt.modifyAttributesOnViewTree;
 import static com.android.launcher3.UtilitiesKt.restoreAttributesOnViewTree;
 import static com.android.launcher3.anim.PropertySetter.NO_ANIM_PROPERTY_SETTER;
-import static com.android.launcher3.states.StateAnimationConfig.ANIM_ALL_APPS_BOTTOM_SHEET_FADE;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_ALL_APPS_FADE;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_VERTICAL_PROGRESS;
 import static com.android.launcher3.util.SystemUiController.FLAG_DARK_NAV;
@@ -106,7 +104,7 @@ public class AllAppsTransitionController
 
                 @Override
                 public Float get(AllAppsTransitionController controller) {
-                    if (controller.mIsTablet) {
+                    if (controller.mShouldShowAllAppsOnSheet) {
                         return controller.mAppsView.getActiveRecyclerView().getTranslationY();
                     } else {
                         return controller.getAppsViewPullbackTranslationY().getValue();
@@ -115,7 +113,7 @@ public class AllAppsTransitionController
 
                 @Override
                 public void setValue(AllAppsTransitionController controller, float translation) {
-                    if (controller.mIsTablet) {
+                    if (controller.mShouldShowAllAppsOnSheet) {
                         controller.mAppsView.getActiveRecyclerView().setTranslationY(translation);
                         controller.getAppsViewPullbackTranslationY().setValue(
                                 ALL_APPS_PULL_BACK_TRANSLATION_DEFAULT);
@@ -134,7 +132,7 @@ public class AllAppsTransitionController
 
                 @Override
                 public Float get(AllAppsTransitionController controller) {
-                    if (controller.mIsTablet) {
+                    if (controller.mShouldShowAllAppsOnSheet) {
                         return controller.mAppsView.getActiveRecyclerView().getAlpha();
                     } else {
                         return controller.getAppsViewPullbackAlpha().getValue();
@@ -143,7 +141,7 @@ public class AllAppsTransitionController
 
                 @Override
                 public void setValue(AllAppsTransitionController controller, float alpha) {
-                    if (controller.mIsTablet) {
+                    if (controller.mShouldShowAllAppsOnSheet) {
                         controller.mAppsView.getActiveRecyclerView().setAlpha(alpha);
                         controller.getAppsViewPullbackAlpha().setValue(
                                 ALL_APPS_PULL_BACK_ALPHA_DEFAULT);
@@ -168,6 +166,7 @@ public class AllAppsTransitionController
     @Nullable private Animator.AnimatorListener mAllAppsSearchBackAnimationListener;
 
     private boolean mIsVerticalLayout;
+    private boolean mShouldShowAllAppsOnSheet;
 
     // Animation in this class is controlled by a single variable {@link mProgress}.
     // Visually, it represents top y coordinate of the all apps container if multiplied with
@@ -183,8 +182,6 @@ public class AllAppsTransitionController
     private MultiValueAlpha mAppsViewAlpha;
     private MultiPropertyFactory<View> mAppsViewTranslationY;
 
-    private boolean mIsTablet;
-
     private boolean mHasScaleEffect;
     private final VibratorWrapper mVibratorWrapper;
 
@@ -193,7 +190,7 @@ public class AllAppsTransitionController
         DeviceProfile dp = mLauncher.getDeviceProfile();
         mProgress = 1f;
         mIsVerticalLayout = dp.isVerticalBarLayout();
-        mIsTablet = dp.isTablet;
+        mShouldShowAllAppsOnSheet = dp.shouldShowAllAppsOnSheet();
         mNavScrimFlag = Themes.getAttrBoolean(l, R.attr.isMainColorDark)
                 ? FLAG_DARK_NAV : FLAG_LIGHT_NAV;
 
@@ -217,7 +214,7 @@ public class AllAppsTransitionController
             mLauncher.getWorkspace().getPageIndicator().setTranslationY(0);
         }
 
-        mIsTablet = dp.isTablet;
+        mShouldShowAllAppsOnSheet = dp.shouldShowAllAppsOnSheet();
     }
 
     /**
@@ -394,10 +391,6 @@ public class AllAppsTransitionController
                 hasAllAppsContent ? 1 : 0, allAppsFade);
         setter.setFloat(getAppsViewPullbackAlpha(), MultiPropertyFactory.MULTI_PROPERTY_VALUE,
                 hasAllAppsContent ? 1 : 0, allAppsFade);
-
-        setter.setFloat(mLauncher.getAppsView(),
-                ActivityAllAppsContainerView.BOTTOM_SHEET_ALPHA, hasAllAppsContent ? 1 : 0,
-                config.getInterpolator(ANIM_ALL_APPS_BOTTOM_SHEET_FADE, INSTANT));
 
         boolean shouldProtectHeader = !config.hasAnimationFlag(StateAnimationConfig.SKIP_SCRIM)
                 && (ALL_APPS == state || mLauncher.getStateManager().getState() == ALL_APPS);

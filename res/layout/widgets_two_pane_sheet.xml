@@ -70,7 +70,7 @@
                 android:layout_height="match_parent"
                 android:clipChildren="false"
                 android:clipToPadding="false"
-                android:paddingBottom="24dp"
+                android:paddingBottom="8dp"
                 android:layout_gravity="start"
                 android:layout_weight="0.33">
                 <TextView
@@ -84,14 +84,6 @@
                     android:layout_width="@dimen/fastscroll_width"
                     android:layout_height="match_parent"
                     android:layout_marginEnd="@dimen/fastscroll_end_margin" />
-
-                <com.android.launcher3.widget.picker.WidgetsRecyclerView
-                    android:id="@+id/search_widgets_list_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clipToPadding="false"
-                    android:paddingHorizontal="@dimen/widget_list_horizontal_margin_two_pane"
-                    android:visibility="gone" />
             </FrameLayout>
 
             <FrameLayout

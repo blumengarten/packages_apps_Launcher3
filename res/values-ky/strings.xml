@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"<xliff:g id="NAME">%1$s</xliff:g> орнотулууда, <xliff:g id="PROGRESS">%2$s</xliff:g> аткарылды"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"<xliff:g id="NAME">%1$s</xliff:g> жүктөлүп алынууда, <xliff:g id="PROGRESS">%2$s</xliff:g> аяктады"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g> орнотулушу күтүлүүдө"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"<xliff:g id="NAME">%1$s</xliff:g> архивделди. Жүктөп алуу жана калыбына келтирүү үчүн таптаңыз."</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"<xliff:g id="NAME">%1$s</xliff:g> архивделди."</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"жүктөп алуу жана калыбына келтирүү"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"Колдонмону жаңыртыңыз"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"Бул сүрөтчөнүн колдонмосу жаңыртылган эмес. Ыкчам баскычты кайра иштетүү үчүн аны кол менен жаңыртып же сүрөтчөнү өчүрүп койсоңуз болот."</string>
     <string name="dialog_update" msgid="2178028071796141234">"Жаңыртуу"</string>

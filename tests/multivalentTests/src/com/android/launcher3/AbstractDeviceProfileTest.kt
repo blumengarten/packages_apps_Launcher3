@@ -307,6 +307,7 @@ abstract class AbstractDeviceProfileTest {
 
         whenever(launcherPrefs.get(LauncherPrefs.TASKBAR_PINNING)).thenReturn(false)
         whenever(launcherPrefs.get(LauncherPrefs.TASKBAR_PINNING_IN_DESKTOP_MODE)).thenReturn(true)
+        whenever(launcherPrefs.get(LauncherPrefs.FIXED_LANDSCAPE_MODE)).thenReturn(false)
         whenever(launcherPrefs.get(LauncherPrefs.HOTSEAT_COUNT)).thenReturn(-1)
         whenever(launcherPrefs.get(LauncherPrefs.DEVICE_TYPE)).thenReturn(-1)
         whenever(launcherPrefs.get(LauncherPrefs.WORKSPACE_SIZE)).thenReturn("")

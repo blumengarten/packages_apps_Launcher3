@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"<xliff:g id="NAME">%1$s</xliff:g> встановлюється, виконано <xliff:g id="PROGRESS">%2$s</xliff:g>"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"<xliff:g id="NAME">%1$s</xliff:g> завантажується, <xliff:g id="PROGRESS">%2$s</xliff:g>"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g> очікує на завантаження"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"Додаток <xliff:g id="NAME">%1$s</xliff:g> заархівовано. Натисніть, щоб завантажити й відновити."</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"Додаток <xliff:g id="NAME">%1$s</xliff:g> заархівовано."</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"завантажити й відновити"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"Потрібно оновити додаток"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"Додаток для цього значка не оновлено. Ви можете оновити його вручну, щоб знову ввімкнути цю швидку команду, або можете вилучити значок."</string>
     <string name="dialog_update" msgid="2178028071796141234">"Оновити"</string>

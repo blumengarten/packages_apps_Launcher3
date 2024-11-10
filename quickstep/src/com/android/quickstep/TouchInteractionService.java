@@ -74,6 +74,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import androidx.annotation.BinderThread;
+import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
@@ -342,36 +343,36 @@ public class TouchInteractionService extends Service {
 
         @BinderThread
         @Override
-        public void checkNavBarModes() {
-            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(tis ->
-                    executeForTaskbarManager(TaskbarManager::checkNavBarModes)
-            ));
-        }
-
-        @BinderThread
-        @Override
-        public void finishBarAnimations() {
-            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(tis ->
-                    executeForTaskbarManager(TaskbarManager::finishBarAnimations)
-            ));
-        }
-
-        @BinderThread
-        @Override
-        public void touchAutoDim(boolean reset) {
-            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(tis ->
-                    executeForTaskbarManager(taskbarManager -> taskbarManager.touchAutoDim(reset))
-            ));
-        }
-
-        @BinderThread
-        @Override
-        public void transitionTo(@BarTransitions.TransitionMode int barMode,
-                boolean animate) {
+        public void checkNavBarModes(int displayId) {
             MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(tis ->
                     executeForTaskbarManager(
-                            taskbarManager -> taskbarManager.transitionTo(barMode, animate))
-            ));
+                            taskbarManager -> taskbarManager.checkNavBarModes(displayId))));
+        }
+
+        @BinderThread
+        @Override
+        public void finishBarAnimations(int displayId) {
+            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(
+                    tis -> executeForTaskbarManager(
+                            taskbarManager -> taskbarManager.finishBarAnimations(displayId))));
+        }
+
+        @BinderThread
+        @Override
+        public void touchAutoDim(int displayId, boolean reset) {
+            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(
+                    tis -> executeForTaskbarManager(
+                            taskbarManager -> taskbarManager.touchAutoDim(displayId, reset))));
+        }
+
+        @BinderThread
+        @Override
+        public void transitionTo(int displayId, @BarTransitions.TransitionMode int barMode,
+                boolean animate) {
+            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(
+                    tis -> executeForTaskbarManager(
+                            taskbarManager -> taskbarManager.transitionTo(displayId, barMode,
+                                    animate))));
         }
 
         @BinderThread
@@ -550,11 +551,15 @@ public class TouchInteractionService extends Service {
                 @Override
                 public void onInputDeviceAdded(int deviceId) {
                     if (isTrackpadDevice(deviceId)) {
-                        boolean wasEmpty = mTrackpadsConnected.isEmpty();
-                        mTrackpadsConnected.add(deviceId);
-                        if (wasEmpty) {
-                            update();
-                        }
+                        // This updates internal TIS state so it needs to also run on the main
+                        // thread.
+                        MAIN_EXECUTOR.execute(() -> {
+                            boolean wasEmpty = mTrackpadsConnected.isEmpty();
+                            mTrackpadsConnected.add(deviceId);
+                            if (wasEmpty) {
+                                update();
+                            }
+                        });
                     }
                 }
 
@@ -564,12 +569,17 @@ public class TouchInteractionService extends Service {
 
                 @Override
                 public void onInputDeviceRemoved(int deviceId) {
-                    mTrackpadsConnected.remove(deviceId);
-                    if (mTrackpadsConnected.isEmpty()) {
-                        update();
-                    }
+                    // This updates internal TIS state so it needs to also run on the main
+                    // thread.
+                    MAIN_EXECUTOR.execute(() -> {
+                        mTrackpadsConnected.remove(deviceId);
+                        if (mTrackpadsConnected.isEmpty()) {
+                            update();
+                        }
+                    });
                 }
 
+                @MainThread
                 private void update() {
                     if (mInputMonitorCompat != null && !mTrackpadsConnected.isEmpty()) {
                         // Don't destroy and reinitialize input monitor due to trackpad
@@ -580,6 +590,7 @@ public class TouchInteractionService extends Service {
                 }
 
                 private boolean isTrackpadDevice(int deviceId) {
+                    // This is a blocking binder call that should run on a bg thread.
                     InputDevice inputDevice = mInputManager.getInputDevice(deviceId);
                     if (inputDevice == null) {
                         return false;

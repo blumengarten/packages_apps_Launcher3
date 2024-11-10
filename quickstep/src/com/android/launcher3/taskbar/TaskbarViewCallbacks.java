@@ -148,8 +148,7 @@ public class TaskbarViewCallbacks {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mControllers.keyboardQuickSwitchController.toggleQuickSwitchViewForTaskbar(
-                        mControllers.taskbarViewController.getTaskIdsForPinnedApps());
+                toggleKeyboardQuickSwitchView();
             }
         };
     }
@@ -159,11 +158,26 @@ public class TaskbarViewCallbacks {
         return new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                mControllers.keyboardQuickSwitchController.toggleQuickSwitchViewForTaskbar(
-                        mControllers.taskbarViewController.getTaskIdsForPinnedApps());
+                toggleKeyboardQuickSwitchView();
                 return true;
             }
         };
+    }
+
+    private void toggleKeyboardQuickSwitchView() {
+        if (mTaskbarView.getTaskbarOverflowView() != null) {
+            mTaskbarView.getTaskbarOverflowView().setIsActive(
+                    !mTaskbarView.getTaskbarOverflowView().getIsActive());
+        }
+        mControllers.keyboardQuickSwitchController.toggleQuickSwitchViewForTaskbar(
+                mControllers.taskbarViewController.getTaskIdsForPinnedApps(),
+                this::onKeyboardQuickSwitchViewClosed);
+    }
+
+    private void onKeyboardQuickSwitchViewClosed() {
+        if (mTaskbarView.getTaskbarOverflowView() != null) {
+            mTaskbarView.getTaskbarOverflowView().setIsActive(false);
+        }
     }
 
     private float getDividerCenterX() {

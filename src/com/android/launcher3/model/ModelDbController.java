@@ -89,6 +89,7 @@ import org.xmlpull.v1.XmlPullParser;
 import java.io.File;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.util.List;
 
 /**
  * Utility class which maintains an instance of Launcher database and provides utility methods
@@ -368,6 +369,13 @@ public class ModelDbController {
 
         InvariantDeviceProfile idp = LauncherAppState.getIDP(mContext);
         DatabaseHelper oldHelper = mOpenHelper;
+
+        // We save the existing db's before creating the destination db helper so we know what logic
+        // to run in grid migration based on if that grid already existed before migration or not.
+        List<String> existingDBs = LauncherFiles.GRID_DB_FILES.stream()
+                .filter(dbName -> mContext.getDatabasePath(dbName).exists())
+                .toList();
+
         mOpenHelper = (mContext instanceof SandboxContext) ? oldHelper
                 : createDatabaseHelper(true, new DeviceGridState(idp).getDbFile());
         try {
@@ -376,9 +384,11 @@ public class ModelDbController {
             // This is the state we want to migrate to that is given by the idp
             DeviceGridState destDeviceState = new DeviceGridState(idp);
 
+            boolean isDestNewDb = !existingDBs.contains(destDeviceState.getDbFile());
+
             GridSizeMigrationLogic gridSizeMigrationLogic = new GridSizeMigrationLogic();
             gridSizeMigrationLogic.migrateGrid(mContext, srcDeviceState, destDeviceState,
-                    mOpenHelper, oldHelper.getWritableDatabase());
+                    mOpenHelper, oldHelper.getWritableDatabase(), isDestNewDb);
         } catch (Exception e) {
             resetLauncherDb(restoreEventLogger);
             throw new Exception("Failed to migrate grid", e);
@@ -441,6 +451,13 @@ public class ModelDbController {
             return false;
         }
         DatabaseHelper oldHelper = mOpenHelper;
+
+        // We save the existing db's before creating the destination db helper so we know what logic
+        // to run in grid migration based on if that grid already existed before migration or not.
+        List<String> existingDBs = LauncherFiles.GRID_DB_FILES.stream()
+                .filter(dbName -> mContext.getDatabasePath(dbName).exists())
+                .toList();
+
         mOpenHelper = (mContext instanceof SandboxContext) ? oldHelper
                 : createDatabaseHelper(true /* forMigration */, targetDbName);
         try {
@@ -448,8 +465,11 @@ public class ModelDbController {
             DeviceGridState srcDeviceState = new DeviceGridState(mContext);
             // This is the state we want to migrate to that is given by the idp
             DeviceGridState destDeviceState = new DeviceGridState(idp);
+
+            boolean isDestNewDb = !existingDBs.contains(destDeviceState.getDbFile());
+
             return GridSizeMigrationDBController.migrateGridIfNeeded(mContext, srcDeviceState,
-                    destDeviceState, mOpenHelper, oldHelper.getWritableDatabase());
+                    destDeviceState, mOpenHelper, oldHelper.getWritableDatabase(), isDestNewDb);
         } catch (Exception e) {
             FileLog.e(TAG, "Failed to migrate grid", e);
             return false;

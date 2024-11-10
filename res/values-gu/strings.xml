@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"<xliff:g id="NAME">%1$s</xliff:g> ઇન્સ્ટૉલ કરી રહ્યાં છીએ, <xliff:g id="PROGRESS">%2$s</xliff:g> પૂર્ણ થયું"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"<xliff:g id="NAME">%1$s</xliff:g> ડાઉનલોડ કરી રહ્યાં છે, <xliff:g id="PROGRESS">%2$s</xliff:g> પૂર્ણ"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g>, ઇન્સ્ટૉલ થવાની રાહ જોઈ રહ્યું છે"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"<xliff:g id="NAME">%1$s</xliff:g>ને આર્કાઇવ કર્યું છે. ડાઉનલોડ અને રિસ્ટોર કરવા માટે ટૅપ કરો."</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"<xliff:g id="NAME">%1$s</xliff:g>ને આર્કાઇવ કર્યું છે."</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"ડાઉનલોડ અને રિસ્ટોર કરો"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"ઍપને અપડેટ કરવી જરૂરી છે"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"આ આઇકન માટે ઍપ અપડેટ કરવામાં આવી નથી. તમે આ શૉર્ટકટ ફરી ચાલુ કરવા અથવા આઇકન કાઢી નાખવા માટે ઍપને મેન્યુઅલી અપડેટ કરી શકો છો."</string>
     <string name="dialog_update" msgid="2178028071796141234">"અપડેટ કરો"</string>

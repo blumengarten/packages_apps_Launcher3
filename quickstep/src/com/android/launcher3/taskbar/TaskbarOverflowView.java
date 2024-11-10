@@ -25,10 +25,13 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import androidx.annotation.NonNull;
+
 import com.android.launcher3.R;
 import com.android.launcher3.Reorderable;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.util.MultiTranslateDelegate;
+import com.android.launcher3.util.Themes;
 import com.android.systemui.shared.recents.model.Task;
 
 import java.util.ArrayList;
@@ -42,12 +45,22 @@ import java.util.List;
  * each other in counter clockwise manner (icons of tasks partially overlapping with each other).
  */
 public class TaskbarOverflowView extends FrameLayout implements Reorderable {
+    private static final int MAX_ITEMS_IN_PREVIEW = 4;
+
+    private boolean mIsRtlLayout;
     private final List<Task> mItems = new ArrayList<Task>();
     private int mIconSize;
     private int mPadding;
     private Paint mItemBackgroundPaint;
     private final MultiTranslateDelegate mTranslateDelegate = new MultiTranslateDelegate(this);
     private float mScaleForReorderBounce = 1f;
+    private int mItemBackgroundColor;
+    private int mLeaveBehindColor;
+    private float mItemPreviewStrokeWidth;
+
+    // Active means the overflow icon has been pressed, which replaces the app icons with the
+    // leave-behind circle and shows the KQS UI.
+    private boolean mIsActive = false;
 
     public TaskbarOverflowView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -78,22 +91,32 @@ public class TaskbarOverflowView extends FrameLayout implements Reorderable {
     }
 
     private void init() {
+        mIsRtlLayout = Utilities.isRtl(getResources());
         mItemBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mItemBackgroundPaint.setColor(getContext().getColor(R.color.taskbar_background));
+        mItemBackgroundColor = getContext().getColor(R.color.taskbar_background);
+        mLeaveBehindColor = Themes.getAttrColor(getContext(), android.R.attr.textColorTertiary);
+        mItemPreviewStrokeWidth = getResources().getDimension(
+                R.dimen.taskbar_overflow_button_preview_stroke);
 
         setWillNotDraw(false);
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
 
-        boolean isRtlLayout = Utilities.isRtl(getResources());
-        float radius = mIconSize / 2.0f - mPadding;
-        float itemPreviewStrokeWidth =
-                getResources().getDimension(R.dimen.taskbar_overflow_button_preview_stroke);
+        if (mIsActive) {
+            drawLeaveBehindCircle(canvas);
+        } else {
+            drawAppIcons(canvas);
+        }
+    }
 
-        int itemsToShow = Math.min(mItems.size(), 4);
+    private void drawAppIcons(@NonNull Canvas canvas) {
+        mItemBackgroundPaint.setColor(mItemBackgroundColor);
+        float radius = mIconSize / 2f - mPadding;
+
+        int itemsToShow = Math.min(mItems.size(), MAX_ITEMS_IN_PREVIEW);
         for (int i = itemsToShow - 1; i >= 0; --i) {
             Drawable icon = mItems.get(mItems.size() - i - 1).icon;
             if (icon == null) {
@@ -103,11 +126,11 @@ public class TaskbarOverflowView extends FrameLayout implements Reorderable {
             // Set the item icon size so two items fit within the overflow icon with stroke width
             // included, and overlap of 4 stroke width sizes between base item preview items.
             // 2 * strokeWidth + 2 * itemIconSize - 4 * strokeWidth = iconSize = 2 * radius.
-            float itemIconSize = radius + itemPreviewStrokeWidth;
-            // Offset item icon from center so item icon stroke edge mateches the parent icon edge.
-            float itemCenterOffset = radius - itemIconSize / 2 - itemPreviewStrokeWidth;
+            float itemIconSize = radius + mItemPreviewStrokeWidth;
+            // Offset item icon from center so item icon stroke edge matches the parent icon edge.
+            float itemCenterOffset = radius - itemIconSize / 2 - mItemPreviewStrokeWidth;
 
-            float itemCenterX = getItemXOffset(itemCenterOffset, isRtlLayout, i, itemsToShow);
+            float itemCenterX = getItemXOffset(itemCenterOffset, mIsRtlLayout, i, itemsToShow);
             float itemCenterY = getItemYOffset(itemCenterOffset, i, itemsToShow);
 
             Drawable iconCopy = icon.getConstantState().newDrawable().mutate();
@@ -119,10 +142,17 @@ public class TaskbarOverflowView extends FrameLayout implements Reorderable {
                     mPadding + itemCenterX + radius - itemIconRadius,
                     mPadding + itemCenterY + radius - itemIconRadius);
             canvas.drawCircle(itemIconRadius, itemIconRadius,
-                    itemIconRadius + itemPreviewStrokeWidth, mItemBackgroundPaint);
+                    itemIconRadius + mItemPreviewStrokeWidth, mItemBackgroundPaint);
             iconCopy.draw(canvas);
             canvas.restore();
         }
+    }
+
+    private void drawLeaveBehindCircle(@NonNull Canvas canvas) {
+        mItemBackgroundPaint.setColor(mLeaveBehindColor);
+
+        final var xyCenter = mIconSize / 2f;
+        canvas.drawCircle(xyCenter, xyCenter, mIconSize / 4f, mItemBackgroundPaint);
     }
 
     /**
@@ -153,11 +183,29 @@ public class TaskbarOverflowView extends FrameLayout implements Reorderable {
         for (int i = 0; i < mItems.size(); ++i) {
             if (mItems.get(i).key.id == task.key.id) {
                 mItems.set(i, task);
-                if (i >= mItems.size() - 4) {
+                if (i >= mItems.size() - MAX_ITEMS_IN_PREVIEW) {
                     invalidate();
                 }
                 break;
             }
+        }
+    }
+
+    /**
+     * Returns the view's state (whether it shows a set of app icons or a leave-behind circle).
+     */
+    public boolean getIsActive() {
+        return mIsActive;
+    }
+
+    /**
+     * Updates the view's state to draw either a set of app icons or a leave-behind circle.
+     * @param isActive The next state of the view.
+     */
+    public void setIsActive(boolean isActive) {
+        if (mIsActive != isActive) {
+            mIsActive = isActive;
+            invalidate();
         }
     }
 

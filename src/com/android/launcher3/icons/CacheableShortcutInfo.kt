@@ -121,7 +121,10 @@ object CacheableShortcutCachingLogic : CachingLogic<CacheableShortcutInfo> {
         item: CacheableShortcutInfo,
         provider: IconProvider,
     ): String? =
-        item.shortcutInfo.lastChangedTimestamp.toString() +
+        // Manifest shortcuts get updated on every reboot. Don't include their change timestamp as
+        // it gets covered by the app's version
+        (if (item.shortcutInfo.isDeclaredInManifest) ""
+        else item.shortcutInfo.lastChangedTimestamp.toString()) +
             "-" +
             provider.getStateForApp(getApplicationInfo(item))
 }

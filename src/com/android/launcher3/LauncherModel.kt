@@ -42,6 +42,7 @@ import com.android.launcher3.model.PackageUpdatedTask
 import com.android.launcher3.model.ReloadStringCacheTask
 import com.android.launcher3.model.ShortcutsChangedTask
 import com.android.launcher3.model.UserLockStateChangedTask
+import com.android.launcher3.model.WidgetsFilterDataProvider
 import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.model.data.WorkspaceItemInfo
 import com.android.launcher3.pm.UserCache
@@ -66,6 +67,7 @@ class LauncherModel(
     private val context: Context,
     private val mApp: LauncherAppState,
     private val iconCache: IconCache,
+    private val widgetsFilterDataProvider: WidgetsFilterDataProvider,
     appFilter: AppFilter,
     mPmHelper: PackageManagerHelper,
     isPrimaryInstance: Boolean,
@@ -140,6 +142,11 @@ class LauncherModel(
         owner: BgDataModel.Callbacks?,
     ) = ModelWriter(mApp.context, this, mBgDataModel, verifyChanges, cellPosMapper, owner)
 
+    /** Returns the [WidgetsFilterDataProvider] that manages widget filters. */
+    fun getWidgetsFilterDataProvider(): WidgetsFilterDataProvider {
+        return widgetsFilterDataProvider
+    }
+
     /** Called when the icon for an app changes, outside of package event */
     @WorkerThread
     fun onAppIconChanged(packageName: String, user: UserHandle) {
@@ -160,7 +167,10 @@ class LauncherModel(
     /** Called when the model is destroyed */
     fun destroy() {
         mModelDestroyed = true
-        MODEL_EXECUTOR.execute(modelDelegate::destroy)
+        MODEL_EXECUTOR.execute {
+            modelDelegate.destroy()
+            widgetsFilterDataProvider.destroy()
+        }
     }
 
     fun onBroadcastIntent(intent: Intent) {
@@ -312,6 +322,7 @@ class LauncherModel(
                             mBgDataModel,
                             this.modelDelegate,
                             launcherBinder,
+                            widgetsFilterDataProvider,
                         )
 
                     // Always post the loader task, instead of running directly
@@ -413,6 +424,14 @@ class LauncherModel(
     fun onWidgetLabelsUpdated(updatedPackages: HashSet<String?>, user: UserHandle) {
         enqueueModelUpdateTask { taskController, dataModel, _ ->
             dataModel.widgetsModel.onPackageIconsUpdated(updatedPackages, user, mApp)
+            taskController.bindUpdatedWidgets(dataModel)
+        }
+    }
+
+    /** Called when the widget filters are refreshed and available to bind to the model. */
+    fun onWidgetFiltersLoaded() {
+        enqueueModelUpdateTask { taskController, dataModel, _ ->
+            dataModel.widgetsModel.updateWidgetFilters(widgetsFilterDataProvider)
             taskController.bindUpdatedWidgets(dataModel)
         }
     }

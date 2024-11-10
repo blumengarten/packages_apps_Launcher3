@@ -297,9 +297,7 @@ public class BubbleBarController extends IBubblesListener.Stub {
                 Log.e(TAG, "Could not instantiate BubbleBarBubble for " + bubbleInfos.get(i));
                 continue;
             }
-            addBubbleInternally(bubble,  /* showAppBadge = */
-                    mBubbleBarViewController.isExpanded() || i == 0,
-                    /* isExpanding = */ false,  /* suppressAnimation = */ true);
+            addBubbleInternally(bubble, /* isExpanding= */ false, /* suppressAnimation= */ true);
         }
     }
 
@@ -390,8 +388,7 @@ public class BubbleBarController extends IBubblesListener.Stub {
             for (int i = update.currentBubbles.size() - 1; i >= 0; i--) {
                 BubbleBarBubble bubble = update.currentBubbles.get(i);
                 if (bubble != null) {
-                    addBubbleInternally(bubble, /* showAppBadge = */ !isCollapsed || i == 0,
-                            isExpanding, suppressAnimation);
+                    addBubbleInternally(bubble, isExpanding, suppressAnimation);
                     if (isCollapsed) {
                         // If we're collapsed, the most recently added bubble will be selected.
                         bubbleToSelect = bubble;
@@ -420,8 +417,13 @@ public class BubbleBarController extends IBubblesListener.Stub {
             // Updates mean the dot state may have changed; any other changes were updated in
             // the populateBubble step.
             BubbleBarBubble bb = mBubbles.get(update.updatedBubble.getKey());
-            mBubbleBarViewController.animateBubbleNotification(
-                    bb, /* isExpanding= */ false, /* isUpdate= */ true);
+            if (suppressAnimation) {
+                // since we're not animating this update, we should update the dot visibility here.
+                bb.getView().updateDotVisibility(/* animate= */ false);
+            } else {
+                mBubbleBarViewController.animateBubbleNotification(
+                        bb, /* isExpanding= */ false, /* isUpdate= */ true);
+            }
         }
         if (update.bubbleKeysInOrder != null && !update.bubbleKeysInOrder.isEmpty()) {
             // Create the new list
@@ -563,10 +565,8 @@ public class BubbleBarController extends IBubblesListener.Stub {
         }
     }
 
-    private void addBubbleInternally(BubbleBarBubble bubble, boolean showAppBadge,
-            boolean isExpanding, boolean suppressAnimation) {
-        //TODO(b/360652359): remove setting scale to the app badge once issue is fixed
-        bubble.getView().setBadgeScale(showAppBadge ? 1 : 0);
+    private void addBubbleInternally(BubbleBarBubble bubble, boolean isExpanding,
+            boolean suppressAnimation) {
         mBubbles.put(bubble.getKey(), bubble);
         mBubbleBarViewController.addBubble(bubble, isExpanding, suppressAnimation);
     }

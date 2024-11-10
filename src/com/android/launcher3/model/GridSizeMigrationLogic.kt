@@ -46,6 +46,7 @@ class GridSizeMigrationLogic {
         destDeviceState: DeviceGridState,
         target: DatabaseHelper,
         source: SQLiteDatabase,
+        isDestNewDb: Boolean,
     ) {
         if (!GridSizeMigrationDBController.needsToMigrate(srcDeviceState, destDeviceState)) {
             return
@@ -57,7 +58,7 @@ class GridSizeMigrationLogic {
         // This is a special case where if the grid is the same amount of columns but a larger
         // amount of rows we simply copy over the source grid to the destination grid, rather
         // than undergoing the general grid migration.
-        if (shouldMigrateToStrictlyTallerGrid(isFirstLoad, srcDeviceState, destDeviceState)) {
+        if (shouldMigrateToStrictlyTallerGrid(isDestNewDb, srcDeviceState, destDeviceState)) {
             GridSizeMigrationDBController.copyCurrentGridToNewGrid(
                 context,
                 destDeviceState,
@@ -335,11 +336,11 @@ class GridSizeMigrationLogic {
 
     /** Only migrate the grid in this manner if the target grid is taller and not wider. */
     private fun shouldMigrateToStrictlyTallerGrid(
-        isFirstLoad: Boolean,
+        isDestNewDb: Boolean,
         srcDeviceState: DeviceGridState,
         destDeviceState: DeviceGridState,
     ): Boolean {
-        return (isFirstLoad && Flags.enableGridMigrationFix()) &&
+        return isDestNewDb &&
             srcDeviceState.columns == destDeviceState.columns &&
             srcDeviceState.rows < destDeviceState.rows
     }

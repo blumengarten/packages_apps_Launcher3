@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"<xliff:g id="NAME">%1$s</xliff:g> се инсталира, <xliff:g id="PROGRESS">%2$s</xliff:g> завршено"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"Се презема <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="PROGRESS">%2$s</xliff:g> завршено"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g> чека да се инсталира"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"Апликацијата <xliff:g id="NAME">%1$s</xliff:g> е архивирана. Допрете за да преземете и вратите."</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"Апликацијата <xliff:g id="NAME">%1$s</xliff:g> е архивирана."</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"преземете и вратете"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"Потребно е ажурирање на апликацијата"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"Апликацијата за оваа икона не е ажурирана. Може да ажурирате рачно за да повторно се овозможи кратенкава или отстранете ја иконата."</string>
     <string name="dialog_update" msgid="2178028071796141234">"Ажурирај"</string>

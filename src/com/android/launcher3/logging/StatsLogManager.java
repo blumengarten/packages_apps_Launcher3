@@ -175,6 +175,10 @@ public class StatsLogManager implements ResourceBasedOverride {
         @UiEvent(doc = "User searched for a widget in the widget picker.")
         LAUNCHER_WIDGETSTRAY_SEARCHED(819),
 
+        @UiEvent(doc = "User clicked on view all button to expand the displayed list in the "
+                + "widget picker.")
+        LAUNCHER_WIDGETSTRAY_EXPAND_PRESS(1978),
+
         @UiEvent(doc = "A dragged item is dropped on 'Remove' button in the target bar")
         LAUNCHER_ITEM_DROPPED_ON_REMOVE(465),
 

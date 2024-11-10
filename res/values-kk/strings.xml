@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"<xliff:g id="NAME">%1$s</xliff:g> орнатылуда, <xliff:g id="PROGRESS">%2$s</xliff:g> аяқталды"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"<xliff:g id="NAME">%1$s</xliff:g> жүктелуде, <xliff:g id="PROGRESS">%2$s</xliff:g> аяқталды"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g> орнату күтілуде"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"<xliff:g id="NAME">%1$s</xliff:g> мұрағатталды. Жүктеп алу және қалпына келтіру үшін түртіңіз."</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"<xliff:g id="NAME">%1$s</xliff:g> мұрағатталды."</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"жүктеп алу және қалпына келтіру"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"Қолданбаны жаңарту қажет"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"Осы белгіше үшін қолданба жаңартылмаған. Оны қолмен жаңартып, осы таңбашаны қайта іске қоса аласыз немесе белгішені өшіріп тастаңыз."</string>
     <string name="dialog_update" msgid="2178028071796141234">"Жаңарту"</string>

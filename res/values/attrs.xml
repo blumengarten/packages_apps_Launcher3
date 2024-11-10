@@ -126,6 +126,8 @@
     <attr name="widgetPickerCollapseHandleColor" format="color"/>
     <attr name="widgetPickerAddButtonBackgroundColor" format="color"/>
     <attr name="widgetPickerAddButtonTextColor" format="color"/>
+    <attr name="widgetPickerExpandButtonBackgroundColor" format="color"/>
+    <attr name="widgetPickerExpandButtonTextColor" format="color"/>
     <attr name="widgetCellTitleColor" format="color" />
     <attr name="widgetCellSubtitleColor" format="color" />
 
@@ -268,6 +270,9 @@
              defaults to @dimen/taskbar_button_margin_default -->
         <attr name="inlineNavButtonsEndSpacing" format="reference" />
 
+        <!-- Grid flips row and column count when rotating the device -->
+        <attr name="isDualGrid" format="boolean" />
+
         <attr name="dbFile" format="string" />
         <attr name="defaultLayoutId" format="reference" />
         <attr name="demoModeLayoutId" format="reference" />
@@ -305,6 +310,9 @@
         <attr name="rowCountSpecsId" format="reference" />
         <!-- defaults to allAppsCellSpecsId, if not specified -->
         <attr name="allAppsCellSpecsTwoPanelId" format="reference" />
+
+        <!-- defaults to false, if not specified -->
+        <attr name="isFixedLandscape" format="boolean" />
 
         <!-- By default all categories are enabled -->
         <attr name="deviceCategory" format="integer">

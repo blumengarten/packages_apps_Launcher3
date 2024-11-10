@@ -115,7 +115,7 @@ public class TaskbarNavButtonControllerTest {
     @Test
     public void testPressBack() {
         mNavButtonController.onButtonClick(BUTTON_BACK, mockView);
-        verify(mockSystemUiProxy, times(1)).onBackPressed();
+        verify(mockSystemUiProxy, times(1)).onBackEvent(null);
     }
 
     @Test

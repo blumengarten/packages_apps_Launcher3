@@ -69,8 +69,7 @@ public class TaplUninstallRemoveTest extends AbstractLauncherUiTest<Launcher> {
     private void verifyAppUninstalledFromAllApps(Workspace workspace, String appName) {
         final HomeAllApps allApps = workspace.switchToAllApps();
         Wait.atMost(appName + " app was found on all apps after being uninstalled",
-                () -> allApps.tryGetAppIcon(appName) == null,
-                DEFAULT_UI_TIMEOUT, mLauncher);
+                () -> allApps.tryGetAppIcon(appName) == null, mLauncher);
     }
 
     private void installDummyAppAndWaitForUIUpdate() throws IOException {

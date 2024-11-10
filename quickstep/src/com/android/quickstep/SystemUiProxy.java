@@ -43,6 +43,7 @@ import android.os.RemoteException;
 import android.os.UserHandle;
 import android.util.Log;
 import android.view.IRemoteAnimationRunner;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.RemoteAnimationTarget;
 import android.view.SurfaceControl;
@@ -91,7 +92,7 @@ import com.android.wm.shell.recents.IRecentTasks;
 import com.android.wm.shell.recents.IRecentTasksListener;
 import com.android.wm.shell.recents.IRecentsAnimationController;
 import com.android.wm.shell.recents.IRecentsAnimationRunner;
-import com.android.wm.shell.shared.GroupedRecentTaskInfo;
+import com.android.wm.shell.shared.GroupedTaskInfo;
 import com.android.wm.shell.shared.IShellTransitions;
 import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
@@ -210,10 +211,10 @@ public class SystemUiProxy implements ISystemUiProxy, NavHandle {
     }
 
     @Override
-    public void onBackPressed() {
+    public void onBackEvent(KeyEvent backEvent) {
         if (mSystemUiProxy != null) {
             try {
-                mSystemUiProxy.onBackPressed();
+                mSystemUiProxy.onBackEvent(backEvent);
             } catch (RemoteException e) {
                 Log.w(TAG, "Failed call onBackPressed", e);
             }
@@ -1358,15 +1359,15 @@ public class SystemUiProxy implements ISystemUiProxy, NavHandle {
      * @throws GetRecentTasksException if IRecentTasks is not initialized, or when we get
      * RemoteException from server side
      */
-    public ArrayList<GroupedRecentTaskInfo> getRecentTasks(int numTasks, int userId)
-            throws GetRecentTasksException {
+    public ArrayList<GroupedTaskInfo> getRecentTasks(int numTasks,
+            int userId) throws GetRecentTasksException {
         if (mRecentTasks == null) {
             Log.e(TAG, "getRecentTasks() failed due to null mRecentTasks");
             throw new GetRecentTasksException("null mRecentTasks");
         }
         try {
-            final GroupedRecentTaskInfo[] rawTasks = mRecentTasks.getRecentTasks(numTasks,
-                    RECENT_IGNORE_UNAVAILABLE, userId);
+            final GroupedTaskInfo[] rawTasks =
+                    mRecentTasks.getRecentTasks(numTasks, RECENT_IGNORE_UNAVAILABLE, userId);
             if (rawTasks == null) {
                 return new ArrayList<>();
             }

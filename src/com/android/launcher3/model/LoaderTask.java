@@ -20,6 +20,7 @@ import static com.android.launcher3.BuildConfig.WIDGET_ON_FIRST_SCREEN;
 import static com.android.launcher3.Flags.enableLauncherBrMetricsFixed;
 import static com.android.launcher3.Flags.enableSmartspaceAsAWidget;
 import static com.android.launcher3.Flags.enableSmartspaceRemovalToggle;
+import static com.android.launcher3.Flags.enableTieredWidgetsByDefaultInPicker;
 import static com.android.launcher3.LauncherPrefs.IS_FIRST_LOAD_AFTER_RESTORE;
 import static com.android.launcher3.LauncherPrefs.SHOULD_SHOW_SMARTSPACE;
 import static com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME;
@@ -142,6 +143,7 @@ public class LoaderTask implements Runnable {
     private final UserManager mUserManager;
     private final UserCache mUserCache;
     private final PackageManagerHelper mPmHelper;
+    private final WidgetsFilterDataProvider mWidgetsFilterDataProvider;
 
     private final InstallSessionHelper mSessionHelper;
     private final IconCache mIconCache;
@@ -158,13 +160,16 @@ public class LoaderTask implements Runnable {
     private String mDbName;
 
     public LoaderTask(@NonNull LauncherAppState app, AllAppsList bgAllAppsList, BgDataModel bgModel,
-            ModelDelegate modelDelegate, @NonNull BaseLauncherBinder launcherBinder) {
-        this(app, bgAllAppsList, bgModel, modelDelegate, launcherBinder, new UserManagerState());
+            ModelDelegate modelDelegate, @NonNull BaseLauncherBinder launcherBinder,
+            @NonNull WidgetsFilterDataProvider widgetsFilterDataProvider) {
+        this(app, bgAllAppsList, bgModel, modelDelegate, launcherBinder, widgetsFilterDataProvider,
+                new UserManagerState());
     }
 
     @VisibleForTesting
     LoaderTask(@NonNull LauncherAppState app, AllAppsList bgAllAppsList, BgDataModel bgModel,
             ModelDelegate modelDelegate, @NonNull BaseLauncherBinder launcherBinder,
+            WidgetsFilterDataProvider widgetsFilterDataProvider,
             UserManagerState userManagerState) {
         mApp = app;
         mBgAllAppsList = bgAllAppsList;
@@ -179,6 +184,7 @@ public class LoaderTask implements Runnable {
         mIconCache = mApp.getIconCache();
         mUserManagerState = userManagerState;
         mInstallingPkgsCached = null;
+        mWidgetsFilterDataProvider = widgetsFilterDataProvider;
     }
 
     protected synchronized void waitForIdle() {
@@ -330,7 +336,15 @@ public class LoaderTask implements Runnable {
             verifyNotStopped();
 
             // fourth step
-            List<CachedObject> allWidgetsList = mBgDataModel.widgetsModel.update(mApp, null);
+            WidgetsModel widgetsModel = mBgDataModel.widgetsModel;
+            if (enableTieredWidgetsByDefaultInPicker()) {
+                // Begin periodic refresh of filters
+                mWidgetsFilterDataProvider.initPeriodicDataRefresh(
+                        mApp.getModel()::onWidgetFiltersLoaded);
+                // And, update model with currently cached data.
+                widgetsModel.updateWidgetFilters(mWidgetsFilterDataProvider);
+            }
+            List<CachedObject> allWidgetsList = widgetsModel.update(mApp, /*packageUser=*/null);
             logASplit("load widgets");
 
             verifyNotStopped();

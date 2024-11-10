@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"<xliff:g id="NAME">%1$s</xliff:g> se namešča, dokončano: <xliff:g id="PROGRESS">%2$s</xliff:g>"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"Prenašanje aplikacije <xliff:g id="NAME">%1$s</xliff:g>; preneseno <xliff:g id="PROGRESS">%2$s</xliff:g>"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"Aplikacija <xliff:g id="NAME">%1$s</xliff:g> čaka na namestitev"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"Aplikacija <xliff:g id="NAME">%1$s</xliff:g> je arhivirana. Dotaknite se za prenos in obnovitev."</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"Aplikacija <xliff:g id="NAME">%1$s</xliff:g> je arhivirana."</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"prenos in obnovitev"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"Zahtevana je posodobitev aplikacije"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"Aplikacija za to ikono ni posodobljena. Lahko jo ročno posodobite, da znova omogočite to bližnjico, ali pa odstranite ikono."</string>
     <string name="dialog_update" msgid="2178028071796141234">"Posodobi"</string>

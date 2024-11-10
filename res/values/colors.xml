@@ -98,8 +98,6 @@
     <color name="preload_icon_background_color_dark">#40484D</color>
 
     <color name="work_turn_on_stroke">?android:attr/colorAccent</color>
-    <color name="work_fab_bg_color">#A8C7FA</color>
-    <color name="work_fab_icon_color">#041E49</color>
 
     <color name="widget_picker_primary_surface_color_light">#EFEDED</color>
     <color name="widget_picker_secondary_surface_color_light">#FAF9F8</color>
@@ -119,6 +117,12 @@
     <color name="widget_picker_collapse_handle_color_light">#C4C7C5</color>
     <color name="widget_picker_add_button_background_color_light">#0B57D0</color>
     <color name="widget_picker_add_button_text_color_light">#0B57D0</color>
+    <color name="widget_picker_expand_button_background_color_light">
+        @color/widget_picker_secondary_surface_color_light
+    </color>
+    <color name="widget_picker_expand_button_text_color_light">
+        @color/widget_picker_header_app_title_color_light
+    </color>
     <color name="widget_cell_title_color_light">@color/system_on_surface_light</color>
     <color name="widget_cell_subtitle_color_light">@color/system_on_surface_variant_light</color>
 
@@ -140,6 +144,12 @@
     <color name="widget_picker_collapse_handle_color_dark">#444746</color>
     <color name="widget_picker_add_button_background_color_dark">#062E6F</color>
     <color name="widget_picker_add_button_text_color_dark">#FFFFFF</color>
+    <color name="widget_picker_expand_button_background_color_dark">
+        @color/widget_picker_secondary_surface_color_dark
+    </color>
+    <color name="widget_picker_expand_button_text_color_dark">
+        @color/widget_picker_header_app_title_color_dark
+    </color>
     <color name="widget_cell_title_color_dark">@color/system_on_surface_dark</color>
     <color name="widget_cell_subtitle_color_dark">@color/system_on_surface_variant_dark</color>
 

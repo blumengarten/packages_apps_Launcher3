@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"<xliff:g id="NAME">%1$s</xliff:g> ကို ထည့်သွင်းနေသည်၊ <xliff:g id="PROGRESS">%2$s</xliff:g> ပြီးပါပြီ"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"<xliff:g id="NAME">%1$s</xliff:g> ဒေါင်းလုဒ်လုပ်နေသည်၊ <xliff:g id="PROGRESS">%2$s</xliff:g> ပြီးပါပြီ"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g> ကိုထည့်သွင်းရန်စောင့်နေသည်"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"<xliff:g id="NAME">%1$s</xliff:g> ကို သိမ်းထားသည်။ ဒေါင်းလုဒ်လုပ်ပြီး ပြန်ယူရန် တို့ပါ။"</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"<xliff:g id="NAME">%1$s</xliff:g> ကို သိမ်းထားသည်။"</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"ဒေါင်းလုဒ်လုပ်ပြီး ပြန်ယူရန်"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"အက်ပ်ကို အပ်ဒိတ်လုပ်ရန် လိုအပ်သည်"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"ဤသင်္ကေတအတွက် အက်ပ်ကို အပ်ဒိတ်လုပ်မထားပါ။ ဤဖြတ်လမ်းလင့်ခ်ကို ပြန်ဖွင့်ရန် ကိုယ်တိုင်အပ်ဒိတ်လုပ်နိုင်သည် (သို့) သင်္ကေတကို ဖယ်ရှားနိုင်သည်။"</string>
     <string name="dialog_update" msgid="2178028071796141234">"အပ်ဒိတ်လုပ်ရန်"</string>

@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"S\'està instal·lant <xliff:g id="NAME">%1$s</xliff:g>; s\'ha completat un <xliff:g id="PROGRESS">%2$s</xliff:g>"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"S\'està baixant <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="PROGRESS">%2$s</xliff:g> completat"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"S\'està esperant per instal·lar <xliff:g id="NAME">%1$s</xliff:g>"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"L\'aplicació <xliff:g id="NAME">%1$s</xliff:g> està arxivada. Toca per baixar-la i restaurar-la."</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"L\'aplicació <xliff:g id="NAME">%1$s</xliff:g> està arxivada."</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"baixa i restaura"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"Cal actualitzar l\'aplicació"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"L\'aplicació d\'aquesta icona no està actualitzada. Pots actualitzar-la manualment per tornar a activar aquesta drecera o pots suprimir la icona."</string>
     <string name="dialog_update" msgid="2178028071796141234">"Actualitza"</string>

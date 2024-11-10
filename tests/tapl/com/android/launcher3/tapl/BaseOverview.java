@@ -536,6 +536,10 @@ public class BaseOverview extends LauncherInstrumentation.VisibleContainer {
         int focusedTaskHeight = focusTaskSize.height();
         for (UiObject2 task : taskViews) {
             OverviewTask overviewTask = new OverviewTask(mLauncher, task, this);
+            // Desktop tasks can't be focused tasks, but are the same size.
+            if (overviewTask.isDesktop()) {
+                continue;
+            }
             if (overviewTask.getVisibleHeight() == focusedTaskHeight) {
                 return overviewTask;
             }

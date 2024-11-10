@@ -158,16 +158,16 @@ public class TaplWorkProfileTest extends AbstractLauncherUiTest<Launcher> {
 
 
         waitForLauncherCondition("work profile initial state check failed", launcher ->
-                        manager.getWorkModeSwitch() != null
+                        manager.getWorkUtilityView() != null
                                 && manager.getCurrentState() == WorkProfileManager.STATE_ENABLED
-                                && manager.getWorkModeSwitch().isEnabled(),
+                                && manager.getWorkUtilityView().isEnabled(),
                 LauncherInstrumentation.WAIT_TIME_MS);
 
         //start work profile toggle OFF test
         executeOnLauncher(l -> {
             // Ensure updates are not deferred so notification happens when apps pause.
             l.getAppsView().getAppsStore().disableDeferUpdates(DEFER_UPDATES_TEST);
-            l.getAppsView().getWorkManager().getWorkModeSwitch().performClick();
+            l.getAppsView().getWorkManager().getWorkUtilityView().performClick();
         });
 
         waitForLauncherCondition("Work profile toggle OFF failed", launcher -> {

@@ -29,7 +29,10 @@ import android.app.Instrumentation;
 import android.app.blob.BlobHandle;
 import android.app.blob.BlobStoreManager;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.LauncherApps;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Point;
 import android.os.AsyncTask;
@@ -229,6 +232,15 @@ public class TestUtil {
     public static void grantWriteSecurePermission() {
         getInstrumentation().getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_SECURE_SETTINGS);
+    }
+
+    /**
+     * Returns the activity info corresponding to the system app for the provided category
+     */
+    public static ActivityInfo resolveSystemAppInfo(String category) {
+        return getInstrumentation().getTargetContext().getPackageManager().resolveActivity(
+                new Intent(Intent.ACTION_MAIN).addCategory(category),
+                PackageManager.MATCH_SYSTEM_ONLY).activityInfo;
     }
 
     /** Interface to indicate a runnable which can throw any exception. */

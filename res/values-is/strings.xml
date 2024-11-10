@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"Setur upp <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="PROGRESS">%2$s</xliff:g> lokið"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"<xliff:g id="NAME">%1$s</xliff:g> í niðurhali, <xliff:g id="PROGRESS">%2$s</xliff:g> lokið"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g> bíður uppsetningar"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"<xliff:g id="NAME">%1$s</xliff:g> er í geymslu. Ýttu til að sækja og endurheimta."</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"<xliff:g id="NAME">%1$s</xliff:g> er í geymslu."</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"sækja og endurheimta"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"Uppfæra þarf forritið"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"Forritið fyrir þetta tákn er ekki uppfært. Þú getur uppfært það handvirkt til að kveikja aftur á þessari flýtileið eða fjarlægt táknið."</string>
     <string name="dialog_update" msgid="2178028071796141234">"Uppfæra"</string>

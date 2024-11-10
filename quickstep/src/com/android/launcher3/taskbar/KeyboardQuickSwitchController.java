@@ -54,6 +54,8 @@ public final class KeyboardQuickSwitchController implements
     public static final int MAX_TASKS = 6;
 
     @NonNull private final ControllerCallbacks mControllerCallbacks = new ControllerCallbacks();
+    // Callback used to notify when the KQS view is closed.
+    @Nullable private Runnable mOnClosed;
 
     // Initialized on init
     @Nullable private RecentsModel mModel;
@@ -112,8 +114,12 @@ public final class KeyboardQuickSwitchController implements
      * Opens or closes the view in response to taskbar action. The view shows a filtered list of
      * tasks.
      * @param taskIdsToExclude A list of tasks to exclude in the opened view.
+     * @param onClosed A callback used to notify when the KQS view is closed.
      */
-    void toggleQuickSwitchViewForTaskbar(@NonNull Set<Integer> taskIdsToExclude) {
+    void toggleQuickSwitchViewForTaskbar(@NonNull Set<Integer> taskIdsToExclude,
+            @NonNull Runnable onClosed) {
+        mOnClosed = onClosed;
+
         // Close the view if its shown, and was opened from the taskbar.
         if (mQuickSwitchViewController != null
                 && !mQuickSwitchViewController.isCloseAnimationRunning()
@@ -264,6 +270,10 @@ public final class KeyboardQuickSwitchController implements
             return;
         }
         mQuickSwitchViewController.closeQuickSwitchView(animate);
+        if (mOnClosed != null) {
+            mOnClosed.run();
+            mOnClosed = null;
+        }
     }
 
     /**

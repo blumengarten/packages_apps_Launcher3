@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"Instaliranje aplikacije <xliff:g id="NAME">%1$s</xliff:g>, završeno je <xliff:g id="PROGRESS">%2$s</xliff:g>"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"<xliff:g id="NAME">%1$s</xliff:g> se preuzima, završeno <xliff:g id="PROGRESS">%2$s</xliff:g>"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g> čeka da se instalira"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"Arhivirana je aplikacija <xliff:g id="NAME">%1$s</xliff:g>. Dodirnite da je preuzmete i vratite."</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"Arhivirana je aplikacija <xliff:g id="NAME">%1$s</xliff:g>."</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"preuzimanje i vraćanje"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"Potrebno je ažurirati aplikaciju"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"Aplikacija za ovu ikonu nije ažurirana. Možete je ažurirati ručno da ponovo omogućite ovu prečicu ili možete ukloniti ikonu."</string>
     <string name="dialog_update" msgid="2178028071796141234">"Ažuriraj"</string>

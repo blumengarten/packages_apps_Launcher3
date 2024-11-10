@@ -15,7 +15,9 @@
  */
 package com.android.quickstep;
 
-import static androidx.test.InstrumentationRegistry.getInstrumentation;
+import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
+
+import static com.android.launcher3.util.TestUtil.resolveSystemAppInfo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -25,10 +27,13 @@ import android.app.PendingIntent;
 import android.app.usage.UsageStatsManager;
 import android.content.Intent;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
-import androidx.test.runner.AndroidJUnit4;
 
 import com.android.launcher3.Launcher;
+import com.android.launcher3.LauncherState;
+import com.android.launcher3.uioverrides.QuickstepLauncher;
+import com.android.launcher3.util.BaseLauncherActivityTest;
 import com.android.quickstep.views.DigitalWellBeingToast;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.TaskContainer;
@@ -41,30 +46,31 @@ import java.time.Duration;
 
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class TaplDigitalWellBeingToastTest extends AbstractQuickStepTest {
-    private static final String CALCULATOR_PACKAGE =
-            resolveSystemApp(Intent.CATEGORY_APP_CALCULATOR);
+public class DigitalWellBeingToastTest extends BaseLauncherActivityTest<QuickstepLauncher> {
+
+    public final String calculatorPackage =
+            resolveSystemAppInfo(Intent.CATEGORY_APP_CALCULATOR).packageName;
 
     @Test
-    public void testToast() throws Exception {
-        startAppFast(CALCULATOR_PACKAGE);
+    public void testToast() {
+        startAppFast(calculatorPackage);
 
         final UsageStatsManager usageStatsManager =
-                mTargetContext.getSystemService(UsageStatsManager.class);
+                targetContext().getSystemService(UsageStatsManager.class);
         final int observerId = 0;
 
         try {
-            final String[] packages = new String[]{CALCULATOR_PACKAGE};
+            final String[] packages = new String[]{calculatorPackage};
 
             // Set time limit for app.
             runWithShellPermission(() ->
                     usageStatsManager.registerAppUsageLimitObserver(observerId, packages,
                             Duration.ofSeconds(600), Duration.ofSeconds(300),
-                            PendingIntent.getActivity(mTargetContext, -1, new Intent()
-                                            .setPackage(mTargetContext.getPackageName()),
+                            PendingIntent.getActivity(targetContext(), -1, new Intent()
+                                            .setPackage(targetContext().getPackageName()),
                                     PendingIntent.FLAG_MUTABLE)));
 
-            mLauncher.goHome();
+            loadLauncherSync();
             final DigitalWellBeingToast toast = getToast();
 
             waitForLauncherCondition("Toast is not visible", launcher -> toast.getHasLimit());
@@ -74,7 +80,7 @@ public class TaplDigitalWellBeingToastTest extends AbstractQuickStepTest {
             runWithShellPermission(
                     () -> usageStatsManager.unregisterAppUsageLimitObserver(observerId));
 
-            mLauncher.goHome();
+            goToState(LauncherState.NORMAL);
             assertFalse("Toast is visible", getToast().getHasLimit());
         } finally {
             runWithShellPermission(
@@ -83,12 +89,12 @@ public class TaplDigitalWellBeingToastTest extends AbstractQuickStepTest {
     }
 
     private DigitalWellBeingToast getToast() {
-        mLauncher.getWorkspace().switchToOverview();
+        goToState(LauncherState.OVERVIEW);
         final TaskView task = getOnceNotNull("No latest task", launcher -> getLatestTask(launcher));
 
         return getFromLauncher(launcher -> {
             TaskContainer taskContainer = task.getTaskContainers().get(0);
-            assertTrue("Latest task is not Calculator", CALCULATOR_PACKAGE.equals(
+            assertTrue("Latest task is not Calculator", calculatorPackage.equals(
                     taskContainer.getTask().getTopComponent().getPackageName()));
             return taskContainer.getDigitalWellBeingToast();
         });
@@ -105,6 +111,5 @@ public class TaplDigitalWellBeingToastTest extends AbstractQuickStepTest {
         } finally {
             getInstrumentation().getUiAutomation().dropShellPermissionIdentity();
         }
-
     }
 }

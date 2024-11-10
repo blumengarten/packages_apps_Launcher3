@@ -28,6 +28,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 
+import androidx.annotation.UiThread;
+
 import com.android.launcher3.dagger.ApplicationContext;
 import com.android.launcher3.dagger.LauncherAppSingleton;
 import com.android.launcher3.dagger.LauncherBaseAppComponent;
@@ -140,7 +142,9 @@ public class SettingsCache extends ContentObserver implements SafeCloseable {
      * Does not de-dupe if you add same listeners for the same key multiple times.
      * Unregister once complete using {@link #unregister(Uri, OnChangeListener)}
      */
+    @UiThread
     public void register(Uri uri, OnChangeListener changeListener) {
+        Preconditions.assertUIThread();
         if (mListenerMap.containsKey(uri)) {
             mListenerMap.get(uri).add(changeListener);
         } else {

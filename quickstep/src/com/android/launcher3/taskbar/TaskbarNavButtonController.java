@@ -16,6 +16,8 @@
 
 package com.android.launcher3.taskbar;
 
+import static android.view.MotionEvent.ACTION_UP;
+
 import static com.android.internal.app.AssistUtils.INVOCATION_TYPE_HOME_BUTTON_LONG_PRESS;
 import static com.android.internal.app.AssistUtils.INVOCATION_TYPE_KEY;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_TASKBAR_A11Y_BUTTON_LONGPRESS;
@@ -31,12 +33,14 @@ import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCH
 import static com.android.systemui.shared.system.ActivityManagerWrapper.CLOSE_SYSTEM_WINDOWS_REASON_HOME_KEY;
 import static com.android.systemui.shared.system.ActivityManagerWrapper.CLOSE_SYSTEM_WINDOWS_REASON_RECENTS;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_SCREEN_PINNING;
+import static com.android.window.flags.Flags.predictiveBackThreeButtonNav;
 
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.HapticFeedbackConstants;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.Flags;
 
@@ -141,10 +145,7 @@ public class TaskbarNavButtonController implements TaskbarControllers.LoggableTa
         view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
         switch (buttonType) {
             case BUTTON_BACK:
-                logEvent(LAUNCHER_TASKBAR_BACK_BUTTON_TAP);
-                mContextualEduStatsManager.updateEduStats(/* isTrackpadGesture= */ false,
-                        GestureType.BACK);
-                executeBack();
+                executeBack(/* keyEvent */ null);
                 break;
             case BUTTON_HOME:
                 logEvent(LAUNCHER_TASKBAR_HOME_BUTTON_TAP);
@@ -182,7 +183,9 @@ public class TaskbarNavButtonController implements TaskbarControllers.LoggableTa
 
         // Provide the same haptic feedback that the system offers for long press.
         // The haptic feedback from long pressing on the home button is handled by circle to search.
-        if (buttonType != BUTTON_HOME) {
+        // There are no haptics for long pressing the back button if predictive back is enabled
+        if (buttonType != BUTTON_HOME
+                && (!predictiveBackThreeButtonNav() || buttonType != BUTTON_BACK)) {
             view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
         }
         switch (buttonType) {
@@ -320,8 +323,13 @@ public class TaskbarNavButtonController implements TaskbarControllers.LoggableTa
         mCallbacks.onToggleOverview();
     }
 
-    private void executeBack() {
-        mSystemUiProxy.onBackPressed();
+    void executeBack(@Nullable KeyEvent keyEvent) {
+        if (keyEvent == null || (keyEvent.getAction() == ACTION_UP && !keyEvent.isCanceled())) {
+            logEvent(LAUNCHER_TASKBAR_BACK_BUTTON_TAP);
+            mContextualEduStatsManager.updateEduStats(/* isTrackpadGesture= */ false,
+                    GestureType.BACK);
+        }
+        mSystemUiProxy.onBackEvent(keyEvent);
     }
 
     private void onImeSwitcherPress() {

@@ -23,6 +23,7 @@ import com.android.launcher3.R
 import com.android.launcher3.dagger.LauncherAppComponent
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.util.LauncherModelHelper
+import com.android.quickstep.dagger.QuickStepModule
 import com.android.systemui.contextualeducation.GestureType
 import com.android.systemui.shared.system.InputConsumerController
 import dagger.BindsInstance
@@ -105,7 +106,7 @@ class LauncherSwipeHandlerV2Test {
 }
 
 @LauncherAppSingleton
-@Component
+@Component(modules = [QuickStepModule::class])
 interface TestComponent : LauncherAppComponent {
     @Component.Builder
     interface Builder : LauncherAppComponent.Builder {

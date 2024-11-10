@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"<xliff:g id="NAME">%1$s</xliff:g> इंस्टॉल करत आहे, <xliff:g id="PROGRESS">%2$s</xliff:g> पूर्ण झाले"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"<xliff:g id="NAME">%1$s</xliff:g> डाउनलोड होत आहे , <xliff:g id="PROGRESS">%2$s</xliff:g> पूर्ण झाले"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g> इंस्टॉल करण्याची प्रतिक्षा करत आहे"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"<xliff:g id="NAME">%1$s</xliff:g> संग्रहित केले आहे. डाउनलोड करून रिस्टोअर करण्यासाठी टॅप करा."</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"<xliff:g id="NAME">%1$s</xliff:g> संग्रहित केले आहे."</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"डाउनलोड करून रिस्टोअर करा"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"अ‍ॅप अपडेट करणे आवश्‍यक आहे"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"या आयकनसाठी अ‍ॅप अपडेट केलेले नाही. हा शॉटकर्ट पुन्हा सुरू करण्यासाठी तुम्ही मॅन्युअली अपडेट करू शकता किंवा आयकन काढून टाका."</string>
     <string name="dialog_update" msgid="2178028071796141234">"अपडेट करा"</string>

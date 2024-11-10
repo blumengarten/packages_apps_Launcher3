@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"<xliff:g id="NAME">%1$s</xliff:g> ইনষ্টল কৰি থকা হৈছে, <xliff:g id="PROGRESS">%2$s</xliff:g> সম্পূৰ্ণ হৈছে"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"<xliff:g id="NAME">%1$s</xliff:g> ডাউনল’ড কৰি থকা হৈছে, <xliff:g id="PROGRESS">%2$s</xliff:g> সম্পূৰ্ণ হ’ল"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g> ইনষ্টল হোৱালৈ অপেক্ষা কৰি থকা হৈছে"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"<xliff:g id="NAME">%1$s</xliff:g> আৰ্কাইভ কৰা হৈছে। ডাউনল’ড আৰু পুনঃস্থাপন কৰিবলৈ টিপক।"</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"<xliff:g id="NAME">%1$s</xliff:g> আৰ্কাইভ কৰা হৈছে।"</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"ডাউনল’ড আৰু পুনঃস্থাপন কৰক"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"এপ্‌টো আপডে’ট কৰা প্ৰয়োজন"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"এই চিহ্নটোৰ এপ্‌টো আপডে’ট কৰা হোৱা নাই। আপুনি এই শ্বৰ্টকাটটো পুনৰ সক্ষম কৰিবলৈ মেনুৱেলী আপডে’ট কৰিব পাৰে অথবা চিহ্নটো আঁতৰাব পাৰে।"</string>
     <string name="dialog_update" msgid="2178028071796141234">"আপডে’ট কৰক"</string>

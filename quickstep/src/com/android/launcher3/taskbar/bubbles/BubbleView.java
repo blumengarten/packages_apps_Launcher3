@@ -49,6 +49,8 @@ import com.android.wm.shell.shared.bubbles.BubbleInfo;
 public class BubbleView extends ConstraintLayout {
 
     public static final int DEFAULT_PATH_SIZE = 100;
+    /** Duration for animating the scale of the dot and badge. */
+    private static final int SCALE_ANIMATION_DURATION_MS = 200;
 
     private final ImageView mBubbleIcon;
     private final ImageView mAppIcon;
@@ -316,10 +318,35 @@ public class BubbleView extends ConstraintLayout {
     }
 
     void setBadgeScale(float fraction) {
-        if (mAppIcon.getVisibility() == VISIBLE) {
+        if (hasBadge()) {
             mAppIcon.setScaleX(fraction);
             mAppIcon.setScaleY(fraction);
         }
+    }
+
+    void showBadge() {
+        animateBadgeScale(1);
+    }
+
+    void hideBadge() {
+        animateBadgeScale(0);
+    }
+
+    private boolean hasBadge() {
+        return mAppIcon.getVisibility() == VISIBLE;
+    }
+
+    private void animateBadgeScale(float scale) {
+        if (!hasBadge()) {
+            return;
+        }
+        mAppIcon.clearAnimation();
+        mAppIcon.animate()
+                .setDuration(SCALE_ANIMATION_DURATION_MS)
+                .setInterpolator(Interpolators.FAST_OUT_SLOW_IN)
+                .scaleX(scale)
+                .scaleY(scale)
+                .start();
     }
 
     /** Suppresses or un-suppresses drawing the dot due to an update for this bubble. */
@@ -409,7 +436,7 @@ public class BubbleView extends ConstraintLayout {
 
         clearAnimation();
         animate()
-                .setDuration(200)
+                .setDuration(SCALE_ANIMATION_DURATION_MS)
                 .setInterpolator(Interpolators.FAST_OUT_SLOW_IN)
                 .setUpdateListener((valueAnimator) -> {
                     float fraction = valueAnimator.getAnimatedFraction();

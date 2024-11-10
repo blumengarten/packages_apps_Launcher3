@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"កំពុង​ដំឡើង <xliff:g id="NAME">%1$s</xliff:g>, បាន​បញ្ចប់ <xliff:g id="PROGRESS">%2$s</xliff:g>"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"កំពុងដោនឡូត <xliff:g id="NAME">%1$s</xliff:g> បានបញ្ចប់ <xliff:g id="PROGRESS">%2$s</xliff:g>"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g> កំពុងរង់ចាំការដំឡើង"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"<xliff:g id="NAME">%1$s</xliff:g> ត្រូវបានទុក​ក្នុង​បណ្ណសារ។ សូមចុចដើម្បីទាញយក និងស្ដារ។"</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"<xliff:g id="NAME">%1$s</xliff:g> ត្រូវបានទុក​ក្នុង​បណ្ណសារ។"</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"ទាញយក និងស្ដារ"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"តម្រូវឱ្យមាន​កំណែកម្មវិធីថ្មី"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"កម្មវិធីសម្រាប់​រូបតំណាងនេះ​មិនត្រូវបានដំឡើងកំណែ​ទេ។ អ្នកអាច​ដំឡើងកំណែ​ដោយផ្ទាល់ ដើម្បីបើក​ផ្លូវកាត់នេះឡើងវិញ ឬលុបរូបតំណាងនេះ។"</string>
     <string name="dialog_update" msgid="2178028071796141234">"ដំឡើងកំណែ"</string>

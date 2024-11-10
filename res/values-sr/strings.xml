@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"<xliff:g id="NAME">%1$s</xliff:g> се инсталира, <xliff:g id="PROGRESS">%2$s</xliff:g> готово"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"<xliff:g id="NAME">%1$s</xliff:g> се преузима, завршено је <xliff:g id="PROGRESS">%2$s</xliff:g>"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g> чека на инсталирање"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"Апликација <xliff:g id="NAME">%1$s</xliff:g> је архивирана. Додирните да бисте је преузели и вратили."</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"Апликација <xliff:g id="NAME">%1$s</xliff:g> је архивирана."</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"преузмите и вратите"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"Треба да ажурирате апликацију"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"Апликација за ову икону није ажурирана. Можете да је ручно ажурирате да бисте поново омогућили ову пречицу или уклоните икону."</string>
     <string name="dialog_update" msgid="2178028071796141234">"Ажурирај"</string>

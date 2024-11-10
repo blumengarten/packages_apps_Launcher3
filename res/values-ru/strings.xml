@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"Установка приложения \"<xliff:g id="NAME">%1$s</xliff:g>\" (выполнено <xliff:g id="PROGRESS">%2$s</xliff:g>)"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"Скачивается \"<xliff:g id="NAME">%1$s</xliff:g>\" (<xliff:g id="PROGRESS">%2$s</xliff:g>)"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"Ожидание установки \"<xliff:g id="NAME">%1$s</xliff:g>\""</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"Приложение \"<xliff:g id="NAME">%1$s</xliff:g>\" находится в архиве. Нажмите, чтобы скачать его и восстановить"</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"Приложение \"<xliff:g id="NAME">%1$s</xliff:g>\" находится в архиве."</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"скачать и восстановить"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"Обновите приложение"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"Эта версия приложения устарела. Обновите его вручную, чтобы снова пользоваться ярлыком, или удалите значок."</string>
     <string name="dialog_update" msgid="2178028071796141234">"Обновить"</string>

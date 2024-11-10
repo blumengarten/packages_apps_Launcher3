@@ -26,11 +26,13 @@ import android.os.UserHandle
 import android.platform.test.rule.TestWatcher
 import android.testing.AndroidTestingRunner
 import com.android.internal.R
+import com.android.launcher3.BubbleTextView.RunningAppState
 import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT
 import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT_PREDICTION
 import com.android.launcher3.model.data.AppInfo
 import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.model.data.TaskItemInfo
+import com.android.launcher3.model.data.WorkspaceItemInfo
 import com.android.quickstep.RecentsModel
 import com.android.quickstep.RecentsModel.RecentTasksChangedListener
 import com.android.quickstep.TaskIconCache
@@ -77,7 +79,9 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
     private var taskListChangeId: Int = 1
 
     private lateinit var recentAppsController: TaskbarRecentAppsController
-    private lateinit var userHandle: UserHandle
+    private lateinit var myUserHandle: UserHandle
+    private val USER_HANDLE_1 = UserHandle.of(1)
+    private val USER_HANDLE_2 = UserHandle.of(2)
 
     private var canShowRunningAndRecentAppsAtInit = true
     private var recentTasksChangedListener: RecentTasksChangedListener? = null
@@ -85,7 +89,7 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
     @Before
     fun setUp() {
         super.setup()
-        userHandle = Process.myUserHandle()
+        myUserHandle = Process.myUserHandle()
 
         // Set desktop mode supported
         whenever(mockContext.getResources()).thenReturn(mockResources)
@@ -145,6 +149,115 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
         )
         // Verify that getTasks() was not called again after the init().
         verify(mockRecentsModel, times(1)).getTasks(any<Consumer<List<GroupTask>>>())
+    }
+
+    @Test
+    fun getDesktopItemState_nullItemInfo_returnsNotRunning() {
+        setInDesktopMode(true)
+        assertThat(recentAppsController.getDesktopItemState(/* itemInfo= */ null))
+            .isEqualTo(RunningAppState.NOT_RUNNING)
+    }
+
+    @Test
+    fun getDesktopItemState_noItemPackage_returnsNotRunning() {
+        setInDesktopMode(true)
+        assertThat(recentAppsController.getDesktopItemState(ItemInfo()))
+            .isEqualTo(RunningAppState.NOT_RUNNING)
+    }
+
+    @Test
+    fun getDesktopItemState_noMatchingTasks_returnsNotRunning() {
+        setInDesktopMode(true)
+        val itemInfo = createItemInfo("package")
+        assertThat(recentAppsController.getDesktopItemState(itemInfo))
+            .isEqualTo(RunningAppState.NOT_RUNNING)
+    }
+
+    @Test
+    fun getDesktopItemState_matchingVisibleTask_returnsVisible() {
+        setInDesktopMode(true)
+        val visibleTask = createTask(id = 1, "visiblePackage", isVisible = true)
+        updateRecentTasks(runningTasks = listOf(visibleTask), recentTaskPackages = emptyList())
+        val itemInfo = createItemInfo("visiblePackage")
+
+        assertThat(recentAppsController.getDesktopItemState(itemInfo))
+            .isEqualTo(RunningAppState.RUNNING)
+    }
+
+    @Test
+    fun getDesktopItemState_matchingMinimizedTask_returnsMinimized() {
+        setInDesktopMode(true)
+        val minimizedTask = createTask(id = 1, "minimizedPackage", isVisible = false)
+        updateRecentTasks(runningTasks = listOf(minimizedTask), recentTaskPackages = emptyList())
+        val itemInfo = createItemInfo("minimizedPackage")
+
+        assertThat(recentAppsController.getDesktopItemState(itemInfo))
+            .isEqualTo(RunningAppState.MINIMIZED)
+    }
+
+    @Test
+    fun getDesktopItemState_matchingMinimizedAndRunningTask_returnsVisible() {
+        setInDesktopMode(true)
+        updateRecentTasks(
+            runningTasks =
+                listOf(
+                    createTask(id = 1, "package", isVisible = false),
+                    createTask(id = 2, "package", isVisible = true),
+                ),
+            recentTaskPackages = emptyList(),
+        )
+        val itemInfo = createItemInfo("package")
+
+        assertThat(recentAppsController.getDesktopItemState(itemInfo))
+            .isEqualTo(RunningAppState.RUNNING)
+    }
+
+    @Test
+    fun getDesktopItemState_noMatchingUserId_returnsNotRunning() {
+        setInDesktopMode(true)
+        updateRecentTasks(
+            runningTasks =
+                listOf(
+                    createTask(id = 1, "package", isVisible = false, USER_HANDLE_1),
+                    createTask(id = 2, "package", isVisible = true, USER_HANDLE_1),
+                ),
+            recentTaskPackages = emptyList(),
+        )
+        val itemInfo = createItemInfo("package", USER_HANDLE_2)
+
+        assertThat(recentAppsController.getDesktopItemState(itemInfo))
+            .isEqualTo(RunningAppState.NOT_RUNNING)
+    }
+
+    @Test
+    fun getRunningAppState_taskNotRunningOrMinimized_returnsNotRunning() {
+        setInDesktopMode(true)
+        updateRecentTasks(runningTasks = emptyList(), recentTaskPackages = emptyList())
+
+        assertThat(recentAppsController.getRunningAppState(taskId = 1))
+            .isEqualTo(RunningAppState.NOT_RUNNING)
+    }
+
+    @Test
+    fun getRunningAppState_taskNotVisible_returnsMinimized() {
+        setInDesktopMode(true)
+        val task1 = createTask(id = 1, packageName = RUNNING_APP_PACKAGE_1, isVisible = false)
+        val task2 = createTask(id = 2, packageName = RUNNING_APP_PACKAGE_1, isVisible = true)
+        updateRecentTasks(runningTasks = listOf(task1, task2), recentTaskPackages = emptyList())
+
+        assertThat(recentAppsController.getRunningAppState(taskId = 1))
+            .isEqualTo(RunningAppState.MINIMIZED)
+    }
+
+    @Test
+    fun getRunningAppState_taskVisible_returnsRunning() {
+        setInDesktopMode(true)
+        val task1 = createTask(id = 1, packageName = RUNNING_APP_PACKAGE_1, isVisible = false)
+        val task2 = createTask(id = 2, packageName = RUNNING_APP_PACKAGE_1, isVisible = true)
+        updateRecentTasks(runningTasks = listOf(task1, task2), recentTaskPackages = emptyList())
+
+        assertThat(recentAppsController.getRunningAppState(taskId = 2))
+            .isEqualTo(RunningAppState.RUNNING)
     }
 
     @Test
@@ -782,7 +895,13 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
     private fun createTestAppInfo(
         packageName: String = "testPackageName",
         className: String = "testClassName",
-    ) = AppInfo(ComponentName(packageName, className), className /* title */, userHandle, Intent())
+    ) =
+        AppInfo(
+            ComponentName(packageName, className),
+            className /* title */,
+            myUserHandle,
+            Intent(),
+        )
 
     private fun createRecentTasksFromPackageNames(packageNames: List<String>): List<GroupTask> {
         return packageNames.map { packageName ->
@@ -801,14 +920,19 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
         }
     }
 
-    private fun createTask(id: Int, packageName: String, isVisible: Boolean = true): Task {
+    private fun createTask(
+        id: Int,
+        packageName: String,
+        isVisible: Boolean = true,
+        localUserHandle: UserHandle? = null,
+    ): Task {
         return Task(
                 Task.TaskKey(
                     id,
                     WINDOWING_MODE_FREEFORM,
                     Intent().apply { `package` = packageName },
                     ComponentName(packageName, "TestActivity"),
-                    userHandle.identifier,
+                    localUserHandle?.identifier ?: myUserHandle.identifier,
                     0,
                 )
             )
@@ -818,6 +942,16 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
     private fun setInDesktopMode(inDesktopMode: Boolean) {
         whenever(taskbarControllers.taskbarDesktopModeController.areDesktopTasksVisible)
             .thenReturn(inDesktopMode)
+    }
+
+    private fun createItemInfo(
+        packageName: String,
+        userHandle: UserHandle = myUserHandle,
+    ): ItemInfo {
+        val appInfo = AppInfo()
+        appInfo.intent = Intent().setComponent(ComponentName(packageName, "className"))
+        appInfo.user = userHandle
+        return WorkspaceItemInfo(appInfo)
     }
 
     private val GroupTask.packageNames: List<String>

@@ -126,6 +126,9 @@ class TransientBubbleStashController(
     override val bubbleBarTranslationYForTaskbar: Float =
         -taskbarHotseatDimensionsProvider.getTaskbarBottomSpace().toFloat()
 
+    /** Not supported in transient mode */
+    override var inAppDisplayOverrideProgress: Float = 0f
+
     /** Check if we have handle view controller */
     override val hasHandleView: Boolean
         get() = bubbleStashedHandleViewController != null

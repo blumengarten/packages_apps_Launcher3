@@ -21,6 +21,7 @@ import static androidx.test.InstrumentationRegistry.getInstrumentation;
 
 import static com.android.launcher3.testing.shared.TestProtocol.ICON_MISSING;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
+import static com.android.launcher3.util.TestUtil.resolveSystemAppInfo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -31,9 +32,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ActivityInfo;
-import android.content.pm.LauncherActivityInfo;
-import android.content.pm.LauncherApps;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Point;
@@ -97,10 +95,8 @@ import java.util.function.Supplier;
  */
 public abstract class AbstractLauncherUiTest<LAUNCHER_TYPE extends Launcher> {
 
-    public static final long DEFAULT_ACTIVITY_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
     public static final long DEFAULT_BROADCAST_TIMEOUT_SECS = 10;
 
-    public static final long DEFAULT_UI_TIMEOUT = TestUtil.DEFAULT_UI_TIMEOUT;
     private static final String TAG = "AbstractLauncherUiTest";
 
     private static final long BYTES_PER_MEGABYTE = 1 << 20;
@@ -151,7 +147,7 @@ public abstract class AbstractLauncherUiTest<LAUNCHER_TYPE extends Launcher> {
                     launcher.forceGc();
                     return MAIN_EXECUTOR.submit(
                             () -> launcher.noLeakedActivities(requireOneActiveActivity)).get();
-                }, DEFAULT_UI_TIMEOUT, launcher);
+                }, launcher);
     }
 
     public static String getAppPackageName() {
@@ -443,7 +439,7 @@ public abstract class AbstractLauncherUiTest<LAUNCHER_TYPE extends Launcher> {
      */
     protected <T> T getOnUiThread(final Callable<T> callback) {
         try {
-            return mMainThreadExecutor.submit(callback).get(DEFAULT_UI_TIMEOUT,
+            return mMainThreadExecutor.submit(callback).get(TestUtil.DEFAULT_UI_TIMEOUT,
                     TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
             Log.e(TAG, "Timeout in getOnUiThread, sending SIGABRT", e);
@@ -498,13 +494,7 @@ public abstract class AbstractLauncherUiTest<LAUNCHER_TYPE extends Launcher> {
     // flakiness.
     protected void waitForLauncherCondition(String
             message, Function<LAUNCHER_TYPE, Boolean> condition) {
-        waitForLauncherCondition(message, condition, DEFAULT_ACTIVITY_TIMEOUT);
-    }
-
-    // Cannot be used in TaplTests after injecting any gesture using Tapl because this can hide
-    // flakiness.
-    protected <O> O getOnceNotNull(String message, Function<LAUNCHER_TYPE, O> f) {
-        return getOnceNotNull(message, f, DEFAULT_ACTIVITY_TIMEOUT);
+        waitForLauncherCondition(message, condition, TestUtil.DEFAULT_UI_TIMEOUT);
     }
 
     // Cannot be used in TaplTests after injecting any gesture using Tapl because this can hide
@@ -513,12 +503,12 @@ public abstract class AbstractLauncherUiTest<LAUNCHER_TYPE extends Launcher> {
             String message, Function<LAUNCHER_TYPE, Boolean> condition, long timeout) {
         verifyKeyguardInvisible();
         if (!TestHelpers.isInLauncherProcess()) return;
-        Wait.atMost(message, () -> getFromLauncher(condition), timeout, mLauncher);
+        Wait.atMost(message, () -> getFromLauncher(condition), mLauncher, timeout);
     }
 
     // Cannot be used in TaplTests after injecting any gesture using Tapl because this can hide
     // flakiness.
-    protected <T> T getOnceNotNull(String message, Function<LAUNCHER_TYPE, T> f, long timeout) {
+    protected <T> T getOnceNotNull(String message, Function<LAUNCHER_TYPE, T> f) {
         if (!TestHelpers.isInLauncherProcess()) return null;
 
         final Object[] output = new Object[1];
@@ -526,7 +516,7 @@ public abstract class AbstractLauncherUiTest<LAUNCHER_TYPE extends Launcher> {
             final Object fromLauncher = getFromLauncher(f);
             output[0] = fromLauncher;
             return fromLauncher != null;
-        }, timeout, mLauncher);
+        }, mLauncher);
         return (T) output[0];
     }
 
@@ -540,12 +530,7 @@ public abstract class AbstractLauncherUiTest<LAUNCHER_TYPE extends Launcher> {
         Wait.atMost(message, () -> {
             testThreadAction.run();
             return getFromLauncher(condition);
-        }, timeout, mLauncher);
-    }
-
-    protected LauncherActivityInfo getSettingsApp() {
-        return mTargetContext.getSystemService(LauncherApps.class)
-                .getActivityList("com.android.settings", Process.myUserHandle()).get(0);
+        }, mLauncher, timeout);
     }
 
     /**
@@ -633,20 +618,13 @@ public abstract class AbstractLauncherUiTest<LAUNCHER_TYPE extends Launcher> {
         }
         getInstrumentation().getTargetContext().startActivity(intent);
         assertTrue("App didn't start: " + selector,
-                TestHelpers.wait(Until.hasObject(selector), DEFAULT_UI_TIMEOUT));
+                TestHelpers.wait(Until.hasObject(selector), TestUtil.DEFAULT_UI_TIMEOUT));
 
         // Wait for the Launcher to stop.
         final LauncherInstrumentation launcherInstrumentation = new LauncherInstrumentation();
         Wait.atMost("Launcher activity didn't stop",
                 () -> !launcherInstrumentation.isLauncherActivityStarted(),
-                DEFAULT_ACTIVITY_TIMEOUT, launcherInstrumentation);
-    }
-
-    public static ActivityInfo resolveSystemAppInfo(String category) {
-        return getInstrumentation().getContext().getPackageManager().resolveActivity(
-                new Intent(Intent.ACTION_MAIN).addCategory(category),
-                PackageManager.MATCH_SYSTEM_ONLY).
-                activityInfo;
+                launcherInstrumentation);
     }
 
 
@@ -662,8 +640,7 @@ public abstract class AbstractLauncherUiTest<LAUNCHER_TYPE extends Launcher> {
                 launcher.finish();
             }
         });
-        waitForLauncherCondition(
-                "Launcher still active", launcher -> launcher == null, DEFAULT_UI_TIMEOUT);
+        waitForLauncherCondition("Launcher still active", launcher -> launcher == null);
     }
 
     protected boolean isInLaunchedApp(LAUNCHER_TYPE launcher) {

@@ -57,7 +57,7 @@ public final class OverviewTask {
         mLauncher.assertNotNull("task must not be null", task);
         mTask = task;
         mOverview = overview;
-        mType = getType();
+        mType = getType(task);
         verifyActiveContainer();
     }
 
@@ -304,8 +304,12 @@ public final class OverviewTask {
         return containsContentDescription(expected, DEFAULT);
     }
 
-    private TaskViewType getType() {
-        String resourceName = mTask.getResourceName();
+    /**
+     * Returns the TaskView type of the task. It will return whether the task is a single TaskView,
+     * a GroupedTaskView or a DesktopTaskView.
+     */
+    static TaskViewType getType(UiObject2 task) {
+        String resourceName = task.getResourceName();
         if (resourceName.endsWith("task_view_grouped")) {
             return TaskViewType.GROUPED;
         } else if (resourceName.endsWith("task_view_desktop")) {
@@ -345,7 +349,7 @@ public final class OverviewTask {
         }
     }
 
-    private enum TaskViewType {
+    enum TaskViewType {
         SINGLE,
         GROUPED,
         DESKTOP

@@ -17,6 +17,7 @@
 package com.android.launcher3.taskbar
 
 import android.animation.AnimatorTestRule
+import android.view.KeyEvent
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
@@ -47,8 +48,8 @@ class TaskbarScrimViewControllerTest {
         TaskbarWindowSandboxContext.create { builder ->
             builder.bindSystemUiProxy(
                 object : SystemUiProxy(this) {
-                    override fun onBackPressed() {
-                        super.onBackPressed()
+                    override fun onBackEvent(backEvent: KeyEvent?) {
+                        super.onBackEvent(backEvent)
                         backPressed = true
                     }
                 }

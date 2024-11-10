@@ -26,6 +26,7 @@ import com.android.launcher3.tapl.OverviewTask
 import com.android.launcher3.ui.AbstractLauncherUiTest
 import com.android.launcher3.ui.PortraitLandscapeRunner.PortraitLandscape
 import com.android.launcher3.uioverrides.QuickstepLauncher
+import com.android.launcher3.util.TestUtil
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Before
 import org.junit.Test
@@ -104,28 +105,36 @@ class TaplTestsOverviewDesktop : AbstractLauncherUiTest<QuickstepLauncher?>() {
 
     @Test
     @PortraitLandscape
-    fun dismissFocusedTask_thenDesktopTask_thenFocusedTaskIsCentered() {
+    fun dismissTasks_whenDesktopTask_IsInTheCenter() {
         // Create extra activity to be DesktopTaskView
         startTestActivity(TEST_ACTIVITY_EXTRA)
         mLauncher.goHome().switchToOverview()
+
         val desktop = moveTaskToDesktop(TEST_ACTIVITY_EXTRA)
+        var overview = desktop.switchToOverview()
 
-        val overview = desktop.switchToOverview()
+        // Open focused task and go back to Overview to validate whether it has adjacent tasks in
+        // its both sides (grid task on left and desktop tasks at its right side)
+        val focusedTaskOpened = overview.getTestActivityTask(TEST_ACTIVITY_2).open()
 
-        // Dismiss focused task
-        val focusedTask1 = overview.getTestActivityTask(TEST_ACTIVITY_2)
-        assertTaskContentDescription(focusedTask1, TEST_ACTIVITY_2)
-        focusedTask1.dismiss()
-
-        // Dismiss DesktopTaskView
+        // Fling to desktop task and dismiss the focused task to check repositioning of
+        // grid tasks.
+        overview = focusedTaskOpened.switchToOverview().apply { flingBackward() }
         val desktopTask = overview.currentTask
         assertWithMessage("The current task is not a Desktop.").that(desktopTask.isDesktop).isTrue()
+
+        // Get focused task (previously opened task) then dismiss this task
+        val focusedTaskInOverview = overview.getTestActivityTask(TEST_ACTIVITY_2)
+        assertTaskContentDescription(focusedTaskInOverview, TEST_ACTIVITY_2)
+        focusedTaskInOverview.dismiss()
+
+        // Dismiss DesktopTask to validate whether the new focused task will take its position
         desktopTask.dismiss()
 
-        // Dismiss focused task
-        val focusedTask2 = overview.currentTask
-        assertTaskContentDescription(focusedTask2, TEST_ACTIVITY_1)
-        focusedTask2.dismiss()
+        // Dismiss last focused task
+        val lastFocusedTask = overview.currentTask
+        assertTaskContentDescription(lastFocusedTask, TEST_ACTIVITY_1)
+        lastFocusedTask.dismiss()
 
         assertWithMessage("Still have tasks after dismissing all the tasks")
             .that(mLauncher.workspace.switchToOverview().hasTasks())
@@ -164,7 +173,7 @@ class TaplTestsOverviewDesktop : AbstractLauncherUiTest<QuickstepLauncher?>() {
             .that(
                 mDevice.wait(
                     Until.hasObject(By.pkg(getAppPackageName()).text("TestActivity$index")),
-                    DEFAULT_UI_TIMEOUT,
+                    TestUtil.DEFAULT_UI_TIMEOUT,
                 )
             )
             .isTrue()

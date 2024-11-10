@@ -53,6 +53,7 @@ import com.android.launcher3.tapl.Widget;
 import com.android.launcher3.tapl.Workspace;
 import com.android.launcher3.ui.AbstractLauncherUiTest;
 import com.android.launcher3.ui.TestViewHelpers;
+import com.android.launcher3.util.TestUtil;
 import com.android.launcher3.util.rule.ShellCommandRule;
 import com.android.launcher3.widget.LauncherAppWidgetProviderInfo;
 import com.android.launcher3.widget.WidgetManagerHelper;
@@ -233,13 +234,15 @@ public class TaplBindWidgetTest extends AbstractLauncherUiTest<Launcher> {
     }
 
     private void verifyWidgetPresent(LauncherAppWidgetProviderInfo info) {
-        final Widget widget = mLauncher.getWorkspace().tryGetWidget(info.label, DEFAULT_UI_TIMEOUT);
+        final Widget widget = mLauncher.getWorkspace().tryGetWidget(info.label,
+                TestUtil.DEFAULT_UI_TIMEOUT);
         assertTrue("Widget is not present",
                 widget != null);
     }
 
     private void verifyPendingWidgetPresent() {
-        final Widget widget = mLauncher.getWorkspace().tryGetPendingWidget(DEFAULT_UI_TIMEOUT);
+        final Widget widget = mLauncher.getWorkspace().tryGetPendingWidget(
+                TestUtil.DEFAULT_UI_TIMEOUT);
         assertTrue("Pending widget is not present",
                 widget != null);
     }

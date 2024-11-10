@@ -21,11 +21,13 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Rect;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -36,6 +38,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.android.app.animation.Interpolators;
 import com.android.launcher3.DeviceProfile;
+import com.android.launcher3.Flags;
 import com.android.launcher3.Insettable;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
@@ -43,10 +46,13 @@ import com.android.launcher3.anim.AnimatedPropertySetter;
 import com.android.launcher3.anim.KeyboardInsetAnimationCallback;
 import com.android.launcher3.model.StringCache;
 import com.android.launcher3.views.ActivityContext;
+
+import java.util.ArrayList;
+
 /**
- * Work profile toggle switch shown at the bottom of AllApps work tab
+ * Work profile utility ViewGroup that is shown at the bottom of AllApps work tab
  */
-public class WorkModeSwitch extends LinearLayout implements Insettable,
+public class WorkUtilityView extends LinearLayout implements Insettable,
         KeyboardInsetAnimationCallback.KeyboardInsetListener {
 
     private static final int TEXT_EXPAND_OPACITY_DURATION = 300;
@@ -54,10 +60,14 @@ public class WorkModeSwitch extends LinearLayout implements Insettable,
     private static final int EXPAND_COLLAPSE_DURATION = 300;
     private static final int TEXT_ALPHA_EXPAND_DELAY = 80;
     private static final int TEXT_ALPHA_COLLAPSE_DELAY = 0;
+    private static final int WORK_SCHEDULER_OPACITY_DURATION =
+            (int) (EXPAND_COLLAPSE_DURATION * 0.75f);
     private static final int FLAG_FADE_ONGOING = 1 << 1;
     private static final int FLAG_TRANSLATION_ONGOING = 1 << 2;
     private static final int FLAG_IS_EXPAND = 1 << 3;
     private static final int SCROLL_THRESHOLD_DP = 10;
+    private static final float WORK_SCHEDULER_SCALE_MIN = 0.25f;
+    private static final float WORK_SCHEDULER_SCALE_MAX = 1f;
 
     private final Rect mInsets = new Rect();
     private final Rect mImeInsets = new Rect();
@@ -67,22 +77,25 @@ public class WorkModeSwitch extends LinearLayout implements Insettable,
     private final int mTextMarginStart;
     private final int mTextMarginEnd;
     private final int mIconMarginStart;
+    private final String mWorkSchedulerIntentAction;
 
     // Threshold when user scrolls up/down to determine when should button extend/collapse
     private final int mScrollThreshold;
-    private TextView mTextView;
-    private ImageView mIcon;
     private ValueAnimator mPauseFABAnim;
+    private TextView mPauseText;
+    private ImageView mWorkIcon;
+    private ImageButton mSchedulerButton;
 
-    public WorkModeSwitch(@NonNull Context context) {
+    public WorkUtilityView(@NonNull Context context) {
         this(context, null, 0);
     }
 
-    public WorkModeSwitch(@NonNull Context context, @NonNull AttributeSet attrs) {
+    public WorkUtilityView(@NonNull Context context, @NonNull AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public WorkModeSwitch(@NonNull Context context, @NonNull AttributeSet attrs, int defStyleAttr) {
+    public WorkUtilityView(@NonNull Context context, @NonNull AttributeSet attrs,
+            int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mContext = context;
         mScrollThreshold = Utilities.dpToPx(SCROLL_THRESHOLD_DP);
@@ -93,14 +106,17 @@ public class WorkModeSwitch extends LinearLayout implements Insettable,
                 R.dimen.work_fab_text_end_margin);
         mIconMarginStart = mContext.getResources().getDimensionPixelSize(
                 R.dimen.work_fab_icon_start_margin_expanded);
+        mWorkSchedulerIntentAction = mContext.getResources().getString(
+                R.string.work_profile_scheduler_intent);
     }
 
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
 
-        mTextView = findViewById(R.id.pause_text);
-        mIcon = findViewById(R.id.work_icon);
+        mPauseText = findViewById(R.id.pause_text);
+        mWorkIcon = findViewById(R.id.work_icon);
+        mSchedulerButton = findViewById(R.id.work_scheduler);
         setSelected(true);
         KeyboardInsetAnimationCallback keyboardInsetAnimationCallback =
                 new KeyboardInsetAnimationCallback(this);
@@ -109,6 +125,12 @@ public class WorkModeSwitch extends LinearLayout implements Insettable,
         addFlag(FLAG_IS_EXPAND);
         setInsets(mActivityContext.getDeviceProfile().getInsets());
         updateStringFromCache();
+        mSchedulerButton.setVisibility(GONE);
+        if (shouldUseScheduler()) {
+            mSchedulerButton.setVisibility(VISIBLE);
+            mSchedulerButton.setOnClickListener(view ->
+                    mContext.startActivity(new Intent(mWorkSchedulerIntentAction)));
+        }
     }
 
     @Override
@@ -166,8 +188,10 @@ public class WorkModeSwitch extends LinearLayout implements Insettable,
                 WindowInsetsCompat.toWindowInsetsCompat(insets, this);
         if (windowInsetsCompat.isVisible(WindowInsetsCompat.Type.ime())) {
             setInsets(mImeInsets, windowInsetsCompat.getInsets(WindowInsetsCompat.Type.ime()));
+            shrink();
         } else {
             mImeInsets.setEmpty();
+            extend();
         }
         updateTranslationY();
         return super.onApplyWindowInsets(insets);
@@ -183,15 +207,63 @@ public class WorkModeSwitch extends LinearLayout implements Insettable,
         super.setTranslationY(Math.min(translationY, -mInsets.bottom));
     }
 
+    private ValueAnimator animateSchedulerScale(boolean isExpanding) {
+        float scaleFrom = isExpanding ? WORK_SCHEDULER_SCALE_MIN : WORK_SCHEDULER_SCALE_MAX;
+        float scaleTo = isExpanding ? WORK_SCHEDULER_SCALE_MAX : WORK_SCHEDULER_SCALE_MIN;
+        ValueAnimator schedulerScaleAnim = ObjectAnimator.ofFloat(scaleFrom, scaleTo);
+        schedulerScaleAnim.setDuration(EXPAND_COLLAPSE_DURATION);
+        schedulerScaleAnim.setInterpolator(Interpolators.STANDARD);
+        schedulerScaleAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                float scale = (float) valueAnimator.getAnimatedValue();
+                mSchedulerButton.setScaleX(scale);
+                mSchedulerButton.setScaleY(scale);
+            }
+        });
+        schedulerScaleAnim.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                if (isExpanding) {
+                    mSchedulerButton.setVisibility(VISIBLE);
+                }
+            }
 
-    private void animatePillTransition(boolean isExpanding) {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (!isExpanding) {
+                    mSchedulerButton.setVisibility(GONE);
+                }
+            }
+        });
+        return schedulerScaleAnim;
+    }
+
+    private ValueAnimator animateSchedulerAlpha(boolean isExpanding) {
+        float alphaFrom = isExpanding ? 0 : 1;
+        float alphaTo = isExpanding ? 1 : 0;
+        ValueAnimator schedulerAlphaAnim = ObjectAnimator.ofFloat(alphaFrom, alphaTo);
+        schedulerAlphaAnim.setDuration(WORK_SCHEDULER_OPACITY_DURATION);
+        schedulerAlphaAnim.setStartDelay(isExpanding ? 0 :
+                EXPAND_COLLAPSE_DURATION - WORK_SCHEDULER_OPACITY_DURATION);
+        schedulerAlphaAnim.setInterpolator(Interpolators.STANDARD);
+        schedulerAlphaAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                mSchedulerButton.setAlpha((float) valueAnimator.getAnimatedValue());
+            }
+        });
+        return schedulerAlphaAnim;
+    }
+
+    private void animateWorkUtilityViews(boolean isExpanding) {
         if (!shouldAnimate(isExpanding)) {
             return;
         }
         AnimatorSet animatorSet = new AnimatedPropertySetter().buildAnim();
-        mTextView.measure(0,0);
-        int currentWidth = mTextView.getWidth();
-        int fullWidth = mTextView.getMeasuredWidth();
+        mPauseText.measure(0,0);
+        int currentWidth = mPauseText.getWidth();
+        int fullWidth = mPauseText.getMeasuredWidth();
         float from = isExpanding ? 0 : currentWidth;
         float to = isExpanding ? fullWidth : 0;
         mPauseFABAnim = ObjectAnimator.ofFloat(from, to);
@@ -203,15 +275,15 @@ public class WorkModeSwitch extends LinearLayout implements Insettable,
                 float translation = (float) valueAnimator.getAnimatedValue();
                 float translationFraction = translation / fullWidth;
                 ViewGroup.MarginLayoutParams textViewLayoutParams =
-                        (ViewGroup.MarginLayoutParams) mTextView.getLayoutParams();
+                        (ViewGroup.MarginLayoutParams) mPauseText.getLayoutParams();
                 textViewLayoutParams.width = (int) translation;
                 textViewLayoutParams.setMarginStart((int) (mTextMarginStart * translationFraction));
                 textViewLayoutParams.setMarginEnd((int) (mTextMarginEnd * translationFraction));
-                mTextView.setLayoutParams(textViewLayoutParams);
+                mPauseText.setLayoutParams(textViewLayoutParams);
                 ViewGroup.MarginLayoutParams iconLayoutParams =
-                        (ViewGroup.MarginLayoutParams) mIcon.getLayoutParams();
+                        (ViewGroup.MarginLayoutParams) mWorkIcon.getLayoutParams();
                 iconLayoutParams.setMarginStart((int) (mIconMarginStart * translationFraction));
-                mIcon.setLayoutParams(iconLayoutParams);
+                mWorkIcon.setLayoutParams(iconLayoutParams);
             }
         });
         mPauseFABAnim.addListener(new AnimatorListenerAdapter() {
@@ -220,21 +292,28 @@ public class WorkModeSwitch extends LinearLayout implements Insettable,
                 if (isExpanding) {
                     addFlag(FLAG_IS_EXPAND);
                 } else {
-                    mTextView.setVisibility(GONE);
+                    mPauseText.setVisibility(GONE);
                     removeFlag(FLAG_IS_EXPAND);
                 }
-                mTextView.setHorizontallyScrolling(false);
-                mTextView.setEllipsize(TextUtils.TruncateAt.END);
+                mPauseText.setHorizontallyScrolling(false);
+                mPauseText.setEllipsize(TextUtils.TruncateAt.END);
             }
 
             @Override
             public void onAnimationStart(Animator animator) {
-                mTextView.setHorizontallyScrolling(true);
-                mTextView.setVisibility(VISIBLE);
-                mTextView.setEllipsize(null);
+                mPauseText.setHorizontallyScrolling(true);
+                mPauseText.setVisibility(VISIBLE);
+                mPauseText.setEllipsize(null);
             }
         });
-        animatorSet.playTogether(mPauseFABAnim, updatePauseTextAlpha(isExpanding));
+        ArrayList<Animator> animatorList = new ArrayList<>();
+        animatorList.add(mPauseFABAnim);
+        animatorList.add(updatePauseTextAlpha(isExpanding));
+        if (shouldUseScheduler()) {
+            animatorList.add(animateSchedulerScale(isExpanding));
+            animatorList.add(animateSchedulerAlpha(isExpanding));
+        }
+        animatorSet.playTogether(animatorList);
         animatorSet.start();
     }
 
@@ -250,7 +329,7 @@ public class WorkModeSwitch extends LinearLayout implements Insettable,
         alphaAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                mTextView.setAlpha((float) valueAnimator.getAnimatedValue());
+                mPauseText.setAlpha((float) valueAnimator.getAnimatedValue());
             }
         });
         return alphaAnim;
@@ -287,11 +366,11 @@ public class WorkModeSwitch extends LinearLayout implements Insettable,
     }
 
     public void extend() {
-        animatePillTransition(true);
+        animateWorkUtilityViews(true);
     }
 
-    public void shrink(){
-         animatePillTransition(false);
+    public void shrink() {
+        animateWorkUtilityViews(false);
     }
 
     /**
@@ -310,7 +389,11 @@ public class WorkModeSwitch extends LinearLayout implements Insettable,
     public void updateStringFromCache(){
         StringCache cache = mActivityContext.getStringCache();
         if (cache != null) {
-            mTextView.setText(cache.workProfilePauseButton);
+            mPauseText.setText(cache.workProfilePauseButton);
         }
+    }
+
+    private boolean shouldUseScheduler() {
+        return Flags.workSchedulerInWorkProfile() && !mWorkSchedulerIntentAction.isEmpty();
     }
 }

@@ -176,11 +176,17 @@ interface BubbleStashController {
                 bubbleBarTranslationYForTaskbar
             }
 
-    /** Translation Y to align the bubble bar with the hotseat. */
+    /** Translation Y to align the bubble bar with the taskbar. */
     val bubbleBarTranslationYForTaskbar: Float
 
-    /** Return translation Y to align the bubble bar with the taskbar. */
+    /** Return translation Y to align the bubble bar with the hotseat. */
     val bubbleBarTranslationYForHotseat: Float
+
+    /**
+     * Show bubble bar is if it were in-app while launcher state is still on home. Set as a progress
+     * value between 0 and 1: 0 - use home layout, 1 - use in-app layout.
+     */
+    var inAppDisplayOverrideProgress: Float
 
     /** Dumps the state of BubbleStashController. */
     fun dump(pw: PrintWriter) {

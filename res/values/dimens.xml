@@ -166,6 +166,9 @@
     <dimen name="work_fab_margin">16dp</dimen>
     <dimen name="work_fab_margin_bottom">20dp</dimen>
     <dimen name="work_mode_fab_background_horizontal_padding">16dp</dimen>
+    <dimen name="work_scheduler_background_padding">16dp</dimen>
+    <dimen name="work_scheduler_bottom_margin">8dp</dimen>
+    <dimen name="work_scheduler_size">56dp</dimen>
     <dimen name="work_profile_footer_padding">20dp</dimen>
     <dimen name="work_edu_card_margin">16dp</dimen>
     <dimen name="work_edu_card_radius">16dp</dimen>
@@ -225,8 +228,18 @@
     <!-- Bottom margin for the search and recommended widgets container with work profile -->
     <dimen name="search_and_recommended_widgets_container_small_bottom_margin">10dp</dimen>
 
+    <dimen name="widget_header_focus_ring_width">3dp</dimen>
+    <dimen name="widget_focus_ring_corner_radius">28dp</dimen>
+    <dimen name="widget_header_background_border">5dp</dimen>
+
     <dimen name="widget_list_top_bottom_corner_radius">28dp</dimen>
     <dimen name="widget_list_content_corner_radius">4dp</dimen>
+    <!-- Button that expands the widget apps list in the widget picker. -->
+    <dimen name="widgets_list_expand_button_drawable_padding">8dp</dimen>
+    <dimen name="widgets_list_expand_button_start_padding">16dp</dimen>
+    <dimen name="widgets_list_expand_button_end_padding">24dp</dimen>
+    <dimen name="widgets_list_expand_button_vertical_padding">16dp</dimen>
+    <dimen name="widgets_list_expand_button_top_margin">14dp</dimen>
 
     <dimen name="widget_list_header_view_vertical_padding">20dp</dimen>
     <dimen name="widget_list_entry_spacing">2dp</dimen>

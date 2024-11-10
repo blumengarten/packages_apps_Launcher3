@@ -186,18 +186,20 @@ public class Hotseat extends CellLayout implements Insettable {
      */
     public void adjustForBubbleBar(boolean isBubbleBarVisible) {
         DeviceProfile dp = mActivity.getDeviceProfile();
+        float adjustedBorderSpace = dp.getHotseatAdjustedBorderSpaceForBubbleBar(getContext());
+        boolean adjustmentRequired = Float.compare(adjustedBorderSpace, 0f) != 0;
 
         ShortcutAndWidgetContainer icons = getShortcutsAndWidgets();
-        AnimatorSet animatorSet = new AnimatorSet();
-
         // update the translation provider for future layout passes of hotseat icons.
-        if (isBubbleBarVisible) {
+        if (adjustmentRequired && isBubbleBarVisible) {
             icons.setTranslationProvider(
                     cellX -> dp.getHotseatAdjustedTranslation(getContext(), cellX));
         } else {
             icons.setTranslationProvider(null);
         }
+        if (!adjustmentRequired) return;
 
+        AnimatorSet animatorSet = new AnimatorSet();
         for (int i = 0; i < icons.getChildCount(); i++) {
             View child = icons.getChildAt(i);
             float tx = isBubbleBarVisible ? dp.getHotseatAdjustedTranslation(getContext(), i) : 0;

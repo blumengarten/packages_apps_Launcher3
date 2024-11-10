@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"Έχει ολοκληρωθεί το <xliff:g id="PROGRESS">%2$s</xliff:g> της εγκατάστασης της εφαρμογής <xliff:g id="NAME">%1$s</xliff:g>"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"Λήψη <xliff:g id="NAME">%1$s</xliff:g>, ολοκληρώθηκε <xliff:g id="PROGRESS">%2$s</xliff:g>"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g> σε αναμονή για εγκατάσταση"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"Η εφαρμογή <xliff:g id="NAME">%1$s</xliff:g> είναι αρχειοθετημένη. Πατήστε για λήψη και επαναφορά."</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"Η εφαρμογή <xliff:g id="NAME">%1$s</xliff:g> είναι αρχειοθετημένη."</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"λήψη και επαναφορά"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"Απαιτείται ενημέρωση της εφαρμογής"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"Η εφαρμογή για αυτό το εικονίδιο δεν έχει ενημερωθεί. Μπορείτε να την ενημερώσετε μη αυτόματα για να ενεργοποιήσετε ξανά τη συγκεκριμένη συντόμευση ή να καταργήσετε το εικονίδιο."</string>
     <string name="dialog_update" msgid="2178028071796141234">"Ενημέρωση"</string>

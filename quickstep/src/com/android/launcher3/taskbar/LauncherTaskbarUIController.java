@@ -372,6 +372,11 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
                             * mTaskbarInAppDisplayProgress.value);
             mControllers.navbarButtonsViewController
                     .getOnTaskbarBackgroundNavButtonColorOverride().updateValue(progress);
+
+            if (isBubbleBarEnabled()) {
+                mControllers.bubbleControllers.ifPresent(
+                        c -> c.bubbleStashController.setInAppDisplayOverrideProgress(progress));
+            }
         }
     }
 

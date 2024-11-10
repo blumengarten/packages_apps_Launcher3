@@ -49,6 +49,7 @@ import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_Q
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_SCREEN_PINNING;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_SHORTCUT_HELPER_SHOWING;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_VOICE_INTERACTION_WINDOW_SHOWING;
+import static com.android.window.flags.Flags.predictiveBackThreeButtonNav;
 import static com.android.wm.shell.Flags.enableBubbleBarInPersistentTaskBar;
 
 import android.animation.Animator;
@@ -71,8 +72,10 @@ import android.graphics.drawable.PaintDrawable;
 import android.graphics.drawable.RotateDrawable;
 import android.inputmethodservice.InputMethodService;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.util.Property;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnAttachStateChangeListener;
@@ -843,10 +846,41 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         buttonView.setImageResource(drawableId);
         buttonView.setContentDescription(parent.getContext().getString(
                 navButtonController.getButtonContentDescription(buttonType)));
-        buttonView.setOnClickListener(view -> navButtonController.onButtonClick(buttonType, view));
-        buttonView.setOnLongClickListener(view ->
-                navButtonController.onButtonLongClick(buttonType, view));
+        if (predictiveBackThreeButtonNav() && buttonType == BUTTON_BACK) {
+            // set up special touch listener for back button to support predictive back
+            setBackButtonTouchListener(buttonView, navButtonController);
+        } else {
+            buttonView.setOnClickListener(view ->
+                    navButtonController.onButtonClick(buttonType, view));
+            buttonView.setOnLongClickListener(view ->
+                    navButtonController.onButtonLongClick(buttonType, view));
+        }
         return buttonView;
+    }
+
+    private void setBackButtonTouchListener(View buttonView,
+            TaskbarNavButtonController navButtonController) {
+        buttonView.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_MOVE) return false;
+            long time = SystemClock.uptimeMillis();
+            int action = event.getAction();
+            KeyEvent keyEvent = new KeyEvent(time, time,
+                    action == MotionEvent.ACTION_DOWN ? KeyEvent.ACTION_DOWN : KeyEvent.ACTION_UP,
+                    KeyEvent.KEYCODE_BACK, 0);
+            if (event.getAction() == MotionEvent.ACTION_CANCEL) {
+                keyEvent.cancel();
+            }
+            navButtonController.executeBack(keyEvent);
+
+            if (action == MotionEvent.ACTION_UP) {
+                buttonView.performClick();
+            }
+            return false;
+        });
+        buttonView.setOnLongClickListener((view) ->  {
+            navButtonController.onButtonLongClick(BUTTON_BACK, view);
+            return false;
+        });
     }
 
     private ImageView addButton(ViewGroup parent, @IdRes int id, @LayoutRes int layoutId) {

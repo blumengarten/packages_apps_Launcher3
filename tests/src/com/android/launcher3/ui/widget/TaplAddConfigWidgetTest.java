@@ -103,12 +103,12 @@ public class TaplAddConfigWidgetTest extends AbstractLauncherUiTest<Launcher> {
 
         setResultAndWaitForAnimation(acceptConfig);
         if (acceptConfig) {
-            Wait.atMost("", new WidgetSearchCondition(), DEFAULT_ACTIVITY_TIMEOUT, mLauncher);
+            Wait.atMost("", new WidgetSearchCondition(), mLauncher);
             assertNotNull(mAppWidgetManager.getAppWidgetInfo(mWidgetId));
         } else {
             // Verify that the widget id is deleted.
             Wait.atMost("", () -> mAppWidgetManager.getAppWidgetInfo(mWidgetId) == null,
-                    DEFAULT_ACTIVITY_TIMEOUT, mLauncher);
+                    mLauncher);
         }
     }
 

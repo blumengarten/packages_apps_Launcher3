@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"Đang cài đặt <xliff:g id="NAME">%1$s</xliff:g>, hoàn tất <xliff:g id="PROGRESS">%2$s</xliff:g>"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"Đang tải xuống <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="PROGRESS">%2$s</xliff:g> hoàn tất"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"Đang chờ cài đặt <xliff:g id="NAME">%1$s</xliff:g>"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"<xliff:g id="NAME">%1$s</xliff:g> đã được lưu trữ. Hãy nhấn để tải xuống và khôi phục."</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"<xliff:g id="NAME">%1$s</xliff:g> đã được lưu trữ."</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"tải xuống và khôi phục"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"Cần cập nhật ứng dụng"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"Ứng dụng cho biểu tượng này chưa được cập nhật. Bạn có thể cập nhật theo cách thủ công để bật lại phím tắt này hoặc xóa biểu tượng."</string>
     <string name="dialog_update" msgid="2178028071796141234">"Cập nhật"</string>

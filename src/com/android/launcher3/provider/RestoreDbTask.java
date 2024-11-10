@@ -51,7 +51,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
-import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherFiles;
@@ -124,18 +123,14 @@ public class RestoreDbTask {
         // executed again.
         LauncherPrefs.get(context).removeSync(RESTORE_DEVICE);
 
-        if (Flags.enableNarrowGridRestore()) {
-            DeviceGridState deviceGridState = new DeviceGridState(context);
-            String oldPhoneFileName = deviceGridState.getDbFile();
-            List<String> previousDbs = existingDbs(context);
-            removeOldDBs(context, oldPhoneFileName);
-            // The idp before this contains data about the old phone, after this it becomes the idp
-            // of the current phone.
-            idp.reset(context);
-            trySettingPreviousGridAsCurrent(context, idp, oldPhoneFileName, previousDbs);
-        } else {
-            idp.reinitializeAfterRestore(context);
-        }
+        DeviceGridState deviceGridState = new DeviceGridState(context);
+        String oldPhoneFileName = deviceGridState.getDbFile();
+        List<String> previousDbs = existingDbs(context);
+        removeOldDBs(context, oldPhoneFileName);
+        // The idp before this contains data about the old phone, after this it becomes the idp
+        // of the current phone.
+        idp.reset(context);
+        trySettingPreviousGridAsCurrent(context, idp, oldPhoneFileName, previousDbs);
     }
 
 

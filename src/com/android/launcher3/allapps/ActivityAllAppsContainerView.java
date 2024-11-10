@@ -47,7 +47,6 @@ import android.os.Parcelable;
 import android.os.Process;
 import android.os.UserManager;
 import android.util.AttributeSet;
-import android.util.FloatProperty;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.KeyEvent;
@@ -96,6 +95,7 @@ import com.android.launcher3.views.RecyclerViewFastScroller;
 import com.android.launcher3.views.ScrimView;
 import com.android.launcher3.views.SpringRelativeLayout;
 import com.android.launcher3.workprofile.PersonalWorkSlidingTabStrip;
+import com.android.systemui.plugins.AllAppsRow;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -114,19 +114,6 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         OnDeviceProfileChangeListener, PersonalWorkSlidingTabStrip.OnActivePageChangedListener,
         ScrimView.ScrimDrawingController {
 
-
-    public static final FloatProperty<ActivityAllAppsContainerView<?>> BOTTOM_SHEET_ALPHA =
-            new FloatProperty<>("bottomSheetAlpha") {
-                @Override
-                public Float get(ActivityAllAppsContainerView<?> containerView) {
-                    return containerView.mBottomSheetAlpha;
-                }
-
-                @Override
-                public void setValue(ActivityAllAppsContainerView<?> containerView, float v) {
-                    containerView.setBottomSheetAlpha(v);
-                }
-            };
 
     public static final float PULL_MULTIPLIER = .02f;
     public static final float FLING_VELOCITY_MULTIPLIER = 1200f;
@@ -166,6 +153,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     private final RectF mTmpRectF = new RectF();
     protected AllAppsPagedView mViewPager;
     protected FloatingHeaderView mHeader;
+    protected final List<AllAppsRow> mAdditionalHeaderRows = new ArrayList<>();
     protected View mBottomSheetBackground;
     protected RecyclerViewFastScroller mFastScroller;
     private ConstraintLayout mFastScrollLetterLayout;
@@ -191,8 +179,6 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     private ScrimView mScrimView;
     private int mHeaderColor;
     private int mBottomSheetBackgroundColor;
-    private float mBottomSheetAlpha = 1f;
-    private boolean mForceBottomSheetVisible;
     private int mTabsProtectionAlpha;
     @Nullable private AllAppsTransitionController mAllAppsTransitionController;
 
@@ -278,6 +264,8 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
 
         getLayoutInflater().inflate(R.layout.all_apps_content, this);
         mHeader = findViewById(R.id.all_apps_header);
+        mAdditionalHeaderRows.clear();
+        mAdditionalHeaderRows.addAll(getAdditionalHeaderRows());
         mBottomSheetBackground = findViewById(R.id.bottom_sheet_background);
         mBottomSheetHandleArea = findViewById(R.id.bottom_sheet_handle_area);
         mSearchRecyclerView = findViewById(R.id.search_results_list_view);
@@ -302,6 +290,10 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             mSearchContainer.setFocusedByDefault(true);
         }
         mSearchUiManager = (SearchUiManager) mSearchContainer;
+    }
+
+    public List<AllAppsRow> getAdditionalHeaderRows() {
+        return List.of();
     }
 
     @Override
@@ -349,20 +341,6 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
 
     public SearchUiManager getSearchUiManager() {
         return mSearchUiManager;
-    }
-
-    public View getBottomSheetBackground() {
-        return mBottomSheetBackground;
-    }
-
-    /**
-     * Temporarily force the bottom sheet to be visible on non-tablets.
-     *
-     * @param force {@code true} means bottom sheet will be visible on phones until {@code reset()}.
-     */
-    public void forceBottomSheetVisible(boolean force) {
-        mForceBottomSheetVisible = force;
-        updateBackgroundVisibility(mActivityContext.getDeviceProfile());
     }
 
     public View getSearchView() {
@@ -496,7 +474,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         if (mHeader != null && mHeader.getVisibility() == VISIBLE) {
             mHeader.reset(animate);
         }
-        forceBottomSheetVisible(false);
+        updateBackgroundVisibility(mActivityContext.getDeviceProfile());
         // Reset the base recycler view after transitioning home.
         updateHeaderScroll(0);
         if (exitSearch) {
@@ -726,7 +704,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             post(() -> mAH.get(AdapterHolder.WORK).applyPadding());
 
         } else {
-            mWorkManager.detachWorkModeSwitch();
+            mWorkManager.detachWorkUtilityViews();
             mViewPager = null;
         }
 
@@ -744,6 +722,8 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     }
 
     void setupHeader() {
+        mAdditionalHeaderRows.forEach(row -> mHeader.onPluginDisconnected(row));
+
         mHeader.setVisibility(View.VISIBLE);
         boolean tabsHidden = !mUsingTabs;
         mHeader.setup(
@@ -761,6 +741,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
                 adapterHolder.mRecyclerView.scrollToTop();
             }
         });
+        mAdditionalHeaderRows.forEach(row -> mHeader.onPluginConnected(row, mActivityContext));
 
         removeCustomRules(mHeader);
         if (isSearchBarFloating()) {
@@ -1002,16 +983,11 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     }
 
     protected void updateBackgroundVisibility(DeviceProfile deviceProfile) {
-        boolean visible = deviceProfile.isTablet || mForceBottomSheetVisible;
-        mBottomSheetBackground.setVisibility(visible ? View.VISIBLE : View.GONE);
-        // Note: For tablets, the opaque background and header protection are added in drawOnScrim.
+        mBottomSheetBackground.setVisibility(
+                deviceProfile.shouldShowAllAppsOnSheet() ? View.VISIBLE : View.GONE);
+        // Note: The opaque sheet background and header protection are added in drawOnScrim.
         // For the taskbar entrypoint, the scrim is drawn by its abstract slide in view container,
         // so its header protection is derived from this scrim instead.
-    }
-
-    private void setBottomSheetAlpha(float alpha) {
-        // Bottom sheet alpha is always 1 for tablets.
-        mBottomSheetAlpha = mActivityContext.getDeviceProfile().isTablet ? 1f : alpha;
     }
 
     @VisibleForTesting
@@ -1151,8 +1127,8 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         applyAdapterSideAndBottomPaddings(grid);
 
         MarginLayoutParams mlp = (MarginLayoutParams) getLayoutParams();
-        // Ignore left/right insets on tablet because we are already centered in-screen.
-        if (grid.isTablet) {
+        // Ignore left/right insets on bottom sheet because we are already centered in-screen.
+        if (grid.shouldShowAllAppsOnSheet()) {
             mlp.leftMargin = mlp.rightMargin = 0;
         } else {
             mlp.leftMargin = insets.left;
@@ -1257,8 +1233,8 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     /** Called in Launcher#bindStringCache() to update the UI when cache is updated. */
     public void updateWorkUI() {
         setDeviceManagementResources();
-        if (mWorkManager.getWorkModeSwitch() != null) {
-            mWorkManager.getWorkModeSwitch().updateStringFromCache();
+        if (mWorkManager.getWorkUtilityView() != null) {
+            mWorkManager.getWorkUtilityView().updateStringFromCache();
         }
         inflateWorkCardsIfNeeded();
     }
@@ -1398,7 +1374,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         // Draw full background panel for tablets.
         if (hasBottomSheet) {
             mHeaderPaint.setColor(mBottomSheetBackgroundColor);
-            mHeaderPaint.setAlpha((int) (255 * mBottomSheetAlpha));
+            mHeaderPaint.setAlpha(255);
 
             mTmpRectF.set(
                     leftWithScale,
@@ -1581,8 +1557,8 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         void applyPadding() {
             if (mRecyclerView != null) {
                 int bottomOffset = 0;
-                if (isWork() && mWorkManager.getWorkModeSwitch() != null) {
-                    bottomOffset = mInsets.bottom + mWorkManager.getWorkModeSwitch().getHeight();
+                if (isWork() && mWorkManager.getWorkUtilityView() != null) {
+                    bottomOffset = mInsets.bottom + mWorkManager.getWorkUtilityView().getHeight();
                 } else if (isMain() && mPrivateProfileManager != null) {
                     Optional<AdapterItem> privateSpaceHeaderItem = mAppsList.getAdapterItems()
                             .stream()

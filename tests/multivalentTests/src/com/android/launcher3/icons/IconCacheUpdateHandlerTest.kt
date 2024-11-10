@@ -19,6 +19,7 @@ package com.android.launcher3.icons
 import android.content.ComponentName
 import android.content.pm.ApplicationInfo
 import android.database.MatrixCursor
+import android.os.Handler
 import android.os.Process.myUserHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
@@ -34,9 +35,18 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentCaptor
+import org.mockito.Captor
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.never
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 @SmallTest
@@ -45,14 +55,25 @@ class IconCacheUpdateHandlerTest {
 
     @Mock private lateinit var iconProvider: IconProvider
     @Mock private lateinit var baseIconCache: BaseIconCache
+    @Mock private lateinit var cacheDb: IconDB
+    @Mock private lateinit var workerHandler: Handler
 
-    private var cursor: MatrixCursor? = null
-    private var cachingLogic = CachedObjectCachingLogic
+    @Captor private lateinit var deleteCaptor: ArgumentCaptor<String>
+
+    private var cursor =
+        MatrixCursor(
+            arrayOf(IconDB.COLUMN_ROWID, IconDB.COLUMN_COMPONENT, IconDB.COLUMN_FRESHNESS_ID)
+        )
+
+    private lateinit var updateHandlerUnderTest: IconCacheUpdateHandler
 
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
         doReturn(iconProvider).whenever(baseIconCache).iconProvider
+        doReturn(cursor).whenever(cacheDb).query(any(), any(), any())
+
+        updateHandlerUnderTest = IconCacheUpdateHandler(baseIconCache, cacheDb, workerHandler)
     }
 
     @After
@@ -61,63 +82,136 @@ class IconCacheUpdateHandlerTest {
     }
 
     @Test
-    fun `IconCacheUpdateHandler returns null if the component name is malformed`() {
-        val updateHandlerUnderTest = IconCacheUpdateHandler(baseIconCache)
-        val cn = ComponentName.unflattenFromString("com.android.fake/.FakeActivity")!!
+    fun `keeps correct icons irrespective of call order`() {
+        val obj1 = TestCachedObject(1).apply { addToCursor(cursor) }
+        val obj2 = TestCachedObject(2).apply { addToCursor(cursor) }
 
-        val result =
-            updateHandlerUnderTest.updateOrDeleteIcon(
-                createCursor(1, cn.flattenToString() + "#", "freshId-old"),
-                hashMapOf(cn to TestCachedObject(cn, "freshId")),
-                setOf(),
-                myUserHandle(),
-                cachingLogic,
-            )
-        assertThat(result).isNull()
+        updateHandlerUnderTest.updateIcons(obj1)
+        updateHandlerUnderTest.updateIcons(obj2)
+        updateHandlerUnderTest.finish()
+
+        verify(cacheDb, never()).delete(any(), anyOrNull())
     }
 
     @Test
-    fun `IconCacheUpdateHandler returns null if the freshId match`() {
-        val updateHandlerUnderTest = IconCacheUpdateHandler(baseIconCache)
-        val cn = ComponentName.unflattenFromString("com.android.fake/.FakeActivity")!!
+    fun `removes missing entries in single call`() {
+        TestCachedObject(1).addToCursor(cursor)
+        TestCachedObject(2).addToCursor(cursor)
+        TestCachedObject(3).addToCursor(cursor)
+        TestCachedObject(4).addToCursor(cursor)
+        TestCachedObject(5).addToCursor(cursor)
 
-        val result =
-            updateHandlerUnderTest.updateOrDeleteIcon(
-                createCursor(1, cn.flattenToString(), "freshId"),
-                hashMapOf(cn to TestCachedObject(cn, "freshId")),
-                setOf(),
-                myUserHandle(),
-                cachingLogic,
-            )
-        assertThat(result).isNull()
+        updateHandlerUnderTest.updateIcons(TestCachedObject(1), TestCachedObject(4))
+        updateHandlerUnderTest.finish()
+
+        verifyItemsDeleted(2, 3, 5)
     }
 
     @Test
-    fun `IconCacheUpdateHandler returns non-null if the freshId do not match`() {
-        val updateHandlerUnderTest = IconCacheUpdateHandler(baseIconCache)
-        val cn = ComponentName.unflattenFromString("com.android.fake/.FakeActivity")!!
-        val testObj = TestCachedObject(cn, "freshId")
+    fun `removes missing entries in multiple calls`() {
+        TestCachedObject(1).addToCursor(cursor)
+        TestCachedObject(2).addToCursor(cursor)
+        TestCachedObject(3).addToCursor(cursor)
+        TestCachedObject(4).addToCursor(cursor)
+        TestCachedObject(5).addToCursor(cursor)
+        TestCachedObject(6).addToCursor(cursor)
 
-        val result =
-            updateHandlerUnderTest.updateOrDeleteIcon(
-                createCursor(1, cn.flattenToString(), "freshId-old"),
-                hashMapOf(cn to testObj),
-                setOf(),
-                myUserHandle(),
-                cachingLogic,
-            )
-        assertThat(result).isEqualTo(testObj)
+        updateHandlerUnderTest.updateIcons(TestCachedObject(1), TestCachedObject(2))
+        updateHandlerUnderTest.updateIcons(TestCachedObject(4), TestCachedObject(5))
+        updateHandlerUnderTest.finish()
+
+        verifyItemsDeleted(3, 6)
     }
 
-    private fun createCursor(row: Long, component: String, appState: String) =
-        MatrixCursor(
-                arrayOf(IconDB.COLUMN_ROWID, IconDB.COLUMN_COMPONENT, IconDB.COLUMN_FRESHNESS_ID)
-            )
-            .apply { addRow(arrayOf(row, component, appState)) }
-            .apply {
-                cursor = this
-                moveToNext()
+    @Test
+    fun `keeps valid app infos`() {
+        val appInfo = ApplicationInfo()
+        doReturn("app-fresh").whenever(iconProvider).getStateForApp(eq(appInfo))
+
+        TestCachedObject(1).addToCursor(cursor)
+        TestCachedObject(2).addToCursor(cursor)
+        cursor.addRow(arrayOf(33, TestCachedObject(1).getPackageKey(), "app-fresh"))
+
+        updateHandlerUnderTest.updateIcons(
+            TestCachedObject(1, appInfo = appInfo),
+            TestCachedObject(2),
+        )
+        updateHandlerUnderTest.finish()
+
+        verify(cacheDb, never()).delete(any(), anyOrNull())
+    }
+
+    @Test
+    fun `deletes stale app infos`() {
+        val appInfo1 = ApplicationInfo()
+        doReturn("app1-fresh").whenever(iconProvider).getStateForApp(eq(appInfo1))
+
+        val appInfo2 = ApplicationInfo()
+        doReturn("app2-fresh").whenever(iconProvider).getStateForApp(eq(appInfo2))
+
+        TestCachedObject(1).addToCursor(cursor)
+        TestCachedObject(2).addToCursor(cursor)
+        cursor.addRow(arrayOf(33, TestCachedObject(1).getPackageKey(), "app1-not-fresh"))
+        cursor.addRow(arrayOf(34, TestCachedObject(2).getPackageKey(), "app2-fresh"))
+
+        updateHandlerUnderTest.updateIcons(
+            TestCachedObject(1, appInfo = appInfo1),
+            TestCachedObject(2, appInfo = appInfo2),
+        )
+        updateHandlerUnderTest.finish()
+
+        verifyItemsDeleted(33)
+    }
+
+    @Test
+    fun `updates stale entries`() {
+        doAnswer { i ->
+                (i.arguments[0] as Runnable).run()
+                true
             }
+            .whenever(workerHandler)
+            .postAtTime(any(), anyOrNull(), any())
+
+        TestCachedObject(1).addToCursor(cursor)
+        TestCachedObject(2).addToCursor(cursor)
+        TestCachedObject(3).addToCursor(cursor)
+
+        var updatedPackages = mutableSetOf<String>()
+        updateHandlerUnderTest.updateIcons(
+            listOf(
+                TestCachedObject(1, freshnessId = "not-fresh"),
+                TestCachedObject(2, freshnessId = "not-fresh"),
+                TestCachedObject(3),
+            ),
+            CachedObjectCachingLogic,
+        ) { apps, _ ->
+            updatedPackages.addAll(apps)
+        }
+        updateHandlerUnderTest.finish()
+
+        assertThat(updatedPackages)
+            .isEqualTo(
+                mutableSetOf(TestCachedObject(1).cn.packageName, TestCachedObject(2).cn.packageName)
+            )
+    }
+
+    private fun IconCacheUpdateHandler.updateIcons(vararg items: TestCachedObject) {
+        updateIcons(items.toList(), CachedObjectCachingLogic) { _, _ -> }
+    }
+
+    private fun verifyItemsDeleted(vararg rowIds: Long) {
+        verify(cacheDb, times(1)).delete(deleteCaptor.capture(), anyOrNull())
+        val actual =
+            deleteCaptor.value
+                .split('(')
+                ?.get(1)
+                ?.split(')')
+                ?.get(0)
+                ?.split(",")
+                ?.map { it.trim().toLong() }!!
+                .sorted()
+        assertThat(actual).isEqualTo(rowIds.toList().sorted())
+    }
 }
 
 /** Utility method to wait for the icon update handler to finish */
@@ -135,7 +229,13 @@ fun IconCache.waitForUpdateHandlerToFinish() {
     }
 }
 
-class TestCachedObject(val cn: ComponentName, val freshnessId: String) : CachedObject {
+class TestCachedObject(
+    val rowId: Long,
+    val cn: ComponentName =
+        ComponentName.unflattenFromString("com.android.fake$rowId/.FakeActivity")!!,
+    val freshnessId: String = "fresh-$rowId",
+    val appInfo: ApplicationInfo? = null,
+) : CachedObject {
 
     override fun getComponent() = cn
 
@@ -143,7 +243,13 @@ class TestCachedObject(val cn: ComponentName, val freshnessId: String) : CachedO
 
     override fun getLabel(): CharSequence? = null
 
-    override fun getApplicationInfo(): ApplicationInfo? = null
+    override fun getApplicationInfo(): ApplicationInfo? = appInfo
 
     override fun getFreshnessIdentifier(iconProvider: IconProvider): String? = freshnessId
+
+    fun addToCursor(cursor: MatrixCursor) =
+        cursor.addRow(arrayOf(rowId, cn.flattenToString(), freshnessId))
+
+    fun getPackageKey() =
+        BaseIconCache.getPackageKey(cn.packageName, user).componentName.flattenToString()
 }

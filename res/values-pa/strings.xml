@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"<xliff:g id="NAME">%1$s</xliff:g> ਨੂੰ ਸਥਾਪਤ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ, <xliff:g id="PROGRESS">%2$s</xliff:g> ਪੂਰਾ ਹੋਇਆ"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"<xliff:g id="NAME">%1$s</xliff:g> ਡਾਉਨਲੋਡ ਹੋਰ ਰਿਹਾ ਹੈ, <xliff:g id="PROGRESS">%2$s</xliff:g> ਸੰਪੂਰਣ"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"<xliff:g id="NAME">%1$s</xliff:g> ਸਥਾਪਤ ਕਰਨ ਦੀ ਉਡੀਕ ਕਰ ਰਿਹਾ ਹੈ"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"<xliff:g id="NAME">%1$s</xliff:g> ਪੁਰਾਲੇਖਬੱਧ ਹੈ। ਡਾਊਨਲੋਡ ਅਤੇ ਮੁੜ-ਬਹਾਲ ਕਰਨ ਲਈ ਟੈਪ ਕਰੋ।"</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"<xliff:g id="NAME">%1$s</xliff:g> ਪੁਰਾਲੇਖਬੱਧ ਹੈ।"</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"ਡਾਊਨਲੋਡ ਕਰ ਕੇ ਮੁੜ-ਬਹਾਲ ਕਰੋ"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"ਐਪ ਨੂੰ ਅੱਪਡੇਟ ਕਰਨ ਦੀ ਲੋੜ ਹੈ"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"ਇਸ ਪ੍ਰਤੀਕ ਲਈ ਐਪ ਨੂੰ ਅੱਪਡੇਟ ਨਹੀਂ ਕੀਤਾ ਗਿਆ ਹੈ। ਇਸ ਸ਼ਾਰਟਕੱਟ ਨੂੰ ਮੁੜ-ਚਾਲੂ ਕਰਨ ਜਾਂ ਪ੍ਰਤੀਕ ਨੂੰ ਹਟਾਉਣ ਲਈ ਤੁਸੀਂ ਹੱਥੀਂ ਅੱਪਡੇਟ ਕਰ ਸਕਦੇ ਹੋ।"</string>
     <string name="dialog_update" msgid="2178028071796141234">"ਅੱਪਡੇਟ ਕਰੋ"</string>

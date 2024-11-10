@@ -22,6 +22,8 @@ import android.animation.AnimatorSet
 import android.graphics.Rect
 import android.view.MotionEvent
 import android.view.View
+import com.android.app.animation.Interpolators
+import com.android.launcher3.Utilities
 import com.android.launcher3.anim.AnimatedFloat
 import com.android.launcher3.taskbar.TaskbarInsetsController
 import com.android.launcher3.taskbar.bubbles.BubbleBarViewController
@@ -95,6 +97,34 @@ class PersistentBubbleStashController(
         get() {
             val bubbleBarHeight = bubbleBarViewController.bubbleBarCollapsedHeight
             return -hotseatVerticalCenter + bubbleBarHeight / 2
+        }
+
+    override val bubbleBarTranslationY: Float
+        get() =
+            if (inAppDisplayOverrideProgress > 0f && launcherState == BubbleLauncherState.HOME) {
+                Utilities.mapToRange(
+                    inAppDisplayOverrideProgress,
+                    /* fromMin = */ 0f,
+                    /* fromMax = */ 1f,
+                    bubbleBarTranslationYForHotseat,
+                    bubbleBarTranslationYForTaskbar,
+                    Interpolators.LINEAR,
+                )
+            } else {
+                super.bubbleBarTranslationY
+            }
+
+    override var inAppDisplayOverrideProgress: Float = 0f
+        set(value) {
+            if (field == value) return
+            field = value
+            if (launcherState == BubbleLauncherState.HOME) {
+                bubbleBarViewController.bubbleBarTranslationY.updateValue(bubbleBarTranslationY)
+                if (value == 0f || value == 1f) {
+                    // Update insets only when we reach the end values
+                    taskbarInsetsController.onTaskbarOrBubblebarWindowHeightOrInsetsChanged()
+                }
+            }
         }
 
     override fun init(

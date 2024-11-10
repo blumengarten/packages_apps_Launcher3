@@ -169,8 +169,7 @@ public class TaplRequestPinItemTest extends AbstractLauncherUiTest<Launcher> {
 
         // Go back to home
         mLauncher.goHome();
-        Wait.atMost("", new ItemSearchCondition(itemMatcher), DEFAULT_ACTIVITY_TIMEOUT,
-                mLauncher);
+        Wait.atMost("", new ItemSearchCondition(itemMatcher), mLauncher);
     }
 
     /**

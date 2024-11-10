@@ -142,7 +142,8 @@
     <string name="app_installing_title" msgid="5864044122733792085">"正在安裝「<xliff:g id="NAME">%1$s</xliff:g>」(已完成 <xliff:g id="PROGRESS">%2$s</xliff:g>)"</string>
     <string name="app_downloading_title" msgid="8336702962104482644">"正在下載「<xliff:g id="NAME">%1$s</xliff:g>」，已完成 <xliff:g id="PROGRESS">%2$s</xliff:g>"</string>
     <string name="app_waiting_download_title" msgid="7053938513995617849">"正在等待安裝「<xliff:g id="NAME">%1$s</xliff:g>」"</string>
-    <string name="app_archived_title" msgid="7717956158562544081">"「<xliff:g id="NAME">%1$s</xliff:g>」已封存。輕觸即可下載並還原。"</string>
+    <string name="app_archived_title" msgid="4548283110222420708">"「<xliff:g id="NAME">%1$s</xliff:g>」已封存。"</string>
+    <string name="app_unarchiving_action" msgid="5736107006413929484">"下載及還原"</string>
     <string name="dialog_update_title" msgid="114234265740994042">"必須更新應用程式"</string>
     <string name="dialog_update_message" msgid="4176784553982226114">"這個圖示代表的應用程式未更新。手動更新即可重新啟用這個捷徑，你也可以移除圖示。"</string>
     <string name="dialog_update" msgid="2178028071796141234">"更新"</string>
