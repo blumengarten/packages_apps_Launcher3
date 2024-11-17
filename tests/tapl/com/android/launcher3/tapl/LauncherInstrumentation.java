@@ -1728,6 +1728,27 @@ public final class LauncherInstrumentation {
         scrollDownByDistance(container, distance, appsListBottomPadding);
     }
 
+    /** Scrolls up by given distance within the container. */
+    void scrollUpByDistance(UiObject2 container, int distance) {
+        scrollUpByDistance(container, distance, 0);
+    }
+
+    /** Scrolls up by given distance within the container considering the given bottom padding. */
+    void scrollUpByDistance(UiObject2 container, int distance, int bottomPadding) {
+        final Rect containerRect = getVisibleBounds(container);
+        final int bottomGestureMarginInContainer = getBottomGestureMarginInContainer(container);
+        scroll(
+                container,
+                Direction.UP,
+                new Rect(
+                        0,
+                        containerRect.height() - bottomGestureMarginInContainer - distance,
+                        0,
+                        bottomGestureMarginInContainer + bottomPadding),
+                /* steps= */ 10,
+                /* slowDown= */ true);
+    }
+
     void scrollDownByDistance(UiObject2 container, int distance) {
         scrollDownByDistance(container, distance, 0);
     }

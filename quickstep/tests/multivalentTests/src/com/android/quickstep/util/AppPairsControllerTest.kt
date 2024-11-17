@@ -202,7 +202,7 @@ class AppPairsControllerTest {
         // Trigger app pair launch, capture and run callback from findLastActiveTasksAndRunCallback
         spyAppPairsController.handleAppPairLaunchInApp(
             mockAppPairIcon,
-            listOf(mockItemInfo1, mockItemInfo2)
+            listOf(mockItemInfo1, mockItemInfo2),
         )
         verify(splitSelectStateController)
             .findLastActiveTasksAndRunCallback(any(), any(), callbackCaptor.capture())
@@ -226,7 +226,7 @@ class AppPairsControllerTest {
         // Trigger app pair launch, capture and run callback from findLastActiveTasksAndRunCallback
         spyAppPairsController.handleAppPairLaunchInApp(
             mockAppPairIcon,
-            listOf(mockItemInfo1, mockItemInfo2)
+            listOf(mockItemInfo1, mockItemInfo2),
         )
         verify(splitSelectStateController)
             .findLastActiveTasksAndRunCallback(any(), any(), callbackCaptor.capture())
@@ -250,7 +250,7 @@ class AppPairsControllerTest {
         // Trigger app pair launch, capture and run callback from findLastActiveTasksAndRunCallback
         spyAppPairsController.handleAppPairLaunchInApp(
             mockAppPairIcon,
-            listOf(mockItemInfo1, mockItemInfo2)
+            listOf(mockItemInfo1, mockItemInfo2),
         )
         verify(splitSelectStateController)
             .findLastActiveTasksAndRunCallback(any(), any(), callbackCaptor.capture())
@@ -274,7 +274,7 @@ class AppPairsControllerTest {
         // Trigger app pair launch, capture and run callback from findLastActiveTasksAndRunCallback
         spyAppPairsController.handleAppPairLaunchInApp(
             mockAppPairIcon,
-            listOf(mockItemInfo1, mockItemInfo2)
+            listOf(mockItemInfo1, mockItemInfo2),
         )
         verify(splitSelectStateController)
             .findLastActiveTasksAndRunCallback(any(), any(), callbackCaptor.capture())
@@ -298,7 +298,7 @@ class AppPairsControllerTest {
         // Trigger app pair launch, capture and run callback from findLastActiveTasksAndRunCallback
         spyAppPairsController.handleAppPairLaunchInApp(
             mockAppPairIcon,
-            listOf(mockItemInfo1, mockItemInfo2)
+            listOf(mockItemInfo1, mockItemInfo2),
         )
         verify(splitSelectStateController)
             .findLastActiveTasksAndRunCallback(any(), any(), callbackCaptor.capture())
@@ -322,7 +322,7 @@ class AppPairsControllerTest {
         // Trigger app pair launch, capture and run callback from findLastActiveTasksAndRunCallback
         spyAppPairsController.handleAppPairLaunchInApp(
             mockAppPairIcon,
-            listOf(mockItemInfo1, mockItemInfo2)
+            listOf(mockItemInfo1, mockItemInfo2),
         )
         verify(splitSelectStateController)
             .findLastActiveTasksAndRunCallback(any(), any(), callbackCaptor.capture())
@@ -341,12 +341,16 @@ class AppPairsControllerTest {
         whenever(mockTaskKey1.getId()).thenReturn(1)
         whenever(mockTaskKey2.getId()).thenReturn(2)
         // ... with app 1 already on screen
-        whenever(mockCachedTaskInfo.taskId).thenReturn(1)
+        if (com.android.wm.shell.Flags.enableShellTopTaskTracking()) {
+            whenever(mockCachedTaskInfo.topGroupedTaskContainsTask(eq(1))).thenReturn(true)
+        } else {
+            whenever(mockCachedTaskInfo.taskId).thenReturn(1)
+        }
 
         // Trigger app pair launch, capture and run callback from findLastActiveTasksAndRunCallback
         spyAppPairsController.handleAppPairLaunchInApp(
             mockAppPairIcon,
-            listOf(mockItemInfo1, mockItemInfo2)
+            listOf(mockItemInfo1, mockItemInfo2),
         )
         verify(splitSelectStateController)
             .findLastActiveTasksAndRunCallback(any(), any(), callbackCaptor.capture())
@@ -365,12 +369,16 @@ class AppPairsControllerTest {
         whenever(mockTaskKey1.getId()).thenReturn(1)
         whenever(mockTaskKey2.getId()).thenReturn(2)
         // ... with app 2 already on screen
-        whenever(mockCachedTaskInfo.taskId).thenReturn(2)
+        if (com.android.wm.shell.Flags.enableShellTopTaskTracking()) {
+            whenever(mockCachedTaskInfo.topGroupedTaskContainsTask(eq(2))).thenReturn(true)
+        } else {
+            whenever(mockCachedTaskInfo.taskId).thenReturn(2)
+        }
 
         // Trigger app pair launch, capture and run callback from findLastActiveTasksAndRunCallback
         spyAppPairsController.handleAppPairLaunchInApp(
             mockAppPairIcon,
-            listOf(mockItemInfo1, mockItemInfo2)
+            listOf(mockItemInfo1, mockItemInfo2),
         )
         verify(splitSelectStateController)
             .findLastActiveTasksAndRunCallback(any(), any(), callbackCaptor.capture())
@@ -389,12 +397,16 @@ class AppPairsControllerTest {
         whenever(mockTaskKey1.getId()).thenReturn(1)
         whenever(mockTaskKey2.getId()).thenReturn(2)
         // ... with app 3 already on screen
-        whenever(mockCachedTaskInfo.taskId).thenReturn(3)
+        if (com.android.wm.shell.Flags.enableShellTopTaskTracking()) {
+            whenever(mockCachedTaskInfo.topGroupedTaskContainsTask(eq(3))).thenReturn(true)
+        } else {
+            whenever(mockCachedTaskInfo.taskId).thenReturn(3)
+        }
 
         // Trigger app pair launch, capture and run callback from findLastActiveTasksAndRunCallback
         spyAppPairsController.handleAppPairLaunchInApp(
             mockAppPairIcon,
-            listOf(mockItemInfo1, mockItemInfo2)
+            listOf(mockItemInfo1, mockItemInfo2),
         )
         verify(splitSelectStateController)
             .findLastActiveTasksAndRunCallback(any(), any(), callbackCaptor.capture())

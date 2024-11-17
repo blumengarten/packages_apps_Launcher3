@@ -43,9 +43,9 @@ import android.view.animation.Interpolator;
 import androidx.annotation.FloatRange;
 import androidx.annotation.Nullable;
 
-import com.android.app.animation.Interpolators;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.DeviceProfile.OnDeviceProfileChangeListener;
+import com.android.launcher3.Flags;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherState;
 import com.android.launcher3.R;
@@ -55,13 +55,15 @@ import com.android.launcher3.anim.PropertySetter;
 import com.android.launcher3.statemanager.StateManager.StateHandler;
 import com.android.launcher3.states.StateAnimationConfig;
 import com.android.launcher3.touch.AllAppsSwipeController;
+import com.android.launcher3.util.MSDLPlayerWrapper;
 import com.android.launcher3.util.MultiPropertyFactory;
 import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
 import com.android.launcher3.util.MultiValueAlpha;
 import com.android.launcher3.util.ScrollableLayoutManager;
 import com.android.launcher3.util.Themes;
-import com.android.launcher3.util.VibratorWrapper;
 import com.android.launcher3.views.ScrimView;
+
+import com.google.android.msdl.data.model.MSDLToken;
 
 /**
  * Handles AllApps view transition.
@@ -183,7 +185,7 @@ public class AllAppsTransitionController
     private MultiPropertyFactory<View> mAppsViewTranslationY;
 
     private boolean mHasScaleEffect;
-    private final VibratorWrapper mVibratorWrapper;
+    private final MSDLPlayerWrapper mMSDLPlayerWrapper;
 
     public AllAppsTransitionController(Launcher l) {
         mLauncher = l;
@@ -197,7 +199,7 @@ public class AllAppsTransitionController
         setShiftRange(dp.allAppsShiftRange);
         mAllAppScale.value = 1;
         mLauncher.addOnDeviceProfileChangeListener(this);
-        mVibratorWrapper = VibratorWrapper.INSTANCE.get(mLauncher.getApplicationContext());
+        mMSDLPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(mLauncher.getApplicationContext());
     }
 
     public float getShiftRange() {
@@ -277,10 +279,9 @@ public class AllAppsTransitionController
             return;
         }
 
-        float deceleratedProgress = Interpolators.BACK_GESTURE.getInterpolation(backProgress);
         float scaleProgress = ScrollableLayoutManager.PREDICTIVE_BACK_MIN_SCALE
                 + (1 - ScrollableLayoutManager.PREDICTIVE_BACK_MIN_SCALE)
-                * (1 - deceleratedProgress);
+                * (1 - backProgress);
 
         mAllAppScale.updateValue(scaleProgress);
     }
@@ -370,8 +371,16 @@ public class AllAppsTransitionController
         setAlphas(toState, config, builder);
         // This controls both haptics for tapping on QSB and going to all apps.
         if (ALL_APPS.equals(toState) && mLauncher.isInState(NORMAL)) {
-            mLauncher.getAppsView().performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY,
-                    HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
+            if (Flags.msdlFeedback()) {
+                if (config.isUserControlled()) {
+                    mMSDLPlayerWrapper.playToken(MSDLToken.SWIPE_THRESHOLD_INDICATOR);
+                } else {
+                    mMSDLPlayerWrapper.playToken(MSDLToken.TAP_HIGH_EMPHASIS);
+                }
+            } else {
+                mLauncher.getAppsView().performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY,
+                        HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
+            }
         }
     }
 

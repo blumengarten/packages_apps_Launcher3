@@ -54,7 +54,9 @@ class PersistentBubbleStashController(
             if (field == state) return
             val transitionFromHome = field == BubbleLauncherState.HOME
             field = state
-            if (!bubbleBarViewController.hasBubbles()) {
+            val hasBubbles = bubbleBarViewController.hasBubbles()
+            bubbleBarViewController.onBubbleBarConfigurationChanged(hasBubbles)
+            if (!hasBubbles) {
                 // if there are no bubbles, there's nothing to show, so just return.
                 return
             }
@@ -65,7 +67,6 @@ class PersistentBubbleStashController(
                 // on home but in persistent taskbar elsewhere so the position is different.
                 animateBubbleBarY()
             }
-            bubbleBarViewController.onBubbleBarConfigurationChanged(/* animate= */ true)
         }
 
     override var isSysuiLocked: Boolean = false
@@ -119,7 +120,10 @@ class PersistentBubbleStashController(
             if (field == value) return
             field = value
             if (launcherState == BubbleLauncherState.HOME) {
-                bubbleBarViewController.bubbleBarTranslationY.updateValue(bubbleBarTranslationY)
+                if (bubbleBarTranslationYAnimator.isAnimating) {
+                    bubbleBarTranslationYAnimator.cancelAnimation()
+                }
+                bubbleBarTranslationYAnimator.updateValue(bubbleBarTranslationY)
                 if (value == 0f || value == 1f) {
                     // Update insets only when we reach the end values
                     taskbarInsetsController.onTaskbarOrBubblebarWindowHeightOrInsetsChanged()

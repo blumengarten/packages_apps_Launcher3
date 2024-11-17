@@ -114,18 +114,22 @@ public class RecentTasksList {
             }
 
             @Override
-            public void onTaskMovedToFront(GroupedTaskInfo[] visibleTasks) {
+            public void onTaskMovedToFront(GroupedTaskInfo taskToFront) {
                 mMainThreadExecutor.execute(() -> {
-                    // TODO(b/346588978): We currently are only sending a single task, but this will
-                    //                    be updated once we send the full set of visible tasks
-                    final TaskInfo info = visibleTasks[0].getTaskInfo1();
-                    topTaskTracker.handleTaskMovedToFront(info);
+                    topTaskTracker.handleTaskMovedToFront(taskToFront.getTaskInfo1());
                 });
             }
 
             @Override
             public void onTaskInfoChanged(RunningTaskInfo taskInfo) {
                 mMainThreadExecutor.execute(() -> topTaskTracker.onTaskChanged(taskInfo));
+            }
+
+            @Override
+            public void onVisibleTasksChanged(GroupedTaskInfo[] visibleTasks) {
+                mMainThreadExecutor.execute(() -> {
+                    topTaskTracker.onVisibleTasksChanged(visibleTasks);
+                });
             }
         });
         // We may receive onRunningTaskAppeared events later for tasks which have already been

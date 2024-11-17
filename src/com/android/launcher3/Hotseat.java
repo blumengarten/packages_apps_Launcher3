@@ -187,22 +187,20 @@ public class Hotseat extends CellLayout implements Insettable {
     public void adjustForBubbleBar(boolean isBubbleBarVisible) {
         DeviceProfile dp = mActivity.getDeviceProfile();
         float adjustedBorderSpace = dp.getHotseatAdjustedBorderSpaceForBubbleBar(getContext());
-        boolean adjustmentRequired = Float.compare(adjustedBorderSpace, 0f) != 0;
-
+        boolean shouldAdjustHotseat = isBubbleBarVisible
+                && Float.compare(adjustedBorderSpace, 0f) != 0;
         ShortcutAndWidgetContainer icons = getShortcutsAndWidgets();
         // update the translation provider for future layout passes of hotseat icons.
-        if (adjustmentRequired && isBubbleBarVisible) {
+        if (shouldAdjustHotseat) {
             icons.setTranslationProvider(
                     cellX -> dp.getHotseatAdjustedTranslation(getContext(), cellX));
         } else {
             icons.setTranslationProvider(null);
         }
-        if (!adjustmentRequired) return;
-
         AnimatorSet animatorSet = new AnimatorSet();
         for (int i = 0; i < icons.getChildCount(); i++) {
             View child = icons.getChildAt(i);
-            float tx = isBubbleBarVisible ? dp.getHotseatAdjustedTranslation(getContext(), i) : 0;
+            float tx = shouldAdjustHotseat ? dp.getHotseatAdjustedTranslation(getContext(), i) : 0;
             if (child instanceof Reorderable) {
                 MultiTranslateDelegate mtd = ((Reorderable) child).getTranslateDelegate();
                 animatorSet.play(
@@ -213,8 +211,8 @@ public class Hotseat extends CellLayout implements Insettable {
         }
         if (mQsb instanceof HorizontalInsettableView horizontalInsettableQsb) {
             final float currentInsetFraction = horizontalInsettableQsb.getHorizontalInsets();
-            final float targetInsetFraction =
-                    isBubbleBarVisible ? (float) dp.iconSizePx / dp.hotseatQsbWidth : 0;
+            final float targetInsetFraction = shouldAdjustHotseat
+                    ? (float) dp.iconSizePx / dp.hotseatQsbWidth : 0;
             ValueAnimator qsbAnimator =
                     ValueAnimator.ofFloat(currentInsetFraction, targetInsetFraction);
             qsbAnimator.addUpdateListener(animation -> {

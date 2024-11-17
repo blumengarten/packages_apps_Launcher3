@@ -143,6 +143,7 @@ class DesktopAppLaunchTransition(
     }
 
     companion object {
+        /** Change modes that represent a task becoming visible / launching in Desktop mode. */
         val LAUNCH_CHANGE_MODES = intArrayOf(TRANSIT_OPEN, TRANSIT_TO_FRONT)
 
         private val launchBoundsAnimationDef =

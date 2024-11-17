@@ -126,6 +126,7 @@ abstract class AbstractDeviceProfileTest {
         deviceSpec: DeviceSpec,
         isGestureMode: Boolean = true,
         isVerticalBar: Boolean = false,
+        isFixedLandscape: Boolean = false,
     ) {
         val (naturalX, naturalY) = deviceSpec.naturalSize
         val windowsBounds = phoneWindowsBounds(deviceSpec, isGestureMode, naturalX, naturalY)
@@ -138,6 +139,7 @@ abstract class AbstractDeviceProfileTest {
             rotation = if (isVerticalBar) Surface.ROTATION_90 else Surface.ROTATION_0,
             isGestureMode,
             densityDpi = deviceSpec.densityDpi,
+            isFixedLandscape = isFixedLandscape,
         )
     }
 
@@ -166,6 +168,7 @@ abstract class AbstractDeviceProfileTest {
         isLandscape: Boolean = false,
         isGestureMode: Boolean = true,
         isFolded: Boolean = false,
+        isFixedLandscape: Boolean = false,
     ) {
         val (unfoldedNaturalX, unfoldedNaturalY) = deviceSpecUnfolded.naturalSize
         val unfoldedWindowsBounds =
@@ -192,6 +195,7 @@ abstract class AbstractDeviceProfileTest {
                 rotation = if (isLandscape) Surface.ROTATION_90 else Surface.ROTATION_0,
                 isGestureMode = isGestureMode,
                 densityDpi = deviceSpecFolded.densityDpi,
+                isFixedLandscape = isFixedLandscape,
             )
         } else {
             initializeCommonVars(
@@ -200,6 +204,7 @@ abstract class AbstractDeviceProfileTest {
                 rotation = if (isLandscape) Surface.ROTATION_0 else Surface.ROTATION_90,
                 isGestureMode = isGestureMode,
                 densityDpi = deviceSpecUnfolded.densityDpi,
+                isFixedLandscape = isFixedLandscape,
             )
         }
     }
@@ -274,6 +279,7 @@ abstract class AbstractDeviceProfileTest {
         rotation: Int,
         isGestureMode: Boolean = true,
         densityDpi: Int,
+        isFixedLandscape: Boolean = false,
     ) {
         setFlagsRule.setFlags(true, Flags.FLAG_ENABLE_TWOLINE_TOGGLE)
         LauncherPrefs.get(testContext).put(LauncherPrefs.ENABLE_TWOLINE_ALLAPPS_TOGGLE, true)
@@ -307,7 +313,7 @@ abstract class AbstractDeviceProfileTest {
 
         whenever(launcherPrefs.get(LauncherPrefs.TASKBAR_PINNING)).thenReturn(false)
         whenever(launcherPrefs.get(LauncherPrefs.TASKBAR_PINNING_IN_DESKTOP_MODE)).thenReturn(true)
-        whenever(launcherPrefs.get(LauncherPrefs.FIXED_LANDSCAPE_MODE)).thenReturn(false)
+        whenever(launcherPrefs.get(LauncherPrefs.FIXED_LANDSCAPE_MODE)).thenReturn(isFixedLandscape)
         whenever(launcherPrefs.get(LauncherPrefs.HOTSEAT_COUNT)).thenReturn(-1)
         whenever(launcherPrefs.get(LauncherPrefs.DEVICE_TYPE)).thenReturn(-1)
         whenever(launcherPrefs.get(LauncherPrefs.WORKSPACE_SIZE)).thenReturn("")

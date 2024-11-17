@@ -418,7 +418,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
     /** Called when the visibility of the bubble bar changed. */
     public void bubbleBarVisibilityChanged(boolean isVisible) {
         mControllers.uiController.adjustHotseatForBubbleBar(isVisible);
-        mControllers.taskbarViewController.resetIconAlignmentController();
+        mControllers.taskbarViewController.adjustTaskbarForBubbleBar();
     }
 
     public void init(@NonNull TaskbarSharedState sharedState) {

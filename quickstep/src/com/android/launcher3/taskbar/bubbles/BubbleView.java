@@ -224,12 +224,14 @@ public class BubbleView extends ConstraintLayout {
         }
         if (action == R.id.action_move_left) {
             if (mController != null) {
-                mController.updateBubbleBarLocation(BubbleBarLocation.LEFT);
+                mController.updateBubbleBarLocation(BubbleBarLocation.LEFT,
+                        BubbleBarLocation.UpdateSource.A11Y_ACTION_BUBBLE);
             }
         }
         if (action == R.id.action_move_right) {
             if (mController != null) {
-                mController.updateBubbleBarLocation(BubbleBarLocation.RIGHT);
+                mController.updateBubbleBarLocation(BubbleBarLocation.RIGHT,
+                        BubbleBarLocation.UpdateSource.A11Y_ACTION_BUBBLE);
             }
         }
         return false;
@@ -483,6 +485,7 @@ public class BubbleView extends ConstraintLayout {
         void collapse();
 
         /** Request bubble bar location to be updated to the given location */
-        void updateBubbleBarLocation(BubbleBarLocation location);
+        void updateBubbleBarLocation(BubbleBarLocation location,
+                @BubbleBarLocation.UpdateSource int source);
     }
 }

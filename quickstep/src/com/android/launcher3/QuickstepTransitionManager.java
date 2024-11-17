@@ -108,6 +108,7 @@ import android.view.WindowManager;
 import android.view.animation.AnimationUtils;
 import android.view.animation.Interpolator;
 import android.view.animation.PathInterpolator;
+import android.window.DesktopModeFlags;
 import android.window.RemoteTransition;
 import android.window.TransitionFilter;
 import android.window.WindowAnimationState;
@@ -166,11 +167,13 @@ import com.android.systemui.animation.RemoteAnimationRunnerCompat;
 import com.android.systemui.shared.system.BlurUtils;
 import com.android.systemui.shared.system.InteractionJankMonitorWrapper;
 import com.android.systemui.shared.system.QuickStepContract;
+import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 import com.android.wm.shell.startingsurface.IStartingWindowListener;
 
 import java.io.PrintWriter;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -214,6 +217,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
     public static final int CONTENT_ALPHA_DURATION = 217;
     public static final int TRANSIENT_TASKBAR_TRANSITION_DURATION = 417;
+    public static final int PINNED_TASKBAR_TRANSITION_DURATION = 600;
     public static final int TASKBAR_TO_APP_DURATION = 600;
     // TODO(b/236145847): Tune TASKBAR_TO_HOME_DURATION to 383 after conflict with unlock animation
     // is solved.
@@ -233,6 +237,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
     protected final Handler mHandler;
 
     private final float mClosingWindowTransY;
+    private final float mClosingFreeformWindowTransY;
     private final float mMaxShadowRadius;
 
     private final StartingWindowListener mStartingWindowListener =
@@ -290,6 +295,8 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
         Resources res = mLauncher.getResources();
         mClosingWindowTransY = res.getDimensionPixelSize(R.dimen.closing_window_trans_y);
+        mClosingFreeformWindowTransY =
+                res.getDimensionPixelSize(R.dimen.closing_freeform_window_trans_y);
         mMaxShadowRadius = res.getDimensionPixelSize(R.dimen.max_shadow_radius);
 
         mLauncher.addOnDeviceProfileChangeListener(this);
@@ -1480,10 +1487,16 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                 ? 0 : getWindowCornerRadius(mLauncher);
         float startShadowRadius = areAllTargetsTranslucent(appTargets) ? 0 : mMaxShadowRadius;
         closingAnimator.setDuration(duration);
+        boolean isFreeform = isFreeformAnimation(appTargets);
+        float translateY = isFreeform ? mClosingFreeformWindowTransY : mClosingWindowTransY;
+        float endScale = isFreeform ? 0.95f : 1f;
+        Interpolator alphaInterpolator = isFreeform
+                ? clampToDuration(LINEAR, 0, 100, duration)
+                : clampToDuration(LINEAR, 25, 125, duration);
         closingAnimator.addUpdateListener(new MultiValueUpdateListener() {
-            FloatProp mDy = new FloatProp(0, mClosingWindowTransY, DECELERATE_1_7);
-            FloatProp mScale = new FloatProp(1f, 1f, DECELERATE_1_7);
-            FloatProp mAlpha = new FloatProp(1f, 0f, clampToDuration(LINEAR, 25, 125, duration));
+            FloatProp mDy = new FloatProp(0, translateY, DECELERATE_1_7);
+            FloatProp mScale = new FloatProp(1f, endScale, DECELERATE_1_7);
+            FloatProp mAlpha = new FloatProp(1f, 0f, alphaInterpolator);
             FloatProp mShadowRadius = new FloatProp(startShadowRadius, 0, DECELERATE_1_7);
 
             @Override
@@ -1530,6 +1543,13 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         });
 
         return closingAnimator;
+    }
+
+    private boolean isFreeformAnimation(RemoteAnimationTarget[] appTargets) {
+        return DesktopModeStatus.canEnterDesktopMode(mLauncher.getApplicationContext())
+                && DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_EXIT_TRANSITIONS.isTrue()
+                && Arrays.stream(appTargets)
+                        .anyMatch(app -> app.taskInfo != null && app.taskInfo.isFreeform());
     }
 
     private void addCujInstrumentation(Animator anim, int cuj) {
@@ -1726,8 +1746,21 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         return new AnimatorBackState(rectFSpringAnim, anim);
     }
 
-    public static int getTaskbarToHomeDuration() {
-        if (enableScalingRevealHomeAnimation()) {
+    /** Get animation duration for taskbar for going to home. */
+    public static int getTaskbarToHomeDuration(boolean isPinnedTaskbar) {
+        return getTaskbarToHomeDuration(false, isPinnedTaskbar);
+    }
+
+    /**
+     * Get animation duration for taskbar for going to home.
+     *
+     * @param shouldOverrideToFastAnimation should overwrite scaling reveal home animation duration
+     */
+    public static int getTaskbarToHomeDuration(boolean shouldOverrideToFastAnimation,
+            boolean isPinnedTaskbar) {
+        if (isPinnedTaskbar) {
+            return PINNED_TASKBAR_TRANSITION_DURATION;
+        } else if (enableScalingRevealHomeAnimation() && !shouldOverrideToFastAnimation) {
             return TASKBAR_TO_HOME_DURATION_SLOW;
         } else {
             return TASKBAR_TO_HOME_DURATION_FAST;

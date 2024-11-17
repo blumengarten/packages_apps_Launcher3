@@ -120,7 +120,8 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
 
     private boolean mShouldTryStartAlign;
 
-    private final int mMaxNumIcons;
+    private int mMaxNumIcons = 0;
+    private int mIdealNumIcons = 0;
 
     private final int mAllAppsButtonTranslationOffset;
 
@@ -188,8 +189,6 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
 
         // TODO: Disable touch events on QSB otherwise it can crash.
         mQsb = LayoutInflater.from(context).inflate(R.layout.search_container_hotseat, this, false);
-
-        mMaxNumIcons = calculateMaxNumIcons();
     }
 
     /**
@@ -200,11 +199,15 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         int availableWidth = deviceProfile.widthPx;
         int defaultEdgeMargin =
                 (int) getResources().getDimension(deviceProfile.inv.inlineNavButtonsEndSpacing);
+        int spaceForBubbleBar =
+                Math.round(mControllerCallbacks.getBubbleBarMaxCollapsedWidthIfVisible());
 
         // Reserve space required for edge margins, or for navbar if shown. If task bar needs to be
         // center aligned with nav bar shown, reserve space on both sides.
-        availableWidth -= Math.max(defaultEdgeMargin, deviceProfile.hotseatBarEndOffset);
-        availableWidth -= Math.max(defaultEdgeMargin,
+        availableWidth -=
+                Math.max(defaultEdgeMargin + spaceForBubbleBar, deviceProfile.hotseatBarEndOffset);
+        availableWidth -= Math.max(
+                defaultEdgeMargin + (mShouldTryStartAlign ? 0 : spaceForBubbleBar),
                 mShouldTryStartAlign ? 0 : deviceProfile.hotseatBarEndOffset);
 
         // The space taken by an item icon used during layout.
@@ -229,6 +232,21 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         ++additionalIcons;
 
         return Math.floorDiv(availableWidth, iconSize) + additionalIcons;
+    }
+
+    /**
+     * Recalculates the max number of icons the taskbar view can show without entering overflow.
+     * Returns whether the max number of icons changed and the change affects the number of icons
+     * that should be shown in the taskbar.
+     */
+    boolean updateMaxNumIcons() {
+        if (!Flags.taskbarOverflow()) {
+            return false;
+        }
+        int oldMaxNumIcons = mMaxNumIcons;
+        mMaxNumIcons = calculateMaxNumIcons();
+        return oldMaxNumIcons != mMaxNumIcons
+                && (mIdealNumIcons > oldMaxNumIcons || mIdealNumIcons > mMaxNumIcons);
     }
 
     @Override
@@ -327,6 +345,10 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         if (Flags.showTaskbarPinningPopupFromAnywhere()
                 && mActivityContext.getTaskbarFeatureEvaluator().getSupportsPinningPopup()) {
             setOnTouchListener(mControllerCallbacks.getTaskbarTouchListener());
+        }
+
+        if (Flags.taskbarOverflow()) {
+            mMaxNumIcons = calculateMaxNumIcons();
         }
     }
 
@@ -460,8 +482,9 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
                 }
             }
 
-            overflowSize =
-                    nextViewIndex + numberOfSupportedRecents + nonTaskIconsToBeAdded - mMaxNumIcons;
+            mIdealNumIcons = nextViewIndex + numberOfSupportedRecents + nonTaskIconsToBeAdded;
+            overflowSize = mIdealNumIcons - mMaxNumIcons;
+
             if (overflowSize > 0 && mTaskbarOverflowView != null) {
                 addView(mTaskbarOverflowView, nextViewIndex++);
             } else if (mTaskbarOverflowView != null) {

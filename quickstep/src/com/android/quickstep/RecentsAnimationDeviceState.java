@@ -354,7 +354,11 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
      * @return whether the given running task info matches the gesture-blocked task.
      */
     public boolean isGestureBlockedTask(CachedTaskInfo taskInfo) {
-        return taskInfo != null && taskInfo.getTaskId() == mGestureBlockingTaskId;
+        if (com.android.wm.shell.Flags.enableShellTopTaskTracking()) {
+            return taskInfo != null && taskInfo.topGroupedTaskContainsTask(mGestureBlockingTaskId);
+        } else {
+            return taskInfo != null && taskInfo.getTaskId() == mGestureBlockingTaskId;
+        }
     }
 
     /**

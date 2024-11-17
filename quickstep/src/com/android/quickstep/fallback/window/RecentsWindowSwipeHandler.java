@@ -149,7 +149,8 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
         if (mActiveAnimationFactory != null) {
             return;
         }
-        setHomeScaleAndAlpha(builder, app, mCurrentShift.value, 0);
+        setHomeScaleAndAlpha(builder, app, mCurrentShift.value,
+                Utilities.boundToRange(1 - mCurrentShift.value, 0, 1));
     }
 
     private void setHomeScaleAndAlpha(SurfaceProperties builder,

@@ -21,15 +21,20 @@ import android.graphics.Point
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.android.launcher3.Flags
+import com.android.launcher3.Flags.oneGridSpecs
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherPrefs.Companion.get
 import com.android.launcher3.LauncherPrefs.Companion.getPrefs
 import com.android.launcher3.LauncherSettings
+import com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME
+import com.android.launcher3.LauncherSettings.Favorites.TMP_TABLE
 import com.android.launcher3.Utilities
 import com.android.launcher3.config.FeatureFlags
 import com.android.launcher3.model.GridSizeMigrationDBController.DbReader
-import com.android.launcher3.provider.LauncherDbUtils
 import com.android.launcher3.provider.LauncherDbUtils.SQLiteTransaction
+import com.android.launcher3.provider.LauncherDbUtils.copyTable
+import com.android.launcher3.provider.LauncherDbUtils.dropTable
+import com.android.launcher3.provider.LauncherDbUtils.shiftTableByXCells
 import com.android.launcher3.util.CellAndSpan
 import com.android.launcher3.util.GridOccupancy
 import com.android.launcher3.util.IntArray
@@ -59,27 +64,30 @@ class GridSizeMigrationLogic {
         // amount of rows we simply copy over the source grid to the destination grid, rather
         // than undergoing the general grid migration.
         if (shouldMigrateToStrictlyTallerGrid(isDestNewDb, srcDeviceState, destDeviceState)) {
-            GridSizeMigrationDBController.copyCurrentGridToNewGrid(
-                context,
-                destDeviceState,
-                target,
-                source,
-            )
+            copyTable(source, TABLE_NAME, target.writableDatabase, TABLE_NAME, context)
+            if (oneGridSpecs()) {
+                val destReader = DbReader(target.writableDatabase, TABLE_NAME, context)
+                val shouldShiftCells = shouldShiftCells(destReader, srcDeviceState.rows)
+                if (shouldShiftCells) {
+                    shiftTableByXCells(
+                        target.writableDatabase,
+                        (destDeviceState.rows - srcDeviceState.rows),
+                        TABLE_NAME,
+                    )
+                }
+            }
+            // Save current configuration, so that the migration does not run again.
+            destDeviceState.writeToPrefs(context)
             return
         }
-        LauncherDbUtils.copyTable(
-            source,
-            LauncherSettings.Favorites.TABLE_NAME,
-            target.writableDatabase,
-            LauncherSettings.Favorites.TMP_TABLE,
-            context,
-        )
+
+        copyTable(source, TABLE_NAME, target.writableDatabase, TMP_TABLE, context)
 
         val migrationStartTime = System.currentTimeMillis()
         try {
             SQLiteTransaction(target.writableDatabase).use { t ->
-                val srcReader = DbReader(t.db, LauncherSettings.Favorites.TMP_TABLE, context)
-                val destReader = DbReader(t.db, LauncherSettings.Favorites.TABLE_NAME, context)
+                val srcReader = DbReader(t.db, TMP_TABLE, context)
+                val destReader = DbReader(t.db, TABLE_NAME, context)
 
                 val targetSize = Point(destDeviceState.columns, destDeviceState.rows)
 
@@ -95,7 +103,7 @@ class GridSizeMigrationLogic {
                 // Migrate workspace.
                 migrateWorkspace(srcReader, destReader, target, targetSize, idsInUse)
 
-                LauncherDbUtils.dropTable(t.db, LauncherSettings.Favorites.TMP_TABLE)
+                dropTable(t.db, TMP_TABLE)
                 t.commit()
             }
         } catch (e: Exception) {
@@ -110,6 +118,19 @@ class GridSizeMigrationLogic {
             // Save current configuration, so that the migration does not run again.
             destDeviceState.writeToPrefs(context)
         }
+    }
+
+    private fun shouldShiftCells(destReader: DbReader, srcGridRowCount: Int): Boolean {
+        val workspaceItems = destReader.loadAllWorkspaceEntries()
+        val firstPageItemsRowPosSum =
+            workspaceItems.sumOf { entry -> if (entry.screenId == 0) entry.cellY else 0 }
+        val firstPageWorkspaceItemsCount = workspaceItems.count { entry -> entry.screenId == 0 }
+        if (firstPageWorkspaceItemsCount == 0) {
+            return false
+        }
+        val srcGridMidPoint = srcGridRowCount / 2f
+        val firstPageItemPosAvg = firstPageItemsRowPosSum / firstPageWorkspaceItemsCount.toFloat()
+        return (firstPageItemPosAvg >= srcGridMidPoint)
     }
 
     /** Handles hotseat migration. */

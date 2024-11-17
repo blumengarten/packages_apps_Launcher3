@@ -87,7 +87,9 @@ class TransientBubbleStashController(
         set(state) {
             if (field == state) return
             field = state
-            if (!bubbleBarViewController.hasBubbles()) {
+            val hasBubbles = bubbleBarViewController.hasBubbles()
+            bubbleBarViewController.onBubbleBarConfigurationChanged(hasBubbles)
+            if (!hasBubbles) {
                 // if there are no bubbles, there's nothing to show, so just return.
                 return
             }
@@ -103,7 +105,6 @@ class TransientBubbleStashController(
             // Only stash if we're in an app, otherwise we're in home or overview where we should
             // be un-stashed
             updateStashedAndExpandedState(field == BubbleLauncherState.IN_APP, expand = false)
-            bubbleBarViewController.onBubbleBarConfigurationChanged(/* animate= */ true)
         }
 
     override var isSysuiLocked: Boolean = false

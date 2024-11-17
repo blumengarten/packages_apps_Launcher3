@@ -131,6 +131,11 @@ object LauncherDbUtils {
         }
     }
 
+    @JvmStatic
+    fun shiftTableByXCells(db: SQLiteDatabase, x: Int, toTable: String) {
+        db.run { execSQL("UPDATE $toTable SET cellY = cellY + $x") }
+    }
+
     /**
      * Migrates the legacy shortcuts to deep shortcuts pinned under Launcher. Removes any invalid
      * shortcut or any shortcut which requires some permission to launch

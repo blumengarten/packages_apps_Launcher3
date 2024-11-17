@@ -636,24 +636,29 @@ constructor(
     override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {
         super.onInitializeAccessibilityNodeInfo(info)
         with(info) {
-            addAction(
-                AccessibilityAction(
-                    R.id.action_close,
-                    context.getText(R.string.accessibility_close),
+            // Only make actions available if the app icon menu is visible to the user.
+            // When modalness is >0, the user is in select mode and the icon menu is hidden.
+            if (modalness == 0f) {
+                addAction(
+                    AccessibilityAction(
+                        R.id.action_close,
+                        context.getText(R.string.accessibility_close),
+                    )
                 )
-            )
 
-            taskContainers.forEach {
-                TraceHelper.allowIpcs("TV.a11yInfo") {
-                    TaskOverlayFactory.getEnabledShortcuts(this@TaskView, it).forEach { shortcut ->
-                        addAction(shortcut.createAccessibilityAction(context))
+                taskContainers.forEach {
+                    TraceHelper.allowIpcs("TV.a11yInfo") {
+                        TaskOverlayFactory.getEnabledShortcuts(this@TaskView, it).forEach { shortcut
+                            ->
+                            addAction(shortcut.createAccessibilityAction(context))
+                        }
                     }
                 }
-            }
 
-            // Add DWB accessibility action at the end of the list
-            taskContainers.forEach {
-                it.digitalWellBeingToast?.getDWBAccessibilityAction()?.let(::addAction)
+                // Add DWB accessibility action at the end of the list
+                taskContainers.forEach {
+                    it.digitalWellBeingToast?.getDWBAccessibilityAction()?.let(::addAction)
+                }
             }
 
             recentsView?.let {
@@ -1216,8 +1221,6 @@ constructor(
                     if (isQuickSwitch) {
                         setFreezeRecentTasksReordering()
                     }
-                    // TODO(b/334826842) no work required - add splash functionality to new TTV -
-                    // cold start e.g. restart device. Small splash moving to bigger splash
                     disableStartingWindow = firstContainer.shouldShowSplashView
                 }
         Executors.UI_HELPER_EXECUTOR.execute {

@@ -35,6 +35,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.ArgbEvaluator
 import com.android.launcher3.R
 import com.android.launcher3.popup.RoundedArrowDrawable
+import kotlin.math.min
 
 /** The flyout view used to notify the user of a new bubble notification. */
 class BubbleBarFlyoutView(
@@ -46,6 +47,8 @@ class BubbleBarFlyoutView(
     private companion object {
         // the minimum progress of the expansion animation before the content starts fading in.
         const val MIN_EXPANSION_PROGRESS_FOR_CONTENT_ALPHA = 0.75f
+        // the rate multiple for the background color animation relative to the morph animation.
+        const val BACKGROUND_COLOR_CHANGE_RATE = 5
     }
 
     private val scheduler: FlyoutScheduler = scheduler ?: HandlerScheduler(this)
@@ -204,6 +207,8 @@ class BubbleBarFlyoutView(
         minExpansionProgressForTriangle =
             positioner.distanceToRevealTriangle / translationToCollapsedPosition.y
 
+        backgroundPaint.color = collapsedColor
+
         // post the request to start the expand animation to the looper so the view can measure
         // itself
         scheduler.runAfterLayout(expandAnimation)
@@ -307,8 +312,16 @@ class BubbleBarFlyoutView(
             height.toFloat() - triangleHeight + triangleOverlap,
         )
 
+        // transform the flyout color between the collapsed and expanded states. the color
+        // transformation completes at a faster rate (BACKGROUND_COLOR_CHANGE_RATE) than the
+        // expansion animation. this helps make the color change smooth.
         backgroundPaint.color =
-            ArgbEvaluator.getInstance().evaluate(expansionProgress, collapsedColor, backgroundColor)
+            ArgbEvaluator.getInstance()
+                .evaluate(
+                    min(expansionProgress * BACKGROUND_COLOR_CHANGE_RATE, 1f),
+                    collapsedColor,
+                    backgroundColor,
+                )
 
         canvas.save()
         canvas.translate(backgroundRectTx, backgroundRectTy)

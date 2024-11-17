@@ -201,6 +201,8 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
             int currentFocusIndexOverride,
             @NonNull KeyboardQuickSwitchViewController.ViewCallbacks viewCallbacks,
             boolean useDesktopTaskView) {
+        mContent.removeAllViews();
+
         mViewCallbacks = viewCallbacks;
         Resources resources = context.getResources();
         Resources.Theme theme = context.getTheme();
@@ -333,11 +335,17 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
         return closeAnimation;
     }
 
-    private void animateOpen(int currentFocusIndexOverride) {
+    protected void animateOpen(int currentFocusIndexOverride) {
         if (mOpenAnimation != null) {
             // Restart animation since currentFocusIndexOverride can change the initial scroll.
             mOpenAnimation.cancel();
         }
+
+        // Reset the alpha for the case where the KQS view is opened before.
+        setAlpha(0);
+        mScrollView.setAlpha(0);
+        mNoRecentItemsPane.setAlpha(0);
+
         mOpenAnimation = new AnimatorSet();
 
         Animator outlineAnimation = mOutlineAnimationProgress.animateToValue(1f);

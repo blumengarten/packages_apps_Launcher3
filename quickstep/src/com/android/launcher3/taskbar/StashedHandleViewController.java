@@ -192,7 +192,9 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
 
 
     public void onDestroy() {
-        mRegionSamplingHelper.stopAndDestroy();
+        if (mRegionSamplingHelper != null) {
+            mRegionSamplingHelper.stopAndDestroy();
+        }
         mRegionSamplingHelper = null;
     }
 

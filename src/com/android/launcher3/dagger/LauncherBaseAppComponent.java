@@ -24,6 +24,7 @@ import com.android.launcher3.model.ItemInstallQueue;
 import com.android.launcher3.pm.InstallSessionHelper;
 import com.android.launcher3.util.ApiWrapper;
 import com.android.launcher3.util.DaggerSingletonTracker;
+import com.android.launcher3.util.MSDLPlayerWrapper;
 import com.android.launcher3.util.PackageManagerHelper;
 import com.android.launcher3.util.PluginManagerWrapper;
 import com.android.launcher3.util.ScreenOnTracker;
@@ -56,6 +57,7 @@ public interface LauncherBaseAppComponent {
     PackageManagerHelper getPackageManagerHelper();
     PluginManagerWrapper getPluginManagerWrapper();
     VibratorWrapper getVibratorWrapper();
+    MSDLPlayerWrapper getMSDLPlayerWrapper();
 
     /** Builder for LauncherBaseAppComponent. */
     interface Builder {

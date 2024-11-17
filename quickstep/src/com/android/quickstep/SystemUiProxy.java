@@ -886,10 +886,12 @@ public class SystemUiProxy implements ISystemUiProxy, NavHandle {
     /**
      * Tells SysUI to update the bubble bar location to the new location.
      * @param location new location for the bubble bar
+     * @param source what triggered the location update
      */
-    public void setBubbleBarLocation(BubbleBarLocation location) {
+    public void setBubbleBarLocation(BubbleBarLocation location,
+            @BubbleBarLocation.UpdateSource int source) {
         try {
-            mBubbles.setBubbleBarLocation(location);
+            mBubbles.setBubbleBarLocation(location, source);
         } catch (RemoteException e) {
             Log.w(TAG, "Failed call setBubbleBarLocation");
         }

@@ -137,6 +137,17 @@ public class TaskbarViewCallbacks {
         return null;
     }
 
+    /**
+     * Get the max bubble bar collapsed width for the current bubble bar visibility state. Used to
+     * reserve space for the bubble bar when transitioning taskbar view into overflow.
+     */
+    public float getBubbleBarMaxCollapsedWidthIfVisible() {
+        return mControllers.bubbleControllers
+                .filter(c -> !c.bubbleBarViewController.isHiddenForNoBubbles())
+                .map(c -> c.bubbleBarViewController.getCollapsedWidthWithMaxVisibleBubbles())
+                .orElse(0f);
+    }
+
     /** Returns true if bubble bar controllers present and enabled in persistent taskbar. */
     public boolean isBubbleBarEnabledInPersistentTaskbar() {
         return Flags.enableBubbleBarInPersistentTaskBar()

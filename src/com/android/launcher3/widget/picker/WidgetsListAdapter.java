@@ -103,7 +103,7 @@ public class WidgetsListAdapter extends Adapter<ViewHolder> implements OnHeaderC
                             .equals(mWidgetsContentVisiblePackageUserKey);
     @Nullable private Predicate<WidgetsListBaseEntry> mFilter = null;
     @Nullable private RecyclerView mRecyclerView;
-    @Nullable private PackageUserKey mPendingClickHeader;
+    @Nullable private PackageUserKey mHeaderPositionToMaintain;
     @Px private int mMaxHorizontalSpan;
 
     private boolean mShowOnlyDefaultList = true;
@@ -215,7 +215,7 @@ public class WidgetsListAdapter extends Adapter<ViewHolder> implements OnHeaderC
         // Get the current top of the header with the matching key before adjusting the visible
         // entries.
         OptionalInt previousPositionForPackageUserKey =
-                getPositionForPackageUserKey(mPendingClickHeader);
+                getPositionForPackageUserKey(mHeaderPositionToMaintain);
         OptionalInt topForPackageUserKey =
                 getOffsetForPosition(previousPositionForPackageUserKey);
 
@@ -247,13 +247,15 @@ public class WidgetsListAdapter extends Adapter<ViewHolder> implements OnHeaderC
         mVisibleEntries.addAll(newVisibleEntries);
         diffResult.dispatchUpdatesTo(this);
 
-        if (mPendingClickHeader != null) {
+        if (mHeaderPositionToMaintain != null && mRecyclerView != null) {
             // Get the position for the clicked header after adjusting the visible entries. The
             // position may have changed if another header had previously been expanded.
             OptionalInt positionForPackageUserKey =
-                    getPositionForPackageUserKey(mPendingClickHeader);
-            scrollToPositionAndMaintainOffset(positionForPackageUserKey, topForPackageUserKey);
-            mPendingClickHeader = null;
+                    getPositionForPackageUserKey(mHeaderPositionToMaintain);
+            // Post scroll updates to be applied after diff updates.
+            mRecyclerView.post(() -> scrollToPositionAndMaintainOffset(positionForPackageUserKey,
+                    topForPackageUserKey));
+            mHeaderPositionToMaintain = null;
         }
     }
 
@@ -384,7 +386,7 @@ public class WidgetsListAdapter extends Adapter<ViewHolder> implements OnHeaderC
 
         // Store the header that was clicked so that its position will be maintained the next time
         // we update the entries.
-        mPendingClickHeader = packageUserKey;
+        mHeaderPositionToMaintain = packageUserKey;
 
         updateVisibleEntries();
 
@@ -470,6 +472,16 @@ public class WidgetsListAdapter extends Adapter<ViewHolder> implements OnHeaderC
      */
     public void useExpandedList() {
         mShowOnlyDefaultList = false;
+        if (mWidgetsContentVisiblePackageUserKey != null) {
+            // Maintain selected header for the next update that expands the list.
+            mHeaderPositionToMaintain = mWidgetsContentVisiblePackageUserKey;
+        } else if (mVisibleEntries.size() > 2) {
+            // Maintain last visible header shown above expand button since there was no selected
+            // header.
+            mHeaderPositionToMaintain = PackageUserKey.fromPackageItemInfo(
+                    mVisibleEntries.get(mVisibleEntries.size() - 2).mPkgItem);
+        }
+
     }
 
     /** Comparator for sorting WidgetListRowEntry based on package title. */

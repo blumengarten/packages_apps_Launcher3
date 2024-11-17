@@ -21,6 +21,7 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.animation.ValueAnimator
+import com.android.app.animation.InterpolatorsAndroidX
 import com.android.launcher3.R
 import com.android.systemui.util.addListener
 
@@ -35,7 +36,8 @@ constructor(
 ) {
 
     private companion object {
-        const val ANIMATION_DURATION_MS = 250L
+        const val EXPAND_ANIMATION_DURATION_MS = 400L
+        const val COLLAPSE_ANIMATION_DURATION_MS = 350L
     }
 
     private var flyout: BubbleBarFlyoutView? = null
@@ -86,9 +88,10 @@ constructor(
     private fun showFlyout(animationType: AnimationType, endAction: () -> Unit) {
         val flyout = this.flyout ?: return
         val startValue = getCurrentAnimatedValueIfRunning() ?: 0f
-        val duration = (ANIMATION_DURATION_MS * (1f - startValue)).toLong()
+        val duration = (EXPAND_ANIMATION_DURATION_MS * (1f - startValue)).toLong()
         animator?.cancel()
         val animator = ValueAnimator.ofFloat(startValue, 1f).setDuration(duration)
+        animator.interpolator = InterpolatorsAndroidX.EMPHASIZED
         this.animator = animator
         when (animationType) {
             AnimationType.FADE ->
@@ -111,6 +114,7 @@ constructor(
     fun updateFlyoutFullyExpanded(message: BubbleBarFlyoutMessage, onEnd: () -> Unit) {
         val flyout = flyout ?: return
         hideFlyout(AnimationType.FADE) {
+            callbacks.resetTopBoundary()
             flyout.updateData(message) { showFlyout(AnimationType.FADE, onEnd) }
         }
     }
@@ -152,9 +156,10 @@ constructor(
     private fun hideFlyout(animationType: AnimationType, endAction: () -> Unit) {
         val flyout = this.flyout ?: return
         val startValue = getCurrentAnimatedValueIfRunning() ?: 1f
-        val duration = (ANIMATION_DURATION_MS * startValue).toLong()
+        val duration = (COLLAPSE_ANIMATION_DURATION_MS * startValue).toLong()
         animator?.cancel()
         val animator = ValueAnimator.ofFloat(startValue, 0f).setDuration(duration)
+        animator.interpolator = InterpolatorsAndroidX.EMPHASIZED
         this.animator = animator
         when (animationType) {
             AnimationType.FADE ->

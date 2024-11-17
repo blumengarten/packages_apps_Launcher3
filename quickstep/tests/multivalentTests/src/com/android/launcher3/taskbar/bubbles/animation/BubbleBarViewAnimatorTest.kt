@@ -1123,7 +1123,7 @@ class BubbleBarViewAnimatorTest {
             animator.animateBubbleInForStashed(updatedBubble, isExpanding = false)
 
             // the flyout should now reverse and expand
-            animatorTestRule.advanceTimeBy(100)
+            animatorTestRule.advanceTimeBy(400)
         }
 
         assertThat(flyoutView!!.findViewById<TextView>(R.id.bubble_flyout_text).text)
@@ -1362,21 +1362,21 @@ class BubbleBarViewAnimatorTest {
 
     private fun waitForFlyoutToShow() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            animatorTestRule.advanceTimeBy(250)
+            animatorTestRule.advanceTimeBy(400)
         }
         assertThat(flyoutView).isNotNull()
     }
 
     private fun waitForFlyoutToHide() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            animatorTestRule.advanceTimeBy(250)
+            animatorTestRule.advanceTimeBy(350)
         }
         assertThat(flyoutView).isNull()
     }
 
     private fun waitForFlyoutToFadeOutAndBackIn() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            animatorTestRule.advanceTimeBy(500)
+            animatorTestRule.advanceTimeBy(750)
         }
         assertThat(flyoutView).isNotNull()
     }

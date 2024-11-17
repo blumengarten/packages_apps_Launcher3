@@ -281,6 +281,10 @@ public class TaskbarNavButtonController implements TaskbarControllers.LoggableTa
     }
 
     private void resetScreenUnpin() {
+        // if only back button was long pressed, navigate back like a single click back behavior.
+        if (mLongPressedButtons == BUTTON_BACK) {
+            executeBack(null);
+        }
         mLongPressedButtons = 0;
         mLastScreenPinLongPress = 0;
     }

@@ -190,6 +190,7 @@ import com.android.quickstep.views.OverviewActionsView;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
 import com.android.quickstep.views.TaskView;
+import com.android.systemui.animation.back.FlingOnBackAnimationCallback;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.system.ActivityManagerWrapper;
 import com.android.systemui.unfold.RemoteUnfoldSharedComponent;
@@ -900,12 +901,12 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     protected void registerBackDispatcher() {
         getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                 OnBackInvokedDispatcher.PRIORITY_DEFAULT,
-                new OnBackAnimationCallback() {
+                new FlingOnBackAnimationCallback() {
 
                     @Nullable OnBackAnimationCallback mActiveOnBackAnimationCallback;
 
                     @Override
-                    public void onBackStarted(@NonNull BackEvent backEvent) {
+                    public void onBackStartedCompat(@NonNull BackEvent backEvent) {
                         if (mActiveOnBackAnimationCallback != null) {
                             mActiveOnBackAnimationCallback.onBackCancelled();
                         }
@@ -915,7 +916,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
                     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
                     @Override
-                    public void onBackInvoked() {
+                    public void onBackInvokedCompat() {
                         // Recreate mActiveOnBackAnimationCallback if necessary to avoid NPE
                         // because:
                         // 1. b/260636433: In 3-button-navigation mode, onBackStarted() is not
@@ -931,7 +932,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
                     }
 
                     @Override
-                    public void onBackProgressed(@NonNull BackEvent backEvent) {
+                    public void onBackProgressedCompat(@NonNull BackEvent backEvent) {
                         if (!FeatureFlags.IS_STUDIO_BUILD
                                 && mActiveOnBackAnimationCallback == null) {
                             return;
@@ -940,7 +941,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
                     }
 
                     @Override
-                    public void onBackCancelled() {
+                    public void onBackCancelledCompat() {
                         if (!FeatureFlags.IS_STUDIO_BUILD
                                 && mActiveOnBackAnimationCallback == null) {
                             return;

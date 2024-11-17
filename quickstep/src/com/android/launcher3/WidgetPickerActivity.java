@@ -55,6 +55,7 @@ import com.android.launcher3.widget.model.WidgetsListBaseEntriesBuilder;
 import com.android.launcher3.widget.model.WidgetsListBaseEntry;
 import com.android.launcher3.widget.picker.WidgetsFullSheet;
 import com.android.launcher3.widget.picker.model.WidgetPickerDataProvider;
+import com.android.systemui.animation.back.FlingOnBackAnimationCallback;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -374,12 +375,12 @@ public class WidgetPickerActivity extends BaseActivity {
     /**
      * Animation callback for different predictive back animation states for the widget picker.
      */
-    private class BackAnimationCallback implements OnBackAnimationCallback {
+    private class BackAnimationCallback extends FlingOnBackAnimationCallback {
         @Nullable
         OnBackAnimationCallback mActiveOnBackAnimationCallback;
 
         @Override
-        public void onBackStarted(@NonNull BackEvent backEvent) {
+        public void onBackStartedCompat(@NonNull BackEvent backEvent) {
             if (mActiveOnBackAnimationCallback != null) {
                 mActiveOnBackAnimationCallback.onBackCancelled();
             }
@@ -390,7 +391,7 @@ public class WidgetPickerActivity extends BaseActivity {
         }
 
         @Override
-        public void onBackInvoked() {
+        public void onBackInvokedCompat() {
             if (mActiveOnBackAnimationCallback == null) {
                 return;
             }
@@ -399,7 +400,7 @@ public class WidgetPickerActivity extends BaseActivity {
         }
 
         @Override
-        public void onBackProgressed(@NonNull BackEvent backEvent) {
+        public void onBackProgressedCompat(@NonNull BackEvent backEvent) {
             if (mActiveOnBackAnimationCallback == null) {
                 return;
             }
@@ -407,7 +408,7 @@ public class WidgetPickerActivity extends BaseActivity {
         }
 
         @Override
-        public void onBackCancelled() {
+        public void onBackCancelledCompat() {
             if (mActiveOnBackAnimationCallback == null) {
                 return;
             }

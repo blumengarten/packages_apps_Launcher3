@@ -58,16 +58,16 @@
     <attr name="materialColorSecondaryFixedDim" format="color" />
     <attr name="materialColorOnErrorContainer" format="color" />
     <attr name="materialColorOnSecondaryFixed" format="color" />
-    <attr name="materialColorOnSurfaceInverse" format="color" />
+    <attr name="materialColorInverseOnSurface" format="color" />
     <attr name="materialColorTertiaryFixedDim" format="color" />
     <attr name="materialColorOnTertiaryFixed" format="color" />
     <attr name="materialColorPrimaryFixedDim" format="color" />
     <attr name="materialColorSecondaryContainer" format="color" />
     <attr name="materialColorErrorContainer" format="color" />
     <attr name="materialColorOnPrimaryFixed" format="color" />
-    <attr name="materialColorPrimaryInverse" format="color" />
+    <attr name="materialColorInversePrimary" format="color" />
     <attr name="materialColorSecondaryFixed" format="color" />
-    <attr name="materialColorSurfaceInverse" format="color" />
+    <attr name="materialColorInverseSurface" format="color" />
     <attr name="materialColorSurfaceVariant" format="color" />
     <attr name="materialColorTertiaryContainer" format="color" />
     <attr name="materialColorTertiaryFixed" format="color" />
@@ -215,6 +215,8 @@
         <attr name="minDeviceHeightPx" format="float"/>
         <attr name="numRowsNew" format="integer"/>
         <attr name="dbFile" />
+        <attr name="defaultLayoutId"/>
+        <attr name="demoModeLayoutId"/>
     </declare-styleable>
 
     <declare-styleable name="GridDisplayOption">
@@ -310,9 +312,10 @@
         <attr name="rowCountSpecsId" format="reference" />
         <!-- defaults to allAppsCellSpecsId, if not specified -->
         <attr name="allAppsCellSpecsTwoPanelId" format="reference" />
-
         <!-- defaults to false, if not specified -->
         <attr name="isFixedLandscape" format="boolean" />
+        <!-- defaults to false, if not specified -->
+        <attr name="isOldGrid" format="boolean" />
 
         <!-- By default all categories are enabled -->
         <attr name="deviceCategory" format="integer">

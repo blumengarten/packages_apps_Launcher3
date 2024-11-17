@@ -16,17 +16,28 @@
 
 package com.android.launcher3.taskbar;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
+import android.graphics.BlendMode;
+import android.graphics.BlendModeColorFilter;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.util.FloatProperty;
+import android.util.IntProperty;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
+import androidx.core.graphics.ColorUtils;
 
+import com.android.app.animation.Interpolators;
 import com.android.launcher3.R;
 import com.android.launcher3.Reorderable;
 import com.android.launcher3.Utilities;
@@ -45,7 +56,103 @@ import java.util.List;
  * each other in counter clockwise manner (icons of tasks partially overlapping with each other).
  */
 public class TaskbarOverflowView extends FrameLayout implements Reorderable {
+    private static final int ALPHA_TRANSPARENT = 0;
+    private static final int ALPHA_OPAQUE = 255;
+    private static final long ANIMATION_DURATION_APPS_TO_LEAVE_BEHIND = 300L;
+    private static final long ANIMATION_DURATION_LEAVE_BEHIND_TO_APPS = 500L;
+    private static final long ANIMATION_SET_DURATION = 1000L;
+    private static final long ITEM_ICON_CENTER_OFFSET_ANIMATION_DURATION = 500L;
+    private static final long ITEM_ICON_COLOR_FILTER_OPACITY_ANIMATION_DURATION = 600L;
+    private static final long ITEM_ICON_SIZE_ANIMATION_DURATION = 500L;
+    private static final long ITEM_ICON_STROKE_WIDTH_ANIMATION_DURATION = 500L;
+    private static final long LEAVE_BEHIND_ANIMATIONS_DELAY = 500L;
+    private static final long LEAVE_BEHIND_OPACITY_ANIMATION_DURATION = 100L;
+    private static final long LEAVE_BEHIND_SIZE_ANIMATION_DURATION = 500L;
     private static final int MAX_ITEMS_IN_PREVIEW = 4;
+
+    private static final FloatProperty<TaskbarOverflowView> ITEM_ICON_CENTER_OFFSET =
+            new FloatProperty<>("itemIconCenterOffset") {
+                @Override
+                public Float get(TaskbarOverflowView view) {
+                    return view.mItemIconCenterOffset;
+                }
+
+                @Override
+                public void setValue(TaskbarOverflowView view, float value) {
+                    view.mItemIconCenterOffset = value;
+                    view.invalidate();
+                }
+            };
+
+    private static final IntProperty<TaskbarOverflowView> ITEM_ICON_COLOR_FILTER_OPACITY =
+            new IntProperty<>("itemIconColorFilterOpacity") {
+                @Override
+                public Integer get(TaskbarOverflowView view) {
+                    return view.mItemIconColorFilterOpacity;
+                }
+
+                @Override
+                public void setValue(TaskbarOverflowView view, int value) {
+                    view.mItemIconColorFilterOpacity = value;
+                    view.invalidate();
+                }
+            };
+
+    private static final FloatProperty<TaskbarOverflowView> ITEM_ICON_SIZE =
+            new FloatProperty<>("itemIconSize") {
+                @Override
+                public Float get(TaskbarOverflowView view) {
+                    return view.mItemIconSize;
+                }
+
+                @Override
+                public void setValue(TaskbarOverflowView view, float value) {
+                    view.mItemIconSize = value;
+                    view.invalidate();
+                }
+            };
+
+    private static final FloatProperty<TaskbarOverflowView> ITEM_ICON_STROKE_WIDTH =
+            new FloatProperty<>("itemIconStrokeWidth") {
+                @Override
+                public Float get(TaskbarOverflowView view) {
+                    return view.mItemIconStrokeWidth;
+                }
+
+                @Override
+                public void setValue(TaskbarOverflowView view, float value) {
+                    view.mItemIconStrokeWidth = value;
+                    view.invalidate();
+                }
+            };
+
+    private static final IntProperty<TaskbarOverflowView> LEAVE_BEHIND_OPACITY =
+            new IntProperty<>("leaveBehindOpacity") {
+                @Override
+                public Integer get(TaskbarOverflowView view) {
+                    return view.mLeaveBehindOpacity;
+                }
+
+                @Override
+                public void setValue(TaskbarOverflowView view, int value) {
+                    view.mLeaveBehindOpacity = value;
+                    view.invalidate();
+                }
+            };
+
+    private static final FloatProperty<TaskbarOverflowView> LEAVE_BEHIND_SIZE =
+            new FloatProperty<>("leaveBehindSize") {
+                @Override
+                public Float get(TaskbarOverflowView view) {
+                    return view.mLeaveBehindSize;
+                }
+
+                @Override
+                public void setValue(TaskbarOverflowView view, float value) {
+                    view.mLeaveBehindSize = value;
+                    view.invalidate();
+                }
+            };
 
     private boolean mIsRtlLayout;
     private final List<Task> mItems = new ArrayList<Task>();
@@ -56,11 +163,24 @@ public class TaskbarOverflowView extends FrameLayout implements Reorderable {
     private float mScaleForReorderBounce = 1f;
     private int mItemBackgroundColor;
     private int mLeaveBehindColor;
-    private float mItemPreviewStrokeWidth;
 
     // Active means the overflow icon has been pressed, which replaces the app icons with the
     // leave-behind circle and shows the KQS UI.
     private boolean mIsActive = false;
+    private ValueAnimator mStateTransitionAnimationWrapper;
+
+    private float mItemIconCenterOffsetDefault;
+    private float mItemIconCenterOffset;  // [0..mItemIconCenterOffsetDefault]
+    private int mItemIconColorFilterOpacity;  // [ALPHA_TRANSPARENT..ALPHA_OPAQUE]
+    private float mItemIconSizeDefault;
+    private float mItemIconSizeScaledDown;
+    private float mItemIconSize;  // [mItemIconSizeScaledDown..mItemIconSizeDefault]
+    private float mItemIconStrokeWidthDefault;
+    private float mItemIconStrokeWidth;  // [0..mItemIconStrokeWidthDefault]
+    private int mLeaveBehindOpacity;  // [ALPHA_TRANSPARENT..ALPHA_OPAQUE]
+    private float mLeaveBehindSizeScaledDown;
+    private float mLeaveBehindSizeDefault;
+    private float mLeaveBehindSize;  // [mLeaveBehindSizeScaledDown..mLeaveBehindSizeDefault]
 
     public TaskbarOverflowView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -87,6 +207,12 @@ public class TaskbarOverflowView extends FrameLayout implements Reorderable {
 
         icon.mIconSize = iconSize;
         icon.mPadding = padding;
+
+        final float radius = iconSize / 2f - padding;
+        final float size = radius + icon.mItemIconStrokeWidth;
+        icon.mItemIconCenterOffsetDefault = radius - size / 2 - icon.mItemIconStrokeWidth;
+        icon.mItemIconCenterOffset = icon.mItemIconCenterOffsetDefault;
+
         return icon;
     }
 
@@ -95,8 +221,22 @@ public class TaskbarOverflowView extends FrameLayout implements Reorderable {
         mItemBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mItemBackgroundColor = getContext().getColor(R.color.taskbar_background);
         mLeaveBehindColor = Themes.getAttrColor(getContext(), android.R.attr.textColorTertiary);
-        mItemPreviewStrokeWidth = getResources().getDimension(
-                R.dimen.taskbar_overflow_button_preview_stroke);
+
+        mItemIconSizeDefault = getResources().getDimension(
+                R.dimen.taskbar_overflow_item_icon_size_default);
+        mItemIconSizeScaledDown = getResources().getDimension(
+                R.dimen.taskbar_overflow_item_icon_size_scaled_down);
+        mItemIconSize = mItemIconSizeDefault;
+
+        mItemIconStrokeWidthDefault = getResources().getDimension(
+                R.dimen.taskbar_overflow_item_icon_stroke_width_default);
+        mItemIconStrokeWidth = mItemIconStrokeWidthDefault;
+
+        mLeaveBehindSizeDefault = getResources().getDimension(
+                R.dimen.taskbar_overflow_leave_behind_size_default);
+        mLeaveBehindSizeScaledDown = getResources().getDimension(
+                R.dimen.taskbar_overflow_leave_behind_size_scaled_down);
+        mLeaveBehindSize = mLeaveBehindSizeScaledDown;
 
         setWillNotDraw(false);
     }
@@ -105,16 +245,14 @@ public class TaskbarOverflowView extends FrameLayout implements Reorderable {
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
 
-        if (mIsActive) {
-            drawLeaveBehindCircle(canvas);
-        } else {
-            drawAppIcons(canvas);
-        }
+        drawAppIcons(canvas);
+        drawLeaveBehindCircle(canvas);
     }
 
     private void drawAppIcons(@NonNull Canvas canvas) {
         mItemBackgroundPaint.setColor(mItemBackgroundColor);
         float radius = mIconSize / 2f - mPadding;
+        int adjustedItemIconSize = Math.round(mItemIconSize);
 
         int itemsToShow = Math.min(mItems.size(), MAX_ITEMS_IN_PREVIEW);
         for (int i = itemsToShow - 1; i >= 0; --i) {
@@ -123,36 +261,33 @@ public class TaskbarOverflowView extends FrameLayout implements Reorderable {
                 continue;
             }
 
-            // Set the item icon size so two items fit within the overflow icon with stroke width
-            // included, and overlap of 4 stroke width sizes between base item preview items.
-            // 2 * strokeWidth + 2 * itemIconSize - 4 * strokeWidth = iconSize = 2 * radius.
-            float itemIconSize = radius + mItemPreviewStrokeWidth;
-            // Offset item icon from center so item icon stroke edge matches the parent icon edge.
-            float itemCenterOffset = radius - itemIconSize / 2 - mItemPreviewStrokeWidth;
-
-            float itemCenterX = getItemXOffset(itemCenterOffset, mIsRtlLayout, i, itemsToShow);
-            float itemCenterY = getItemYOffset(itemCenterOffset, i, itemsToShow);
+            float itemCenterX = getItemXOffset(mItemIconCenterOffset, mIsRtlLayout, i, itemsToShow);
+            float itemCenterY = getItemYOffset(mItemIconCenterOffset, i, itemsToShow);
 
             Drawable iconCopy = icon.getConstantState().newDrawable().mutate();
-            iconCopy.setBounds(0, 0, (int) itemIconSize, (int) itemIconSize);
+            iconCopy.setBounds(0, 0, adjustedItemIconSize, adjustedItemIconSize);
+            iconCopy.setColorFilter(new BlendModeColorFilter(
+                    ColorUtils.setAlphaComponent(mLeaveBehindColor, mItemIconColorFilterOpacity),
+                    BlendMode.SRC_ATOP));
 
             canvas.save();
-            float itemIconRadius = itemIconSize / 2;
+            float itemIconRadius = adjustedItemIconSize / 2f;
             canvas.translate(
                     mPadding + itemCenterX + radius - itemIconRadius,
                     mPadding + itemCenterY + radius - itemIconRadius);
             canvas.drawCircle(itemIconRadius, itemIconRadius,
-                    itemIconRadius + mItemPreviewStrokeWidth, mItemBackgroundPaint);
+                    itemIconRadius + mItemIconStrokeWidth, mItemBackgroundPaint);
             iconCopy.draw(canvas);
             canvas.restore();
         }
     }
 
     private void drawLeaveBehindCircle(@NonNull Canvas canvas) {
-        mItemBackgroundPaint.setColor(mLeaveBehindColor);
+        mItemBackgroundPaint.setColor(
+                ColorUtils.setAlphaComponent(mLeaveBehindColor, mLeaveBehindOpacity));
 
-        final var xyCenter = mIconSize / 2f;
-        canvas.drawCircle(xyCenter, xyCenter, mIconSize / 4f, mItemBackgroundPaint);
+        final float xyCenter = mIconSize / 2f;
+        canvas.drawCircle(xyCenter, xyCenter, mLeaveBehindSize / 2f, mItemBackgroundPaint);
     }
 
     /**
@@ -203,10 +338,98 @@ public class TaskbarOverflowView extends FrameLayout implements Reorderable {
      * @param isActive The next state of the view.
      */
     public void setIsActive(boolean isActive) {
-        if (mIsActive != isActive) {
-            mIsActive = isActive;
-            invalidate();
+        if (mIsActive == isActive) {
+            return;
         }
+        mIsActive = isActive;
+
+        if (mStateTransitionAnimationWrapper != null
+                && mStateTransitionAnimationWrapper.isRunning()) {
+            mStateTransitionAnimationWrapper.reverse();
+            return;
+        }
+
+        final AnimatorSet stateTransitionAnimation = getStateTransitionAnimation();
+        mStateTransitionAnimationWrapper = ValueAnimator.ofFloat(0, 1f);
+        mStateTransitionAnimationWrapper.setDuration(mIsActive
+                ? ANIMATION_DURATION_APPS_TO_LEAVE_BEHIND
+                : ANIMATION_DURATION_LEAVE_BEHIND_TO_APPS);
+        mStateTransitionAnimationWrapper.setInterpolator(
+                mIsActive ? Interpolators.STANDARD : Interpolators.EMPHASIZED);
+        mStateTransitionAnimationWrapper.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mStateTransitionAnimationWrapper = null;
+            }
+        });
+        mStateTransitionAnimationWrapper.addUpdateListener(
+                new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animator) {
+                        stateTransitionAnimation.setCurrentPlayTime(
+                                (long) (ANIMATION_SET_DURATION * animator.getAnimatedFraction()));
+                    }
+                });
+        mStateTransitionAnimationWrapper.start();
+    }
+
+    private AnimatorSet getStateTransitionAnimation() {
+        final AnimatorSet animation = new AnimatorSet();
+        animation.setInterpolator(Interpolators.LINEAR);
+        animation.playTogether(
+                buildAnimator(ITEM_ICON_CENTER_OFFSET, 0f, mItemIconCenterOffsetDefault,
+                        ITEM_ICON_CENTER_OFFSET_ANIMATION_DURATION, 0L,
+                        ITEM_ICON_CENTER_OFFSET_ANIMATION_DURATION),
+                buildAnimator(ITEM_ICON_COLOR_FILTER_OPACITY, ALPHA_OPAQUE, ALPHA_TRANSPARENT,
+                        ITEM_ICON_COLOR_FILTER_OPACITY_ANIMATION_DURATION, 0L,
+                        ANIMATION_SET_DURATION - ITEM_ICON_COLOR_FILTER_OPACITY_ANIMATION_DURATION),
+                buildAnimator(ITEM_ICON_SIZE, mItemIconSizeScaledDown, mItemIconSizeDefault,
+                        ITEM_ICON_SIZE_ANIMATION_DURATION, 0L,
+                        ITEM_ICON_SIZE_ANIMATION_DURATION),
+                buildAnimator(ITEM_ICON_STROKE_WIDTH, 0f, mItemIconStrokeWidthDefault,
+                        ITEM_ICON_STROKE_WIDTH_ANIMATION_DURATION, 0L,
+                        ITEM_ICON_STROKE_WIDTH_ANIMATION_DURATION),
+                buildAnimator(LEAVE_BEHIND_OPACITY, ALPHA_OPAQUE, ALPHA_TRANSPARENT,
+                        LEAVE_BEHIND_OPACITY_ANIMATION_DURATION, LEAVE_BEHIND_ANIMATIONS_DELAY,
+                        ANIMATION_SET_DURATION - LEAVE_BEHIND_ANIMATIONS_DELAY
+                                - LEAVE_BEHIND_OPACITY_ANIMATION_DURATION),
+                buildAnimator(LEAVE_BEHIND_SIZE, mLeaveBehindSizeDefault,
+                        mLeaveBehindSizeScaledDown, LEAVE_BEHIND_SIZE_ANIMATION_DURATION,
+                        LEAVE_BEHIND_ANIMATIONS_DELAY, 0L)
+        );
+        return animation;
+    }
+
+    private ObjectAnimator buildAnimator(IntProperty<TaskbarOverflowView> property,
+            int finalValueWhenAnimatingToLeaveBehind, int finalValueWhenAnimatingToAppIcons,
+            long duration, long delayWhenAnimatingToLeaveBehind,
+            long delayWhenAnimatingToAppIcons) {
+        final ObjectAnimator animator = ObjectAnimator.ofInt(this, property,
+                mIsActive ? finalValueWhenAnimatingToLeaveBehind
+                        : finalValueWhenAnimatingToAppIcons);
+        applyTiming(animator, duration, delayWhenAnimatingToLeaveBehind,
+                delayWhenAnimatingToAppIcons);
+        return animator;
+    }
+
+    private ObjectAnimator buildAnimator(FloatProperty<TaskbarOverflowView> property,
+            float finalValueWhenAnimatingToLeaveBehind, float finalValueWhenAnimatingToAppIcons,
+            long duration, long delayWhenAnimatingToLeaveBehind,
+            long delayWhenAnimatingToAppIcons) {
+        final ObjectAnimator animator = ObjectAnimator.ofFloat(this, property,
+                mIsActive ? finalValueWhenAnimatingToLeaveBehind
+                        : finalValueWhenAnimatingToAppIcons);
+        applyTiming(animator, duration, delayWhenAnimatingToLeaveBehind,
+                delayWhenAnimatingToAppIcons);
+        return animator;
+    }
+
+    private void applyTiming(ObjectAnimator animator, long duration,
+            long delayWhenAnimatingToLeaveBehind,
+            long delayWhenAnimatingToAppIcons) {
+        animator.setDuration(duration);
+        animator.setStartDelay(
+                mIsActive ? delayWhenAnimatingToLeaveBehind : delayWhenAnimatingToAppIcons);
     }
 
     @Override

@@ -21,7 +21,6 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color.TRANSPARENT
 import android.util.AttributeSet
-import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
@@ -57,7 +56,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         }
 
     init {
-        LayoutInflater.from(context).inflate(R.layout.taskbar_all_apps_button, null, false)
+        contentDescription = context.getString(R.string.all_apps_button_label)
         setUpIcon()
     }
 

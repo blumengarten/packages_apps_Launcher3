@@ -18,8 +18,8 @@ package com.android.launcher3.util;
 
 import android.content.Context;
 
-import com.android.launcher3.LauncherApplication;
 import com.android.launcher3.dagger.LauncherAppComponent;
+import com.android.launcher3.dagger.LauncherComponentProvider;
 
 import java.util.function.Function;
 
@@ -37,8 +37,6 @@ public class DaggerSingletonObject<T> {
     }
 
     public T get(Context context) {
-        LauncherAppComponent component =
-                ((LauncherApplication) context.getApplicationContext()).getAppComponent();
-        return mFunction.apply(component);
+        return mFunction.apply(LauncherComponentProvider.get(context));
     }
 }

@@ -69,6 +69,12 @@
     <string name="widget_category_note_taking" msgid="3469689394504266039">"નોંધ લેવી"</string>
     <string name="widget_add_button_label" msgid="2761267068711937179">"ઉમેરો"</string>
     <string name="widget_add_button_content_description" msgid="1810530016360039643">"<xliff:g id="WIDGET_NAME">%1$s</xliff:g> વિજેટ ઉમેરો"</string>
+    <!-- no translation found for widgets_list_expand_button_label (7912016136574932622) -->
+    <skip />
+    <!-- no translation found for widgets_list_expand_button_content_description (4600513860973450888) -->
+    <skip />
+    <!-- no translation found for widgets_list_expanded (7374857868788557730) -->
+    <skip />
     <string name="reconfigurable_widget_education_tip" msgid="6336962690888067057">"વિજેટના સેટિંગ બદલવા માટે ટૅપ કરો"</string>
     <string name="widget_reconfigure_button_content_description" msgid="8811472721881205250">"વિજેટના સેટિંગ બદલો"</string>
     <string name="all_apps_search_bar_hint" msgid="1390553134053255246">"ઍપ શોધો"</string>
@@ -124,6 +130,10 @@
     <string name="msg_disabled_by_admin" msgid="6898038085516271325">"તમારા વ્યવસ્થાપક દ્વારા અક્ષમ કરેલ"</string>
     <string name="allow_rotation_title" msgid="7222049633713050106">"હોમ સ્ક્રીનને ફેરવવાની મંજૂરી આપો"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"જ્યારે ફોન ફેરવવામાં આવે ત્યારે"</string>
+    <!-- no translation found for landscape_mode_title (5138814555934843926) -->
+    <skip />
+    <!-- no translation found for landscape_mode_desc (7372569859592816793) -->
+    <skip />
     <string name="notification_dots_title" msgid="9062440428204120317">"નોટિફિકેશન માટેના ચિહ્નો"</string>
     <string name="notification_dots_desc_on" msgid="1679848116452218908">"ચાલુ છે"</string>
     <string name="notification_dots_desc_off" msgid="1760796511504341095">"બંધ છે"</string>
@@ -188,6 +198,8 @@
     <string name="work_apps_paused_edu_accept" msgid="6377476824357318532">"સમજાઈ ગયું"</string>
     <string name="work_apps_pause_btn_text" msgid="4669288269140620646">"ઑફિસની ઍપ થોભાવો"</string>
     <string name="work_apps_enable_btn_text" msgid="1736198302467317371">"ફરી ચાલુ કરો"</string>
+    <!-- no translation found for work_scheduler_button_content_description (917340740986764967) -->
+    <skip />
     <string name="developer_options_filter_hint" msgid="5896817443635989056">"ફિલ્ટર કરો"</string>
     <string name="remote_action_failed" msgid="1383965239183576790">"નિષ્ફળ: <xliff:g id="WHAT">%1$s</xliff:g>"</string>
     <string name="private_space_label" msgid="2359721649407947001">"ખાનગી સ્પેસ"</string>

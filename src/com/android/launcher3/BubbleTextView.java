@@ -20,6 +20,7 @@ import static android.graphics.fonts.FontStyle.FONT_WEIGHT_BOLD;
 import static android.graphics.fonts.FontStyle.FONT_WEIGHT_NORMAL;
 import static android.text.Layout.Alignment.ALIGN_NORMAL;
 
+import static com.android.launcher3.Flags.enableContrastTiles;
 import static com.android.launcher3.Flags.enableCursorHoverStates;
 import static com.android.launcher3.graphics.PreloadIconDrawable.newPendingIcon;
 import static com.android.launcher3.icons.BitmapInfo.FLAG_NO_BADGE;
@@ -39,6 +40,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.icu.text.MessageFormat;
@@ -722,6 +724,29 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         }
     }
 
+    /** Draws a background behind the App Title label when required. **/
+    public void drawAppContrastTile(Canvas canvas) {
+        RectF appTitleBounds;
+        Paint.FontMetrics fm = getPaint().getFontMetrics();
+        Rect tmpRect = new Rect();
+        getDrawingRect(tmpRect);
+
+        if (mIcon == null) {
+            appTitleBounds = new RectF(0, 0, tmpRect.right,
+                    (int) Math.ceil(fm.bottom - fm.top));
+        } else {
+            Rect iconBounds = new Rect();
+            getIconBounds(iconBounds);
+            int textStart = iconBounds.bottom + getCompoundDrawablePadding();
+            appTitleBounds = new RectF(tmpRect.left, textStart, tmpRect.right,
+                    textStart + (int) Math.ceil(fm.bottom - fm.top));
+        }
+
+        canvas.drawRoundRect(appTitleBounds, appTitleBounds.height() / 2,
+                appTitleBounds.height() / 2,
+                PillColorProvider.getInstance(getContext()).getAppTitlePillPaint());
+    }
+
     /** Draws a line under the app icon if this is representing a running app in Desktop Mode. */
     protected void drawRunningAppIndicatorIfNecessary(Canvas canvas) {
         if (mRunningAppState == RunningAppState.NOT_RUNNING || mDisplay != DISPLAY_TASKBAR) {
@@ -909,7 +934,9 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
     @Override
     public void setTextColor(ColorStateList colors) {
-        mTextColor = colors.getDefaultColor();
+        mTextColor = shouldDrawAppContrastTile() ? PillColorProvider.getInstance(
+                getContext()).getAppTitleTextPaint().getColor()
+                : colors.getDefaultColor();
         mTextColorStateList = colors;
         if (Float.compare(mTextAlpha, 1) == 0) {
             super.setTextColor(colors);
@@ -924,6 +951,15 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         ItemInfo info = tag instanceof ItemInfo ? (ItemInfo) tag : null;
         return info == null || (info.container != LauncherSettings.Favorites.CONTAINER_HOTSEAT
                 && info.container != LauncherSettings.Favorites.CONTAINER_HOTSEAT_PREDICTION);
+    }
+
+    /**
+     * Whether or not an App title contrast tile should be drawn for this element.
+     **/
+    public boolean shouldDrawAppContrastTile() {
+        return mDisplay == DISPLAY_WORKSPACE && shouldTextBeVisible()
+                && PillColorProvider.getInstance(getContext()).isMatchaEnabled()
+                && enableContrastTiles();
     }
 
     public void setTextVisibility(boolean visible) {

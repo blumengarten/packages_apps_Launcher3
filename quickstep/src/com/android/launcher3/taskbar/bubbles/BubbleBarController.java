@@ -528,9 +528,10 @@ public class BubbleBarController extends IBubblesListener.Stub {
      * <p>
      * Updates the value locally in Launcher and in WMShell.
      */
-    public void updateBubbleBarLocation(BubbleBarLocation location) {
+    public void updateBubbleBarLocation(BubbleBarLocation location,
+            @BubbleBarLocation.UpdateSource int source) {
         updateBubbleBarLocationInternal(location);
-        mSystemUiProxy.setBubbleBarLocation(location);
+        mSystemUiProxy.setBubbleBarLocation(location, source);
     }
 
     private void updateBubbleBarLocationInternal(BubbleBarLocation location) {

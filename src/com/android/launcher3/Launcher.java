@@ -537,6 +537,7 @@ public class Launcher extends StatefulActivity<LauncherState>
 
         mPopupDataProvider = new PopupDataProvider(this::updateNotificationDots);
         mWidgetPickerDataProvider = new WidgetPickerDataProvider();
+        PillColorProvider.getInstance(mWorkspace.getContext()).registerObserver();
 
         boolean internalStateHandled = ACTIVITY_TRACKER.handleCreate(this);
         if (internalStateHandled) {
@@ -780,6 +781,11 @@ public class Launcher extends StatefulActivity<LauncherState>
     private void updateFixedLandscape() {
         if (!com.android.launcher3.Flags.oneGridSpecs()) {
             return;
+        }
+        // When the flag oneGridSpecs is on we want to disable ALLOW_ROTATION which is replaced
+        // by FIXED_LANDSCAPE_MODE, ALLOW_ROTATION will only be used on Tablets afterwards.
+        if (!getDeviceProfile().isTablet) {
+            LauncherPrefs.get(this).put(LauncherPrefs.ALLOW_ROTATION, false);
         }
         getRotationHelper().setFixedLandscape(
                 Objects.requireNonNull(mDeviceProfile.inv).isFixedLandscapeMode
@@ -1813,6 +1819,7 @@ public class Launcher extends StatefulActivity<LauncherState>
         // changes while launcher is still loading.
         getRootView().getViewTreeObserver().removeOnPreDrawListener(mOnInitialBindListener);
         mOverlayManager.onActivityDestroyed();
+        PillColorProvider.getInstance(mWorkspace.getContext()).unregisterObserver();
     }
 
     public LauncherAccessibilityDelegate getAccessibilityDelegate() {

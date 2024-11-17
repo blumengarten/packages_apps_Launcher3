@@ -527,3 +527,10 @@ flag {
     description: "Enable Taskbar LayoutTransition for Recent Apps"
     bug: "343521765"
 }
+
+flag {
+    name: "enable_pinning_app_with_context_menu"
+    namespace: "launcher"
+    description: "Add options to pin/unpin to taskbar to app context menus."
+    bug: "375648361"
+}

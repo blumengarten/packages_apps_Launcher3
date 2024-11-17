@@ -345,6 +345,11 @@ public class InvariantDeviceProfile implements SafeCloseable {
     }
 
     private String initGrid(Context context, String gridName) {
+        if (!Flags.oneGridSpecs() && (isFixedLandscapeMode || FIXED_LANDSCAPE_MODE.get(context))) {
+            LauncherPrefs.get(context).put(FIXED_LANDSCAPE_MODE, false);
+            isFixedLandscapeMode = false;
+        }
+
         Info displayInfo = DisplayController.INSTANCE.get(context).getInfo();
 
         List<DisplayOption> allOptions = getPredefinedDeviceProfiles(
@@ -539,8 +544,8 @@ public class InvariantDeviceProfile implements SafeCloseable {
     }
 
     /**
-     * Updates the mounted mode, this triggers a new IDP, reloads the database and triggers a grid
-     * migration.
+     * Updates the fixed landscape mode, this triggers a new IDP, reloads the database and triggers
+     * a grid migration.
      */
     public void setFixedLandscape(Context context, boolean isFixedLandscape) {
         this.isFixedLandscapeMode = isFixedLandscape;
@@ -580,8 +585,7 @@ public class InvariantDeviceProfile implements SafeCloseable {
     private static boolean firstGridFilter(GridOption gridOption, int deviceType,
             boolean allowDisabledGrid, boolean isFixedLandscapeMode) {
         return (gridOption.isEnabled(deviceType) || allowDisabledGrid)
-                && ((gridOption.mIsFixedLandscape == isFixedLandscapeMode)
-                && gridOption.filterByFlag(deviceType));
+                && gridOption.filterByFlag(deviceType, isFixedLandscapeMode);
     }
 
     private static List<DisplayOption> getPredefinedDeviceProfiles(
@@ -755,9 +759,7 @@ public class InvariantDeviceProfile implements SafeCloseable {
         return parseAllDefinedGridOptions(context, displayInfo)
                 .stream()
                 .filter(go -> go.isEnabled(deviceType))
-                // if in fixedLandscape, then only show fixed landscape grids
-                .filter(go -> go.mIsFixedLandscape == isFixedLandscapeMode)
-                .filter(go -> go.filterByFlag(deviceType))
+                .filter(go -> go.filterByFlag(deviceType, isFixedLandscapeMode))
                 .collect(Collectors.toList());
     }
 
@@ -1029,6 +1031,7 @@ public class InvariantDeviceProfile implements SafeCloseable {
         private final int mAllAppsCellSpecsTwoPanelId;
         private final int mRowCountSpecsId;
         private final boolean mIsFixedLandscape;
+        private final boolean mIsOldGrid;
 
         public GridOption(Context context, AttributeSet attrs, Info displayInfo) {
             TypedArray a = context.obtainStyledAttributes(
@@ -1045,18 +1048,20 @@ public class InvariantDeviceProfile implements SafeCloseable {
                 NumRows numR = getRowCount(resourceHelper, context, displayInfo);
                 numRows = numR.mNumRowsNew;
                 dbFile = numR.mDbFile;
+                defaultLayoutId = numR.mDefaultLayoutId;
+                demoModeLayoutId = numR.mDemoModeLayoutId;
             } else {
                 numRows = a.getInt(R.styleable.GridDisplayOption_numRows, 0);
                 dbFile = a.getString(R.styleable.GridDisplayOption_dbFile);
+                defaultLayoutId = a.getResourceId(
+                        R.styleable.GridDisplayOption_defaultLayoutId, 0);
+                demoModeLayoutId = a.getResourceId(
+                        R.styleable.GridDisplayOption_demoModeLayoutId, defaultLayoutId);
             }
 
             numColumns = a.getInt(R.styleable.GridDisplayOption_numColumns, 0);
             numSearchContainerColumns = a.getInt(
                     R.styleable.GridDisplayOption_numSearchContainerColumns, numColumns);
-            defaultLayoutId = a.getResourceId(
-                    R.styleable.GridDisplayOption_defaultLayoutId, 0);
-            demoModeLayoutId = a.getResourceId(
-                    R.styleable.GridDisplayOption_demoModeLayoutId, defaultLayoutId);
 
             allAppsStyle = a.getResourceId(R.styleable.GridDisplayOption_allAppsStyle,
                     R.style.AllAppsStyleDefault);
@@ -1171,6 +1176,7 @@ public class InvariantDeviceProfile implements SafeCloseable {
             }
 
             mIsFixedLandscape = a.getBoolean(R.styleable.GridDisplayOption_isFixedLandscape, false);
+            mIsOldGrid = a.getBoolean(R.styleable.GridDisplayOption_isOldGrid, false);
 
             int inlineForRotation = a.getInt(R.styleable.GridDisplayOption_inlineQsb,
                     DONT_INLINE_QSB);
@@ -1202,16 +1208,30 @@ public class InvariantDeviceProfile implements SafeCloseable {
             }
         }
 
-        public boolean isNewGridOption() {
-            Log.d("HHHH", "GRID = " + mIsFixedLandscape);
-            return mRowCountSpecsId != INVALID_RESOURCE_HANDLE || mIsFixedLandscape;
-        }
-
-        public boolean filterByFlag(int deviceType) {
+        /**
+         * Returns true if the grid option should be used given the flags that are toggled on/off.
+         */
+        public boolean filterByFlag(int deviceType, boolean isFixedLandscape) {
             if (deviceType == TYPE_TABLET) {
                 return Flags.oneGridRotationHandling() == mIsDualGrid;
             }
-            return Flags.oneGridSpecs() == isNewGridOption();
+
+            // Here we return true if fixed landscape mode should be on.
+            if (mIsFixedLandscape || isFixedLandscape) {
+                return mIsFixedLandscape && isFixedLandscape && Flags.oneGridSpecs();
+            }
+
+            // Here we return true if we want to show the new grids.
+            if (mRowCountSpecsId != INVALID_RESOURCE_HANDLE) {
+                return Flags.oneGridSpecs();
+            }
+
+            // Here we return true if we want to show the old grids.
+            if (mIsOldGrid) {
+                return !Flags.oneGridSpecs();
+            }
+
+            return true;
         }
     }
 
@@ -1220,6 +1240,9 @@ public class InvariantDeviceProfile implements SafeCloseable {
         final float mMinDeviceWidthPx;
         final float mMinDeviceHeightPx;
         final String mDbFile;
+        final int mDefaultLayoutId;
+        final int mDemoModeLayoutId;
+
 
         NumRows(Context context, AttributeSet attrs) {
             TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.NumRows);
@@ -1228,6 +1251,10 @@ public class InvariantDeviceProfile implements SafeCloseable {
             mMinDeviceWidthPx = a.getFloat(R.styleable.NumRows_minDeviceWidthPx, 0);
             mMinDeviceHeightPx = a.getFloat(R.styleable.NumRows_minDeviceHeightPx, 0);
             mDbFile = a.getString(R.styleable.NumRows_dbFile);
+            mDefaultLayoutId = a.getResourceId(
+                    R.styleable.NumRows_defaultLayoutId, 0);
+            mDemoModeLayoutId = a.getResourceId(
+                    R.styleable.NumRows_demoModeLayoutId, mDefaultLayoutId);
 
             a.recycle();
         }

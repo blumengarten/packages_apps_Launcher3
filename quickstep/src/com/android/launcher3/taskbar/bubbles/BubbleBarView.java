@@ -407,11 +407,13 @@ public class BubbleBarView extends FrameLayout {
             return true;
         }
         if (action == R.id.action_move_left) {
-            mController.updateBubbleBarLocation(BubbleBarLocation.LEFT);
+            mController.updateBubbleBarLocation(BubbleBarLocation.LEFT,
+                    BubbleBarLocation.UpdateSource.A11Y_ACTION_BAR);
             return true;
         }
         if (action == R.id.action_move_right) {
-            mController.updateBubbleBarLocation(BubbleBarLocation.RIGHT);
+            mController.updateBubbleBarLocation(BubbleBarLocation.RIGHT,
+                    BubbleBarLocation.UpdateSource.A11Y_ACTION_BAR);
             return true;
         }
         return false;
@@ -1288,8 +1290,12 @@ public class BubbleBarView extends FrameLayout {
         // If there are more than 2 bubbles, the first 2 should be visible when collapsed,
         // excluding the overflow.
         return bubbleChildCount >= MAX_VISIBLE_BUBBLES_COLLAPSED
-                ? getScaledIconSize() + mIconOverlapAmount + horizontalPadding
+                ? getCollapsedWidthWithMaxVisibleBubbles()
                 : getScaledIconSize() + horizontalPadding;
+    }
+
+    float getCollapsedWidthWithMaxVisibleBubbles()  {
+        return getScaledIconSize() + mIconOverlapAmount + 2 * mBubbleBarPadding;
     }
 
     /** Returns the child count excluding the overflow if it's present. */
@@ -1567,6 +1573,7 @@ public class BubbleBarView extends FrameLayout {
         void dismissBubbleBar();
 
         /** Requests the controller to update bubble bar location to the given value */
-        void updateBubbleBarLocation(BubbleBarLocation location);
+        void updateBubbleBarLocation(BubbleBarLocation location,
+                @BubbleBarLocation.UpdateSource int source);
     }
 }

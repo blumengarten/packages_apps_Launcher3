@@ -19,6 +19,7 @@ package com.android.quickstep.recents.di
 import android.content.Context
 import android.util.Log
 import android.view.View
+import com.android.launcher3.util.coroutines.DispatcherProvider
 import com.android.launcher3.util.coroutines.ProductionDispatchers
 import com.android.quickstep.RecentsModel
 import com.android.quickstep.recents.data.RecentTasksRepository
@@ -63,6 +64,7 @@ class RecentsDependencies private constructor(private val appContext: Context) {
             val recentsCoroutineScope =
                 CoroutineScope(SupervisorJob() + Dispatchers.Main + CoroutineName("RecentsView"))
             set(CoroutineScope::class.java.simpleName, recentsCoroutineScope)
+            set(DispatcherProvider::class.java.simpleName, ProductionDispatchers)
             val recentsModel = RecentsModel.INSTANCE.get(appContext)
             val taskVisualsChangedDelegate =
                 TaskVisualsChangedDelegateImpl(
@@ -196,6 +198,7 @@ class RecentsDependencies private constructor(private val appContext: Context) {
                         recentsViewData = inject(),
                         taskViewData = inject(scopeId, extras),
                         taskContainerData = inject(scopeId),
+                        dispatcherProvider = inject(),
                         getThumbnailPositionUseCase = inject(),
                         tasksRepository = inject(),
                         splashAlphaUseCase = inject(scopeId),

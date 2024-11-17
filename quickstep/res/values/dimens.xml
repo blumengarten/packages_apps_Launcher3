@@ -118,6 +118,7 @@
 
     <!-- Launcher app transition -->
     <dimen name="closing_window_trans_y">115dp</dimen>
+    <dimen name="closing_freeform_window_trans_y">36dp</dimen>
 
     <dimen name="quick_switch_scaling_scroll_threshold">100dp</dimen>
 
@@ -361,7 +362,11 @@
     <dimen name="taskbar_running_app_indicator_width">12dp</dimen>
     <dimen name="taskbar_running_app_indicator_top_margin">4dp</dimen>
     <dimen name="taskbar_minimized_app_indicator_width">6dp</dimen>
-    <dimen name="taskbar_overflow_button_preview_stroke">2dp</dimen>
+    <dimen name="taskbar_overflow_item_icon_size_default">22dp</dimen>
+    <dimen name="taskbar_overflow_item_icon_size_scaled_down">15dp</dimen>
+    <dimen name="taskbar_overflow_item_icon_stroke_width_default">2dp</dimen>
+    <dimen name="taskbar_overflow_leave_behind_size_default">18dp</dimen>
+    <dimen name="taskbar_overflow_leave_behind_size_scaled_down">15dp</dimen>
 
     <!-- Transient taskbar -->
     <dimen name="transient_taskbar_padding">12dp</dimen>
@@ -425,6 +430,9 @@
     <dimen name="taskbar_pinning_popup_menu_width">300dp</dimen>
     <dimen name="taskbar_pinning_popup_menu_vertical_margin">16dp</dimen>
     <dimen name="taskbar_pinning_popup_menu_min_padding_from_screen_edge">16dp</dimen>
+
+    <!-- Taskbar Multi Instance Menu -->
+    <dimen name="taskbar_multi_instance_menu_min_padding_from_screen_edge">8dp</dimen>
 
     <!--- Floating Ime Inset height-->
     <dimen name="floating_ime_inset_height">60dp</dimen>

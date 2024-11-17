@@ -33,7 +33,6 @@ import com.android.launcher3.Utilities
 import com.android.launcher3.util.ViewPool
 import com.android.quickstep.recents.di.RecentsDependencies
 import com.android.quickstep.recents.di.get
-import com.android.quickstep.recents.di.inject
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.BackgroundOnly
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.LiveTile
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.Snapshot
@@ -43,7 +42,6 @@ import com.android.quickstep.task.viewmodel.TaskThumbnailViewModel
 import com.android.quickstep.util.TaskCornerRadius
 import com.android.quickstep.views.FixedSizeImageView
 import com.android.systemui.shared.system.QuickStepContract
-import kotlin.math.abs
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -53,8 +51,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class TaskThumbnailView : ConstraintLayout, ViewPool.Reusable {
-
-    private val viewData: TaskThumbnailViewData by RecentsDependencies.inject(this)
+    private lateinit var viewData: TaskThumbnailViewData
     private lateinit var viewModel: TaskThumbnailViewModel
 
     private lateinit var viewAttachedScope: CoroutineScope
@@ -92,10 +89,12 @@ class TaskThumbnailView : ConstraintLayout, ViewPool.Reusable {
         super.onAttachedToWindow()
         viewAttachedScope =
             CoroutineScope(SupervisorJob() + Dispatchers.Main + CoroutineName("TaskThumbnailView"))
+        viewData = RecentsDependencies.get(this)
+        updateViewDataValues()
         viewModel = RecentsDependencies.get(this)
         viewModel.uiState
             .onEach { viewModelUiState ->
-                Log.d(TAG, "viewModelUiState changed from $uiState to: $viewModelUiState")
+                Log.d(TAG, "viewModelUiState changed from: $uiState to: $viewModelUiState")
                 uiState = viewModelUiState
                 resetViews()
                 when (viewModelUiState) {
@@ -144,9 +143,13 @@ class TaskThumbnailView : ConstraintLayout, ViewPool.Reusable {
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
         if (changed) {
-            viewData.width.value = abs(right - left)
-            viewData.height.value = abs(bottom - top)
+            updateViewDataValues()
         }
+    }
+
+    private fun updateViewDataValues() {
+        viewData.width.value = width
+        viewData.height.value = height
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {

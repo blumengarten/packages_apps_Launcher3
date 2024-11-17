@@ -21,6 +21,7 @@ import android.platform.test.annotations.EnableFlags
 import android.platform.test.flag.junit.SetFlagsRule
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import com.android.launcher3.LauncherPrefs.Companion.TASKBAR_PINNING
+import com.android.launcher3.QuickstepTransitionManager.PINNED_TASKBAR_TRANSITION_DURATION
 import com.android.launcher3.R
 import com.android.launcher3.taskbar.StashedHandleViewController.ALPHA_INDEX_STASHED
 import com.android.launcher3.taskbar.TaskbarAutohideSuspendController.FLAG_AUTOHIDE_SUSPEND_EDU_OPEN
@@ -158,7 +159,7 @@ class TaskbarStashControllerTest {
     @Test
     @TaskbarMode(PINNED)
     fun testGetStashDuration_pinnedMode() {
-        assertThat(stashController.stashDuration).isEqualTo(TASKBAR_STASH_DURATION)
+        assertThat(stashController.stashDuration).isEqualTo(PINNED_TASKBAR_TRANSITION_DURATION)
     }
 
     @Test

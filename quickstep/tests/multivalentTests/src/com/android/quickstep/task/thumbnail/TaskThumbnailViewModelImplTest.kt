@@ -24,6 +24,7 @@ import android.graphics.Matrix
 import android.graphics.drawable.Drawable
 import android.view.Surface
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.launcher3.util.TestDispatcherProvider
 import com.android.quickstep.recents.data.FakeTasksRepository
 import com.android.quickstep.recents.usecase.GetThumbnailPositionUseCase
 import com.android.quickstep.recents.usecase.ThumbnailPositionState.MatrixScaling
@@ -42,6 +43,8 @@ import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.ThumbnailData
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -51,18 +54,24 @@ import org.mockito.kotlin.whenever
 /** Test for [TaskThumbnailView] */
 @RunWith(AndroidJUnit4::class)
 class TaskThumbnailViewModelImplTest {
+    private val dispatcher = StandardTestDispatcher()
+    private val testScope = TestScope(dispatcher)
+
     private var taskViewType = TaskViewType.SINGLE
     private val recentsViewData = RecentsViewData()
     private val taskViewData by lazy { TaskViewData(taskViewType) }
     private val taskContainerData = TaskContainerData()
+    private val dispatcherProvider = TestDispatcherProvider(dispatcher)
     private val tasksRepository = FakeTasksRepository()
     private val mGetThumbnailPositionUseCase = mock<GetThumbnailPositionUseCase>()
     private val splashAlphaUseCase: SplashAlphaUseCase = mock()
+
     private val systemUnderTest by lazy {
         TaskThumbnailViewModelImpl(
             recentsViewData,
             taskViewData,
             taskContainerData,
+            dispatcherProvider,
             tasksRepository,
             mGetThumbnailPositionUseCase,
             splashAlphaUseCase,
@@ -72,81 +81,85 @@ class TaskThumbnailViewModelImplTest {
     private val tasks = (0..5).map(::createTaskWithId)
 
     @Test
-    fun initialStateIsUninitialized() = runTest {
-        assertThat(systemUnderTest.uiState.first()).isEqualTo(Uninitialized)
-    }
+    fun initialStateIsUninitialized() =
+        testScope.runTest { assertThat(systemUnderTest.uiState.first()).isEqualTo(Uninitialized) }
 
     @Test
-    fun bindRunningTask_thenStateIs_LiveTile() = runTest {
-        val taskId = 1
-        tasksRepository.seedTasks(tasks)
-        tasksRepository.setVisibleTasks(setOf(taskId))
-        recentsViewData.runningTaskIds.value = setOf(taskId)
-        systemUnderTest.bind(taskId)
+    fun bindRunningTask_thenStateIs_LiveTile() =
+        testScope.runTest {
+            val taskId = 1
+            tasksRepository.seedTasks(tasks)
+            tasksRepository.setVisibleTasks(setOf(taskId))
+            recentsViewData.runningTaskIds.value = setOf(taskId)
+            systemUnderTest.bind(taskId)
 
-        assertThat(systemUnderTest.uiState.first()).isEqualTo(LiveTile)
-    }
+            assertThat(systemUnderTest.uiState.first()).isEqualTo(LiveTile)
+        }
 
     @Test
-    fun bindRunningTaskShouldShowScreenshot_thenStateIs_SnapshotSplash() = runTest {
-        val taskId = 1
-        val expectedThumbnailData = createThumbnailData()
-        tasksRepository.seedThumbnailData(mapOf(taskId to expectedThumbnailData))
-        val expectedIconData = mock<Drawable>()
-        tasksRepository.seedIconData(taskId, "Task $taskId", "", expectedIconData)
-        tasksRepository.seedTasks(tasks)
-        tasksRepository.setVisibleTasks(setOf(taskId))
-        recentsViewData.runningTaskIds.value = setOf(taskId)
-        recentsViewData.runningTaskShowScreenshot.value = true
-        systemUnderTest.bind(taskId)
+    fun bindRunningTaskShouldShowScreenshot_thenStateIs_SnapshotSplash() =
+        testScope.runTest {
+            val taskId = 1
+            val expectedThumbnailData = createThumbnailData()
+            tasksRepository.seedThumbnailData(mapOf(taskId to expectedThumbnailData))
+            val expectedIconData = mock<Drawable>()
+            tasksRepository.seedIconData(taskId, "Task $taskId", "", expectedIconData)
+            tasksRepository.seedTasks(tasks)
+            tasksRepository.setVisibleTasks(setOf(taskId))
+            recentsViewData.runningTaskIds.value = setOf(taskId)
+            recentsViewData.runningTaskShowScreenshot.value = true
+            systemUnderTest.bind(taskId)
 
-        assertThat(systemUnderTest.uiState.first())
-            .isEqualTo(
-                SnapshotSplash(
-                    Snapshot(
-                        backgroundColor = Color.rgb(1, 1, 1),
-                        bitmap = expectedThumbnailData.thumbnail!!,
-                        thumbnailRotation = Surface.ROTATION_0,
-                    ),
-                    expectedIconData,
+            assertThat(systemUnderTest.uiState.first())
+                .isEqualTo(
+                    SnapshotSplash(
+                        Snapshot(
+                            backgroundColor = Color.rgb(1, 1, 1),
+                            bitmap = expectedThumbnailData.thumbnail!!,
+                            thumbnailRotation = Surface.ROTATION_0,
+                        ),
+                        expectedIconData,
+                    )
                 )
-            )
-    }
+        }
 
     @Test
-    fun setRecentsFullscreenProgress_thenCornerRadiusProgressIsPassedThrough() = runTest {
-        recentsViewData.fullscreenProgress.value = 0.5f
+    fun setRecentsFullscreenProgress_thenCornerRadiusProgressIsPassedThrough() =
+        testScope.runTest {
+            recentsViewData.fullscreenProgress.value = 0.5f
 
-        assertThat(systemUnderTest.cornerRadiusProgress.first()).isEqualTo(0.5f)
+            assertThat(systemUnderTest.cornerRadiusProgress.first()).isEqualTo(0.5f)
 
-        recentsViewData.fullscreenProgress.value = 0.6f
+            recentsViewData.fullscreenProgress.value = 0.6f
 
-        assertThat(systemUnderTest.cornerRadiusProgress.first()).isEqualTo(0.6f)
-    }
-
-    @Test
-    fun setRecentsFullscreenProgress_thenCornerRadiusProgressIsConstantForDesktop() = runTest {
-        taskViewType = TaskViewType.DESKTOP
-        recentsViewData.fullscreenProgress.value = 0.5f
-
-        assertThat(systemUnderTest.cornerRadiusProgress.first()).isEqualTo(1f)
-
-        recentsViewData.fullscreenProgress.value = 0.6f
-
-        assertThat(systemUnderTest.cornerRadiusProgress.first()).isEqualTo(1f)
-    }
+            assertThat(systemUnderTest.cornerRadiusProgress.first()).isEqualTo(0.6f)
+        }
 
     @Test
-    fun setAncestorScales_thenScaleIsCalculated() = runTest {
-        recentsViewData.scale.value = 0.5f
-        taskViewData.scale.value = 0.6f
+    fun setRecentsFullscreenProgress_thenCornerRadiusProgressIsConstantForDesktop() =
+        testScope.runTest {
+            taskViewType = TaskViewType.DESKTOP
+            recentsViewData.fullscreenProgress.value = 0.5f
 
-        assertThat(systemUnderTest.inheritedScale.first()).isEqualTo(0.3f)
-    }
+            assertThat(systemUnderTest.cornerRadiusProgress.first()).isEqualTo(1f)
+
+            recentsViewData.fullscreenProgress.value = 0.6f
+
+            assertThat(systemUnderTest.cornerRadiusProgress.first()).isEqualTo(1f)
+        }
+
+    @Test
+    fun setAncestorScales_thenScaleIsCalculated() =
+        testScope.runTest {
+            recentsViewData.scale.value = 0.5f
+            taskViewData.scale.value = 0.6f
+
+            assertThat(systemUnderTest.inheritedScale.first()).isEqualTo(0.3f)
+        }
 
     @Test
     fun bindRunningTaskThenStoppedTaskWithoutThumbnail_thenStateChangesToBackgroundOnly() =
-        runTest {
+        testScope.runTest {
             val runningTaskId = 1
             val stoppedTaskId = 2
             tasksRepository.seedTasks(tasks)
@@ -161,125 +174,138 @@ class TaskThumbnailViewModelImplTest {
         }
 
     @Test
-    fun bindStoppedTaskWithoutThumbnail_thenStateIs_BackgroundOnly_withAlphaRemoved() = runTest {
-        val stoppedTaskId = 2
-        tasksRepository.seedTasks(tasks)
-        tasksRepository.setVisibleTasks(setOf(stoppedTaskId))
+    fun bindStoppedTaskWithoutThumbnail_thenStateIs_BackgroundOnly_withAlphaRemoved() =
+        testScope.runTest {
+            val stoppedTaskId = 2
+            tasksRepository.seedTasks(tasks)
+            tasksRepository.setVisibleTasks(setOf(stoppedTaskId))
 
-        systemUnderTest.bind(stoppedTaskId)
-        assertThat(systemUnderTest.uiState.first())
-            .isEqualTo(BackgroundOnly(backgroundColor = Color.rgb(2, 2, 2)))
-    }
-
-    @Test
-    fun bindLockedTaskWithThumbnail_thenStateIs_BackgroundOnly() = runTest {
-        val taskId = 2
-        tasksRepository.seedThumbnailData(mapOf(taskId to createThumbnailData()))
-        tasks[taskId].isLocked = true
-        tasksRepository.seedTasks(tasks)
-        tasksRepository.setVisibleTasks(setOf(taskId))
-
-        systemUnderTest.bind(taskId)
-        assertThat(systemUnderTest.uiState.first())
-            .isEqualTo(BackgroundOnly(backgroundColor = Color.rgb(2, 2, 2)))
-    }
+            systemUnderTest.bind(stoppedTaskId)
+            assertThat(systemUnderTest.uiState.first())
+                .isEqualTo(BackgroundOnly(backgroundColor = Color.rgb(2, 2, 2)))
+        }
 
     @Test
-    fun bindStoppedTaskWithThumbnail_thenStateIs_SnapshotSplash_withAlphaRemoved() = runTest {
-        val taskId = 2
-        val expectedThumbnailData = createThumbnailData(rotation = Surface.ROTATION_270)
-        tasksRepository.seedThumbnailData(mapOf(taskId to expectedThumbnailData))
-        val expectedIconData = mock<Drawable>()
-        tasksRepository.seedIconData(taskId, "Task $taskId", "", expectedIconData)
-        tasksRepository.seedTasks(tasks)
-        tasksRepository.setVisibleTasks(setOf(taskId))
+    fun bindLockedTaskWithThumbnail_thenStateIs_BackgroundOnly() =
+        testScope.runTest {
+            val taskId = 2
+            tasksRepository.seedThumbnailData(mapOf(taskId to createThumbnailData()))
+            tasks[taskId].isLocked = true
+            tasksRepository.seedTasks(tasks)
+            tasksRepository.setVisibleTasks(setOf(taskId))
 
-        systemUnderTest.bind(taskId)
-        assertThat(systemUnderTest.uiState.first())
-            .isEqualTo(
-                SnapshotSplash(
-                    Snapshot(
-                        backgroundColor = Color.rgb(2, 2, 2),
-                        bitmap = expectedThumbnailData.thumbnail!!,
-                        thumbnailRotation = Surface.ROTATION_270,
-                    ),
-                    expectedIconData,
+            systemUnderTest.bind(taskId)
+            assertThat(systemUnderTest.uiState.first())
+                .isEqualTo(BackgroundOnly(backgroundColor = Color.rgb(2, 2, 2)))
+        }
+
+    @Test
+    fun bindStoppedTaskWithThumbnail_thenStateIs_SnapshotSplash_withAlphaRemoved() =
+        testScope.runTest {
+            val taskId = 2
+            val expectedThumbnailData = createThumbnailData(rotation = Surface.ROTATION_270)
+            tasksRepository.seedThumbnailData(mapOf(taskId to expectedThumbnailData))
+            val expectedIconData = mock<Drawable>()
+            tasksRepository.seedIconData(taskId, "Task $taskId", "", expectedIconData)
+            tasksRepository.seedTasks(tasks)
+            tasksRepository.setVisibleTasks(setOf(taskId))
+
+            systemUnderTest.bind(taskId)
+            assertThat(systemUnderTest.uiState.first())
+                .isEqualTo(
+                    SnapshotSplash(
+                        Snapshot(
+                            backgroundColor = Color.rgb(2, 2, 2),
+                            bitmap = expectedThumbnailData.thumbnail!!,
+                            thumbnailRotation = Surface.ROTATION_270,
+                        ),
+                        expectedIconData,
+                    )
                 )
-            )
-    }
+        }
 
     @Test
-    fun bindNonVisibleStoppedTask_whenMadeVisible_thenStateIsSnapshotSplash() = runTest {
-        val taskId = 2
-        val expectedThumbnailData = createThumbnailData()
-        tasksRepository.seedThumbnailData(mapOf(taskId to expectedThumbnailData))
-        val expectedIconData = mock<Drawable>()
-        tasksRepository.seedIconData(taskId, "Task $taskId", "", expectedIconData)
-        tasksRepository.seedTasks(tasks)
+    fun bindNonVisibleStoppedTask_whenMadeVisible_thenStateIsSnapshotSplash() =
+        testScope.runTest {
+            val taskId = 2
+            val expectedThumbnailData = createThumbnailData()
+            tasksRepository.seedThumbnailData(mapOf(taskId to expectedThumbnailData))
+            val expectedIconData = mock<Drawable>()
+            tasksRepository.seedIconData(taskId, "Task $taskId", "", expectedIconData)
+            tasksRepository.seedTasks(tasks)
 
-        systemUnderTest.bind(taskId)
-        assertThat(systemUnderTest.uiState.first()).isEqualTo(Uninitialized)
+            systemUnderTest.bind(taskId)
+            assertThat(systemUnderTest.uiState.first()).isEqualTo(Uninitialized)
 
-        tasksRepository.setVisibleTasks(setOf(taskId))
-        assertThat(systemUnderTest.uiState.first())
-            .isEqualTo(
-                SnapshotSplash(
-                    Snapshot(
-                        backgroundColor = Color.rgb(2, 2, 2),
-                        bitmap = expectedThumbnailData.thumbnail!!,
-                        thumbnailRotation = Surface.ROTATION_0,
-                    ),
-                    expectedIconData,
+            tasksRepository.setVisibleTasks(setOf(taskId))
+            assertThat(systemUnderTest.uiState.first())
+                .isEqualTo(
+                    SnapshotSplash(
+                        Snapshot(
+                            backgroundColor = Color.rgb(2, 2, 2),
+                            bitmap = expectedThumbnailData.thumbnail!!,
+                            thumbnailRotation = Surface.ROTATION_0,
+                        ),
+                        expectedIconData,
+                    )
                 )
-            )
-    }
+        }
 
     @Test
-    fun getSnapshotMatrix_MissingThumbnail() = runTest {
-        val taskId = 2
-        val isRtl = true
+    fun getSnapshotMatrix_MissingThumbnail() =
+        testScope.runTest {
+            val taskId = 2
+            val isRtl = true
 
-        whenever(mGetThumbnailPositionUseCase.run(taskId, CANVAS_WIDTH, CANVAS_HEIGHT, isRtl))
-            .thenReturn(MissingThumbnail)
+            whenever(mGetThumbnailPositionUseCase.run(taskId, CANVAS_WIDTH, CANVAS_HEIGHT, isRtl))
+                .thenReturn(MissingThumbnail)
 
-        systemUnderTest.bind(taskId)
-        assertThat(systemUnderTest.getThumbnailPositionState(CANVAS_WIDTH, CANVAS_HEIGHT, isRtl))
-            .isEqualTo(Matrix.IDENTITY_MATRIX)
-    }
-
-    @Test
-    fun getSnapshotMatrix_MatrixScaling() = runTest {
-        val taskId = 2
-        val isRtl = true
-
-        whenever(mGetThumbnailPositionUseCase.run(taskId, CANVAS_WIDTH, CANVAS_HEIGHT, isRtl))
-            .thenReturn(MatrixScaling(MATRIX, isRotated = false))
-
-        systemUnderTest.bind(taskId)
-        assertThat(systemUnderTest.getThumbnailPositionState(CANVAS_WIDTH, CANVAS_HEIGHT, isRtl))
-            .isEqualTo(MATRIX)
-    }
+            systemUnderTest.bind(taskId)
+            assertThat(
+                    systemUnderTest.getThumbnailPositionState(CANVAS_WIDTH, CANVAS_HEIGHT, isRtl)
+                )
+                .isEqualTo(Matrix.IDENTITY_MATRIX)
+        }
 
     @Test
-    fun getForegroundScrimDimProgress_returnsForegroundMaxScrim() = runTest {
-        recentsViewData.tintAmount.value = 0.32f
-        taskContainerData.taskMenuOpenProgress.value = 0f
-        assertThat(systemUnderTest.dimProgress.first()).isEqualTo(0.32f)
-    }
+    fun getSnapshotMatrix_MatrixScaling() =
+        testScope.runTest {
+            val taskId = 2
+            val isRtl = true
+
+            whenever(mGetThumbnailPositionUseCase.run(taskId, CANVAS_WIDTH, CANVAS_HEIGHT, isRtl))
+                .thenReturn(MatrixScaling(MATRIX, isRotated = false))
+
+            systemUnderTest.bind(taskId)
+            assertThat(
+                    systemUnderTest.getThumbnailPositionState(CANVAS_WIDTH, CANVAS_HEIGHT, isRtl)
+                )
+                .isEqualTo(MATRIX)
+        }
 
     @Test
-    fun getTaskMenuScrimDimProgress_returnsTaskMenuScrim() = runTest {
-        recentsViewData.tintAmount.value = 0f
-        taskContainerData.taskMenuOpenProgress.value = 1f
-        assertThat(systemUnderTest.dimProgress.first()).isEqualTo(0.4f)
-    }
+    fun getForegroundScrimDimProgress_returnsForegroundMaxScrim() =
+        testScope.runTest {
+            recentsViewData.tintAmount.value = 0.32f
+            taskContainerData.taskMenuOpenProgress.value = 0f
+            assertThat(systemUnderTest.dimProgress.first()).isEqualTo(0.32f)
+        }
 
     @Test
-    fun getForegroundScrimDimProgress_returnsNoScrim() = runTest {
-        recentsViewData.tintAmount.value = 0f
-        taskContainerData.taskMenuOpenProgress.value = 0f
-        assertThat(systemUnderTest.dimProgress.first()).isEqualTo(0f)
-    }
+    fun getTaskMenuScrimDimProgress_returnsTaskMenuScrim() =
+        testScope.runTest {
+            recentsViewData.tintAmount.value = 0f
+            taskContainerData.taskMenuOpenProgress.value = 1f
+            assertThat(systemUnderTest.dimProgress.first()).isEqualTo(0.4f)
+        }
+
+    @Test
+    fun getForegroundScrimDimProgress_returnsNoScrim() =
+        testScope.runTest {
+            recentsViewData.tintAmount.value = 0f
+            taskContainerData.taskMenuOpenProgress.value = 0f
+            assertThat(systemUnderTest.dimProgress.first()).isEqualTo(0f)
+        }
 
     private fun createTaskWithId(taskId: Int) =
         Task(Task.TaskKey(taskId, 0, Intent(), ComponentName("", ""), 0, 2000)).apply {

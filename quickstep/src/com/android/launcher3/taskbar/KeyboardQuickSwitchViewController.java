@@ -128,6 +128,23 @@ public class KeyboardQuickSwitchViewController {
                 /* useDesktopTaskView= */ !onDesktop && hasDesktopTask);
     }
 
+    protected void updateQuickSwitchView(
+            @NonNull List<GroupTask> tasks,
+            int numHiddenTasks,
+            int currentFocusIndexOverride,
+            boolean hasDesktopTask,
+            boolean wasDesktopTaskFilteredOut) {
+        mWasDesktopTaskFilteredOut = wasDesktopTaskFilteredOut;
+        mKeyboardQuickSwitchView.applyLoadPlan(
+                mOverlayContext,
+                tasks,
+                numHiddenTasks,
+                /* updateTasks= */ true,
+                currentFocusIndexOverride,
+                mViewCallbacks,
+                /* useDesktopTaskView= */ !mOnDesktop && hasDesktopTask);
+    }
+
     protected void positionView(boolean wasOpenedFromTaskbar, boolean isTransientTaskbar) {
         if (!wasOpenedFromTaskbar) {
             // Keep the default positioning.
@@ -153,6 +170,20 @@ public class KeyboardQuickSwitchViewController {
         lp.width = BaseDragLayer.LayoutParams.WRAP_CONTENT;
         lp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
         mKeyboardQuickSwitchView.setLayoutParams(lp);
+    }
+
+    protected void updateLayoutForSurface(boolean updateLayoutFromTaskbar,
+            int currentFocusIndexOverride) {
+        BaseDragLayer.LayoutParams lp =
+                (BaseDragLayer.LayoutParams) mKeyboardQuickSwitchView.getLayoutParams();
+
+        if (updateLayoutFromTaskbar) {
+            lp.width = BaseDragLayer.LayoutParams.WRAP_CONTENT;
+        } else {
+            lp.width = BaseDragLayer.LayoutParams.MATCH_PARENT;
+        }
+
+        mKeyboardQuickSwitchView.animateOpen(currentFocusIndexOverride);
     }
 
     boolean isCloseAnimationRunning() {

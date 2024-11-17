@@ -22,6 +22,7 @@ import static androidx.preference.PreferenceFragmentCompat.ARG_PREFERENCE_ROOT;
 
 import static com.android.launcher3.BuildConfig.IS_DEBUG_DEVICE;
 import static com.android.launcher3.BuildConfig.IS_STUDIO_BUILD;
+import static com.android.launcher3.InvariantDeviceProfile.TYPE_MULTI_DISPLAY;
 import static com.android.launcher3.states.RotationHelper.ALLOW_ROTATION_PREFERENCE_KEY;
 
 import android.app.Activity;
@@ -52,6 +53,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.launcher3.BuildConfig;
 import com.android.launcher3.Flags;
+import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherFiles;
 import com.android.launcher3.R;
 import com.android.launcher3.states.RotationHelper;
@@ -310,7 +312,10 @@ public class SettingsActivity extends FragmentActivity
                     }
                     return mDeveloperOptionsEnabled;
                 case FIXED_LANDSCAPE_MODE:
-                    if (!Flags.oneGridSpecs()) {
+                    if (!Flags.oneGridSpecs()
+                            // adding this condition until fixing b/378972567
+                            || InvariantDeviceProfile.INSTANCE.get(getContext()).deviceType
+                            == TYPE_MULTI_DISPLAY) {
                         return false;
                     }
                     // When the setting changes rotate the screen accordingly to showcase the result

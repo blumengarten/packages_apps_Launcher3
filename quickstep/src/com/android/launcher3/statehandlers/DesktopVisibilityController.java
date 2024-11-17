@@ -488,6 +488,15 @@ public class DesktopVisibilityController {
                 }
             });
         }
+
+        public void onEnterDesktopModeTransitionStarted(int transitionDuration) {
+
+        }
+
+        @Override
+        public void onExitDesktopModeTransitionStarted(int transitionDuration) {
+
+        }
     }
 
     /** A listener for Taskbar in Desktop Mode. */

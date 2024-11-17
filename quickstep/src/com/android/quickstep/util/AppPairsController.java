@@ -409,8 +409,8 @@ public class AppPairsController {
             );
         } else {
             // Tapped an app pair while in a single app
-            int runningTaskId = topTaskTracker
-                    .getCachedTopTask(false /* filterOnlyVisibleRecents */).getTaskId();
+            final TopTaskTracker.CachedTaskInfo runningTask = topTaskTracker
+                    .getCachedTopTask(false /* filterOnlyVisibleRecents */);
 
             mSplitSelectStateController.findLastActiveTasksAndRunCallback(
                     componentKeys,
@@ -418,10 +418,21 @@ public class AppPairsController {
                     foundTasks -> {
                         Task foundTask1 = foundTasks[0];
                         Task foundTask2 = foundTasks[1];
-                        boolean task1IsOnScreen =
-                                foundTask1 != null && foundTask1.getKey().getId() == runningTaskId;
-                        boolean task2IsOnScreen =
-                                foundTask2 != null && foundTask2.getKey().getId() == runningTaskId;
+                        boolean task1IsOnScreen;
+                        boolean task2IsOnScreen;
+                        if (com.android.wm.shell.Flags.enableShellTopTaskTracking()) {
+                            task1IsOnScreen = foundTask1 != null
+                                    && runningTask.topGroupedTaskContainsTask(
+                                    foundTask1.getKey().getId());
+                            task2IsOnScreen = foundTask2 != null
+                                    && runningTask.topGroupedTaskContainsTask(
+                                    foundTask2.getKey().getId());
+                        } else {
+                            task1IsOnScreen = foundTask1 != null && foundTask1.getKey().getId()
+                                    == runningTask.getTaskId();
+                            task2IsOnScreen = foundTask2 != null && foundTask2.getKey().getId()
+                                    == runningTask.getTaskId();
+                        }
 
                         if (!task1IsOnScreen && !task2IsOnScreen) {
                             // Neither App A nor App B are on-screen, launch the app pair normally.

@@ -22,6 +22,9 @@ import android.view.InputDevice
 import android.view.KeyCharacterMap
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import androidx.core.view.children
 import androidx.lifecycle.Lifecycle.State.RESUMED
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ActivityScenario.ActivityAction
@@ -30,11 +33,13 @@ import androidx.test.uiautomator.UiDevice
 import com.android.launcher3.Launcher
 import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherState
+import com.android.launcher3.R
 import com.android.launcher3.allapps.AllAppsStore.DEFER_UPDATES_TEST
 import com.android.launcher3.tapl.TestHelpers
 import com.android.launcher3.util.ModelTestExtensions.loadModelSync
 import com.android.launcher3.util.Wait.atMost
 import java.util.function.Function
+import java.util.function.Predicate
 import java.util.function.Supplier
 import org.junit.After
 
@@ -56,6 +61,8 @@ open class BaseLauncherActivityTest<LAUNCHER_TYPE : Launcher> {
                     )
                     .also { currentScenario = it }
 
+    @JvmField val uiDevice = UiDevice.getInstance(getInstrumentation())
+
     @After
     fun closeCurrentActivity() {
         currentScenario?.close()
@@ -69,8 +76,9 @@ open class BaseLauncherActivityTest<LAUNCHER_TYPE : Launcher> {
 
     protected fun targetContext(): Context = getInstrumentation().targetContext
 
-    protected fun goToState(state: LauncherState) = executeOnLauncher {
-        it.stateManager.goToState(state, 0)
+    protected fun goToState(state: LauncherState) {
+        executeOnLauncher { it.stateManager.goToState(state, 0) }
+        UiDevice.getInstance(getInstrumentation()).waitForIdle()
     }
 
     protected fun executeOnLauncher(f: ActivityAction<LAUNCHER_TYPE>) = scenario.onActivity(f)
@@ -91,6 +99,12 @@ open class BaseLauncherActivityTest<LAUNCHER_TYPE : Launcher> {
         message: String,
         condition: Function<LAUNCHER_TYPE, Boolean>,
     ) = atMost(message, { getFromLauncher(condition)!! })
+
+    protected fun waitForLauncherCondition(
+        message: String,
+        condition: Function<LAUNCHER_TYPE, Boolean>,
+        timeout: Long,
+    ) = atMost(message, { getFromLauncher(condition)!! }, null, timeout)
 
     protected fun <T> getOnceNotNull(message: String, f: Function<LAUNCHER_TYPE, T?>): T? {
         var output: T? = null
@@ -129,18 +143,43 @@ open class BaseLauncherActivityTest<LAUNCHER_TYPE : Launcher> {
         event.recycle()
     }
 
-    fun startAppFast(packageName: String) {
-        val intent = targetContext().packageManager.getLaunchIntentForPackage(packageName)!!
+    @JvmOverloads
+    fun startAppFast(
+        packageName: String,
+        intent: Intent = targetContext().packageManager.getLaunchIntentForPackage(packageName)!!,
+    ) {
         intent.addCategory(Intent.CATEGORY_LAUNCHER)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         targetContext().startActivity(intent)
-        UiDevice.getInstance(getInstrumentation()).waitForIdle()
+        uiDevice.waitForIdle()
     }
 
     fun freezeAllApps() = executeOnLauncher {
         it.appsView.appsStore.enableDeferUpdates(DEFER_UPDATES_TEST)
     }
 
-    fun executeShellCommand(cmd: String) =
-        UiDevice.getInstance(getInstrumentation()).executeShellCommand(cmd)
+    fun executeShellCommand(cmd: String) = uiDevice.executeShellCommand(cmd)
+
+    fun addToWorkspace(view: View) {
+        TestUtil.runOnExecutorSync(Executors.MAIN_EXECUTOR) {
+            view.accessibilityDelegate.performAccessibilityAction(
+                view,
+                R.id.action_add_to_workspace,
+                null,
+            )
+        }
+        UiDevice.getInstance(getInstrumentation()).waitForIdle()
+    }
+
+    fun ViewGroup.searchView(filter: Predicate<View>): View? {
+        if (filter.test(this)) return this
+        for (child in children) {
+            if (filter.test(child)) return child
+            if (child is ViewGroup)
+                child.searchView(filter)?.let {
+                    return it
+                }
+        }
+        return null
+    }
 }

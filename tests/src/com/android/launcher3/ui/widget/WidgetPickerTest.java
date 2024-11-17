@@ -22,24 +22,30 @@ import static org.junit.Assert.assertTrue;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.MediumTest;
 
+import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.Launcher;
-import com.android.launcher3.tapl.Widgets;
-import com.android.launcher3.ui.AbstractLauncherUiTest;
 import com.android.launcher3.ui.PortraitLandscapeRunner.PortraitLandscape;
+import com.android.launcher3.util.BaseLauncherActivityTest;
+import com.android.launcher3.util.rule.ScreenRecordRule;
 import com.android.launcher3.util.rule.ScreenRecordRule.ScreenRecord;
+import com.android.launcher3.views.OptionsPopupView;
 import com.android.launcher3.widget.picker.WidgetsFullSheet;
 import com.android.launcher3.widget.picker.WidgetsRecyclerView;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
 /**
- * This test run in both Out of process (Oop) and in-process (Ipc).
  * Make sure the basic interactions with the WidgetPicker works.
  */
 @MediumTest
 @RunWith(AndroidJUnit4.class)
-public class TaplWidgetPickerTest extends AbstractLauncherUiTest<Launcher> {
+public class WidgetPickerTest extends BaseLauncherActivityTest<Launcher> {
+
+    @Rule
+    public TestRule screenRecordRule = new ScreenRecordRule();
 
     private WidgetsRecyclerView getWidgetsView(Launcher launcher) {
         return WidgetsFullSheet.getWidgetsView(launcher);
@@ -56,30 +62,21 @@ public class TaplWidgetPickerTest extends AbstractLauncherUiTest<Launcher> {
     @ScreenRecord
     @PortraitLandscape
     public void testWidgets() {
-        mLauncher.goHome();
+        loadLauncherSync();
         // Test opening widgets.
         executeOnLauncher(launcher ->
                 assertTrue("Widgets is initially opened", getWidgetsView(launcher) == null));
-        Widgets widgets = mLauncher.getWorkspace().openAllWidgets();
-        assertNotNull("openAllWidgets() returned null", widgets);
-        widgets = mLauncher.getAllWidgets();
+        assertNotNull("openAllWidgets() returned null",
+                getFromLauncher(OptionsPopupView::openWidgets));
+        WidgetsRecyclerView widgets = getFromLauncher(this::getWidgetsView);
         assertNotNull("getAllWidgets() returned null", widgets);
-        executeOnLauncher(launcher ->
-                assertTrue("Widgets is not shown", getWidgetsView(launcher).isShown()));
+        executeOnLauncher(launcher -> assertTrue("Widgets is not shown", widgets.isShown()));
         executeOnLauncher(launcher -> assertEquals("Widgets is scrolled upon opening",
                 0, getWidgetsScroll(launcher)));
 
-        // Test flinging widgets.
-        widgets.flingForward();
-        Integer flingForwardY = getFromLauncher(launcher -> getWidgetsScroll(launcher));
-        executeOnLauncher(launcher -> assertTrue("Flinging forward didn't scroll widgets",
-                flingForwardY > 0));
+        executeOnLauncher(AbstractFloatingView::closeAllOpenViews);
+        uiDevice.waitForIdle();
 
-        widgets.flingBackward();
-        executeOnLauncher(launcher -> assertTrue("Flinging backward didn't scroll widgets",
-                getWidgetsScroll(launcher) < flingForwardY));
-
-        mLauncher.goHome();
         waitForLauncherCondition("Widgets were not closed",
                 launcher -> getWidgetsView(launcher) == null);
     }

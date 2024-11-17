@@ -295,8 +295,11 @@ public class WidgetsFullSheet extends BaseWidgetSheet
     }
 
     private void attachScrollbarToRecyclerView(WidgetsRecyclerView recyclerView) {
-        recyclerView.bindFastScrollbar(mFastScroller, WIDGET_SCROLLER);
         if (mCurrentWidgetsRecyclerView != recyclerView) {
+            // Bind scrollbar if changing the recycler view. If widgets list updates, since
+            // scrollbar is already attached to the recycler view, it will automatically adjust as
+            // needed with recycler view's onScrollListener.
+            recyclerView.bindFastScrollbar(mFastScroller, WIDGET_SCROLLER);
             // Only reset the scroll position & expanded apps if the currently shown recycler view
             // has been updated.
             reset();
@@ -605,9 +608,12 @@ public class WidgetsFullSheet extends BaseWidgetSheet
             mAdapters.get(AdapterHolder.SEARCH).mWidgetsRecyclerView.setVisibility(GONE);
             mAdapters.get(getCurrentAdapterHolderType()).mWidgetsRecyclerView.setVisibility(
                     VISIBLE);
-            // Visibility of recommended widgets, recycler views and headers are handled in methods
-            // below.
-            post(this::onRecommendedWidgetsBound);
+            if (mRecommendedWidgetsCount > 0) {
+                // Display recommendations immediately, if present, so that other parts of sticky
+                // header (e.g. personal / work tabs) don't flash in interim.
+                mWidgetRecommendationsContainer.setVisibility(VISIBLE);
+            }
+            // Visibility of recycler views and headers are handled in methods below.
             onWidgetsBound();
         }
     }

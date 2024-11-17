@@ -139,18 +139,42 @@ public final class KeyboardQuickSwitchController implements
             @NonNull Set<Integer> taskIdsToExclude,
             boolean wasOpenedFromTaskbar) {
         if (mQuickSwitchViewController != null) {
-            if (!mQuickSwitchViewController.isCloseAnimationRunning()
-                    && mQuickSwitchViewController.wasOpenedFromTaskbar() == wasOpenedFromTaskbar) {
-                return;
-            }
+            if (!mQuickSwitchViewController.isCloseAnimationRunning()) {
+                if (mQuickSwitchViewController.wasOpenedFromTaskbar() == wasOpenedFromTaskbar) {
+                    return;
+                }
 
-            // Allow the KQS to be reopened during the close animation to make it more responsive.
-            // Similarly, if KQS was opened in different mode (from taskbar vs. keyboard event),
-            // close it so it can be reopened in the correct mode.
-            // TODO(b/368119679) Consider updating list of shown tasks in place, or at least reopen
-            // the view in the same vertical location.
-            closeQuickSwitchView(false);
+                // Relayout the KQS view instead of recreating a new one if it is the current
+                // trigger surface is different than the previous one.
+                final int currentFocusIndexOverride =
+                        currentFocusedIndex == -1 && !mControllerCallbacks.isFirstTaskRunning()
+                                ? 0 : currentFocusedIndex;
+
+                // Skip the task reload if the list is not changed.
+                if (!mModel.isTaskListValid(mTaskListChangeId) || !taskIdsToExclude.equals(
+                        mExcludedTaskIds)) {
+                    mExcludedTaskIds = taskIdsToExclude;
+                    mTaskListChangeId = mModel.getTasks((tasks) -> {
+                        processLoadedTasks(tasks, taskIdsToExclude);
+                        mQuickSwitchViewController.updateQuickSwitchView(
+                                mTasks,
+                                mNumHiddenTasks,
+                                currentFocusIndexOverride,
+                                mHasDesktopTask,
+                                mWasDesktopTaskFilteredOut);
+                    });
+                }
+
+                mQuickSwitchViewController.updateLayoutForSurface(wasOpenedFromTaskbar,
+                        currentFocusIndexOverride);
+                return;
+            } else {
+                // Allow the KQS to be reopened during the close animation to make it more
+                // responsive.
+                closeQuickSwitchView(false);
+            }
         }
+
         mOverlayContext = mControllers.taskbarOverlayController.requestWindow();
         if (Flags.taskbarOverflow()) {
             mOverlayContext.getDragLayer().addTouchController(this);
@@ -186,13 +210,7 @@ public final class KeyboardQuickSwitchController implements
 
         mExcludedTaskIds = taskIdsToExclude;
         mTaskListChangeId = mModel.getTasks((tasks) -> {
-            mHasDesktopTask = false;
-            mWasDesktopTaskFilteredOut = false;
-            if (onDesktop) {
-                processLoadedTasksOnDesktop(tasks, taskIdsToExclude);
-            } else {
-                processLoadedTasks(tasks, taskIdsToExclude);
-            }
+            processLoadedTasks(tasks, taskIdsToExclude);
             // Check if the first task is running after the recents model has updated so that we use
             // the correct index.
             mQuickSwitchViewController.openQuickSwitchView(
@@ -213,6 +231,17 @@ public final class KeyboardQuickSwitchController implements
     }
 
     private void processLoadedTasks(List<GroupTask> tasks, Set<Integer> taskIdsToExclude) {
+        mHasDesktopTask = false;
+        mWasDesktopTaskFilteredOut = false;
+        if (mControllers.taskbarDesktopModeController.getAreDesktopTasksVisible()) {
+            processLoadedTasksOnDesktop(tasks, taskIdsToExclude);
+        } else {
+            processLoadedTasksOutsideDesktop(tasks, taskIdsToExclude);
+        }
+    }
+
+    private void processLoadedTasksOutsideDesktop(List<GroupTask> tasks,
+            Set<Integer> taskIdsToExclude) {
         // Only store MAX_TASK tasks, from most to least recent
         Collections.reverse(tasks);
         mTasks = tasks.stream()

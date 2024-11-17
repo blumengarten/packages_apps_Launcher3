@@ -163,6 +163,8 @@ public class SplitSelectStateController {
      */
     private Pair<InstanceId, com.android.launcher3.logging.InstanceId> mSessionInstanceIds;
 
+    private boolean mIsDestroyed = false;
+
     private final BackPressHandler mSplitBackHandler = new BackPressHandler() {
         @Override
         public boolean canHandleBack() {
@@ -199,6 +201,7 @@ public class SplitSelectStateController {
 
     public void onDestroy() {
         mContainer = null;
+        mIsDestroyed = true;
         mActivityBackCallback = null;
         mAppPairsController.onDestroy();
         mSplitSelectDataHolder.onDestroy();
@@ -744,7 +747,9 @@ public class SplitSelectStateController {
      */
     public void resetState() {
         mSplitSelectDataHolder.resetState();
-        mContainer.<RecentsView>getOverviewPanel().resetDesktopTaskFromSplitSelectState();
+        if (!mIsDestroyed) {
+            mContainer.<RecentsView>getOverviewPanel().resetDesktopTaskFromSplitSelectState();
+        }
         dispatchOnSplitSelectionExit();
         mRecentsAnimationRunning = false;
         mLaunchingTaskView = null;

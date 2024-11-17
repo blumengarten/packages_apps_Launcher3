@@ -847,6 +847,8 @@ public abstract class RecentsView<
     private final RecentsViewModelHelper mHelper;
     private final RecentsViewUtils mUtils = new RecentsViewUtils();
 
+    private final Matrix mTmpMatrix = new Matrix();
+
     public RecentsView(Context context, @Nullable AttributeSet attrs, int defStyleAttr,
             BaseContainerInterface sizeStrategy) {
         super(context, attrs, defStyleAttr);
@@ -1966,7 +1968,7 @@ public abstract class RecentsView<
                     // We try to avoid this because it can cause a scroll jump, but it is needed
                     // for cases where the running task isn't included in this load plan (e.g. if
                     // the current running task is excludedFromRecents.)
-                    showCurrentTask(mActiveGestureRunningTasks);
+                    showCurrentTask(mActiveGestureRunningTasks, "applyLoadPlan");
                 } else {
                     setRunningTaskViewId(INVALID_TASK_ID);
                 }
@@ -2749,7 +2751,7 @@ public abstract class RecentsView<
             updateSizeAndPadding();
         }
 
-        showCurrentTask(mActiveGestureRunningTasks);
+        showCurrentTask(mActiveGestureRunningTasks, "onGestureAnimationStart");
         setEnableFreeScroll(false);
         setEnableDrawingLiveTile(false);
         setRunningTaskHidden(true);
@@ -2930,8 +2932,9 @@ public abstract class RecentsView<
      * All subsequent calls to reload will keep the task as the first item until {@link #reset()}
      * is called.  Also scrolls the view to this task.
      */
-    private void showCurrentTask(Task[] runningTasks) {
-        Log.d(TAG, "showCurrentTask - runningTasks: " + Arrays.toString(runningTasks));
+    private void showCurrentTask(Task[] runningTasks, String caller) {
+        Log.d(TAG, "showCurrentTask(" + caller + ") - runningTasks: "
+                + Arrays.toString(runningTasks));
         if (runningTasks.length == 0) {
             return;
         }
@@ -3694,30 +3697,42 @@ public abstract class RecentsView<
         int currentPageScroll = getScrollForPage(mCurrentPage);
         int lastGridTaskScroll = getScrollForPage(indexOfChild(lastGridTaskView));
         boolean currentPageSnapsToEndOfGrid = currentPageScroll == lastGridTaskScroll;
+
+        int topGridRowSize = mTopRowIdSet.size();
+        int numLargeTiles = mUtils.getLargeTileCount(getTaskViews());
+        int bottomGridRowSize = taskCount - mTopRowIdSet.size() - numLargeTiles;
+        boolean topRowLonger = topGridRowSize > bottomGridRowSize;
+        boolean bottomRowLonger = bottomGridRowSize > topGridRowSize;
+        boolean dismissedTaskFromTop = mTopRowIdSet.contains(dismissedTaskViewId);
+        boolean dismissedTaskFromBottom = !dismissedTaskFromTop && !isFocusedTaskDismissed;
+        if (dismissedTaskFromTop || (isFocusedTaskDismissed && nextFocusedTaskFromTop)) {
+            topGridRowSize--;
+        }
+        if (dismissedTaskFromBottom || (isFocusedTaskDismissed && !nextFocusedTaskFromTop)) {
+            bottomGridRowSize--;
+        }
+        int longRowWidth = Math.max(topGridRowSize, bottomGridRowSize)
+                * (mLastComputedGridTaskSize.width() + mPageSpacing);
+        if (!enableGridOnlyOverview() && !isStagingFocusedTask) {
+            longRowWidth += mLastComputedTaskSize.width() + mPageSpacing;
+        }
+        // Compensate the removed gap if we don't already have shortTotalCompensation,
+        // and adjust accordingly to the new shortTotalCompensation after dismiss.
+        int newClearAllShortTotalWidthTranslation = 0;
+        if (mClearAllShortTotalWidthTranslation == 0) {
+            // If first task is not in the expected position (mLastComputedTaskSize) and being too
+            // close  to ClearAllButton, then apply extra translation to ClearAllButton.
+            int firstTaskStart = mLastComputedGridSize.left + longRowWidth;
+            int expectedFirstTaskStart = mLastComputedTaskSize.right;
+            if (firstTaskStart < expectedFirstTaskStart) {
+                newClearAllShortTotalWidthTranslation = expectedFirstTaskStart - firstTaskStart;
+            }
+        }
         if (lastGridTaskView != null && lastGridTaskView.isVisibleToUser()) {
             // After dismissal, animate translation of the remaining tasks to fill any gap left
             // between the end of the grid and the clear all button. Only animate if the clear
             // all button is visible or would become visible after dismissal.
             float longGridRowWidthDiff = 0;
-
-            int topGridRowSize = mTopRowIdSet.size();
-            int numLargeTiles = mUtils.getLargeTileCount(getTaskViews());
-            int bottomGridRowSize = taskCount - mTopRowIdSet.size() - numLargeTiles;
-            boolean topRowLonger = topGridRowSize > bottomGridRowSize;
-            boolean bottomRowLonger = bottomGridRowSize > topGridRowSize;
-            boolean dismissedTaskFromTop = mTopRowIdSet.contains(dismissedTaskViewId);
-            boolean dismissedTaskFromBottom = !dismissedTaskFromTop && !isFocusedTaskDismissed;
-            if (dismissedTaskFromTop || (isFocusedTaskDismissed && nextFocusedTaskFromTop)) {
-                topGridRowSize--;
-            }
-            if (dismissedTaskFromBottom || (isFocusedTaskDismissed && !nextFocusedTaskFromTop)) {
-                bottomGridRowSize--;
-            }
-            int longRowWidth = Math.max(topGridRowSize, bottomGridRowSize)
-                    * (mLastComputedGridTaskSize.width() + mPageSpacing);
-            if (!enableGridOnlyOverview() && !isStagingFocusedTask) {
-                longRowWidth += mLastComputedTaskSize.width() + mPageSpacing;
-            }
 
             float gapWidth = 0;
             if ((topRowLonger && dismissedTaskFromTop)
@@ -3730,17 +3745,6 @@ public abstract class RecentsView<
             }
             if (gapWidth > 0) {
                 if (mClearAllShortTotalWidthTranslation == 0) {
-                    // Compensate the removed gap if we don't already have shortTotalCompensation,
-                    // and adjust accordingly to the new shortTotalCompensation after dismiss.
-                    int newClearAllShortTotalWidthTranslation = 0;
-                    if (longRowWidth < mLastComputedGridSize.width()) {
-                        DeviceProfile deviceProfile = mContainer.getDeviceProfile();
-                        newClearAllShortTotalWidthTranslation =
-                                (mIsRtl
-                                        ? mLastComputedTaskSize.right
-                                        : deviceProfile.widthPx - mLastComputedTaskSize.left)
-                                        - longRowWidth - deviceProfile.overviewGridSideMargin;
-                    }
                     float gapCompensation = gapWidth - newClearAllShortTotalWidthTranslation;
                     longGridRowWidthDiff += mIsRtl ? -gapCompensation : gapCompensation;
                 }
@@ -3830,6 +3834,8 @@ public abstract class RecentsView<
                     : mUtils.getDesktopTaskViewCount(getTaskViews());
             stagingTranslation = getPagedOrientationHandler().getPrimaryScroll(this)
                     - getScrollForPage(nextSnappedPage);
+            stagingTranslation += mIsRtl ? newClearAllShortTotalWidthTranslation
+                    : -newClearAllShortTotalWidthTranslation;
         }
         for (int i = 0; i < count; i++) {
             View child = getChildAt(i);
@@ -3888,7 +3894,7 @@ public abstract class RecentsView<
                     anim.setFloat(taskView, TaskView.DISMISS_SCALE, scale,
                             clampToProgress(LINEAR, animationStartProgress,
                                     dismissTranslationInterpolationEnd));
-                    primaryTranslation += mIsRtl ? dismissedTaskWidth : -dismissedTaskWidth;
+                    primaryTranslation += dismissedTaskWidth;
                     animationEndProgress = dismissTranslationInterpolationEnd;
                     float secondaryTranslation = -mTaskGridVerticalDiff;
                     if (!nextFocusedTaskFromTop) {
@@ -5804,6 +5810,14 @@ public abstract class RecentsView<
         // mSyncTransactionApplier doesn't get transferred over
         runActionOnRemoteHandles(remoteTargetHandle -> {
             final TransformParams params = remoteTargetHandle.getTransformParams();
+            if (Flags.enableFallbackOverviewInWindow() || Flags.enableLauncherOverviewInWindow()) {
+                params.setHomeBuilderProxy((builder, app, transformParams) -> {
+                    mTmpMatrix.setScale(
+                            1f, 1f, app.localBounds.exactCenterX(), app.localBounds.exactCenterY());
+                    builder.setMatrix(mTmpMatrix).setAlpha(1f).setShow();
+                });
+            }
+
             if (mSyncTransactionApplier != null) {
                 params.setSyncTransactionApplier(mSyncTransactionApplier);
                 params.getTargetSet().addReleaseCheck(mSyncTransactionApplier);
@@ -5840,15 +5854,22 @@ public abstract class RecentsView<
      * Finish recents animation.
      */
     public void finishRecentsAnimation(boolean toRecents, @Nullable Runnable onFinishComplete) {
-        finishRecentsAnimation(toRecents, true /* shouldPip */, onFinishComplete);
+        finishRecentsAnimation(toRecents, false, true /* shouldPip */, onFinishComplete);
     }
 
+    /**
+     * Finish recents animation.
+     */
+    public void finishRecentsAnimation(boolean toRecents, boolean shouldPip,
+            @Nullable Runnable onFinishComplete) {
+        finishRecentsAnimation(toRecents, shouldPip, false, onFinishComplete);
+    }
     /**
      * NOTE: Whatever value gets passed through to the toRecents param may need to also be set on
      * {@link #mRecentsAnimationController#setWillFinishToHome}.
      */
     public void finishRecentsAnimation(boolean toRecents, boolean shouldPip,
-            @Nullable Runnable onFinishComplete) {
+            boolean allAppTargetsAreTranslucent, @Nullable Runnable onFinishComplete) {
         Log.d(TAG, "finishRecentsAnimation - mRecentsAnimationController: "
                 + mRecentsAnimationController);
         // TODO(b/197232424#comment#10) Move this back into onRecentsAnimationComplete(). Maybe?
@@ -5880,7 +5901,7 @@ public abstract class RecentsView<
                         tx, null /* overlay */);
             }
         }
-        mRecentsAnimationController.finish(toRecents, () -> {
+        mRecentsAnimationController.finish(toRecents, allAppTargetsAreTranslucent, () -> {
             if (onFinishComplete != null) {
                 onFinishComplete.run();
             }

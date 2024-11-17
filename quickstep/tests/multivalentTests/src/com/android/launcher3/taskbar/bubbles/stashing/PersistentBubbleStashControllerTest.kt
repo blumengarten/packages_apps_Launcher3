@@ -86,6 +86,20 @@ class PersistentBubbleStashControllerTest {
     }
 
     @Test
+    fun updateLauncherState_noBubbles_controllerNotified() {
+        // Given bubble bar has  no bubbles
+        whenever(bubbleBarViewController.hasBubbles()).thenReturn(false)
+
+        // When switch to home screen
+        getInstrumentation().runOnMainSync {
+            persistentTaskBarStashController.launcherState = BubbleLauncherState.HOME
+        }
+
+        // Then bubble bar view controller is notified
+        verify(bubbleBarViewController).onBubbleBarConfigurationChanged(/* animate= */ false)
+    }
+
+    @Test
     fun setBubblesShowingOnHomeUpdatedToFalse_barPositionYUpdated_controllersNotified() {
         // Given bubble bar is on home and has bubbles
         whenever(bubbleBarViewController.hasBubbles()).thenReturn(false)
@@ -281,6 +295,21 @@ class PersistentBubbleStashControllerTest {
         // Update insets when progress reaches 0
         persistentTaskBarStashController.inAppDisplayOverrideProgress = 0f
         verify(taskbarInsetsController).onTaskbarOrBubblebarWindowHeightOrInsetsChanged()
+    }
+
+    @Test
+    fun inAppDisplayOverrideProgress_onHome_cancelExistingAnimation() {
+        whenever(bubbleBarViewController.hasBubbles()).thenReturn(false)
+        persistentTaskBarStashController.launcherState = BubbleLauncherState.HOME
+
+        bubbleBarViewController.bubbleBarTranslationY.animateToValue(100f)
+        advanceTimeBy(10)
+        assertThat(bubbleBarViewController.bubbleBarTranslationY.isAnimating).isTrue()
+
+        getInstrumentation().runOnMainSync {
+            persistentTaskBarStashController.inAppDisplayOverrideProgress = 0.5f
+        }
+        assertThat(bubbleBarViewController.bubbleBarTranslationY.isAnimating).isFalse()
     }
 
     @Test

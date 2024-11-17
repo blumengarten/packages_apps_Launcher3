@@ -85,14 +85,18 @@ class TaskOverlayHelper(val task: Task, val overlay: TaskOverlayFactory.TaskOver
     }
 
     private fun initOverlay(enabledState: Enabled) {
-        Log.d(TAG, "initOverlay - taskId: ${task.key.id}, thumbnail: ${enabledState.thumbnail}")
+        if (DEBUG) {
+            Log.d(TAG, "initOverlay - taskId: ${task.key.id}, thumbnail: ${enabledState.thumbnail}")
+        }
         with(getThumbnailPositionState()) {
             overlay.initOverlay(task, enabledState.thumbnail, matrix, isRotated)
         }
     }
 
     private fun reset() {
-        Log.d(TAG, "reset - taskId: ${task.key.id}")
+        if (DEBUG) {
+            Log.d(TAG, "reset - taskId: ${task.key.id}")
+        }
         overlay.reset()
     }
 
@@ -105,5 +109,6 @@ class TaskOverlayHelper(val task: Task, val overlay: TaskOverlayFactory.TaskOver
 
     companion object {
         private const val TAG = "TaskOverlayHelper"
+        private const val DEBUG = false
     }
 }
