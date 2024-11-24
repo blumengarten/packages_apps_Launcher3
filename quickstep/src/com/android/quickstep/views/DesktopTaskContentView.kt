@@ -23,14 +23,15 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
-import com.android.quickstep.views.TaskView.FullscreenDrawParams
 
 class DesktopTaskContentView
 @JvmOverloads
 constructor(context: Context, attrs: AttributeSet? = null) : FrameLayout(context, attrs) {
-    private val currentFullscreenParams = FullscreenDrawParams(context)
-    private val taskCornerRadius: Float
-        get() = currentFullscreenParams.cornerRadius
+    var cornerRadius: Float = 0f
+        set(value) {
+            field = value
+            invalidateOutline()
+        }
 
     private val bounds = Rect()
 
@@ -39,7 +40,7 @@ constructor(context: Context, attrs: AttributeSet? = null) : FrameLayout(context
         outlineProvider =
             object : ViewOutlineProvider() {
                 override fun getOutline(view: View, outline: Outline) {
-                    outline.setRoundRect(bounds, taskCornerRadius)
+                    outline.setRoundRect(bounds, cornerRadius)
                 }
             }
     }

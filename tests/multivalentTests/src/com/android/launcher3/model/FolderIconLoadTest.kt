@@ -18,6 +18,7 @@ package com.android.launcher3.model
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.android.launcher3.LauncherAppState
+import com.android.launcher3.icons.BitmapInfo
 import com.android.launcher3.icons.waitForUpdateHandlerToFinish
 import com.android.launcher3.model.data.WorkspaceItemInfo
 import com.android.launcher3.util.Executors
@@ -160,6 +161,9 @@ class FolderIconLoadTest {
             assertWithMessage("Index $index was not highRes")
                 .that(items[index].bitmap.isNullOrLowRes)
                 .isFalse()
+            assertWithMessage("Index $index was the default icon")
+                .that(isDefaultIcon(items[index].bitmap))
+                .isFalse()
         }
     }
 
@@ -168,8 +172,16 @@ class FolderIconLoadTest {
             assertWithMessage("Index $index was not lowRes")
                 .that(items[index].bitmap.isNullOrLowRes)
                 .isTrue()
+            assertWithMessage("Index $index was the default icon")
+                .that(isDefaultIcon(items[index].bitmap))
+                .isFalse()
         }
     }
+
+    private fun isDefaultIcon(bitmap: BitmapInfo) =
+        LauncherAppState.getInstance(modelHelper.sandboxContext)
+            .iconCache
+            .isDefaultIcon(bitmap, modelHelper.sandboxContext.user)
 
     /** Recreate DeviceProfiles after changing InvariantDeviceProfile */
     private fun recreateSupportedDeviceProfiles() {

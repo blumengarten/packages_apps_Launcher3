@@ -1833,7 +1833,8 @@ public class DeviceProfile {
                         workspacePageIndicatorHeight - mWorkspacePageIndicatorOverlapWorkspace;
             }
             int paddingTop = workspaceTopPadding + (mIsScalableGrid ? 0 : edgeMarginPx);
-            int paddingSide = desiredWorkspaceHorizontalMarginPx;
+            // On isFixedLandscapeMode on phones we already have padding because of the camera hole
+            int paddingSide = inv.isFixedLandscapeMode ? 0 : desiredWorkspaceHorizontalMarginPx;
 
             padding.set(paddingSide, paddingTop, paddingSide, paddingBottom);
         }
@@ -1941,10 +1942,8 @@ public class DeviceProfile {
             startSpacing += getAdditionalQsbSpace();
 
             if (inv.isFixedLandscapeMode) {
-                endSpacing += workspacePadding.right + cellLayoutPaddingPx.right
-                        + mInsets.right;
-                startSpacing += workspacePadding.left + cellLayoutPaddingPx.left
-                        + mInsets.left;
+                endSpacing += mInsets.right;
+                startSpacing +=  mInsets.left;
             }
 
             hotseatBarPadding.top = hotseatBarTopPadding;

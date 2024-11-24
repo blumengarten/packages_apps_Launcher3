@@ -71,6 +71,7 @@ import com.android.launcher3.util.PackageUserKey;
 
 import com.google.common.truth.Truth;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -97,6 +98,11 @@ public class IconCacheTest {
         mIconCache = new IconCache(mContext,
                 InvariantDeviceProfile.INSTANCE.get(mContext), null,
                 new LauncherIconProvider(mContext));
+    }
+
+    @After
+    public void tearDown() {
+        mIconCache.close();
     }
 
     @Test

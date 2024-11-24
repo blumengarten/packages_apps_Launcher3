@@ -109,6 +109,7 @@ public class LoaderCursorTest {
 
     @After
     public void tearDown() {
+        mCursor.close();
         mModelHelper.destroy();
     }
 

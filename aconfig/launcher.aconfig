@@ -501,10 +501,13 @@ flag {
 }
 
 flag {
-   name: "enforce_system_radius_for_app_widgets"
+   name: "use_system_radius_for_app_widgets"
    namespace: "launcher"
-   description: "Enforce system radius for widget corners instead of a separate 16.dp value"
-   bug: "370950552"
+   description: "Use system radius for enforced widget corners instead of a separate 16.dp value"
+   bug: "373351337"
+   metadata {
+    purpose: PURPOSE_BUGFIX
+  }
 }
 
 flag {

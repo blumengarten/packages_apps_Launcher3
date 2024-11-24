@@ -351,6 +351,11 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         OneShotPreDrawListener.add(mTaskbarView, listener);
     }
 
+    @VisibleForTesting
+    int getMaxNumIconViews() {
+        return mTaskbarView.getMaxNumIconViews();
+    }
+
     public Rect getIconLayoutVisualBounds() {
         return mTaskbarView.getIconLayoutVisualBounds();
     }

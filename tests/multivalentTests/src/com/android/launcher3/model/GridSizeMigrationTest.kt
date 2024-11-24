@@ -82,6 +82,7 @@ class GridSizeMigrationTest {
 
     @After
     fun tearDown() {
+        db.close()
         modelHelper.destroy()
     }
 

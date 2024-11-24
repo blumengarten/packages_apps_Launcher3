@@ -195,6 +195,16 @@ public class TaskbarUIController implements BubbleBarController.BubbleBarLocatio
         return true;
     }
 
+    public boolean isAnimatingToHotseat() {
+        return false;
+    }
+
+    /**
+     * Skips to the end of the animation to Hotseat - should only be used if
+     * {@link #isAnimatingToHotseat()} returns true.
+     */
+    public void endAnimationToHotseat() {}
+
     /** Returns {@code true} if Taskbar is currently within overview. */
     protected boolean isInOverviewUi() {
         return false;

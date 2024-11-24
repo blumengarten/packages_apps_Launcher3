@@ -66,11 +66,13 @@ class TaskThumbnailViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
         val di = RecentsDependencies.initialize(context)
         val taskThumbnailView =
             LayoutInflater.from(context).inflate(R.layout.task_thumbnail, null, false)
+                as TaskThumbnailView
+        taskThumbnailView.cornerRadius = CORNER_RADIUS
         val ttvDiScopeId = di.getScope(taskThumbnailView).scopeId
         di.provide(TaskThumbnailViewData::class.java, ttvDiScopeId) { TaskThumbnailViewData() }
         di.provide(TaskThumbnailViewModel::class.java, ttvDiScopeId) { taskThumbnailViewModel }
 
-        return taskThumbnailView as TaskThumbnailView
+        return taskThumbnailView
     }
 
     companion object {
@@ -82,5 +84,7 @@ class TaskThumbnailViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
                 isDarkTheme = false,
                 isLandscape = false,
             )
+
+        const val CORNER_RADIUS = 56f
     }
 }

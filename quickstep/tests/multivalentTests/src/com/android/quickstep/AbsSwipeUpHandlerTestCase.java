@@ -17,6 +17,7 @@
 package com.android.quickstep;
 
 import static com.android.quickstep.AbsSwipeUpHandler.STATE_HANDLER_INVALIDATED;
+import static com.android.wm.shell.shared.ShellSharedConstants.KEY_EXTRA_SHELL_CAN_HAND_OFF_ANIMATION;
 
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
@@ -28,6 +29,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -40,6 +42,9 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.platform.test.annotations.DisableFlags;
+import android.platform.test.annotations.EnableFlags;
+import android.platform.test.flag.junit.SetFlagsRule;
 import android.view.RemoteAnimationTarget;
 import android.view.SurfaceControl;
 import android.view.ViewTreeObserver;
@@ -58,6 +63,7 @@ import com.android.quickstep.fallback.window.RecentsWindowManager;
 import com.android.quickstep.util.ContextInitListener;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
+import com.android.systemui.shared.Flags;
 import com.android.systemui.shared.system.InputConsumerController;
 
 import org.junit.Before;
@@ -103,14 +109,8 @@ public abstract class AbsSwipeUpHandlerTestCase<
             /* startBounds= */ null,
             /* taskInfo= */ mRunningTaskInfo,
             /* allowEnterPip= */ false);
-    protected final RecentsAnimationTargets mRecentsAnimationTargets = new RecentsAnimationTargets(
-            new RemoteAnimationTarget[] {mRemoteAnimationTarget},
-            new RemoteAnimationTarget[] {mRemoteAnimationTarget},
-            new RemoteAnimationTarget[] {mRemoteAnimationTarget},
-            /* homeContentInsets= */ new Rect(),
-            /* minimizedHomeBounds= */ null,
-            new Bundle());
 
+    protected RecentsAnimationTargets mRecentsAnimationTargets;
     protected TaskAnimationManager mTaskAnimationManager;
     protected RecentsAnimationDeviceState mRecentsAnimationDeviceState;
 
@@ -126,6 +126,22 @@ public abstract class AbsSwipeUpHandlerTestCase<
 
     @Rule
     public final MockitoRule mMockitoRule = MockitoJUnit.rule();
+
+    @Rule
+    public final SetFlagsRule mSetFlagsRule = new SetFlagsRule();
+
+    @Before
+    public void setUpAnimationTargets() {
+        Bundle extras = new Bundle();
+        extras.putBoolean(KEY_EXTRA_SHELL_CAN_HAND_OFF_ANIMATION, true);
+        mRecentsAnimationTargets = new RecentsAnimationTargets(
+                new RemoteAnimationTarget[] {mRemoteAnimationTarget},
+                new RemoteAnimationTarget[] {mRemoteAnimationTarget},
+                new RemoteAnimationTarget[] {mRemoteAnimationTarget},
+                /* homeContentInsets= */ new Rect(),
+                /* minimizedHomeBounds= */ null,
+                extras);
+    }
 
     @Before
     public void setUpRunningTaskInfo() {
@@ -233,6 +249,30 @@ public abstract class AbsSwipeUpHandlerTestCase<
 
         runOnMainSync(() -> {
             verify(mRecentsAnimationController).detachNavigationBarFromApp(true);
+            verifyRecentsAnimationFinishedAndCallCallback();
+        });
+    }
+
+    @EnableFlags({Flags.FLAG_RETURN_ANIMATION_FRAMEWORK_LIBRARY,
+            Flags.FLAG_RETURN_ANIMATION_FRAMEWORK_LONG_LIVED})
+    @Test
+    public void testHomeGesture_handsOffAnimation() {
+        createSwipeUpHandlerForGesture(GestureState.GestureEndTarget.HOME);
+
+        runOnMainSync(() -> {
+            verify(mRecentsAnimationController).handOffAnimation(any(), any());
+            verifyRecentsAnimationFinishedAndCallCallback();
+        });
+    }
+
+    @DisableFlags({Flags.FLAG_RETURN_ANIMATION_FRAMEWORK_LIBRARY,
+            Flags.FLAG_RETURN_ANIMATION_FRAMEWORK_LONG_LIVED})
+    @Test
+    public void testHomeGesture_doesNotHandOffAnimation_withFlagsDisabled() {
+        createSwipeUpHandlerForGesture(GestureState.GestureEndTarget.HOME);
+
+        runOnMainSync(() -> {
+            verify(mRecentsAnimationController, never()).handOffAnimation(any(), any());
             verifyRecentsAnimationFinishedAndCallCallback();
         });
     }

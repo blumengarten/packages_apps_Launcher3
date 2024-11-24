@@ -89,7 +89,6 @@ public class BubbleControllers {
                 );
         bubbleBarController.init(this,
                 bubbleBarLocationListeners,
-                taskbarControllers.navbarButtonsViewController::isImeVisible,
                 taskbarSharedState);
         bubbleStashedHandleViewController.ifPresent(
                 controller -> controller.init(/* bubbleControllers = */ this));

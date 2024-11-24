@@ -582,7 +582,9 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         int windowFlags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                 | WindowManager.LayoutParams.FLAG_SLIPPERY
                 | WindowManager.LayoutParams.FLAG_SPLIT_TOUCH;
-        if (DisplayController.isTransientTaskbar(this) && !isRunningInTestHarness()) {
+        boolean watchOutside = DisplayController.isTransientTaskbar(this)
+                || isThreeButtonNav();
+        if (watchOutside && !isRunningInTestHarness()) {
             windowFlags |= WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                     | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
         }

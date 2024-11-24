@@ -56,9 +56,11 @@ import static com.android.quickstep.GestureState.STATE_RECENTS_ANIMATION_CANCELE
 import static com.android.quickstep.GestureState.STATE_RECENTS_ANIMATION_STARTED;
 import static com.android.quickstep.GestureState.STATE_RECENTS_SCROLLING_FINISHED;
 import static com.android.quickstep.MultiStateCallback.DEBUG_STATES;
+import static com.android.quickstep.TaskViewUtils.extractTargetsAndStates;
 import static com.android.quickstep.util.ActiveGestureErrorDetector.GestureEvent.EXPECTING_TASK_APPEARED;
 import static com.android.quickstep.views.RecentsView.UPDATE_SYSUI_FLAGS_THRESHOLD;
 import static com.android.systemui.shared.system.ActivityManagerWrapper.CLOSE_SYSTEM_WINDOWS_REASON_RECENTS;
+import static com.android.wm.shell.shared.ShellSharedConstants.KEY_EXTRA_SHELL_CAN_HAND_OFF_ANIMATION;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -77,6 +79,7 @@ import android.graphics.RectF;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.util.Log;
+import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.RemoteAnimationTarget;
 import android.view.SurfaceControl;
@@ -90,6 +93,7 @@ import android.view.animation.Interpolator;
 import android.widget.Toast;
 import android.window.DesktopModeFlags;
 import android.window.PictureInPictureSurfaceTransaction;
+import android.window.WindowAnimationState;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -143,6 +147,7 @@ import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
 import com.android.quickstep.views.TaskContainer;
 import com.android.quickstep.views.TaskView;
+import com.android.systemui.animation.TransitionAnimator;
 import com.android.systemui.contextualeducation.GestureType;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.recents.model.ThumbnailData;
@@ -152,9 +157,12 @@ import com.android.systemui.shared.system.InteractionJankMonitorWrapper;
 import com.android.systemui.shared.system.SysUiStatsLog;
 import com.android.systemui.shared.system.TaskStackChangeListener;
 import com.android.systemui.shared.system.TaskStackChangeListeners;
+import com.android.wm.shell.Flags;
 import com.android.wm.shell.shared.TransactionPool;
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 import com.android.wm.shell.shared.startingsurface.SplashScreenExitAnimationUtils;
+
+import kotlin.Unit;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -164,8 +172,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Consumer;
-
-import kotlin.Unit;
 
 /**
  * Handles the navigation gestures when Launcher is the default home activity.
@@ -347,6 +353,9 @@ public abstract class AbsSwipeUpHandler<
     // Indicates whether the divider is shown, only used when split screen is activated.
     private boolean mIsDividerShown = true;
     private boolean mStartMovingTasks;
+    // Whether the animation to home should be handed off to another handler once the gesture is
+    // committed.
+    protected boolean mHandOffAnimationToHome = false;
 
     @Nullable
     private RemoteAnimationTargets.ReleaseCheck mSwipePipToHomeReleaseCheck = null;
@@ -775,7 +784,7 @@ public abstract class AbsSwipeUpHandler<
                 && recentsAttachedToAppWindow) {
             // Only move running task if RecentsView has never been attached before, to avoid
             // TaskView jumping to new position as we move the tasks.
-            mRecentsView.moveRunningTaskToFront();
+            mRecentsView.moveRunningTaskToExpectedPosition();
         }
         mAnimationFactory.setRecentsAttachedToAppWindow(
                 recentsAttachedToAppWindow, animate, updateRunningTaskAlpha);
@@ -945,6 +954,10 @@ public abstract class AbsSwipeUpHandler<
         mSwipePipToHomeReleaseCheck = new RemoteAnimationTargets.ReleaseCheck();
         mSwipePipToHomeReleaseCheck.setCanRelease(true);
         mRecentsAnimationTargets.addReleaseCheck(mSwipePipToHomeReleaseCheck);
+        if (TransitionAnimator.Companion.longLivedReturnAnimationsEnabled()) {
+            mHandOffAnimationToHome =
+                    targets.extras.getBoolean(KEY_EXTRA_SHELL_CAN_HAND_OFF_ANIMATION, false);
+        }
 
         // Only initialize the device profile, if it has not been initialized before, as in some
         // configurations targets.homeContentInsets may not be correct.
@@ -1629,6 +1642,10 @@ public abstract class AbsSwipeUpHandler<
                 }
                 windowAnim = createWindowAnimationToHome(start, homeAnimFactory);
 
+                if (mHandOffAnimationToHome) {
+                    handOffAnimation(velocityPxPerMs);
+                }
+
                 windowAnim[0].addAnimatorListener(new AnimationSuccessListener() {
                     @Override
                     public void onAnimationSuccess(Animator animator) {
@@ -1709,6 +1726,19 @@ public abstract class AbsSwipeUpHandler<
             animatorSet.start();
             mRunningWindowAnim = new RunningWindowAnim[]{RunningWindowAnim.wrap(animatorSet)};
         }
+    }
+
+    private void handOffAnimation(PointF velocityPxPerMs) {
+        if (!TransitionAnimator.Companion.longLivedReturnAnimationsEnabled()
+                || mRecentsAnimationController == null) {
+            return;
+        }
+
+        Pair<RemoteAnimationTarget[], WindowAnimationState[]> targetsAndStates =
+                extractTargetsAndStates(mRemoteTargetHandles, velocityPxPerMs);
+        mRecentsAnimationController.handOffAnimation(
+                targetsAndStates.first, targetsAndStates.second);
+        ActiveGestureProtoLogProxy.logHandOffAnimation();
     }
 
     private int calculateWindowRotation(RemoteAnimationTarget runningTaskTarget,
@@ -2176,8 +2206,9 @@ public abstract class AbsSwipeUpHandler<
                     mSwipePipToHomeAnimator.getFinishTransaction(),
                     mSwipePipToHomeAnimator.getContentOverlay());
             mIsSwipingPipToHome = false;
-        } else if (mIsSwipeForSplit) {
+        } else if (mIsSwipeForSplit && !Flags.enablePip2()) {
             // Transaction to hide the task to avoid flicker for entering PiP from split-screen.
+            // Note: PiP2 handles entering differently, so skip if enable_pip2=true
             PictureInPictureSurfaceTransaction tx =
                     new PictureInPictureSurfaceTransaction.Builder()
                             .setAlpha(0f)

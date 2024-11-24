@@ -38,6 +38,8 @@ import static com.android.quickstep.util.ActiveGestureErrorDetector.GestureEvent
 import static com.android.quickstep.util.ActiveGestureErrorDetector.GestureEvent.START_RECENTS_ANIMATION;
 import static com.android.quickstep.util.QuickstepProtoLogGroup.ACTIVE_GESTURE_LOG;
 
+import android.graphics.Point;
+import android.graphics.RectF;
 import android.view.MotionEvent;
 
 import androidx.annotation.NonNull;
@@ -94,6 +96,12 @@ public class ActiveGestureProtoLogProxy {
         if (!enableActiveGestureProtoLog()) return;
         ProtoLog.d(ACTIVE_GESTURE_LOG, "AbsSwipeUpHandler.onTasksAppeared: "
                 + "force finish recents animation complete; clearing state callback.");
+    }
+
+    public static void logHandOffAnimation() {
+        ActiveGestureLog.INSTANCE.addLog("AbsSwipeUpHandler.handOffAnimation");
+        if (!enableActiveGestureProtoLog()) return;
+        ProtoLog.d(ACTIVE_GESTURE_LOG, "AbsSwipeUpHandler.handOffAnimation");
     }
 
     public static void logFinishRecentsAnimationOnTasksAppeared() {
@@ -498,5 +506,17 @@ public class ActiveGestureProtoLogProxy {
                 "Forcefully finishing recents animation: Unexpected task appeared id=%d, pkg=%s",
                 taskId,
                 packageName);
+    }
+
+    public static void logCreateTouchRegionForDisplay(int displayRotation,
+            @NonNull Point displaySize, @NonNull RectF swipeRegion, @NonNull RectF ohmRegion,
+            int gesturalHeight, int largerGesturalHeight, @NonNull String reason) {
+        if (!enableActiveGestureProtoLog()) return;
+        ProtoLog.d(ACTIVE_GESTURE_LOG, 
+                "OrientationTouchTransformer.createRegionForDisplay: "
+                        + "dispRot=%d, dispSize=%s, swipeRegion=%s, ohmRegion=%s, "
+                        + "gesturalHeight=%d, largerGesturalHeight=%d, reason=%s",
+                displayRotation, displaySize.flattenToString(), swipeRegion.toShortString(),
+                ohmRegion.toShortString(), gesturalHeight, largerGesturalHeight, reason);
     }
 }

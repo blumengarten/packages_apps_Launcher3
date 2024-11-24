@@ -32,6 +32,8 @@
     <string name="split_app_info_accessibility" msgid="5475288491241414932">"%1$s का हकमा एपसम्बन्धी जानकारी"</string>
     <string name="split_app_usage_settings" msgid="7214375263347964093">"%1$s को प्रयोगसम्बन्धी सेटिङ"</string>
     <string name="new_window_option_taskbar" msgid="6448780542727767211">"नयाँ विन्डो"</string>
+    <!-- no translation found for manage_windows_option_taskbar (2294109489960654212) -->
+    <skip />
     <string name="save_app_pair" msgid="5647523853662686243">"एपको पेयर सेभ गर्नुहोस्"</string>
     <string name="app_pair_default_title" msgid="4045241727446873529">"<xliff:g id="APP1">%1$s</xliff:g> | <xliff:g id="APP2">%2$s</xliff:g>"</string>
     <string name="app_pair_unlaunchable_at_screen_size" msgid="3446551575502685376">"यस डिभाइसमा यो एप पेयर प्रयोग गर्न मिल्दैन"</string>
@@ -69,12 +71,9 @@
     <string name="widget_category_note_taking" msgid="3469689394504266039">"नोट लेख्ने कार्य"</string>
     <string name="widget_add_button_label" msgid="2761267068711937179">"हाल्नुहोस्"</string>
     <string name="widget_add_button_content_description" msgid="1810530016360039643">"<xliff:g id="WIDGET_NAME">%1$s</xliff:g> विजेट हाल्नुहोस्"</string>
-    <!-- no translation found for widgets_list_expand_button_label (7912016136574932622) -->
-    <skip />
-    <!-- no translation found for widgets_list_expand_button_content_description (4600513860973450888) -->
-    <skip />
-    <!-- no translation found for widgets_list_expanded (7374857868788557730) -->
-    <skip />
+    <string name="widgets_list_expand_button_label" msgid="7912016136574932622">"सबै देखाउनुहोस्"</string>
+    <string name="widgets_list_expand_button_content_description" msgid="4600513860973450888">"सबै विजेटहरू देखाउनुहोस्"</string>
+    <string name="widgets_list_expanded" msgid="7374857868788557730">"सबै विजेटहरू देखाइँदै छन्"</string>
     <string name="reconfigurable_widget_education_tip" msgid="6336962690888067057">"विजेटका सेटिङ बदल्न ट्याप गर्नुहोस्"</string>
     <string name="widget_reconfigure_button_content_description" msgid="8811472721881205250">"विजेटका सेटिङ बदल्नुहोस्"</string>
     <string name="all_apps_search_bar_hint" msgid="1390553134053255246">"एपहरू खोज्नुहोस्"</string>
@@ -130,10 +129,8 @@
     <string name="msg_disabled_by_admin" msgid="6898038085516271325">"तपाईँको प्रशासकद्वारा असक्षम गरिएको"</string>
     <string name="allow_rotation_title" msgid="7222049633713050106">"होम स्क्रिन रोटेट हुन दिइयोस्"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"फोन घुमाउँदा"</string>
-    <!-- no translation found for landscape_mode_title (5138814555934843926) -->
-    <skip />
-    <!-- no translation found for landscape_mode_desc (7372569859592816793) -->
-    <skip />
+    <string name="landscape_mode_title" msgid="5138814555934843926">"ल्यान्डस्केप मोड"</string>
+    <string name="landscape_mode_desc" msgid="7372569859592816793">"फोनमा ल्यान्डस्केप मोड अन गर्नुहोस्"</string>
     <string name="notification_dots_title" msgid="9062440428204120317">"नोटिफिकेसन डट"</string>
     <string name="notification_dots_desc_on" msgid="1679848116452218908">"सक्रिय"</string>
     <string name="notification_dots_desc_off" msgid="1760796511504341095">"निष्क्रिय"</string>
@@ -198,8 +195,7 @@
     <string name="work_apps_paused_edu_accept" msgid="6377476824357318532">"बुझेँ"</string>
     <string name="work_apps_pause_btn_text" msgid="4669288269140620646">"कामसम्बन्धी एपहरू पज गर्नुहोस्"</string>
     <string name="work_apps_enable_btn_text" msgid="1736198302467317371">"सुचारु गर्नुहोस्"</string>
-    <!-- no translation found for work_scheduler_button_content_description (917340740986764967) -->
-    <skip />
+    <string name="work_scheduler_button_content_description" msgid="917340740986764967">"कामसम्बन्धी एपहरूको समयतालिका"</string>
     <string name="developer_options_filter_hint" msgid="5896817443635989056">"फिल्टर"</string>
     <string name="remote_action_failed" msgid="1383965239183576790">"कार्य पूरा गर्न सकिएन: <xliff:g id="WHAT">%1$s</xliff:g>"</string>
     <string name="private_space_label" msgid="2359721649407947001">"निजी स्पेस"</string>

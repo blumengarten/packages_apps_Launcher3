@@ -74,7 +74,7 @@ public class WorkProfileManager extends UserProfileManager
      */
     public void setWorkProfileEnabled(boolean enabled) {
         updateCurrentState(STATE_TRANSITION);
-        setQuietMode(!enabled);
+        setQuietMode(!enabled, mAllApps.mActivityContext);
     }
 
     @Override

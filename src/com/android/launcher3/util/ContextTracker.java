@@ -35,7 +35,7 @@ public abstract class ContextTracker<CONTEXT extends ActivityContext> {
     private static final String TAG = "ContextTracker";
 
     private WeakReference<CONTEXT> mCurrentContext = new WeakReference<>(null);
-    private CopyOnWriteArrayList<SchedulerCallback<CONTEXT>> mCallbacks =
+    private final CopyOnWriteArrayList<SchedulerCallback<CONTEXT>> mCallbacks =
             new CopyOnWriteArrayList<>();
 
     @Nullable
@@ -81,7 +81,7 @@ public abstract class ContextTracker<CONTEXT extends ActivityContext> {
 
     public boolean handleCreate(CONTEXT context) {
         mCurrentContext = new WeakReference<>(context);
-        return handleCreate(context, /* alreadyOnHome= */ false);
+        return handleCreate(context, isHomeStarted(context));
     }
 
     public boolean handleNewIntent(CONTEXT context) {

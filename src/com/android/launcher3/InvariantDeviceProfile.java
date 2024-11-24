@@ -651,14 +651,14 @@ public class InvariantDeviceProfile implements SafeCloseable {
     }
 
     /**
-     * Parses through the xml to find NumRows specs. Then calls findBestRowCount to get the correct
-     * row count for this GridOption.
+     * Parses through the xml to find GridDimension specs. Then calls findBestRowCount to get the
+     * correct row count for this GridOption.
      *
      * @return the result of {@link #findBestRowCount(List, Info)}.
      */
-    public static NumRows getRowCount(ResourceHelper resourceHelper, Context context,
+    public static GridDimension getRowCount(ResourceHelper resourceHelper, Context context,
             Info displayInfo) {
-        ArrayList<NumRows> rowCounts = new ArrayList<>();
+        ArrayList<GridDimension> rowCounts = new ArrayList<>();
 
         try (XmlResourceParser parser = resourceHelper.getXml()) {
             final int depth = parser.getDepth();
@@ -666,8 +666,8 @@ public class InvariantDeviceProfile implements SafeCloseable {
             while (((type = parser.next()) != XmlPullParser.END_TAG
                     || parser.getDepth() > depth) && type != XmlPullParser.END_DOCUMENT) {
                 if ((type == XmlPullParser.START_TAG)
-                        && "NumRows".equals(parser.getName())) {
-                    rowCounts.add(new NumRows(context, Xml.asAttributeSet(parser)));
+                        && "GridDimension".equals(parser.getName())) {
+                    rowCounts.add(new GridDimension(context, Xml.asAttributeSet(parser)));
                 }
             }
         } catch (IOException | XmlPullParserException e) {
@@ -678,10 +678,10 @@ public class InvariantDeviceProfile implements SafeCloseable {
     }
 
     /**
-     * @return the biggest row count that fits the display dimensions spec using NumRows to
+     * @return the biggest row count that fits the display dimensions spec using GridDimension to
      * determine that. If no best row count is found, return -1.
      */
-    public static NumRows findBestRowCount(List<NumRows> list, Info displayInfo) {
+    public static GridDimension findBestRowCount(List<GridDimension> list, Info displayInfo) {
         int minWidthPx = Integer.MAX_VALUE;
         int minHeightPx = Integer.MAX_VALUE;
         for (WindowBounds bounds : displayInfo.supportedBounds) {
@@ -700,10 +700,10 @@ public class InvariantDeviceProfile implements SafeCloseable {
             }
         }
 
-        NumRows selectedRow = null;
-        for (NumRows item: list) {
+        GridDimension selectedRow = null;
+        for (GridDimension item: list) {
             if (minWidthPx >= item.mMinDeviceWidthPx && minHeightPx >= item.mMinDeviceHeightPx) {
-                if (selectedRow == null || selectedRow.mNumRowsNew < item.mNumRowsNew) {
+                if (selectedRow == null || selectedRow.mNumGridDimension < item.mNumGridDimension) {
                     selectedRow = item;
                 }
             }
@@ -1045,8 +1045,8 @@ public class InvariantDeviceProfile implements SafeCloseable {
             mIsDualGrid = a.getBoolean(R.styleable.GridDisplayOption_isDualGrid, false);
             if (mRowCountSpecsId != INVALID_RESOURCE_HANDLE) {
                 ResourceHelper resourceHelper = new ResourceHelper(context, mRowCountSpecsId);
-                NumRows numR = getRowCount(resourceHelper, context, displayInfo);
-                numRows = numR.mNumRowsNew;
+                GridDimension numR = getRowCount(resourceHelper, context, displayInfo);
+                numRows = numR.mNumGridDimension;
                 dbFile = numR.mDbFile;
                 defaultLayoutId = numR.mDefaultLayoutId;
                 demoModeLayoutId = numR.mDemoModeLayoutId;
@@ -1235,8 +1235,8 @@ public class InvariantDeviceProfile implements SafeCloseable {
         }
     }
 
-    public static final class NumRows {
-        final int mNumRowsNew;
+    public static final class GridDimension {
+        final int mNumGridDimension;
         final float mMinDeviceWidthPx;
         final float mMinDeviceHeightPx;
         final String mDbFile;
@@ -1244,17 +1244,17 @@ public class InvariantDeviceProfile implements SafeCloseable {
         final int mDemoModeLayoutId;
 
 
-        NumRows(Context context, AttributeSet attrs) {
-            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.NumRows);
+        GridDimension(Context context, AttributeSet attrs) {
+            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.GridDimension);
 
-            mNumRowsNew = (int) a.getFloat(R.styleable.NumRows_numRowsNew, 0);
-            mMinDeviceWidthPx = a.getFloat(R.styleable.NumRows_minDeviceWidthPx, 0);
-            mMinDeviceHeightPx = a.getFloat(R.styleable.NumRows_minDeviceHeightPx, 0);
-            mDbFile = a.getString(R.styleable.NumRows_dbFile);
+            mNumGridDimension = (int) a.getFloat(R.styleable.GridDimension_numGridDimension, 0);
+            mMinDeviceWidthPx = a.getFloat(R.styleable.GridDimension_minDeviceWidthPx, 0);
+            mMinDeviceHeightPx = a.getFloat(R.styleable.GridDimension_minDeviceHeightPx, 0);
+            mDbFile = a.getString(R.styleable.GridDimension_dbFile);
             mDefaultLayoutId = a.getResourceId(
-                    R.styleable.NumRows_defaultLayoutId, 0);
+                    R.styleable.GridDimension_defaultLayoutId, 0);
             mDemoModeLayoutId = a.getResourceId(
-                    R.styleable.NumRows_demoModeLayoutId, mDefaultLayoutId);
+                    R.styleable.GridDimension_demoModeLayoutId, mDefaultLayoutId);
 
             a.recycle();
         }

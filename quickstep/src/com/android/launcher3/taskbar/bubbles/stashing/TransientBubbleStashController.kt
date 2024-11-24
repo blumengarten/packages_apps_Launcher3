@@ -90,7 +90,10 @@ class TransientBubbleStashController(
             val hasBubbles = bubbleBarViewController.hasBubbles()
             bubbleBarViewController.onBubbleBarConfigurationChanged(hasBubbles)
             if (!hasBubbles) {
-                // if there are no bubbles, there's nothing to show, so just return.
+                // if there are no bubbles, there's no need to update the bubble bar, just keep the
+                // isStashed state up to date so that we can process state changes when bubbles are
+                // created.
+                isStashed = launcherState == BubbleLauncherState.IN_APP
                 return
             }
             if (field == BubbleLauncherState.HOME) {
@@ -486,10 +489,9 @@ class TransientBubbleStashController(
         val isStashed = stash && !isBubblesShowingOnHome && !isBubblesShowingOnOverview
         if (this.isStashed != isStashed) {
             this.isStashed = isStashed
+
             // notify the view controller that the stash state is about to change so that it can
             // cancel an ongoing animation if there is one.
-            // note that this has to be called before updating mIsStashed with the new value,
-            // otherwise interrupting an ongoing animation may update it again with the wrong state
             bubbleBarViewController.onStashStateChanging()
             animator?.cancel()
             animator =

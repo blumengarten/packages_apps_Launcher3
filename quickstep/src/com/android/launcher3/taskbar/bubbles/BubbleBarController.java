@@ -115,7 +115,6 @@ public class BubbleBarController extends IBubblesListener.Stub {
     private BubbleBarItem mSelectedBubble;
 
     private TaskbarSharedState mSharedState;
-    private ImeVisibilityChecker mImeVisibilityChecker;
     private BubbleBarViewController mBubbleBarViewController;
     private BubbleStashController mBubbleStashController;
     private Optional<BubbleStashedHandleViewController> mBubbleStashedHandleViewController;
@@ -125,6 +124,8 @@ public class BubbleBarController extends IBubblesListener.Stub {
 
     // Cache last sent top coordinate to avoid sending duplicate updates to shell
     private int mLastSentBubbleBarTop;
+
+    private boolean mIsImeVisible = false;
 
     /**
      * Similar to {@link BubbleBarUpdate} but rather than {@link BubbleInfo}s it uses
@@ -192,10 +193,8 @@ public class BubbleBarController extends IBubblesListener.Stub {
     /** Initializes controllers. */
     public void init(BubbleControllers bubbleControllers,
             BubbleBarLocationListener bubbleBarLocationListener,
-            ImeVisibilityChecker imeVisibilityChecker,
             TaskbarSharedState sharedState) {
         mSharedState = sharedState;
-        mImeVisibilityChecker = imeVisibilityChecker;
         mBubbleBarViewController = bubbleControllers.bubbleBarViewController;
         mBubbleStashController = bubbleControllers.bubbleStashController;
         mBubbleStashedHandleViewController = bubbleControllers.bubbleStashedHandleViewController;
@@ -234,6 +233,10 @@ public class BubbleBarController extends IBubblesListener.Stub {
 
         boolean sysuiLocked = (flags & MASK_SYSUI_LOCKED) != 0;
         mBubbleStashController.setSysuiLocked(sysuiLocked);
+        mIsImeVisible = (flags & SYSUI_STATE_IME_SHOWING) != 0;
+        if (mIsImeVisible) {
+            mBubbleBarViewController.onImeVisible();
+        }
     }
 
     //
@@ -309,8 +312,7 @@ public class BubbleBarController extends IBubblesListener.Stub {
         // enabling gesture nav. also suppress animation if the bubble bar is hidden for sysui e.g.
         // the shade is open, or we're locked.
         final boolean suppressAnimation =
-                update.initialState || mBubbleBarViewController.isHiddenForSysui()
-                        || mImeVisibilityChecker.isImeVisible();
+                update.initialState || mBubbleBarViewController.isHiddenForSysui() || mIsImeVisible;
 
         if (update.initialState && mSharedState.hasSavedBubbles()) {
             // clear restored state
@@ -570,12 +572,6 @@ public class BubbleBarController extends IBubblesListener.Stub {
             boolean suppressAnimation) {
         mBubbles.put(bubble.getKey(), bubble);
         mBubbleBarViewController.addBubble(bubble, isExpanding, suppressAnimation);
-    }
-
-    /** Interface for checking whether the IME is visible. */
-    public interface ImeVisibilityChecker {
-        /** Whether the IME is visible. */
-        boolean isImeVisible();
     }
 
     /** Listener of {@link BubbleBarLocation} updates. */

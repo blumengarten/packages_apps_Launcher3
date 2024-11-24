@@ -456,7 +456,7 @@ public class BubbleBarView extends FrameLayout {
             return;
         }
         mDragging = dragging;
-        setElevation(dragging ? mDragElevation : mBubbleElevation);
+        mController.setIsDragging(dragging);
         if (!mDragging) {
             // Relayout after dragging to ensure that the dragged bubble is positioned correctly
             requestLayout();
@@ -1575,5 +1575,8 @@ public class BubbleBarView extends FrameLayout {
         /** Requests the controller to update bubble bar location to the given value */
         void updateBubbleBarLocation(BubbleBarLocation location,
                 @BubbleBarLocation.UpdateSource int source);
+
+        /** Notifies the controller that bubble bar is being dragged */
+        void setIsDragging(boolean dragging);
     }
 }

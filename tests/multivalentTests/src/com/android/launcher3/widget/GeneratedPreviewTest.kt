@@ -26,6 +26,7 @@ import com.android.launcher3.model.WidgetItem
 import com.android.launcher3.util.ActivityContextWrapper
 import com.android.launcher3.util.Executors
 import com.google.common.truth.Truth.assertThat
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -38,7 +39,7 @@ class GeneratedPreviewTest {
     @get:Rule val checkFlagsRule: CheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule()
     private val providerName =
         ComponentName(
-            getInstrumentation().getContext().getPackageName(),
+            getInstrumentation().context.packageName,
             "com.android.launcher3.testcomponent.AppWidgetNoConfig",
         )
     private val generatedPreviewLayout =
@@ -51,6 +52,7 @@ class GeneratedPreviewTest {
     private lateinit var helper: WidgetManagerHelper
     private lateinit var appWidgetProviderInfo: LauncherAppWidgetProviderInfo
     private lateinit var widgetItem: WidgetItem
+    private lateinit var iconCache: IconCache
 
     @Before
     fun setup() {
@@ -88,17 +90,17 @@ class GeneratedPreviewTest {
         createWidgetItem()
     }
 
+    @After
+    fun tearDown() {
+        iconCache.close()
+    }
+
     private fun createWidgetItem() {
         Executors.MODEL_EXECUTOR.submit {
                 val idp = InvariantDeviceProfile()
-                widgetItem =
-                    WidgetItem(
-                        appWidgetProviderInfo,
-                        idp,
-                        IconCache(context, idp, null, IconProvider(context)),
-                        context,
-                        helper,
-                    )
+                if (::iconCache.isInitialized) iconCache.close()
+                iconCache = IconCache(context, idp, null, IconProvider(context))
+                widgetItem = WidgetItem(appWidgetProviderInfo, idp, iconCache, context, helper)
             }
             .get()
     }

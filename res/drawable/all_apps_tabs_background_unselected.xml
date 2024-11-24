@@ -15,10 +15,10 @@
 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
      <item
-        android:bottom="@dimen/all_apps_tabs_focus_width"
-        android:end="@dimen/all_apps_tabs_focus_width"
-        android:start="@dimen/all_apps_tabs_focus_width"
-        android:top="@dimen/all_apps_tabs_focus_width">
+         android:bottom="@dimen/all_apps_tabs_focus_vertical_inset"
+         android:end="@dimen/all_apps_tabs_focus_horizontal_inset"
+         android:start="@dimen/all_apps_tabs_focus_horizontal_inset"
+         android:top="@dimen/all_apps_tabs_focus_vertical_inset">
         <shape android:shape="rectangle">
             <corners android:radius="@dimen/all_apps_header_pill_corner_radius" />
             <solid android:color="?attr/materialColorSurfaceBright" />

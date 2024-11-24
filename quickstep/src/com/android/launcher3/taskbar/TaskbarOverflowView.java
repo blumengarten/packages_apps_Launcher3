@@ -41,6 +41,7 @@ import com.android.app.animation.Interpolators;
 import com.android.launcher3.R;
 import com.android.launcher3.Reorderable;
 import com.android.launcher3.Utilities;
+import com.android.launcher3.icons.IconNormalizer;
 import com.android.launcher3.util.MultiTranslateDelegate;
 import com.android.launcher3.util.Themes;
 import com.android.systemui.shared.recents.model.Task;
@@ -68,7 +69,14 @@ public class TaskbarOverflowView extends FrameLayout implements Reorderable {
     private static final long LEAVE_BEHIND_ANIMATIONS_DELAY = 500L;
     private static final long LEAVE_BEHIND_OPACITY_ANIMATION_DURATION = 100L;
     private static final long LEAVE_BEHIND_SIZE_ANIMATION_DURATION = 500L;
+    private static final float LEAVE_BEHIND_SIZE_SCALE_DOWN_MULTIPLIER = 0.83f;
     private static final int MAX_ITEMS_IN_PREVIEW = 4;
+
+    // The height divided by the width of the horizontal box containing two overlapping app icons.
+    // According to the spec, this ratio is constant for different sizes of taskbar app icons.
+    // Assuming the width of this box = taskbar app icon size - 2 paddings - 2 stroke widths, and
+    // the height = width * 0.61, which is also equal to the height of a single item in the preview.
+    private static final float TWO_ITEM_ICONS_BOX_ASPECT_RATIO = 0.61f;
 
     private static final FloatProperty<TaskbarOverflowView> ITEM_ICON_CENTER_OFFSET =
             new FloatProperty<>("itemIconCenterOffset") {
@@ -208,9 +216,24 @@ public class TaskbarOverflowView extends FrameLayout implements Reorderable {
         icon.mIconSize = iconSize;
         icon.mPadding = padding;
 
-        final float radius = iconSize / 2f - padding;
-        final float size = radius + icon.mItemIconStrokeWidth;
-        icon.mItemIconCenterOffsetDefault = radius - size / 2 - icon.mItemIconStrokeWidth;
+        final float taskbarIconRadius =
+                iconSize * IconNormalizer.ICON_VISIBLE_AREA_FACTOR / 2f - padding;
+
+        icon.mLeaveBehindSizeDefault = taskbarIconRadius;  // 1/2 of taskbar app icon size
+        icon.mLeaveBehindSizeScaledDown =
+                icon.mLeaveBehindSizeDefault * LEAVE_BEHIND_SIZE_SCALE_DOWN_MULTIPLIER;
+        icon.mLeaveBehindSize = icon.mLeaveBehindSizeScaledDown;
+
+        icon.mItemIconStrokeWidthDefault = taskbarIconRadius / 5f;  // 1/10 of taskbar app icon size
+        icon.mItemIconStrokeWidth = icon.mItemIconStrokeWidthDefault;
+
+        icon.mItemIconSizeDefault = 2 * (taskbarIconRadius - icon.mItemIconStrokeWidthDefault)
+                * TWO_ITEM_ICONS_BOX_ASPECT_RATIO;
+        icon.mItemIconSizeScaledDown = icon.mLeaveBehindSizeScaledDown;
+        icon.mItemIconSize = icon.mItemIconSizeDefault;
+
+        icon.mItemIconCenterOffsetDefault = taskbarIconRadius - icon.mItemIconSizeDefault / 2f
+                - icon.mItemIconStrokeWidthDefault;
         icon.mItemIconCenterOffset = icon.mItemIconCenterOffsetDefault;
 
         return icon;
@@ -221,22 +244,6 @@ public class TaskbarOverflowView extends FrameLayout implements Reorderable {
         mItemBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mItemBackgroundColor = getContext().getColor(R.color.taskbar_background);
         mLeaveBehindColor = Themes.getAttrColor(getContext(), android.R.attr.textColorTertiary);
-
-        mItemIconSizeDefault = getResources().getDimension(
-                R.dimen.taskbar_overflow_item_icon_size_default);
-        mItemIconSizeScaledDown = getResources().getDimension(
-                R.dimen.taskbar_overflow_item_icon_size_scaled_down);
-        mItemIconSize = mItemIconSizeDefault;
-
-        mItemIconStrokeWidthDefault = getResources().getDimension(
-                R.dimen.taskbar_overflow_item_icon_stroke_width_default);
-        mItemIconStrokeWidth = mItemIconStrokeWidthDefault;
-
-        mLeaveBehindSizeDefault = getResources().getDimension(
-                R.dimen.taskbar_overflow_leave_behind_size_default);
-        mLeaveBehindSizeScaledDown = getResources().getDimension(
-                R.dimen.taskbar_overflow_leave_behind_size_scaled_down);
-        mLeaveBehindSize = mLeaveBehindSizeScaledDown;
 
         setWillNotDraw(false);
     }

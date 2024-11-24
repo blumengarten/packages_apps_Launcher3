@@ -233,6 +233,7 @@ import com.android.launcher3.util.IntSet;
 import com.android.launcher3.util.ItemInflater;
 import com.android.launcher3.util.KeyboardShortcutsDelegate;
 import com.android.launcher3.util.LockedUserState;
+import com.android.launcher3.util.MSDLPlayerWrapper;
 import com.android.launcher3.util.PackageUserKey;
 import com.android.launcher3.util.PendingRequestArgs;
 import com.android.launcher3.util.PluginManagerWrapper;
@@ -784,7 +785,7 @@ public class Launcher extends StatefulActivity<LauncherState>
         }
         // When the flag oneGridSpecs is on we want to disable ALLOW_ROTATION which is replaced
         // by FIXED_LANDSCAPE_MODE, ALLOW_ROTATION will only be used on Tablets afterwards.
-        if (!getDeviceProfile().isTablet) {
+        if (getDeviceProfile().isPhone || getDeviceProfile().isTwoPanels) {
             LauncherPrefs.get(this).put(LauncherPrefs.ALLOW_ROTATION, false);
         }
         getRotationHelper().setFixedLandscape(
@@ -2745,6 +2746,7 @@ public class Launcher extends StatefulActivity<LauncherState>
         mModel.dumpState(prefix, fd, writer, args);
         mOverlayManager.dump(prefix, writer);
         ACTIVITY_TRACKER.dump(prefix, writer);
+        MSDLPlayerWrapper.INSTANCE.get(getApplicationContext()).dump(prefix, writer);
     }
 
     /**

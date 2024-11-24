@@ -210,10 +210,10 @@
         <attr name="layout_sticky" format="boolean" />
     </declare-styleable>
 
-    <declare-styleable name="NumRows">
+    <declare-styleable name="GridDimension">
         <attr name="minDeviceWidthPx" format="float"/>
         <attr name="minDeviceHeightPx" format="float"/>
-        <attr name="numRowsNew" format="integer"/>
+        <attr name="numGridDimension" format="integer"/>
         <attr name="dbFile" />
         <attr name="defaultLayoutId"/>
         <attr name="demoModeLayoutId"/>

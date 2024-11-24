@@ -22,8 +22,6 @@ import com.android.quickstep.task.viewmodel.TaskThumbnailViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class FakeTaskThumbnailViewModel : TaskThumbnailViewModel {
-    override val cornerRadiusProgress = MutableStateFlow(0f)
-    override val inheritedScale = MutableStateFlow(1f)
     override val dimProgress = MutableStateFlow(0f)
     override val splashAlpha = MutableStateFlow(0f)
     override val uiState = MutableStateFlow<TaskThumbnailUiState>(Uninitialized)

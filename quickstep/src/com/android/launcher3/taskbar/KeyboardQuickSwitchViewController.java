@@ -198,6 +198,7 @@ public class KeyboardQuickSwitchViewController {
             // Let currently-running animation finish.
             return;
         }
+        mControllerCallbacks.onCloseStarted();
         if (!animate) {
             InteractionJankMonitorWrapper.begin(
                     mKeyboardQuickSwitchView, Cuj.CUJ_LAUNCHER_KEYBOARD_QUICK_SWITCH_CLOSE);

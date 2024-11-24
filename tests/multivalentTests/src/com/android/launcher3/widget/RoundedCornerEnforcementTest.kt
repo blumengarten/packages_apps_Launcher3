@@ -86,7 +86,7 @@ class RoundedCornerEnforcementTest {
     }
 
     @Test
-    @DisableFlags(Flags.FLAG_ENFORCE_SYSTEM_RADIUS_FOR_APP_WIDGETS)
+    @DisableFlags(Flags.FLAG_USE_SYSTEM_RADIUS_FOR_APP_WIDGETS)
     fun `Compute system radius when smaller`() {
         val mockContext = mock(Context::class.java)
         val mockRes = mock(Resources::class.java)
@@ -103,7 +103,7 @@ class RoundedCornerEnforcementTest {
     }
 
     @Test
-    @DisableFlags(Flags.FLAG_ENFORCE_SYSTEM_RADIUS_FOR_APP_WIDGETS)
+    @DisableFlags(Flags.FLAG_USE_SYSTEM_RADIUS_FOR_APP_WIDGETS)
     fun `Compute launcher radius when smaller`() {
         val mockContext = mock(Context::class.java)
         val mockRes = mock(Resources::class.java)
@@ -120,7 +120,7 @@ class RoundedCornerEnforcementTest {
     }
 
     @Test
-    @EnableFlags(Flags.FLAG_ENFORCE_SYSTEM_RADIUS_FOR_APP_WIDGETS)
+    @EnableFlags(Flags.FLAG_USE_SYSTEM_RADIUS_FOR_APP_WIDGETS)
     fun `Compute system radius ignoring launcher radius`() {
         val mockContext = mock(Context::class.java)
         val mockRes = mock(Resources::class.java)

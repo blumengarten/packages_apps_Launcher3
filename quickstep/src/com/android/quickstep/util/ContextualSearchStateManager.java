@@ -24,7 +24,6 @@ import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 import static com.android.launcher3.util.MainThreadInitializedObject.forOverride;
 import static com.android.quickstep.util.SystemActionConstants.SYSTEM_ACTION_ID_SEARCH_SCREEN;
 
-import android.annotation.Nullable;
 import android.app.PendingIntent;
 import android.app.RemoteAction;
 import android.content.Context;
@@ -78,7 +77,6 @@ public class ContextualSearchStateManager implements ResourceBasedOverride, Safe
             this::onContextualSearchSettingChanged;
     protected final EventLogArray mEventLogArray = new EventLogArray(TAG, MAX_DEBUG_EVENT_SIZE);
 
-    @Nullable private SettingsCache mSettingsCache;
     // Cached value whether the ContextualSearch intent filter matched any enabled components.
     private boolean mIsContextualSearchIntentAvailable;
     private boolean mIsContextualSearchSettingEnabled;
@@ -108,11 +106,10 @@ public class ContextualSearchStateManager implements ResourceBasedOverride, Safe
                 context, mContextualSearchPackage, Intent.ACTION_PACKAGE_ADDED,
                 Intent.ACTION_PACKAGE_CHANGED, Intent.ACTION_PACKAGE_REMOVED);
 
-        mSettingsCache = SettingsCache.INSTANCE.get(context);
-        mSettingsCache.register(SEARCH_ALL_ENTRYPOINTS_ENABLED_URI,
+        SettingsCache.INSTANCE.get(context).register(SEARCH_ALL_ENTRYPOINTS_ENABLED_URI,
                 mContextualSearchSettingChangedListener);
         onContextualSearchSettingChanged(
-                mSettingsCache.getValue(SEARCH_ALL_ENTRYPOINTS_ENABLED_URI));
+                SettingsCache.INSTANCE.get(context).getValue(SEARCH_ALL_ENTRYPOINTS_ENABLED_URI));
         SystemUiProxy.INSTANCE.get(mContext).addOnStateChangeListener(mSysUiStateChangeListener);
     }
 
@@ -266,11 +263,8 @@ public class ContextualSearchStateManager implements ResourceBasedOverride, Safe
     public void close() {
         mContextualSearchPackageReceiver.unregisterReceiverSafely(mContext);
         unregisterSearchScreenSystemAction();
-
-        if (mSettingsCache != null) {
-            mSettingsCache.unregister(SEARCH_ALL_ENTRYPOINTS_ENABLED_URI,
-                    mContextualSearchSettingChangedListener);
-        }
+        SettingsCache.INSTANCE.get(mContext).unregister(SEARCH_ALL_ENTRYPOINTS_ENABLED_URI,
+                mContextualSearchSettingChangedListener);
         SystemUiProxy.INSTANCE.get(mContext).removeOnStateChangeListener(mSysUiStateChangeListener);
     }
 

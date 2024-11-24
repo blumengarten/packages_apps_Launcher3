@@ -16,7 +16,8 @@
 
 package com.android.launcher3.taskbar;
 
-import static android.view.MotionEvent.ACTION_UP;
+import static android.view.KeyEvent.ACTION_DOWN;
+import static android.view.KeyEvent.ACTION_UP;
 
 import static com.android.internal.app.AssistUtils.INVOCATION_TYPE_HOME_BUTTON_LONG_PRESS;
 import static com.android.internal.app.AssistUtils.INVOCATION_TYPE_KEY;
@@ -38,6 +39,7 @@ import static com.android.window.flags.Flags.predictiveBackThreeButtonNav;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
@@ -78,6 +80,7 @@ public class TaskbarNavButtonController implements TaskbarControllers.LoggableTa
     private long mLastScreenPinLongPress;
     private boolean mScreenPinned;
     private boolean mAssistantLongPressEnabled;
+    private int mLastSentBackAction = ACTION_UP;
 
     @Override
     public void dumpLogs(String prefix, PrintWriter pw) {
@@ -85,6 +88,8 @@ public class TaskbarNavButtonController implements TaskbarControllers.LoggableTa
 
         pw.println(prefix + "\tmLastScreenPinLongPress=" + mLastScreenPinLongPress);
         pw.println(prefix + "\tmScreenPinned=" + mScreenPinned);
+        pw.println(prefix + "\tmLastSentBackAction="
+                + KeyEvent.actionToString(mLastSentBackAction));
     }
 
     @Retention(RetentionPolicy.SOURCE)
@@ -141,6 +146,11 @@ public class TaskbarNavButtonController implements TaskbarControllers.LoggableTa
         if (buttonType == BUTTON_SPACE) {
             return;
         }
+        if (predictiveBackThreeButtonNav() && mLastSentBackAction == ACTION_DOWN) {
+            Log.i(TAG, "Button click ignored while back button is pressed");
+            // prevent interactions with other buttons while back button is pressed
+            return;
+        }
         // Provide the same haptic feedback that the system offers for virtual keys.
         view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
         switch (buttonType) {
@@ -178,6 +188,13 @@ public class TaskbarNavButtonController implements TaskbarControllers.LoggableTa
 
     public boolean onButtonLongClick(@TaskbarButton int buttonType, View view) {
         if (buttonType == BUTTON_SPACE) {
+            return false;
+        }
+        if (predictiveBackThreeButtonNav() && mLastSentBackAction == ACTION_DOWN
+                && buttonType != BUTTON_BACK && buttonType != BUTTON_RECENTS) {
+            // prevent interactions with other buttons while back button is pressed (except back
+            // and recents button for screen-unpin action).
+            Log.i(TAG, "Button long click ignored while back button is pressed");
             return false;
         }
 
@@ -327,13 +344,27 @@ public class TaskbarNavButtonController implements TaskbarControllers.LoggableTa
         mCallbacks.onToggleOverview();
     }
 
-    void executeBack(@Nullable KeyEvent keyEvent) {
+    void sendBackKeyEvent(int action, boolean cancelled) {
+        if (action == mLastSentBackAction) {
+            // There must always be an alternating sequence of ACTION_DOWN and ACTION_UP events
+            return;
+        }
+        long time = SystemClock.uptimeMillis();
+        KeyEvent keyEvent = new KeyEvent(time, time, action, KeyEvent.KEYCODE_BACK, 0);
+        if (cancelled) {
+            keyEvent.cancel();
+        }
+        executeBack(keyEvent);
+    }
+
+    private void executeBack(@Nullable KeyEvent keyEvent) {
         if (keyEvent == null || (keyEvent.getAction() == ACTION_UP && !keyEvent.isCanceled())) {
             logEvent(LAUNCHER_TASKBAR_BACK_BUTTON_TAP);
             mContextualEduStatsManager.updateEduStats(/* isTrackpadGesture= */ false,
                     GestureType.BACK);
         }
         mSystemUiProxy.onBackEvent(keyEvent);
+        mLastSentBackAction = keyEvent != null ? keyEvent.getAction() : ACTION_UP;
     }
 
     private void onImeSwitcherPress() {

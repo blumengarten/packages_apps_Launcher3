@@ -37,6 +37,7 @@ import com.android.launcher3.util.TestUtil
 import com.android.quickstep.AllAppsActionManager
 import java.lang.reflect.Field
 import java.lang.reflect.ParameterizedType
+import java.util.Locale
 import java.util.Optional
 import org.junit.Assume.assumeTrue
 import org.junit.rules.TestRule
@@ -119,6 +120,15 @@ class TaskbarUnitTestRule(
                         }
                     }
 
+                if (description.getAnnotation(ForceRtl::class.java) != null) {
+                    // Needs to be set on window context instead of sandbox context, because it does
+                    // does not propagate between them. However, this change will impact created
+                    // TaskbarActivityContext instances, since they wrap the window context.
+                    taskbarManager.windowContext.resources.configuration.setLayoutDirection(
+                        RTL_LOCALE
+                    )
+                }
+
                 try {
                     TaskbarViewController.enableModelLoadingForTests(false)
 
@@ -191,4 +201,11 @@ class TaskbarUnitTestRule(
     @Retention(AnnotationRetention.RUNTIME)
     @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
     annotation class NavBarKidsMode
+
+    /** Forces RTL UI for tests. */
+    @Retention(AnnotationRetention.RUNTIME)
+    @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
+    annotation class ForceRtl
 }
+
+private val RTL_LOCALE = Locale.of("ar", "XB")

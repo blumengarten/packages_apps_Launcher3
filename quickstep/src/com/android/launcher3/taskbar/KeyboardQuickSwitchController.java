@@ -299,10 +299,6 @@ public final class KeyboardQuickSwitchController implements
             return;
         }
         mQuickSwitchViewController.closeQuickSwitchView(animate);
-        if (mOnClosed != null) {
-            mOnClosed.run();
-            mOnClosed = null;
-        }
     }
 
     /**
@@ -392,6 +388,13 @@ public final class KeyboardQuickSwitchController implements
                 task.title = title;
                 callback.accept(task);
             });
+        }
+
+        void onCloseStarted() {
+            if (mOnClosed != null) {
+                mOnClosed.run();
+                mOnClosed = null;
+            }
         }
 
         void onCloseComplete() {

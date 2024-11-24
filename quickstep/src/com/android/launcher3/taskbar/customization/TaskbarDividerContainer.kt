@@ -21,7 +21,6 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color.TRANSPARENT
 import android.util.AttributeSet
-import androidx.core.view.setPadding
 import com.android.launcher3.R
 import com.android.launcher3.Utilities.dpToPx
 import com.android.launcher3.taskbar.TaskbarActivityContext
@@ -51,7 +50,6 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         backgroundTintList = ColorStateList.valueOf(TRANSPARENT)
         val drawable = resources.getDrawable(R.drawable.taskbar_divider_button)
         setIconDrawable(drawable)
-        setPadding(dpToPx(activityContext.taskbarSpecsEvaluator.taskbarIconPadding.toFloat()))
     }
 
     @SuppressLint("ClickableViewAccessibility")

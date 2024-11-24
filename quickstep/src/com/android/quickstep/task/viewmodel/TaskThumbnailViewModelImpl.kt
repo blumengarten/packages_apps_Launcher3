@@ -38,7 +38,6 @@ import kotlin.math.max
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
@@ -50,7 +49,6 @@ import kotlinx.coroutines.runBlocking
 @OptIn(ExperimentalCoroutinesApi::class)
 class TaskThumbnailViewModelImpl(
     recentsViewData: RecentsViewData,
-    taskViewData: TaskViewData,
     taskContainerData: TaskContainerData,
     dispatcherProvider: DispatcherProvider,
     private val tasksRepository: RecentTasksRepository,
@@ -60,15 +58,6 @@ class TaskThumbnailViewModelImpl(
     private val task = MutableStateFlow<Flow<Task?>>(flowOf(null))
     private val splashProgress = MutableStateFlow(flowOf(0f))
     private var taskId: Int = INVALID_TASK_ID
-
-    override val cornerRadiusProgress =
-        if (taskViewData.isOutlineFormedByThumbnailView) recentsViewData.fullscreenProgress
-        else MutableStateFlow(1f).asStateFlow()
-
-    override val inheritedScale =
-        combine(recentsViewData.scale, taskViewData.scale) { recentsScale, taskScale ->
-            recentsScale * taskScale
-        }
 
     override val dimProgress: Flow<Float> =
         combine(taskContainerData.taskMenuOpenProgress, recentsViewData.tintAmount) {

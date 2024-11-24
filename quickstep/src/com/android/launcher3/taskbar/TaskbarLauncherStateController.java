@@ -475,7 +475,7 @@ public class TaskbarLauncherStateController {
         }
         mControllers.bubbleControllers.ifPresent(controllers -> {
             // Show the bubble bar when on launcher home (hotseat icons visible) or in overview
-            boolean onOverview = mLauncherState == LauncherState.OVERVIEW;
+            boolean onOverview = isInLauncher && mLauncherState == LauncherState.OVERVIEW;
             boolean hotseatIconsVisible = isInLauncher && mLauncherState.areElementsVisible(
                     mLauncher, HOTSEAT_ICONS);
             BubbleLauncherState state = onOverview
@@ -1009,12 +1009,7 @@ public class TaskbarLauncherStateController {
 
         @Override
         public void onRecentsAnimationFinished(RecentsAnimationController controller) {
-            endGestureStateOverride(!controller.getFinishTargetIsLauncher(),
-                    controller.getLauncherIsVisibleAtFinish(), false /*canceled*/);
-        }
-
-        private void endGestureStateOverride(boolean finishedToApp, boolean canceled) {
-            endGestureStateOverride(finishedToApp, finishedToApp, canceled);
+            endGestureStateOverride(!controller.getFinishTargetIsLauncher(), false /*canceled*/);
         }
 
         /**
@@ -1024,13 +1019,11 @@ public class TaskbarLauncherStateController {
          *
          * @param finishedToApp {@code true} if the recents animation finished to showing an app and
          *                      not workspace or overview
-         * @param launcherIsVisible {code true} if launcher is visible at finish
          * @param canceled      {@code true} if the recents animation was canceled instead of
          *                      finishing
          *                      to completion
          */
-        private void endGestureStateOverride(boolean finishedToApp, boolean launcherIsVisible,
-                boolean canceled) {
+        private void endGestureStateOverride(boolean finishedToApp, boolean canceled) {
             mCallbacks.removeListener(this);
             mTaskBarRecentsAnimationListener = null;
             ((RecentsView) mLauncher.getOverviewPanel()).setTaskLaunchListener(null);
@@ -1039,27 +1032,18 @@ public class TaskbarLauncherStateController {
                 mSkipNextRecentsAnimEnd = false;
                 return;
             }
-            updateStateForUserFinishedToApp(finishedToApp, launcherIsVisible);
+            updateStateForUserFinishedToApp(finishedToApp);
         }
-    }
-
-    /**
-     * @see #updateStateForUserFinishedToApp(boolean, boolean)
-     */
-    private void updateStateForUserFinishedToApp(boolean finishedToApp) {
-        updateStateForUserFinishedToApp(finishedToApp, !finishedToApp);
     }
 
     /**
      * Updates the visible state immediately to ensure a seamless handoff.
      *
      * @param finishedToApp True iff user is in an app.
-     * @param launcherIsVisible True iff launcher is still visible (ie. transparent app)
      */
-    private void updateStateForUserFinishedToApp(boolean finishedToApp,
-            boolean launcherIsVisible) {
+    private void updateStateForUserFinishedToApp(boolean finishedToApp) {
         // Update the visible state immediately to ensure a seamless handoff
-        boolean launcherVisible = !finishedToApp || launcherIsVisible;
+        boolean launcherVisible = !finishedToApp;
         updateStateForFlag(FLAG_TRANSITION_TO_VISIBLE, false);
         updateStateForFlag(FLAG_VISIBLE, launcherVisible);
         applyState();
@@ -1068,7 +1052,7 @@ public class TaskbarLauncherStateController {
         if (DEBUG) {
             Log.d(TAG, "endGestureStateOverride - FLAG_IN_APP: " + finishedToApp);
         }
-        controller.updateStateForFlag(FLAG_IN_APP, finishedToApp && !launcherIsVisible);
+        controller.updateStateForFlag(FLAG_IN_APP, finishedToApp);
         controller.applyState();
     }
 

@@ -351,14 +351,20 @@ public class BubbleView extends ConstraintLayout {
                 .start();
     }
 
-    /** Suppresses or un-suppresses drawing the dot due to an update for this bubble. */
-    public void suppressDotForBubbleUpdate(boolean suppress) {
-        mDotSuppressedForBubbleUpdate = suppress;
-        if (suppress) {
-            setDotScale(0);
-        } else {
-            showDotIfNeeded(/* animate= */ false);
-        }
+    /** Suppresses drawing the dot due to an update for this bubble. */
+    public void suppressDotForBubbleUpdate() {
+        mDotSuppressedForBubbleUpdate = true;
+        setDotScale(0);
+    }
+
+    /**
+     * Unsuppresses the dot after the bubble update finished animating.
+     *
+     * @param animate whether or not to animate the dot back in
+     */
+    public void unsuppressDotForBubbleUpdate(boolean animate) {
+        mDotSuppressedForBubbleUpdate = false;
+        showDotIfNeeded(animate);
     }
 
     boolean hasUnseenContent() {

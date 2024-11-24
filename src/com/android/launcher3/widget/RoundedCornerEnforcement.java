@@ -16,7 +16,7 @@
 
 package com.android.launcher3.widget;
 
-import static com.android.launcher3.Flags.enforceSystemRadiusForAppWidgets;
+import static com.android.launcher3.Flags.useSystemRadiusForAppWidgets;
 
 import android.appwidget.AppWidgetHostView;
 import android.content.Context;
@@ -99,7 +99,7 @@ public class RoundedCornerEnforcement {
     public static float computeEnforcedRadius(@NonNull Context context) {
         Resources res = context.getResources();
         float systemRadius = res.getDimension(android.R.dimen.system_app_widget_background_radius);
-        if (enforceSystemRadiusForAppWidgets()) {
+        if (useSystemRadiusForAppWidgets()) {
             return systemRadius;
         }
 

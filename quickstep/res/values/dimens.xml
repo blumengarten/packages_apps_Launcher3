@@ -362,11 +362,6 @@
     <dimen name="taskbar_running_app_indicator_width">12dp</dimen>
     <dimen name="taskbar_running_app_indicator_top_margin">4dp</dimen>
     <dimen name="taskbar_minimized_app_indicator_width">6dp</dimen>
-    <dimen name="taskbar_overflow_item_icon_size_default">22dp</dimen>
-    <dimen name="taskbar_overflow_item_icon_size_scaled_down">15dp</dimen>
-    <dimen name="taskbar_overflow_item_icon_stroke_width_default">2dp</dimen>
-    <dimen name="taskbar_overflow_leave_behind_size_default">18dp</dimen>
-    <dimen name="taskbar_overflow_leave_behind_size_scaled_down">15dp</dimen>
 
     <!-- Transient taskbar -->
     <dimen name="transient_taskbar_padding">12dp</dimen>

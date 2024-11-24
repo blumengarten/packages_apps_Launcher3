@@ -262,6 +262,7 @@ public class TaskbarDragLayer extends BaseDragLayer<TaskbarActivityContext> {
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         TestLogging.recordMotionEvent(TestProtocol.SEQUENCE_MAIN, "Touch event", ev);
+        mControllerCallbacks.onDispatchTouchEvent(ev);
         return super.dispatchTouchEvent(ev);
     }
 

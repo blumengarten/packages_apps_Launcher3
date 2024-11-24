@@ -85,6 +85,7 @@ public class BubbleBarViewController {
     private final BubbleBarView mBarView;
     private int mIconSize;
     private int mBubbleBarPadding;
+    private final int mDragElevation;
 
     // Initialized in init.
     private BubbleStashController mBubbleStashController;
@@ -152,6 +153,8 @@ public class BubbleBarViewController {
         mBubbleBarAlpha = new MultiValueAlpha(mBarView, 1 /* num alpha channels */);
         mIconSize = activity.getResources().getDimensionPixelSize(
                 R.dimen.bubblebar_icon_size);
+        mDragElevation = activity.getResources().getDimensionPixelSize(
+                R.dimen.bubblebar_drag_elevation);
         mTaskbarTranslationDelta = getBubbleBarTranslationDeltaForTaskbar(activity);
     }
 
@@ -220,6 +223,11 @@ public class BubbleBarViewController {
             public void updateBubbleBarLocation(BubbleBarLocation location,
                     @BubbleBarLocation.UpdateSource int source) {
                 mBubbleBarController.updateBubbleBarLocation(location, source);
+            }
+
+            @Override
+            public void setIsDragging(boolean dragging) {
+                mBubbleBarContainer.setElevation(dragging ? mDragElevation : 0);
             }
         });
 
@@ -380,6 +388,13 @@ public class BubbleBarViewController {
     public void onStashStateChanging() {
         if (isAnimatingNewBubble()) {
             mBubbleBarViewAnimator.onStashStateChangingWhileAnimating();
+        }
+    }
+
+    /** Notifies that the IME became visible. */
+    public void onImeVisible() {
+        if (isAnimatingNewBubble()) {
+            mBubbleBarViewAnimator.interruptForIme();
         }
     }
 
@@ -997,10 +1012,9 @@ public class BubbleBarViewController {
         }
     }
 
-    /** Marks as should show education and shows the bubble bar in a collapsed state */
+    /** Marks as should show education. */
     public void prepareToShowEducation() {
         mShouldShowEducation = true;
-        mBubbleStashController.showBubbleBar(false /* expand the bubbles */);
     }
 
     /**

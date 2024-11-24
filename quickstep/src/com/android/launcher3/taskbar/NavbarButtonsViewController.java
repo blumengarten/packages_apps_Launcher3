@@ -15,6 +15,7 @@
  */
 package com.android.launcher3.taskbar;
 
+import static android.view.KeyEvent.ACTION_UP;
 import static android.view.View.AccessibilityDelegate;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewTreeObserver.InternalInsetsInfo.TOUCHABLE_INSETS_REGION;
@@ -72,7 +73,6 @@ import android.graphics.drawable.PaintDrawable;
 import android.graphics.drawable.RotateDrawable;
 import android.inputmethodservice.InputMethodService;
 import android.os.Handler;
-import android.os.SystemClock;
 import android.util.Property;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -448,14 +448,16 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         mPropertyHolders.add(new StatePropertyHolder(mBackButton,
                 flags -> (flags & FLAG_IME_VISIBLE) != 0,
                 ROTATION_DRAWABLE_PERCENT, 1f, 0f));
-        // Translate back button to be at end/start of other buttons for keyguard
+        // Translate back button to be at end/start of other buttons for keyguard (only after SUW
+        // since it is laid to align with SUW actions while in that state)
         int navButtonSize = mContext.getResources().getDimensionPixelSize(
                 R.dimen.taskbar_nav_buttons_size);
         boolean isRtl = Utilities.isRtl(mContext.getResources());
         if (!mContext.isPhoneMode()) {
             mPropertyHolders.add(new StatePropertyHolder(
-                    mBackButton, flags -> (flags & FLAG_ONLY_BACK_FOR_BOUNCER_VISIBLE) != 0
-                            || (flags & FLAG_KEYGUARD_VISIBLE) != 0,
+                    mBackButton, flags -> mContext.isUserSetupComplete()
+                            && ((flags & FLAG_ONLY_BACK_FOR_BOUNCER_VISIBLE) != 0
+                                    || (flags & FLAG_KEYGUARD_VISIBLE) != 0),
                     VIEW_TRANSLATE_X, navButtonSize * (isRtl ? -2 : 2), 0));
         }
 
@@ -862,17 +864,12 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
             TaskbarNavButtonController navButtonController) {
         buttonView.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_MOVE) return false;
-            long time = SystemClock.uptimeMillis();
-            int action = event.getAction();
-            KeyEvent keyEvent = new KeyEvent(time, time,
-                    action == MotionEvent.ACTION_DOWN ? KeyEvent.ACTION_DOWN : KeyEvent.ACTION_UP,
-                    KeyEvent.KEYCODE_BACK, 0);
-            if (event.getAction() == MotionEvent.ACTION_CANCEL) {
-                keyEvent.cancel();
-            }
-            navButtonController.executeBack(keyEvent);
-
-            if (action == MotionEvent.ACTION_UP) {
+            int motionEventAction = event.getAction();
+            int keyEventAction = motionEventAction == MotionEvent.ACTION_DOWN
+                    ? KeyEvent.ACTION_DOWN : ACTION_UP;
+            boolean isCancelled = event.getAction() == MotionEvent.ACTION_CANCEL;
+            navButtonController.sendBackKeyEvent(keyEventAction, isCancelled);
+            if (motionEventAction == MotionEvent.ACTION_UP) {
                 buttonView.performClick();
             }
             return false;
@@ -1293,7 +1290,10 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         boolean isNavbarOnRight = location.isOnLeft(mNavButtonsView.isLayoutRtl());
         DeviceProfile dp = mContext.getDeviceProfile();
         float navBarTargetStartX;
-        if (mContext.shouldStartAlignTaskbar()) {
+        if (!mContext.isUserSetupComplete()) {
+            // Skip additional translations on the nav bar container while in SUW layout
+            return 0;
+        } else if (mContext.shouldStartAlignTaskbar()) {
             int navBarSpacing = dp.inlineNavButtonsEndSpacingPx;
             // If the taskbar is start aligned the navigation bar is aligned to the start or end of
             // the container, depending on the bubble bar location

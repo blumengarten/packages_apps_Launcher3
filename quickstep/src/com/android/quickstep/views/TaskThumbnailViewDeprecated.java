@@ -50,9 +50,9 @@ import com.android.launcher3.util.MainThreadInitializedObject;
 import com.android.launcher3.util.SystemUiController;
 import com.android.launcher3.util.SystemUiController.SystemUiControllerFlags;
 import com.android.launcher3.util.ViewPool;
+import com.android.quickstep.FullscreenDrawParams;
 import com.android.quickstep.TaskOverlayFactory.TaskOverlay;
 import com.android.quickstep.orientation.RecentsPagedOrientationHandler;
-import com.android.quickstep.views.TaskView.FullscreenDrawParams;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.recents.model.ThumbnailData;
 import com.android.systemui.shared.recents.utilities.PreviewPositionHelper;
@@ -107,7 +107,7 @@ public class TaskThumbnailViewDeprecated extends View implements ViewPool.Reusab
     // Contains the portion of the thumbnail that is clipped when fullscreen progress = 0.
     private final Rect mPreviewRect = new Rect();
     private final PreviewPositionHelper mPreviewPositionHelper = new PreviewPositionHelper();
-    private TaskView.FullscreenDrawParams mFullscreenParams;
+    private FullscreenDrawParams mFullscreenParams;
     private ImageView mSplashView;
     private Drawable mSplashViewDrawable;
     private TaskView mTaskView;
@@ -279,7 +279,7 @@ public class TaskThumbnailViewDeprecated extends View implements ViewPool.Reusab
         canvas.save();
         // Draw the insets if we're being drawn fullscreen (we do this for quick switch).
         drawOnCanvas(canvas, 0, 0, getMeasuredWidth(), getMeasuredHeight(),
-                mFullscreenParams.getCurrentDrawnCornerRadius());
+                mFullscreenParams.getCurrentCornerRadius());
         canvas.restore();
     }
 
@@ -287,7 +287,7 @@ public class TaskThumbnailViewDeprecated extends View implements ViewPool.Reusab
         return mPreviewPositionHelper;
     }
 
-    public void setFullscreenParams(TaskView.FullscreenDrawParams fullscreenParams) {
+    public void setFullscreenParams(FullscreenDrawParams fullscreenParams) {
         mFullscreenParams = fullscreenParams;
         invalidate();
     }
@@ -473,7 +473,7 @@ public class TaskThumbnailViewDeprecated extends View implements ViewPool.Reusab
             mBitmapShader.setLocalMatrix(mPreviewPositionHelper.getMatrix());
             mPaint.setShader(mBitmapShader);
         }
-        mTaskView.updateCurrentFullscreenParams();
+        mTaskView.updateFullscreenParams();
         invalidate();
     }
 

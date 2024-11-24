@@ -154,8 +154,9 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
 
     @Override
     protected boolean isTaskbarTouchable() {
-        return !(mTaskbarLauncherStateController.isAnimatingToLauncher()
-                && mTaskbarLauncherStateController.isTaskbarAlignedWithHotseat());
+        // Touching down during animation to Hotseat will end the transition and allow the touch to
+        // go through to the Hotseat directly.
+        return !isAnimatingToHotseat();
     }
 
     public void setShouldDelayLauncherStateAnim(boolean shouldDelayLauncherStateAnim) {
@@ -437,6 +438,17 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
         return mTaskbarLauncherStateController.isInHotseatOnTopStates()
                 && mTaskbarInAppDisplayProgressMultiProp.get(MINUS_ONE_PAGE_PROGRESS_INDEX)
                     .getValue() == 0;
+    }
+
+    @Override
+    public boolean isAnimatingToHotseat() {
+        return mTaskbarLauncherStateController.isAnimatingToLauncher()
+                && isIconAlignedWithHotseat();
+    }
+
+    @Override
+    public void endAnimationToHotseat() {
+        mTaskbarLauncherStateController.resetIconAlignment();
     }
 
     @Override

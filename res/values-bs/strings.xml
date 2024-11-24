@@ -32,6 +32,8 @@
     <string name="split_app_info_accessibility" msgid="5475288491241414932">"Informacije o aplikaciji %1$s"</string>
     <string name="split_app_usage_settings" msgid="7214375263347964093">"Postavke korištenja za: %1$s"</string>
     <string name="new_window_option_taskbar" msgid="6448780542727767211">"Novi prozor"</string>
+    <!-- no translation found for manage_windows_option_taskbar (2294109489960654212) -->
+    <skip />
     <string name="save_app_pair" msgid="5647523853662686243">"Sačuvaj par aplikacija"</string>
     <string name="app_pair_default_title" msgid="4045241727446873529">"<xliff:g id="APP1">%1$s</xliff:g> | <xliff:g id="APP2">%2$s</xliff:g>"</string>
     <string name="app_pair_unlaunchable_at_screen_size" msgid="3446551575502685376">"Par aplikacija nije podržan na uređaju"</string>
@@ -69,12 +71,9 @@
     <string name="widget_category_note_taking" msgid="3469689394504266039">"Pisanje bilješki"</string>
     <string name="widget_add_button_label" msgid="2761267068711937179">"Dodajte"</string>
     <string name="widget_add_button_content_description" msgid="1810530016360039643">"Dodavanje vidžeta <xliff:g id="WIDGET_NAME">%1$s</xliff:g>"</string>
-    <!-- no translation found for widgets_list_expand_button_label (7912016136574932622) -->
-    <skip />
-    <!-- no translation found for widgets_list_expand_button_content_description (4600513860973450888) -->
-    <skip />
-    <!-- no translation found for widgets_list_expanded (7374857868788557730) -->
-    <skip />
+    <string name="widgets_list_expand_button_label" msgid="7912016136574932622">"Prikaži sve"</string>
+    <string name="widgets_list_expand_button_content_description" msgid="4600513860973450888">"Prikaz svih vidžeta"</string>
+    <string name="widgets_list_expanded" msgid="7374857868788557730">"Prikazivanje svih vidžeta"</string>
     <string name="reconfigurable_widget_education_tip" msgid="6336962690888067057">"Dodirnite da promijenite postavke vidžeta"</string>
     <string name="widget_reconfigure_button_content_description" msgid="8811472721881205250">"Promjena postavki vidžeta"</string>
     <string name="all_apps_search_bar_hint" msgid="1390553134053255246">"Pretražite aplikacije"</string>
@@ -130,10 +129,8 @@
     <string name="msg_disabled_by_admin" msgid="6898038085516271325">"Onemogućio vaš administrator"</string>
     <string name="allow_rotation_title" msgid="7222049633713050106">"Dozvoli rotiranje početnog ekrana"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"Kada se telefon zarotira"</string>
-    <!-- no translation found for landscape_mode_title (5138814555934843926) -->
-    <skip />
-    <!-- no translation found for landscape_mode_desc (7372569859592816793) -->
-    <skip />
+    <string name="landscape_mode_title" msgid="5138814555934843926">"Vodoravni način"</string>
+    <string name="landscape_mode_desc" msgid="7372569859592816793">"Postavite telefon u vodoravni način"</string>
     <string name="notification_dots_title" msgid="9062440428204120317">"Tačke za obavještenja"</string>
     <string name="notification_dots_desc_on" msgid="1679848116452218908">"Uključeno"</string>
     <string name="notification_dots_desc_off" msgid="1760796511504341095">"Isključeno"</string>
@@ -198,8 +195,7 @@
     <string name="work_apps_paused_edu_accept" msgid="6377476824357318532">"Razumijem"</string>
     <string name="work_apps_pause_btn_text" msgid="4669288269140620646">"Pauziraj poslovne aplikacije"</string>
     <string name="work_apps_enable_btn_text" msgid="1736198302467317371">"Ponovo pokreni"</string>
-    <!-- no translation found for work_scheduler_button_content_description (917340740986764967) -->
-    <skip />
+    <string name="work_scheduler_button_content_description" msgid="917340740986764967">"Raspored poslovnih aplikacija"</string>
     <string name="developer_options_filter_hint" msgid="5896817443635989056">"Filtrirajte"</string>
     <string name="remote_action_failed" msgid="1383965239183576790">"Nije uspjelo: <xliff:g id="WHAT">%1$s</xliff:g>"</string>
     <string name="private_space_label" msgid="2359721649407947001">"Privatni prostor"</string>

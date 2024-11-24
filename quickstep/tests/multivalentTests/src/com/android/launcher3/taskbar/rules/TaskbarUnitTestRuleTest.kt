@@ -19,11 +19,13 @@ package com.android.launcher3.taskbar.rules
 import android.platform.test.annotations.DisableFlags
 import android.platform.test.annotations.EnableFlags
 import android.platform.test.flag.junit.SetFlagsRule
+import com.android.launcher3.Utilities
 import com.android.launcher3.taskbar.TaskbarActivityContext
 import com.android.launcher3.taskbar.TaskbarKeyguardController
 import com.android.launcher3.taskbar.TaskbarManager
 import com.android.launcher3.taskbar.TaskbarStashController
 import com.android.launcher3.taskbar.bubbles.BubbleBarController
+import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule.ForceRtl
 import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule.InjectController
 import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule.NavBarKidsMode
 import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule.UserSetupMode
@@ -194,6 +196,14 @@ class TaskbarUnitTestRuleTest {
         @NavBarKidsMode class Mode
         onSetup(description = Description.createSuiteDescription(Mode::class.java)) {
             assertThat(activityContext.isNavBarForceVisible).isTrue()
+        }
+    }
+
+    @Test
+    fun testForceRtlAnnotation_setsActivityContextLayoutDirection() {
+        @ForceRtl class Rtl
+        onSetup(description = Description.createSuiteDescription(Rtl::class.java)) {
+            assertThat(Utilities.isRtl(activityContext.resources)).isTrue()
         }
     }
 

@@ -19,19 +19,9 @@ package com.android.quickstep.task.viewmodel
 import android.graphics.Matrix
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 
 /** ViewModel for representing TaskThumbnails */
 interface TaskThumbnailViewModel {
-    /**
-     * Progress for changes in corner radius. progress: 0 = overview corner radius; 1 = fullscreen
-     * corner radius.
-     */
-    val cornerRadiusProgress: StateFlow<Float>
-
-    /** The accumulated View.scale value for parent Views up to and including RecentsView */
-    val inheritedScale: Flow<Float>
-
     /** Provides the level of dimming that the View should have */
     val dimProgress: Flow<Float>
 

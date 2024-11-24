@@ -303,10 +303,11 @@ public class SecondaryDropTarget extends ButtonDropTarget implements OnAlarmList
                     .setData(Uri.fromParts("package", cn.getPackageName(), cn.getClassName()))
                     .putExtra(Intent.EXTRA_USER, info.user);
             context.startActivity(i);
-            FileLog.d(TAG, "start uninstall activity " + cn.getPackageName());
+            FileLog.d(TAG, "start uninstall activity from drop target " + cn.getPackageName());
             return cn;
         } catch (URISyntaxException e) {
-            Log.e(TAG, "Failed to parse intent to start uninstall activity for item=" + info);
+            Log.e(TAG, "Failed to parse intent to start drop target uninstall activity for"
+                    + " item=" + info);
             return null;
         }
     }

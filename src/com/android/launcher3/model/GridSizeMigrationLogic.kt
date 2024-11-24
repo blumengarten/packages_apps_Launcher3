@@ -58,12 +58,17 @@ class GridSizeMigrationLogic {
         }
 
         val isFirstLoad = get(context).get(LauncherPrefs.IS_FIRST_LOAD_AFTER_RESTORE)
-        Log.d(TAG, "Begin grid migration. First load: $isFirstLoad")
+        Log.d(
+            TAG,
+            "Begin grid migration. First load: $isFirstLoad\n srcDeviceState: " +
+                "$srcDeviceState\ndestDeviceState: $destDeviceState\nisDestNewDb: $isDestNewDb",
+        )
 
         // This is a special case where if the grid is the same amount of columns but a larger
         // amount of rows we simply copy over the source grid to the destination grid, rather
         // than undergoing the general grid migration.
         if (shouldMigrateToStrictlyTallerGrid(isDestNewDb, srcDeviceState, destDeviceState)) {
+            Log.d(TAG, "Migrating to strictly taller grid")
             copyTable(source, TABLE_NAME, target.writableDatabase, TABLE_NAME, context)
             if (oneGridSpecs()) {
                 val destReader = DbReader(target.writableDatabase, TABLE_NAME, context)

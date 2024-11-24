@@ -28,6 +28,7 @@ import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCH
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.ScrollableLayoutManager.PREDICTIVE_BACK_MIN_SCALE;
 import static com.android.launcher3.views.RecyclerViewFastScroller.FastScrollerLocation.ALL_APPS_SCROLLER;
+import static com.android.window.flags.Flags.predictiveBackThreeButtonNav;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -1173,8 +1174,10 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         super.dispatchDraw(canvas);
 
         if (mNavBarScrimHeight > 0) {
-            canvas.drawRect(0, getHeight() - mNavBarScrimHeight, getWidth(), getHeight(),
-                    mNavBarScrimPaint);
+            float left = (getWidth() - getWidth() / getScaleX()) / 2;
+            float top = getHeight() / 2f + (getHeight() / 2f - mNavBarScrimHeight) / getScaleY();
+            canvas.drawRect(left, top, getWidth() / getScaleX(),
+                    top + mNavBarScrimHeight / getScaleY(), mNavBarScrimPaint);
         }
     }
 
@@ -1338,6 +1341,17 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     public void setTranslationY(float translationY) {
         super.setTranslationY(translationY);
         invalidateHeader();
+    }
+
+    @Override
+    public void setScaleY(float scaleY) {
+        super.setScaleY(scaleY);
+        if (predictiveBackThreeButtonNav() && mNavBarScrimHeight > 0) {
+            // Call invalidate to prevent navbar scrim from scaling. The navbar scrim is drawn
+            // directly onto the canvas. To prevent it from being scaled with the canvas, there's a
+            // counter scale applied in dispatchDraw.
+            invalidate(20, getHeight() - mNavBarScrimHeight, getWidth(), getHeight());
+        }
     }
 
     /**

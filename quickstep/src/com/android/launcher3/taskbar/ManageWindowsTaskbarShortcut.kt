@@ -34,7 +34,7 @@ import com.android.quickstep.RecentsModel
 import com.android.quickstep.SystemUiProxy
 import com.android.quickstep.util.GroupTask
 import com.android.systemui.shared.recents.model.ThumbnailData
-import com.android.wm.shell.shared.desktopmode.ManageWindowsViewContainer
+import com.android.wm.shell.shared.multiinstance.ManageWindowsViewContainer
 import java.util.Collections
 import java.util.function.Predicate
 
@@ -46,7 +46,7 @@ import java.util.function.Predicate
 class ManageWindowsTaskbarShortcut<T>(
     private val target: T,
     private val itemInfo: ItemInfo?,
-    private val originalView: View?,
+    private val originalView: View,
     private val controllers: TaskbarControllers,
 ) :
     SystemShortcut<T>(
@@ -123,7 +123,7 @@ class ManageWindowsTaskbarShortcut<T>(
 
         taskbarShortcutAllWindowsView =
             TaskbarShortcutManageWindowsView(
-                originalView!!,
+                originalView,
                 controllers.taskbarOverlayController.requestWindow(),
                 taskList,
                 onIconClickListener,
@@ -160,7 +160,7 @@ class ManageWindowsTaskbarShortcut<T>(
 
         /** Adds the carousel menu to the taskbar overlay drag layer */
         override fun addToContainer(menuView: ManageWindowsView) {
-            taskbarOverlayContext.dragLayer.post { positionCarouselMenu() }
+            positionCarouselMenu()
 
             controllers.taskbarAutohideSuspendController.updateFlag(
                 FLAG_AUTOHIDE_SUSPEND_MULTI_INSTANCE_MENU_OPEN,
@@ -184,28 +184,28 @@ class ManageWindowsTaskbarShortcut<T>(
          * align with the calling app while ensuring it doesn't go beyond the screen edge.
          */
         private fun positionCarouselMenu() {
+            val deviceProfile = taskbarActivityContext.deviceProfile
             val margin =
                 context.resources.getDimension(
                     R.dimen.taskbar_multi_instance_menu_min_padding_from_screen_edge
                 )
 
             // Calculate the Y position to place the carousel above the taskbar
-            val availableHeight = taskbarOverlayContext.dragLayer.height
             menuView.rootView.y =
-                availableHeight -
+                deviceProfile.availableHeightPx -
                     menuView.menuHeight -
                     controllers.taskbarStashController.touchableHeight -
                     margin
 
             // Calculate the X position to align with the calling app,
             // but avoid clashing with the screen edge
-            val availableWidth = taskbarOverlayContext.dragLayer.width
-            if (Utilities.isRtl(context.resources)) {
-                menuView.rootView.translationX = -(availableWidth - menuView.menuWidth) / 2f
-            } else {
-                val maxX = availableWidth - menuView.menuWidth - margin
-                menuView.rootView.translationX = minOf(originalView.x, maxX)
-            }
+            menuView.rootView.translationX =
+                if (Utilities.isRtl(context.resources)) {
+                    -(deviceProfile.availableWidthPx - menuView.menuWidth) / 2f
+                } else {
+                    val maxX = deviceProfile.availableWidthPx - menuView.menuWidth - margin
+                    minOf(originalView.x, maxX)
+                }
         }
 
         /** Closes the carousel menu and removes it from the taskbar overlay drag layer */
@@ -227,8 +227,8 @@ class ManageWindowsTaskbarShortcut<T>(
         override fun onControllerInterceptTouchEvent(ev: MotionEvent?): Boolean {
             ev?.let {
                 if (
-                    ev.action == MotionEvent.ACTION_DOWN &&
-                        !taskbarOverlayContext.dragLayer.isEventOverView(menuView.rootView, ev)
+                    it.action == MotionEvent.ACTION_DOWN &&
+                        !taskbarOverlayContext.dragLayer.isEventOverView(menuView.rootView, it)
                 ) {
                     removeFromContainer()
                 }

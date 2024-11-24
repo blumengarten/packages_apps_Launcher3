@@ -236,7 +236,8 @@ public class RotationTouchHelper implements DisplayInfoChangeListener, SafeClose
             return;
         }
 
-        mOrientationTouchTransformer.createOrAddTouchRegion(mDisplayController.getInfo());
+        mOrientationTouchTransformer.createOrAddTouchRegion(mDisplayController.getInfo(),
+                "RTH.updateGestureTouchRegions");
     }
 
     /**
@@ -273,7 +274,8 @@ public class RotationTouchHelper implements DisplayInfoChangeListener, SafeClose
 
             if (hasGestures(mMode)) {
                 updateGestureTouchRegions();
-                mOrientationTouchTransformer.createOrAddTouchRegion(info);
+                mOrientationTouchTransformer.createOrAddTouchRegion(info,
+                        "RTH.onDisplayInfoChanged");
                 mCurrentAppRotation = mDisplayRotation;
 
                 /* Update nav bars on the following:

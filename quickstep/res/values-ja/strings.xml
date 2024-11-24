@@ -53,7 +53,7 @@
     <string name="back_gesture_feedback_cancelled" msgid="762621530959111290">"画面の右端または左端から中央に向かってスワイプし、指を離してください"</string>
     <string name="back_gesture_feedback_complete_with_overview_follow_up" msgid="9176400654037014471">"右側からスワイプして前の画面に戻る方法を学習しました。次は、アプリを切り替える方法を覚えましょう。"</string>
     <string name="back_gesture_feedback_complete_with_follow_up" msgid="8653374779579748392">"「戻る」操作を完了しました。次は、アプリを切り替える方法を覚えましょう。"</string>
-    <string name="back_gesture_feedback_complete_without_follow_up" msgid="197189945858268342">"「戻る」操作を学習しました"</string>
+    <string name="back_gesture_feedback_complete_without_follow_up" msgid="197189945858268342">"「戻る」ジェスチャーを学習しました"</string>
     <string name="back_gesture_feedback_swipe_in_nav_bar" msgid="9157480023651452969">"スワイプする際は画面の下部に近づきすぎないようにしましょう"</string>
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"「戻る」操作の感度を変更するには [設定] に移動します"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"スワイプで戻る"</string>
@@ -65,7 +65,7 @@
     <string name="home_gesture_feedback_overview_detected" msgid="5177627157303895077">"指を離す前にいったん止めないでください"</string>
     <string name="home_gesture_feedback_wrong_swipe_direction" msgid="8328465201424027148">"まっすぐ上にスワイプしてください"</string>
     <string name="home_gesture_feedback_complete_with_follow_up" msgid="8766981412895888417">"「ホームに移動」操作を学習しました。次は、前の画面に戻る方法を覚えましょう。"</string>
-    <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"「ホームに移動」操作を学習しました"</string>
+    <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"「ホームに移動」ジェスチャーを学習しました"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"スワイプでホームに戻る"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"画面を下から上にスワイプします。この操作でいつでもホーム画面に戻れます。"</string>
     <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"2 本の指で画面下部から上にスワイプします。この操作で常にホーム画面に戻ります。"</string>

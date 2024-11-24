@@ -34,10 +34,6 @@ class RecentsViewModel(
         recentsTasksRepository.setVisibleTasks(visibleTaskIdList.toSet())
     }
 
-    fun updateScale(scale: Float) {
-        recentsViewData.scale.value = scale
-    }
-
     fun updateFullscreenProgress(fullscreenProgress: Float) {
         recentsViewData.fullscreenProgress.value = fullscreenProgress
     }

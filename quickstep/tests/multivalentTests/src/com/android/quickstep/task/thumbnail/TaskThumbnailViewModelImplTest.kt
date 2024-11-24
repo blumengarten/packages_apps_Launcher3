@@ -37,8 +37,6 @@ import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.SnapshotSplash
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.Uninitialized
 import com.android.quickstep.task.viewmodel.TaskContainerData
 import com.android.quickstep.task.viewmodel.TaskThumbnailViewModelImpl
-import com.android.quickstep.task.viewmodel.TaskViewData
-import com.android.quickstep.views.TaskViewType
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.ThumbnailData
 import com.google.common.truth.Truth.assertThat
@@ -57,9 +55,7 @@ class TaskThumbnailViewModelImplTest {
     private val dispatcher = StandardTestDispatcher()
     private val testScope = TestScope(dispatcher)
 
-    private var taskViewType = TaskViewType.SINGLE
     private val recentsViewData = RecentsViewData()
-    private val taskViewData by lazy { TaskViewData(taskViewType) }
     private val taskContainerData = TaskContainerData()
     private val dispatcherProvider = TestDispatcherProvider(dispatcher)
     private val tasksRepository = FakeTasksRepository()
@@ -69,7 +65,6 @@ class TaskThumbnailViewModelImplTest {
     private val systemUnderTest by lazy {
         TaskThumbnailViewModelImpl(
             recentsViewData,
-            taskViewData,
             taskContainerData,
             dispatcherProvider,
             tasksRepository,
@@ -121,40 +116,6 @@ class TaskThumbnailViewModelImplTest {
                         expectedIconData,
                     )
                 )
-        }
-
-    @Test
-    fun setRecentsFullscreenProgress_thenCornerRadiusProgressIsPassedThrough() =
-        testScope.runTest {
-            recentsViewData.fullscreenProgress.value = 0.5f
-
-            assertThat(systemUnderTest.cornerRadiusProgress.first()).isEqualTo(0.5f)
-
-            recentsViewData.fullscreenProgress.value = 0.6f
-
-            assertThat(systemUnderTest.cornerRadiusProgress.first()).isEqualTo(0.6f)
-        }
-
-    @Test
-    fun setRecentsFullscreenProgress_thenCornerRadiusProgressIsConstantForDesktop() =
-        testScope.runTest {
-            taskViewType = TaskViewType.DESKTOP
-            recentsViewData.fullscreenProgress.value = 0.5f
-
-            assertThat(systemUnderTest.cornerRadiusProgress.first()).isEqualTo(1f)
-
-            recentsViewData.fullscreenProgress.value = 0.6f
-
-            assertThat(systemUnderTest.cornerRadiusProgress.first()).isEqualTo(1f)
-        }
-
-    @Test
-    fun setAncestorScales_thenScaleIsCalculated() =
-        testScope.runTest {
-            recentsViewData.scale.value = 0.5f
-            taskViewData.scale.value = 0.6f
-
-            assertThat(systemUnderTest.inheritedScale.first()).isEqualTo(0.3f)
         }
 
     @Test

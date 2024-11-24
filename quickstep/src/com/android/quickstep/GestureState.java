@@ -274,7 +274,7 @@ public class GestureState implements RecentsAnimationCallbacks.RecentsAnimationL
      * @return the interface to the activity handing the UI updates for this gesture.
      */
     public <S extends BaseState<S>, T extends RecentsViewContainer & StatefulContainer<S>>
-    BaseContainerInterface getContainerInterface() {
+            BaseContainerInterface<S, T> getContainerInterface() {
         return mContainerInterface;
     }
 

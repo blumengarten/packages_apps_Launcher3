@@ -304,7 +304,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
         mTISBindHelper = new TISBindHelper(this, this::onTISConnected);
         mDepthController = new DepthController(this);
-        if (DesktopModeStatus.canEnterDesktopMode(this)) {
+        if (DesktopModeStatus.canEnterDesktopModeOrShowAppHandle(this)) {
             mSplitSelectStateController.initSplitFromDesktopController(this,
                     overviewComponentObserver);
         }

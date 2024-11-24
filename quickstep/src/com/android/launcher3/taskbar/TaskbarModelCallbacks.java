@@ -208,7 +208,7 @@ public class TaskbarModelCallbacks implements
 
     private void commitHotseatItemUpdates(
             ItemInfo[] hotseatItemInfos, List<GroupTask> recentTasks) {
-        mContainer.updateHotseatItems(hotseatItemInfos, recentTasks);
+        mContainer.updateItems(hotseatItemInfos, recentTasks);
         mControllers.taskbarViewController.updateIconViewsRunningStates();
     }
 

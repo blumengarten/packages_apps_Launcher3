@@ -124,9 +124,10 @@ open class BaseLauncherActivityTest<LAUNCHER_TYPE : Launcher> {
 
     @JvmOverloads
     protected fun injectKeyEvent(keyCode: Int, actionDown: Boolean, metaState: Int = 0) {
+        uiDevice.waitForIdle()
         val eventTime = SystemClock.uptimeMillis()
         val event =
-            KeyEvent.obtain(
+            KeyEvent(
                 eventTime,
                 eventTime,
                 if (actionDown) KeyEvent.ACTION_DOWN else MotionEvent.ACTION_UP,
@@ -137,10 +138,8 @@ open class BaseLauncherActivityTest<LAUNCHER_TYPE : Launcher> {
                 /* scancode= */ 0,
                 /* flags= */ 0,
                 InputDevice.SOURCE_KEYBOARD,
-                /* characters =*/ null,
             )
         executeOnLauncher { it.dispatchKeyEvent(event) }
-        event.recycle()
     }
 
     @JvmOverloads

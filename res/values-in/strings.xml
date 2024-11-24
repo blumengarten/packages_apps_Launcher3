@@ -32,6 +32,8 @@
     <string name="split_app_info_accessibility" msgid="5475288491241414932">"Info aplikasi untuk %1$s"</string>
     <string name="split_app_usage_settings" msgid="7214375263347964093">"Setelan penggunaan untuk %1$s"</string>
     <string name="new_window_option_taskbar" msgid="6448780542727767211">"Jendela Baru"</string>
+    <!-- no translation found for manage_windows_option_taskbar (2294109489960654212) -->
+    <skip />
     <string name="save_app_pair" msgid="5647523853662686243">"Simpan pasangan aplikasi"</string>
     <string name="app_pair_default_title" msgid="4045241727446873529">"<xliff:g id="APP1">%1$s</xliff:g> | <xliff:g id="APP2">%2$s</xliff:g>"</string>
     <string name="app_pair_unlaunchable_at_screen_size" msgid="3446551575502685376">"Pasangan aplikasi ini tidak didukung di perangkat ini"</string>
@@ -69,12 +71,9 @@
     <string name="widget_category_note_taking" msgid="3469689394504266039">"Pembuatan catatan"</string>
     <string name="widget_add_button_label" msgid="2761267068711937179">"Tambahkan"</string>
     <string name="widget_add_button_content_description" msgid="1810530016360039643">"Tambahkan widget <xliff:g id="WIDGET_NAME">%1$s</xliff:g>"</string>
-    <!-- no translation found for widgets_list_expand_button_label (7912016136574932622) -->
-    <skip />
-    <!-- no translation found for widgets_list_expand_button_content_description (4600513860973450888) -->
-    <skip />
-    <!-- no translation found for widgets_list_expanded (7374857868788557730) -->
-    <skip />
+    <string name="widgets_list_expand_button_label" msgid="7912016136574932622">"Tampilkan semua"</string>
+    <string name="widgets_list_expand_button_content_description" msgid="4600513860973450888">"Tampilkan semua widget"</string>
+    <string name="widgets_list_expanded" msgid="7374857868788557730">"Menampilkan semua widget"</string>
     <string name="reconfigurable_widget_education_tip" msgid="6336962690888067057">"Ketuk untuk mengubah setelan widget"</string>
     <string name="widget_reconfigure_button_content_description" msgid="8811472721881205250">"Ubah setelan widget"</string>
     <string name="all_apps_search_bar_hint" msgid="1390553134053255246">"Telusuri aplikasi"</string>
@@ -130,10 +129,8 @@
     <string name="msg_disabled_by_admin" msgid="6898038085516271325">"Dinonaktifkan oleh admin"</string>
     <string name="allow_rotation_title" msgid="7222049633713050106">"Izinkan layar utama diputar"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"Saat ponsel diputar"</string>
-    <!-- no translation found for landscape_mode_title (5138814555934843926) -->
-    <skip />
-    <!-- no translation found for landscape_mode_desc (7372569859592816793) -->
-    <skip />
+    <string name="landscape_mode_title" msgid="5138814555934843926">"Mode lanskap"</string>
+    <string name="landscape_mode_desc" msgid="7372569859592816793">"Setel ponsel ke mode lanskap"</string>
     <string name="notification_dots_title" msgid="9062440428204120317">"Titik notifikasi"</string>
     <string name="notification_dots_desc_on" msgid="1679848116452218908">"Aktif"</string>
     <string name="notification_dots_desc_off" msgid="1760796511504341095">"Nonaktif"</string>
@@ -198,8 +195,7 @@
     <string name="work_apps_paused_edu_accept" msgid="6377476824357318532">"Oke"</string>
     <string name="work_apps_pause_btn_text" msgid="4669288269140620646">"Jeda aplikasi kerja"</string>
     <string name="work_apps_enable_btn_text" msgid="1736198302467317371">"Aktifkan lagi"</string>
-    <!-- no translation found for work_scheduler_button_content_description (917340740986764967) -->
-    <skip />
+    <string name="work_scheduler_button_content_description" msgid="917340740986764967">"Jadwal aplikasi kerja"</string>
     <string name="developer_options_filter_hint" msgid="5896817443635989056">"Filter"</string>
     <string name="remote_action_failed" msgid="1383965239183576790">"Gagal: <xliff:g id="WHAT">%1$s</xliff:g>"</string>
     <string name="private_space_label" msgid="2359721649407947001">"Ruang privasi"</string>

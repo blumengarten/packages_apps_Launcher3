@@ -168,7 +168,6 @@ abstract class AbstractDeviceProfileTest {
         isLandscape: Boolean = false,
         isGestureMode: Boolean = true,
         isFolded: Boolean = false,
-        isFixedLandscape: Boolean = false,
     ) {
         val (unfoldedNaturalX, unfoldedNaturalY) = deviceSpecUnfolded.naturalSize
         val unfoldedWindowsBounds =
@@ -195,7 +194,6 @@ abstract class AbstractDeviceProfileTest {
                 rotation = if (isLandscape) Surface.ROTATION_90 else Surface.ROTATION_0,
                 isGestureMode = isGestureMode,
                 densityDpi = deviceSpecFolded.densityDpi,
-                isFixedLandscape = isFixedLandscape,
             )
         } else {
             initializeCommonVars(
@@ -204,7 +202,6 @@ abstract class AbstractDeviceProfileTest {
                 rotation = if (isLandscape) Surface.ROTATION_0 else Surface.ROTATION_90,
                 isGestureMode = isGestureMode,
                 densityDpi = deviceSpecUnfolded.densityDpi,
-                isFixedLandscape = isFixedLandscape,
             )
         }
     }
