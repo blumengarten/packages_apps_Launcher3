@@ -83,7 +83,7 @@ open class TaskbarEduTooltipController(context: Context) :
     protected val activityContext: TaskbarActivityContext = ActivityContext.lookupContext(context)
     open val shouldShowSearchEdu: Boolean
         get() =
-            ContextualSearchInvoker.newInstance(activityContext)
+            ContextualSearchInvoker(activityContext)
                 .runContextualSearchInvocationChecksAndLogFailures()
 
     private val isTooltipEnabled: Boolean

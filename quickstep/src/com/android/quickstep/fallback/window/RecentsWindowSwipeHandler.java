@@ -31,6 +31,7 @@ import android.app.ActivityManager.RunningTaskInfo;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Matrix;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Bundle;
@@ -47,9 +48,11 @@ import android.view.RemoteAnimationTarget;
 import android.view.Surface;
 import android.view.SurfaceControl;
 import android.view.SurfaceControl.Transaction;
+import android.view.animation.Interpolator;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.UiThread;
 
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Utilities;
@@ -142,6 +145,29 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
             mMaxLauncherScale = 1 / mRemoteTargetHandles[0].getTaskViewSimulator()
                     .getFullScreenScale();
         }
+    }
+
+    @UiThread
+    @Override
+    protected void animateGestureEnd(
+            float startShift,
+            float endShift,
+            long duration,
+            @NonNull Interpolator interpolator,
+            @NonNull GestureState.GestureEndTarget endTarget,
+            @NonNull PointF velocityPxPerMs) {
+        boolean fromHomeToHome = mRunningOverHome
+                && endTarget == GestureState.GestureEndTarget.HOME;
+        if (fromHomeToHome) {
+            mRecentsWindowManager.startHome(/* finishRecentsAnimation= */ false);
+        }
+        super.animateGestureEnd(
+                startShift,
+                endShift,
+                fromHomeToHome ? 0 : duration,
+                interpolator,
+                endTarget,
+                velocityPxPerMs);
     }
 
     private void updateHomeActivityTransformDuringSwipeUp(SurfaceProperties builder,

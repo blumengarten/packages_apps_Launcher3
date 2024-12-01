@@ -109,7 +109,7 @@ class TransientBubbleStashControllerTest {
         setUpStashedHandleView()
         setUpBubbleStashedHandleViewController()
         PhysicsAnimatorTestUtils.prepareForTest()
-        mTransientBubbleStashController.setHotseatVerticalCenter(HOTSEAT_VERTICAL_CENTER)
+        mTransientBubbleStashController.bubbleBarVerticalCenterForHome = HOTSEAT_VERTICAL_CENTER
         mTransientBubbleStashController.init(
             taskbarInsetsController,
             bubbleBarViewController,
@@ -359,6 +359,57 @@ class TransientBubbleStashControllerTest {
 
         // Shows bubble bar immediately
         verify(bubbleBarViewController).setHiddenForStashed(false)
+    }
+
+    @Test
+    fun updateStashedAndExpandedState_expand_bubbleBarGesture() {
+        mTransientBubbleStashController.isStashed = true
+        whenever(bubbleBarViewController.isHiddenForNoBubbles).thenReturn(false)
+        whenever(bubbleBarViewController.isExpanded).thenReturn(false)
+
+        getInstrumentation().runOnMainSync {
+            mTransientBubbleStashController.updateStashedAndExpandedState(
+                stash = false,
+                expand = true,
+                bubbleBarGesture = true,
+            )
+        }
+
+        verify(bubbleBarViewController).setExpanded(true, true)
+    }
+
+    @Test
+    fun updateStashedAndExpandedState_expand_notBubbleBarGesture() {
+        mTransientBubbleStashController.isStashed = true
+        whenever(bubbleBarViewController.isHiddenForNoBubbles).thenReturn(false)
+        whenever(bubbleBarViewController.isExpanded).thenReturn(false)
+
+        getInstrumentation().runOnMainSync {
+            mTransientBubbleStashController.updateStashedAndExpandedState(
+                stash = false,
+                expand = true,
+                bubbleBarGesture = false,
+            )
+        }
+
+        verify(bubbleBarViewController).setExpanded(true, false)
+    }
+
+    @Test
+    fun updateStashedAndExpandedState_notExpanding_bubbleBarGesture() {
+        mTransientBubbleStashController.isStashed = true
+        whenever(bubbleBarViewController.isHiddenForNoBubbles).thenReturn(false)
+        whenever(bubbleBarViewController.isExpanded).thenReturn(false)
+
+        getInstrumentation().runOnMainSync {
+            mTransientBubbleStashController.updateStashedAndExpandedState(
+                stash = false,
+                expand = false,
+                bubbleBarGesture = true,
+            )
+        }
+
+        verify(bubbleBarViewController, never()).setExpanded(any(), any())
     }
 
     @Test

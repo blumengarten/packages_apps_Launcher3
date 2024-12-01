@@ -101,7 +101,7 @@ constructor(
     defStyleRes: Int = 0,
     focusBorderAnimator: BorderAnimator? = null,
     hoverBorderAnimator: BorderAnimator? = null,
-    private val type: TaskViewType = TaskViewType.SINGLE,
+    val type: TaskViewType = TaskViewType.SINGLE,
     protected val thumbnailFullscreenParams: FullscreenDrawParams = FullscreenDrawParams(context),
 ) : FrameLayout(context, attrs), ViewPool.Reusable {
     /**
@@ -1566,6 +1566,7 @@ constructor(
     }
 
     private fun onModalnessUpdated(modalness: Float) {
+        isClickable = modalness == 0f
         taskContainers.forEach {
             it.iconView.setModalAlpha(1 - modalness)
             it.digitalWellBeingToast?.bannerOffsetPercentage = modalness

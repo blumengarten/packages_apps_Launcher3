@@ -114,7 +114,8 @@ public class BubbleBarInputConsumer implements InputConsumer {
                 if (isWithinTapTime && !swipeUpOnBubbleHandle && !mPassedTouchSlop
                         && mStashedOrCollapsedOnDown) {
                     // Taps on the handle / collapsed state should open the bar
-                    mBubbleStashController.showBubbleBar(/* expandBubbles= */ true);
+                    mBubbleStashController.showBubbleBar(
+                            /* expandBubbles= */ true, /* bubbleBarGesture= */ true);
                 }
                 break;
         }

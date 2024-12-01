@@ -186,9 +186,10 @@ public class Hotseat extends CellLayout implements Insettable {
      */
     public void adjustForBubbleBar(boolean isBubbleBarVisible) {
         DeviceProfile dp = mActivity.getDeviceProfile();
-        float adjustedBorderSpace = dp.getHotseatAdjustedBorderSpaceForBubbleBar(getContext());
-        boolean shouldAdjustHotseat = isBubbleBarVisible
-                && Float.compare(adjustedBorderSpace, 0f) != 0;
+        boolean shouldAdjust = isBubbleBarVisible
+                && dp.shouldAdjustHotseatOrQsbForBubbleBar(getContext());
+        boolean shouldAdjustHotseat = shouldAdjust
+                && dp.shouldAlignBubbleBarWithHotseat();
         ShortcutAndWidgetContainer icons = getShortcutsAndWidgets();
         // update the translation provider for future layout passes of hotseat icons.
         if (shouldAdjustHotseat) {
@@ -209,9 +210,12 @@ public class Hotseat extends CellLayout implements Insettable {
                 animatorSet.play(ObjectAnimator.ofFloat(child, VIEW_TRANSLATE_X, tx));
             }
         }
+        //TODO(b/381109832) refactor & simplify adjustment logic
+        boolean shouldAdjustQsb =
+                shouldAdjustHotseat || (shouldAdjust && dp.shouldAlignBubbleBarWithQSB());
         if (mQsb instanceof HorizontalInsettableView horizontalInsettableQsb) {
             final float currentInsetFraction = horizontalInsettableQsb.getHorizontalInsets();
-            final float targetInsetFraction = shouldAdjustHotseat
+            final float targetInsetFraction = shouldAdjustQsb
                     ? (float) dp.iconSizePx / dp.hotseatQsbWidth : 0;
             ValueAnimator qsbAnimator =
                     ValueAnimator.ofFloat(currentInsetFraction, targetInsetFraction);

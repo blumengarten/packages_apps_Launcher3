@@ -21,8 +21,8 @@ import android.app.contextualsearch.ContextualSearchManager.ENTRYPOINT_LONG_PRES
 import android.app.contextualsearch.ContextualSearchManager.FEATURE_CONTEXTUAL_SEARCH
 import android.content.Context
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import com.android.internal.app.AssistUtils
-import com.android.launcher3.R
 import com.android.launcher3.logging.StatsLogManager
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_LAUNCH_ASSISTANT_FAILED_SERVICE_ERROR
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_LAUNCH_OMNI_ATTEMPTED_OVER_KEYGUARD
@@ -31,23 +31,26 @@ import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_LAUN
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_LAUNCH_OMNI_FAILED_NOT_AVAILABLE
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_LAUNCH_OMNI_FAILED_SETTING_DISABLED
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_LAUNCH_OMNI_SUCCESSFUL_HOME
-import com.android.launcher3.util.ResourceBasedOverride
+import com.android.quickstep.BaseContainerInterface
 import com.android.quickstep.DeviceConfigWrapper
+import com.android.quickstep.OverviewComponentObserver
+import com.android.quickstep.RecentsAnimationDeviceState
 import com.android.quickstep.SystemUiProxy
 import com.android.quickstep.TopTaskTracker
+import com.android.quickstep.views.RecentsView
 import com.android.systemui.shared.system.QuickStepContract
 
 /** Handles invocations and checks for Contextual Search. */
-open class ContextualSearchInvoker
+class ContextualSearchInvoker
 internal constructor(
-    protected val context: Context,
+    private val context: Context,
     private val contextualSearchStateManager: ContextualSearchStateManager,
     private val topTaskTracker: TopTaskTracker,
     private val systemUiProxy: SystemUiProxy,
-    protected val statsLogManager: StatsLogManager,
+    private val statsLogManager: StatsLogManager,
     private val contextualSearchHapticManager: ContextualSearchHapticManager,
     private val contextualSearchManager: ContextualSearchManager?,
-) : ResourceBasedOverride {
+) {
     constructor(
         context: Context
     ) : this(
@@ -61,7 +64,7 @@ internal constructor(
     )
 
     /** @return Array of AssistUtils.INVOCATION_TYPE_* that we want to handle instead of SysUI. */
-    open fun getSysUiAssistOverrideInvocationTypes(): IntArray {
+    fun getSysUiAssistOverrideInvocationTypes(): IntArray {
         val overrideInvocationTypes = com.android.launcher3.util.IntArray()
         if (context.packageManager.hasSystemFeature(FEATURE_CONTEXTUAL_SEARCH)) {
             overrideInvocationTypes.add(AssistUtils.INVOCATION_TYPE_HOME_BUTTON_LONG_PRESS)
@@ -183,7 +186,15 @@ internal constructor(
         if (contextualSearchManager == null) {
             return false
         }
-        contextualSearchManager.startContextualSearch(entryPoint)
+        val recentsContainerInterface = getRecentsContainerInterface()
+        if (recentsContainerInterface?.isInLiveTileMode() == true) {
+            Log.i(TAG, "Contextual Search invocation attempted: live tile")
+            endLiveTileMode(recentsContainerInterface) {
+                contextualSearchManager.startContextualSearch(entryPoint)
+            }
+        } else {
+            contextualSearchManager.startContextualSearch(entryPoint)
+        }
         return true
     }
 
@@ -199,6 +210,42 @@ internal constructor(
         return systemUiProxy.lastSystemUiStateFlags and KEYGUARD_SHOWING_SYSUI_FLAGS != 0L
     }
 
+    @VisibleForTesting
+    fun getRecentsContainerInterface(): BaseContainerInterface<*, *>? {
+        val rads = RecentsAnimationDeviceState(context)
+        val observer = OverviewComponentObserver(context, rads)
+        try {
+            return observer.containerInterface
+        } finally {
+            observer.onDestroy()
+            rads.destroy()
+        }
+    }
+
+    /**
+     * End the live tile mode.
+     *
+     * @param onCompleteRunnable Runnable to run when the live tile is paused. May run immediately.
+     */
+    private fun endLiveTileMode(
+        recentsContainerInterface: BaseContainerInterface<*, *>?,
+        onCompleteRunnable: Runnable,
+    ) {
+        val recentsViewContainer = recentsContainerInterface?.createdContainer
+        if (recentsViewContainer == null) {
+            onCompleteRunnable.run()
+            return
+        }
+        val recentsView: RecentsView<*, *> = recentsViewContainer.getOverviewPanel()
+        recentsView.switchToScreenshot {
+            recentsView.finishRecentsAnimation(
+                true, /* toRecents */
+                false, /* shouldPip */
+                onCompleteRunnable,
+            )
+        }
+    }
+
     companion object {
         private const val TAG = "ContextualSearchInvoker"
         const val SHADE_EXPANDED_SYSUI_FLAGS =
@@ -208,14 +255,5 @@ internal constructor(
             (QuickStepContract.SYSUI_STATE_BOUNCER_SHOWING or
                 QuickStepContract.SYSUI_STATE_STATUS_BAR_KEYGUARD_SHOWING or
                 QuickStepContract.SYSUI_STATE_STATUS_BAR_KEYGUARD_SHOWING_OCCLUDED)
-
-        @JvmStatic
-        fun newInstance(context: Context): ContextualSearchInvoker {
-            return ResourceBasedOverride.Overrides.getObject(
-                ContextualSearchInvoker::class.java,
-                context,
-                R.string.contextual_search_invoker_class,
-            )
-        }
     }
 }

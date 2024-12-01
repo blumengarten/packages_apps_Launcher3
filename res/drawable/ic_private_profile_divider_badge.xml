@@ -21,6 +21,6 @@
     <group>
       <path
           android:pathData="M5,9L15,9A1,1 0,0 1,16 10L16,10A1,1 0,0 1,15 11L5,11A1,1 0,0 1,4 10L4,10A1,1 0,0 1,5 9z"
-          android:fillColor="?attr/materialColorOnSurface"/>
+          android:fillColor="@color/materialColorOnSurface"/>
     </group>
 </vector>

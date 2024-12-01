@@ -18,8 +18,8 @@ package com.android.launcher3.taskbar;
 import static android.window.DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY;
 
 import static com.android.launcher3.QuickstepTransitionManager.TASKBAR_TO_APP_DURATION;
-import static com.android.launcher3.QuickstepTransitionManager.getTaskbarToHomeDuration;
 import static com.android.launcher3.QuickstepTransitionManager.TRANSIENT_TASKBAR_TRANSITION_DURATION;
+import static com.android.launcher3.QuickstepTransitionManager.getTaskbarToHomeDuration;
 import static com.android.launcher3.statemanager.BaseState.FLAG_NON_INTERACTIVE;
 import static com.android.launcher3.taskbar.TaskbarEduTooltipControllerKt.TOOLTIP_STEP_FEATURES;
 import static com.android.launcher3.taskbar.TaskbarLauncherStateController.FLAG_VISIBLE;
@@ -275,7 +275,8 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
         if (mControllers.bubbleControllers.isEmpty() || hotseat == null) return;
         boolean hiddenForBubbles =
                 mControllers.bubbleControllers.get().bubbleBarViewController.isHiddenForNoBubbles();
-        hotseat.post(() -> adjustHotseatForBubbleBar(!hiddenForBubbles));
+        if (hiddenForBubbles) return;
+        hotseat.post(() -> adjustHotseatForBubbleBar(/* isBubbleBarVisible= */ true));
     }
 
     /**

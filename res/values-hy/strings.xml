@@ -32,8 +32,7 @@
     <string name="split_app_info_accessibility" msgid="5475288491241414932">"Տեղեկություններ %1$s հավելվածի մասին"</string>
     <string name="split_app_usage_settings" msgid="7214375263347964093">"Օգտագործման կարգավորումներ (%1$s)"</string>
     <string name="new_window_option_taskbar" msgid="6448780542727767211">"Նոր պատուհան"</string>
-    <!-- no translation found for manage_windows_option_taskbar (2294109489960654212) -->
-    <skip />
+    <string name="manage_windows_option_taskbar" msgid="2294109489960654212">"Կառավարել պատուհանները"</string>
     <string name="save_app_pair" msgid="5647523853662686243">"Պահել հավելվ. զույգը"</string>
     <string name="app_pair_default_title" msgid="4045241727446873529">"<xliff:g id="APP1">%1$s</xliff:g> | <xliff:g id="APP2">%2$s</xliff:g>"</string>
     <string name="app_pair_unlaunchable_at_screen_size" msgid="3446551575502685376">"Հավելվածների զույգը չի աջակցվում այս սարքում"</string>
@@ -179,7 +178,7 @@
     <string name="action_decrease_width" msgid="1374549771083094654">"Նվազեցնել լայնությունը"</string>
     <string name="action_decrease_height" msgid="282377193880900022">"Նվազեցնել բարձրությունը"</string>
     <string name="widget_resized" msgid="9130327887929620">"Վիջեթի լայնությունը փոխվել է <xliff:g id="NUMBER_0">%1$s</xliff:g>-ի, իսկ բարձրությունը՝ <xliff:g id="NUMBER_1">%2$s</xliff:g>-ի"</string>
-    <string name="action_deep_shortcut" msgid="2864038805849372848">"Դյուրանցումներ"</string>
+    <string name="action_deep_shortcut" msgid="4766835855579976045">"Դյուրանցման ընտրացանկ"</string>
     <string name="action_dismiss_notification" msgid="5909461085055959187">"Անտեսել"</string>
     <string name="accessibility_close" msgid="2277148124685870734">"Փակել"</string>
     <string name="all_apps_personal_tab" msgid="4190252696685155002">"Անձնական"</string>

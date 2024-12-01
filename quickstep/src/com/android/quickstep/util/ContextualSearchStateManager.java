@@ -224,7 +224,7 @@ public class ContextualSearchStateManager implements ResourceBasedOverride, Safe
                 UI_HELPER_EXECUTOR.getHandler().postDelayed(
                         () -> {
                             boolean contextualSearchInvoked =
-                                    ContextualSearchInvoker.newInstance(mContext).show(
+                                    new ContextualSearchInvoker(mContext).show(
                                             ENTRYPOINT_SYSTEM_ACTION);
                             if (contextualSearchInvoked) {
                                 String runningPackage =

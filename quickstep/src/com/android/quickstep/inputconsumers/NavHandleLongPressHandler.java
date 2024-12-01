@@ -62,7 +62,7 @@ public class NavHandleLongPressHandler implements ResourceBasedOverride {
         mStatsLogManager = StatsLogManager.newInstance(context);
         mVibratorWrapper = VibratorWrapper.INSTANCE.get(mContext);
         mContextualSearchHapticManager = ContextualSearchHapticManager.INSTANCE.get(context);
-        mContextualSearchInvoker = ContextualSearchInvoker.newInstance(mContext);
+        mContextualSearchInvoker = new ContextualSearchInvoker(mContext);
     }
 
     /** Creates NavHandleLongPressHandler as specified by overrides */

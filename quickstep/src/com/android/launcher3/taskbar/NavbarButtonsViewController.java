@@ -66,6 +66,7 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Region;
 import android.graphics.Region.Op;
 import android.graphics.drawable.Drawable;
@@ -75,6 +76,7 @@ import android.inputmethodservice.InputMethodService;
 import android.os.Handler;
 import android.util.Property;
 import android.view.Gravity;
+import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -862,15 +864,21 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
 
     private void setBackButtonTouchListener(View buttonView,
             TaskbarNavButtonController navButtonController) {
+        final RectF rect = new RectF();
         buttonView.setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_MOVE) return false;
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                rect.set(0, 0, v.getWidth(), v.getHeight());
+            }
+            boolean isCancelled = event.getAction() == MotionEvent.ACTION_CANCEL
+                    || !rect.contains(event.getX(), event.getY());
+            if (event.getAction() == MotionEvent.ACTION_MOVE && !isCancelled) return false;
             int motionEventAction = event.getAction();
             int keyEventAction = motionEventAction == MotionEvent.ACTION_DOWN
                     ? KeyEvent.ACTION_DOWN : ACTION_UP;
-            boolean isCancelled = event.getAction() == MotionEvent.ACTION_CANCEL;
             navButtonController.sendBackKeyEvent(keyEventAction, isCancelled);
-            if (motionEventAction == MotionEvent.ACTION_UP) {
+            if (motionEventAction == MotionEvent.ACTION_UP && !isCancelled) {
                 buttonView.performClick();
+                buttonView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
             }
             return false;
         });
@@ -1306,7 +1314,8 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
             // If the task bar is not start aligned, the navigation bar is located in the center
             // between the taskbar and screen edges, depending on the bubble bar location.
             float navbarWidth = mNavButtonContainer.getWidth();
-            Rect taskbarBounds = mControllers.taskbarViewController.getIconLayoutBounds();
+            Rect taskbarBounds = mControllers.taskbarViewController
+                    .getTransientTaskbarIconLayoutBoundsInParent();
             if (isNavbarOnRight) {
                 if (mNavButtonsView.isLayoutRtl()) {
                     float taskBarEnd = taskbarBounds.right;
@@ -1326,8 +1335,10 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
     public void onLayoutsUpdated() {
         // no need to do anything if on phone, or if taskbar or navbar views were not placed on
         // screen.
+        Rect transientTaskbarIconLayoutBoundsInParent = mControllers.taskbarViewController
+                .getTransientTaskbarIconLayoutBoundsInParent();
         if (mContext.getDeviceProfile().isPhone
-                || mControllers.taskbarViewController.getIconLayoutBounds().isEmpty()
+                || transientTaskbarIconLayoutBoundsInParent.isEmpty()
                 || mNavButtonsView.getWidth() == 0) {
             return;
         }

@@ -31,7 +31,6 @@ import androidx.core.graphics.ColorUtils;
 
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
-import com.android.launcher3.util.Themes;
 
 /**
  * A TextView that is used to display the letter list in the fast scroller.
@@ -56,7 +55,7 @@ public class LetterListTextView extends TextView {
         mLetterBackground = context.getDrawable(R.drawable.bg_letter_list_text);
         mLetterListTextWidthAndHeight = context.getResources().getDimensionPixelSize(
                 R.dimen.fastscroll_list_letter_size);
-        mTextColor = Themes.getAttrColor(context, R.attr.materialColorOnSurface);
+        mTextColor = context.getColor(R.color.materialColorOnSurface);
     }
 
     @Override

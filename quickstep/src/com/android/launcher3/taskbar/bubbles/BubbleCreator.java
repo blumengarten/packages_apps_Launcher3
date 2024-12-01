@@ -30,7 +30,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
 import android.content.pm.ShortcutInfo;
-import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -217,14 +216,8 @@ public class BubbleCreator {
     private Bitmap createOverflowBitmap() {
         Drawable iconDrawable = mContext.getDrawable(R.drawable.bubble_ic_overflow_button);
 
-        final TypedArray ta = mContext.obtainStyledAttributes(
-                new int[]{
-                        R.attr.materialColorOnPrimaryFixed,
-                        R.attr.materialColorPrimaryFixed
-                });
-        int overflowIconColor = ta.getColor(0, Color.WHITE);
-        int overflowBackgroundColor = ta.getColor(1, Color.BLACK);
-        ta.recycle();
+        int overflowIconColor = mContext.getColor(R.color.materialColorOnPrimaryFixed);
+        int overflowBackgroundColor = mContext.getColor(R.color.materialColorPrimaryFixed);
 
         iconDrawable.setTint(overflowIconColor);
 

@@ -1453,8 +1453,21 @@ public abstract class AbsSwipeUpHandler<
                 onPageTransitionEnd.run();
             }
         }
+        long finalDuration = duration;
+        runOnRecentsAnimationAndLauncherBound(() -> animateGestureEnd(
+                startShift, endShift, finalDuration, interpolator, endTarget, velocityPxPerMs));
+    }
 
-        animateToProgress(startShift, endShift, duration, interpolator, endTarget, velocityPxPerMs);
+    @UiThread
+    protected void animateGestureEnd(
+            float startShift,
+            float endShift,
+            long duration,
+            @NonNull Interpolator interpolator,
+            @NonNull GestureEndTarget endTarget,
+            @NonNull PointF velocityPxPerMs) {
+        animateToProgressInternal(
+                startShift, endShift, duration, interpolator, endTarget, velocityPxPerMs);
     }
 
     private void doLogGesture(GestureEndTarget endTarget, @Nullable TaskView targetTask) {
@@ -1495,14 +1508,6 @@ public abstract class AbsSwipeUpHandler<
                 : mRecentsView.getNextPage();
         logger.withRank(pageIndex);
         logger.log(event);
-    }
-
-    /** Animates to the given progress, where 0 is the current app and 1 is overview. */
-    @UiThread
-    private void animateToProgress(float start, float end, long duration, Interpolator interpolator,
-            GestureEndTarget target, PointF velocityPxPerMs) {
-        runOnRecentsAnimationAndLauncherBound(() -> animateToProgressInternal(start, end, duration,
-                interpolator, target, velocityPxPerMs));
     }
 
     protected abstract HomeAnimationFactory createHomeAnimationFactory(

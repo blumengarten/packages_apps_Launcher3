@@ -18,10 +18,8 @@ package com.android.quickstep
 
 import android.content.ComponentName
 import android.content.Intent
-import android.platform.test.annotations.DisableFlags
 import android.platform.test.annotations.EnableFlags
 import android.platform.test.flag.junit.SetFlagsRule
-import com.android.dx.mockito.inline.extended.ExtendedMockito
 import com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession
 import com.android.dx.mockito.inline.extended.StaticMockitoSession
 import com.android.launcher3.AbstractFloatingView
@@ -29,7 +27,7 @@ import com.android.launcher3.AbstractFloatingViewHelper
 import com.android.launcher3.Flags.enableRefactorTaskThumbnail
 import com.android.launcher3.logging.StatsLogManager
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent
-import com.android.launcher3.model.data.WorkspaceItemInfo
+import com.android.launcher3.model.data.TaskViewItemInfo
 import com.android.launcher3.uioverrides.QuickstepLauncher
 import com.android.launcher3.util.SplitConfigurationOptions
 import com.android.launcher3.util.TransformingTouchDelegate
@@ -49,6 +47,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
@@ -58,7 +57,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
 
-/** Test for ExternalDisplaySystemShortcut */
+/** Test for [ExternalDisplaySystemShortcut] */
 class ExternalDisplaySystemShortcutTest {
 
     @get:Rule val setFlagsRule = SetFlagsRule(SetFlagsRule.DefaultInitValueType.DEVICE_DEFAULT)
@@ -68,14 +67,10 @@ class ExternalDisplaySystemShortcutTest {
     private val statsLogger: StatsLogManager.StatsLogger = mock()
     private val recentsView: LauncherRecentsView = mock()
     private val taskView: TaskView = mock()
-    private val workspaceItemInfo: WorkspaceItemInfo = mock()
     private val abstractFloatingViewHelper: AbstractFloatingViewHelper = mock()
-    private val iconView: TaskViewIcon = mock()
-    private val transformingTouchDelegate: TransformingTouchDelegate = mock()
+    private val overlayFactory: TaskOverlayFactory = mock()
     private val factory: TaskShortcutFactory =
         ExternalDisplaySystemShortcut.createFactory(abstractFloatingViewHelper)
-    private val overlayFactory: TaskOverlayFactory = mock()
-    private val overlay: TaskOverlay<*> = mock()
 
     private lateinit var mockitoSession: StaticMockitoSession
 
@@ -84,11 +79,10 @@ class ExternalDisplaySystemShortcutTest {
         mockitoSession =
             mockitoSession()
                 .strictness(Strictness.LENIENT)
-                .spyStatic(DesktopModeStatus::class.java)
+                .mockStatic(DesktopModeStatus::class.java)
                 .startMocking()
-        ExtendedMockito.doReturn(true).`when` { DesktopModeStatus.enforceDeviceRestrictions() }
-        ExtendedMockito.doReturn(true).`when` { DesktopModeStatus.isDesktopModeSupported(any()) }
-        whenever(overlayFactory.createOverlay(any())).thenReturn(overlay)
+        whenever(DesktopModeStatus.canEnterDesktopMode(any())).thenReturn(true)
+        whenever(overlayFactory.createOverlay(any())).thenReturn(mock<TaskOverlay<*>>())
     }
 
     @After
@@ -97,23 +91,9 @@ class ExternalDisplaySystemShortcutTest {
     }
 
     @Test
-    @DisableFlags(Flags.FLAG_ENABLE_DESKTOP_WINDOWING_MODE)
     @EnableFlags(Flags.FLAG_MOVE_TO_EXTERNAL_DISPLAY_SHORTCUT)
     fun createExternalDisplayTaskShortcut_desktopModeDisabled() {
-        val task = createTask()
-        val taskContainer = createTaskContainer(task)
-
-        val shortcuts = factory.getShortcuts(launcher, taskContainer)
-        assertThat(shortcuts).isNull()
-    }
-
-    @Test
-    @EnableFlags(
-        Flags.FLAG_ENABLE_DESKTOP_WINDOWING_MODE,
-        Flags.FLAG_MOVE_TO_EXTERNAL_DISPLAY_SHORTCUT,
-    )
-    fun createExternalDisplayTaskShortcut_desktopModeEnabled_deviceNotSupported() {
-        ExtendedMockito.doReturn(false).`when` { DesktopModeStatus.isDesktopModeSupported(any()) }
+        `when`(DesktopModeStatus.canEnterDesktopMode(any())).thenReturn(false)
 
         val taskContainer = createTaskContainer(createTask())
 
@@ -122,26 +102,7 @@ class ExternalDisplaySystemShortcutTest {
     }
 
     @Test
-    @EnableFlags(
-        Flags.FLAG_ENABLE_DESKTOP_WINDOWING_MODE,
-        Flags.FLAG_MOVE_TO_EXTERNAL_DISPLAY_SHORTCUT,
-    )
-    fun createExternalDisplayTaskShortcut_desktopModeEnabled_deviceNotSupported_overrideEnabled() {
-        ExtendedMockito.doReturn(false).`when` { DesktopModeStatus.isDesktopModeSupported(any()) }
-        ExtendedMockito.doReturn(false).`when` { DesktopModeStatus.enforceDeviceRestrictions() }
-
-        val taskContainer = spy(createTaskContainer(createTask()))
-        doReturn(workspaceItemInfo).whenever(taskContainer).itemInfo
-
-        val shortcuts = factory.getShortcuts(launcher, taskContainer)
-        assertThat(shortcuts).isNotNull()
-    }
-
-    @Test
-    @EnableFlags(
-        Flags.FLAG_ENABLE_DESKTOP_WINDOWING_MODE,
-        Flags.FLAG_MOVE_TO_EXTERNAL_DISPLAY_SHORTCUT,
-    )
+    @EnableFlags(Flags.FLAG_MOVE_TO_EXTERNAL_DISPLAY_SHORTCUT)
     fun externalDisplaySystemShortcutClicked() {
         val task = createTask()
         val taskContainer = spy(createTaskContainer(task))
@@ -154,7 +115,8 @@ class ExternalDisplaySystemShortcutTest {
             val successCallback = it.getArgument<Runnable>(1)
             successCallback.run()
         }
-        doReturn(workspaceItemInfo).whenever(taskContainer).itemInfo
+        val taskViewItemInfo = mock<TaskViewItemInfo>()
+        doReturn(taskViewItemInfo).whenever(taskContainer).itemInfo
 
         val shortcuts = factory.getShortcuts(launcher, taskContainer)
         assertThat(shortcuts).hasSize(1)
@@ -168,26 +130,23 @@ class ExternalDisplaySystemShortcutTest {
             AbstractFloatingView.TYPE_ALL and AbstractFloatingView.TYPE_REBIND_SAFE.inv()
         verify(abstractFloatingViewHelper).closeOpenViews(launcher, true, allTypesExceptRebindSafe)
         verify(recentsView).moveTaskToExternalDisplay(eq(taskContainer), any())
-        verify(statsLogger).withItemInfo(workspaceItemInfo)
+        verify(statsLogger).withItemInfo(taskViewItemInfo)
         verify(statsLogger).log(LauncherEvent.LAUNCHER_SYSTEM_SHORTCUT_EXTERNAL_DISPLAY_TAP)
     }
 
-    private fun createTask(): Task = Task(TaskKey(1, 0, Intent(), ComponentName("", ""), 0, 2000))
+    private fun createTask() = Task(TaskKey(1, 0, Intent(), ComponentName("", ""), 0, 2000))
 
-    private fun createTaskContainer(task: Task): TaskContainer {
-        val snapshotView =
-            if (enableRefactorTaskThumbnail()) mock<TaskThumbnailView>()
-            else mock<TaskThumbnailViewDeprecated>()
-        return TaskContainer(
+    private fun createTaskContainer(task: Task) =
+        TaskContainer(
             taskView,
             task,
-            snapshotView,
-            iconView,
-            transformingTouchDelegate,
+            if (enableRefactorTaskThumbnail()) mock<TaskThumbnailView>()
+            else mock<TaskThumbnailViewDeprecated>(),
+            mock<TaskViewIcon>(),
+            mock<TransformingTouchDelegate>(),
             SplitConfigurationOptions.STAGE_POSITION_UNDEFINED,
             digitalWellBeingToast = null,
             showWindowsView = null,
             overlayFactory,
         )
-    }
 }

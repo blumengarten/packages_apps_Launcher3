@@ -40,6 +40,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.content.Context;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.animation.Interpolator;
@@ -581,7 +582,7 @@ public class TaskbarLauncherStateController {
         float backgroundAlpha = isInLauncher && isTaskbarAlignedWithHotseat() ? 0 : 1;
         AnimatedFloat taskbarBgOffset =
                 mControllers.taskbarDragLayerController.getTaskbarBackgroundOffset();
-        boolean showTaskbar = !isInLauncher || isInOverview;
+        boolean showTaskbar = shouldShowTaskbar(mLauncher, isInLauncher, isInOverview);
         float taskbarBgOffsetEnd = showTaskbar ? 0f : 1f;
         float taskbarBgOffsetStart = showTaskbar ? 1f : 0f;
 
@@ -712,6 +713,14 @@ public class TaskbarLauncherStateController {
             animatorSet.start();
         }
         return animatorSet;
+    }
+
+    private static boolean shouldShowTaskbar(Context context, boolean isInLauncher,
+            boolean isInOverview) {
+        if (DisplayController.showLockedTaskbarOnHome(context) && isInLauncher) {
+            return true;
+        }
+        return !isInLauncher || isInOverview;
     }
 
     private void setupPinnedTaskbarAnimation(AnimatorSet animatorSet, boolean showTaskbar,

@@ -130,6 +130,22 @@ class ManageWindowsTaskbarShortcut<T>(
                 onOutsideClickListener,
                 controllers,
             )
+
+        // If the view is removed from elsewhere, reset the state to allow the taskbar to auto-stash
+        taskbarShortcutAllWindowsView.menuView.rootView.addOnAttachStateChangeListener(
+            object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(v: View) {
+                    return
+                }
+
+                override fun onViewDetachedFromWindow(v: View) {
+                    controllers.taskbarAutohideSuspendController.updateFlag(
+                        FLAG_AUTOHIDE_SUSPEND_MULTI_INSTANCE_MENU_OPEN,
+                        false,
+                    )
+                }
+            }
+        )
     }
 
     /**
@@ -148,7 +164,7 @@ class ManageWindowsTaskbarShortcut<T>(
     ) :
         ManageWindowsViewContainer(
             originalView.context,
-            Themes.getAttrColor(originalView.context, R.attr.materialColorSurfaceBright),
+            originalView.context.getColor(R.color.materialColorSurfaceBright),
         ),
         TouchController {
         private val taskbarActivityContext = controllers.taskbarActivityContext
@@ -214,7 +230,6 @@ class ManageWindowsTaskbarShortcut<T>(
                 FLAG_AUTOHIDE_SUSPEND_MULTI_INSTANCE_MENU_OPEN,
                 false,
             )
-            controllers.taskbarStashController.updateAndAnimateTransientTaskbar(true)
             taskbarOverlayContext.dragLayer?.removeView(menuView.rootView)
             taskbarOverlayContext.dragLayer.removeTouchController(this)
         }

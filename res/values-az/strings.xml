@@ -32,8 +32,7 @@
     <string name="split_app_info_accessibility" msgid="5475288491241414932">"%1$s ilə bağlı tətbiq məlumatı"</string>
     <string name="split_app_usage_settings" msgid="7214375263347964093">"%1$s üzrə istifadə ayarları"</string>
     <string name="new_window_option_taskbar" msgid="6448780542727767211">"Yeni Pəncərə"</string>
-    <!-- no translation found for manage_windows_option_taskbar (2294109489960654212) -->
-    <skip />
+    <string name="manage_windows_option_taskbar" msgid="2294109489960654212">"Pəncərələri idarə edin"</string>
     <string name="save_app_pair" msgid="5647523853662686243">"Tətbiq cütünü saxlayın"</string>
     <string name="app_pair_default_title" msgid="4045241727446873529">"<xliff:g id="APP1">%1$s</xliff:g> | <xliff:g id="APP2">%2$s</xliff:g>"</string>
     <string name="app_pair_unlaunchable_at_screen_size" msgid="3446551575502685376">"Bu tətbiq cütü bu cihazda dəstəklənmir"</string>
@@ -179,7 +178,7 @@
     <string name="action_decrease_width" msgid="1374549771083094654">"Eni azaldın"</string>
     <string name="action_decrease_height" msgid="282377193880900022">"Hündürlüyü azaldın"</string>
     <string name="widget_resized" msgid="9130327887929620">"Vidcetin eni <xliff:g id="NUMBER_0">%1$s</xliff:g> hündürlüyü <xliff:g id="NUMBER_1">%2$s</xliff:g> kimi ölçüləndirildi"</string>
-    <string name="action_deep_shortcut" msgid="2864038805849372848">"Qısa yollar"</string>
+    <string name="action_deep_shortcut" msgid="4766835855579976045">"Qısayol menyusu"</string>
     <string name="action_dismiss_notification" msgid="5909461085055959187">"Rədd edin"</string>
     <string name="accessibility_close" msgid="2277148124685870734">"Bağlayın"</string>
     <string name="all_apps_personal_tab" msgid="4190252696685155002">"Şəxsi"</string>
@@ -200,7 +199,7 @@
     <string name="remote_action_failed" msgid="1383965239183576790">"Alınmadı: <xliff:g id="WHAT">%1$s</xliff:g>"</string>
     <string name="private_space_label" msgid="2359721649407947001">"Məxfi sahə"</string>
     <string name="private_space_secondary_label" msgid="9203933341714508907">"Toxunaraq ayarlayın və ya açın"</string>
-    <string name="ps_container_title" msgid="4391796149519594205">"Şəxsi"</string>
+    <string name="ps_container_title" msgid="4391796149519594205">"Məxfi"</string>
     <string name="ps_container_settings" msgid="6059734123353320479">"Şəxsi məkan ayarları"</string>
     <string name="ps_container_unlock_button_content_description" msgid="9181551784092204234">"Şəxsi, kilidli deyil."</string>
     <string name="ps_container_lock_button_content_description" msgid="5961993384382649530">"Şəxsi, kilidli."</string>

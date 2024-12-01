@@ -537,3 +537,10 @@ flag {
     description: "Add options to pin/unpin to taskbar to app context menus."
     bug: "375648361"
 }
+
+flag {
+  name: "enable_launcher_icon_shapes"
+  namespace: "launcher"
+  description: "Enable launcher icon shape customizations"
+  bug: "348708061"
+}

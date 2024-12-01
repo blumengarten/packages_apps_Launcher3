@@ -37,6 +37,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.any
 import org.mockito.kotlin.clearInvocations
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -76,7 +77,7 @@ class PersistentBubbleStashControllerTest {
             PersistentBubbleStashController(DefaultDimensionsProvider())
         setUpBubbleBarView()
         setUpBubbleBarController()
-        persistentTaskBarStashController.setHotseatVerticalCenter(HOTSEAT_VERTICAL_CENTER)
+        persistentTaskBarStashController.bubbleBarVerticalCenterForHome = HOTSEAT_VERTICAL_CENTER
         persistentTaskBarStashController.init(
             taskbarInsetsController,
             bubbleBarViewController,
@@ -340,6 +341,45 @@ class PersistentBubbleStashControllerTest {
 
         // Never triggers an update to insets
         verify(taskbarInsetsController, never()).onTaskbarOrBubblebarWindowHeightOrInsetsChanged()
+    }
+
+    @Test
+    fun showBubbleBar_expand_bubbleBarGesture() {
+        whenever(bubbleBarViewController.isHiddenForNoBubbles).thenReturn(false)
+        whenever(bubbleBarViewController.isExpanded).thenReturn(false)
+
+        persistentTaskBarStashController.showBubbleBar(
+            expandBubbles = true,
+            bubbleBarGesture = true,
+        )
+
+        verify(bubbleBarViewController).setExpanded(true, true)
+    }
+
+    @Test
+    fun showBubbleBar_expand_notBubbleBarGesture() {
+        whenever(bubbleBarViewController.isHiddenForNoBubbles).thenReturn(false)
+        whenever(bubbleBarViewController.isExpanded).thenReturn(false)
+
+        persistentTaskBarStashController.showBubbleBar(
+            expandBubbles = true,
+            bubbleBarGesture = false,
+        )
+
+        verify(bubbleBarViewController).setExpanded(true, false)
+    }
+
+    @Test
+    fun showBubbleBar_notExpanding_bubbleBarGesture() {
+        whenever(bubbleBarViewController.isHiddenForNoBubbles).thenReturn(false)
+        whenever(bubbleBarViewController.isExpanded).thenReturn(false)
+
+        persistentTaskBarStashController.showBubbleBar(
+            expandBubbles = false,
+            bubbleBarGesture = true,
+        )
+
+        verify(bubbleBarViewController, never()).setExpanded(any(), any())
     }
 
     private fun advanceTimeBy(advanceMs: Long) {

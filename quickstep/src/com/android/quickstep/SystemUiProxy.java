@@ -313,7 +313,7 @@ public class SystemUiProxy implements ISystemUiProxy, NavHandle {
         setBackToLauncherCallback(mBackToLauncherCallback, mBackToLauncherRunner);
         setUnfoldAnimationListener(mUnfoldAnimationListener);
         setDesktopTaskListener(mDesktopTaskListener);
-        setAssistantOverridesRequested(ContextualSearchInvoker.newInstance(mContext)
+        setAssistantOverridesRequested(new ContextualSearchInvoker(mContext)
                 .getSysUiAssistOverrideInvocationTypes());
         mStateChangeCallbacks.forEach(Runnable::run);
 

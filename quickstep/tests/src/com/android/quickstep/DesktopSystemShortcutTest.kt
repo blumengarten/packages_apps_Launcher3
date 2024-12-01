@@ -18,8 +18,6 @@ package com.android.quickstep
 
 import android.content.ComponentName
 import android.content.Intent
-import android.platform.test.flag.junit.SetFlagsRule
-import com.android.dx.mockito.inline.extended.ExtendedMockito
 import com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession
 import com.android.dx.mockito.inline.extended.StaticMockitoSession
 import com.android.launcher3.AbstractFloatingView
@@ -27,7 +25,7 @@ import com.android.launcher3.AbstractFloatingViewHelper
 import com.android.launcher3.Flags.enableRefactorTaskThumbnail
 import com.android.launcher3.logging.StatsLogManager
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent
-import com.android.launcher3.model.data.WorkspaceItemInfo
+import com.android.launcher3.model.data.TaskViewItemInfo
 import com.android.launcher3.uioverrides.QuickstepLauncher
 import com.android.launcher3.util.SplitConfigurationOptions
 import com.android.launcher3.util.TransformingTouchDelegate
@@ -40,14 +38,13 @@ import com.android.quickstep.views.TaskView
 import com.android.quickstep.views.TaskViewIcon
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.Task.TaskKey
-import com.android.window.flags.Flags
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus
 import com.android.wm.shell.shared.desktopmode.DesktopModeTransitionSource
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
@@ -57,24 +54,18 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
 
-/** Test for DesktopSystemShortcut */
+/** Test for [DesktopSystemShortcut] */
 class DesktopSystemShortcutTest {
-
-    @get:Rule val setFlagsRule = SetFlagsRule(SetFlagsRule.DefaultInitValueType.DEVICE_DEFAULT)
 
     private val launcher: QuickstepLauncher = mock()
     private val statsLogManager: StatsLogManager = mock()
     private val statsLogger: StatsLogManager.StatsLogger = mock()
     private val recentsView: LauncherRecentsView = mock()
     private val taskView: TaskView = mock()
-    private val workspaceItemInfo: WorkspaceItemInfo = mock()
     private val abstractFloatingViewHelper: AbstractFloatingViewHelper = mock()
-    private val iconView: TaskViewIcon = mock()
-    private val transformingTouchDelegate: TransformingTouchDelegate = mock()
+    private val overlayFactory: TaskOverlayFactory = mock()
     private val factory: TaskShortcutFactory =
         DesktopSystemShortcut.createFactory(abstractFloatingViewHelper)
-    private val overlayFactory: TaskOverlayFactory = mock()
-    private val overlay: TaskOverlay<*> = mock()
 
     private lateinit var mockitoSession: StaticMockitoSession
 
@@ -83,11 +74,10 @@ class DesktopSystemShortcutTest {
         mockitoSession =
             mockitoSession()
                 .strictness(Strictness.LENIENT)
-                .spyStatic(DesktopModeStatus::class.java)
+                .mockStatic(DesktopModeStatus::class.java)
                 .startMocking()
-        ExtendedMockito.doReturn(true).`when` { DesktopModeStatus.enforceDeviceRestrictions() }
-        ExtendedMockito.doReturn(true).`when` { DesktopModeStatus.isDesktopModeSupported(any()) }
-        whenever(overlayFactory.createOverlay(any())).thenReturn(overlay)
+        whenever(DesktopModeStatus.canEnterDesktopMode(any())).thenReturn(true)
+        whenever(overlayFactory.createOverlay(any())).thenReturn(mock<TaskOverlay<*>>())
     }
 
     @After
@@ -97,22 +87,7 @@ class DesktopSystemShortcutTest {
 
     @Test
     fun createDesktopTaskShortcutFactory_desktopModeDisabled() {
-        setFlagsRule.disableFlags(Flags.FLAG_ENABLE_DESKTOP_WINDOWING_MODE)
-
-        val task =
-            Task(TaskKey(1, 0, Intent(), ComponentName("", ""), 0, 2000)).apply {
-                isDockable = true
-            }
-        val taskContainer = createTaskContainer(task)
-
-        val shortcuts = factory.getShortcuts(launcher, taskContainer)
-        assertThat(shortcuts).isNull()
-    }
-
-    @Test
-    fun createDesktopTaskShortcutFactory_desktopModeEnabled_DeviceNotSupported() {
-        setFlagsRule.enableFlags(Flags.FLAG_ENABLE_DESKTOP_WINDOWING_MODE)
-        ExtendedMockito.doReturn(false).`when` { DesktopModeStatus.isDesktopModeSupported(any()) }
+        `when`(DesktopModeStatus.canEnterDesktopMode(any())).thenReturn(false)
 
         val taskContainer = createTaskContainer(createTask())
 
@@ -121,22 +96,7 @@ class DesktopSystemShortcutTest {
     }
 
     @Test
-    fun createDesktopTaskShortcutFactory_desktopModeEnabled_DeviceNotSupported_OverrideEnabled() {
-        setFlagsRule.enableFlags(Flags.FLAG_ENABLE_DESKTOP_WINDOWING_MODE)
-        ExtendedMockito.doReturn(false).`when` { DesktopModeStatus.isDesktopModeSupported(any()) }
-        ExtendedMockito.doReturn(false).`when` { DesktopModeStatus.enforceDeviceRestrictions() }
-
-        val taskContainer = spy(createTaskContainer(createTask()))
-        doReturn(workspaceItemInfo).whenever(taskContainer).itemInfo
-
-        val shortcuts = factory.getShortcuts(launcher, taskContainer)
-        assertThat(shortcuts).isNotNull()
-    }
-
-    @Test
     fun createDesktopTaskShortcutFactory_undockable() {
-        setFlagsRule.enableFlags(Flags.FLAG_ENABLE_DESKTOP_WINDOWING_MODE)
-
         val unDockableTask = createTask().apply { isDockable = false }
         val taskContainer = createTaskContainer(unDockableTask)
 
@@ -146,8 +106,6 @@ class DesktopSystemShortcutTest {
 
     @Test
     fun desktopSystemShortcutClicked() {
-        setFlagsRule.enableFlags(Flags.FLAG_ENABLE_DESKTOP_WINDOWING_MODE)
-
         val task = createTask()
         val taskContainer = spy(createTaskContainer(task))
 
@@ -159,13 +117,14 @@ class DesktopSystemShortcutTest {
             val successCallback = it.getArgument<Runnable>(2)
             successCallback.run()
         }
-        doReturn(workspaceItemInfo).whenever(taskContainer).itemInfo
+        val taskViewItemInfo = mock<TaskViewItemInfo>()
+        doReturn(taskViewItemInfo).whenever(taskContainer).itemInfo
 
         val shortcuts = factory.getShortcuts(launcher, taskContainer)
-        assertThat(shortcuts).hasSize(1)
-        assertThat(shortcuts!!.first()).isInstanceOf(DesktopSystemShortcut::class.java)
+        assertThat(shortcuts).isNotNull()
+        assertThat(shortcuts!!.single()).isInstanceOf(DesktopSystemShortcut::class.java)
 
-        val desktopShortcut = shortcuts.first() as DesktopSystemShortcut
+        val desktopShortcut = shortcuts.single() as DesktopSystemShortcut
 
         desktopShortcut.onClick(taskView)
 
@@ -178,30 +137,24 @@ class DesktopSystemShortcutTest {
                 eq(DesktopModeTransitionSource.APP_FROM_OVERVIEW),
                 any(),
             )
-        verify(statsLogger).withItemInfo(workspaceItemInfo)
+        verify(statsLogger).withItemInfo(taskViewItemInfo)
         verify(statsLogger).log(LauncherEvent.LAUNCHER_SYSTEM_SHORTCUT_DESKTOP_TAP)
     }
 
-    private fun createTask(): Task {
-        return Task(TaskKey(1, 0, Intent(), ComponentName("", ""), 0, 2000)).apply {
-            isDockable = true
-        }
-    }
+    private fun createTask() =
+        Task(TaskKey(1, 0, Intent(), ComponentName("", ""), 0, 2000)).apply { isDockable = true }
 
-    private fun createTaskContainer(task: Task): TaskContainer {
-        val snapshotView =
-            if (enableRefactorTaskThumbnail()) mock<TaskThumbnailView>()
-            else mock<TaskThumbnailViewDeprecated>()
-        return TaskContainer(
+    private fun createTaskContainer(task: Task) =
+        TaskContainer(
             taskView,
             task,
-            snapshotView,
-            iconView,
-            transformingTouchDelegate,
+            if (enableRefactorTaskThumbnail()) mock<TaskThumbnailView>()
+            else mock<TaskThumbnailViewDeprecated>(),
+            mock<TaskViewIcon>(),
+            mock<TransformingTouchDelegate>(),
             SplitConfigurationOptions.STAGE_POSITION_UNDEFINED,
             digitalWellBeingToast = null,
             showWindowsView = null,
             overlayFactory,
         )
-    }
 }

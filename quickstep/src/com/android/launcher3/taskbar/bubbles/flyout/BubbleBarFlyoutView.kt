@@ -18,6 +18,7 @@ package com.android.launcher3.taskbar.bubbles.flyout
 
 import android.content.Context
 import android.content.res.Configuration
+import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Outline
@@ -44,11 +45,27 @@ class BubbleBarFlyoutView(
     scheduler: FlyoutScheduler? = null,
 ) : ConstraintLayout(context) {
 
-    private companion object {
-        // the minimum progress of the expansion animation before the content starts fading in.
-        const val MIN_EXPANSION_PROGRESS_FOR_CONTENT_ALPHA = 0.75f
+    companion object {
         // the rate multiple for the background color animation relative to the morph animation.
         const val BACKGROUND_COLOR_CHANGE_RATE = 5
+        // the minimum progress of the expansion animation before the content starts fading in.
+        private const val MIN_EXPANSION_PROGRESS_FOR_CONTENT_ALPHA = 0.75f
+
+        private const val TEXT_ROW_HEIGHT_SP = 20
+        private const val MAX_ROWS_COUNT = 3
+
+        /** Returns the maximum possible height of the flyout view. */
+        fun getMaximumViewHeight(context: Context): Int {
+            val verticalPaddings = getFlyoutPadding(context) * 2
+            val textSizeSp = TEXT_ROW_HEIGHT_SP * MAX_ROWS_COUNT
+            val textSizePx = textSizeSp * Resources.getSystem().displayMetrics.scaledDensity
+            val triangleHeight =
+                context.resources.getDimensionPixelSize(R.dimen.bubblebar_flyout_triangle_height)
+            return verticalPaddings + textSizePx.toInt() + triangleHeight
+        }
+
+        private fun getFlyoutPadding(context: Context) =
+            context.resources.getDimensionPixelSize(R.dimen.bubblebar_flyout_padding)
     }
 
     private val scheduler: FlyoutScheduler = scheduler ?: HandlerScheduler(this)
@@ -61,10 +78,7 @@ class BubbleBarFlyoutView(
     private val message: TextView by
         lazy(LazyThreadSafetyMode.NONE) { findViewById(R.id.bubble_flyout_text) }
 
-    private val flyoutPadding by
-        lazy(LazyThreadSafetyMode.NONE) {
-            context.resources.getDimensionPixelSize(R.dimen.bubblebar_flyout_padding)
-        }
+    private val flyoutPadding by lazy(LazyThreadSafetyMode.NONE) { getFlyoutPadding(context) }
 
     private val triangleHeight by
         lazy(LazyThreadSafetyMode.NONE) {
@@ -402,18 +416,13 @@ class BubbleBarFlyoutView(
         val isNightModeOn = nightModeFlags == Configuration.UI_MODE_NIGHT_YES
         val defaultBackgroundColor = if (isNightModeOn) Color.BLACK else Color.WHITE
         val defaultTextColor = if (isNightModeOn) Color.WHITE else Color.BLACK
-        val ta =
-            context.obtainStyledAttributes(
-                intArrayOf(
-                    com.android.internal.R.attr.materialColorSurfaceContainer,
-                    com.android.internal.R.attr.materialColorOnSurface,
-                    com.android.internal.R.attr.materialColorOnSurfaceVariant,
-                )
-            )
-        backgroundColor = ta.getColor(0, defaultBackgroundColor)
-        title.setTextColor(ta.getColor(1, defaultTextColor))
-        message.setTextColor(ta.getColor(2, defaultTextColor))
-        ta.recycle()
+
+        backgroundColor =
+            context.getColor(com.android.internal.R.color.materialColorSurfaceContainer)
+        title.setTextColor(context.getColor(com.android.internal.R.color.materialColorOnSurface))
+        message.setTextColor(
+            context.getColor(com.android.internal.R.color.materialColorOnSurfaceVariant)
+        )
         backgroundPaint.color = backgroundColor
     }
 }

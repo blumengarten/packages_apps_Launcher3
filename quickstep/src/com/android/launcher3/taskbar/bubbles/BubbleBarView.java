@@ -381,6 +381,7 @@ public class BubbleBarView extends FrameLayout {
         super.onInitializeAccessibilityNodeInfoInternal(info);
         // Always show only expand action as the menu is only for collapsed bubble bar
         info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_EXPAND);
+        info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK);
         info.addAction(new AccessibilityNodeInfo.AccessibilityAction(R.id.action_dismiss_all,
                 getResources().getString(R.string.bubble_bar_action_dismiss_all)));
         if (mBubbleBarLocation.isOnLeft(isLayoutRtl())) {
@@ -395,10 +396,8 @@ public class BubbleBarView extends FrameLayout {
     @Override
     public boolean performAccessibilityActionInternal(int action,
             @androidx.annotation.Nullable Bundle arguments) {
-        if (super.performAccessibilityActionInternal(action, arguments)) {
-            return true;
-        }
-        if (action == AccessibilityNodeInfo.ACTION_EXPAND) {
+        if (action == AccessibilityNodeInfo.ACTION_EXPAND
+                || action == AccessibilityNodeInfo.ACTION_CLICK) {
             mController.expandBubbleBar();
             return true;
         }
@@ -416,7 +415,7 @@ public class BubbleBarView extends FrameLayout {
                     BubbleBarLocation.UpdateSource.A11Y_ACTION_BAR);
             return true;
         }
-        return false;
+        return super.performAccessibilityActionInternal(action, arguments);
     }
 
     @SuppressLint("RtlHardcoded")
@@ -1305,6 +1304,10 @@ public class BubbleBarView extends FrameLayout {
 
     private float getBubbleBarExpandedHeight() {
         return getBubbleBarCollapsedHeight() + mPointerSize;
+    }
+
+    float getArrowHeight() {
+        return mPointerSize;
     }
 
     float getBubbleBarCollapsedHeight() {

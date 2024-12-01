@@ -353,6 +353,9 @@ public class TaskOverlayFactory implements ResourceBasedOverride {
         /** Sets visibility for the overlay associated elements. */
         public void setVisibility(int visibility) {}
 
+        /** See {@link View#addChildrenForAccessibility(ArrayList)} */
+        public void addChildForAccessibility(ArrayList<View> outChildren) {}
+
         private class ScreenshotSystemShortcut extends SystemShortcut {
 
             private final RecentsViewContainer mContainer;

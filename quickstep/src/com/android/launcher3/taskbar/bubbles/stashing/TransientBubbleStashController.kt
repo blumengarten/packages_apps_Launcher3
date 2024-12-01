@@ -78,7 +78,7 @@ class TransientBubbleStashController(
         context.resources.getDimensionPixelSize(R.dimen.bubblebar_stashed_size) / 2f
 
     private var animator: AnimatorSet? = null
-    private var hotseatVerticalCenter: Int = 0
+    override var bubbleBarVerticalCenterForHome: Int = 0
 
     override var isStashed: Boolean = false
         @VisibleForTesting set
@@ -124,7 +124,7 @@ class TransientBubbleStashController(
     override val bubbleBarTranslationYForHotseat: Float
         get() {
             val bubbleBarHeight = bubbleBarViewController.bubbleBarCollapsedHeight
-            return -hotseatVerticalCenter + bubbleBarHeight / 2
+            return -bubbleBarVerticalCenterForHome + bubbleBarHeight / 2
         }
 
     override val bubbleBarTranslationYForTaskbar: Float =
@@ -180,10 +180,6 @@ class TransientBubbleStashController(
             .updateTouchRegionOnAnimationEnd()
             .setDuration(BAR_STASH_DURATION)
             .start()
-    }
-
-    override fun setHotseatVerticalCenter(hotseatVerticalCenter: Int) {
-        this.hotseatVerticalCenter = hotseatVerticalCenter
     }
 
     override fun showBubbleBarImmediate() {
@@ -250,8 +246,12 @@ class TransientBubbleStashController(
         updateStashedAndExpandedState(stash = true, expand = false)
     }
 
-    override fun showBubbleBar(expandBubbles: Boolean) {
-        updateStashedAndExpandedState(stash = false, expandBubbles)
+    override fun showBubbleBar(expandBubbles: Boolean, bubbleBarGesture: Boolean) {
+        updateStashedAndExpandedState(
+            stash = false,
+            expand = expandBubbles,
+            bubbleBarGesture = bubbleBarGesture,
+        )
     }
 
     override fun getDiffBetweenHandleAndBarCenters(): Float {
@@ -481,7 +481,11 @@ class TransientBubbleStashController(
     }
 
     @VisibleForTesting
-    fun updateStashedAndExpandedState(stash: Boolean, expand: Boolean) {
+    fun updateStashedAndExpandedState(
+        stash: Boolean,
+        expand: Boolean,
+        bubbleBarGesture: Boolean = false,
+    ) {
         if (bubbleBarViewController.isHiddenForNoBubbles) {
             // If there are no bubbles the bar and handle are invisible, nothing to do here.
             return
@@ -502,7 +506,8 @@ class TransientBubbleStashController(
                 }
         }
         if (bubbleBarViewController.isExpanded != expand) {
-            bubbleBarViewController.isExpanded = expand
+            val maybeShowEdu = expand && bubbleBarGesture
+            bubbleBarViewController.setExpanded(expand, maybeShowEdu)
         }
     }
 

@@ -67,7 +67,8 @@ class DesktopAppLaunchTransitionManager(
 
     private fun shouldRegisterTransitions(): Boolean =
         DesktopModeStatus.canEnterDesktopMode(context) &&
-            DesktopModeFlags.ENABLE_DESKTOP_APP_LAUNCH_TRANSITIONS.isTrue
+            (DesktopModeFlags.ENABLE_DESKTOP_APP_LAUNCH_TRANSITIONS.isTrue ||
+                DesktopModeFlags.ENABLE_DESKTOP_APP_LAUNCH_TRANSITIONS_BUGFIX.isTrue)
 
     companion object {
         private fun buildAppLaunchFilter(): TransitionFilter {

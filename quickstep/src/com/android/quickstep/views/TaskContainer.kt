@@ -16,19 +16,13 @@
 
 package com.android.quickstep.views
 
-import android.content.Intent
 import android.graphics.Bitmap
 import android.view.View
 import com.android.launcher3.Flags.enableRefactorTaskThumbnail
-import com.android.launcher3.Flags.privateSpaceRestrictAccessibilityDrag
-import com.android.launcher3.LauncherSettings
-import com.android.launcher3.model.data.ItemInfoWithIcon
-import com.android.launcher3.model.data.WorkspaceItemInfo
-import com.android.launcher3.pm.UserCache
+import com.android.launcher3.model.data.TaskViewItemInfo
 import com.android.launcher3.util.SplitConfigurationOptions
 import com.android.launcher3.util.TransformingTouchDelegate
 import com.android.quickstep.TaskOverlayFactory
-import com.android.quickstep.TaskUtils
 import com.android.quickstep.ViewUtils.addAccessibleChildToList
 import com.android.quickstep.recents.di.RecentsDependencies
 import com.android.quickstep.recents.di.get
@@ -123,27 +117,8 @@ class TaskContainer(
             else thumbnailViewDeprecated.sysUiStatusNavFlags
 
     /** Builds proto for logging */
-    val itemInfo: WorkspaceItemInfo
-        get() =
-            WorkspaceItemInfo().apply {
-                itemType = LauncherSettings.Favorites.ITEM_TYPE_TASK
-                container = LauncherSettings.Favorites.CONTAINER_TASKSWITCHER
-                val componentKey = TaskUtils.getLaunchComponentKeyForTask(task.key)
-                user = componentKey.user
-                intent = Intent().setComponent(componentKey.componentName)
-                title = task.title
-                taskView.recentsView?.let { screenId = it.indexOfChild(taskView) }
-                if (privateSpaceRestrictAccessibilityDrag()) {
-                    if (
-                        UserCache.getInstance(taskView.context)
-                            .getUserInfo(componentKey.user)
-                            .isPrivate
-                    ) {
-                        runtimeStatusFlags =
-                            runtimeStatusFlags or ItemInfoWithIcon.FLAG_NOT_PINNABLE
-                    }
-                }
-            }
+    val itemInfo: TaskViewItemInfo
+        get() = TaskViewItemInfo(this)
 
     fun bind() {
         digitalWellBeingToast?.bind(task, taskView, snapshotView, stagePosition)
@@ -181,5 +156,6 @@ class TaskContainer(
         addAccessibleChildToList(snapshotView, outChildren)
         showWindowsView?.let { addAccessibleChildToList(it, outChildren) }
         digitalWellBeingToast?.let { addAccessibleChildToList(it, outChildren) }
+        overlay.addChildForAccessibility(outChildren)
     }
 }

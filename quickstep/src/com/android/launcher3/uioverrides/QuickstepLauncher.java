@@ -264,6 +264,8 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
     private boolean mIsOverlayVisible;
 
+    private final Runnable mOverviewTargetChangeRunnable = this::onOverviewTargetChanged;
+
     public static QuickstepLauncher getLauncher(Context context) {
         return fromContext(context);
     }
@@ -550,6 +552,10 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
             mUnfoldTransitionProgressProvider.destroy();
         }
 
+        TISBinder binder = mTISBindHelper.getBinder();
+        if (binder != null) {
+            binder.unregisterOverviewTargetChangeListener(mOverviewTargetChangeRunnable);
+        }
         mTISBindHelper.onDestroy();
 
         if (mLauncherUnfoldAnimationController != null) {
@@ -1025,12 +1031,20 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         }
     }
 
+    private void onOverviewTargetChanged() {
+        QuickstepTransitionManager transitionManager = getAppTransitionManager();
+        if (transitionManager != null) {
+            transitionManager.onOverviewTargetChange();
+        }
+    }
+
     private void onTISConnected(TISBinder binder) {
         TaskbarManager taskbarManager = mTISBindHelper.getTaskbarManager();
         if (taskbarManager != null) {
             taskbarManager.setActivity(this);
         }
         mTISBindHelper.setPredictiveBackToHomeInProgress(mIsPredictiveBackToHomeInProgress);
+        binder.registerOverviewTargetChangeListener(mOverviewTargetChangeRunnable);
     }
 
     @Override

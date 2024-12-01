@@ -19,6 +19,7 @@ package com.android.launcher3;
 import static android.app.WindowConfiguration.ACTIVITY_TYPE_HOME;
 import static android.app.WindowConfiguration.ACTIVITY_TYPE_STANDARD;
 import static android.app.WindowConfiguration.WINDOWING_MODE_MULTI_WINDOW;
+import static android.app.role.RoleManager.ROLE_HOME;
 import static android.provider.Settings.Secure.LAUNCHER_TASKBAR_EDUCATION_SHOWING;
 import static android.view.RemoteAnimationTarget.MODE_CLOSING;
 import static android.view.RemoteAnimationTarget.MODE_OPENING;
@@ -74,6 +75,7 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.ActivityOptions;
 import android.app.WindowConfiguration;
+import android.app.role.RoleManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.res.Resources;
@@ -1194,7 +1196,9 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                 .registerRemoteTransition(mLauncherOpenTransition, homeCheck);
         if (mBackAnimationController != null) {
             mBackAnimationController.registerComponentCallbacks();
-            mBackAnimationController.registerBackCallbacks(mHandler);
+            if (isHomeRoleHeld()) {
+                mBackAnimationController.registerBackCallbacks(mHandler);
+            }
         }
     }
 
@@ -1205,6 +1209,22 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         SystemUiProxy.INSTANCE.get(mLauncher).setStartingWindowListener(null);
         ORDERED_BG_EXECUTOR.execute(() -> mLauncher.getContentResolver()
                 .unregisterContentObserver(mAnimationRemovalObserver));
+    }
+
+    /**
+     * Called when the overview-target changes. Updates the back callback registration state.
+     */
+    public void onOverviewTargetChange() {
+        if (isHomeRoleHeld()) {
+            mBackAnimationController.registerBackCallbacks(mHandler);
+        } else {
+            mBackAnimationController.unregisterBackCallbacks();
+        }
+    }
+
+    private boolean isHomeRoleHeld() {
+        RoleManager roleManager = mLauncher.getSystemService(RoleManager.class);
+        return roleManager == null || roleManager.isRoleHeld(ROLE_HOME);
     }
 
     private void unregisterRemoteAnimations() {
@@ -1547,7 +1567,8 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
     private boolean isFreeformAnimation(RemoteAnimationTarget[] appTargets) {
         return DesktopModeStatus.canEnterDesktopMode(mLauncher.getApplicationContext())
-                && DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_EXIT_TRANSITIONS.isTrue()
+                && (DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_EXIT_TRANSITIONS.isTrue()
+                    || DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_EXIT_TRANSITIONS_BUGFIX.isTrue())
                 && Arrays.stream(appTargets)
                         .anyMatch(app -> app.taskInfo != null && app.taskInfo.isFreeform());
     }

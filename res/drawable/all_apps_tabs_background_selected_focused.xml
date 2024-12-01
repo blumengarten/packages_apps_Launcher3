@@ -17,7 +17,7 @@
     <item>
         <shape>
             <corners android:radius="16dp" />
-            <solid android:color="?attr/materialColorPrimary" />
+            <solid android:color="@color/materialColorPrimary" />
         </shape>
     </item>
 
@@ -28,10 +28,10 @@
         android:top="@dimen/all_apps_tabs_focus_border">
         <shape android:shape="rectangle">
             <corners android:radius="13dp" />
-            <solid android:color="?attr/materialColorPrimary" />
+            <solid android:color="@color/materialColorPrimary" />
             <stroke
                 android:width="@dimen/all_apps_tabs_focus_padding"
-                android:color="?attr/materialColorSurfaceDim" />
+                android:color="@color/materialColorSurfaceDim" />
         </shape>
     </item>
 </layer-list>

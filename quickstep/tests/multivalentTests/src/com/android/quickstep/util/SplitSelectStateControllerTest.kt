@@ -40,6 +40,7 @@ import com.android.quickstep.views.RecentsView
 import com.android.quickstep.views.RecentsViewContainer
 import com.android.systemui.shared.recents.model.Task
 import com.android.wm.shell.shared.split.SplitScreenConstants.SNAP_TO_2_50_50
+import java.util.function.Consumer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -54,7 +55,6 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.util.function.Consumer
 
 @RunWith(AndroidJUnit4::class)
 class SplitSelectStateControllerTest {
@@ -623,6 +623,21 @@ class SplitSelectStateControllerTest {
 
         // Verify desktop controller is also destroyed
         verify(splitFromDesktopController).onDestroy()
+    }
+
+    @Test
+    fun splitSelectStateControllerDestroyed_doNotResetDeskTopTasks() {
+        whenever(context.getOverviewPanel<RecentsView<*, *>>()).thenReturn(recentsView)
+        splitSelectStateController.setInitialTaskSelect(
+            Intent(), /*intent*/
+            -1, /*stagePosition*/
+            ItemInfo(),
+            null, /*splitEvent*/
+            -1,
+        )
+        splitSelectStateController.onDestroy()
+        splitSelectStateController.resetState()
+        verify(recentsView, times(0)).resetDesktopTaskFromSplitSelectState()
     }
 
     // Generate GroupTask with default userId.

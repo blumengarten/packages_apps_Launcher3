@@ -356,12 +356,12 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         return mTaskbarView.getMaxNumIconViews();
     }
 
-    public Rect getIconLayoutVisualBounds() {
-        return mTaskbarView.getIconLayoutVisualBounds();
+    public Rect getTransientTaskbarIconLayoutBounds() {
+        return mTaskbarView.getTransientTaskbarIconLayoutBounds();
     }
 
-    public Rect getIconLayoutBounds() {
-        return mTaskbarView.getIconLayoutBounds();
+    public Rect getTransientTaskbarIconLayoutBoundsInParent() {
+        return mTaskbarView.getTransientTaskbarIconLayoutBoundsInParent();
     }
 
     public View[] getIconViews() {
@@ -559,14 +559,14 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         if (mControllers.getSharedState().startTaskbarVariantIsTransient) {
             float transY =
                     mTransientTaskbarDp.taskbarBottomMargin + (mTransientTaskbarDp.taskbarHeight
-                            - mTaskbarView.getIconLayoutVisualBounds().bottom)
+                            - mTaskbarView.getTransientTaskbarIconLayoutBounds().bottom)
                             - (mPersistentTaskbarDp.taskbarHeight
                                     - mTransientTaskbarDp.taskbarIconSize) / 2f;
             taskbarIconTranslationYForPinningValue = mapRange(scale, 0f, transY);
         } else {
             float transY =
                     -mTransientTaskbarDp.taskbarBottomMargin + (mPersistentTaskbarDp.taskbarHeight
-                            - mTaskbarView.getIconLayoutVisualBounds().bottom)
+                            - mTaskbarView.getTransientTaskbarIconLayoutBounds().bottom)
                             - (mTransientTaskbarDp.taskbarHeight
                                     - mTransientTaskbarDp.taskbarIconSize) / 2f;
             taskbarIconTranslationYForPinningValue = mapRange(scale, transY, 0f);

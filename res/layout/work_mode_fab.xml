@@ -37,7 +37,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:maxWidth="@dimen/work_fab_width"
-        android:textColor="?attr/materialColorOnPrimary"
+        android:textColor="@color/materialColorOnPrimary"
         android:textSize="14sp"
         android:includeFontPadding="false"
         android:textDirection="locale"

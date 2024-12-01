@@ -261,7 +261,7 @@ public class TaskbarManager {
                 SystemUiProxy.INSTANCE.get(mContext),
                 ContextualEduStatsManager.INSTANCE.get(mContext),
                 new Handler(),
-                ContextualSearchInvoker.newInstance(mContext));
+                new ContextualSearchInvoker(mContext));
         mDefaultComponentCallbacks = new ComponentCallbacks() {
             private Configuration mOldConfig = mContext.getResources().getConfiguration();
 

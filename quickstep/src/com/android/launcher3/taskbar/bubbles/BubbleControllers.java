@@ -102,7 +102,8 @@ public class BubbleControllers {
                 new TaskbarViewPropertiesProvider() {
                     @Override
                     public Rect getTaskbarViewBounds() {
-                        return taskbarControllers.taskbarViewController.getIconLayoutBounds();
+                        return taskbarControllers.taskbarViewController
+                                .getTransientTaskbarIconLayoutBoundsInParent();
                     }
 
                     @Override

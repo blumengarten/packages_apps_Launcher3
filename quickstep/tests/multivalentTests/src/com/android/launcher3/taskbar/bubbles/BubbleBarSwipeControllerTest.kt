@@ -36,6 +36,7 @@ import org.mockito.junit.MockitoRule
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.atLeastOnce
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -206,7 +207,7 @@ class BubbleBarSwipeControllerTest {
             bubbleBarSwipeController.start()
             bubbleBarSwipeController.swipeTo(UP_ABOVE_UNSTASH)
         }
-        verify(bubbleStashController).showBubbleBar(expandBubbles = false)
+        verify(bubbleStashController).showBubbleBar(expandBubbles = false, bubbleBarGesture = true)
     }
 
     @Test
@@ -227,11 +228,12 @@ class BubbleBarSwipeControllerTest {
             bubbleBarSwipeController.swipeTo(UP_ABOVE_UNSTASH)
             bubbleBarSwipeController.swipeTo(UP_BELOW_UNSTASH)
         }
-        verify(bubbleStashController).showBubbleBar(expandBubbles = false)
+        verify(bubbleStashController).showBubbleBar(expandBubbles = false, bubbleBarGesture = true)
         verify(bubbleStashController).stashBubbleBar()
 
         getInstrumentation().runOnMainSync { bubbleBarSwipeController.swipeTo(UP_ABOVE_UNSTASH) }
-        verify(bubbleStashController, times(2)).showBubbleBar(expandBubbles = false)
+        verify(bubbleStashController, times(2))
+            .showBubbleBar(expandBubbles = false, bubbleBarGesture = true)
     }
 
     @Test
@@ -241,9 +243,9 @@ class BubbleBarSwipeControllerTest {
             bubbleBarSwipeController.start()
             bubbleBarSwipeController.swipeTo(UP_ABOVE_UNSTASH)
         }
-        verify(bubbleStashController, never()).showBubbleBar(expandBubbles = true)
+        verify(bubbleStashController, never()).showBubbleBar(expandBubbles = eq(true), any())
         getInstrumentation().runOnMainSync { bubbleBarSwipeController.finish() }
-        verify(bubbleStashController).showBubbleBar(expandBubbles = true)
+        verify(bubbleStashController).showBubbleBar(expandBubbles = true, bubbleBarGesture = true)
     }
 
     @Test
@@ -253,12 +255,12 @@ class BubbleBarSwipeControllerTest {
             bubbleBarSwipeController.start()
             bubbleBarSwipeController.swipeTo(UP_ABOVE_UNSTASH)
         }
-        verify(bubbleStashController).showBubbleBar(expandBubbles = false)
+        verify(bubbleStashController).showBubbleBar(expandBubbles = false, bubbleBarGesture = true)
         getInstrumentation().runOnMainSync {
             bubbleBarSwipeController.swipeTo(UP_BELOW_UNSTASH)
             bubbleBarSwipeController.finish()
         }
-        verify(bubbleStashController, never()).showBubbleBar(expandBubbles = true)
+        verify(bubbleStashController, never()).showBubbleBar(expandBubbles = eq(true), any())
     }
 
     @Test
@@ -334,7 +336,7 @@ class BubbleBarSwipeControllerTest {
             bubbleBarSwipeController.swipeTo(UP_ABOVE_UNSTASH)
             bubbleBarSwipeController.finish()
         }
-        verify(bubbleStashController).showBubbleBar(expandBubbles = true)
+        verify(bubbleStashController).showBubbleBar(expandBubbles = true, bubbleBarGesture = true)
     }
 
     @Test

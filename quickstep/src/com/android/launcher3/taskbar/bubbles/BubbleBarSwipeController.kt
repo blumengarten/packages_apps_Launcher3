@@ -91,7 +91,7 @@ class BubbleBarSwipeController {
         when {
             canUnstash() && swipeState.passedUnstash -> {
                 swipeState.currentState = COLLAPSED
-                bubbleStashController.showBubbleBar(expandBubbles = false)
+                bubbleStashController.showBubbleBar(expandBubbles = false, bubbleBarGesture = true)
             }
             canStash() && !swipeState.passedUnstash -> {
                 swipeState.currentState = STASHED
@@ -103,7 +103,7 @@ class BubbleBarSwipeController {
     /** Finish tracking swipe gesture. Animate views back to resting state */
     fun finish() {
         if (swipeState.passedUnstash && swipeState.startState in setOf(STASHED, COLLAPSED)) {
-            bubbleStashController.showBubbleBar(expandBubbles = true)
+            bubbleStashController.showBubbleBar(expandBubbles = true, bubbleBarGesture = true)
         }
         if (animatedSwipeTranslation.value == 0f) {
             reset()

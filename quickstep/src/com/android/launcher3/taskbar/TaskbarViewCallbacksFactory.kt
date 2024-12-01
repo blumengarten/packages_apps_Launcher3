@@ -38,7 +38,7 @@ open class TaskbarViewCallbacksFactory : ResourceBasedOverride {
                 super.triggerAllAppsButtonLongClick()
 
                 val contextualSearchInvoked =
-                    ContextualSearchInvoker.newInstance(activity).show(ENTRYPOINT_LONG_PRESS_META)
+                    ContextualSearchInvoker(activity).show(ENTRYPOINT_LONG_PRESS_META)
                 if (contextualSearchInvoked) {
                     val runningPackage =
                         TopTaskTracker.INSTANCE[activity].getCachedTopTask(
@@ -59,8 +59,7 @@ open class TaskbarViewCallbacksFactory : ResourceBasedOverride {
     }
 
     open fun longPressAllAppsToStartContextualSearch(context: Context): Boolean =
-        ContextualSearchInvoker.newInstance(context)
-            .runContextualSearchInvocationChecksAndLogFailures()
+        ContextualSearchInvoker(context).runContextualSearchInvocationChecksAndLogFailures()
 
     companion object {
         @JvmStatic

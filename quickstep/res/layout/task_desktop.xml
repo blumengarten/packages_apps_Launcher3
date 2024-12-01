@@ -22,8 +22,8 @@
     android:contentDescription="@string/recent_task_desktop"
     android:defaultFocusHighlightEnabled="false"
     android:focusable="true"
-    launcher:focusBorderColor="?attr/materialColorOutline"
-    launcher:hoverBorderColor="?attr/materialColorPrimary">
+    launcher:focusBorderColor="@color/materialColorOutline"
+    launcher:hoverBorderColor="@color/materialColorPrimary">
 
     <ViewStub
         android:id="@+id/icon"

@@ -389,6 +389,10 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         if (!(view.getTag() instanceof CollectionInfo)) {
             mActivityContext.getViewCache().recycleView(view.getSourceLayoutResId(), view);
         }
+        if (view instanceof FolderIcon fi) {
+            // We should clear FolderInfo's Folder and FolderIcon to avoid memory leak.
+            fi.removeListeners();
+        }
         view.setTag(null);
     }
 
@@ -760,7 +764,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         ) {
             return 0;
         }
-        Rect iconsBounds = getIconLayoutBounds();
+        Rect iconsBounds = getTransientTaskbarIconLayoutBoundsInParent();
         return getTaskBarIconsEndForBubbleBarLocation(location) - iconsBounds.right;
     }
 
@@ -888,26 +892,46 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
     }
 
     /**
-     * Returns whether the given MotionEvent, *in screen coorindates*, is within any Taskbar item's
+     * Returns whether the given MotionEvent, *in screen coordinates*, is within any Taskbar item's
      * touch bounds.
      */
     public boolean isEventOverAnyItem(MotionEvent ev) {
         getLocationOnScreen(mTempOutLocation);
-        int xInOurCoordinates = (int) ev.getX() - mTempOutLocation[0];
-        int yInOurCoorindates = (int) ev.getY() - mTempOutLocation[1];
-        return isShown() && mIconLayoutBounds.contains(xInOurCoordinates, yInOurCoorindates);
+        int xInOurCoordinates = (int) ev.getRawX() - mTempOutLocation[0];
+        int yInOurCoordinates = (int) ev.getRawY() - mTempOutLocation[1];
+        return isShown() && getTaskbarIconsActualBounds().contains(xInOurCoordinates,
+                yInOurCoordinates);
+    }
+
+    /**
+     * Returns the current visual taskbar icons bounds (unlike `mIconLayoutBounds` which contains
+     * bounds for transient mode only).
+     */
+    private Rect getTaskbarIconsActualBounds() {
+        View[] iconViews = getIconViews();
+        if (iconViews.length == 0) {
+            return new Rect();
+        }
+
+        int[] firstIconViewLocation = new int[2];
+        int[] lastIconViewLocation = new int[2];
+        iconViews[0].getLocationOnScreen(firstIconViewLocation);
+        iconViews[iconViews.length - 1].getLocationOnScreen(lastIconViewLocation);
+
+        return new Rect(firstIconViewLocation[0], 0, lastIconViewLocation[0] + mIconTouchSize,
+                getHeight());
     }
 
     /**
      * Gets visual bounds of the taskbar view. The visual bounds correspond to the taskbar touch
      * area, rather than layout placement in the parent view.
      */
-    public Rect getIconLayoutVisualBounds() {
+    public Rect getTransientTaskbarIconLayoutBounds() {
         return new Rect(mIconLayoutBounds);
     }
 
     /** Gets taskbar layout bounds in parent view. */
-    public Rect getIconLayoutBounds() {
+    public Rect getTransientTaskbarIconLayoutBoundsInParent() {
         Rect actualBounds = new Rect(mIconLayoutBounds);
         actualBounds.top = getTop();
         actualBounds.bottom = getBottom();

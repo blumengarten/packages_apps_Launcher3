@@ -654,9 +654,9 @@ public class InvariantDeviceProfile implements SafeCloseable {
      * Parses through the xml to find GridDimension specs. Then calls findBestRowCount to get the
      * correct row count for this GridOption.
      *
-     * @return the result of {@link #findBestRowCount(List, Info)}.
+     * @return the result of {@link #findBestRowCount(List, int, int)}.
      */
-    public static GridDimension getRowCount(ResourceHelper resourceHelper, Context context,
+    private static GridDimension getRowCount(ResourceHelper resourceHelper, Context context,
             Info displayInfo) {
         ArrayList<GridDimension> rowCounts = new ArrayList<>();
 
@@ -674,24 +674,40 @@ public class InvariantDeviceProfile implements SafeCloseable {
             throw new RuntimeException(e);
         }
 
-        return findBestRowCount(rowCounts, displayInfo);
+        // Finds the min width and height in dp for all displays.
+        int[] dimens = findMinWidthAndHeightDpForDevice(displayInfo);
+
+        return findBestRowCount(rowCounts, dimens[0], dimens[1]);
     }
 
     /**
      * @return the biggest row count that fits the display dimensions spec using GridDimension to
-     * determine that. If no best row count is found, return -1.
+     * determine that. If no best row count is found, return null.
      */
-    public static GridDimension findBestRowCount(List<GridDimension> list, Info displayInfo) {
+    private static GridDimension findBestRowCount(List<GridDimension> list, int minWidthDp,
+            int minHeightDp) {
+        GridDimension selectedRow = null;
+        for (GridDimension item: list) {
+            if (minWidthDp >= item.mMinDeviceWidthDp && minHeightDp >= item.mMinDeviceHeightDp) {
+                if (selectedRow == null || selectedRow.mNumGridDimension < item.mNumGridDimension) {
+                    selectedRow = item;
+                }
+            }
+        }
+        return selectedRow;
+    }
+
+    private static int[] findMinWidthAndHeightDpForDevice(Info displayInfo) {
         int minWidthPx = Integer.MAX_VALUE;
         int minHeightPx = Integer.MAX_VALUE;
         for (WindowBounds bounds : displayInfo.supportedBounds) {
             boolean isTablet = displayInfo.isTablet(bounds);
             if (isTablet && displayInfo.getDeviceType() == TYPE_MULTI_DISPLAY) {
-                // For split displays, take half width per page
+                // For split displays, take half width per page.
                 minWidthPx = Math.min(minWidthPx, bounds.availableSize.x / 2);
                 minHeightPx = Math.min(minHeightPx, bounds.availableSize.y);
             } else if (!isTablet && bounds.isLandscape()) {
-                // We will use transposed layout in this case
+                // We will use transposed layout in this case.
                 minWidthPx = Math.min(minWidthPx, bounds.availableSize.y);
                 minHeightPx = Math.min(minHeightPx, bounds.availableSize.x);
             } else {
@@ -700,18 +716,10 @@ public class InvariantDeviceProfile implements SafeCloseable {
             }
         }
 
-        GridDimension selectedRow = null;
-        for (GridDimension item: list) {
-            if (minWidthPx >= item.mMinDeviceWidthPx && minHeightPx >= item.mMinDeviceHeightPx) {
-                if (selectedRow == null || selectedRow.mNumGridDimension < item.mNumGridDimension) {
-                    selectedRow = item;
-                }
-            }
-        }
-        if (selectedRow != null) {
-            return selectedRow;
-        }
-        return null;
+        int minWidthDp = (int) dpiFromPx(minWidthPx, DisplayMetrics.DENSITY_DEVICE_STABLE);
+        int minHeightDp = (int) dpiFromPx(minHeightPx, DisplayMetrics.DENSITY_DEVICE_STABLE);
+
+        return new int[]{minWidthDp, minHeightDp};
     }
 
     /**
@@ -1237,8 +1245,8 @@ public class InvariantDeviceProfile implements SafeCloseable {
 
     public static final class GridDimension {
         final int mNumGridDimension;
-        final float mMinDeviceWidthPx;
-        final float mMinDeviceHeightPx;
+        final int mMinDeviceWidthDp;
+        final int mMinDeviceHeightDp;
         final String mDbFile;
         final int mDefaultLayoutId;
         final int mDemoModeLayoutId;
@@ -1248,8 +1256,8 @@ public class InvariantDeviceProfile implements SafeCloseable {
             TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.GridDimension);
 
             mNumGridDimension = (int) a.getFloat(R.styleable.GridDimension_numGridDimension, 0);
-            mMinDeviceWidthPx = a.getFloat(R.styleable.GridDimension_minDeviceWidthPx, 0);
-            mMinDeviceHeightPx = a.getFloat(R.styleable.GridDimension_minDeviceHeightPx, 0);
+            mMinDeviceWidthDp = a.getInt(R.styleable.GridDimension_minDeviceWidthDp, 0);
+            mMinDeviceHeightDp = a.getInt(R.styleable.GridDimension_minDeviceHeightDp, 0);
             mDbFile = a.getString(R.styleable.GridDimension_dbFile);
             mDefaultLayoutId = a.getResourceId(
                     R.styleable.GridDimension_defaultLayoutId, 0);

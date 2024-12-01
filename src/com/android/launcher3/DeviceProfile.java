@@ -1861,13 +1861,15 @@ public class DeviceProfile {
      * the bubble bar.
      *
      * <p>Does not check for visible bubbles persistence, so caller should call
-     * {@link #shouldAdjustHotseatForBubbleBar} first.
+     * {@link #shouldAdjustHotseatOrQsbForBubbleBar} first.
      *
      * <p>If there's no adjustment needed, this method returns {@code 0}.
-     * @see #shouldAdjustHotseatForBubbleBar(Context, boolean)
+     * @see #shouldAdjustHotseatOrQsbForBubbleBar(Context, boolean)
      */
     public float getHotseatAdjustedBorderSpaceForBubbleBar(Context context) {
-        if (!shouldAdjustHotseatForBubbleBar(context)) return 0;
+        if (shouldAlignBubbleBarWithQSB() || !shouldAdjustHotseatOrQsbForBubbleBar(context)) {
+            return 0;
+        }
         // The adjustment is shrinking the hotseat's width by 1 icon on either side.
         int iconsWidth =
                 iconSizePx * numShownHotseatIcons + hotseatBorderSpace * (numShownHotseatIcons - 1);
@@ -1880,27 +1882,37 @@ public class DeviceProfile {
      * Returns the hotseat icon translation X for the cellX index.
      *
      * <p>Does not check for visible bubbles persistence, so caller should call
-     * {@link #shouldAdjustHotseatForBubbleBar} first.
+     * {@link #shouldAdjustHotseatOrQsbForBubbleBar} first.
      *
      * <p>If there's no adjustment needed, this method returns {@code 0}.
-     * @see #shouldAdjustHotseatForBubbleBar(Context, boolean)
+     * @see #shouldAdjustHotseatOrQsbForBubbleBar(Context, boolean)
      */
     public float getHotseatAdjustedTranslation(Context context, int cellX) {
-        if (!shouldAdjustHotseatForBubbleBar(context)) return 0;
         float borderSpace = getHotseatAdjustedBorderSpaceForBubbleBar(context);
+        if (borderSpace == 0) return borderSpace;
         float borderSpaceDelta = borderSpace - hotseatBorderSpace;
         return iconSizePx + cellX * borderSpaceDelta;
     }
 
-    /** Returns whether hotseat should be adjusted for the bubble bar. */
-    public boolean shouldAdjustHotseatForBubbleBar(Context context, boolean hasBubbles) {
-        return hasBubbles && shouldAdjustHotseatForBubbleBar(context);
+    /** Returns whether hotseat or QSB should be adjusted for the bubble bar. */
+    public boolean shouldAdjustHotseatOrQsbForBubbleBar(Context context, boolean hasBubbles) {
+        return hasBubbles && shouldAdjustHotseatOrQsbForBubbleBar(context);
     }
 
-    private boolean shouldAdjustHotseatForBubbleBar(Context context) {
-        // only need to adjust if bubble bar is enabled, when QSB is on top of the hotseat and
-        // there's not enough space for the bubble bar to the right of the hotseat.
-        return !isQsbInline && getHotseatLayoutPadding(context).right <= mBubbleBarSpaceThresholdPx;
+    /** Returns whether hotseat should be adjusted for the bubble bar. */
+    public boolean shouldAdjustHotseatForBubbleBar(Context context, boolean hasBubbles) {
+        return shouldAlignBubbleBarWithHotseat()
+                && shouldAdjustHotseatOrQsbForBubbleBar(context, hasBubbles);
+    }
+
+    /** Returns whether hotseat or QSB should be adjusted for the bubble bar. */
+    public boolean shouldAdjustHotseatOrQsbForBubbleBar(Context context) {
+        // only need to adjust if QSB is on top of the hotseat and there's not enough space for the
+        // bubble bar to either side of the hotseat.
+        if (isQsbInline) return false;
+        Rect hotseatPadding = getHotseatLayoutPadding(context);
+        int hotseatMinHorizontalPadding = Math.min(hotseatPadding.left, hotseatPadding.right);
+        return hotseatMinHorizontalPadding <= mBubbleBarSpaceThresholdPx;
     }
 
     /**
@@ -2055,15 +2067,29 @@ public class DeviceProfile {
     }
 
     /**
-     * Returns the number of pixels the hotseat icons vertical center is translated from the bottom
-     * of the screen.
+     * Returns the number of pixels the hotseat icons or QSB vertical center is translated from the
+     * bottom of the screen.
      */
-    public int getHotseatVerticalCenter() {
-        return hotseatBarSizePx
-                - (isQsbInline ? 0 : hotseatQsbVisualHeight)
-                - hotseatQsbSpace
-                - (hotseatCellHeightPx / 2)
-                + ((hotseatCellHeightPx - iconSizePx) / 2);
+    public int getBubbleBarVerticalCenterForHome() {
+        if (shouldAlignBubbleBarWithHotseat()) {
+            return hotseatBarSizePx
+                    - (isQsbInline ? 0 : hotseatQsbVisualHeight)
+                    - hotseatQsbSpace
+                    - (hotseatCellHeightPx / 2)
+                    + ((hotseatCellHeightPx - iconSizePx) / 2);
+        } else {
+            return hotseatBarSizePx - (hotseatQsbVisualHeight / 2);
+        }
+    }
+
+    /** Returns whether bubble bar should be aligned with the hotseat. */
+    public boolean shouldAlignBubbleBarWithQSB() {
+        return !shouldAlignBubbleBarWithHotseat();
+    }
+
+    /** Returns whether bubble bar should be aligned with the hotseat. */
+    public boolean shouldAlignBubbleBarWithHotseat() {
+        return isQsbInline || isGestureMode;
     }
 
     /**

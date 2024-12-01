@@ -32,8 +32,7 @@
     <string name="split_app_info_accessibility" msgid="5475288491241414932">"%1$sৰ বাবে এপৰ তথ্য"</string>
     <string name="split_app_usage_settings" msgid="7214375263347964093">"%1$sৰ বাবে ব্যৱহাৰৰ ছেটিং"</string>
     <string name="new_window_option_taskbar" msgid="6448780542727767211">"নতুন ৱিণ্ড’"</string>
-    <!-- no translation found for manage_windows_option_taskbar (2294109489960654212) -->
-    <skip />
+    <string name="manage_windows_option_taskbar" msgid="2294109489960654212">"Windows পৰিচালনা কৰক"</string>
     <string name="save_app_pair" msgid="5647523853662686243">"এপৰ পেয়াৰ ছেভ কৰক"</string>
     <string name="app_pair_default_title" msgid="4045241727446873529">"<xliff:g id="APP1">%1$s</xliff:g> | <xliff:g id="APP2">%2$s</xliff:g>"</string>
     <string name="app_pair_unlaunchable_at_screen_size" msgid="3446551575502685376">"এই ডিভাইচটোত এই এপ্‌ পেয়াৰ কৰাৰ সুবিধাটো সমৰ্থিত নহয়"</string>
@@ -179,7 +178,7 @@
     <string name="action_decrease_width" msgid="1374549771083094654">"প্ৰস্থ হ্ৰাস কৰক"</string>
     <string name="action_decrease_height" msgid="282377193880900022">"উচ্চতা হ্ৰাস কৰক"</string>
     <string name="widget_resized" msgid="9130327887929620">"ৱিজেটৰ আকাৰ সলনি কৰি প্ৰস্থ <xliff:g id="NUMBER_0">%1$s</xliff:g> আৰু উচ্চতা <xliff:g id="NUMBER_1">%2$s</xliff:g> কৰা হ’ল"</string>
-    <string name="action_deep_shortcut" msgid="2864038805849372848">"শ্বৰ্টকাটসমূহ"</string>
+    <string name="action_deep_shortcut" msgid="4766835855579976045">"শ্বৰ্টকাটৰ মেনু"</string>
     <string name="action_dismiss_notification" msgid="5909461085055959187">"অগ্ৰাহ্য কৰক"</string>
     <string name="accessibility_close" msgid="2277148124685870734">"বন্ধ কৰক"</string>
     <string name="all_apps_personal_tab" msgid="4190252696685155002">"ব্যক্তিগত"</string>
@@ -200,7 +199,7 @@
     <string name="remote_action_failed" msgid="1383965239183576790">"বিফল: <xliff:g id="WHAT">%1$s</xliff:g>"</string>
     <string name="private_space_label" msgid="2359721649407947001">"প্ৰাইভেট স্পে\'চ"</string>
     <string name="private_space_secondary_label" msgid="9203933341714508907">"ছেট আপ কৰিবলৈ টিপক অথবা খোলক"</string>
-    <string name="ps_container_title" msgid="4391796149519594205">"ব্যক্তিগত"</string>
+    <string name="ps_container_title" msgid="4391796149519594205">"প্ৰাইভেট"</string>
     <string name="ps_container_settings" msgid="6059734123353320479">"ব্যক্তিগত স্পে’চৰ ছেটিং"</string>
     <string name="ps_container_unlock_button_content_description" msgid="9181551784092204234">"ব্যক্তিগত, আনলক কৰা আছে।"</string>
     <string name="ps_container_lock_button_content_description" msgid="5961993384382649530">"ব্যক্তিগত, লক কৰা আছে।"</string>

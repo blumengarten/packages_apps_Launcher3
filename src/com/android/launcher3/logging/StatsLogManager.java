@@ -843,6 +843,13 @@ public class StatsLogManager implements ResourceBasedOverride {
 
         @UiEvent(doc = "User long press nav handle and a long press runnable was created.")
         LAUNCHER_OMNI_GET_LONG_PRESS_RUNNABLE(1545),
+
+        // One Grid Flags
+        @UiEvent(doc = "User sets the device in Fixed Landscape")
+        FIXED_LANDSCAPE_TOGGLE_ENABLE(2014),
+
+        @UiEvent(doc = "User sets the device in Fixed Landscape")
+        FIXED_LANDSCAPE_TOGGLE_DISABLED(2020),
         // ADD MORE
         ;
 

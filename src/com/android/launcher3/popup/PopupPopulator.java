@@ -116,7 +116,7 @@ public class PopupPopulator {
         final UserHandle user = originalInfo.user;
         return () -> {
             ApplicationInfoWrapper infoWrapper =
-                    new ApplicationInfoWrapper(context, activity.getPackageName(), user);
+                    new ApplicationInfoWrapper(context, originalInfo.getTargetPackage(), user);
             List<ShortcutInfo> shortcuts = new ShortcutRequest(context, user)
                     .withContainer(activity)
                     .query(ShortcutRequest.PUBLISHED);

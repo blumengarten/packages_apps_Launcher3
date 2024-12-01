@@ -87,10 +87,16 @@ public final class OverviewComponentObserver {
         mCurrentHomeIntent = createHomeIntent();
         mMyHomeIntent = new Intent(mCurrentHomeIntent).setPackage(mContext.getPackageName());
         ResolveInfo info = context.getPackageManager().resolveActivity(mMyHomeIntent, 0);
+        ActivityInfo myHomeActivityInfo = info == null ? null : info.activityInfo;
+        int myHomeConfigChanges = myHomeActivityInfo == null ? 0 : myHomeActivityInfo.configChanges;
         ComponentName myHomeComponent =
-                new ComponentName(context.getPackageName(), info.activityInfo.name);
-        mMyHomeIntent.setComponent(myHomeComponent);
-        mConfigChangesMap.append(myHomeComponent.hashCode(), info.activityInfo.configChanges);
+                myHomeActivityInfo == null
+                        ? mMyHomeIntent.resolveActivity(context.getPackageManager())
+                        : new ComponentName(context.getPackageName(), myHomeActivityInfo.name);
+        if (myHomeComponent != null) {
+            mMyHomeIntent.setComponent(myHomeComponent);
+            mConfigChangesMap.append(myHomeComponent.hashCode(), myHomeConfigChanges);
+        }
         mSetupWizardPkg = context.getString(R.string.setup_wizard_pkg);
 
         ComponentName fallbackComponent = new ComponentName(mContext, RecentsActivity.class);

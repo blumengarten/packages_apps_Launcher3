@@ -18,11 +18,6 @@ package com.android.launcher3.taskbar.bubbles.flyout
 
 /** Callbacks that the flyout uses to notify of events. */
 interface FlyoutCallbacks {
-    /** Requests to extend the top boundary of the parent to fully include the flyout. */
-    fun extendTopBoundary(space: Int)
-
-    /** Resets the top boundary of the parent. */
-    fun resetTopBoundary()
 
     /** The flyout was clicked. */
     fun flyoutClicked()

@@ -31,6 +31,8 @@ import static com.android.quickstep.util.ContextualSearchInvoker.SHADE_EXPANDED_
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -46,13 +48,17 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
 
 import com.android.launcher3.logging.StatsLogManager;
+import com.android.quickstep.BaseContainerInterface;
 import com.android.quickstep.DeviceConfigWrapper;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.TopTaskTracker;
+import com.android.quickstep.views.RecentsView;
+import com.android.quickstep.views.RecentsViewContainer;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -73,6 +79,9 @@ public class ContextualSearchInvokerTest {
     private @Mock StatsLogManager.StatsLogger mMockStatsLogger;
     private @Mock ContextualSearchHapticManager mMockContextualSearchHapticManager;
     private @Mock ContextualSearchManager mMockContextualSearchManager;
+    private @Mock BaseContainerInterface mMockContainerInterface;
+    private @Mock RecentsViewContainer mMockRecentsViewContainer;
+    private @Mock RecentsView mMockRecentsView;
     private ContextualSearchInvoker mContextualSearchInvoker;
 
     @Before
@@ -86,10 +95,15 @@ public class ContextualSearchInvokerTest {
         when(mMockStateManager.isContextualSearchIntentAvailable()).thenReturn(true);
         when(mMockStateManager.isContextualSearchSettingEnabled()).thenReturn(true);
         when(mMockStatsLogManager.logger()).thenReturn(mMockStatsLogger);
+        when(mMockContainerInterface.getCreatedContainer()).thenReturn(mMockRecentsViewContainer);
+        when(mMockRecentsViewContainer.getOverviewPanel()).thenReturn(mMockRecentsView);
 
-        mContextualSearchInvoker = new ContextualSearchInvoker(context, mMockStateManager,
+        mContextualSearchInvoker = spy(new ContextualSearchInvoker(context, mMockStateManager,
                 mMockTopTaskTracker, mMockSystemUiProxy, mMockStatsLogManager,
-                mMockContextualSearchHapticManager, mMockContextualSearchManager);
+                mMockContextualSearchHapticManager, mMockContextualSearchManager
+        ));
+        doReturn(mMockContainerInterface).when(mContextualSearchInvoker)
+                .getRecentsContainerInterface();
     }
 
     @Test
@@ -242,6 +256,64 @@ public class ContextualSearchInvokerTest {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    public void invokeContextualSearchUncheckedWithHaptic_liveTile() {
+        when(mMockContainerInterface.isInLiveTileMode()).thenReturn(true);
+        ArgumentCaptor<Runnable> switchToScreenshotCaptor = ArgumentCaptor.forClass(Runnable.class);
+        ArgumentCaptor<Runnable> finishRecentsAnimationCaptor =
+                ArgumentCaptor.forClass(Runnable.class);
+
+        assertTrue("Expected invocation unchecked to succeed",
+                mContextualSearchInvoker.invokeContextualSearchUncheckedWithHaptic(
+                        CONTEXTUAL_SEARCH_ENTRY_POINT));
+        verify(mMockRecentsView).switchToScreenshot(switchToScreenshotCaptor.capture());
+        switchToScreenshotCaptor.getValue().run();
+        verify(mMockRecentsView).finishRecentsAnimation(anyBoolean(), anyBoolean(),
+                finishRecentsAnimationCaptor.capture());
+        finishRecentsAnimationCaptor.getValue().run();
+        verify(mMockContextualSearchManager).startContextualSearch(CONTEXTUAL_SEARCH_ENTRY_POINT);
+        verifyNoMoreInteractions(mMockStatsLogManager);
+    }
+
+    @Test
+    public void invokeContextualSearchUncheckedWithHaptic_liveTile_failsToSwitchToScreenshot() {
+        when(mMockContainerInterface.isInLiveTileMode()).thenReturn(true);
+        ArgumentCaptor<Runnable> switchToScreenshotCaptor = ArgumentCaptor.forClass(Runnable.class);
+        ArgumentCaptor<Runnable> finishRecentsAnimationCaptor =
+                ArgumentCaptor.forClass(Runnable.class);
+
+        assertTrue("Expected invocation unchecked to succeed",
+                mContextualSearchInvoker.invokeContextualSearchUncheckedWithHaptic(
+                        CONTEXTUAL_SEARCH_ENTRY_POINT));
+        verify(mMockRecentsView).switchToScreenshot(switchToScreenshotCaptor.capture());
+
+        // Don't run switchToScreenshot's callback. Therefore, recents animation should not finish.
+        verify(mMockRecentsView, never()).finishRecentsAnimation(anyBoolean(), anyBoolean(),
+                finishRecentsAnimationCaptor.capture());
+        // And ContextualSearch should not start.
+        verify(mMockContextualSearchManager, never()).startContextualSearch(anyInt());
+        verifyNoMoreInteractions(mMockStatsLogManager);
+    }
+
+    @Test
+    public void invokeContextualSearchUncheckedWithHaptic_liveTile_failsToFinishRecentsAnimation() {
+        when(mMockContainerInterface.isInLiveTileMode()).thenReturn(true);
+        ArgumentCaptor<Runnable> switchToScreenshotCaptor = ArgumentCaptor.forClass(Runnable.class);
+        ArgumentCaptor<Runnable> finishRecentsAnimationCaptor =
+                ArgumentCaptor.forClass(Runnable.class);
+
+        assertTrue("Expected invocation unchecked to succeed",
+                mContextualSearchInvoker.invokeContextualSearchUncheckedWithHaptic(
+                        CONTEXTUAL_SEARCH_ENTRY_POINT));
+        verify(mMockRecentsView).switchToScreenshot(switchToScreenshotCaptor.capture());
+        switchToScreenshotCaptor.getValue().run();
+        verify(mMockRecentsView).finishRecentsAnimation(anyBoolean(), anyBoolean(),
+                finishRecentsAnimationCaptor.capture());
+        // Don't run finishRecentsAnimation's callback. Therefore ContextualSearch should not start.
+        verify(mMockContextualSearchManager, never()).startContextualSearch(anyInt());
+        verifyNoMoreInteractions(mMockStatsLogManager);
     }
 
     private AutoCloseable overrideSearchHapticCommitFlag(boolean value) {

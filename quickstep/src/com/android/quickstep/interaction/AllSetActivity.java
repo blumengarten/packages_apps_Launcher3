@@ -121,6 +121,8 @@ public class AllSetActivity extends Activity {
 
     private TextView mHintView;
 
+    private final Runnable mOverviewTargetChangeRunnable = this::onOverviewTargetChanged;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -193,7 +195,7 @@ public class AllSetActivity extends Activity {
                         LOTTIE_TERTIARY_COLOR_TOKEN, R.color.all_set_bg_tertiary),
                 getTheme());
 
-        startBackgroundAnimation(getDP().isTablet);
+        setUpBackgroundAnimation(getDP().isTablet);
         getIDP().addOnChangeListener(mOnIDPChangeListener);
     }
 
@@ -218,7 +220,7 @@ public class AllSetActivity extends Activity {
         Executors.UI_HELPER_EXECUTOR.execute(runnable);
     }
 
-    private void startBackgroundAnimation(boolean forTablet) {
+    private void setUpBackgroundAnimation(boolean forTablet) {
         if (mVibrator == null) {
             return;
         }
@@ -262,7 +264,6 @@ public class AllSetActivity extends Activity {
                     };
         }
         mAnimatedBackground.addAnimatorListener(mBackgroundAnimatorListener);
-        mAnimatedBackground.playAnimation();
     }
 
     private void setSetupUIVisible(boolean visible) {
@@ -285,11 +286,19 @@ public class AllSetActivity extends Activity {
     private void onTISConnected(TISBinder binder) {
         setSetupUIVisible(isResumed());
         binder.setSwipeUpProxy(isResumed() ? this::createSwipeUpProxy : null);
-        binder.setOverviewTargetChangeListener(binder::preloadOverviewForSUWAllSet);
+        binder.registerOverviewTargetChangeListener(mOverviewTargetChangeRunnable);
         binder.preloadOverviewForSUWAllSet();
         TaskbarManager taskbarManager = binder.getTaskbarManager();
         if (taskbarManager != null) {
             mLauncherStartAnim = taskbarManager.createLauncherStartFromSuwAnim(MAX_SWIPE_DURATION);
+        }
+    }
+
+    private void onOverviewTargetChanged() {
+        TISBinder binder = mTISBindHelper.getBinder();
+        if (binder != null) {
+            binder.preloadOverviewForSUWAllSet();
+            binder.unregisterOverviewTargetChangeListener(mOverviewTargetChangeRunnable);
         }
     }
 
@@ -309,7 +318,7 @@ public class AllSetActivity extends Activity {
         if (binder != null) {
             setSetupUIVisible(false);
             binder.setSwipeUpProxy(null);
-            binder.setOverviewTargetChangeListener(null);
+            binder.unregisterOverviewTargetChangeListener(mOverviewTargetChangeRunnable);
         }
     }
 

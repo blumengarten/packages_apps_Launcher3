@@ -47,7 +47,7 @@ class PersistentBubbleStashController(
     private lateinit var bubbleBarAlphaAnimator: MultiPropertyFactory<View>.MultiProperty
     private lateinit var bubbleBarScaleAnimator: AnimatedFloat
     private lateinit var controllersAfterInitAction: ControllersAfterInitAction
-    private var hotseatVerticalCenter: Int = 0
+    override var bubbleBarVerticalCenterForHome: Int = 0
 
     override var launcherState: BubbleLauncherState = BubbleLauncherState.IN_APP
         set(state) {
@@ -97,7 +97,7 @@ class PersistentBubbleStashController(
     override val bubbleBarTranslationYForHotseat: Float
         get() {
             val bubbleBarHeight = bubbleBarViewController.bubbleBarCollapsedHeight
-            return -hotseatVerticalCenter + bubbleBarHeight / 2
+            return -bubbleBarVerticalCenterForHome + bubbleBarHeight / 2
         }
 
     override val bubbleBarTranslationY: Float
@@ -159,10 +159,6 @@ class PersistentBubbleStashController(
         animatorSet.setDuration(BAR_STASH_DURATION).start()
     }
 
-    override fun setHotseatVerticalCenter(hotseatVerticalCenter: Int) {
-        this.hotseatVerticalCenter = hotseatVerticalCenter
-    }
-
     override fun showBubbleBarImmediate() = showBubbleBarImmediate(bubbleBarTranslationY)
 
     override fun showBubbleBarImmediate(bubbleBarTranslationY: Float) {
@@ -180,8 +176,8 @@ class PersistentBubbleStashController(
         updateExpandedState(expand = false)
     }
 
-    override fun showBubbleBar(expandBubbles: Boolean) {
-        updateExpandedState(expandBubbles)
+    override fun showBubbleBar(expandBubbles: Boolean, bubbleBarGesture: Boolean) {
+        updateExpandedState(expand = expandBubbles, bubbleBarGesture = bubbleBarGesture)
     }
 
     override fun stashBubbleBarImmediate() {
@@ -235,13 +231,14 @@ class PersistentBubbleStashController(
         // no op since does not have a handle view
     }
 
-    private fun updateExpandedState(expand: Boolean) {
+    private fun updateExpandedState(expand: Boolean, bubbleBarGesture: Boolean = false) {
         if (bubbleBarViewController.isHiddenForNoBubbles) {
             // If there are no bubbles the bar is invisible, nothing to do here.
             return
         }
         if (bubbleBarViewController.isExpanded != expand) {
-            bubbleBarViewController.isExpanded = expand
+            val maybeShowEdu = expand && bubbleBarGesture
+            bubbleBarViewController.setExpanded(expand, maybeShowEdu)
         }
     }
 

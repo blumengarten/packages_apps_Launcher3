@@ -227,7 +227,9 @@ public class TaskbarControllers {
                     bubbleControllers.bubbleBarViewController.getBubbleBarLocation();
             boolean hiddenForBubbles =
                     bubbleControllers.bubbleBarViewController.isHiddenForNoBubbles();
-            uiController.adjustHotseatForBubbleBar(!hiddenForBubbles);
+            if (!hiddenForBubbles) {
+                uiController.adjustHotseatForBubbleBar(/* isBubbleBarVisible= */ true);
+            }
             uiController.onBubbleBarLocationUpdated(location);
         }, () -> uiController.onBubbleBarLocationUpdated(null));
         // Notify that the ui controller has changed
