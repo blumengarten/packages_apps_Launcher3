@@ -392,6 +392,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
 
     /** Inflates/binds the hotseat items and recent tasks to the view. */
     protected void updateItems(ItemInfo[] hotseatItemInfos, List<GroupTask> recentTasks) {
+        if (mActivityContext.isDestroyed()) return;
         // Filter out unsupported items.
         hotseatItemInfos = Arrays.stream(hotseatItemInfos)
                 .filter(Objects::nonNull)

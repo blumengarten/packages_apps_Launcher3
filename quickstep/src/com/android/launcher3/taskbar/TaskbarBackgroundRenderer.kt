@@ -50,6 +50,8 @@ class TaskbarBackgroundRenderer(private val context: TaskbarActivityContext) {
         }
 
     var isAnimatingPinning = false
+    var isAnimatingPersistentTaskbar = false
+    var isAnimatingTransientTaskbar = false
 
     val paint = Paint()
     private val strokePaint = Paint()
@@ -144,7 +146,7 @@ class TaskbarBackgroundRenderer(private val context: TaskbarActivityContext) {
     /** Draws the background with the given paint and height, on the provided canvas. */
     fun draw(canvas: Canvas) {
         if (isInSetup) return
-        val isTransientTaskbar = backgroundProgress == 0f
+        val isTransientTaskbar = DisplayController.isTransientTaskbar(context)
         canvas.save()
         if (!isTransientTaskbar || transientBackgroundBounds.isEmpty || isAnimatingPinning) {
             drawPersistentBackground(canvas)
@@ -158,7 +160,7 @@ class TaskbarBackgroundRenderer(private val context: TaskbarActivityContext) {
     }
 
     private fun drawPersistentBackground(canvas: Canvas) {
-        if (isAnimatingPinning) {
+        if (isAnimatingPinning || isAnimatingPersistentTaskbar) {
             val persistentTaskbarHeight = maxPersistentTaskbarHeight * backgroundProgress
             canvas.translate(0f, canvas.height - persistentTaskbarHeight)
             // Draw the background behind taskbar content.
@@ -181,12 +183,13 @@ class TaskbarBackgroundRenderer(private val context: TaskbarActivityContext) {
     private fun drawTransientBackground(canvas: Canvas) {
         val res = context.resources
         val transientTaskbarHeight = maxTransientTaskbarHeight * (1f - backgroundProgress)
+        val isAnimating = isAnimatingPinning || isAnimatingTransientTaskbar
         val heightProgressWhileAnimating =
-            if (isAnimatingPinning) transientTaskbarHeight else backgroundHeight
+            if (isAnimating) transientTaskbarHeight else backgroundHeight
 
         var progress = heightProgressWhileAnimating / maxTransientTaskbarHeight
         progress = Math.round(progress * 100f) / 100f
-        if (isAnimatingPinning) {
+        if (isAnimating) {
             var scale = transientTaskbarHeight / maxTransientTaskbarHeight
             scale = Math.round(scale * 100f) / 100f
             bottomMargin =

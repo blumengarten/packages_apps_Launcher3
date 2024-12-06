@@ -109,8 +109,11 @@ public class QuickstepAtomicAnimationFactory extends
 
             // We sync the scrim fade with the taskbar animation duration to avoid any flickers for
             // taskbar icons disappearing before hotseat icons show up.
+            boolean isPinnedTaskbarAndNotInDesktopMode =
+                    isPinnedTaskbar && !DisplayController.isInDesktopMode(mContainer);
             float scrimUpperBoundFromSplit =
-                    QuickstepTransitionManager.getTaskbarToHomeDuration(isPinnedTaskbar)
+                    QuickstepTransitionManager.getTaskbarToHomeDuration(
+                            isPinnedTaskbarAndNotInDesktopMode)
                             / (float) config.duration;
             scrimUpperBoundFromSplit = Math.min(scrimUpperBoundFromSplit, 1f);
             config.setInterpolator(ANIM_OVERVIEW_ACTIONS_FADE, clampToProgress(LINEAR, 0, 0.25f));
@@ -142,7 +145,8 @@ public class QuickstepAtomicAnimationFactory extends
                 if (mContainer.getDeviceProfile().isTaskbarPresent) {
                     config.duration = Math.min(
                             config.duration,
-                            QuickstepTransitionManager.getTaskbarToHomeDuration(isPinnedTaskbar));
+                            QuickstepTransitionManager.getTaskbarToHomeDuration(
+                                    isPinnedTaskbarAndNotInDesktopMode));
                 }
                 overview.snapToPage(DEFAULT_PAGE, Math.toIntExact(config.duration));
             } else {

@@ -223,9 +223,13 @@ public class TaskbarLauncherStateController {
                     updateStateForFlag(FLAG_LAUNCHER_IN_STATE_TRANSITION, true);
                     if (!mShouldDelayLauncherStateAnim) {
                         if (toState == LauncherState.NORMAL) {
-                            applyState(QuickstepTransitionManager.getTaskbarToHomeDuration(
+                            boolean isPinnedTaskbarAndNotInDesktopMode =
                                     DisplayController.isPinnedTaskbar(
-                                            mControllers.taskbarActivityContext)));
+                                            mControllers.taskbarActivityContext)
+                                            && !DisplayController.isInDesktopMode(
+                                            mControllers.taskbarActivityContext);
+                            applyState(QuickstepTransitionManager.getTaskbarToHomeDuration(
+                                    isPinnedTaskbarAndNotInDesktopMode));
                         } else {
                             applyState();
                         }
@@ -680,8 +684,11 @@ public class TaskbarLauncherStateController {
         } else if (mIconAlignment.isAnimatingToValue(toAlignment)
                 || mIconAlignment.isSettledOnValue(toAlignment)) {
             // Already at desired value, but make sure we run the callback at the end.
-            animatorSet.addListener(AnimatorListeners.forEndCallback(
-                    this::onIconAlignmentRatioChanged));
+            animatorSet.addListener(AnimatorListeners.forEndCallback(() -> {
+                if (!mIconAlignment.isAnimating()) {
+                    onIconAlignmentRatioChanged();
+                }
+            }));
         } else {
             mIconAlignment.cancelAnimation();
             ObjectAnimator iconAlignAnim = mIconAlignment
