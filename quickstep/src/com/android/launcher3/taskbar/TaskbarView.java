@@ -70,7 +70,6 @@ import com.android.quickstep.views.TaskViewType;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -135,6 +134,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
     private final int mNumStaticViews;
 
     private Set<GroupTask> mPrevRecentTasks = Collections.emptySet();
+    private Set<GroupTask> mPrevOverflowTasks = Collections.emptySet();
 
     public TaskbarView(@NonNull Context context) {
         this(context, null);
@@ -431,7 +431,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
             mAddedDividerForRecents = true;
         }
 
-        updateRecents(recentTasks);
+        updateRecents(recentTasks, hotseatItemInfos.length);
 
         addView(mAllAppsButtonContainer, mIsRtl ? hotseatItemInfos.length : 0);
 
@@ -460,7 +460,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
 
         // Update left section.
         if (mIsRtl) {
-            updateRecents(recentTasks.reversed());
+            updateRecents(recentTasks.reversed(), hotseatItemInfos.length);
         } else {
             updateHotseatItems(hotseatItemInfos);
         }
@@ -475,7 +475,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         if (mIsRtl) {
             updateHotseatItems(hotseatItemInfos);
         } else {
-            updateRecents(recentTasks);
+            updateRecents(recentTasks, hotseatItemInfos.length);
         }
 
         // Recents divider takes priority.
@@ -606,47 +606,59 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         }
     }
 
-    private void updateRecents(List<GroupTask> recentTasks) {
-        // At this point, the all apps button has not been added as a child view, but needs to be
-        // accounted for when comparing current icon count to max number of icons.
-        int nonTaskIconsToBeAdded = 1;
-
+    private void updateRecents(List<GroupTask> recentTasks, int hotseatSize) {
         boolean supportsOverflow = Flags.taskbarOverflow() && recentTasks.size() > 1;
         int overflowSize = 0;
-        if (supportsOverflow) {
-            mIdealNumIcons = mNextViewIndex + recentTasks.size() + nonTaskIconsToBeAdded;
+        boolean hasOverflow = false;
+        if (supportsOverflow && mTaskbarOverflowView != null) {
+            // Need to account for All Apps and the divider. If we need to have an overflow, we will
+            // have a divider for recents.
+            final int nonTaskIconsToBeAdded = 2;
+            mIdealNumIcons = hotseatSize + recentTasks.size() + nonTaskIconsToBeAdded;
             overflowSize = mIdealNumIcons - mMaxNumIcons;
+            hasOverflow = overflowSize > 0;
 
-            if (overflowSize > 0 && mTaskbarOverflowView != null) {
+            if (!ENABLE_TASKBAR_RECENTS_LAYOUT_TRANSITION.isTrue() && hasOverflow) {
                 addView(mTaskbarOverflowView, mNextViewIndex++);
-            } else if (mTaskbarOverflowView != null) {
+            } else if (ENABLE_TASKBAR_RECENTS_LAYOUT_TRANSITION.isTrue()) {
+                // RTL case is handled after we add the recent icons, because the button needs to
+                // then be to the right of them.
+                if (hasOverflow && !mIsRtl) {
+                    if (mPrevOverflowTasks.isEmpty()) addView(mTaskbarOverflowView, mNextViewIndex);
+                    // NOTE: If overflow already existed, assume the overflow view is already
+                    // at the correct position.
+                    mNextViewIndex++;
+                } else if (!hasOverflow && !mPrevOverflowTasks.isEmpty()) {
+                    removeView(mTaskbarOverflowView);
+                    mTaskbarOverflowView.clearItems();
+                }
+            } else {
                 mTaskbarOverflowView.clearItems();
             }
         }
 
-        List<Task> overflownTasks = null;
         // An extra item needs to be added to overflow button to account for the space taken up by
         // the overflow button.
         final int itemsToAddToOverflow =
-                (overflowSize > 0) ? Math.min(overflowSize + 1, recentTasks.size()) : 0;
-        if (overflowSize > 0) {
-            overflownTasks = new ArrayList<>(itemsToAddToOverflow);
+                hasOverflow ? Math.min(overflowSize + 1, recentTasks.size()) : 0;
+        final Set<GroupTask> overflownRecentsSet;
+        if (hasOverflow && mTaskbarOverflowView != null) {
+            final int startIndex = mIsRtl ? recentTasks.size() - itemsToAddToOverflow : 0;
+            final int endIndex = mIsRtl ? recentTasks.size() : itemsToAddToOverflow;
+            final List<GroupTask> overflownRecents = recentTasks.subList(startIndex, endIndex);
+            mTaskbarOverflowView.setItems(
+                    overflownRecents.stream().map(t -> ((SingleTask) t).getTask()).toList());
+            overflownRecentsSet = new ArraySet<>(overflownRecents);
+        } else {
+            overflownRecentsSet = Collections.emptySet();
         }
 
         // Add Recent/Running icons.
         final Set<GroupTask> recentTasksSet = new ArraySet<>(recentTasks);
-        for (GroupTask task : recentTasks) {
-            if (mTaskbarOverflowView != null && overflownTasks != null
-                    && overflownTasks.size() < itemsToAddToOverflow
-                    && task instanceof SingleTask singleTask) {
-                // TODO(b/343289567 and b/316004172): support app pairs and desktop mode.
-                overflownTasks.add(singleTask.getTask());
-                if (overflownTasks.size() == itemsToAddToOverflow) {
-                    mTaskbarOverflowView.setItems(overflownTasks);
-                }
-                continue;
-            }
-
+        final int startIndex = mIsRtl ? 0 : itemsToAddToOverflow;
+        final int endIndex =
+                mIsRtl ? recentTasks.size() - itemsToAddToOverflow : recentTasks.size();
+        for (GroupTask task : recentTasks.subList(startIndex, endIndex)) {
             // Replace any Recent views with the appropriate type if it's not already that type.
             final int expectedLayoutResId;
             boolean isCollection = false;
@@ -666,16 +678,18 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
             View recentIcon = null;
             // If a task is new, we should not reuse a view so that it animates in when it is added.
             final boolean canReuseView = !ENABLE_TASKBAR_RECENTS_LAYOUT_TRANSITION.isTrue()
-                    || mPrevRecentTasks.contains(task);
+                    || (mPrevRecentTasks.contains(task) && !mPrevOverflowTasks.contains(task));
             while (canReuseView && isNextViewInSection(GroupTask.class)) {
                 recentIcon = getChildAt(mNextViewIndex);
+                GroupTask tag = (GroupTask) recentIcon.getTag();
 
                 // see if the view can be reused
                 if ((recentIcon.getSourceLayoutResId() != expectedLayoutResId)
-                        || (isCollection && (recentIcon.getTag() != task))
+                        || (isCollection && tag != task)
                         // Remove view corresponding to removed task so that it animates out.
                         || (ENABLE_TASKBAR_RECENTS_LAYOUT_TRANSITION.isTrue()
-                                && !recentTasksSet.contains(recentIcon.getTag()))) {
+                                && (!recentTasksSet.contains(tag)
+                                        || overflownRecentsSet.contains(tag)))) {
                     removeAndRecycle(recentIcon);
                     recentIcon = null;
                 } else {
@@ -706,7 +720,15 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
             removeAndRecycle(getChildAt(mNextViewIndex));
         }
 
+        if (ENABLE_TASKBAR_RECENTS_LAYOUT_TRANSITION.isTrue() && mIsRtl && hasOverflow) {
+            if (mPrevOverflowTasks.isEmpty()) {
+                addView(mTaskbarOverflowView, mNextViewIndex);
+            }
+            mNextViewIndex++;
+        }
+
         mPrevRecentTasks = recentTasksSet;
+        mPrevOverflowTasks = overflownRecentsSet;
     }
 
     private boolean isNextViewInSection(Class<?> tagClass) {

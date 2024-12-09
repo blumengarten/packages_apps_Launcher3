@@ -19,12 +19,14 @@ package com.android.launcher3.taskbar
 import android.platform.test.annotations.EnableFlags
 import android.platform.test.flag.junit.SetFlagsRule
 import android.view.View
+import com.android.launcher3.Flags.FLAG_TASKBAR_OVERFLOW
 import com.android.launcher3.R
 import com.android.launcher3.statehandlers.DesktopVisibilityController
 import com.android.launcher3.taskbar.TaskbarControllerTestUtil.runOnMainSync
 import com.android.launcher3.taskbar.TaskbarIconType.ALL_APPS
 import com.android.launcher3.taskbar.TaskbarIconType.DIVIDER
 import com.android.launcher3.taskbar.TaskbarIconType.HOTSEAT
+import com.android.launcher3.taskbar.TaskbarIconType.OVERFLOW
 import com.android.launcher3.taskbar.TaskbarIconType.RECENT
 import com.android.launcher3.taskbar.TaskbarViewTestUtil.assertThat
 import com.android.launcher3.taskbar.TaskbarViewTestUtil.createHotseatItems
@@ -44,7 +46,7 @@ import org.mockito.kotlin.whenever
 
 @RunWith(LauncherMultivalentJUnit::class)
 @EmulatedDevices(["pixelFoldable2023", "pixelTablet2023"])
-@EnableFlags(FLAG_ENABLE_TASKBAR_RECENTS_LAYOUT_TRANSITION)
+@EnableFlags(FLAG_ENABLE_TASKBAR_RECENTS_LAYOUT_TRANSITION, FLAG_TASKBAR_OVERFLOW)
 class TaskbarViewWithLayoutTransitionTest {
 
     @get:Rule(order = 0) val setFlagsRule = SetFlagsRule()
@@ -58,6 +60,9 @@ class TaskbarViewWithLayoutTransitionTest {
 
     private val desktopVisibilityController: DesktopVisibilityController
         get() = DesktopVisibilityController.INSTANCE[context]
+
+    private val maxShownRecents: Int
+        get() = taskbarView.maxNumIconViews - 2 // Account for All Apps and Divider.
 
     @Before
     fun obtainView() {
@@ -259,5 +264,89 @@ class TaskbarViewWithLayoutTransitionTest {
         whenever(desktopVisibilityController.isInDesktopMode(context.displayId)).thenReturn(true)
         runOnMainSync { taskbarView.updateItems(emptyArray(), createRecents(1)) }
         assertThat(taskbarView).hasIconTypes(RECENT, DIVIDER, ALL_APPS)
+    }
+
+    @Test
+    fun testUpdateItems_maxRecents_noOverflow() {
+        runOnMainSync { taskbarView.updateItems(emptyArray(), createRecents(maxShownRecents)) }
+        assertThat(taskbarView).hasIconTypes(ALL_APPS, DIVIDER, *RECENT * maxShownRecents)
+    }
+
+    @Test
+    fun testUpdateItems_moreThanMaxRecents_overflowShownBeforeRecents() {
+        val recentsSize = maxShownRecents + 2
+        runOnMainSync { taskbarView.updateItems(emptyArray(), createRecents(recentsSize)) }
+
+        val expectedNumRecents = RECENT * getExpectedNumRecentsWithOverflow()
+        assertThat(taskbarView).hasIconTypes(ALL_APPS, DIVIDER, OVERFLOW, *expectedNumRecents)
+    }
+
+    @Test
+    @ForceRtl
+    fun testUpdateItems_rtl_moreThanMaxRecents_overflowShownAfterRecents() {
+        val recentsSize = maxShownRecents + 2
+        runOnMainSync { taskbarView.updateItems(emptyArray(), createRecents(recentsSize)) }
+
+        val expectedRecents = RECENT * getExpectedNumRecentsWithOverflow()
+        assertThat(taskbarView).hasIconTypes(*expectedRecents, OVERFLOW, DIVIDER, ALL_APPS)
+    }
+
+    @Test
+    fun testUpdateItems_moreThanMaxRecentsWithHotseat_fewerRecentsShown() {
+        val hotseatSize = 4
+        val recentsSize = maxShownRecents + 2
+        runOnMainSync {
+            taskbarView.updateItems(createHotseatItems(hotseatSize), createRecents(recentsSize))
+        }
+
+        val expectedRecents = RECENT * getExpectedNumRecentsWithOverflow(hotseatSize)
+        assertThat(taskbarView)
+            .hasIconTypes(ALL_APPS, *HOTSEAT * hotseatSize, DIVIDER, OVERFLOW, *expectedRecents)
+    }
+
+    @Test
+    @ForceRtl
+    fun testUpdateItems_rtl_moreThanMaxRecentsWithHotseat_fewerRecentsShown() {
+        val hotseatSize = 4
+        val recentsSize = maxShownRecents + 2
+        runOnMainSync {
+            taskbarView.updateItems(createHotseatItems(hotseatSize), createRecents(recentsSize))
+        }
+
+        val expectedRecents = RECENT * getExpectedNumRecentsWithOverflow(hotseatSize)
+        assertThat(taskbarView)
+            .hasIconTypes(*expectedRecents, OVERFLOW, DIVIDER, *HOTSEAT * hotseatSize, ALL_APPS)
+    }
+
+    @Test
+    fun testUpdateItems_moreThanMaxRecents_verifyShownRecentsOrder() {
+        val recentsSize = maxShownRecents + 2
+        runOnMainSync { taskbarView.updateItems(emptyArray(), createRecents(recentsSize)) }
+
+        val expectedNumRecents = getExpectedNumRecentsWithOverflow()
+        assertThat(taskbarView)
+            .hasRecentsOrder(
+                startIndex = iconViews.size - expectedNumRecents,
+                expectedIds = ((recentsSize - expectedNumRecents)..<recentsSize).toList(),
+            )
+    }
+
+    @Test
+    @ForceRtl
+    fun testUpdateItems_rtl_moreThanMaxRecents_verifyShownRecentsReversed() {
+        val recentsSize = maxShownRecents + 2
+        runOnMainSync { taskbarView.updateItems(emptyArray(), createRecents(recentsSize)) }
+
+        val expectedNumRecents = getExpectedNumRecentsWithOverflow()
+        assertThat(taskbarView)
+            .hasRecentsOrder(
+                startIndex = 0,
+                expectedIds = ((recentsSize - expectedNumRecents)..<recentsSize).toList().reversed(),
+            )
+    }
+
+    /** Returns the number of expected recents outside of the overflow based on [hotseatSize]. */
+    private fun getExpectedNumRecentsWithOverflow(hotseatSize: Int = 0): Int {
+        return maxShownRecents - hotseatSize - 1 // Account for overflow.
     }
 }
