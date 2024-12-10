@@ -149,7 +149,7 @@ public class QuickSwitchTouchController extends AbstractStateChangeTouchControll
         mOverviewPanel.setFullscreenProgress(progress);
         if (progress > UPDATE_SYSUI_FLAGS_THRESHOLD) {
             int sysuiFlags = 0;
-            TaskView tv = mOverviewPanel.getTaskViewAt(0);
+            TaskView tv = mOverviewPanel.getFirstTaskView();
             if (tv != null) {
                 sysuiFlags = tv.getTaskContainers().getFirst().getSysUiStatusNavFlags();
             }

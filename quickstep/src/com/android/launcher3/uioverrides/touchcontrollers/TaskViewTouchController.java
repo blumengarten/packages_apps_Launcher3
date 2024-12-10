@@ -66,7 +66,7 @@ public abstract class TaskViewTouchController<CONTAINER extends Context & Recent
 
     protected final CONTAINER mContainer;
     private final SingleAxisSwipeDetector mDetector;
-    private final RecentsView mRecentsView;
+    private final RecentsView<?, ?> mRecentsView;
     private final Rect mTempRect = new Rect();
     private final boolean mIsRtl;
 
@@ -157,17 +157,15 @@ public abstract class TaskViewTouchController<CONTAINER extends Context & Recent
             } else {
                 mTaskBeingDragged = null;
 
-                for (int i = 0; i < mRecentsView.getTaskViewCount(); i++) {
-                    TaskView view = mRecentsView.getTaskViewAt(i);
-
-                    if (mRecentsView.isTaskViewVisible(view) && mContainer.getDragLayer()
-                            .isEventOverView(view, ev)) {
+                for (TaskView taskView : mRecentsView.getTaskViews()) {
+                    if (mRecentsView.isTaskViewVisible(taskView) && mContainer.getDragLayer()
+                            .isEventOverView(taskView, ev)) {
                         // Disable swiping up and down if the task overlay is modal.
                         if (isRecentsModal()) {
                             mTaskBeingDragged = null;
                             break;
                         }
-                        mTaskBeingDragged = view;
+                        mTaskBeingDragged = taskView;
                         int upDirection = mRecentsView.getPagedOrientationHandler()
                                 .getUpDirection(mIsRtl);
 
@@ -179,10 +177,10 @@ public abstract class TaskViewTouchController<CONTAINER extends Context & Recent
                         // - We support gestures to enter overview
                         // - It's the focused task if in grid view
                         // - The task is snapped
-                        mAllowGoingDown = i == mRecentsView.getCurrentPage()
+                        mAllowGoingDown = taskView == mRecentsView.getCurrentPageTaskView()
                                 && DisplayController.getNavigationMode(mContainer).hasGestures
                                 && (!mRecentsView.showAsGrid() || mTaskBeingDragged.isLargeTile())
-                                && mRecentsView.isTaskInExpectedScrollPosition(i);
+                                && mRecentsView.isTaskInExpectedScrollPosition(taskView);
 
                         directionsToDetectScroll = mAllowGoingDown ? DIRECTION_BOTH : upDirection;
                         break;

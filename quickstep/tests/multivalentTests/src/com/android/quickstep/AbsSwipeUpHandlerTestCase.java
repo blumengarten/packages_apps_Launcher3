@@ -59,7 +59,7 @@ import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.statemanager.BaseState;
 import com.android.launcher3.statemanager.StatefulContainer;
 import com.android.launcher3.util.SystemUiController;
-import com.android.quickstep.fallback.window.RecentsWindowManager;
+import com.android.quickstep.fallback.window.RecentsWindowFactory;
 import com.android.quickstep.util.ContextInitListener;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
@@ -173,7 +173,8 @@ public abstract class AbsSwipeUpHandlerTestCase<
 
     @Before
     public void setUpRecentsContainer() {
-        mTaskAnimationManager = new TaskAnimationManager(mContext, getRecentsWindowManager());
+        mTaskAnimationManager = new TaskAnimationManager(mContext, getRecentsWindowFactory(),
+                mRecentsAnimationDeviceState);
         RecentsViewContainer recentsContainer = getRecentsContainer();
         RECENTS_VIEW recentsView = getRecentsView();
 
@@ -365,7 +366,7 @@ public abstract class AbsSwipeUpHandlerTestCase<
     }
 
     @Nullable
-    protected RecentsWindowManager getRecentsWindowManager() {
+    protected RecentsWindowFactory getRecentsWindowFactory() {
         return null;
     }
 

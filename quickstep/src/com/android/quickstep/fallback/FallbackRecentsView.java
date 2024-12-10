@@ -73,13 +73,14 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
     }
 
     public FallbackRecentsView(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr, getContainerInterface());
+        super(context, attrs, defStyleAttr);
         mContainer.getStateManager().addStateListener(this);
     }
 
-    private static BaseContainerInterface<RecentsState, ?> getContainerInterface() {
+    @Override
+    public BaseContainerInterface<RecentsState, ?> getContainerInterface(int displayId) {
         return (Flags.enableFallbackOverviewInWindow() || Flags.enableLauncherOverviewInWindow())
-                ? FallbackWindowInterface.getInstance()
+                ? FallbackWindowInterface.getInstance(displayId)
                 : FallbackActivityInterface.INSTANCE;
     }
 

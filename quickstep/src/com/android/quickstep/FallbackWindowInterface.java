@@ -41,6 +41,8 @@ import com.android.quickstep.util.AnimatorControllerWithResistance;
 import com.android.quickstep.util.ContextInitListener;
 import com.android.quickstep.views.RecentsView;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -51,21 +53,23 @@ import java.util.function.Predicate;
  */
 public final class FallbackWindowInterface extends BaseWindowInterface{
 
-    private static FallbackWindowInterface INSTANCE;
+    static Map<Integer, FallbackWindowInterface> sWindowInterfaceMap = new HashMap<>();
 
     private final RecentsWindowManager mRecentsWindowManager;
-
     /**
      * This is only null before init() or after destroy()
      */
     @Nullable
-    public static FallbackWindowInterface getInstance(){
-        return INSTANCE;
+    public static FallbackWindowInterface getInstance(int displayId) {
+        return sWindowInterfaceMap.get(displayId);
     }
 
-    public static void init(RecentsWindowManager recentsWindowManager) {
-        if (INSTANCE == null) {
-            INSTANCE = new FallbackWindowInterface(recentsWindowManager);
+    /**
+     * initializing instance and mapping it to display id
+     */
+    public static void init(int displayId, RecentsWindowManager recentsWindowManager) {
+        if (!sWindowInterfaceMap.containsKey(displayId)) {
+            sWindowInterfaceMap.put(displayId, new FallbackWindowInterface(recentsWindowManager));
         }
     }
 
@@ -75,7 +79,7 @@ public final class FallbackWindowInterface extends BaseWindowInterface{
     }
 
     public void destroy() {
-        INSTANCE = null;
+        sWindowInterfaceMap.clear();
     }
 
     /** 2 */

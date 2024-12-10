@@ -180,7 +180,8 @@ public final class OverviewComponentObserver {
             // The default home app is a different launcher. Use the fallback Overview instead.
 
             if (Flags.enableLauncherOverviewInWindow() || Flags.enableFallbackOverviewInWindow()) {
-                mContainerInterface = FallbackWindowInterface.getInstance();
+                mContainerInterface =
+                        FallbackWindowInterface.getInstance(mDeviceState.getDisplayId());
             } else {
                 mContainerInterface = FallbackActivityInterface.INSTANCE;
             }

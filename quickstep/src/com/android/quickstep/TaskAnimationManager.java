@@ -47,6 +47,7 @@ import com.android.launcher3.Utilities;
 import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.taskbar.TaskbarUIController;
 import com.android.launcher3.util.DisplayController;
+import com.android.quickstep.fallback.window.RecentsWindowFactory;
 import com.android.quickstep.fallback.window.RecentsWindowManager;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.quickstep.util.SystemUiFlagUtils;
@@ -65,10 +66,12 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
             SystemProperties.getBoolean("persist.wm.debug.shell_transit_rotate", false);
 
     private final Context mCtx;
-    private RecentsWindowManager mRecentsWindowsManager;
+    private RecentsWindowFactory mRecentsWindowFactory;
     private RecentsAnimationController mController;
     private RecentsAnimationCallbacks mCallbacks;
     private RecentsAnimationTargets mTargets;
+    private RecentsAnimationDeviceState mDeviceState;
+
     // Temporary until we can hook into gesture state events
     private GestureState mLastGestureState;
     private RemoteAnimationTarget[] mLastAppearedTaskTargets;
@@ -100,9 +103,11 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
         }
     };
 
-    TaskAnimationManager(Context ctx, RecentsWindowManager manager) {
+    TaskAnimationManager(Context ctx, RecentsWindowFactory recentsWindowFactory,
+            RecentsAnimationDeviceState deviceState) {
         mCtx = ctx;
-        mRecentsWindowsManager = manager;
+        mDeviceState = deviceState;
+        mRecentsWindowFactory = recentsWindowFactory;
     }
     SystemUiProxy getSystemUiProxy() {
         return SystemUiProxy.INSTANCE.get(mCtx);
@@ -298,7 +303,8 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
                         || Flags.enableLauncherOverviewInWindow())) {
             mRecentsAnimationStartPending = getSystemUiProxy().startRecentsActivity(intent, options,
                     mCallbacks, gestureState.useSyntheticRecentsTransition());
-            mRecentsWindowsManager.startRecentsWindow(mCallbacks);
+            mRecentsWindowFactory.create(mDeviceState.getDisplayId())
+                    .startRecentsWindow(mCallbacks);
         } else {
             options.setPendingIntentBackgroundActivityStartMode(
                     ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOW_ALWAYS);

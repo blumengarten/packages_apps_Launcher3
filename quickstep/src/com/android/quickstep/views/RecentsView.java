@@ -503,7 +503,7 @@ public abstract class RecentsView<
     private static final float FOREGROUND_SCRIM_TINT = 0.32f;
 
     protected final RecentsOrientedState mOrientationState;
-    protected final BaseContainerInterface<STATE_TYPE, CONTAINER_TYPE> mSizeStrategy;
+    protected final BaseContainerInterface<STATE_TYPE, ?> mSizeStrategy;
     @Nullable
     protected RecentsAnimationController mRecentsAnimationController;
     @Nullable
@@ -846,13 +846,18 @@ public abstract class RecentsView<
 
     private final Matrix mTmpMatrix = new Matrix();
 
-    public RecentsView(Context context, @Nullable AttributeSet attrs, int defStyleAttr,
-            BaseContainerInterface sizeStrategy) {
+    @Nullable
+    public TaskView getFirstTaskView() {
+        return mUtils.getFirstTaskView(getTaskViews());
+    }
+
+    public RecentsView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         setEnableFreeScroll(true);
 
-        mSizeStrategy = sizeStrategy;
         mContainer = RecentsViewContainer.containerFromContext(context);
+        mSizeStrategy = getContainerInterface(mContainer.getDisplayId());
+
         mOrientationState = new RecentsOrientedState(
                 context, mSizeStrategy, this::animateRecentsRotationInPlace);
         final int rotation = mContainer.getDisplay().getRotation();
@@ -1493,17 +1498,16 @@ public abstract class RecentsView<
     }
 
     /**
-     * Returns true if the task is in expected scroll position.
-     *
-     * @param taskIndex the index of the task
+     * Returns true if the given TaskView is in expected scroll position.
      */
-    public boolean isTaskInExpectedScrollPosition(int taskIndex) {
-        return getScrollForPage(taskIndex) == getPagedOrientationHandler().getPrimaryScroll(this);
+    public boolean isTaskInExpectedScrollPosition(TaskView taskView) {
+        return getScrollForPage(indexOfChild(taskView))
+                == getPagedOrientationHandler().getPrimaryScroll(this);
     }
 
     private boolean isFocusedTaskInExpectedScrollPosition() {
         TaskView focusedTask = getFocusedTaskView();
-        return focusedTask != null && isTaskInExpectedScrollPosition(indexOfChild(focusedTask));
+        return focusedTask != null && isTaskInExpectedScrollPosition(focusedTask);
     }
 
     /**
@@ -4717,7 +4721,7 @@ public abstract class RecentsView<
     /**
      * Returns the current list of [TaskView] children.
      */
-    private Iterable<TaskView> getTaskViews() {
+    public Iterable<TaskView> getTaskViews() {
         return mUtils.getTaskViews(getTaskViewCount(), this::requireTaskViewAt);
     }
 
@@ -6473,6 +6477,12 @@ public abstract class RecentsView<
     public BaseContainerInterface getSizeStrategy() {
         return mSizeStrategy;
     }
+
+
+    /**
+     * Returns the container interface
+     */
+    protected abstract BaseContainerInterface<STATE_TYPE, ?> getContainerInterface(int displayId);
 
     /**
      * Set all the task views to color tint scrim mode, dimming or tinting them all. Allows the

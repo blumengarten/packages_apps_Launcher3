@@ -108,7 +108,7 @@ public final class TaskViewUtils {
      * opening remote target (which we don't get until onAnimationStart) will resolve to a TaskView.
      */
     public static TaskView findTaskViewToLaunch(
-            RecentsView recentsView, View v, RemoteAnimationTarget[] targets) {
+            RecentsView<?, ?> recentsView, View v, RemoteAnimationTarget[] targets) {
         if (v instanceof TaskView) {
             TaskView taskView = (TaskView) v;
             return recentsView.isTaskViewVisible(taskView) ? taskView : null;
@@ -121,8 +121,7 @@ public final class TaskViewUtils {
             ComponentName componentName = itemInfo.getTargetComponent();
             int userId = itemInfo.user.getIdentifier();
             if (componentName != null) {
-                for (int i = 0; i < recentsView.getTaskViewCount(); i++) {
-                    TaskView taskView = recentsView.getTaskViewAt(i);
+                for (TaskView taskView : recentsView.getTaskViews()) {
                     if (recentsView.isTaskViewVisible(taskView)) {
                         Task.TaskKey key = taskView.getFirstTask().key;
                         if (componentName.equals(key.getComponent()) && userId == key.userId) {

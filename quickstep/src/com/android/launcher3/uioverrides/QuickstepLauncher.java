@@ -601,7 +601,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
             case QUICK_SWITCH_STATE_ORDINAL: {
                 RecentsView rv = getOverviewPanel();
                 TaskView currentPageTask = rv.getCurrentPageTaskView();
-                TaskView fallbackTask = rv.getTaskViewAt(0);
+                TaskView fallbackTask = rv.getFirstTaskView();
                 if (currentPageTask != null || fallbackTask != null) {
                     TaskView taskToLaunch = currentPageTask;
                     if (currentPageTask == null) {

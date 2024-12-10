@@ -35,6 +35,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import androidx.core.graphics.ColorUtils;
 
 import com.android.app.animation.Interpolators;
@@ -313,6 +314,11 @@ public class TaskbarOverflowView extends FrameLayout implements Reorderable {
         mItems.clear();
         mItems.addAll(items);
         invalidate();
+    }
+
+    @VisibleForTesting
+    public List<Integer> getItemIds() {
+        return mItems.stream().map(task -> task.key.id).toList();
     }
 
     /**

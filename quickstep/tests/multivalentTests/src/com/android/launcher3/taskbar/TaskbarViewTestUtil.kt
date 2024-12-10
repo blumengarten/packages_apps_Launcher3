@@ -99,7 +99,7 @@ class TaskbarViewSubject(failureMetadata: FailureMetadata, private val view: Tas
     /** Verifies that recents from [startIndex] have IDs that match [expectedIds] in order. */
     fun hasRecentsOrder(startIndex: Int, expectedIds: List<Int>) {
         val actualIds =
-            view.iconViews.slice(startIndex..<expectedIds.size).map {
+            view.iconViews.slice(startIndex..<startIndex + expectedIds.size).map {
                 assertThat(it.tag).isInstanceOf(GroupTask::class.java)
                 (it.tag as? GroupTask)?.task1?.key?.id
             }

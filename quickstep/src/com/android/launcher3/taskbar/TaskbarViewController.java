@@ -15,10 +15,17 @@
  */
 package com.android.launcher3.taskbar;
 
+import static android.animation.LayoutTransition.APPEARING;
+import static android.animation.LayoutTransition.CHANGE_APPEARING;
+import static android.animation.LayoutTransition.CHANGE_DISAPPEARING;
+import static android.animation.LayoutTransition.DISAPPEARING;
+
+import static com.android.app.animation.Interpolators.EMPHASIZED;
 import static com.android.app.animation.Interpolators.FINAL_FRAME;
 import static com.android.app.animation.Interpolators.LINEAR;
 import static com.android.launcher3.Flags.enableScalingRevealHomeAnimation;
 import static com.android.launcher3.Flags.taskbarOverflow;
+import static com.android.launcher3.Flags.taskbarRecentsLayoutTransition;
 import static com.android.launcher3.LauncherAnimUtils.SCALE_PROPERTY;
 import static com.android.launcher3.LauncherAnimUtils.VIEW_ALPHA;
 import static com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_X;
@@ -40,13 +47,17 @@ import static com.android.launcher3.util.MultiTranslateDelegate.INDEX_TASKBAR_RE
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
+import android.animation.LayoutTransition;
+import android.animation.LayoutTransition.TransitionListener;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.annotation.NonNull;
 import android.graphics.Rect;
+import android.util.FloatProperty;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.Interpolator;
 
 import androidx.annotation.Nullable;
@@ -74,6 +85,7 @@ import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.ItemInfoMatcher;
 import com.android.launcher3.util.LauncherBindableItemsContainer;
 import com.android.launcher3.util.MultiPropertyFactory;
+import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
 import com.android.launcher3.util.MultiTranslateDelegate;
 import com.android.launcher3.util.MultiValueAlpha;
 import com.android.quickstep.util.GroupTask;
@@ -113,6 +125,11 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
 
     /** Used if an unexpected edge case is hit in {@link #getPositionInHotseat}. */
     private static final float ERROR_POSITION_IN_HOTSEAT_NOT_FOUND = -100;
+
+    private static final int TRANSITION_DELAY = 50;
+    private static final int TRANSITION_DEFAULT_DURATION = 500;
+    private static final int TRANSITION_FADE_IN_DURATION = 167;
+    private static final int TRANSITION_FADE_OUT_DURATION = 83;
 
     private static boolean sEnableModelLoadingForTests = true;
 
@@ -158,7 +175,9 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
 
     private final View.OnLayoutChangeListener mTaskbarViewLayoutChangeListener =
             (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
-                updateTaskbarIconTranslationXForPinning();
+                if (!taskbarRecentsLayoutTransition()) {
+                    updateTaskbarIconTranslationXForPinning();
+                }
                 if (BubbleBarController.isBubbleBarEnabled()) {
                     mControllers.navbarButtonsViewController.onLayoutsUpdated();
                 }
@@ -432,7 +451,7 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         }
     }
 
-    private void updateTaskbarIconTranslationXForPinning() {
+    void updateTaskbarIconTranslationXForPinning() {
         View[] iconViews = mTaskbarView.getIconViews();
         float scale = mTaskbarIconTranslationXForPinning.value;
         float transientTaskbarAllAppsOffset = mActivity.getResources().getDimension(
@@ -1076,6 +1095,89 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
     /** Called when there's a change in running apps to update the UI. */
     public void commitRunningAppsToUI() {
         mModelCallbacks.commitRunningAppsToUI();
+        if (taskbarRecentsLayoutTransition() && mTaskbarView.getLayoutTransition() == null) {
+            // Set up after the first commit so that the initial recents do not animate (janky).
+            mTaskbarView.setLayoutTransition(createLayoutTransitionForRunningApps());
+        }
+    }
+
+    private LayoutTransition createLayoutTransitionForRunningApps() {
+        LayoutTransition layoutTransition = new LayoutTransition();
+        layoutTransition.setDuration(TRANSITION_DEFAULT_DURATION);
+        layoutTransition.addTransitionListener(new TransitionListener() {
+
+            @Override
+            public void startTransition(
+                    LayoutTransition transition, ViewGroup container, View view, int type) {
+                if (type == APPEARING) {
+                    view.setAlpha(0f);
+                    view.setScaleX(0f);
+                    view.setScaleY(0f);
+                }
+            }
+
+            @Override
+            public void endTransition(
+                    LayoutTransition transition, ViewGroup container, View view, int type) {
+                // Do nothing.
+            }
+        });
+
+        // Appearing.
+        AnimatorSet appearingSet = new AnimatorSet();
+        Animator appearingAlphaAnimator = ObjectAnimator.ofFloat(null, "alpha", 0f, 1f);
+        appearingAlphaAnimator.setInterpolator(Interpolators.clampToProgress(LINEAR, 0f,
+                (float) TRANSITION_FADE_IN_DURATION / TRANSITION_DEFAULT_DURATION));
+        Animator appearingScaleAnimator = ObjectAnimator.ofFloat(null, SCALE_PROPERTY, 0f, 1f);
+        appearingScaleAnimator.setInterpolator(EMPHASIZED);
+        appearingSet.playTogether(appearingAlphaAnimator, appearingScaleAnimator);
+        layoutTransition.setAnimator(APPEARING, appearingSet);
+        layoutTransition.setStartDelay(APPEARING, TRANSITION_DELAY);
+
+        // Disappearing.
+        AnimatorSet disappearingSet = new AnimatorSet();
+        Animator disappearingAlphaAnimator = ObjectAnimator.ofFloat(null, "alpha", 1f, 0f);
+        disappearingAlphaAnimator.setInterpolator(Interpolators.clampToProgress(LINEAR,
+                (float) TRANSITION_DELAY / TRANSITION_DEFAULT_DURATION,
+                (float) (TRANSITION_DELAY + TRANSITION_FADE_OUT_DURATION)
+                        / TRANSITION_DEFAULT_DURATION));
+        Animator disappearingScaleAnimator = ObjectAnimator.ofFloat(null, SCALE_PROPERTY, 1f, 0f);
+        disappearingScaleAnimator.setInterpolator(EMPHASIZED);
+        disappearingSet.playTogether(disappearingAlphaAnimator, disappearingScaleAnimator);
+        layoutTransition.setAnimator(DISAPPEARING, disappearingSet);
+
+        // Change transitions.
+        FloatProperty<View> translateXPinning = new FloatProperty<>("translateXPinning") {
+            @Override
+            public void setValue(View view, float value) {
+                getTranslationXForPinning(view).setValue(value);
+            }
+
+            @Override
+            public Float get(View view) {
+                return getTranslationXForPinning(view).getValue();
+            }
+
+            private MultiProperty getTranslationXForPinning(View view) {
+                return ((Reorderable) view).getTranslateDelegate()
+                        .getTranslationX(INDEX_TASKBAR_PINNING_ANIM);
+            }
+        };
+        AnimatorSet changeSet = new AnimatorSet();
+        changeSet.playTogether(
+                layoutTransition.getAnimator(CHANGE_APPEARING),
+                ObjectAnimator.ofFloat(null, translateXPinning, 0f, 1f));
+
+        // Change appearing.
+        layoutTransition.setAnimator(CHANGE_APPEARING, changeSet);
+        layoutTransition.setInterpolator(CHANGE_APPEARING, EMPHASIZED);
+
+        // Change disappearing.
+        layoutTransition.setAnimator(CHANGE_DISAPPEARING, changeSet);
+        layoutTransition.setInterpolator(CHANGE_DISAPPEARING, EMPHASIZED);
+        layoutTransition.setStartDelay(CHANGE_DISAPPEARING, TRANSITION_DELAY);
+
+        return layoutTransition;
     }
 
     /**

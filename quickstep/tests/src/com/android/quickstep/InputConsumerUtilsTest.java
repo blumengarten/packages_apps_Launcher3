@@ -56,7 +56,7 @@ import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController;
 import com.android.launcher3.util.LockedUserState;
 import com.android.launcher3.util.MainThreadInitializedObject;
 import com.android.launcher3.views.BaseDragLayer;
-import com.android.quickstep.fallback.window.RecentsWindowManager;
+import com.android.quickstep.fallback.window.RecentsWindowFactory;
 import com.android.quickstep.inputconsumers.AccessibilityInputConsumer;
 import com.android.quickstep.inputconsumers.BubbleBarInputConsumer;
 import com.android.quickstep.inputconsumers.DeviceLockedInputConsumer;
@@ -96,10 +96,9 @@ public class InputConsumerUtilsTest {
 
     @NonNull private final MainThreadInitializedObject.SandboxContext mContext =
             new MainThreadInitializedObject.SandboxContext(getApplicationContext());
-    @NonNull private final TaskAnimationManager mTaskAnimationManager = new TaskAnimationManager(
-            mContext, mock(RecentsWindowManager.class));
     @NonNull private final InputMonitorCompat mInputMonitorCompat = new InputMonitorCompat("", 0);
 
+    private TaskAnimationManager mTaskAnimationManager;
     private InputChannelCompat.InputEventReceiver mInputEventReceiver;
     @Nullable private ResetGestureInputConsumer mResetGestureInputConsumer;
     @NonNull private Function<GestureState, AnimatedFloat> mSwipeUpProxyProvider = (state) -> null;
@@ -119,6 +118,12 @@ public class InputConsumerUtilsTest {
 
     @Rule
     public final MockitoRule mMockitoRule = MockitoJUnit.rule();
+
+    @Before
+    public void setupTaskAnimationManager() {
+        mTaskAnimationManager = new TaskAnimationManager(
+                mContext, mock(RecentsWindowFactory.class), mDeviceState);
+    }
 
     @Before
     public void setupMainThreadInitializedObjects() {
@@ -184,6 +189,7 @@ public class InputConsumerUtilsTest {
 
     @Before
     public void setupDeviceState() {
+        when(mDeviceState.getDisplayId()).thenReturn(0);
         when(mDeviceState.canStartTrackpadGesture()).thenReturn(true);
         when(mDeviceState.canStartSystemGesture()).thenReturn(true);
         when(mDeviceState.isFullyGesturalNavMode()).thenReturn(true);

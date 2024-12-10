@@ -47,6 +47,7 @@ import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.PendingSplitSelectInfo;
 import com.android.launcher3.util.SplitConfigurationOptions;
 import com.android.launcher3.util.SplitConfigurationOptions.SplitSelectSource;
+import com.android.quickstep.BaseContainerInterface;
 import com.android.quickstep.GestureState;
 import com.android.quickstep.LauncherActivityInterface;
 import com.android.quickstep.RotationTouchHelper;
@@ -73,7 +74,7 @@ public class LauncherRecentsView extends RecentsView<QuickstepLauncher, Launcher
     }
 
     public LauncherRecentsView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr, LauncherActivityInterface.INSTANCE);
+        super(context, attrs, defStyleAttr);
         getStateManager().addStateListener(this);
     }
 
@@ -222,6 +223,11 @@ public class LauncherRecentsView extends RecentsView<QuickstepLauncher, Launcher
         } else if (mContainer.isInState(LauncherState.OVERVIEW_MODAL_TASK)) {
             getStateManager().goToState(LauncherState.OVERVIEW, animate);
         }
+    }
+
+    @Override
+    protected BaseContainerInterface<LauncherState, ?> getContainerInterface(int displayId) {
+        return LauncherActivityInterface.INSTANCE;
     }
 
     @Override

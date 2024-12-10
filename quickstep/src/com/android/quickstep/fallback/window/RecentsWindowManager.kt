@@ -88,8 +88,10 @@ import java.util.function.Predicate
  * To add new protologs, see [RecentsWindowProtoLogProxy]. To enable logging to logcat, see
  * [QuickstepProtoLogGroup.Constants.DEBUG_RECENTS_WINDOW]
  */
-class RecentsWindowManager(context: Context) :
-    RecentsWindowContext(context), RecentsViewContainer, StatefulContainer<RecentsState> {
+class RecentsWindowManager(
+    private val displayId: Int,
+    context: Context
+) : RecentsWindowContext(context), RecentsViewContainer, StatefulContainer<RecentsState> {
 
     companion object {
         private const val HOME_APPEAR_DURATION: Long = 250
@@ -151,14 +153,14 @@ class RecentsWindowManager(context: Context) :
         }
 
     init {
-        FallbackWindowInterface.init(this)
+        FallbackWindowInterface.init(displayId, this)
         TaskStackChangeListeners.getInstance().registerTaskStackListener(taskStackChangeListener)
     }
 
     override fun destroy() {
         super.destroy()
         cleanupRecentsWindow()
-        FallbackWindowInterface.getInstance()?.destroy()
+        FallbackWindowInterface.getInstance(displayId)?.destroy()
         TaskStackChangeListeners.getInstance().unregisterTaskStackListener(taskStackChangeListener)
         callbacks?.removeListener(recentsAnimationListener)
         recentsWindowTracker.onContextDestroyed(this)

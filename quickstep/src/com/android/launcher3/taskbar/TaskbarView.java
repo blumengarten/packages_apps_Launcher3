@@ -34,6 +34,7 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.ArraySet;
 import android.util.AttributeSet;
 import android.view.DisplayCutout;
 import android.view.InputDevice;
@@ -74,8 +75,10 @@ import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -133,6 +136,8 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
     private final int mAllAppsButtonTranslationOffset;
 
     private final int mNumStaticViews;
+
+    private Set<GroupTask> mPrevRecentTasks = Collections.emptySet();
 
     public TaskbarView(@NonNull Context context) {
         this(context, null);
@@ -458,7 +463,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
 
         // Skip static views and potential All Apps divider, if they are on the left.
         mNextViewIndex = mIsRtl ? 0 : mNumStaticViews;
-        if (getChildAt(mNextViewIndex) == mTaskbarDividerContainer) {
+        if (getChildAt(mNextViewIndex) == mTaskbarDividerContainer && !mAddedDividerForRecents) {
             mNextViewIndex++;
         }
 
@@ -613,7 +618,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         // accounted for when comparing current icon count to max number of icons.
         int nonTaskIconsToBeAdded = 1;
 
-        boolean supportsOverflow = Flags.taskbarOverflow();
+        boolean supportsOverflow = Flags.taskbarOverflow() && recentTasks.size() > 1;
         int overflowSize = 0;
         if (supportsOverflow) {
             mIdealNumIcons = mNextViewIndex + recentTasks.size() + nonTaskIconsToBeAdded;
@@ -636,6 +641,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         }
 
         // Add Recent/Running icons.
+        final Set<GroupTask> recentTasksSet = new ArraySet<>(recentTasks);
         for (GroupTask task : recentTasks) {
             if (mTaskbarOverflowView != null && overflownTasks != null
                     && overflownTasks.size() < itemsToAddToOverflow) {
@@ -664,12 +670,18 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
             }
 
             View recentIcon = null;
-            while (isNextViewInSection(GroupTask.class)) {
+            // If a task is new, we should not reuse a view so that it animates in when it is added.
+            final boolean canReuseView = !taskbarRecentsLayoutTransition()
+                    || mPrevRecentTasks.contains(task);
+            while (canReuseView && isNextViewInSection(GroupTask.class)) {
                 recentIcon = getChildAt(mNextViewIndex);
 
                 // see if the view can be reused
                 if ((recentIcon.getSourceLayoutResId() != expectedLayoutResId)
-                        || (isCollection && (recentIcon.getTag() != task))) {
+                        || (isCollection && (recentIcon.getTag() != task))
+                        // Remove view corresponding to removed task so that it animates out.
+                        || (taskbarRecentsLayoutTransition()
+                                && !recentTasksSet.contains(recentIcon.getTag()))) {
                     removeAndRecycle(recentIcon);
                     recentIcon = null;
                 } else {
@@ -699,6 +711,8 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         while (isNextViewInSection(GroupTask.class)) {
             removeAndRecycle(getChildAt(mNextViewIndex));
         }
+
+        mPrevRecentTasks = recentTasksSet;
     }
 
     private boolean isNextViewInSection(Class<?> tagClass) {
@@ -838,6 +852,8 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         if (layoutRtl) {
             iconEnd += mAllAppsButtonTranslationOffset;
         }
+
+        mControllerCallbacks.onPreLayoutChildren();
 
         int count = getChildCount();
         for (int i = count; i > 0; i--) {

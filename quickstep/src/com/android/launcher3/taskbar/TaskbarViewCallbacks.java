@@ -16,6 +16,8 @@
 
 package com.android.launcher3.taskbar;
 
+import static com.android.launcher3.Flags.taskbarRecentsLayoutTransition;
+import static com.android.launcher3.config.FeatureFlags.enableTaskbarPinning;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_TASKBAR_ALLAPPS_BUTTON_LONG_PRESS;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_TASKBAR_ALLAPPS_BUTTON_TAP;
 import static com.android.launcher3.taskbar.TaskbarAutohideSuspendController.FLAG_AUTOHIDE_SUSPEND_TASKBAR_OVERFLOW;
@@ -108,6 +110,13 @@ public class TaskbarViewCallbacks {
     /** Gets the hover listener for the provided icon view. */
     public View.OnHoverListener getIconOnHoverListener(View icon) {
         return new TaskbarHoverToolTipController(mActivity, mTaskbarView, icon);
+    }
+
+    /** Callback invoked before Taskbar icons are laid out. */
+    void onPreLayoutChildren() {
+        if (enableTaskbarPinning() && taskbarRecentsLayoutTransition()) {
+            mControllers.taskbarViewController.updateTaskbarIconTranslationXForPinning();
+        }
     }
 
     /**

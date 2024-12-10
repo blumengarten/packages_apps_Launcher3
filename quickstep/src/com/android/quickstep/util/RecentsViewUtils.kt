@@ -95,6 +95,9 @@ class RecentsViewUtils {
             ?: taskViews.firstOrNull { it !is DesktopTaskView }
             ?: taskViews.lastOrNull()
 
+    /** Returns the first TaskView if it exists, or null otherwise. */
+    fun getFirstTaskView(taskViews: Iterable<TaskView>): TaskView? = taskViews.firstOrNull()
+
     /**
      * Returns the first TaskView that is not large
      *

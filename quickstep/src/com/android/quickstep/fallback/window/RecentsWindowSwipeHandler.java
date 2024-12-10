@@ -110,9 +110,9 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
     public RecentsWindowSwipeHandler(Context context, RecentsAnimationDeviceState deviceState,
             TaskAnimationManager taskAnimationManager, GestureState gestureState, long touchTimeMs,
             boolean continuingLastGesture, InputConsumerController inputConsumer,
-            RecentsWindowManager recentsWindowManager) {
+            RecentsWindowFactory recentsWindowFactory) {
         super(context, deviceState, taskAnimationManager, gestureState, touchTimeMs,
-                continuingLastGesture, inputConsumer, recentsWindowManager);
+                continuingLastGesture, inputConsumer, recentsWindowFactory);
 
         mRunningOverHome = mGestureState.getRunningTask() != null
                 && mGestureState.getRunningTask().isHomeTask();
@@ -159,7 +159,10 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
         boolean fromHomeToHome = mRunningOverHome
                 && endTarget == GestureState.GestureEndTarget.HOME;
         if (fromHomeToHome) {
-            mRecentsWindowManager.startHome(/* finishRecentsAnimation= */ false);
+            RecentsWindowManager manager = mRecentsWindowFactory.get(mDeviceState.getDisplayId());
+            if (manager != null) {
+                manager.startHome(/* finishRecentsAnimation= */ false);
+            }
         }
         super.animateGestureEnd(
                 startShift,
@@ -220,7 +223,11 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
             // the PiP task appearing.
             recentsCallback = () -> {
                 callback.run();
-                mRecentsWindowManager.startHome();
+                RecentsWindowManager manager =
+                        mRecentsWindowFactory.get(mDeviceState.getDisplayId());
+                if (manager != null) {
+                    manager.startHome();
+                }
             };
         } else {
             recentsCallback = callback;

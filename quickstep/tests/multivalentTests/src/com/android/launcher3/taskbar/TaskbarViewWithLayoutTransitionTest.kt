@@ -18,6 +18,7 @@ package com.android.launcher3.taskbar
 
 import android.platform.test.annotations.EnableFlags
 import android.platform.test.flag.junit.SetFlagsRule
+import android.view.View
 import com.android.launcher3.Flags.FLAG_TASKBAR_RECENTS_LAYOUT_TRANSITION
 import com.android.launcher3.R
 import com.android.launcher3.taskbar.TaskbarControllerTestUtil.runOnMainSync
@@ -33,6 +34,7 @@ import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule.ForceRtl
 import com.android.launcher3.taskbar.rules.TaskbarWindowSandboxContext
 import com.android.launcher3.util.LauncherMultivalentJUnit
 import com.android.launcher3.util.LauncherMultivalentJUnit.EmulatedDevices
+import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -48,6 +50,9 @@ class TaskbarViewWithLayoutTransitionTest {
     @get:Rule(order = 2) val taskbarUnitTestRule = TaskbarUnitTestRule(this, context)
 
     private lateinit var taskbarView: TaskbarView
+
+    private val iconViews: Array<View>
+        get() = taskbarView.iconViews
 
     @Before
     fun obtainView() {
@@ -130,5 +135,94 @@ class TaskbarViewWithLayoutTransitionTest {
             taskbarView.updateItems(createHotseatItems(1), createRecents(1))
         }
         assertThat(taskbarView).hasIconTypes(RECENT, DIVIDER, HOTSEAT, ALL_APPS)
+    }
+
+    @Test
+    fun testUpdateItems_addRecentsItem_viewAddedOnRight() {
+        runOnMainSync {
+            taskbarView.updateItems(emptyArray(), createRecents(1))
+            val prevIconViews = iconViews
+
+            val newRecents = createRecents(2)
+            taskbarView.updateItems(emptyArray(), newRecents)
+
+            assertThat(taskbarView).hasRecentsOrder(startIndex = 2, expectedIds = listOf(0, 1))
+            assertThat(iconViews[2]).isSameInstanceAs(prevIconViews[2])
+            assertThat(iconViews.last() in prevIconViews).isFalse()
+        }
+    }
+
+    @Test
+    @ForceRtl
+    fun testUpdateItems_rtl_addRecentsItem_viewAddedOnLeft() {
+        runOnMainSync {
+            taskbarView.updateItems(emptyArray(), createRecents(1))
+            val prevIconViews = iconViews
+
+            val newRecents = createRecents(2)
+            taskbarView.updateItems(emptyArray(), newRecents)
+
+            assertThat(taskbarView).hasRecentsOrder(startIndex = 0, expectedIds = listOf(1, 0))
+            assertThat(iconViews[1]).isSameInstanceAs(prevIconViews.first())
+            assertThat(iconViews.first() in prevIconViews).isFalse()
+        }
+    }
+
+    @Test
+    fun testUpdateItems_removeFirstRecentsItem_correspondingViewRemoved() {
+        runOnMainSync {
+            val recents = createRecents(2)
+            taskbarView.updateItems(emptyArray(), recents)
+
+            val expectedViewToRemove = iconViews[2]
+            assertThat(expectedViewToRemove.tag).isEqualTo(recents.first())
+
+            taskbarView.updateItems(emptyArray(), listOf(recents.last()))
+            assertThat(expectedViewToRemove in iconViews).isFalse()
+        }
+    }
+
+    @Test
+    fun testUpdateItems_removeLastRecentsItem_correspondingViewRemoved() {
+        runOnMainSync {
+            val recents = createRecents(2)
+            taskbarView.updateItems(emptyArray(), recents)
+
+            val expectedViewToRemove = iconViews[3]
+            assertThat(expectedViewToRemove.tag).isEqualTo(recents.last())
+
+            taskbarView.updateItems(emptyArray(), listOf(recents.first()))
+            assertThat(expectedViewToRemove in iconViews).isFalse()
+        }
+    }
+
+    @Test
+    @ForceRtl
+    fun testUpdateItems_rtl_removeFirstRecentsItem_correspondingViewRemoved() {
+        runOnMainSync {
+            val recents = createRecents(2)
+            taskbarView.updateItems(emptyArray(), recents)
+
+            val expectedViewToRemove = iconViews[1]
+            assertThat(expectedViewToRemove.tag).isEqualTo(recents.first())
+
+            taskbarView.updateItems(emptyArray(), listOf(recents.last()))
+            assertThat(expectedViewToRemove in iconViews).isFalse()
+        }
+    }
+
+    @Test
+    @ForceRtl
+    fun testUpdateItems_rtl_removeLastRecentsItem_correspondingViewRemoved() {
+        runOnMainSync {
+            val recents = createRecents(2)
+            taskbarView.updateItems(emptyArray(), recents)
+
+            val expectedViewToRemove = iconViews[0]
+            assertThat(expectedViewToRemove.tag).isEqualTo(recents.last())
+
+            taskbarView.updateItems(emptyArray(), listOf(recents.first()))
+            assertThat(expectedViewToRemove in iconViews).isFalse()
+        }
     }
 }

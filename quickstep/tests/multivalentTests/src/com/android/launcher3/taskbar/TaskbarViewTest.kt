@@ -154,4 +154,13 @@ class TaskbarViewTest(deviceName: String, flags: FlagsParameterization) {
         }
         assertThat(taskbarView).hasIconTypes(ALL_APPS, HOTSEAT, DIVIDER, RECENT)
     }
+
+    @Test
+    fun testUpdateItem_addHotseatItemAfterRecentsItem_hotseatItemBeforeDivider() {
+        runOnMainSync {
+            taskbarView.updateItems(emptyArray(), createRecents(1))
+            taskbarView.updateItems(createHotseatItems(1), createRecents(1))
+        }
+        assertThat(taskbarView).hasIconTypes(ALL_APPS, HOTSEAT, DIVIDER, RECENT)
+    }
 }
