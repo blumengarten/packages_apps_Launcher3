@@ -847,12 +847,42 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
         verify(taskbarViewController, times(2)).commitRunningAppsToUI()
     }
 
+    @Test
+    fun onRecentTasksChanged_inDesktopMode_sameHotseatPackage_differentUser_isInShownTasks() {
+        setInDesktopMode(true)
+        val hotseatPackageUser = PackageUser(HOTSEAT_PACKAGE_1, USER_HANDLE_2)
+        val hotseatPackageUsers = listOf(hotseatPackageUser)
+        val runningTask = createTask(id = 1, HOTSEAT_PACKAGE_1, localUserHandle = USER_HANDLE_1)
+        val runningTasks = listOf(runningTask)
+        prepareHotseatAndRunningAndRecentAppsInternal(
+            hotseatPackageUsers = hotseatPackageUsers,
+            runningTasks = runningTasks,
+            recentTaskPackages = emptyList(),
+        )
+        val shownTasks = recentAppsController.shownTasks.map { it.task1 }
+        assertThat(shownTasks).contains(runningTask)
+        assertThat(recentAppsController.runningTaskIds).containsExactlyElementsIn(listOf(1))
+    }
+
     private fun prepareHotseatAndRunningAndRecentApps(
         hotseatPackages: List<String>,
         runningTasks: List<Task>,
         recentTaskPackages: List<String>,
     ): Array<ItemInfo?> {
-        val hotseatItems = createHotseatItemsFromPackageNames(hotseatPackages)
+        val hotseatPackageUsers = hotseatPackages.map { PackageUser(it, myUserHandle) }
+        return prepareHotseatAndRunningAndRecentAppsInternal(
+            hotseatPackageUsers,
+            runningTasks,
+            recentTaskPackages,
+        )
+    }
+
+    private fun prepareHotseatAndRunningAndRecentAppsInternal(
+        hotseatPackageUsers: List<PackageUser>,
+        runningTasks: List<Task>,
+        recentTaskPackages: List<String>,
+    ): Array<ItemInfo?> {
+        val hotseatItems = createHotseatItemsFromPackageUsers(hotseatPackageUsers)
         recentAppsController.updateHotseatItemInfos(hotseatItems.toTypedArray())
         updateRecentTasks(runningTasks, recentTaskPackages)
         return recentAppsController.shownHotseatItems.toTypedArray()
@@ -877,12 +907,14 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
         recentTasksChangedListener?.onRecentTasksChanged()
     }
 
-    private fun createHotseatItemsFromPackageNames(packageNames: List<String>): List<ItemInfo> {
-        return packageNames
+    private fun createHotseatItemsFromPackageUsers(
+        packageUsers: List<PackageUser>
+    ): List<ItemInfo> {
+        return packageUsers
             .map {
-                createTestAppInfo(packageName = it).apply {
+                createTestAppInfo(packageName = it.packageName, userHandle = it.userHandle).apply {
                     container =
-                        if (it.startsWith("predicted")) {
+                        if (it.packageName.startsWith("predicted")) {
                             CONTAINER_HOTSEAT_PREDICTION
                         } else {
                             CONTAINER_HOTSEAT
@@ -895,13 +927,8 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
     private fun createTestAppInfo(
         packageName: String = "testPackageName",
         className: String = "testClassName",
-    ) =
-        AppInfo(
-            ComponentName(packageName, className),
-            className /* title */,
-            myUserHandle,
-            Intent(),
-        )
+        userHandle: UserHandle,
+    ) = AppInfo(ComponentName(packageName, className), className /* title */, userHandle, Intent())
 
     private fun createRecentTasksFromPackageNames(packageNames: List<String>): List<GroupTask> {
         return packageNames.map { packageName ->
@@ -969,4 +996,6 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
         const val RECENT_PACKAGE_3 = "recent3"
         const val RECENT_SPLIT_PACKAGES_1 = "split1_split2"
     }
+
+    data class PackageUser(val packageName: String, val userHandle: UserHandle)
 }

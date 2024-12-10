@@ -141,7 +141,7 @@ class WorkspaceItemProcessor(
         var allowMissingTarget = false
         var intent = c.parseIntent()
         if (intent == null) {
-            c.markDeleted("Null intent from db for item id=${c.id}", RestoreError.MISSING_INFO)
+            c.markDeleted("Null intent from db for item id=${c.id}", RestoreError.APP_NO_DB_INTENT)
             return
         }
         var disabledState =
@@ -151,7 +151,10 @@ class WorkspaceItemProcessor(
         val cn = intent.component
         val targetPkg = cn?.packageName ?: intent.getPackage()
         if (targetPkg.isNullOrEmpty()) {
-            c.markDeleted("No target package for item id=${c.id}", RestoreError.MISSING_INFO)
+            c.markDeleted(
+                "No target package for item id=${c.id}",
+                RestoreError.APP_NO_TARGET_PACKAGE,
+            )
             return
         }
         val appInfoWrapper = ApplicationInfoWrapper(app.context, targetPkg, c.user)
@@ -180,7 +183,7 @@ class WorkspaceItemProcessor(
                     c.markDeleted(
                         "No Activities found for id=${c.id}, targetPkg=$targetPkg, component=$cn." +
                             " Unable to create launch Intent.",
-                        RestoreError.MISSING_INFO,
+                        RestoreError.APP_NO_LAUNCH_INTENT,
                     )
                     return
                 }
@@ -215,7 +218,7 @@ class WorkspaceItemProcessor(
                             else -> {
                                 c.markDeleted(
                                     "removing app that is not restored and not installing. package: $targetPkg",
-                                    RestoreError.APP_NOT_INSTALLED,
+                                    RestoreError.APP_NOT_RESTORED_OR_INSTALLING,
                                 )
                                 return
                             }
@@ -240,7 +243,7 @@ class WorkspaceItemProcessor(
                         // Do not wait for external media load anymore.
                         c.markDeleted(
                             "Invalid package removed: $targetPkg",
-                            RestoreError.APP_NOT_INSTALLED,
+                            RestoreError.APP_NOT_INSTALLED_EXTERNAL_MEDIA,
                         )
                         return
                     }
@@ -448,7 +451,7 @@ class WorkspaceItemProcessor(
                     ", id=${c.id}," +
                     ", appWidgetId=${c.appWidgetId}," +
                     ", component=${component}",
-                RestoreError.INVALID_LOCATION,
+                RestoreError.INVALID_WIDGET_SIZE,
             )
             return
         }
@@ -459,7 +462,7 @@ class WorkspaceItemProcessor(
                     ", appWidgetId=${c.appWidgetId}," +
                     ", component=${component}," +
                     ", container=${c.container}",
-                RestoreError.INVALID_LOCATION,
+                RestoreError.INVALID_WIDGET_CONTAINER,
             )
             return
         }
@@ -500,7 +503,7 @@ class WorkspaceItemProcessor(
                             ", appWidgetId=${c.appWidgetId}" +
                             ", component=${component}" +
                             ", restoreFlag:=${c.restoreFlag}",
-                        RestoreError.APP_NOT_INSTALLED,
+                        RestoreError.UNRESTORED_PENDING_WIDGET,
                     )
                     return
                 } else if (

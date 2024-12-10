@@ -48,16 +48,6 @@ class RecentsViewUtils {
         return otherTasks + desktopTasks
     }
 
-    /** Returns the expected index of the focus task. */
-    fun getFocusedTaskIndex(taskGroups: List<GroupTask>): Int {
-        // The focused task index is placed after the desktop tasks views.
-        return if (enableLargeDesktopWindowingTile()) {
-            taskGroups.count { it.taskViewType == TaskViewType.DESKTOP }
-        } else {
-            0
-        }
-    }
-
     /** Counts [TaskView]s that are [DesktopTaskView] instances. */
     fun getDesktopTaskViewCount(taskViews: Iterable<TaskView>): Int =
         taskViews.count { it is DesktopTaskView }
@@ -80,6 +70,30 @@ class RecentsViewUtils {
         splitSelectActive: Boolean,
     ): TaskView? =
         taskViews.firstOrNull { it.isLargeTile && !(splitSelectActive && it is DesktopTaskView) }
+
+    /** Returns the expected focus task. */
+    fun getExpectedFocusedTask(taskViews: Iterable<TaskView>): TaskView? =
+        if (enableLargeDesktopWindowingTile()) taskViews.firstOrNull { it !is DesktopTaskView }
+        else taskViews.firstOrNull()
+
+    /**
+     * Returns the [TaskView] that should be the current page during task binding, in the following
+     * priorities:
+     * 1. Running task
+     * 2. Focused task
+     * 3. First non-desktop task
+     * 4. Last desktop task
+     * 5. null otherwise
+     */
+    fun getExpectedCurrentTask(
+        runningTaskView: TaskView?,
+        focusedTaskView: TaskView?,
+        taskViews: Iterable<TaskView>,
+    ): TaskView? =
+        runningTaskView
+            ?: focusedTaskView
+            ?: taskViews.firstOrNull { it !is DesktopTaskView }
+            ?: taskViews.lastOrNull()
 
     /**
      * Returns the first TaskView that is not large

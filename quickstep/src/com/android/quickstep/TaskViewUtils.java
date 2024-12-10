@@ -562,7 +562,7 @@ public final class TaskViewUtils {
      * Start recents to desktop animation
      */
     public static AnimatorSet composeRecentsDesktopLaunchAnimator(
-            @NonNull DesktopTaskView launchingTaskView,
+            @NonNull TaskView launchingTaskView,
             @NonNull StateManager stateManager, @Nullable DepthController depthController,
             @NonNull TransitionInfo transitionInfo,
             SurfaceControl.Transaction t, @NonNull Runnable finishCallback) {
@@ -795,14 +795,15 @@ public final class TaskViewUtils {
      * second applies to the target in the same index of the first.
      *
      * @param handles The handles wrapping each target.
+     * @param timestamp The start time of the current frame.
      * @param velocityPxPerMs The current velocity of the target animations.
      */
     @NonNull
     public static Pair<RemoteAnimationTarget[], WindowAnimationState[]> extractTargetsAndStates(
-            @NonNull RemoteTargetHandle[] handles, @NonNull PointF velocityPxPerMs) {
+            @NonNull RemoteTargetHandle[] handles, long timestamp,
+            @NonNull PointF velocityPxPerMs) {
         RemoteAnimationTarget[] targets = new RemoteAnimationTarget[handles.length];
         WindowAnimationState[] animationStates = new WindowAnimationState[handles.length];
-        long timestamp = System.currentTimeMillis();
 
         for (int i = 0; i < handles.length; i++) {
             targets[i] = handles[i].getTransformParams().getTargetSet().apps[i];

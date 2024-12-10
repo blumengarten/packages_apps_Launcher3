@@ -2,6 +2,7 @@ package com.android.launcher3.model
 
 import android.appwidget.AppWidgetManager
 import android.content.Intent
+import android.os.Process
 import android.os.UserHandle
 import android.platform.test.annotations.DisableFlags
 import android.platform.test.annotations.EnableFlags
@@ -136,7 +137,7 @@ class LoaderTaskTest {
     @Test
     fun loadsDataProperly() =
         with(BgDataModel()) {
-            val MAIN_HANDLE = UserHandle.of(0)
+            val MAIN_HANDLE = Process.myUserHandle()
             val mockUserHandles = arrayListOf<UserHandle>(MAIN_HANDLE)
             `when`(userCache.userProfiles).thenReturn(mockUserHandles)
             `when`(userCache.getUserInfo(MAIN_HANDLE)).thenReturn(UserIconInfo(MAIN_HANDLE, 1))
@@ -186,7 +187,7 @@ class LoaderTaskTest {
     fun setsQuietModeFlagCorrectlyForWorkProfile() =
         with(BgDataModel()) {
             setFlagsRule.enableFlags(Flags.FLAG_ENABLE_PRIVATE_SPACE)
-            val MAIN_HANDLE = UserHandle.of(0)
+            val MAIN_HANDLE = Process.myUserHandle()
             val mockUserHandles = arrayListOf<UserHandle>(MAIN_HANDLE)
             `when`(userCache.userProfiles).thenReturn(mockUserHandles)
             `when`(userManagerState?.isUserQuiet(MAIN_HANDLE)).thenReturn(true)
@@ -215,7 +216,7 @@ class LoaderTaskTest {
     fun setsQuietModeFlagCorrectlyForPrivateProfile() =
         with(BgDataModel()) {
             setFlagsRule.enableFlags(Flags.FLAG_ENABLE_PRIVATE_SPACE)
-            val MAIN_HANDLE = UserHandle.of(0)
+            val MAIN_HANDLE = Process.myUserHandle()
             val mockUserHandles = arrayListOf<UserHandle>(MAIN_HANDLE)
             `when`(userCache.userProfiles).thenReturn(mockUserHandles)
             `when`(userManagerState?.isUserQuiet(MAIN_HANDLE)).thenReturn(true)

@@ -146,7 +146,7 @@ public class WorkProfileTest extends BaseLauncherActivityTest<Launcher> {
         executeOnLauncher(l -> {
             // Ensure updates are not deferred so notification happens when apps pause.
             l.getAppsView().getAppsStore().disableDeferUpdates(DEFER_UPDATES_TEST);
-            l.getAppsView().getWorkManager().getWorkUtilityView().performClick();
+            l.getAppsView().getWorkManager().getWorkUtilityView().getWorkFAB().performClick();
         });
 
         waitForLauncherCondition("Work profile toggle OFF failed", launcher -> {

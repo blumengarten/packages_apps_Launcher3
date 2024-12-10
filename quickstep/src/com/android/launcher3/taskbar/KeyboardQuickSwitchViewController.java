@@ -15,6 +15,7 @@
  */
 package com.android.launcher3.taskbar;
 
+import static com.android.launcher3.desktop.DesktopAppLaunchTransition.AppLaunchType.UNMINIMIZE;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 
@@ -25,6 +26,7 @@ import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.animation.AnimationUtils;
+import android.window.OnBackInvokedCallback;
 import android.window.RemoteTransition;
 
 import androidx.annotation.NonNull;
@@ -284,8 +286,8 @@ public class KeyboardQuickSwitchViewController {
         ) {
             // This app is being unminimized - use our own transition runner.
             remoteTransition = new RemoteTransition(
-                    new DesktopAppLaunchTransition(
-                        context, MAIN_EXECUTOR, AppLaunchType.UNMINIMIZE));
+                    new DesktopAppLaunchTransition(context, MAIN_EXECUTOR, UNMINIMIZE),
+                    "DesktopKeyboardQuickSwitchUnminimize");
         }
         mControllers.taskbarActivityContext.handleGroupTaskLaunch(
                 task,
@@ -331,6 +333,7 @@ public class KeyboardQuickSwitchViewController {
     }
 
     class ViewCallbacks {
+        public final OnBackInvokedCallback onBackInvokedCallback = () -> closeQuickSwitchView(true);
 
         boolean onKeyUp(int keyCode, KeyEvent event, boolean isRTL, boolean allowTraversal) {
             if (keyCode != KeyEvent.KEYCODE_TAB

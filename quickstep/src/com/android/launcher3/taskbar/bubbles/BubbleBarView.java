@@ -81,6 +81,7 @@ public class BubbleBarView extends FrameLayout {
 
     public static final long FADE_OUT_ANIM_POSITION_DURATION_MS = 100L;
     public static final long FADE_IN_ANIM_ALPHA_DURATION_MS = 100L;
+    public static final long FADE_OUT_BUBBLE_BAR_DURATION_MS = 150L;
     private static final String TAG = "BubbleBarView";
     // TODO: (b/273594744) calculate the amount of space we have and base the max on that
     //  if it's smaller than 5.
@@ -145,6 +146,9 @@ public class BubbleBarView extends FrameLayout {
     // An animator that represents the expansion state of the bubble bar, where 0 corresponds to the
     // collapsed state and 1 to the fully expanded state.
     private ValueAnimator mWidthAnimator = createExpansionAnimator(/* expanding = */ false);
+
+    @Nullable
+    private ValueAnimator mDismissAnimator = null;
 
     /** An animator used for animating individual bubbles in the bubble bar while expanded. */
     @Nullable
@@ -798,11 +802,11 @@ public class BubbleBarView extends FrameLayout {
     /** Removes the given bubble from the bubble bar. */
     public void removeBubble(View bubble) {
         if (isExpanded()) {
-            // TODO b/347062801 - animate the bubble bar if the last bubble is removed
             final boolean dismissedByDrag = mDraggedBubbleView == bubble;
             if (dismissedByDrag) {
                 mDismissedByDragBubbleView = mDraggedBubbleView;
             }
+            boolean removingLastRemainingBubble = getBubbleChildCount() == 1;
             int bubbleCount = getChildCount();
             mBubbleAnimator = new BubbleAnimator(mIconSize, mExpandedBarIconsSpacing,
                     bubbleCount, mBubbleBarLocation.isOnLeft(isLayoutRtl()));
@@ -840,7 +844,10 @@ public class BubbleBarView extends FrameLayout {
                             : bubbleIndex == bubbleCount - 1;
             mBubbleAnimator.animateRemovedBubble(
                     indexOfChild(bubble), indexOfChild(mSelectedBubbleView), removingLastBubble,
-                    listener);
+                    removingLastRemainingBubble, listener);
+            if (removingLastRemainingBubble && mDismissAnimator == null) {
+                createDismissAnimator().start();
+            }
         } else {
             removeView(bubble);
         }
@@ -859,6 +866,28 @@ public class BubbleBarView extends FrameLayout {
         updateContentDescription();
         mDismissedByDragBubbleView = null;
         updateDotsAndBadgesIfCollapsed();
+    }
+
+    private ValueAnimator createDismissAnimator() {
+        ValueAnimator animator =
+                ValueAnimator.ofFloat(0, 1).setDuration(FADE_OUT_BUBBLE_BAR_DURATION_MS);
+        animator.setInterpolator(Interpolators.EMPHASIZED);
+        Runnable onEnd = () -> {
+            mDismissAnimator = null;
+            setAlpha(0);
+        };
+        addAnimationCallBacks(animator, /* onStart= */ null, onEnd,
+                /* onUpdate= */ anim -> setAlpha(1 - anim.getAnimatedFraction()));
+        mDismissAnimator = animator;
+        return animator;
+    }
+
+    /** Dismisses the bubble bar */
+    public void dismiss(Runnable onDismissed) {
+        if (mDismissAnimator == null) {
+            createDismissAnimator().start();
+        }
+        addAnimationCallBacks(mDismissAnimator, null, onDismissed, null);
     }
 
     /**

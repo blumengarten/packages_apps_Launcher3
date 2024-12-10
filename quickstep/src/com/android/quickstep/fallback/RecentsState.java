@@ -45,6 +45,8 @@ public class RecentsState implements BaseState<RecentsState> {
     private static final int FLAG_TASK_THUMBNAIL_SPLASH = BaseState.getFlag(8);
     private static final int FLAG_DETACH_DESKTOP_CAROUSEL = BaseState.getFlag(9);
 
+    private static final RecentsState[] sAllStates = new RecentsState[6];
+
     public static final RecentsState DEFAULT = new RecentsState(0,
             FLAG_DISABLE_RESTORE | FLAG_CLEAR_ALL_BUTTON | FLAG_OVERVIEW_ACTIONS | FLAG_SHOW_AS_GRID
                     | FLAG_SCRIM | FLAG_LIVE_TILE | FLAG_RECENTS_VIEW_VISIBLE);
@@ -61,6 +63,11 @@ public class RecentsState implements BaseState<RecentsState> {
             FLAG_SHOW_AS_GRID | FLAG_SCRIM | FLAG_RECENTS_VIEW_VISIBLE | FLAG_CLOSE_POPUPS
                     | FLAG_DISABLE_RESTORE);
 
+    /** Returns the corresponding RecentsState from ordinal provided */
+    public static RecentsState stateFromOrdinal(int ordinal) {
+        return sAllStates[ordinal];
+    }
+
     public final int ordinal;
     private final int mFlags;
 
@@ -70,6 +77,7 @@ public class RecentsState implements BaseState<RecentsState> {
     public RecentsState(int id, int flags) {
         this.ordinal = id;
         this.mFlags = flags;
+        sAllStates[id] = this;
     }
 
 

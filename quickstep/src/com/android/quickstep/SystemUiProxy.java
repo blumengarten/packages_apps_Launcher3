@@ -55,6 +55,7 @@ import android.window.TransitionFilter;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
 import com.android.internal.logging.InstanceId;
@@ -70,6 +71,7 @@ import com.android.quickstep.util.ContextualSearchInvoker;
 import com.android.quickstep.util.unfold.ProxyUnfoldTransitionProvider;
 import com.android.systemui.shared.recents.ISystemUiProxy;
 import com.android.systemui.shared.recents.model.ThumbnailData;
+import com.android.systemui.shared.system.QuickStepContract;
 import com.android.systemui.shared.system.QuickStepContract.SystemUiStateFlags;
 import com.android.systemui.shared.system.RecentsAnimationControllerCompat;
 import com.android.systemui.shared.system.RecentsAnimationListener;
@@ -1476,10 +1478,11 @@ public class SystemUiProxy implements ISystemUiProxy, NavHandle {
     }
 
     /** Call shell to move a task with given `taskId` to desktop  */
-    public void moveToDesktop(int taskId, DesktopModeTransitionSource transitionSource) {
+    public void moveToDesktop(int taskId, DesktopModeTransitionSource transitionSource,
+            @Nullable RemoteTransition transition) {
         if (mDesktopMode != null) {
             try {
-                mDesktopMode.moveToDesktop(taskId, transitionSource);
+                mDesktopMode.moveToDesktop(taskId, transitionSource, transition);
             } catch (RemoteException e) {
                 Log.w(TAG, "Failed call moveToDesktop", e);
             }
@@ -1633,5 +1636,25 @@ public class SystemUiProxy implements ISystemUiProxy, NavHandle {
         pw.println("\tmUnfoldAnimation=" + mUnfoldAnimation);
         pw.println("\tmUnfoldAnimationListener=" + mUnfoldAnimationListener);
         pw.println("\tmDragAndDrop=" + mDragAndDrop);
+    }
+
+    /**
+     * Adds all interfaces held by this proxy to the bundle
+     */
+    @VisibleForTesting
+    public void addAllInterfaces(Bundle out) {
+        QuickStepContract.addInterface(mSystemUiProxy, out);
+        QuickStepContract.addInterface(mPip, out);
+        QuickStepContract.addInterface(mBubbles, out);
+        QuickStepContract.addInterface(mSysuiUnlockAnimationController, out);
+        QuickStepContract.addInterface(mSplitScreen, out);
+        QuickStepContract.addInterface(mOneHanded, out);
+        QuickStepContract.addInterface(mShellTransitions, out);
+        QuickStepContract.addInterface(mStartingWindow, out);
+        QuickStepContract.addInterface(mRecentTasks, out);
+        QuickStepContract.addInterface(mBackAnimation, out);
+        QuickStepContract.addInterface(mDesktopMode, out);
+        QuickStepContract.addInterface(mUnfoldAnimation, out);
+        QuickStepContract.addInterface(mDragAndDrop, out);
     }
 }

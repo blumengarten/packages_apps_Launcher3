@@ -37,7 +37,7 @@ import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherState;
 import com.android.launcher3.allapps.AllAppsRecyclerView;
 import com.android.launcher3.celllayout.FavoriteItemsTransaction;
-import com.android.launcher3.icons.ThemedIconDrawable;
+import com.android.launcher3.icons.mono.ThemedIconDrawable;
 import com.android.launcher3.popup.ArrowPopup;
 import com.android.launcher3.util.BaseLauncherActivityTest;
 import com.android.launcher3.util.Executors;

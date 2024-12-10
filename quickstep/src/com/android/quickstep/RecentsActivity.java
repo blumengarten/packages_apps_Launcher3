@@ -19,6 +19,8 @@ import static android.os.Trace.TRACE_TAG_APP;
 import static android.view.RemoteAnimationTarget.MODE_CLOSING;
 import static android.view.RemoteAnimationTarget.MODE_OPENING;
 
+import static com.android.launcher3.LauncherConstants.SavedInstanceKeys.RUNTIME_STATE;
+import static com.android.launcher3.LauncherConstants.SavedInstanceKeys.RUNTIME_STATE_RECREATE_TO_UPDATE_THEME;
 import static com.android.launcher3.QuickstepTransitionManager.RECENTS_LAUNCH_DURATION;
 import static com.android.launcher3.QuickstepTransitionManager.STATUS_BAR_TRANSITION_DURATION;
 import static com.android.launcher3.QuickstepTransitionManager.STATUS_BAR_TRANSITION_PRE_DELAY;
@@ -362,6 +364,14 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
     }
 
     @Override
+    public void onUiChangedWhileSleeping() {
+        super.onUiChangedWhileSleeping();
+        // Dismiss recents and navigate to home if the device goes to sleep
+        // while in recents.
+        startHome();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         AccessibilityManagerCompat.sendStateEventToTest(getBaseContext(), OVERVIEW_STATE_ORDINAL);
@@ -382,6 +392,32 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
 
         // Set screen title for Talkback
         setTitle(R.string.accessibility_recent_apps);
+
+        restoreState(savedInstanceState);
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putInt(RUNTIME_STATE, mStateManager.getState().ordinal);
+        super.onSaveInstanceState(outState);
+    }
+
+    /**
+     * Restores the previous state, if it exists.
+     *
+     * @param savedState The previous state.
+     */
+    private void restoreState(Bundle savedState) {
+        if (savedState == null) {
+            return;
+        }
+
+        if (savedState.getBoolean(RUNTIME_STATE_RECREATE_TO_UPDATE_THEME)) {
+            // RecentsState is only restored after theme changes.
+            int stateOrdinal = savedState.getInt(RUNTIME_STATE, RecentsState.DEFAULT.ordinal);
+            RecentsState recentsState = RecentsState.stateFromOrdinal(stateOrdinal);
+            mStateManager.goToState(recentsState, /*animated=*/false);
+        }
     }
 
     @Override

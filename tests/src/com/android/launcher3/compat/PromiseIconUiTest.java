@@ -16,6 +16,8 @@
 
 package com.android.launcher3.compat;
 
+import static android.os.Process.myUserHandle;
+
 import static com.android.launcher3.Flags.FLAG_ENABLE_SUPPORT_FOR_ARCHIVING;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -136,7 +138,8 @@ public class PromiseIconUiTest extends BaseLauncherActivityTest<Launcher> {
     public void testPromiseIcon_addedArchivedApp() throws Throwable {
         installDummyAppAndWaitForUIUpdate();
         assertThat(executeShellCommand(
-                String.format("pm archive %s", DUMMY_PACKAGE)))
+                String.format("pm archive --user %d %s",
+                        myUserHandle().getIdentifier(), DUMMY_PACKAGE)))
                 .isEqualTo("Success\n");
 
         // Create and add test session

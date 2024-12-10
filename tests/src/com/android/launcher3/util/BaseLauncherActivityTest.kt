@@ -170,6 +170,18 @@ open class BaseLauncherActivityTest<LAUNCHER_TYPE : Launcher> {
         UiDevice.getInstance(getInstrumentation()).waitForIdle()
     }
 
+    /**
+     * Match the behavior with how widget is added in reality with "tap to add" (even with screen
+     * readers).
+     */
+    fun addWidgetToWorkspace(view: View) {
+        executeOnLauncher {
+            view.performClick()
+            UiDevice.getInstance(getInstrumentation()).waitForIdle()
+            view.findViewById<View>(R.id.widget_add_button).performClick()
+        }
+    }
+
     fun ViewGroup.searchView(filter: Predicate<View>): View? {
         if (filter.test(this)) return this
         for (child in children) {

@@ -149,8 +149,7 @@ public class WidgetsModel {
                         LauncherAppWidgetProviderInfo.fromProviderInfo(context, widgetInfo);
 
                 widgetsAndShortcuts.add(new WidgetItem(
-                        launcherWidgetInfo, idp, app.getIconCache(), app.getContext(),
-                        widgetManager));
+                        launcherWidgetInfo, idp, app.getIconCache(), app.getContext()));
                 updatedItems.add(launcherWidgetInfo);
             }
 
@@ -213,7 +212,6 @@ public class WidgetsModel {
         if (!WIDGETS_ENABLED) {
             return;
         }
-        WidgetManagerHelper widgetManager = new WidgetManagerHelper(app.getContext());
         for (Entry<PackageItemInfo, List<WidgetItem>> entry : mWidgetsByPackageItem.entrySet()) {
             if (packageNames.contains(entry.getKey().packageName)) {
                 List<WidgetItem> items = entry.getValue();
@@ -226,7 +224,7 @@ public class WidgetsModel {
                         } else {
                             items.set(i, new WidgetItem(item.widgetInfo,
                                     app.getInvariantDeviceProfile(), app.getIconCache(),
-                                    app.getContext(), widgetManager));
+                                    app.getContext()));
                         }
                     }
                 }

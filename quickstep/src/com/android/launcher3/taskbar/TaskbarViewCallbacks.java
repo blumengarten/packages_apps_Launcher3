@@ -18,6 +18,7 @@ package com.android.launcher3.taskbar;
 
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_TASKBAR_ALLAPPS_BUTTON_LONG_PRESS;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_TASKBAR_ALLAPPS_BUTTON_TAP;
+import static com.android.launcher3.taskbar.TaskbarAutohideSuspendController.FLAG_AUTOHIDE_SUSPEND_TASKBAR_OVERFLOW;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -180,6 +181,9 @@ public class TaskbarViewCallbacks {
         if (mTaskbarView.getTaskbarOverflowView() != null) {
             mTaskbarView.getTaskbarOverflowView().setIsActive(
                     !mTaskbarView.getTaskbarOverflowView().getIsActive());
+            mControllers.taskbarAutohideSuspendController
+                    .updateFlag(FLAG_AUTOHIDE_SUSPEND_TASKBAR_OVERFLOW,
+                            mTaskbarView.getTaskbarOverflowView().getIsActive());
         }
         mControllers.keyboardQuickSwitchController.toggleQuickSwitchViewForTaskbar(
                 mControllers.taskbarViewController.getTaskIdsForPinnedApps(),
@@ -190,6 +194,8 @@ public class TaskbarViewCallbacks {
         if (mTaskbarView.getTaskbarOverflowView() != null) {
             mTaskbarView.getTaskbarOverflowView().setIsActive(false);
         }
+        mControllers.taskbarAutohideSuspendController.updateFlag(
+                FLAG_AUTOHIDE_SUSPEND_TASKBAR_OVERFLOW, false);
     }
 
     private float getDividerCenterX() {

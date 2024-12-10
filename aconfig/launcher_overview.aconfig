@@ -62,3 +62,13 @@ flag {
     description: "Enables the non-overlapping layout for desktop windows in Overview mode."
     bug: "378011776"
 }
+
+flag {
+    name: "enable_use_top_visible_activity_for_exclude_from_recent_task"
+    namespace: "launcher_overview"
+    description: "Enables using the top visible activity for exclude from recent task instead of the activity indicies."
+    bug: "342627272"
+    metadata {
+      purpose: PURPOSE_BUGFIX
+    }
+}

@@ -326,8 +326,8 @@ class TaskbarRecentAppsController(context: Context, private val recentsModel: Re
     }
 
     /**
-     * Returns the hotseat items updated so that any item that points to a package with a running
-     * task also references that task.
+     * Returns the hotseat items updated so that any item that points to a package+user with a
+     * running task also references that task.
      */
     private fun updateHotseatItemsFromRunningTasks(
         groupTasks: List<GroupTask>,
@@ -338,8 +338,10 @@ class TaskbarRecentAppsController(context: Context, private val recentsModel: Re
                 itemInfo
             } else {
                 val foundTask =
-                    groupTasks.find { task -> task.task1.key.packageName == itemInfo.targetPackage }
-                        ?: return@map itemInfo
+                    groupTasks.find { task ->
+                        task.task1.key.packageName == itemInfo.targetPackage &&
+                            task.task1.key.userId == itemInfo.user.identifier
+                    } ?: return@map itemInfo
                 TaskItemInfo(foundTask.task1.key.id, itemInfo as WorkspaceItemInfo)
             }
         }

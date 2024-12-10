@@ -106,6 +106,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -941,6 +942,10 @@ public class SplitSelectStateController {
                         mLauncher, mLauncher.getDragLayer(),
                         null /* thumbnail */,
                         mAppIcon, new RectF());
+                floatingTaskView.setOnClickListener(view ->
+                        getSplitAnimationController()
+                                .playAnimPlaceholderToFullscreen(mContainer, view,
+                                        Optional.of(() -> resetState())));
                 floatingTaskView.setAlpha(1);
                 floatingTaskView.addStagingAnimation(anim, mTaskBounds, mTempRect,
                         false /* fadeWithThumbnail */, true /* isStagedTask */);

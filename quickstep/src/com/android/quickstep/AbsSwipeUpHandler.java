@@ -80,6 +80,8 @@ import android.os.IBinder;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.Pair;
+import android.util.TimeUtils;
+import android.view.Choreographer;
 import android.view.MotionEvent;
 import android.view.RemoteAnimationTarget;
 import android.view.SurfaceControl;
@@ -1734,13 +1736,30 @@ public abstract class AbsSwipeUpHandler<
     }
 
     private void handOffAnimation(PointF velocityPxPerMs) {
-        if (!TransitionAnimator.Companion.longLivedReturnAnimationsEnabled()
-                || mRecentsAnimationController == null) {
+        if (!TransitionAnimator.Companion.longLivedReturnAnimationsEnabled()) {
+            return;
+        }
+
+        // This function is not guaranteed to be called inside a frame. We try to access the frame
+        // time immediately, but if we're not inside a frame we must post a callback to be run at
+        // the beginning of the next frame.
+        try  {
+            handOffAnimationInternal(Choreographer.getInstance().getFrameTime(), velocityPxPerMs);
+        } catch (IllegalStateException e) {
+            Choreographer.getInstance().postFrameCallback(
+                    frameTimeNanos -> handOffAnimationInternal(
+                            frameTimeNanos / TimeUtils.NANOS_PER_MS, velocityPxPerMs));
+        }
+    }
+
+    private void handOffAnimationInternal(long timestamp, PointF velocityPxPerMs) {
+        if (mRecentsAnimationController == null) {
             return;
         }
 
         Pair<RemoteAnimationTarget[], WindowAnimationState[]> targetsAndStates =
-                extractTargetsAndStates(mRemoteTargetHandles, velocityPxPerMs);
+                extractTargetsAndStates(
+                        mRemoteTargetHandles, timestamp, velocityPxPerMs);
         mRecentsAnimationController.handOffAnimation(
                 targetsAndStates.first, targetsAndStates.second);
         ActiveGestureProtoLogProxy.logHandOffAnimation();
@@ -2085,6 +2104,7 @@ public abstract class AbsSwipeUpHandler<
         if (mRecentsView != null) {
             mRecentsView.removeOnScrollChangedListener(mOnRecentsScrollListener);
         }
+        mGestureState.getContainerInterface().setOnDeferredActivityLaunchCallback(null);
     }
 
     private void resetStateForAnimationCancel() {

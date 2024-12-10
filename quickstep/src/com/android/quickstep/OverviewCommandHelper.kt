@@ -70,7 +70,7 @@ constructor(
     private val taskAnimationManager: TaskAnimationManager,
     private val dispatcherProvider: DispatcherProvider = ProductionDispatchers,
 ) {
-    private val coroutineScope = CoroutineScope(SupervisorJob() + dispatcherProvider.default)
+    private val coroutineScope = CoroutineScope(SupervisorJob() + dispatcherProvider.background)
 
     private val commandQueue = ConcurrentLinkedDeque<CommandInfo>()
 

@@ -35,6 +35,8 @@ import android.view.ViewTreeObserver;
 import android.view.animation.Interpolator;
 import android.widget.HorizontalScrollView;
 import android.widget.TextView;
+import android.window.OnBackInvokedDispatcher;
+import android.window.WindowOnBackInvokedDispatcher;
 
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
@@ -109,6 +111,8 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
 
     @Nullable private AnimatorSet mOpenAnimation;
 
+    private boolean mIsBackCallbackRegistered = false;
+
     @Nullable private KeyboardQuickSwitchViewController.ViewCallbacks mViewCallbacks;
 
     public KeyboardQuickSwitchView(@NonNull Context context) {
@@ -156,6 +160,34 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
                 R.dimen.keyboard_quick_switch_view_small_spacing);
         mOutlineRadius = resources.getDimensionPixelSize(R.dimen.keyboard_quick_switch_view_radius);
         mIsRtl = Utilities.isRtl(resources);
+    }
+
+    private void registerOnBackInvokedCallback() {
+        OnBackInvokedDispatcher dispatcher = findOnBackInvokedDispatcher();
+
+        if (isOnBackInvokedCallbackEnabled(dispatcher)
+                && !mIsBackCallbackRegistered) {
+            dispatcher.registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_OVERLAY, mViewCallbacks.onBackInvokedCallback);
+            mIsBackCallbackRegistered = true;
+        }
+    }
+
+    private void unregisterOnBackInvokedCallback() {
+        OnBackInvokedDispatcher dispatcher = findOnBackInvokedDispatcher();
+
+        if (isOnBackInvokedCallbackEnabled(dispatcher)
+                && mIsBackCallbackRegistered) {
+            dispatcher.unregisterOnBackInvokedCallback(
+                    mViewCallbacks.onBackInvokedCallback);
+            mIsBackCallbackRegistered = false;
+        }
+    }
+
+    private boolean isOnBackInvokedCallbackEnabled(OnBackInvokedDispatcher dispatcher) {
+        return dispatcher instanceof WindowOnBackInvokedDispatcher
+                && ((WindowOnBackInvokedDispatcher) dispatcher).isOnBackInvokedCallbackEnabled()
+                && mViewCallbacks != null;
     }
 
     private KeyboardQuickSwitchTaskView createAndAddTaskView(
@@ -277,6 +309,7 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
                 new ViewTreeObserver.OnGlobalLayoutListener() {
                     @Override
                     public void onGlobalLayout() {
+                        registerOnBackInvokedCallback();
                         animateOpen(currentFocusIndexOverride);
 
                         getViewTreeObserver().removeOnGlobalLayoutListener(this);
@@ -293,6 +326,9 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
     }
 
     void resetViewCallbacks() {
+        // Unregister the back invoked callback after the view is closed and before the
+        // mViewCallbacks is reset.
+        unregisterOnBackInvokedCallback();
         mViewCallbacks = null;
     }
 

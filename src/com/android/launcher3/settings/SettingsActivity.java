@@ -23,6 +23,7 @@ import static androidx.preference.PreferenceFragmentCompat.ARG_PREFERENCE_ROOT;
 import static com.android.launcher3.BuildConfig.IS_DEBUG_DEVICE;
 import static com.android.launcher3.BuildConfig.IS_STUDIO_BUILD;
 import static com.android.launcher3.InvariantDeviceProfile.TYPE_MULTI_DISPLAY;
+import static com.android.launcher3.InvariantDeviceProfile.TYPE_TABLET;
 import static com.android.launcher3.states.RotationHelper.ALLOW_ROTATION_PREFERENCE_KEY;
 
 import android.app.Activity;
@@ -315,7 +316,9 @@ public class SettingsActivity extends FragmentActivity
                     if (!Flags.oneGridSpecs()
                             // adding this condition until fixing b/378972567
                             || InvariantDeviceProfile.INSTANCE.get(getContext()).deviceType
-                            == TYPE_MULTI_DISPLAY) {
+                            == TYPE_MULTI_DISPLAY
+                            || InvariantDeviceProfile.INSTANCE.get(getContext()).deviceType
+                            == TYPE_TABLET) {
                         return false;
                     }
                     // When the setting changes rotate the screen accordingly to showcase the result

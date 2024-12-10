@@ -36,6 +36,7 @@ import android.widget.FrameLayout;
 import androidx.annotation.IntDef;
 import androidx.annotation.Nullable;
 
+import com.android.launcher3.celllayout.CellLayoutLayoutParams;
 import com.android.launcher3.util.HorizontalInsettableView;
 import com.android.launcher3.util.MultiPropertyFactory;
 import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
@@ -201,13 +202,16 @@ public class Hotseat extends CellLayout implements Insettable {
         AnimatorSet animatorSet = new AnimatorSet();
         for (int i = 0; i < icons.getChildCount(); i++) {
             View child = icons.getChildAt(i);
-            float tx = shouldAdjustHotseat ? dp.getHotseatAdjustedTranslation(getContext(), i) : 0;
-            if (child instanceof Reorderable) {
-                MultiTranslateDelegate mtd = ((Reorderable) child).getTranslateDelegate();
-                animatorSet.play(
-                        mtd.getTranslationX(INDEX_BUBBLE_ADJUSTMENT_ANIM).animateToValue(tx));
-            } else {
-                animatorSet.play(ObjectAnimator.ofFloat(child, VIEW_TRANSLATE_X, tx));
+            if (child.getLayoutParams() instanceof CellLayoutLayoutParams lp) {
+                float tx = shouldAdjustHotseat
+                        ? dp.getHotseatAdjustedTranslation(getContext(), lp.getCellX()) : 0;
+                if (child instanceof Reorderable) {
+                    MultiTranslateDelegate mtd = ((Reorderable) child).getTranslateDelegate();
+                    animatorSet.play(
+                            mtd.getTranslationX(INDEX_BUBBLE_ADJUSTMENT_ANIM).animateToValue(tx));
+                } else {
+                    animatorSet.play(ObjectAnimator.ofFloat(child, VIEW_TRANSLATE_X, tx));
+                }
             }
         }
         //TODO(b/381109832) refactor & simplify adjustment logic

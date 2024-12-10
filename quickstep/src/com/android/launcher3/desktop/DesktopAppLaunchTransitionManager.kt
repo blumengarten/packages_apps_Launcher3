@@ -45,7 +45,8 @@ class DesktopAppLaunchTransitionManager(
         }
         remoteWindowLimitUnminimizeTransition =
             RemoteTransition(
-                DesktopAppLaunchTransition(context, MAIN_EXECUTOR, AppLaunchType.UNMINIMIZE)
+                DesktopAppLaunchTransition(context, MAIN_EXECUTOR, AppLaunchType.UNMINIMIZE),
+                "DesktopWindowLimitUnminimize"
             )
         systemUiProxy.registerRemoteTransition(
             remoteWindowLimitUnminimizeTransition,

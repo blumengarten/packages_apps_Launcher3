@@ -16,8 +16,6 @@
 
 package com.android.launcher3;
 
-import static android.graphics.drawable.AdaptiveIconDrawable.getExtraInsetFraction;
-
 import static com.android.launcher3.BuildConfig.WIDGET_ON_FIRST_SCREEN;
 import static com.android.launcher3.Flags.enableSmartspaceAsAWidget;
 import static com.android.launcher3.icons.BitmapInfo.FLAG_THEMED;
@@ -36,9 +34,6 @@ import android.content.pm.LauncherApps;
 import android.content.pm.ShortcutInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BlendMode;
-import android.graphics.BlendModeColorFilter;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.LightingColorFilter;
@@ -49,10 +44,8 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.AdaptiveIconDrawable;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.InsetDrawable;
 import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.os.DeadObjectException;
@@ -85,7 +78,6 @@ import com.android.launcher3.graphics.TintedDrawableSpan;
 import com.android.launcher3.icons.BitmapInfo;
 import com.android.launcher3.icons.CacheableShortcutInfo;
 import com.android.launcher3.icons.LauncherIcons;
-import com.android.launcher3.icons.ThemedIconDrawable;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
 import com.android.launcher3.pm.ShortcutConfigActivityInfo;
@@ -696,28 +688,18 @@ public final class Utilities {
             return null;
         }
 
-        // Inject monochrome icon drawable
+        // Inject theme icon drawable
         if (ATLEAST_T && useTheme) {
-            result.mutate();
-            int[] colors = ThemedIconDrawable.getColors(context);
-            Drawable mono = result.getMonochrome();
-
-            if (mono != null) {
-                mono.setTint(colors[1]);
-            } else  if (info instanceof ItemInfoWithIcon iiwi) {
-                // Inject a previously generated monochrome icon
-                Bitmap monoBitmap = iiwi.bitmap.getMono();
-                if (monoBitmap != null) {
-                    // Use BitmapDrawable instead of FastBitmapDrawable so that the colorState is
-                    // preserved in constantState
-                    mono = new BitmapDrawable(monoBitmap);
-                    mono.setColorFilter(new BlendModeColorFilter(colors[1], BlendMode.SRC_IN));
-                    // Inset the drawable according to the AdaptiveIconDrawable layers
-                    mono = new InsetDrawable(mono, getExtraInsetFraction() / 2);
+            try (LauncherIcons li = LauncherIcons.obtain(context)) {
+                if (li.getThemeController() != null) {
+                    AdaptiveIconDrawable themed = li.getThemeController().createThemedAdaptiveIcon(
+                            context,
+                            result,
+                            info instanceof ItemInfoWithIcon iiwi ? iiwi.bitmap : null);
+                    if (themed != null) {
+                        result = themed;
+                    }
                 }
-            }
-            if (mono != null) {
-                result = new AdaptiveIconDrawable(new ColorDrawable(colors[0]), mono);
             }
         }
 

@@ -15,6 +15,7 @@
  */
 package com.android.launcher3.taskbar;
 
+import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_ALL_APPS;
 import static com.android.launcher3.model.data.AppInfo.COMPONENT_KEY_COMPARATOR;
 import static com.android.launcher3.util.SplitConfigurationOptions.getLogEventForPosition;
 
@@ -309,9 +310,7 @@ public class TaskbarPopupController implements TaskbarControllers.LoggableTaskba
      */
     SystemShortcut.Factory<BaseTaskbarContext> createNewWindowShortcutFactory() {
         return (context, itemInfo, originalView) -> {
-            ComponentKey key = itemInfo.getComponentKey();
-            AppInfo app = getApp(key);
-            if (app != null && app.supportsMultiInstance()) {
+            if (shouldShowMultiInstanceOptions(itemInfo)) {
                 return new NewWindowTaskbarShortcut<>(context, itemInfo, originalView);
             }
             return null;
@@ -325,14 +324,22 @@ public class TaskbarPopupController implements TaskbarControllers.LoggableTaskba
      */
     public SystemShortcut.Factory<BaseTaskbarContext> createManageWindowsShortcutFactory() {
         return (context, itemInfo, originalView) -> {
-            ComponentKey key = itemInfo.getComponentKey();
-            AppInfo app = getApp(key);
-            if (app != null && app.supportsMultiInstance()) {
+            if (shouldShowMultiInstanceOptions(itemInfo)) {
                 return new ManageWindowsTaskbarShortcut<>(context, itemInfo, originalView,
                         mControllers);
             }
             return null;
         };
+    }
+
+    /**
+     * Determines whether to show multi-instance options for a given item.
+     */
+    private boolean shouldShowMultiInstanceOptions(ItemInfo itemInfo) {
+        ComponentKey key = itemInfo.getComponentKey();
+        AppInfo app = getApp(key);
+        return app != null && app.supportsMultiInstance()
+                && itemInfo.container != CONTAINER_ALL_APPS;
     }
 
     /**

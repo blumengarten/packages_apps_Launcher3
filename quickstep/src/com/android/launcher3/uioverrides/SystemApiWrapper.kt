@@ -63,7 +63,7 @@ open class SystemApiWrapper @Inject constructor(@ApplicationContext context: Con
 
     override fun createFadeOutAnimOptions(): ActivityOptions =
         ActivityOptions.makeBasic().apply {
-            remoteTransition = RemoteTransition(FadeOutRemoteTransition())
+            remoteTransition = RemoteTransition(FadeOutRemoteTransition(), "FadeOut")
         }
 
     override fun queryAllUsers(): Map<UserHandle, UserIconInfo> {

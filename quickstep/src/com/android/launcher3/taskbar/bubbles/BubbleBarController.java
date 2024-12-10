@@ -405,8 +405,12 @@ public class BubbleBarController extends IBubblesListener.Stub {
             mBubbleBarViewController.showOverflow(true);
         }
 
-        // Adds and removals have happened, update visibility before any other visual changes.
-        mBubbleBarViewController.setHiddenForBubbles(mBubbles.isEmpty());
+        // Update the visibility if this is the initial state or if there are no bubbles.
+        // If this is the initial bubble, the bubble bar will become visible as part of the
+        // animation.
+        if (update.initialState || mBubbles.isEmpty()) {
+            mBubbleBarViewController.setHiddenForBubbles(mBubbles.isEmpty());
+        }
         mBubbleStashedHandleViewController.ifPresent(
                 controller -> controller.setHiddenForBubbles(mBubbles.isEmpty()));
 

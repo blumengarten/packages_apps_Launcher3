@@ -61,12 +61,14 @@ class TaskThumbnailViewModelImpl(
 
     override val dimProgress: Flow<Float> =
         combine(taskContainerData.taskMenuOpenProgress, recentsViewData.tintAmount) {
-            taskMenuOpenProgress,
-            tintAmount ->
-            max(taskMenuOpenProgress * MAX_SCRIM_ALPHA, tintAmount)
-        }
+                taskMenuOpenProgress,
+                tintAmount ->
+                max(taskMenuOpenProgress * MAX_SCRIM_ALPHA, tintAmount)
+            }
+            .flowOn(dispatcherProvider.background)
 
-    override val splashAlpha = splashProgress.flatMapLatest { it }
+    override val splashAlpha =
+        splashProgress.flatMapLatest { it }.flowOn(dispatcherProvider.background)
 
     private val isLiveTile =
         combine(
@@ -77,7 +79,6 @@ class TaskThumbnailViewModelImpl(
                 runningTaskIds.contains(taskId) && !runningTaskShowScreenshot
             }
             .distinctUntilChanged()
-            .flowOn(dispatcherProvider.default)
 
     override val uiState: Flow<TaskThumbnailUiState> =
         combine(task.flatMapLatest { it }, isLiveTile) { taskVal, isRunning ->
@@ -99,7 +100,7 @@ class TaskThumbnailViewModelImpl(
                 }
             }
             .distinctUntilChanged()
-            .flowOn(dispatcherProvider.default)
+            .flowOn(dispatcherProvider.background)
 
     override fun bind(taskId: Int) {
         Log.d(TAG, "bind taskId: $taskId")

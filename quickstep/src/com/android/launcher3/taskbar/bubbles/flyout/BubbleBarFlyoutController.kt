@@ -63,8 +63,6 @@ constructor(
             return rect
         }
 
-    fun getFlyoutMaxHeight(): Int = BubbleBarFlyoutView.getMaximumViewHeight(container.context)
-
     fun setUpAndShowFlyout(message: BubbleBarFlyoutMessage, onInit: () -> Unit, onEnd: () -> Unit) {
         flyout?.let(container::removeView)
         val flyout = BubbleBarFlyoutView(container.context, positioner, flyoutScheduler)

@@ -761,6 +761,22 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         }
     }
 
+    @Override
+    public void addChildrenForAccessibility(ArrayList<View> arrayList) {
+        super.addChildrenForAccessibility(arrayList);
+        if (!Flags.floatingSearchBar()) {
+            // Searchbox container is visually at the top of the all apps UI but it's present in
+            // end of the children list.
+            // We need to move the searchbox to the top in a11y tree for a11y services to read the
+            // all apps screen in same as visual order.
+            arrayList.stream().filter(v -> v.getId() == R.id.search_container_all_apps)
+                    .findFirst().ifPresent(v -> {
+                        arrayList.remove(v);
+                        arrayList.add(0, v);
+                    });
+        }
+    }
+
     protected void updateHeaderScroll(int scrolledOffset) {
         float prog1 = Utilities.boundToRange((float) scrolledOffset / mHeaderThreshold, 0f, 1f);
         int headerColor = getHeaderColor(prog1);

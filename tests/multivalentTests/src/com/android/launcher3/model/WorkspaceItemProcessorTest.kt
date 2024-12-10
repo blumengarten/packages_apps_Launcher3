@@ -36,10 +36,7 @@ import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET
 import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT
 import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_FOLDER
 import com.android.launcher3.Utilities.EMPTY_PERSON_ARRAY
-import com.android.launcher3.backuprestore.LauncherRestoreEventLogger
-import com.android.launcher3.backuprestore.LauncherRestoreEventLogger.RestoreError.Companion.MISSING_INFO
-import com.android.launcher3.backuprestore.LauncherRestoreEventLogger.RestoreError.Companion.MISSING_WIDGET_PROVIDER
-import com.android.launcher3.backuprestore.LauncherRestoreEventLogger.RestoreError.Companion.PROFILE_DELETED
+import com.android.launcher3.backuprestore.LauncherRestoreEventLogger.RestoreError
 import com.android.launcher3.icons.CacheableShortcutInfo
 import com.android.launcher3.model.data.FolderInfo
 import com.android.launcher3.model.data.IconRequestInfo
@@ -224,7 +221,8 @@ class WorkspaceItemProcessorTest {
         itemProcessorUnderTest.processItem()
 
         // Then
-        verify(mockCursor).markDeleted("User has been deleted for item id=1", PROFILE_DELETED)
+        verify(mockCursor)
+            .markDeleted("User has been deleted for item id=1", RestoreError.PROFILE_DELETED)
         verify(mockCursor, times(0)).checkAndAddItem(any(), any(), anyOrNull())
     }
 
@@ -237,7 +235,8 @@ class WorkspaceItemProcessorTest {
         itemProcessorUnderTest = createWorkspaceItemProcessorUnderTest()
         itemProcessorUnderTest.processItem()
         // Then
-        verify(mockCursor).markDeleted("Null intent from db for item id=1", MISSING_INFO)
+        verify(mockCursor)
+            .markDeleted("Null intent from db for item id=1", RestoreError.APP_NO_DB_INTENT)
         verify(mockCursor, times(0)).checkAndAddItem(any(), any(), anyOrNull())
     }
 
@@ -255,7 +254,8 @@ class WorkspaceItemProcessorTest {
         itemProcessorUnderTest.processItem()
 
         // Then
-        verify(mockCursor).markDeleted("No target package for item id=1", MISSING_INFO)
+        verify(mockCursor)
+            .markDeleted("No target package for item id=1", RestoreError.APP_NO_TARGET_PACKAGE)
         verify(mockCursor, times(0)).checkAndAddItem(any(), any(), anyOrNull())
     }
 
@@ -272,7 +272,8 @@ class WorkspaceItemProcessorTest {
         itemProcessorUnderTest.processItem()
 
         // Then
-        verify(mockCursor).markDeleted("No target package for item id=1", MISSING_INFO)
+        verify(mockCursor)
+            .markDeleted("No target package for item id=1", RestoreError.APP_NO_TARGET_PACKAGE)
         verify(mockCursor, times(0)).checkAndAddItem(any(), any(), anyOrNull())
     }
 
@@ -350,7 +351,7 @@ class WorkspaceItemProcessorTest {
                     " targetPkg=package," +
                     " component=ComponentInfo{package/class}." +
                     " Unable to create launch Intent.",
-                MISSING_INFO,
+                RestoreError.APP_NO_LAUNCH_INTENT,
             )
         verify(mockCursor, times(0)).checkAndAddItem(any(), any(), anyOrNull())
     }
@@ -663,7 +664,7 @@ class WorkspaceItemProcessorTest {
         verify(mockCursor)
             .markDeleted(
                 "processWidget: Unrestored Pending widget removed: id=1, appWidgetId=0, component=$expectedComponentName, restoreFlag:=4",
-                LauncherRestoreEventLogger.RestoreError.APP_NOT_INSTALLED,
+                RestoreError.UNRESTORED_PENDING_WIDGET,
             )
     }
 
@@ -689,7 +690,7 @@ class WorkspaceItemProcessorTest {
                 type = WidgetInflater.TYPE_DELETE,
                 widgetInfo = null,
                 reason = "test_delete_reason",
-                restoreErrorType = MISSING_WIDGET_PROVIDER,
+                restoreErrorType = RestoreError.MISSING_WIDGET_PROVIDER,
             )
         mockWidgetInflater =
             mock<WidgetInflater>().apply {

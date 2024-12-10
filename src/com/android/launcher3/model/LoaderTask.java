@@ -389,7 +389,7 @@ public class LoaderTask implements Runnable {
             }
         } catch (CancellationException e) {
             // Loader stopped, ignore
-            logASplit("Cancelled");
+            FileLog.w(TAG, "LoaderTask cancelled:", e);
         } catch (Exception e) {
             memoryLogger.printLogs();
             throw e;
@@ -398,6 +398,7 @@ public class LoaderTask implements Runnable {
     }
 
     public synchronized void stopLocked() {
+        FileLog.w(TAG, "LoaderTask#stopLocked:", new Exception());
         mStopped = true;
         this.notify();
     }

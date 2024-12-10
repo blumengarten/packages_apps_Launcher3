@@ -111,10 +111,9 @@ public class DesktopVisibilityController {
     public boolean areDesktopTasksVisible() {
         boolean desktopTasksVisible = mVisibleDesktopTasksCount > 0;
         if (DEBUG) {
-            Log.d(TAG, "areDesktopTasksVisible: desktopVisible=" + desktopTasksVisible
-                    + " overview=" + mInOverviewState);
+            Log.d(TAG, "areDesktopTasksVisible: desktopVisible=" + desktopTasksVisible);
         }
-        return desktopTasksVisible && !mInOverviewState;
+        return desktopTasksVisible;
     }
 
     /**
@@ -219,12 +218,8 @@ public class DesktopVisibilityController {
                     + " currentValue=" + mInOverviewState);
         }
         if (overviewStateEnabled != mInOverviewState) {
-            final boolean wereDesktopTasksVisibleBefore = areDesktopTasksVisible();
             mInOverviewState = overviewStateEnabled;
             final boolean areDesktopTasksVisibleNow = areDesktopTasksVisible();
-            if (wereDesktopTasksVisibleBefore != areDesktopTasksVisibleNow) {
-                notifyDesktopVisibilityListeners(areDesktopTasksVisibleNow);
-            }
 
             if (ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY.isTrue()) {
                 return;

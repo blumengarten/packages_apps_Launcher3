@@ -98,7 +98,7 @@
     <color name="widget_picker_unselected_tab_text_color_light">
         @android:color/system_neutral2_700</color>
     <color name="widget_picker_collapse_handle_color_light">
-        @android:color/system_neutral2_200</color>
+        @android:color/system_neutral2_500</color>
     <color name="widget_picker_add_button_background_color_light">
         @android:color/system_accent1_600</color>
     <color name="widget_picker_add_button_text_color_light">

@@ -54,7 +54,6 @@ import com.android.launcher3.util.WidgetUtils;
 import com.android.launcher3.widget.DatabaseWidgetPreviewLoader;
 import com.android.launcher3.widget.LauncherAppWidgetProviderInfo;
 import com.android.launcher3.widget.WidgetCell;
-import com.android.launcher3.widget.WidgetManagerHelper;
 import com.android.launcher3.widget.model.WidgetsListContentEntry;
 
 import org.junit.Before;
@@ -143,7 +142,6 @@ public final class WidgetsListTableViewHolderBinderTest {
     }
 
     private List<WidgetItem> generateWidgetItems(String packageName, int numOfWidgets) {
-        WidgetManagerHelper widgetManager = new WidgetManagerHelper(mContext);
         ArrayList<WidgetItem> widgetItems = new ArrayList<>();
         for (int i = 0; i < numOfWidgets; i++) {
             ComponentName cn = ComponentName.createRelative(packageName, ".SampleWidget" + i);
@@ -151,7 +149,7 @@ public final class WidgetsListTableViewHolderBinderTest {
 
             widgetItems.add(new WidgetItem(
                     LauncherAppWidgetProviderInfo.fromProviderInfo(mContext, widgetInfo),
-                    mTestProfile, mIconCache, mContext, widgetManager));
+                    mTestProfile, mIconCache, mContext));
         }
         return widgetItems;
     }

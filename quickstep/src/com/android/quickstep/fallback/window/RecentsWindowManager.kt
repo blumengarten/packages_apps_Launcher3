@@ -457,7 +457,7 @@ class RecentsWindowManager(context: Context) :
     }
 
     override fun isRecentsViewVisible(): Boolean {
-        return getStateManager().state!!.isRecentsViewVisible
+        return isShowing() || getStateManager().state!!.isRecentsViewVisible
     }
 
     override fun createAtomicAnimationFactory(): AtomicAnimationFactory<RecentsState?>? {

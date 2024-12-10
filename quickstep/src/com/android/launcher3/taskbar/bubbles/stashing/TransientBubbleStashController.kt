@@ -224,12 +224,13 @@ class TransientBubbleStashController(
 
     override fun isBubbleBarVisible(): Boolean = bubbleBarViewController.hasBubbles() && !isStashed
 
-    override fun onNewBubbleAnimationInterrupted(isStashed: Boolean, bubbleBarTranslationY: Float) =
+    override fun onNewBubbleAnimationInterrupted(isStashed: Boolean, bubbleBarTranslationY: Float) {
         if (isStashed) {
             stashBubbleBarImmediate()
         } else {
             showBubbleBarImmediate(bubbleBarTranslationY)
         }
+    }
 
     /** Check if [ev] belongs to the stash handle or the bubble bar views. */
     override fun isEventOverBubbleBarViews(ev: MotionEvent): Boolean {

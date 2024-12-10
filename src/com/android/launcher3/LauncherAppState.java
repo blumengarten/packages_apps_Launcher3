@@ -20,8 +20,12 @@ import static android.app.admin.DevicePolicyManager.ACTION_DEVICE_POLICY_RESOURC
 import static android.content.Context.RECEIVER_EXPORTED;
 
 import static com.android.launcher3.Flags.enableSmartspaceRemovalToggle;
+import static com.android.launcher3.InvariantDeviceProfile.GRID_NAME_PREFS_KEY;
+import static com.android.launcher3.LauncherPrefs.DB_FILE;
+import static com.android.launcher3.LauncherPrefs.GRID_NAME;
 import static com.android.launcher3.LauncherPrefs.ICON_STATE;
 import static com.android.launcher3.LauncherPrefs.THEMED_ICONS;
+import static com.android.launcher3.model.DeviceGridState.KEY_DB_FILE;
 import static com.android.launcher3.model.LoaderTask.SMARTSPACE_ON_HOME_SCREEN;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
@@ -47,6 +51,7 @@ import com.android.launcher3.icons.IconCache;
 import com.android.launcher3.icons.IconProvider;
 import com.android.launcher3.icons.LauncherIconProvider;
 import com.android.launcher3.icons.LauncherIcons;
+import com.android.launcher3.logging.FileLog;
 import com.android.launcher3.model.ModelLauncherCallbacks;
 import com.android.launcher3.model.WidgetsFilterDataProvider;
 import com.android.launcher3.notification.NotificationListener;
@@ -70,6 +75,7 @@ import java.util.Objects;
 
 public class LauncherAppState implements SafeCloseable {
 
+    public static final String TAG = "LauncherAppState";
     public static final String ACTION_FORCE_ROLOAD = "force-reload-launcher";
 
     // We do not need any synchronization for this variable as its only written on UI thread.
@@ -293,6 +299,12 @@ public class LauncherAppState implements SafeCloseable {
             if (Themes.KEY_THEMED_ICONS.equals(key)) {
                 mIconProvider.setIconThemeSupported(Themes.isThemedIconEnabled(mContext));
                 verifyIconChanged();
+            } else if (GRID_NAME_PREFS_KEY.equals(key)) {
+                FileLog.d(TAG, "onPrefChanged GRID_NAME changed: "
+                        + LauncherPrefs.get(mContext).get(GRID_NAME));
+            } else if (KEY_DB_FILE.equals(key)) {
+                FileLog.d(TAG, "onPrefChanged DB_FILE changed: "
+                        + LauncherPrefs.get(mContext).get(DB_FILE));
             }
         }
     }

@@ -425,7 +425,9 @@ public class DeviceProfile {
                 && WindowManagerProxy.INSTANCE.get(context).isTaskbarDrawnInProcess();
 
         // Some more constants.
-        context = getContext(context, info, isVerticalBarLayout() || (isTablet && isLandscape)
+        context = getContext(context, info, inv.isFixedLandscape
+                        || isVerticalBarLayout()
+                        || (isTablet && isLandscape)
                         ? Configuration.ORIENTATION_LANDSCAPE
                         : Configuration.ORIENTATION_PORTRAIT,
                 windowBounds);
@@ -865,7 +867,7 @@ public class DeviceProfile {
         canQsbInline = canQsbInline && hotseatQsbHeight > 0;
 
         return (mIsScalableGrid && inv.inlineQsb[mTypeIndex] && canQsbInline)
-                || inv.isFixedLandscapeMode;
+                || inv.isFixedLandscape;
     }
 
     private static DotRenderer createDotRenderer(
@@ -1834,7 +1836,7 @@ public class DeviceProfile {
             }
             int paddingTop = workspaceTopPadding + (mIsScalableGrid ? 0 : edgeMarginPx);
             // On isFixedLandscapeMode on phones we already have padding because of the camera hole
-            int paddingSide = inv.isFixedLandscapeMode ? 0 : desiredWorkspaceHorizontalMarginPx;
+            int paddingSide = inv.isFixedLandscape ? 0 : desiredWorkspaceHorizontalMarginPx;
 
             padding.set(paddingSide, paddingTop, paddingSide, paddingBottom);
         }
@@ -1934,7 +1936,7 @@ public class DeviceProfile {
                 hotseatBarPadding.set(mHotseatBarWorkspaceSpacePx, paddingTop,
                         mInsets.right + mHotseatBarEdgePaddingPx, paddingBottom);
             }
-        } else if (isTaskbarPresent || inv.isFixedLandscapeMode) {
+        } else if (isTaskbarPresent || inv.isFixedLandscape) {
             // Center the QSB vertically with hotseat
             int hotseatBarBottomPadding = getHotseatBarBottomPadding();
             int hotseatBarTopPadding =
@@ -1953,7 +1955,7 @@ public class DeviceProfile {
             }
             startSpacing += getAdditionalQsbSpace();
 
-            if (inv.isFixedLandscapeMode) {
+            if (inv.isFixedLandscape) {
                 endSpacing += mInsets.right;
                 startSpacing +=  mInsets.left;
             }
@@ -2568,7 +2570,7 @@ public class DeviceProfile {
             }
             if (mTransposeLayoutWithOrientation == null) {
                 mTransposeLayoutWithOrientation =
-                        !(mInfo.isTablet(mWindowBounds) || mInv.isFixedLandscapeMode);
+                        !(mInfo.isTablet(mWindowBounds) || mInv.isFixedLandscape);
             }
             if (mIsGestureMode == null) {
                 mIsGestureMode = mInfo.getNavigationMode().hasGestures;

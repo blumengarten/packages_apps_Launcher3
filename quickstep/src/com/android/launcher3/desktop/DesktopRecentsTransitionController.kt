@@ -31,6 +31,8 @@ import com.android.launcher3.util.Executors.MAIN_EXECUTOR
 import com.android.quickstep.SystemUiProxy
 import com.android.quickstep.TaskViewUtils
 import com.android.quickstep.views.DesktopTaskView
+import com.android.quickstep.views.TaskContainer
+import com.android.quickstep.views.TaskView
 import com.android.window.flags.Flags
 import com.android.wm.shell.shared.desktopmode.DesktopModeTransitionSource
 import java.util.function.Consumer
@@ -62,8 +64,12 @@ class DesktopRecentsTransitionController(
     }
 
     /** Launch desktop tasks from recents view */
-    fun moveToDesktop(taskId: Int, transitionSource: DesktopModeTransitionSource) {
-        systemUiProxy.moveToDesktop(taskId, transitionSource)
+    fun moveToDesktop(taskContainer: TaskContainer, transitionSource: DesktopModeTransitionSource) {
+        systemUiProxy.moveToDesktop(
+            taskContainer.task.key.id,
+            transitionSource,
+            /* transition = */ null,
+        )
     }
 
     /** Move task to external display from recents view */
@@ -72,7 +78,7 @@ class DesktopRecentsTransitionController(
     }
 
     private class RemoteDesktopLaunchTransitionRunner(
-        private val desktopTaskView: DesktopTaskView,
+        private val taskView: TaskView,
         private val animated: Boolean,
         private val stateManager: StateManager<*, *>,
         private val depthController: DepthController?,
@@ -99,7 +105,7 @@ class DesktopRecentsTransitionController(
             MAIN_EXECUTOR.execute {
                 val animator =
                     TaskViewUtils.composeRecentsDesktopLaunchAnimator(
-                        desktopTaskView,
+                        taskView,
                         stateManager,
                         depthController,
                         info,

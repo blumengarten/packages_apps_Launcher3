@@ -69,14 +69,17 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
     public static final int ALL_APPS_PAGE_PROGRESS_INDEX = 1;
     public static final int WIDGETS_PAGE_PROGRESS_INDEX = 2;
     public static final int SYSUI_SURFACE_PROGRESS_INDEX = 3;
+    public static final int LAUNCHER_PAUSE_PROGRESS_INDEX = 4;
 
-    public static final int DISPLAY_PROGRESS_COUNT = 4;
+    public static final int DISPLAY_PROGRESS_COUNT = 5;
 
     private final AnimatedFloat mTaskbarInAppDisplayProgress = new AnimatedFloat(
             this::onInAppDisplayProgressChanged);
     private final MultiPropertyFactory<AnimatedFloat> mTaskbarInAppDisplayProgressMultiProp =
             new MultiPropertyFactory<>(mTaskbarInAppDisplayProgress,
                     AnimatedFloat.VALUE, DISPLAY_PROGRESS_COUNT, Float::max);
+    private final AnimatedFloat mLauncherPauseProgress = new AnimatedFloat(
+            this::onLauncherPauseProgressUpdate);
 
     private final QuickstepLauncher mLauncher;
     private final HomeVisibilityState mHomeState;
@@ -499,7 +502,8 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
                 "MINUS_ONE_PAGE_PROGRESS_INDEX",
                 "ALL_APPS_PAGE_PROGRESS_INDEX",
                 "WIDGETS_PAGE_PROGRESS_INDEX",
-                "SYSUI_SURFACE_PROGRESS_INDEX");
+                "SYSUI_SURFACE_PROGRESS_INDEX",
+                "LAUNCHER_PAUSE_PROGRESS_INDEX");
 
         mTaskbarLauncherStateController.dumpLogs(prefix + "\t", pw);
     }
@@ -529,4 +533,39 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
             mLauncher.getWorkspace().onOverlayScrollChanged(0);
         }
     }
+
+    /**
+     * Called when Launcher Activity resumed while staying at home.
+     * <p>
+     * Shift nav buttons up to at-home position.
+     */
+    public void onLauncherResume() {
+        mLauncherPauseProgress.animateToValue(0.0f).start();
+    }
+
+    /**
+     * Called when Launcher Activity paused while staying at home.
+     * <p>
+     * To avoid UI clash between taskbar & bottom sheet, shift nav buttons down to in-app position.
+     */
+    public void onLauncherPause() {
+        mLauncherPauseProgress.animateToValue(1.0f).start();
+    }
+
+    /**
+     * On launcher stop, avoid animating taskbar & overriding pre-existing animations.
+     */
+    public void onLauncherStop() {
+        mLauncherPauseProgress.cancelAnimation();
+        mLauncherPauseProgress.updateValue(0.0f);
+    }
+
+    private void onLauncherPauseProgressUpdate() {
+        // If we are not aligned with hotseat, setting this will clobber the 3 button nav position.
+        // So in that case, treat the progress as 0 instead.
+        float pauseProgress = isIconAlignedWithHotseat() ? mLauncherPauseProgress.value : 0;
+        onTaskbarInAppDisplayProgressUpdate(pauseProgress, LAUNCHER_PAUSE_PROGRESS_INDEX);
+    }
+
+
 }

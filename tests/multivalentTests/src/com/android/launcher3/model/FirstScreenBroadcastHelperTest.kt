@@ -20,7 +20,7 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageInstaller.SessionInfo
-import android.os.UserHandle
+import android.os.Process.myUserHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_DESKTOP
@@ -77,16 +77,18 @@ class FirstScreenBroadcastHelperTest {
             SessionInfo().apply {
                 installerPackageName = expectedInstallerPackage
                 appPackageName = expectedAppPackage
+                userId = myUserHandle().identifier
             }
         val sessionInfoUnexpected =
             SessionInfo().apply {
                 installerPackageName = expectedInstallerPackage
                 appPackageName = unexpectedAppPackage
+                userId = myUserHandle().identifier
             }
         val sessionInfoMap: HashMap<PackageUserKey, SessionInfo> =
             hashMapOf(
-                PackageUserKey(unexpectedAppPackage, UserHandle(0)) to sessionInfoExpected,
-                PackageUserKey(expectedAppPackage, UserHandle(0)) to sessionInfoUnexpected,
+                PackageUserKey(unexpectedAppPackage, myUserHandle()) to sessionInfoExpected,
+                PackageUserKey(expectedAppPackage, myUserHandle()) to sessionInfoUnexpected,
             )
 
         // When
@@ -200,16 +202,18 @@ class FirstScreenBroadcastHelperTest {
             SessionInfo().apply {
                 installerPackageName = expectedInstallerPackage
                 appPackageName = expectedAppPackage
+                userId = myUserHandle().identifier
             }
         val sessionInfoUnexpected =
             SessionInfo().apply {
                 installerPackageName = expectedInstallerPackage
                 appPackageName = unexpectedAppPackage
+                userId = myUserHandle().identifier
             }
         val sessionInfoMap: HashMap<PackageUserKey, SessionInfo> =
             hashMapOf(
-                PackageUserKey(unexpectedAppPackage, UserHandle(0)) to sessionInfoExpected,
-                PackageUserKey(expectedAppPackage, UserHandle(0)) to sessionInfoUnexpected,
+                PackageUserKey(unexpectedAppPackage, myUserHandle()) to sessionInfoExpected,
+                PackageUserKey(expectedAppPackage, myUserHandle()) to sessionInfoUnexpected,
             )
         val expectedItemInfo = WorkspaceItemInfo().apply { intent = expectedIntent }
         val expectedFolderInfo = FolderInfo().apply { add(expectedItemInfo) }

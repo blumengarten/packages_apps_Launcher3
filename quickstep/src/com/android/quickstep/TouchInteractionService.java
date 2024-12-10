@@ -37,19 +37,6 @@ import static com.android.quickstep.InputConsumer.TYPE_CURSOR_HOVER;
 import static com.android.quickstep.InputConsumerUtils.newConsumer;
 import static com.android.quickstep.InputConsumerUtils.tryCreateAssistantInputConsumer;
 import static com.android.systemui.shared.system.ActivityManagerWrapper.CLOSE_SYSTEM_WINDOWS_REASON_RECENTS;
-import static com.android.systemui.shared.system.QuickStepContract.KEY_EXTRA_SYSUI_PROXY;
-import static com.android.systemui.shared.system.QuickStepContract.KEY_EXTRA_UNFOLD_ANIMATION_FORWARDER;
-import static com.android.systemui.shared.system.QuickStepContract.KEY_EXTRA_UNLOCK_ANIMATION_CONTROLLER;
-import static com.android.wm.shell.shared.ShellSharedConstants.KEY_EXTRA_SHELL_BACK_ANIMATION;
-import static com.android.wm.shell.shared.ShellSharedConstants.KEY_EXTRA_SHELL_BUBBLES;
-import static com.android.wm.shell.shared.ShellSharedConstants.KEY_EXTRA_SHELL_DESKTOP_MODE;
-import static com.android.wm.shell.shared.ShellSharedConstants.KEY_EXTRA_SHELL_DRAG_AND_DROP;
-import static com.android.wm.shell.shared.ShellSharedConstants.KEY_EXTRA_SHELL_ONE_HANDED;
-import static com.android.wm.shell.shared.ShellSharedConstants.KEY_EXTRA_SHELL_PIP;
-import static com.android.wm.shell.shared.ShellSharedConstants.KEY_EXTRA_SHELL_RECENT_TASKS;
-import static com.android.wm.shell.shared.ShellSharedConstants.KEY_EXTRA_SHELL_SHELL_TRANSITIONS;
-import static com.android.wm.shell.shared.ShellSharedConstants.KEY_EXTRA_SHELL_SPLIT_SCREEN;
-import static com.android.wm.shell.shared.ShellSharedConstants.KEY_EXTRA_SHELL_STARTING_WINDOW;
 
 import android.app.PendingIntent;
 import android.app.Service;
@@ -148,7 +135,6 @@ import java.util.function.Function;
 public class TouchInteractionService extends Service {
 
     private static final String SUBSTRING_PREFIX = "; ";
-    private static final String NEWLINE_PREFIX = "\n\t\t\t-> ";
 
     private static final String TAG = "TouchInteractionService";
 
@@ -173,30 +159,30 @@ public class TouchInteractionService extends Service {
         @BinderThread
         public void onInitialize(Bundle bundle) {
             ISystemUiProxy proxy = ISystemUiProxy.Stub.asInterface(
-                    bundle.getBinder(KEY_EXTRA_SYSUI_PROXY));
-            IPip pip = IPip.Stub.asInterface(bundle.getBinder(KEY_EXTRA_SHELL_PIP));
-            IBubbles bubbles = IBubbles.Stub.asInterface(bundle.getBinder(KEY_EXTRA_SHELL_BUBBLES));
+                    bundle.getBinder(ISystemUiProxy.DESCRIPTOR));
+            IPip pip = IPip.Stub.asInterface(bundle.getBinder(IPip.DESCRIPTOR));
+            IBubbles bubbles = IBubbles.Stub.asInterface(bundle.getBinder(IBubbles.DESCRIPTOR));
             ISplitScreen splitscreen = ISplitScreen.Stub.asInterface(bundle.getBinder(
-                    KEY_EXTRA_SHELL_SPLIT_SCREEN));
+                    ISplitScreen.DESCRIPTOR));
             IOneHanded onehanded = IOneHanded.Stub.asInterface(
-                    bundle.getBinder(KEY_EXTRA_SHELL_ONE_HANDED));
+                    bundle.getBinder(IOneHanded.DESCRIPTOR));
             IShellTransitions shellTransitions = IShellTransitions.Stub.asInterface(
-                    bundle.getBinder(KEY_EXTRA_SHELL_SHELL_TRANSITIONS));
+                    bundle.getBinder(IShellTransitions.DESCRIPTOR));
             IStartingWindow startingWindow = IStartingWindow.Stub.asInterface(
-                    bundle.getBinder(KEY_EXTRA_SHELL_STARTING_WINDOW));
+                    bundle.getBinder(IStartingWindow.DESCRIPTOR));
             ISysuiUnlockAnimationController launcherUnlockAnimationController =
                     ISysuiUnlockAnimationController.Stub.asInterface(
-                            bundle.getBinder(KEY_EXTRA_UNLOCK_ANIMATION_CONTROLLER));
+                            bundle.getBinder(ISysuiUnlockAnimationController.DESCRIPTOR));
             IRecentTasks recentTasks = IRecentTasks.Stub.asInterface(
-                    bundle.getBinder(KEY_EXTRA_SHELL_RECENT_TASKS));
+                    bundle.getBinder(IRecentTasks.DESCRIPTOR));
             IBackAnimation backAnimation = IBackAnimation.Stub.asInterface(
-                    bundle.getBinder(KEY_EXTRA_SHELL_BACK_ANIMATION));
+                    bundle.getBinder(IBackAnimation.DESCRIPTOR));
             IDesktopMode desktopMode = IDesktopMode.Stub.asInterface(
-                    bundle.getBinder(KEY_EXTRA_SHELL_DESKTOP_MODE));
+                    bundle.getBinder(IDesktopMode.DESCRIPTOR));
             IUnfoldAnimation unfoldTransition = IUnfoldAnimation.Stub.asInterface(
-                    bundle.getBinder(KEY_EXTRA_UNFOLD_ANIMATION_FORWARDER));
+                    bundle.getBinder(IUnfoldAnimation.DESCRIPTOR));
             IDragAndDrop dragAndDrop = IDragAndDrop.Stub.asInterface(
-                    bundle.getBinder(KEY_EXTRA_SHELL_DRAG_AND_DROP));
+                    bundle.getBinder(IDragAndDrop.DESCRIPTOR));
             MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(tis -> {
                 SystemUiProxy.INSTANCE.get(tis).setProxy(proxy, pip,
                         bubbles, splitscreen, onehanded, shellTransitions, startingWindow,
