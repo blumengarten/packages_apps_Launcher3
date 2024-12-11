@@ -24,8 +24,10 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.Gravity
 import android.view.View
+import android.view.ViewStub
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.updateLayoutParams
+import com.android.launcher3.Flags.enableOverviewIconMenu
 import com.android.launcher3.Flags.enableRefactorTaskThumbnail
 import com.android.launcher3.R
 import com.android.launcher3.testing.TestLogging
@@ -85,7 +87,7 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
     override fun onFinishInflate() {
         super.onFinishInflate()
         iconView =
-            getOrInflateIconView(R.id.icon).apply {
+            (findViewById<View>(R.id.icon) as TaskViewIcon).apply {
                 setIcon(
                     this,
                     ResourcesCompat.getDrawable(
@@ -107,6 +109,16 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
                     resources.getColor(android.R.color.system_neutral2_300, context.theme)
                 )
             }
+    }
+
+    override fun inflateViewStubs() {
+        findViewById<ViewStub>(R.id.icon)
+            ?.apply {
+                layoutResource =
+                    if (enableOverviewIconMenu()) R.layout.icon_app_chip_view
+                    else R.layout.icon_view
+            }
+            ?.inflate()
     }
 
     /** Updates this desktop task to the gives task list defined in `tasks` */

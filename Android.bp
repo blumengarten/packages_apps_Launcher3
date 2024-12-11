@@ -475,6 +475,9 @@ android_library {
     ],
     manifest: "quickstep/AndroidManifest.xml",
     min_sdk_version: "current",
+    lint: {
+        disabled_checks: ["MissingClass"],
+    },
 }
 
 // Library with all the source code and dependencies for building Launcher Go

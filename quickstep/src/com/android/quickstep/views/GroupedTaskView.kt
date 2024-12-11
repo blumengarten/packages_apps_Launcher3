@@ -21,8 +21,10 @@ import android.graphics.PointF
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
+import android.view.ViewStub
 import com.android.internal.jank.Cuj
 import com.android.launcher3.Flags.enableOverviewIconMenu
+import com.android.launcher3.Flags.enableRefactorTaskThumbnail
 import com.android.launcher3.R
 import com.android.launcher3.Utilities
 import com.android.launcher3.config.FeatureFlags
@@ -80,6 +82,24 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         if (!enableOverviewIconMenu()) {
             updateIconPlacement()
         }
+    }
+
+    override fun inflateViewStubs() {
+        super.inflateViewStubs()
+        findViewById<ViewStub>(R.id.bottomright_snapshot)
+            ?.apply {
+                layoutResource =
+                    if (enableRefactorTaskThumbnail()) R.layout.task_thumbnail
+                    else R.layout.task_thumbnail_deprecated
+            }
+            ?.inflate()
+        findViewById<ViewStub>(R.id.bottomRight_icon)
+            ?.apply {
+                layoutResource =
+                    if (enableOverviewIconMenu()) R.layout.icon_app_chip_view
+                    else R.layout.icon_view
+            }
+            ?.inflate()
     }
 
     override fun onRecycle() {

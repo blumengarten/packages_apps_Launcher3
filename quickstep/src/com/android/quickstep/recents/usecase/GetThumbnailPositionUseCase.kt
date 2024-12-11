@@ -24,18 +24,17 @@ import com.android.quickstep.recents.data.RecentsRotationStateRepository
 import com.android.quickstep.recents.usecase.ThumbnailPositionState.MatrixScaling
 import com.android.quickstep.recents.usecase.ThumbnailPositionState.MissingThumbnail
 import com.android.systemui.shared.recents.utilities.PreviewPositionHelper
-import kotlinx.coroutines.flow.firstOrNull
 
 /** Use case for retrieving [Matrix] for positioning Thumbnail in a View */
 class GetThumbnailPositionUseCase(
     private val deviceProfileRepository: RecentsDeviceProfileRepository,
     private val rotationStateRepository: RecentsRotationStateRepository,
     private val tasksRepository: RecentTasksRepository,
-    private val previewPositionHelper: PreviewPositionHelper = PreviewPositionHelper()
+    private val previewPositionHelper: PreviewPositionHelper = PreviewPositionHelper(),
 ) {
-    suspend fun run(taskId: Int, width: Int, height: Int, isRtl: Boolean): ThumbnailPositionState {
+    fun run(taskId: Int, width: Int, height: Int, isRtl: Boolean): ThumbnailPositionState {
         val thumbnailData =
-            tasksRepository.getThumbnailById(taskId).firstOrNull() ?: return MissingThumbnail
+            tasksRepository.getCurrentThumbnailById(taskId) ?: return MissingThumbnail
         val thumbnail = thumbnailData.thumbnail ?: return MissingThumbnail
         previewPositionHelper.updateThumbnailMatrix(
             Rect(0, 0, thumbnail.width, thumbnail.height),
@@ -44,11 +43,11 @@ class GetThumbnailPositionUseCase(
             height,
             deviceProfileRepository.getRecentsDeviceProfile().isLargeScreen,
             rotationStateRepository.getRecentsRotationState().activityRotation,
-            isRtl
+            isRtl,
         )
         return MatrixScaling(
             previewPositionHelper.matrix,
-            previewPositionHelper.isOrientationChanged
+            previewPositionHelper.isOrientationChanged,
         )
     }
 }

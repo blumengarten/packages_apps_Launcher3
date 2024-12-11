@@ -72,6 +72,8 @@ class TasksRepository(
     override fun getThumbnailById(taskId: Int) =
         getTaskDataById(taskId).map { it?.thumbnail }.distinctUntilChangedBy { it?.snapshotId }
 
+    override fun getCurrentThumbnailById(taskId: Int) = tasks.value[taskId]?.thumbnail
+
     override fun setVisibleTasks(visibleTaskIdList: Set<Int>) {
         val tasksNoLongerVisible = taskRequests.keys.subtract(visibleTaskIdList)
         val newlyVisibleTasks = visibleTaskIdList.subtract(taskRequests.keys)

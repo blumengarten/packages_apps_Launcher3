@@ -866,13 +866,19 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
             TaskbarNavButtonController navButtonController) {
         final RectF rect = new RectF();
         buttonView.setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            int motionEventAction = event.getAction();
+            if (motionEventAction == MotionEvent.ACTION_DOWN) {
                 rect.set(0, 0, v.getWidth(), v.getHeight());
             }
-            boolean isCancelled = event.getAction() == MotionEvent.ACTION_CANCEL
-                    || !rect.contains(event.getX(), event.getY());
-            if (event.getAction() == MotionEvent.ACTION_MOVE && !isCancelled) return false;
-            int motionEventAction = event.getAction();
+            boolean isCancelled = motionEventAction == MotionEvent.ACTION_CANCEL
+                    || (!rect.contains(event.getX(), event.getY())
+                    && (motionEventAction == MotionEvent.ACTION_MOVE
+                    || motionEventAction == MotionEvent.ACTION_UP));
+            if (motionEventAction != MotionEvent.ACTION_DOWN
+                    && motionEventAction != MotionEvent.ACTION_UP && !isCancelled) {
+                // return early. we don't care about any other cases than DOWN, UP and CANCEL
+                return false;
+            }
             int keyEventAction = motionEventAction == MotionEvent.ACTION_DOWN
                     ? KeyEvent.ACTION_DOWN : ACTION_UP;
             navButtonController.sendBackKeyEvent(keyEventAction, isCancelled);

@@ -24,8 +24,8 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import android.view.ViewOutlineProvider
+import android.widget.FrameLayout
 import androidx.annotation.ColorInt
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isInvisible
 import com.android.launcher3.R
 import com.android.launcher3.util.ViewPool
@@ -46,7 +46,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-class TaskThumbnailView : ConstraintLayout, ViewPool.Reusable {
+class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
     private lateinit var viewData: TaskThumbnailViewData
     private lateinit var viewModel: TaskThumbnailViewModel
 

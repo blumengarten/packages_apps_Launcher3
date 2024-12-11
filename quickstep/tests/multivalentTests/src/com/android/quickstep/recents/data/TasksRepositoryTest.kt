@@ -87,6 +87,48 @@ class TasksRepositoryTest {
         }
 
     @Test
+    fun getThumbnailByIdReturnsNullWithNoLoadedThumbnails() =
+        testScope.runTest {
+            recentsModel.seedTasks(defaultTaskList)
+            systemUnderTest.getAllTaskData(forceRefresh = true)
+
+            assertThat(systemUnderTest.getThumbnailById(1).first()).isNull()
+        }
+
+    @Test
+    fun getCurrentThumbnailByIdReturnsNullWithNoLoadedThumbnails() =
+        testScope.runTest {
+            recentsModel.seedTasks(defaultTaskList)
+            systemUnderTest.getAllTaskData(forceRefresh = true)
+
+            assertThat(systemUnderTest.getCurrentThumbnailById(1)).isNull()
+        }
+
+    @Test
+    fun getThumbnailByIdReturnsThumbnailWithLoadedThumbnails() =
+        testScope.runTest {
+            recentsModel.seedTasks(defaultTaskList)
+            systemUnderTest.getAllTaskData(forceRefresh = true)
+            val bitmap1 = taskThumbnailDataSource.taskIdToBitmap[1]
+
+            systemUnderTest.setVisibleTasks(setOf(1))
+
+            assertThat(systemUnderTest.getThumbnailById(1).first()!!.thumbnail).isEqualTo(bitmap1)
+        }
+
+    @Test
+    fun getCurrentThumbnailByIdReturnsThumbnailWithLoadedThumbnails() =
+        testScope.runTest {
+            recentsModel.seedTasks(defaultTaskList)
+            systemUnderTest.getAllTaskData(forceRefresh = true)
+            val bitmap1 = taskThumbnailDataSource.taskIdToBitmap[1]
+
+            systemUnderTest.setVisibleTasks(setOf(1))
+
+            assertThat(systemUnderTest.getCurrentThumbnailById(1)?.thumbnail).isEqualTo(bitmap1)
+        }
+
+    @Test
     fun setVisibleTasksPopulatesThumbnails() =
         testScope.runTest {
             recentsModel.seedTasks(defaultTaskList)

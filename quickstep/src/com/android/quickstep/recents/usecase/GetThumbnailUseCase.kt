@@ -18,13 +18,9 @@ package com.android.quickstep.recents.usecase
 
 import android.graphics.Bitmap
 import com.android.quickstep.recents.data.RecentTasksRepository
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.runBlocking
 
 /** Use case for retrieving thumbnail. */
 class GetThumbnailUseCase(private val taskRepository: RecentTasksRepository) {
     /** Returns the latest thumbnail associated with [taskId] if loaded, or null otherwise */
-    fun run(taskId: Int): Bitmap? = runBlocking {
-        taskRepository.getThumbnailById(taskId).firstOrNull()?.thumbnail
-    }
+    fun run(taskId: Int): Bitmap? = taskRepository.getCurrentThumbnailById(taskId)?.thumbnail
 }

@@ -44,7 +44,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TaskThumbnailViewModelImpl(
@@ -109,17 +108,14 @@ class TaskThumbnailViewModelImpl(
         splashProgress.value = splashAlphaUseCase.execute(taskId)
     }
 
-    override fun getThumbnailPositionState(width: Int, height: Int, isRtl: Boolean): Matrix {
-        return runBlocking {
-            when (
-                val thumbnailPositionState =
-                    getThumbnailPositionUseCase.run(taskId, width, height, isRtl)
-            ) {
-                is ThumbnailPositionState.MatrixScaling -> thumbnailPositionState.matrix
-                is ThumbnailPositionState.MissingThumbnail -> Matrix.IDENTITY_MATRIX
-            }
+    override fun getThumbnailPositionState(width: Int, height: Int, isRtl: Boolean): Matrix =
+        when (
+            val thumbnailPositionState =
+                getThumbnailPositionUseCase.run(taskId, width, height, isRtl)
+        ) {
+            is ThumbnailPositionState.MatrixScaling -> thumbnailPositionState.matrix
+            is ThumbnailPositionState.MissingThumbnail -> Matrix.IDENTITY_MATRIX
         }
-    }
 
     private fun isBackgroundOnly(task: Task): Boolean = task.isLocked || task.thumbnail == null
 

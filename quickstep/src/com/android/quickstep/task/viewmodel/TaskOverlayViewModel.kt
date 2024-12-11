@@ -28,7 +28,6 @@ import com.android.systemui.shared.recents.model.Task
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 
 /** View model for TaskOverlay */
 class TaskOverlayViewModel(
@@ -41,7 +40,7 @@ class TaskOverlayViewModel(
         combine(
                 recentsViewData.overlayEnabled,
                 recentsViewData.settledFullyVisibleTaskIds.map { it.contains(task.key.id) },
-                recentTasksRepository.getThumbnailById(task.key.id)
+                recentTasksRepository.getThumbnailById(task.key.id),
             ) { isOverlayEnabled, isFullyVisible, thumbnailData ->
                 if (isOverlayEnabled && isFullyVisible) {
                     Enabled(
@@ -55,24 +54,22 @@ class TaskOverlayViewModel(
             .distinctUntilChanged()
 
     fun getThumbnailPositionState(width: Int, height: Int, isRtl: Boolean): ThumbnailPositionState {
-        return runBlocking {
-            val matrix: Matrix
-            val isRotated: Boolean
-            when (
-                val thumbnailPositionState =
-                    getThumbnailPositionUseCase.run(task.key.id, width, height, isRtl)
-            ) {
-                is MatrixScaling -> {
-                    matrix = thumbnailPositionState.matrix
-                    isRotated = thumbnailPositionState.isRotated
-                }
-                is MissingThumbnail -> {
-                    matrix = Matrix.IDENTITY_MATRIX
-                    isRotated = false
-                }
+        val matrix: Matrix
+        val isRotated: Boolean
+        when (
+            val thumbnailPositionState =
+                getThumbnailPositionUseCase.run(task.key.id, width, height, isRtl)
+        ) {
+            is MatrixScaling -> {
+                matrix = thumbnailPositionState.matrix
+                isRotated = thumbnailPositionState.isRotated
             }
-            ThumbnailPositionState(matrix, isRotated)
+            is MissingThumbnail -> {
+                matrix = Matrix.IDENTITY_MATRIX
+                isRotated = false
+            }
         }
+        return ThumbnailPositionState(matrix, isRotated)
     }
 
     data class ThumbnailPositionState(val matrix: Matrix, val isRotated: Boolean)

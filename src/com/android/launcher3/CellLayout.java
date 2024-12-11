@@ -1816,13 +1816,19 @@ public class CellLayout extends ViewGroup {
                 + (int) Math.ceil(getUnusedHorizontalSpace() / 2f);
         final int vStartPadding = getPaddingTop();
 
-        int x = hStartPadding + (cellX * mBorderSpace.x) + (cellX * cellWidth);
+        int x = hStartPadding + (cellX * mBorderSpace.x) + (cellX * cellWidth)
+                + getTranslationXForCell(cellX, cellY);
         int y = vStartPadding + (cellY * mBorderSpace.y) + (cellY * cellHeight);
 
         int width = cellHSpan * cellWidth + ((cellHSpan - 1) * mBorderSpace.x);
         int height = cellVSpan * cellHeight + ((cellVSpan - 1) * mBorderSpace.y);
 
         resultRect.set(x, y, x + width, y + height);
+    }
+
+    /** Enables successors to provide an X adjustment for the cell. */
+    protected int getTranslationXForCell(int cellX, int cellY) {
+        return 0;
     }
 
     public void markCellsAsOccupiedForView(View view) {

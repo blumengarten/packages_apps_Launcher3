@@ -148,11 +148,12 @@ public class WidgetRecommendationCategoryProviderTest {
 
         doAnswer(invocation -> widgetLabel).when(mIconCache).getTitleNoCache(any());
 
-        AppWidgetProviderInfo providerInfo = WidgetUtils.createAppWidgetProviderInfo(ComponentName
-                .createRelative(TEST_PACKAGE, widgetClassName));
+        AppWidgetProviderInfo providerInfo = WidgetUtils.createAppWidgetProviderInfo(
+                ComponentName.createRelative(TEST_PACKAGE, widgetClassName));
 
         LauncherAppWidgetProviderInfo launcherAppWidgetProviderInfo =
-                LauncherAppWidgetProviderInfo.fromProviderInfo(mContext, providerInfo);
+                spy(LauncherAppWidgetProviderInfo.fromProviderInfo(mContext, providerInfo));
+        doReturn(Process.myUserHandle()).when(launcherAppWidgetProviderInfo).getProfile();
         launcherAppWidgetProviderInfo.spanX = 2;
         launcherAppWidgetProviderInfo.spanY = 2;
         launcherAppWidgetProviderInfo.label = widgetLabel;

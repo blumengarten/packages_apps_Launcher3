@@ -31,7 +31,6 @@ import android.util.AttributeSet
 import android.util.FloatProperty
 import android.util.Log
 import android.view.Display
-import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnClickListener
@@ -78,7 +77,6 @@ import com.android.quickstep.RemoteAnimationTargets
 import com.android.quickstep.TaskOverlayFactory
 import com.android.quickstep.TaskViewUtils
 import com.android.quickstep.orientation.RecentsPagedOrientationHandler
-import com.android.quickstep.task.thumbnail.TaskThumbnailView
 import com.android.quickstep.util.ActiveGestureErrorDetector
 import com.android.quickstep.util.ActiveGestureLog
 import com.android.quickstep.util.BorderAnimator
@@ -694,6 +692,28 @@ constructor(
         return super.performAccessibilityAction(action, arguments)
     }
 
+    override fun onFinishInflate() {
+        super.onFinishInflate()
+        inflateViewStubs()
+    }
+
+    protected open fun inflateViewStubs() {
+        findViewById<ViewStub>(R.id.snapshot)
+            ?.apply {
+                layoutResource =
+                    if (enableRefactorTaskThumbnail()) R.layout.task_thumbnail
+                    else R.layout.task_thumbnail_deprecated
+            }
+            ?.inflate()
+        findViewById<ViewStub>(R.id.icon)
+            ?.apply {
+                layoutResource =
+                    if (enableOverviewIconMenu()) R.layout.icon_app_chip_view
+                    else R.layout.icon_view
+            }
+            ?.inflate()
+    }
+
     /** Updates this task view to the given {@param task}. */
     open fun bind(
         task: Task,
@@ -735,27 +755,11 @@ constructor(
         @StagePosition stagePosition: Int,
         taskOverlayFactory: TaskOverlayFactory,
     ): TaskContainer {
-        val existingThumbnailView: View = findViewById(thumbnailViewId)!!
-        val snapshotView =
-            when {
-                !enableRefactorTaskThumbnail() -> existingThumbnailView
-                existingThumbnailView is TaskThumbnailView -> existingThumbnailView
-                else -> {
-                    val indexOfSnapshotView = indexOfChild(existingThumbnailView)
-                    LayoutInflater.from(context)
-                        .inflate(R.layout.task_thumbnail, this, false)
-                        .also {
-                            it.id = thumbnailViewId
-                            addView(it, indexOfSnapshotView, existingThumbnailView.layoutParams)
-                            removeView(existingThumbnailView)
-                        }
-                }
-            }
-        val iconView = getOrInflateIconView(iconViewId)
+        val iconView = findViewById<View>(iconViewId) as TaskViewIcon
         return TaskContainer(
             this,
             task,
-            snapshotView,
+            findViewById(thumbnailViewId),
             iconView,
             TransformingTouchDelegate(iconView.asView()),
             stagePosition,
@@ -763,18 +767,6 @@ constructor(
             findViewById(showWindowViewId)!!,
             taskOverlayFactory,
         )
-    }
-
-    protected fun getOrInflateIconView(@IdRes iconViewId: Int): TaskViewIcon {
-        val iconView = findViewById<View>(iconViewId)!!
-        return iconView as? TaskViewIcon
-            ?: (iconView as ViewStub)
-                .apply {
-                    layoutResource =
-                        if (enableOverviewIconMenu()) R.layout.icon_app_chip_view
-                        else R.layout.icon_view
-                }
-                .inflate() as TaskViewIcon
     }
 
     fun containsMultipleTasks() = taskContainers.size > 1

@@ -24,6 +24,7 @@ import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCH
 import static com.android.launcher3.testing.shared.TestProtocol.NORMAL_STATE_ORDINAL;
 import static com.android.launcher3.views.RecyclerViewFastScroller.FastScrollerLocation.WIDGET_SCROLLER;
 
+import static java.lang.Math.abs;
 import static java.util.Collections.emptyList;
 
 import android.animation.Animator;
@@ -41,6 +42,7 @@ import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.WindowInsets;
@@ -119,6 +121,10 @@ public class WidgetsFullSheet extends BaseWidgetSheet
     protected int mRecommendationsCurrentPage = 0;
     protected final SparseArray<AdapterHolder> mAdapters = new SparseArray();
 
+    // Helps with removing focus from searchbar by analyzing motion events.
+    private final SearchClearFocusHelper mSearchClearFocusHelper = new SearchClearFocusHelper();
+    private final float mTouchSlop; // initialized in constructor
+
     private final OnAttachStateChangeListener mBindScrollbarInSearchMode =
             new OnAttachStateChangeListener() {
                 @Override
@@ -165,6 +171,7 @@ public class WidgetsFullSheet extends BaseWidgetSheet
 
     public WidgetsFullSheet(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
         mDeviceProfile = mActivityContext.getDeviceProfile();
         mUserCache = UserCache.INSTANCE.get(context);
         mHasWorkProfile = mUserCache.getUserProfiles()
@@ -714,10 +721,14 @@ public class WidgetsFullSheet extends BaseWidgetSheet
     public boolean onControllerInterceptTouchEvent(MotionEvent ev) {
         if (ev.getAction() == MotionEvent.ACTION_DOWN) {
             mNoIntercept = shouldScroll(ev);
-            if (mSearchBar.isSearchBarFocused()
-                    && !getPopupContainer().isEventOverView(mSearchBarContainer, ev)) {
-                mSearchBar.clearSearchBarFocus();
-            }
+        }
+
+        // Clear focus only if user touched outside of search area and handling focus out ourselves
+        // was necessary (e.g. when it's not predictive back, but other user interaction).
+        if (mSearchBar.isSearchBarFocused()
+                && !getPopupContainer().isEventOverView(mSearchBarContainer, ev)
+                && mSearchClearFocusHelper.shouldClearFocus(ev, mTouchSlop)) {
+            mSearchBar.clearSearchBarFocus();
         }
 
         return super.onControllerInterceptTouchEvent(ev);
@@ -1139,6 +1150,55 @@ public class WidgetsFullSheet extends BaseWidgetSheet
                 mWidgetsRecyclerView.addOnAttachStateChangeListener(mBindScrollbarInSearchMode);
             }
             mWidgetsListAdapter.setMaxHorizontalSpansPxPerRow(mMaxSpanPerRow);
+        }
+    }
+
+    /**
+     * Helper to identify if searchbar's focus can be cleared when user performs an action
+     * outside search.
+     */
+    private static class SearchClearFocusHelper {
+        private float mFirstInteractionX = -1f;
+        private float mFirstInteractionY = -1f;
+
+        /**
+         * For a given [MotionEvent] indicates if we should clear focus from search (and hide IME).
+         */
+        boolean shouldClearFocus(MotionEvent ev, float touchSlop) {
+            int action = ev.getAction();
+            boolean clearFocus = false;
+
+            if (action == MotionEvent.ACTION_DOWN) {
+                mFirstInteractionX = ev.getX();
+                mFirstInteractionY = ev.getY();
+            } else if (action == MotionEvent.ACTION_CANCEL) {
+                // This is when user performed a gesture e.g. predictive back
+                // We don't handle it ourselves and let IME handle the close.
+                mFirstInteractionY = -1;
+                mFirstInteractionX = -1;
+            } else if (action == MotionEvent.ACTION_UP) {
+                // Its clear that user action wasn't predictive back - but press / scroll etc. that
+                // should hide the keyboard.
+                clearFocus = true;
+                mFirstInteractionY = -1;
+                mFirstInteractionX = -1;
+            } else if (action == MotionEvent.ACTION_MOVE) {
+                // Sometimes, on move, we may not receive ACTION_UP, but if the move was within
+                // touch slop and we didn't know if its moved or cancelled, we can clear focus.
+                // Example case: Apps list is small and you do a little scroll on list - in such, we
+                // want to still hide the keyboard.
+                if (mFirstInteractionX != -1 && mFirstInteractionY != -1) {
+                    float distY = abs(mFirstInteractionY - ev.getY());
+                    float distX = abs(mFirstInteractionX - ev.getX());
+                    if (distY >= touchSlop || distX >= touchSlop) {
+                        clearFocus = true;
+                        mFirstInteractionY = -1;
+                        mFirstInteractionX = -1;
+                    }
+                }
+            }
+
+            return clearFocus;
         }
     }
 }

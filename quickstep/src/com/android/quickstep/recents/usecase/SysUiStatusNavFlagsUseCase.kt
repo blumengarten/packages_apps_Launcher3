@@ -22,14 +22,11 @@ import com.android.launcher3.util.SystemUiController.FLAG_DARK_STATUS
 import com.android.launcher3.util.SystemUiController.FLAG_LIGHT_NAV
 import com.android.launcher3.util.SystemUiController.FLAG_LIGHT_STATUS
 import com.android.quickstep.recents.data.RecentTasksRepository
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.runBlocking
 
 /** UseCase to calculate flags for status bar and navigation bar */
 class SysUiStatusNavFlagsUseCase(private val taskRepository: RecentTasksRepository) {
     fun getSysUiStatusNavFlags(taskId: Int): Int {
-        val thumbnailData =
-            runBlocking { taskRepository.getThumbnailById(taskId).firstOrNull() } ?: return 0
+        val thumbnailData = taskRepository.getCurrentThumbnailById(taskId) ?: return 0
 
         val thumbnailAppearance = thumbnailData.appearance
         var flags = 0
