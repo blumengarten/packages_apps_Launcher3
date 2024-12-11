@@ -21,6 +21,7 @@ import android.platform.test.flag.junit.SetFlagsRule
 import android.view.View
 import com.android.launcher3.Flags.FLAG_TASKBAR_RECENTS_LAYOUT_TRANSITION
 import com.android.launcher3.R
+import com.android.launcher3.statehandlers.DesktopVisibilityController
 import com.android.launcher3.taskbar.TaskbarControllerTestUtil.runOnMainSync
 import com.android.launcher3.taskbar.TaskbarIconType.ALL_APPS
 import com.android.launcher3.taskbar.TaskbarIconType.DIVIDER
@@ -39,6 +40,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.whenever
 
 @RunWith(LauncherMultivalentJUnit::class)
 @EmulatedDevices(["pixelFoldable2023", "pixelTablet2023"])
@@ -53,6 +55,9 @@ class TaskbarViewWithLayoutTransitionTest {
 
     private val iconViews: Array<View>
         get() = taskbarView.iconViews
+
+    private val desktopVisibilityController: DesktopVisibilityController
+        get() = DesktopVisibilityController.INSTANCE[context]
 
     @Before
     fun obtainView() {
@@ -224,5 +229,35 @@ class TaskbarViewWithLayoutTransitionTest {
             taskbarView.updateItems(emptyArray(), listOf(recents.first()))
             assertThat(expectedViewToRemove in iconViews).isFalse()
         }
+    }
+
+    @Test
+    fun testUpdateItems_desktopMode_hotseatItem_noDivider() {
+        whenever(desktopVisibilityController.isInDesktopMode(context.displayId)).thenReturn(true)
+        runOnMainSync { taskbarView.updateItems(createHotseatItems(1), emptyList()) }
+        assertThat(taskbarView).hasIconTypes(ALL_APPS, HOTSEAT)
+    }
+
+    @Test
+    @ForceRtl
+    fun testUpdateItems_rtlAndDesktopMode_hotseatItem_noDivider() {
+        whenever(desktopVisibilityController.isInDesktopMode(context.displayId)).thenReturn(true)
+        runOnMainSync { taskbarView.updateItems(createHotseatItems(1), emptyList()) }
+        assertThat(taskbarView).hasIconTypes(HOTSEAT, ALL_APPS)
+    }
+
+    @Test
+    fun testUpdateItems_desktopMode_recentItem_hasDivider() {
+        whenever(desktopVisibilityController.isInDesktopMode(context.displayId)).thenReturn(true)
+        runOnMainSync { taskbarView.updateItems(emptyArray(), createRecents(1)) }
+        assertThat(taskbarView).hasIconTypes(ALL_APPS, DIVIDER, RECENT)
+    }
+
+    @Test
+    @ForceRtl
+    fun testUpdateItems_rtlAndDesktopMode_recentItem_hasDivider() {
+        whenever(desktopVisibilityController.isInDesktopMode(context.displayId)).thenReturn(true)
+        runOnMainSync { taskbarView.updateItems(emptyArray(), createRecents(1)) }
+        assertThat(taskbarView).hasIconTypes(RECENT, DIVIDER, ALL_APPS)
     }
 }
