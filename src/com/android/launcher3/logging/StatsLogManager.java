@@ -301,6 +301,12 @@ public class StatsLogManager implements ResourceBasedOverride {
         @UiEvent(doc = "User swipes or fling in RIGHT direction on the bottom bazel area.")
         LAUNCHER_QUICKSWITCH_RIGHT(572),
 
+        @UiEvent(doc = "User swipes or fling on the bottom bazel area to enter Desktop mode.")
+        LAUNCHER_QUICKSWITCH_ENTER_DESKTOP_MODE(2025),
+
+        @UiEvent(doc = "User swipes or fling on the bottom bazel area to exit Desktop mode.")
+        LAUNCHER_QUICKSWITCH_EXIT_DESKTOP_MODE(2026),
+
         @UiEvent(doc = "User swipes or fling in DOWN direction on the bottom bazel area.")
         LAUNCHER_SWIPEDOWN_NAVBAR(573),
 

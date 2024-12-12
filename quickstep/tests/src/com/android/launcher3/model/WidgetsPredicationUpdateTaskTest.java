@@ -42,13 +42,13 @@ import android.appwidget.AppWidgetProviderInfo;
 import android.content.ComponentName;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.LauncherApps;
+import android.os.Process;
 import android.os.UserHandle;
 import android.platform.test.annotations.DisableFlags;
 import android.platform.test.annotations.EnableFlags;
 import android.platform.test.flag.junit.SetFlagsRule;
 import android.text.TextUtils;
 
-import androidx.test.core.content.pm.ApplicationInfoBuilder;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
 
@@ -122,10 +122,10 @@ public final class WidgetsPredicationUpdateTaskTest {
         mLauncherApps = mModelHelper.sandboxContext.spyService(LauncherApps.class);
         doAnswer(i -> {
             String pkg = i.getArgument(0);
-            ApplicationInfo applicationInfo = ApplicationInfoBuilder.newBuilder()
-                    .setPackageName(pkg)
-                    .setName("App " + pkg)
-                    .build();
+            ApplicationInfo applicationInfo = new ApplicationInfo();
+            applicationInfo.packageName = pkg;
+            applicationInfo.name = "App " + pkg;
+            applicationInfo.uid = Process.myUid();
             applicationInfo.category = CATEGORY_PRODUCTIVITY;
             applicationInfo.flags = FLAG_INSTALLED;
             return applicationInfo;

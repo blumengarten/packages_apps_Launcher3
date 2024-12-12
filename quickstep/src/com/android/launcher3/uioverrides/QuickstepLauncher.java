@@ -65,7 +65,6 @@ import static com.android.quickstep.util.AnimUtils.completeRunnableListCallback;
 import static com.android.quickstep.util.SplitAnimationTimings.TABLET_HOME_TO_SPLIT;
 import static com.android.systemui.shared.system.ActivityManagerWrapper.CLOSE_SYSTEM_WINDOWS_REASON_HOME_KEY;
 import static com.android.wm.shell.Flags.enableBubbleAnything;
-import static com.android.wm.shell.Flags.enableBubbleBarInPersistentTaskBar;
 import static com.android.wm.shell.shared.split.SplitScreenConstants.SNAP_TO_2_50_50;
 
 import android.animation.Animator;
@@ -1134,9 +1133,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     /** Provides the translation X for the hotseat item. */
     public int getHotseatItemTranslationX(ItemInfo itemInfo) {
         int translationX = 0;
-        if (isBubbleBarEnabled()
-                && enableBubbleBarInPersistentTaskBar()
-                && mBubbleBarLocation != null) {
+        if (isBubbleBarEnabled() && mBubbleBarLocation != null) {
             boolean isBubblesOnLeft = mBubbleBarLocation.isOnLeft(isRtl(getResources()));
             translationX += mDeviceProfile
                     .getHotseatTranslationXForNavBar(this, isBubblesOnLeft);

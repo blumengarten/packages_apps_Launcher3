@@ -62,6 +62,7 @@ import com.android.launcher3.anim.PendingAnimation;
 import com.android.launcher3.anim.SpringAnimationBuilder;
 import com.android.launcher3.states.StateAnimationConfig;
 import com.android.launcher3.util.DisplayController;
+import com.android.launcher3.util.MSDLPlayerWrapper;
 import com.android.quickstep.fallback.FallbackRecentsView;
 import com.android.quickstep.fallback.RecentsState;
 import com.android.quickstep.util.RectFSpringAnim;
@@ -102,9 +103,10 @@ public class FallbackSwipeHandler extends
 
     public FallbackSwipeHandler(Context context, RecentsAnimationDeviceState deviceState,
             TaskAnimationManager taskAnimationManager, GestureState gestureState, long touchTimeMs,
-            boolean continuingLastGesture, InputConsumerController inputConsumer) {
+            boolean continuingLastGesture, InputConsumerController inputConsumer,
+            MSDLPlayerWrapper msdlPlayerWrapper) {
         super(context, deviceState, taskAnimationManager, gestureState, touchTimeMs,
-                continuingLastGesture, inputConsumer, null);
+                continuingLastGesture, inputConsumer, null, msdlPlayerWrapper);
 
         mRunningOverHome = mGestureState.getRunningTask() != null
                 && mGestureState.getRunningTask().isHomeTask();

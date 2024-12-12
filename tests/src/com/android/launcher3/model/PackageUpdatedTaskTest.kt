@@ -21,7 +21,7 @@ import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherActivityInfo
 import android.content.pm.LauncherApps
-import android.os.UserHandle
+import android.os.Process.myUserHandle
 import android.platform.test.annotations.EnableFlags
 import android.platform.test.flag.junit.SetFlagsRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -60,7 +60,7 @@ class PackageUpdatedTaskTest {
 
     @get:Rule val setFlagsRule = SetFlagsRule()
 
-    private val mUser = UserHandle(0)
+    private val mUser = myUserHandle()
     private val mDataModel: BgDataModel = BgDataModel()
     private val mLauncherModelHelper = LauncherModelHelper()
     private val mContext: SandboxModelContext = spy(mLauncherModelHelper.sandboxContext)

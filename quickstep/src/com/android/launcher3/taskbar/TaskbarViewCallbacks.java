@@ -36,7 +36,6 @@ import com.android.internal.jank.Cuj;
 import com.android.launcher3.taskbar.bubbles.BubbleBarViewController;
 import com.android.launcher3.util.DisplayController;
 import com.android.systemui.shared.system.InteractionJankMonitorWrapper;
-import com.android.wm.shell.Flags;
 import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
 
 /**
@@ -159,10 +158,9 @@ public class TaskbarViewCallbacks {
                 .orElse(0f);
     }
 
-    /** Returns true if bubble bar controllers present and enabled in persistent taskbar. */
-    public boolean isBubbleBarEnabledInPersistentTaskbar() {
-        return Flags.enableBubbleBarInPersistentTaskBar()
-                && mControllers.bubbleControllers.isPresent();
+    /** Returns true if bubble bar controllers are present. */
+    public boolean isBubbleBarEnabled() {
+        return mControllers.bubbleControllers.isPresent();
     }
 
     /** Returns on click listener for the taskbar overflow view. */

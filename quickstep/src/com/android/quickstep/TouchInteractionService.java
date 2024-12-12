@@ -83,6 +83,7 @@ import com.android.launcher3.testing.shared.ResourceUtils;
 import com.android.launcher3.testing.shared.TestProtocol;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.LockedUserState;
+import com.android.launcher3.util.MSDLPlayerWrapper;
 import com.android.launcher3.util.NavigationMode;
 import com.android.launcher3.util.PluginManagerWrapper;
 import com.android.launcher3.util.SafeCloseable;
@@ -1274,20 +1275,20 @@ public class TouchInteractionService extends Service {
             GestureState gestureState, long touchTimeMs) {
         return new LauncherSwipeHandlerV2(this, mDeviceState, mTaskAnimationManager,
                 gestureState, touchTimeMs, mTaskAnimationManager.isRecentsAnimationRunning(),
-                mInputConsumer);
+                mInputConsumer, MSDLPlayerWrapper.INSTANCE.get(this));
     }
 
     private AbsSwipeUpHandler createFallbackSwipeHandler(
             GestureState gestureState, long touchTimeMs) {
         return new FallbackSwipeHandler(this, mDeviceState, mTaskAnimationManager,
                 gestureState, touchTimeMs, mTaskAnimationManager.isRecentsAnimationRunning(),
-                mInputConsumer);
+                mInputConsumer, MSDLPlayerWrapper.INSTANCE.get(this));
     }
 
     private AbsSwipeUpHandler createRecentsWindowSwipeHandler(
             GestureState gestureState, long touchTimeMs) {
         return new RecentsWindowSwipeHandler(this, mDeviceState, mTaskAnimationManager,
                 gestureState, touchTimeMs, mTaskAnimationManager.isRecentsAnimationRunning(),
-                mInputConsumer, mRecentsWindowFactory);
+                mInputConsumer, mRecentsWindowFactory, MSDLPlayerWrapper.INSTANCE.get(this));
     }
 }

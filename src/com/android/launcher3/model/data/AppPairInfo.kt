@@ -32,9 +32,8 @@ class AppPairInfo() : CollectionInfo() {
     }
 
     /** Convenience constructor, calls primary constructor and init block */
-    constructor(app1: WorkspaceItemInfo, app2: WorkspaceItemInfo) : this() {
-        add(app1)
-        add(app2)
+    constructor(apps: List<WorkspaceItemInfo>) : this() {
+        apps.forEach(this::add)
     }
 
     /** Creates a new AppPairInfo that is a copy of the provided one. */

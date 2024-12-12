@@ -772,7 +772,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
      * aligned - returns 0.
      */
     public float getTranslationXForBubbleBarPosition(BubbleBarLocation location) {
-        if (!mControllerCallbacks.isBubbleBarEnabledInPersistentTaskbar()
+        if (!mControllerCallbacks.isBubbleBarEnabled()
                 || location == mBubbleBarLocation
                 || !mActivityContext.shouldStartAlignTaskbar()
         ) {
@@ -792,7 +792,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         int iconEnd = centerAlignIconEnd;
         if (mShouldTryStartAlign) {
             int startSpacingPx = deviceProfile.inlineNavButtonsEndSpacingPx;
-            if (mControllerCallbacks.isBubbleBarEnabledInPersistentTaskbar()
+            if (mControllerCallbacks.isBubbleBarEnabled()
                     && mBubbleBarLocation != null
                     && mActivityContext.shouldStartAlignTaskbar()) {
                 iconEnd = (int) getTaskBarIconsEndForBubbleBarLocation(mBubbleBarLocation);

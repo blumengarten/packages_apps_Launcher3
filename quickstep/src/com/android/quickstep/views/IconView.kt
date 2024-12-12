@@ -25,10 +25,13 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.core.view.updateLayoutParams
 import com.android.launcher3.DeviceProfile
+import com.android.launcher3.Flags
 import com.android.launcher3.Utilities
+import com.android.launcher3.util.MSDLPlayerWrapper
 import com.android.launcher3.util.MultiValueAlpha
 import com.android.launcher3.views.ActivityContext
 import com.android.quickstep.util.RecentsOrientedState
+import com.google.android.msdl.data.model.MSDLToken
 
 /**
  * A view which draws a drawable stretched to fit its size. Unlike ImageView, it avoids relayout
@@ -39,19 +42,32 @@ class IconView : View, TaskViewIcon {
     private var drawable: Drawable? = null
     private var drawableWidth = 0
     private var drawableHeight = 0
+    private var msdlPlayerWrapper: MSDLPlayerWrapper? = null
 
-    constructor(context: Context) : super(context)
+    constructor(context: Context) : super(context) {
+        msdlPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(context)
+    }
 
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
+        msdlPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(context)
+    }
 
     constructor(
         context: Context,
         attrs: AttributeSet?,
         defStyleAttr: Int,
-    ) : super(context, attrs, defStyleAttr)
+    ) : super(context, attrs, defStyleAttr) {
+        msdlPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(context)
+    }
 
     init {
         multiValueAlpha.setUpdateVisibility(true)
+        // Haptics are handled by the MSDLPlayerWrapper
+        isHapticFeedbackEnabled = !Flags.msdlFeedback() || msdlPlayerWrapper == null
+    }
+
+    override fun setOnLongClickListener(l: OnLongClickListener?) {
+        super.setOnLongClickListener(l?.withFeedback())
     }
 
     /** Sets a [Drawable] to be displayed. */
@@ -136,7 +152,7 @@ class IconView : View, TaskViewIcon {
             taskIconMargin = deviceProfile.overviewTaskMarginPx,
             taskIconHeight = deviceProfile.overviewTaskIconSizePx,
             thumbnailTopMargin = deviceProfile.overviewTaskThumbnailTopMarginPx,
-            isRtl = layoutDirection == LAYOUT_DIRECTION_RTL
+            isRtl = layoutDirection == LAYOUT_DIRECTION_RTL,
         )
         updateLayoutParams<FrameLayout.LayoutParams> {
             height = deviceProfile.overviewTaskIconSizePx
@@ -150,6 +166,16 @@ class IconView : View, TaskViewIcon {
     }
 
     override fun asView(): View = this
+
+    private fun OnLongClickListener.withFeedback(): OnLongClickListener {
+        val delegate = this
+        return OnLongClickListener { v: View ->
+            if (Flags.msdlFeedback()) {
+                msdlPlayerWrapper?.playToken(MSDLToken.LONG_PRESS)
+            }
+            delegate.onLongClick(v)
+        }
+    }
 
     companion object {
         private const val NUM_ALPHA_CHANNELS = 2

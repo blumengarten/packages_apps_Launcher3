@@ -28,8 +28,7 @@ import static com.android.launcher3.util.SplitConfigurationOptions.STAGE_POSITIO
 import static com.android.launcher3.util.SplitConfigurationOptions.STAGE_POSITION_TOP_OR_LEFT;
 import static com.android.wm.shell.shared.split.SplitScreenConstants.SNAP_TO_2_50_50;
 import static com.android.wm.shell.shared.split.SplitScreenConstants.SNAP_TO_NONE;
-import static com.android.wm.shell.shared.split.SplitScreenConstants.SPLIT_POSITION_BOTTOM_OR_RIGHT;
-import static com.android.wm.shell.shared.split.SplitScreenConstants.SPLIT_POSITION_TOP_OR_LEFT;
+import static com.android.wm.shell.shared.split.SplitScreenConstants.getIndex;
 import static com.android.wm.shell.shared.split.SplitScreenConstants.isPersistentSnapPosition;
 
 import android.content.Context;
@@ -55,6 +54,7 @@ import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.model.data.AppPairInfo;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
+import com.android.launcher3.model.data.TaskViewItemInfo;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
 import com.android.launcher3.taskbar.TaskbarActivityContext;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
@@ -74,6 +74,7 @@ import com.android.wm.shell.shared.split.SplitScreenConstants.PersistentSnapPosi
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -171,20 +172,6 @@ public class AppPairsController {
      */
     public void saveAppPair(GroupedTaskView gtv) {
         InteractionJankMonitorWrapper.begin(gtv, Cuj.CUJ_LAUNCHER_SAVE_APP_PAIR);
-        List<TaskContainer> containers = gtv.getTaskContainers();
-        WorkspaceItemInfo recentsInfo1 = containers.get(0).getItemInfo();
-        WorkspaceItemInfo recentsInfo2 = containers.get(1).getItemInfo();
-        WorkspaceItemInfo app1 = resolveAppPairWorkspaceInfo(recentsInfo1);
-        WorkspaceItemInfo app2 = resolveAppPairWorkspaceInfo(recentsInfo2);
-
-        if (app1 == null || app2 == null) {
-            // This shouldn't happen if canSaveAppPair() is called above, but log an error and do
-            // not create the app pair if the workspace items can't be resolved
-            Log.w(TAG, "Failed to save app pair due to invalid apps ("
-                    + "app1=" + recentsInfo1.getComponentKey().componentName
-                    + " app2=" + recentsInfo2.getComponentKey().componentName + ")");
-            return;
-        }
 
         @PersistentSnapPosition int snapPosition = gtv.getSnapPosition();
         if (snapPosition == SNAP_TO_NONE) {
@@ -198,9 +185,30 @@ public class AppPairsController {
             return;
         }
 
-        app1.rank = encodeRank(SPLIT_POSITION_TOP_OR_LEFT, snapPosition);
-        app2.rank = encodeRank(SPLIT_POSITION_BOTTOM_OR_RIGHT, snapPosition);
-        AppPairInfo newAppPair = new AppPairInfo(app1, app2);
+        List<TaskContainer> containers = gtv.getTaskContainers();
+        List<TaskViewItemInfo> recentsInfos =
+                containers.stream().map(TaskContainer::getItemInfo).toList();
+        List<WorkspaceItemInfo> apps =
+                recentsInfos.stream().map(this::resolveAppPairWorkspaceInfo).toList();
+
+        if (apps.stream().anyMatch(Objects::isNull)) {
+            // This shouldn't happen if canSaveAppPair() is called above, but log an error and do
+            // not create the app pair if the workspace items can't be resolved
+            StringBuilder error =
+                    new StringBuilder("Failed to save app pair due to invalid apps (");
+            for (int i = 0; i < recentsInfos.size(); i++) {
+                error.append("app").append(i).append("=")
+                        .append(recentsInfos.get(i).getComponentKey().componentName).append(" ");
+            }
+            error.append(")");
+            Log.w(TAG, error.toString());
+            return;
+        }
+
+        for (int i = 0; i < apps.size(); i++) {
+            apps.get(i).rank = encodeRank(getIndex(i), snapPosition);
+        }
+        AppPairInfo newAppPair = new AppPairInfo(apps);
 
         IconCache iconCache = LauncherAppState.getInstance(mContext).getIconCache();
         MODEL_EXECUTOR.execute(() -> {

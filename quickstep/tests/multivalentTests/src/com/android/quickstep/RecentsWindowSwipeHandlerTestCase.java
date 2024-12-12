@@ -65,7 +65,8 @@ public class RecentsWindowSwipeHandlerTestCase extends AbsSwipeUpHandlerTestCase
                 touchTimeMs,
                 continuingLastGesture,
                 mInputConsumerController,
-                mRecentsWindowFactory);
+                mRecentsWindowFactory,
+                mMSDLPlayerWrapper);
     }
 
     @Nullable

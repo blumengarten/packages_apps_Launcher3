@@ -208,8 +208,10 @@ public class QuickstepTestInformationHandler extends TestInformationHandler {
         OverviewComponentObserver observer = new OverviewComponentObserver(mContext, rads);
         try {
             RecentsViewContainer container = observer.getContainerInterface().getCreatedContainer();
+            WindowInsets insets = container == null
+                    ? null : container.getRootView().getRootWindowInsets();
 
-            return container == null ? null : container.getRootView().getRootWindowInsets();
+            return insets == null ? super.getWindowInsets() : insets;
         } finally {
             observer.onDestroy();
             rads.destroy();

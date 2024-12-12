@@ -19,11 +19,15 @@ package com.android.quickstep
 import android.graphics.PointF
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
+import androidx.test.platform.app.InstrumentationRegistry
+import com.android.launcher3.Flags.enableLauncherOverviewInWindow
 import com.android.launcher3.R
 import com.android.launcher3.dagger.LauncherAppComponent
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.util.LauncherModelHelper
+import com.android.launcher3.util.MSDLPlayerWrapper
 import com.android.quickstep.dagger.QuickStepModule
+import com.android.quickstep.fallback.window.RecentsWindowFactory
 import com.android.systemui.contextualeducation.GestureType
 import com.android.systemui.shared.system.InputConsumerController
 import dagger.BindsInstance
@@ -51,6 +55,8 @@ class LauncherSwipeHandlerV2Test {
 
     @Mock private lateinit var systemUiProxy: SystemUiProxy
 
+    @Mock private lateinit var msdlPlayerWrapper: MSDLPlayerWrapper
+
     private lateinit var underTest: LauncherSwipeHandlerV2
 
     @get:Rule val mockitoRule = MockitoJUnit.rule()
@@ -68,6 +74,16 @@ class LauncherSwipeHandlerV2Test {
         )
         val deviceState = mock(RecentsAnimationDeviceState::class.java)
         whenever(deviceState.rotationTouchHelper).thenReturn(mock(RotationTouchHelper::class.java))
+
+        if (enableLauncherOverviewInWindow()) {
+            // Initialize an instance of RecentsWindowFactory directly to simulate its
+            // initialization in TouchInteractionService#onCreate.
+            // This instance will then be used in OverviewComponentObserver.
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                RecentsWindowFactory(sandboxContext)
+            }
+        }
+
         gestureState = spy(GestureState(OverviewComponentObserver(sandboxContext, deviceState), 0))
 
         underTest =
@@ -79,6 +95,7 @@ class LauncherSwipeHandlerV2Test {
                 0,
                 false,
                 inputConsumerController,
+                msdlPlayerWrapper,
             )
         underTest.onGestureStarted(/* isLikelyToStartNewTask= */ false)
     }

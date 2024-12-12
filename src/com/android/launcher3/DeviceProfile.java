@@ -33,7 +33,6 @@ import static com.android.launcher3.testing.shared.ResourceUtils.INVALID_RESOURC
 import static com.android.launcher3.testing.shared.ResourceUtils.pxFromDp;
 import static com.android.launcher3.testing.shared.ResourceUtils.roundPxValueFromFloat;
 import static com.android.wm.shell.Flags.enableBubbleBar;
-import static com.android.wm.shell.Flags.enableBubbleBarInPersistentTaskBar;
 import static com.android.wm.shell.Flags.enableTinyTaskbar;
 
 import android.annotation.SuppressLint;
@@ -2433,7 +2432,6 @@ public class DeviceProfile {
      */
     public boolean shouldAdjustHotseatOnNavBarLocationUpdate(Context context) {
         return enableBubbleBar()
-                && enableBubbleBarInPersistentTaskBar()
                 && !DisplayController.getNavigationMode(context).hasGestures;
     }
 

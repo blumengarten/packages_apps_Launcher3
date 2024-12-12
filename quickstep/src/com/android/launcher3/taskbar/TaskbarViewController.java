@@ -90,7 +90,6 @@ import com.android.launcher3.util.MultiTranslateDelegate;
 import com.android.launcher3.util.MultiValueAlpha;
 import com.android.quickstep.util.GroupTask;
 import com.android.systemui.shared.recents.model.Task;
-import com.android.wm.shell.Flags;
 import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
 
 import java.io.PrintWriter;
@@ -303,8 +302,7 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
 
     /** Returns whether taskbar should be moved on the bubble bar location update. */
     private boolean shouldMoveTaskbarOnBubbleBarLocationUpdate() {
-        return Flags.enableBubbleBarInPersistentTaskBar()
-                && mControllers.bubbleControllers.isPresent()
+        return mControllers.bubbleControllers.isPresent()
                 && mActivity.shouldStartAlignTaskbar()
                 && mActivity.isThreeButtonNav();
     }

@@ -21,6 +21,7 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
+import android.os.Process;
 
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.model.data.LauncherAppWidgetInfo;
@@ -86,6 +87,7 @@ public class WidgetUtils {
     public static AppWidgetProviderInfo createAppWidgetProviderInfo(ComponentName cn) {
         ActivityInfo activityInfo = new ActivityInfo();
         activityInfo.applicationInfo = new ApplicationInfo();
+        activityInfo.applicationInfo.uid = Process.myUid();
         AppWidgetProviderInfo info = new AppWidgetProviderInfo();
         info.providerInfo = activityInfo;
         info.provider = cn;

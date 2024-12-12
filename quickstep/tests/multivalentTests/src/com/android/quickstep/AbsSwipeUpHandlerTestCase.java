@@ -30,7 +30,9 @@ import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.animation.ValueAnimator;
@@ -58,13 +60,17 @@ import com.android.launcher3.LauncherRootView;
 import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.statemanager.BaseState;
 import com.android.launcher3.statemanager.StatefulContainer;
+import com.android.launcher3.util.MSDLPlayerWrapper;
 import com.android.launcher3.util.SystemUiController;
 import com.android.quickstep.fallback.window.RecentsWindowFactory;
 import com.android.quickstep.util.ContextInitListener;
+import com.android.quickstep.util.MotionPauseDetector;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
 import com.android.systemui.shared.Flags;
 import com.android.systemui.shared.system.InputConsumerController;
+
+import com.google.android.msdl.data.model.MSDLToken;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -123,6 +129,7 @@ public abstract class AbsSwipeUpHandlerTestCase<
     @Mock protected LauncherRootView mRootView;
     @Mock protected SystemUiController mSystemUiController;
     @Mock protected GestureState mGestureState;
+    @Mock protected MSDLPlayerWrapper mMSDLPlayerWrapper;
 
     @Rule
     public final MockitoRule mMockitoRule = MockitoJUnit.rule();
@@ -303,6 +310,17 @@ public abstract class AbsSwipeUpHandlerTestCase<
             verifyRecentsAnimationFinishedAndCallCallback();
             assertTrue(handler.mStateCallback.hasStates(STATE_HANDLER_INVALIDATED));
         });
+    }
+
+    @Test
+    @EnableFlags(com.android.launcher3.Flags.FLAG_MSDL_FEEDBACK)
+    public void onMotionPauseDetected_playsSwipeThresholdToken() {
+        SWIPE_HANDLER handler = createSwipeHandler();
+        MotionPauseDetector.OnMotionPauseListener listener = handler.getMotionPauseListener();
+        listener.onMotionPauseDetected();
+
+        verify(mMSDLPlayerWrapper, times(1)).playToken(eq(MSDLToken.SWIPE_THRESHOLD_INDICATOR));
+        verifyNoMoreInteractions(mMSDLPlayerWrapper);
     }
 
     /**
