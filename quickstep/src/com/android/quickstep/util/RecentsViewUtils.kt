@@ -98,6 +98,9 @@ class RecentsViewUtils {
     /** Returns the first TaskView if it exists, or null otherwise. */
     fun getFirstTaskView(taskViews: Iterable<TaskView>): TaskView? = taskViews.firstOrNull()
 
+    /** Returns the last TaskView if it exists, or null otherwise. */
+    fun getLastTaskView(taskViews: Iterable<TaskView>): TaskView? = taskViews.lastOrNull()
+
     /**
      * Returns the first TaskView that is not large
      *
@@ -135,10 +138,6 @@ class RecentsViewUtils {
         taskViews: Iterable<TaskView>,
         isTaskViewFullyVisible: (TaskView) -> Boolean,
     ): Boolean = taskViews.any { !it.isLargeTile && isTaskViewFullyVisible(it) }
-
-    /** Returns the current list of [TaskView] children. */
-    fun getTaskViews(taskViewCount: Int, requireTaskViewAt: (Int) -> TaskView): Iterable<TaskView> =
-        (0 until taskViewCount).map(requireTaskViewAt)
 
     /** Apply attachAlpha to all [TaskView] accordingly to different conditions. */
     fun applyAttachAlpha(

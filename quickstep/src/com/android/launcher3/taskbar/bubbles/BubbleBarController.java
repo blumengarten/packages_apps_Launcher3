@@ -107,6 +107,7 @@ public class BubbleBarController extends IBubblesListener.Stub {
     private final Context mContext;
     private final BubbleBarView mBarView;
     private final ArrayMap<String, BubbleBarBubble> mBubbles = new ArrayMap<>();
+    private final ArrayMap<String, BubbleBarBubble> mSuppressedBubbles = new ArrayMap<>();
 
     private static final Executor BUBBLE_STATE_EXECUTOR = Executors.newSingleThreadExecutor(
             new SimpleThreadFactory("BubbleStateUpdates-", THREAD_PRIORITY_BACKGROUND));
@@ -188,6 +189,10 @@ public class BubbleBarController extends IBubblesListener.Stub {
             }
         });
         mSharedState.bubbleInfoItems = Arrays.asList(bubbleInfoItems);
+        mSharedState.suppressedBubbleInfoItems = new ArrayList<>(mSuppressedBubbles.size());
+        for (int i = 0; i < mSuppressedBubbles.size(); i++) {
+            mSharedState.suppressedBubbleInfoItems.add(mSuppressedBubbles.valueAt(i).getInfo());
+        }
     }
 
     /** Initializes controllers. */
@@ -290,7 +295,11 @@ public class BubbleBarController extends IBubblesListener.Stub {
         if (sharedState.bubbleBarLocation != null) {
             updateBubbleBarLocationInternal(sharedState.bubbleBarLocation);
         }
-        List<BubbleInfo> bubbleInfos = sharedState.bubbleInfoItems;
+        restoreSavedBubbles(sharedState.bubbleInfoItems);
+        restoreSuppressed(sharedState.suppressedBubbleInfoItems);
+    }
+
+    private void restoreSavedBubbles(List<BubbleInfo> bubbleInfos) {
         if (bubbleInfos == null || bubbleInfos.isEmpty()) return;
         // Iterate in reverse because new bubbles are added in front and the list is in order.
         for (int i = bubbleInfos.size() - 1; i >= 0; i--) {
@@ -301,6 +310,18 @@ public class BubbleBarController extends IBubblesListener.Stub {
                 continue;
             }
             addBubbleInternally(bubble, /* isExpanding= */ false, /* suppressAnimation= */ true);
+        }
+    }
+
+    private void restoreSuppressed(List<BubbleInfo> bubbleInfos) {
+        if (bubbleInfos == null || bubbleInfos.isEmpty()) return;
+        for (BubbleInfo bubbleInfo : bubbleInfos.reversed()) {
+            BubbleBarBubble bb = mBubbleCreator.populateBubble(mContext, bubbleInfo,
+                    mBarView, /* existingBubble= */
+                    null);
+            if (bb != null) {
+                mSuppressedBubbles.put(bb.getKey(), bb);
+            }
         }
     }
 
@@ -375,9 +396,7 @@ public class BubbleBarController extends IBubblesListener.Stub {
 
         // if a bubble was updated upstream, but removed before the update was received, add it back
         if (update.updatedBubble != null && !mBubbles.containsKey(update.updatedBubble.getKey())) {
-            mBubbles.put(update.updatedBubble.getKey(), update.updatedBubble);
-            mBubbleBarViewController.addBubble(
-                    update.updatedBubble, isExpanding, suppressAnimation);
+            addBubbleInternally(update.updatedBubble, isExpanding, suppressAnimation);
         }
 
         if (update.addedBubble != null && isCollapsed) {
@@ -403,6 +422,24 @@ public class BubbleBarController extends IBubblesListener.Stub {
         }
         if (Flags.enableOptionalBubbleOverflow() && update.initialState && update.showOverflow) {
             mBubbleBarViewController.showOverflow(true);
+        }
+
+        if (update.suppressedBubbleKey != null) {
+            BubbleBarBubble bb = mBubbles.remove(update.suppressedBubbleKey);
+            if (bb != null) {
+                mSuppressedBubbles.put(update.suppressedBubbleKey, bb);
+                mBubbleBarViewController.removeBubble(bb);
+            }
+        }
+        if (update.unsuppressedBubbleKey != null) {
+            BubbleBarBubble bb = mSuppressedBubbles.remove(update.unsuppressedBubbleKey);
+            if (bb != null) {
+                // Unsuppressing an existing bubble should not cause the bar to expand or animate
+                addBubbleInternally(bb, /* isExpanding= */ false, /* suppressAnimation= */ true);
+                if (mBubbleBarViewController.isHiddenForNoBubbles()) {
+                    mBubbleBarViewController.setHiddenForBubbles(false);
+                }
+            }
         }
 
         // Update the visibility if this is the initial state or if there are no bubbles.
@@ -438,12 +475,6 @@ public class BubbleBarController extends IBubblesListener.Stub {
             if (!newOrder.isEmpty()) {
                 mBubbleBarViewController.reorderBubbles(newOrder);
             }
-        }
-        if (update.suppressedBubbleKey != null) {
-            // TODO: (b/273316505) handle suppression
-        }
-        if (update.unsuppressedBubbleKey != null) {
-            // TODO: (b/273316505) handle suppression
         }
         if (update.selectedBubbleKey != null) {
             if (mSelectedBubble == null

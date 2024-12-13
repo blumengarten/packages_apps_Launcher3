@@ -101,7 +101,7 @@ public class DigitalWellBeingToastTest extends BaseLauncherActivityTest<Quickste
     }
 
     private TaskView getLatestTask(Launcher launcher) {
-        return launcher.<RecentsView>getOverviewPanel().getTaskViewAt(0);
+        return launcher.<RecentsView>getOverviewPanel().getFirstTaskView();
     }
 
     private void runWithShellPermission(Runnable action) {

@@ -233,7 +233,7 @@ constructor(
         // When running task view is null we return last large taskView - typically focusView when
         // grid only is not enabled else last desktop task view.
         return if (recentsView.runningTaskView == null) {
-            recentsView.lastLargeTaskView ?: recentsView.getTaskViewAt(0)
+            recentsView.lastLargeTaskView ?: recentsView.getFirstTaskView()
         } else {
             if (
                 enableLargeDesktopWindowingTile() &&

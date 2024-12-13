@@ -68,10 +68,8 @@
     <string name="widgets_full_sheet_work_tab" msgid="3767150027110633765">"Աշխատանքային"</string>
     <string name="widget_category_conversations" msgid="8894438636213590446">"Զրույցներ"</string>
     <string name="widget_category_note_taking" msgid="3469689394504266039">"Նշումների ստեղծում"</string>
-    <!-- no translation found for widget_cell_tap_to_show_add_button_label (4354194214317043581) -->
-    <skip />
-    <!-- no translation found for widget_cell_tap_to_hide_add_button_label (6117805205101555997) -->
-    <skip />
+    <string name="widget_cell_tap_to_show_add_button_label" msgid="4354194214317043581">"Ցույց տալ «Ավելացնել» կոճակը"</string>
+    <string name="widget_cell_tap_to_hide_add_button_label" msgid="6117805205101555997">"Թաքցնել «Ավելացնել» կոճակը"</string>
     <string name="widget_add_button_label" msgid="2761267068711937179">"Ավելացնել"</string>
     <string name="widget_add_button_content_description" msgid="1810530016360039643">"Ավելացնել <xliff:g id="WIDGET_NAME">%1$s</xliff:g> վիջեթը"</string>
     <string name="widgets_list_expand_button_label" msgid="7912016136574932622">"Բոլորը"</string>
@@ -141,7 +139,7 @@
     <string name="msg_missing_notification_access" msgid="281113995110910548">"Ծանուցումների կետիկները ցուցադրելու համար միացրեք ծանուցումները <xliff:g id="NAME">%1$s</xliff:g>-ի համար"</string>
     <string name="title_change_settings" msgid="1376365968844349552">"Փոխել կարգավորումները"</string>
     <string name="notification_dots_service_title" msgid="4284221181793592871">"Ցուցադրել ծանուցումների կետիկները"</string>
-    <string name="developer_options_title" msgid="700788437593726194">"Մշակողի ընտրանքներ"</string>
+    <string name="developer_options_title" msgid="700788437593726194">"Ծրագրավորողի ընտրանքներ"</string>
     <string name="auto_add_shortcuts_label" msgid="4926805029653694105">"Ավելացնել պատկերակները հիմնական էկրանին"</string>
     <string name="auto_add_shortcuts_description" msgid="7117251166066978730">"Նոր հավելվածների համար"</string>
     <string name="package_state_unknown" msgid="7592128424511031410">"Անհայտ է"</string>

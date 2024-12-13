@@ -181,7 +181,7 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
         Task runningTask = runningTasks[0];
         if (mHomeTask != null && runningTask != null
                 && mHomeTask.key.id == runningTask.key.id
-                && getTaskViewCount() == 0 && mLoadPlanEverApplied) {
+                && !hasTaskViews() && mLoadPlanEverApplied) {
             // Do not add a stub task if we are running over home with empty recents, so that we
             // show the empty recents message instead of showing a stub task and later removing it.
             // Ignore empty task signal if applyLoadPlan has never run.

@@ -223,7 +223,7 @@ public class NoButtonQuickSwitchTouchController implements TouchController,
         updateNonOverviewAnim(QUICK_SWITCH_FROM_HOME, nonOverviewBuilder);
         mNonOverviewAnim.dispatchOnStart();
 
-        if (mRecentsView.getTaskViewCount() == 0) {
+        if (!mRecentsView.hasTaskViews()) {
             mRecentsView.setOnEmptyMessageUpdatedListener(isEmpty -> {
                 if (!isEmpty && mSwipeDetector.isDraggingState()) {
                     // We have loaded tasks, update the animators to start at the correct scale etc.
@@ -269,7 +269,7 @@ public class NoButtonQuickSwitchTouchController implements TouchController,
         // since we need to take potential taskbar into account.
         xAnim.setViewBackgroundColor(mLauncher.getScrimView(),
                 QUICK_SWITCH_FROM_HOME.getWorkspaceScrimColor(mLauncher), LINEAR);
-        if (mRecentsView.getTaskViewCount() == 0) {
+        if (!mRecentsView.hasTaskViews()) {
             xAnim.addFloat(mRecentsView, CONTENT_ALPHA, 0f, 1f, LINEAR);
         }
         mXOverviewAnim = xAnim.createPlaybackController();

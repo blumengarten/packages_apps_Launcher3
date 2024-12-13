@@ -2298,7 +2298,8 @@ public class Launcher extends StatefulActivity<LauncherState>
             if (item.container == CONTAINER_DESKTOP) {
                 CellLayout cl = mWorkspace.getScreenWithId(presenterPos.screenId);
                 if (cl != null && cl.isOccupied(presenterPos.cellX, presenterPos.cellY)) {
-                    Object tag = cl.getChildAt(presenterPos.cellX, presenterPos.cellY).getTag();
+                    View occupiedView = cl.getChildAt(presenterPos.cellX, presenterPos.cellY);
+                    Object tag = occupiedView == null ? null : occupiedView.getTag();
                     String desc = "Collision while binding workspace item: " + item
                             + ". Collides with " + tag;
                     if (FeatureFlags.IS_STUDIO_BUILD) {

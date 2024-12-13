@@ -122,7 +122,7 @@ public class QuickstepAtomicAnimationFactory extends
             config.setInterpolator(ANIM_WORKSPACE_FADE, ACCELERATE);
 
             if (DisplayController.getNavigationMode(mContainer).hasGestures
-                    && overview.getTaskViewCount() > 0) {
+                    && overview.hasTaskViews()) {
                 // Overview is going offscreen, so keep it at its current scale and opacity.
                 config.setInterpolator(ANIM_OVERVIEW_SCALE, FINAL_FRAME);
                 config.setInterpolator(ANIM_OVERVIEW_FADE, FINAL_FRAME);
@@ -178,7 +178,7 @@ public class QuickstepAtomicAnimationFactory extends
                 config.setInterpolator(ANIM_WORKSPACE_TRANSLATE, ACCELERATE);
 
                 // Scrolling in tasks, so show straight away
-                if (overview.getTaskViewCount() > 0) {
+                if (overview.hasTaskViews()) {
                     config.setInterpolator(ANIM_OVERVIEW_FADE, INSTANT);
                 } else {
                     config.setInterpolator(ANIM_OVERVIEW_FADE, OVERSHOOT_1_2);
