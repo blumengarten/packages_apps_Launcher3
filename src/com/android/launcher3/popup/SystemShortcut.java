@@ -210,6 +210,30 @@ public abstract class SystemShortcut<T extends ActivityContext> extends ItemInfo
         }
     }
 
+    public static final Factory<ActivityContext> PIN_UNPIN_ITEM =
+            (context, itemInfo, originalView) -> {
+                // Predicted items use {@code HotseatPredictionController.PinPrediction} shortcut
+                // to pin.
+                if (itemInfo.isPredictedItem()) {
+                    return null;
+                }
+                return new PinUnpinItem<>(context, itemInfo, originalView);
+            };
+
+    private static class PinUnpinItem<T extends ActivityContext> extends SystemShortcut<T> {
+        PinUnpinItem(T target, ItemInfo itemInfo, @NonNull View originalView) {
+            // TODO(b/375648361): Check the pin state of the item to determine if the pin or the
+            //  unpin option should be used.
+            super(R.drawable.ic_pin, R.string.pin_to_taskbar, target,
+                    itemInfo, originalView);
+        }
+
+        @Override
+        public void onClick(View view) {
+            // TODO(b/375648361): Pin/Unpin the item here.
+        }
+    }
+
     public static final Factory<ActivityContext> PRIVATE_PROFILE_INSTALL =
             (context, itemInfo, originalView) -> {
                 if (originalView == null) {

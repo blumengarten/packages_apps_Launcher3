@@ -212,6 +212,7 @@
     <string name="all_apps_button_personal_label">Personal apps list</string>
     <string name="all_apps_button_work_label">Work apps list</string>
 
+    <!-- System shortcuts -->
     <!-- Label for remove drop target (from the homescreen only).
          May appear next to uninstall_drop_target_label [CHAR_LIMIT=20] -->
     <string name="remove_drop_target_label">Remove</string>
@@ -232,6 +233,8 @@
     <string name="pin_prediction">Pin Prediction</string>
     <!-- Label for bubbling a launcher item. [CHAR_LIMIT=20] -->
     <string name="bubble">Bubble</string>
+    <!-- Label for pinning an item to the taskbar. [CHAR_LIMIT=20] -->
+    <string name="pin_to_taskbar">Pin to taskbar</string>
 
     <!-- Permissions: -->
     <skip />
