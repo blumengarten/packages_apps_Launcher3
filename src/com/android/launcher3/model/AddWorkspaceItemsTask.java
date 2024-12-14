@@ -194,8 +194,7 @@ public class AddWorkspaceItemsTask implements ModelUpdateTask {
                         WorkspaceItemInfo wii = (WorkspaceItemInfo) itemInfo;
                         wii.title = "";
                         wii.bitmap = cache.getDefaultIcon(item.user);
-                        cache.getTitleAndIcon(wii,
-                                ((WorkspaceItemInfo) itemInfo).usingLowResIcon());
+                        cache.getTitleAndIcon(wii, wii.getMatchingLookupFlag());
                     }
                 }
 

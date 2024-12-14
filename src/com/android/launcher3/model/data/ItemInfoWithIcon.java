@@ -23,10 +23,10 @@ import android.os.Process;
 import androidx.annotation.Nullable;
 
 import com.android.launcher3.Flags;
-import com.android.launcher3.Utilities;
 import com.android.launcher3.icons.BitmapInfo;
 import com.android.launcher3.icons.BitmapInfo.DrawableCreationFlags;
 import com.android.launcher3.icons.FastBitmapDrawable;
+import com.android.launcher3.icons.cache.CacheLookupFlag;
 import com.android.launcher3.logging.FileLog;
 import com.android.launcher3.pm.PackageInstallInfo;
 import com.android.launcher3.util.ApiWrapper;
@@ -185,10 +185,10 @@ public abstract class ItemInfoWithIcon extends ItemInfo {
     }
 
     /**
-     * Indicates whether we're using a low res icon
+     * Returns the lookup flag to match this current state of this info
      */
-    public boolean usingLowResIcon() {
-        return bitmap.isLowRes();
+    public CacheLookupFlag getMatchingLookupFlag() {
+        return bitmap.getMatchingLookupFlag();
     }
 
     /**

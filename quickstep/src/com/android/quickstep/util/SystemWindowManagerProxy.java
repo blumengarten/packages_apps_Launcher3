@@ -27,7 +27,10 @@ import android.view.WindowManager;
 import android.view.WindowMetrics;
 
 import com.android.internal.policy.SystemBarUtils;
+import com.android.launcher3.dagger.ApplicationContext;
+import com.android.launcher3.dagger.LauncherAppSingleton;
 import com.android.launcher3.statehandlers.DesktopVisibilityController;
+import com.android.launcher3.util.DaggerSingletonTracker;
 import com.android.launcher3.util.WindowBounds;
 import com.android.launcher3.util.window.CachedDisplayInfo;
 import com.android.launcher3.util.window.WindowManagerProxy;
@@ -37,22 +40,22 @@ import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 /**
  * Extension of {@link WindowManagerProxy} with some assumption for the default system Launcher
  */
+@LauncherAppSingleton
 public class SystemWindowManagerProxy extends WindowManagerProxy {
 
     private final TISBindHelper mTISBindHelper;
 
-    public SystemWindowManagerProxy(Context context) {
+    @Inject
+    public SystemWindowManagerProxy(@ApplicationContext Context context,
+            DaggerSingletonTracker lifecycleTracker) {
         super(true);
         mTISBindHelper = new TISBindHelper(context, binder -> {});
-    }
-
-    @Override
-    public void close() {
-        super.close();
-        mTISBindHelper.onDestroy();
+        lifecycleTracker.addCloseable(mTISBindHelper::onDestroy);
     }
 
     @Override

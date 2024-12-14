@@ -16,6 +16,9 @@ import com.android.launcher3.InvariantDeviceProfile
 import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherModel
 import com.android.launcher3.LauncherModel.LoaderTransaction
+import com.android.launcher3.LauncherPrefs
+import com.android.launcher3.LauncherPrefs.Companion.IS_FIRST_LOAD_AFTER_RESTORE
+import com.android.launcher3.LauncherPrefs.Companion.RESTORE_DEVICE
 import com.android.launcher3.icons.IconCache
 import com.android.launcher3.icons.cache.CachingLogic
 import com.android.launcher3.icons.cache.IconCacheUpdateHandler
@@ -130,6 +133,8 @@ class LoaderTaskTest {
 
     @After
     fun tearDown() {
+        LauncherPrefs.get(context).removeSync(RESTORE_DEVICE)
+        LauncherPrefs.get(context).putSync(IS_FIRST_LOAD_AFTER_RESTORE.to(false))
         context.onDestroy()
         mockitoSession.finishMocking()
     }
@@ -242,84 +247,8 @@ class LoaderTaskTest {
         }
 
     @Test
-    @DisableFlags(Flags.FLAG_ENABLE_FIRST_SCREEN_BROADCAST_ARCHIVING_EXTRAS)
-    fun `When secure setting true and is restore then send installed item broadcast`() {
-        // Given
-        val spyContext = spy(context)
-        `when`(app.context).thenReturn(spyContext)
-        whenever(
-                FirstScreenBroadcastHelper.createModelsForFirstScreenBroadcast(
-                    any(),
-                    any(),
-                    any(),
-                    any(),
-                )
-            )
-            .thenReturn(listOf(expectedBroadcastModel))
-
-        whenever(
-                FirstScreenBroadcastHelper.sendBroadcastsForModels(
-                    spyContext,
-                    listOf(expectedBroadcastModel),
-                )
-            )
-            .thenCallRealMethod()
-
-        Settings.Secure.putInt(spyContext.contentResolver, "launcher_broadcast_installed_apps", 1)
-        RestoreDbTask.setPending(spyContext)
-
-        // When
-        LoaderTask(
-                app,
-                bgAllAppsList,
-                BgDataModel(),
-                modelDelegate,
-                launcherBinder,
-                widgetsFilterDataProvider,
-            )
-            .runSyncOnBackgroundThread()
-
-        // Then
-        val argumentCaptor = ArgumentCaptor.forClass(Intent::class.java)
-        verify(spyContext).sendBroadcast(argumentCaptor.capture())
-        val actualBroadcastIntent = argumentCaptor.value
-        assertEquals(expectedBroadcastModel.installerPackage, actualBroadcastIntent.`package`)
-        assertEquals(
-            ArrayList(expectedBroadcastModel.installedWorkspaceItems),
-            actualBroadcastIntent.getStringArrayListExtra("workspaceInstalledItems"),
-        )
-        assertEquals(
-            ArrayList(expectedBroadcastModel.installedHotseatItems),
-            actualBroadcastIntent.getStringArrayListExtra("hotseatInstalledItems"),
-        )
-        assertEquals(
-            ArrayList(
-                expectedBroadcastModel.firstScreenInstalledWidgets +
-                    expectedBroadcastModel.secondaryScreenInstalledWidgets
-            ),
-            actualBroadcastIntent.getStringArrayListExtra("widgetInstalledItems"),
-        )
-        assertEquals(
-            ArrayList(expectedBroadcastModel.pendingCollectionItems),
-            actualBroadcastIntent.getStringArrayListExtra("folderItem"),
-        )
-        assertEquals(
-            ArrayList(expectedBroadcastModel.pendingWorkspaceItems),
-            actualBroadcastIntent.getStringArrayListExtra("workspaceItem"),
-        )
-        assertEquals(
-            ArrayList(expectedBroadcastModel.pendingHotseatItems),
-            actualBroadcastIntent.getStringArrayListExtra("hotseatItem"),
-        )
-        assertEquals(
-            ArrayList(expectedBroadcastModel.pendingWidgetItems),
-            actualBroadcastIntent.getStringArrayListExtra("widgetItem"),
-        )
-    }
-
-    @Test
     @EnableFlags(Flags.FLAG_ENABLE_FIRST_SCREEN_BROADCAST_ARCHIVING_EXTRAS)
-    fun `When broadcast flag true and is restore then send installed item broadcast`() {
+    fun `When broadcast flag on and is restore and secure setting off then send new broadcast`() {
         // Given
         val spyContext = spy(context)
         `when`(app.context).thenReturn(spyContext)
@@ -417,7 +346,7 @@ class LoaderTaskTest {
             )
             .thenCallRealMethod()
 
-        Settings.Secure.putInt(spyContext.contentResolver, "launcher_broadcast_installed_apps", 1)
+        Settings.Secure.putInt(spyContext.contentResolver, "launcher_broadcast_installed_apps", 0)
 
         // When
         LoaderTask(
@@ -436,7 +365,7 @@ class LoaderTaskTest {
 
     @Test
     @DisableFlags(Flags.FLAG_ENABLE_FIRST_SCREEN_BROADCAST_ARCHIVING_EXTRAS)
-    fun `When broadcast flag and secure setting false then installed item broadcast not sent`() {
+    fun `When broadcast flag off then installed item broadcast not sent`() {
         // Given
         val spyContext = spy(context)
         `when`(app.context).thenReturn(spyContext)
@@ -458,7 +387,57 @@ class LoaderTaskTest {
             )
             .thenCallRealMethod()
 
-        Settings.Secure.putInt(spyContext.contentResolver, "launcher_broadcast_installed_apps", 0)
+        Settings.Secure.putInt(
+            spyContext.contentResolver,
+            "disable_launcher_broadcast_installed_apps",
+            0,
+        )
+        RestoreDbTask.setPending(spyContext)
+
+        // When
+        LoaderTask(
+                app,
+                bgAllAppsList,
+                BgDataModel(),
+                modelDelegate,
+                launcherBinder,
+                widgetsFilterDataProvider,
+            )
+            .runSyncOnBackgroundThread()
+
+        // Then
+        verify(spyContext, times(0)).sendBroadcast(any())
+    }
+
+    @Test
+    @EnableFlags(Flags.FLAG_ENABLE_FIRST_SCREEN_BROADCAST_ARCHIVING_EXTRAS)
+    fun `When failsafe secure setting on then installed item broadcast not sent`() {
+        // Given
+        val spyContext = spy(context)
+        `when`(app.context).thenReturn(spyContext)
+        whenever(
+                FirstScreenBroadcastHelper.createModelsForFirstScreenBroadcast(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            )
+            .thenReturn(listOf(expectedBroadcastModel))
+
+        whenever(
+                FirstScreenBroadcastHelper.sendBroadcastsForModels(
+                    spyContext,
+                    listOf(expectedBroadcastModel),
+                )
+            )
+            .thenCallRealMethod()
+
+        Settings.Secure.putInt(
+            spyContext.contentResolver,
+            "disable_launcher_broadcast_installed_apps",
+            1,
+        )
         RestoreDbTask.setPending(spyContext)
 
         // When

@@ -16,6 +16,7 @@
 
 package com.android.quickstep.util;
 
+import static com.android.launcher3.icons.cache.CacheLookupFlag.DEFAULT_LOOKUP_FLAG;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
 
 import android.animation.Animator;
@@ -89,7 +90,7 @@ public class SplitToWorkspaceController {
         MODEL_EXECUTOR.execute(() -> {
             PackageItemInfo infoInOut = new PackageItemInfo(pendingIntent.getCreatorPackage(),
                     pendingIntent.getCreatorUserHandle());
-            mIconCache.getTitleAndIconForApp(infoInOut, false);
+            mIconCache.getTitleAndIconForApp(infoInOut, DEFAULT_LOOKUP_FLAG);
             Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 
             view.post(() -> {

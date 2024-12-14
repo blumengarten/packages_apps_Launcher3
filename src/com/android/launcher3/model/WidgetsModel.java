@@ -4,6 +4,7 @@ package com.android.launcher3.model;
 import static android.appwidget.AppWidgetProviderInfo.WIDGET_FEATURE_HIDE_FROM_PICKER;
 
 import static com.android.launcher3.BuildConfig.WIDGETS_ENABLED;
+import static com.android.launcher3.icons.cache.CacheLookupFlag.DEFAULT_LOOKUP_FLAG;
 import static com.android.launcher3.pm.ShortcutConfigActivityInfo.queryList;
 import static com.android.launcher3.widget.WidgetSections.NO_CATEGORY;
 
@@ -203,7 +204,7 @@ public class WidgetsModel {
         // Update each package entry
         IconCache iconCache = app.getIconCache();
         for (PackageItemInfo p : packageItemInfoCache.values()) {
-            iconCache.getTitleAndIconForApp(p, true /* userLowResIcon */);
+            iconCache.getTitleAndIconForApp(p, DEFAULT_LOOKUP_FLAG.withUseLowRes());
         }
     }
 

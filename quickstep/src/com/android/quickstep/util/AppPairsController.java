@@ -215,7 +215,7 @@ public class AppPairsController {
             newAppPair.getAppContents().forEach(member -> {
                 member.title = "";
                 member.bitmap = iconCache.getDefaultIcon(newAppPair.user);
-                iconCache.getTitleAndIcon(member, member.usingLowResIcon());
+                iconCache.getTitleAndIcon(member, member.getMatchingLookupFlag());
             });
             MAIN_EXECUTOR.execute(() -> {
                 LauncherAccessibilityDelegate delegate =

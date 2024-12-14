@@ -21,6 +21,7 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
 
 import static com.android.launcher3.icons.IconCache.EXTRA_SHORTCUT_BADGE_OVERRIDE_PACKAGE;
 import static com.android.launcher3.icons.IconCacheUpdateHandlerTestKt.waitForUpdateHandlerToFinish;
+import static com.android.launcher3.icons.cache.CacheLookupFlag.DEFAULT_LOOKUP_FLAG;
 import static com.android.launcher3.model.data.AppInfo.makeLaunchIntent;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
 import static com.android.launcher3.util.LauncherModelHelper.TEST_ACTIVITY;
@@ -164,7 +165,7 @@ public class IconCacheTest {
         WorkspaceItemInfo info = new WorkspaceItemInfo();
         info.intent = makeLaunchIntent(cn);
         runOnExecutorSync(MODEL_EXECUTOR,
-                () -> mIconCache.getTitleAndIcon(info, lai, false));
+                () -> mIconCache.getTitleAndIcon(info, lai, DEFAULT_LOOKUP_FLAG));
         assertNotNull(info.bitmap);
         assertFalse(info.bitmap.isLowRes());
 

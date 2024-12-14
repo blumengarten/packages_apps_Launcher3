@@ -16,6 +16,8 @@
 
 package com.android.quickstep.util;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.android.internal.protolog.ProtoLog;
@@ -26,7 +28,7 @@ import java.util.UUID;
 /** Enums used to interface with the ProtoLog API. */
 public enum QuickstepProtoLogGroup implements IProtoLogGroup {
 
-    ACTIVE_GESTURE_LOG(true, true, false, "ActiveGestureLog"),
+    ACTIVE_GESTURE_LOG(true, true, Constants.DEBUG_ACTIVE_GESTURE, "ActiveGestureLog"),
     RECENTS_WINDOW(true, true, Constants.DEBUG_RECENTS_WINDOW, "RecentsWindow"),
     LAUNCHER_STATE_MANAGER(true, true, Constants.DEBUG_STATE_MANAGER, "LauncherStateManager");
 
@@ -35,7 +37,23 @@ public enum QuickstepProtoLogGroup implements IProtoLogGroup {
     private volatile boolean mLogToLogcat;
     private final @NonNull String mTag;
 
+    public static boolean isProtoLogInitialized() {
+        if (!Variables.sIsInitialized) {
+            Log.w(Constants.TAG,
+                    "Attempting to log to ProtoLog before initializing it.",
+                    new IllegalStateException());
+        }
+        return Variables.sIsInitialized;
+    }
+
     public static void initProtoLog() {
+        if (Variables.sIsInitialized) {
+            Log.e(Constants.TAG,
+                    "Attempting to re-initialize ProtoLog.", new IllegalStateException());
+            return;
+        }
+        Log.i(Constants.TAG, "Initializing ProtoLog.");
+        Variables.sIsInitialized = true;
         ProtoLog.init(QuickstepProtoLogGroup.values());
     }
 
@@ -95,8 +113,16 @@ public enum QuickstepProtoLogGroup implements IProtoLogGroup {
         this.mLogToLogcat = logToLogcat;
     }
 
+    private static final class Variables {
+
+        private static boolean sIsInitialized = false;
+    }
+
     private static final class Constants {
 
+        private static final String TAG = "QuickstepProtoLogGroup";
+
+        private static final boolean DEBUG_ACTIVE_GESTURE = false;
         private static final boolean DEBUG_RECENTS_WINDOW = false;
         private static final boolean DEBUG_STATE_MANAGER = true; // b/279059025, b/325463989
 

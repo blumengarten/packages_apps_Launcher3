@@ -326,7 +326,8 @@ public class PackageUpdatedTask implements ModelUpdateTask {
                                     itemInfo.setNonResizeable(ApiWrapper.INSTANCE.get(context)
                                             .isNonResizeableActivity(activities.get(0)));
                                 }
-                                iconCache.getTitleAndIcon(itemInfo, itemInfo.usingLowResIcon());
+                                iconCache.getTitleAndIcon(
+                                        itemInfo, itemInfo.getMatchingLookupFlag());
                                 infoUpdated = true;
                             }
                         }

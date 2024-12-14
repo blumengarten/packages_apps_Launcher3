@@ -142,7 +142,7 @@ public class WorkspaceItemInfo extends ItemInfoWithIcon {
                 .put(Favorites.OPTIONS, options)
                 .put(Favorites.RESTORED, status);
 
-        if (!usingLowResIcon()) {
+        if (!getMatchingLookupFlag().useLowRes()) {
             writer.putIcon(bitmap, user);
         }
     }

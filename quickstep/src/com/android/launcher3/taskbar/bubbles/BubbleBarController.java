@@ -442,10 +442,11 @@ public class BubbleBarController extends IBubblesListener.Stub {
             }
         }
 
-        // Update the visibility if this is the initial state or if there are no bubbles.
+        // Update the visibility if this is the initial state, if there are no bubbles, or if the
+        // animation is suppressed.
         // If this is the initial bubble, the bubble bar will become visible as part of the
         // animation.
-        if (update.initialState || mBubbles.isEmpty()) {
+        if (update.initialState || mBubbles.isEmpty() || suppressAnimation) {
             mBubbleBarViewController.setHiddenForBubbles(mBubbles.isEmpty());
         }
         mBubbleStashedHandleViewController.ifPresent(

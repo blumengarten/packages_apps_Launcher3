@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 fun generateItemsForTest(
     boards: List<CellLayoutBoard>,
-    repeatAfterRange: Point
+    repeatAfterRange: Point,
 ): List<WorkspaceItem> {
     val id = AtomicInteger(0)
     val widgetId = AtomicInteger(LauncherAppWidgetInfo.CUSTOM_WIDGET_ID - 1)
@@ -56,7 +56,7 @@ fun generateItemsForTest(
                 appWidgetProvider = "Hotseat icons don't have a provider",
                 intent = getIntent(id.get()),
                 type = LauncherSettings.Favorites.ITEM_TYPE_APPLICATION,
-                container = LauncherSettings.Favorites.CONTAINER_HOTSEAT
+                container = LauncherSettings.Favorites.CONTAINER_HOTSEAT,
             )
         }
     var widgetEntries =
@@ -75,7 +75,7 @@ fun generateItemsForTest(
                     appWidgetProvider = getProvider(id.get()),
                     intent = "Widgets don't have intent",
                     type = LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET,
-                    container = LauncherSettings.Favorites.CONTAINER_DESKTOP
+                    container = LauncherSettings.Favorites.CONTAINER_DESKTOP,
                 )
             }
     widgetEntries = widgetEntries.filter { it.appWidgetProvider.contains("Provider4") }
@@ -95,7 +95,7 @@ fun generateItemsForTest(
                     appWidgetProvider = "Icons don't have providers",
                     intent = getIntent(id.get()),
                     type = LauncherSettings.Favorites.ITEM_TYPE_APPLICATION,
-                    container = LauncherSettings.Favorites.CONTAINER_DESKTOP
+                    container = LauncherSettings.Favorites.CONTAINER_DESKTOP,
                 )
             }
     return widgetEntries + hotseatEntries + iconEntries
@@ -106,7 +106,7 @@ data class GridMigrationUnitTestCase(
     val destBoards: List<CellLayoutBoard>,
     val srcSize: Point,
     val targetSize: Point,
-    val seed: Long
+    val seed: Long,
 )
 
 class ValidGridMigrationTestCaseGenerator(private val generator: Random) :
@@ -122,7 +122,7 @@ class ValidGridMigrationTestCaseGenerator(private val generator: Random) :
         boardGenerator: RandomBoardGenerator,
         width: Int,
         height: Int,
-        boardCount: Int
+        boardCount: Int,
     ): List<CellLayoutBoard> {
         val boards = mutableListOf<CellLayoutBoard>()
         for (i in 0 until boardCount) {
@@ -130,7 +130,7 @@ class ValidGridMigrationTestCaseGenerator(private val generator: Random) :
                 boardGenerator.generateBoard(
                     width,
                     height,
-                    boardGenerator.getRandom(0, width * height)
+                    boardGenerator.getRandom(0, width * height),
                 )
             )
         }
@@ -145,7 +145,7 @@ class ValidGridMigrationTestCaseGenerator(private val generator: Random) :
         val targetSize =
             Point(
                 randomBoardGenerator.getRandom(3, MAX_BOARD_SIZE),
-                randomBoardGenerator.getRandom(3, MAX_BOARD_SIZE)
+                randomBoardGenerator.getRandom(3, MAX_BOARD_SIZE),
             )
         val destBoards =
             if (isDestEmpty) {
@@ -155,7 +155,7 @@ class ValidGridMigrationTestCaseGenerator(private val generator: Random) :
                     boardGenerator = randomBoardGenerator,
                     width = targetSize.x,
                     height = targetSize.y,
-                    boardCount = randomBoardGenerator.getRandom(3, MAX_BOARD_COUNT)
+                    boardCount = randomBoardGenerator.getRandom(3, MAX_BOARD_COUNT),
                 )
             }
         return GridMigrationUnitTestCase(
@@ -164,12 +164,12 @@ class ValidGridMigrationTestCaseGenerator(private val generator: Random) :
                     boardGenerator = randomBoardGenerator,
                     width = width,
                     height = height,
-                    boardCount = randomBoardGenerator.getRandom(3, MAX_BOARD_COUNT)
+                    boardCount = randomBoardGenerator.getRandom(3, MAX_BOARD_COUNT),
                 ),
             destBoards = destBoards,
             srcSize = Point(width, height),
             targetSize = targetSize,
-            seed = seed
+            seed = seed,
         )
     }
 }

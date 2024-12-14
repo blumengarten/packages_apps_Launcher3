@@ -25,6 +25,7 @@ import static com.android.launcher3.LauncherPrefs.IS_FIRST_LOAD_AFTER_RESTORE;
 import static com.android.launcher3.LauncherPrefs.SHOULD_SHOW_SMARTSPACE;
 import static com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME;
 import static com.android.launcher3.icons.CacheableShortcutInfo.convertShortcutsToCacheableShortcuts;
+import static com.android.launcher3.icons.cache.CacheLookupFlag.DEFAULT_LOOKUP_FLAG;
 import static com.android.launcher3.model.BgDataModel.Callbacks.FLAG_HAS_SHORTCUT_PERMISSION;
 import static com.android.launcher3.model.BgDataModel.Callbacks.FLAG_PRIVATE_PROFILE_QUIET_MODE_ENABLED;
 import static com.android.launcher3.model.BgDataModel.Callbacks.FLAG_QUIET_MODE_CHANGE_PERMISSION;
@@ -213,13 +214,13 @@ public class LoaderTask implements Runnable {
         ArrayList<ItemInfo> firstScreenItems = new ArrayList<>();
         filterCurrentWorkspaceItems(firstScreens, allItems, firstScreenItems,
                 new ArrayList<>() /* otherScreenItems are ignored */);
-        final int launcherBroadcastInstalledApps = Settings.Secure.getInt(
+        final int disableArchivingLauncherBroadcast = Settings.Secure.getInt(
                 mApp.getContext().getContentResolver(),
-                "launcher_broadcast_installed_apps",
-                /* def= */ 0);
+                "disable_launcher_broadcast_installed_apps",
+                /* default */ 0);
         boolean shouldAttachArchivingExtras = mIsRestoreFromBackup
-                && (launcherBroadcastInstalledApps == 1
-                        || Flags.enableFirstScreenBroadcastArchivingExtras());
+                && disableArchivingLauncherBroadcast == 0
+                && Flags.enableFirstScreenBroadcastArchivingExtras();
         if (shouldAttachArchivingExtras) {
             List<FirstScreenBroadcastModel> broadcastModels =
                     FirstScreenBroadcastHelper.createModelsForFirstScreenBroadcast(
@@ -231,6 +232,7 @@ public class LoaderTask implements Runnable {
             logASplit("Sending first screen broadcast with additional archiving Extras");
             FirstScreenBroadcastHelper.sendBroadcastsForModels(mApp.getContext(), broadcastModels);
         } else {
+            logASplit("Sending first screen broadcast");
             mFirstScreenBroadcast.sendBroadcasts(mApp.getContext(), firstScreenItems);
         }
     }
@@ -276,7 +278,6 @@ public class LoaderTask implements Runnable {
             mModelDelegate.workspaceLoadComplete();
             // Notify the installer packages of packages with active installs on the first screen.
             sendFirstScreenActiveInstallsBroadcast();
-            logASplit("sendFirstScreenBroadcast finished");
 
             // Take a break
             waitForIdle();
@@ -599,10 +600,10 @@ public class LoaderTask implements Runnable {
                 info.rank = rank;
 
                 if (info instanceof WorkspaceItemInfo wii
-                        && wii.usingLowResIcon()
+                        && wii.getMatchingLookupFlag().useLowRes()
                         && wii.itemType == Favorites.ITEM_TYPE_APPLICATION
                         && verifiers.stream().anyMatch(it -> it.isItemInPreview(info.rank))) {
-                    mIconCache.getTitleAndIcon(wii, false);
+                    mIconCache.getTitleAndIcon(wii, DEFAULT_LOOKUP_FLAG);
                 } else if (info instanceof AppPairInfo api) {
                     api.fetchHiResIconsIfNeeded(mIconCache);
                 }
@@ -765,7 +766,7 @@ public class LoaderTask implements Runnable {
                     iconRequestInfos.add(new IconRequestInfo<>(
                             promiseAppInfo,
                             /* launcherActivityInfo= */ null,
-                            promiseAppInfo.usingLowResIcon()));
+                            promiseAppInfo.getMatchingLookupFlag().useLowRes()));
                 }
             }
         }

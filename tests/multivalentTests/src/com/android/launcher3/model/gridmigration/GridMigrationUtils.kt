@@ -24,8 +24,11 @@ import com.android.launcher3.celllayout.board.CellLayoutBoard
 
 class MockSet(override val size: Int) : Set<String> {
     override fun contains(element: String): Boolean = true
+
     override fun containsAll(elements: Collection<String>): Boolean = true
+
     override fun isEmpty(): Boolean = false
+
     override fun iterator(): Iterator<String> = listOf<String>().iterator()
 }
 
@@ -91,7 +94,7 @@ fun readDb(tableName: String, db: SQLiteDatabase): List<WorkspaceItem> {
                 appWidgetProvider = cursor.getString(indexWidgetProvider),
                 intent = cursor.getString(indexIntent),
                 type = cursor.getInt(indexItemType),
-                container = cursor.getInt(container)
+                container = cursor.getInt(container),
             )
         )
     }

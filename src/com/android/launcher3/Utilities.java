@@ -631,7 +631,7 @@ public final class Utilities {
         Drawable mainIcon = null;
 
         Drawable badge = null;
-        if ((info instanceof ItemInfoWithIcon iiwi) && !iiwi.usingLowResIcon()) {
+        if ((info instanceof ItemInfoWithIcon iiwi) && !iiwi.getMatchingLookupFlag().useLowRes()) {
             badge = iiwi.bitmap.getBadgeDrawable(context, useTheme);
         }
 

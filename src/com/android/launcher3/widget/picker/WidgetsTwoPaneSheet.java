@@ -22,6 +22,7 @@ import static com.android.launcher3.UtilitiesKt.CLIP_CHILDREN_FALSE_MODIFIER;
 import static com.android.launcher3.UtilitiesKt.CLIP_TO_PADDING_FALSE_MODIFIER;
 import static com.android.launcher3.UtilitiesKt.modifyAttributesOnViewTree;
 import static com.android.launcher3.UtilitiesKt.restoreAttributesOnViewTree;
+import static com.android.launcher3.icons.cache.CacheLookupFlag.DEFAULT_LOOKUP_FLAG;
 import static com.android.launcher3.widget.picker.WidgetsListItemAnimator.WIDGET_LIST_ITEM_APPEARANCE_DELAY;
 import static com.android.launcher3.widget.picker.model.data.WidgetPickerDataUtils.findContentEntryForPackageUser;
 
@@ -51,6 +52,7 @@ import androidx.annotation.Px;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
+import com.android.launcher3.icons.cache.CacheLookupFlag;
 import com.android.launcher3.model.WidgetItem;
 import com.android.launcher3.model.data.PackageItemInfo;
 import com.android.launcher3.recyclerview.ViewHolderBinder;
@@ -691,8 +693,8 @@ public class WidgetsTwoPaneSheet extends WidgetsFullSheet {
         }
 
         @Override
-        public boolean usingLowResIcon() {
-            return false;
+        public CacheLookupFlag getMatchingLookupFlag() {
+            return DEFAULT_LOOKUP_FLAG;
         }
     }
 }

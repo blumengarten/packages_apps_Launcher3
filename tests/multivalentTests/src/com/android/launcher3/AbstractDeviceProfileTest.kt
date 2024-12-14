@@ -26,8 +26,10 @@ import android.platform.test.rule.IgnoreLimit
 import android.platform.test.rule.LimitDevicesRule
 import android.util.DisplayMetrics
 import android.view.Surface
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.platform.app.InstrumentationRegistry
+import com.android.launcher3.dagger.LauncherAppComponent
+import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.testing.shared.ResourceUtils
 import com.android.launcher3.util.DisplayController
 import com.android.launcher3.util.MainThreadInitializedObject.SandboxContext
@@ -38,6 +40,8 @@ import com.android.launcher3.util.rule.setFlags
 import com.android.launcher3.util.window.CachedDisplayInfo
 import com.android.launcher3.util.window.WindowManagerProxy
 import com.google.common.truth.Truth
+import dagger.BindsInstance
+import dagger.Component
 import java.io.BufferedReader
 import java.io.File
 import java.io.PrintWriter
@@ -62,7 +66,7 @@ import org.mockito.kotlin.whenever
 abstract class AbstractDeviceProfileTest {
     protected val testContext: Context = InstrumentationRegistry.getInstrumentation().context
     protected lateinit var context: SandboxContext
-    protected open val runningContext: Context = ApplicationProvider.getApplicationContext()
+    protected open val runningContext: Context = getApplicationContext()
     private val displayController: DisplayController = mock()
     private val windowManagerProxy: WindowManagerProxy = mock()
     private val launcherPrefs: LauncherPrefs = mock()
@@ -290,9 +294,9 @@ abstract class AbstractDeviceProfileTest {
             .thenReturn(
                 if (isGestureMode) NavigationMode.NO_BUTTON else NavigationMode.THREE_BUTTONS
             )
-        doReturn(WindowManagerProxy.INSTANCE[runningContext].isTaskbarDrawnInProcess)
+        doReturn(WindowManagerProxy.INSTANCE[getApplicationContext()].isTaskbarDrawnInProcess)
             .whenever(windowManagerProxy)
-            .isTaskbarDrawnInProcess()
+            .isTaskbarDrawnInProcess
 
         val density = densityDpi / DisplayMetrics.DENSITY_DEFAULT.toFloat()
         val config =
@@ -304,8 +308,10 @@ abstract class AbstractDeviceProfileTest {
             }
         val configurationContext = runningContext.createConfigurationContext(config)
         context = SandboxContext(configurationContext)
+        context.initDaggerComponent(
+            DaggerAbsDPTestSandboxComponent.builder().bindWMProxy(windowManagerProxy)
+        )
         context.putObject(DisplayController.INSTANCE, displayController)
-        context.putObject(WindowManagerProxy.INSTANCE, windowManagerProxy)
         context.putObject(LauncherPrefs.INSTANCE, launcherPrefs)
 
         whenever(launcherPrefs.get(LauncherPrefs.TASKBAR_PINNING)).thenReturn(false)
@@ -353,5 +359,16 @@ abstract class AbstractDeviceProfileTest {
     protected fun String.xmlToId(): Int {
         val context = InstrumentationRegistry.getInstrumentation().context
         return context.resources.getIdentifier(this, "xml", context.packageName)
+    }
+}
+
+@LauncherAppSingleton
+@Component
+interface AbsDPTestSandboxComponent : LauncherAppComponent {
+    @Component.Builder
+    interface Builder : LauncherAppComponent.Builder {
+        @BindsInstance fun bindWMProxy(proxy: WindowManagerProxy): Builder
+
+        override fun build(): AbsDPTestSandboxComponent
     }
 }

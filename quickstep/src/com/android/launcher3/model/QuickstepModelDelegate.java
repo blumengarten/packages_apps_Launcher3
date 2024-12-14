@@ -26,6 +26,7 @@ import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_WIDGETS
 import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APPLICATION;
 import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT;
 import static com.android.launcher3.hybridhotseat.HotseatPredictionModel.convertDataModelToAppTargetBundle;
+import static com.android.launcher3.icons.cache.CacheLookupFlag.DEFAULT_LOOKUP_FLAG;
 import static com.android.launcher3.model.PredictionHelper.getAppTargetFromItemInfo;
 import static com.android.launcher3.model.PredictionHelper.wrapAppTargetWithItemLocation;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
@@ -572,7 +573,7 @@ public class QuickstepModelDelegate extends ModelDelegate {
                             mPmHelper,
                             mUMS.isUserQuiet(user));
                     info.container = mContainer;
-                    mAppState.getIconCache().getTitleAndIcon(info, lai, false);
+                    mAppState.getIconCache().getTitleAndIcon(info, lai, DEFAULT_LOOKUP_FLAG);
                     mReadCount++;
                     return info.makeWorkspaceItem(mAppState.getContext());
                 }

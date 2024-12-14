@@ -1351,12 +1351,10 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
             mIconLoadRequest.cancel();
             mIconLoadRequest = null;
         }
-        if (getTag() instanceof ItemInfoWithIcon && !mHighResUpdateInProgress) {
-            ItemInfoWithIcon info = (ItemInfoWithIcon) getTag();
-            if (info.usingLowResIcon()) {
-                mIconLoadRequest = LauncherAppState.getInstance(getContext()).getIconCache()
-                        .updateIconInBackground(BubbleTextView.this, info);
-            }
+        if (getTag() instanceof ItemInfoWithIcon info && !mHighResUpdateInProgress
+                && info.getMatchingLookupFlag().useLowRes()) {
+            mIconLoadRequest = LauncherAppState.getInstance(getContext()).getIconCache()
+                    .updateIconInBackground(BubbleTextView.this, info);
         }
     }
 

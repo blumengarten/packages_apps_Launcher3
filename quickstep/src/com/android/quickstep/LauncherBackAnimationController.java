@@ -51,11 +51,15 @@ import android.window.BackMotionEvent;
 import android.window.BackProgressAnimator;
 import android.window.IBackAnimationHandoffHandler;
 import android.window.IOnBackInvokedCallback;
+
+import com.android.app.animation.Animations;
 import com.android.app.animation.Interpolators;
 import com.android.internal.policy.SystemBarUtils;
 import com.android.internal.view.AppearanceRegion;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.BubbleTextView;
+import com.android.launcher3.Flags;
+import com.android.launcher3.LauncherState;
 import com.android.launcher3.QuickstepTransitionManager;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
@@ -65,6 +69,7 @@ import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.NavigationMode;
 import com.android.launcher3.widget.LauncherAppWidgetHostView;
 import com.android.quickstep.util.BackAnimState;
+import com.android.quickstep.util.ScalingWorkspaceRevealAnim;
 import com.android.systemui.shared.system.QuickStepContract;
 
 import java.lang.ref.WeakReference;
@@ -87,7 +92,8 @@ import java.lang.ref.WeakReference;
  */
 public class LauncherBackAnimationController {
     private static final int SCRIM_FADE_DURATION = 233;
-    private static final float MIN_WINDOW_SCALE = 0.85f;
+    private static final float MIN_WINDOW_SCALE =
+            Flags.predictiveBackToHomePolish() ? 0.75f : 0.85f;
     private static final float MAX_SCRIM_ALPHA_DARK = 0.8f;
     private static final float MAX_SCRIM_ALPHA_LIGHT = 0.2f;
 
@@ -314,6 +320,14 @@ public class LauncherBackAnimationController {
                 new RemoteAnimationTarget[]{ mBackTarget });
         setLauncherTargetViewVisible(false);
         mCurrentRect.set(mStartRect);
+        if (Flags.predictiveBackToHomePolish() && !mLauncher.getWorkspace().isOverlayShown()
+                && !mLauncher.isInState(LauncherState.ALL_APPS)) {
+            Animations.cancelOngoingAnimation(mLauncher.getWorkspace());
+            Animations.cancelOngoingAnimation(mLauncher.getHotseat());
+            mLauncher.getDepthController().stateDepth.setValue(
+                    LauncherState.BACKGROUND_APP.getDepth(mLauncher));
+            setLauncherScale(ScalingWorkspaceRevealAnim.MIN_SIZE);
+        }
         if (mScrimLayer == null) {
             addScrimLayer();
         }
@@ -326,6 +340,13 @@ public class LauncherBackAnimationController {
         } else if (mLauncherTargetView instanceof LauncherAppWidgetHostView) {
             mLauncherTargetView.setAlpha(isVisible ? 1f : 0f);
         }
+    }
+
+    private void setLauncherScale(float scale) {
+        mLauncher.getWorkspace().setScaleX(scale);
+        mLauncher.getWorkspace().setScaleY(scale);
+        mLauncher.getHotseat().setScaleX(scale);
+        mLauncher.getHotseat().setScaleY(scale);
     }
 
     void addScrimLayer() {
@@ -499,6 +520,10 @@ public class LauncherBackAnimationController {
         }
         if (mScrimLayer != null) {
             removeScrimLayer();
+        }
+        if (Flags.predictiveBackToHomePolish() && !mLauncher.getWorkspace().isOverlayShown()
+                && !mLauncher.isInState(LauncherState.ALL_APPS)) {
+            setLauncherScale(ScalingWorkspaceRevealAnim.MAX_SIZE);
         }
     }
 

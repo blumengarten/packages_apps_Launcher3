@@ -27,7 +27,6 @@ import static com.android.launcher3.testing.shared.ResourceUtils.NAV_BAR_INTERAC
 import static com.android.launcher3.testing.shared.ResourceUtils.STATUS_BAR_HEIGHT;
 import static com.android.launcher3.testing.shared.ResourceUtils.STATUS_BAR_HEIGHT_LANDSCAPE;
 import static com.android.launcher3.testing.shared.ResourceUtils.STATUS_BAR_HEIGHT_PORTRAIT;
-import static com.android.launcher3.util.MainThreadInitializedObject.forOverride;
 import static com.android.launcher3.util.RotationUtils.deltaRotation;
 import static com.android.launcher3.util.RotationUtils.rotateRect;
 import static com.android.launcher3.util.RotationUtils.rotateSize;
@@ -52,37 +51,33 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.launcher3.R;
+import com.android.launcher3.dagger.LauncherAppSingleton;
+import com.android.launcher3.dagger.LauncherBaseAppComponent;
 import com.android.launcher3.testing.shared.ResourceUtils;
-import com.android.launcher3.util.MainThreadInitializedObject;
+import com.android.launcher3.util.DaggerSingletonObject;
 import com.android.launcher3.util.NavigationMode;
-import com.android.launcher3.util.ResourceBasedOverride;
-import com.android.launcher3.util.SafeCloseable;
 import com.android.launcher3.util.WindowBounds;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * Utility class for mocking some window manager behaviours
  */
-public class WindowManagerProxy implements ResourceBasedOverride, SafeCloseable {
+@LauncherAppSingleton
+public class WindowManagerProxy {
 
     private static final String TAG = "WindowManagerProxy";
     public static final int MIN_TABLET_WIDTH = 600;
 
-    public static final MainThreadInitializedObject<WindowManagerProxy> INSTANCE =
-            forOverride(WindowManagerProxy.class, R.string.window_manager_proxy_class);
+    public static final DaggerSingletonObject<WindowManagerProxy> INSTANCE =
+            new DaggerSingletonObject<>(LauncherBaseAppComponent::getWmProxy);
 
     protected final boolean mTaskbarDrawnInProcess;
 
-    /**
-     * Creates a new instance of proxy, applying any overrides
-     */
-    public static WindowManagerProxy newInstance(Context context) {
-        return Overrides.getObject(WindowManagerProxy.class, context,
-                R.string.window_manager_proxy_class);
-    }
-
+    @Inject
     public WindowManagerProxy() {
         this(false);
     }
@@ -482,9 +477,6 @@ public class WindowManagerProxy implements ResourceBasedOverride, SafeCloseable 
         }
         return NavigationMode.NO_BUTTON;
     }
-
-    @Override
-    public void close() { }
 
     /**
      * @see DisplayCutout#getSafeInsets

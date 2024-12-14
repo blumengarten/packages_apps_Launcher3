@@ -57,6 +57,7 @@ import com.android.launcher3.icons.DotRenderer;
 import com.android.launcher3.logging.FileLog;
 import com.android.launcher3.model.DeviceGridState;
 import com.android.launcher3.provider.RestoreDbTask;
+import com.android.launcher3.settings.SettingsActivity;
 import com.android.launcher3.testing.shared.ResourceUtils;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.DisplayController.Info;
@@ -259,8 +260,12 @@ public class InvariantDeviceProfile implements SafeCloseable {
                     }
                 });
         if (Flags.oneGridSpecs()) {
-            mLandscapeModePreferenceListener = (String s) -> {
-                if (isFixedLandscape != FIXED_LANDSCAPE_MODE.get(context)) {
+            mLandscapeModePreferenceListener = (String preference_name) -> {
+                // Here we need both conditions even though they might seem redundant but because
+                // the update happens in the executable there can be race conditions and this avoids
+                // it.
+                if (isFixedLandscape != FIXED_LANDSCAPE_MODE.get(context)
+                        && SettingsActivity.FIXED_LANDSCAPE_MODE.equals(preference_name)) {
                     MAIN_EXECUTOR.execute(() -> {
                         Trace.beginSection("InvariantDeviceProfile#setFixedLandscape");
                         onConfigChanged(context.getApplicationContext());

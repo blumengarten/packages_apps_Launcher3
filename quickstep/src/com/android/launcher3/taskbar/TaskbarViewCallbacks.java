@@ -25,6 +25,7 @@ import static com.android.launcher3.taskbar.TaskbarAutohideSuspendController.FLA
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.GestureDetector;
+import android.view.HapticFeedbackConstants;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.View;
@@ -230,15 +231,19 @@ public class TaskbarViewCallbacks {
 
         @Override
         public void onLongPress(@NonNull MotionEvent event) {
-            maybeShowPinningView(event);
+            if (maybeShowPinningView(event)) {
+                mTaskbarView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+            }
         }
 
-        private void maybeShowPinningView(@NonNull MotionEvent event) {
+        /** Returns true if the taskbar pinning popup view was shown for {@code event}. */
+        private boolean maybeShowPinningView(@NonNull MotionEvent event) {
             if (!DisplayController.isPinnedTaskbar(mActivity) || mTaskbarView.isEventOverAnyItem(
                     event)) {
-                return;
+                return false;
             }
             mControllers.taskbarPinningController.showPinningView(mTaskbarView, event.getRawX());
+            return true;
         }
     }
 }

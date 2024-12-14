@@ -48,7 +48,7 @@ class SessionFailureTask(val packageName: String, val user: UserHandle) : ModelU
                 for (info in dataModel.itemsIdMap) {
                     if (info is WorkspaceItemInfo && info.isArchived && user == info.user) {
                         // Refresh icons on the workspace for archived apps.
-                        iconCache.getTitleAndIcon(info, info.usingLowResIcon())
+                        iconCache.getTitleAndIcon(info, info.matchingLookupFlag)
                         updatedItems.add(info)
                     }
                 }

@@ -32,6 +32,7 @@ import com.android.launcher3.util.ScreenOnTracker;
 import com.android.launcher3.util.SettingsCache;
 import com.android.launcher3.util.VibratorWrapper;
 import com.android.launcher3.util.window.RefreshRateTracker;
+import com.android.launcher3.util.window.WindowManagerProxy;
 import com.android.launcher3.widget.custom.CustomWidgetManager;
 
 import dagger.BindsInstance;
@@ -60,6 +61,7 @@ public interface LauncherBaseAppComponent {
     PluginManagerWrapper getPluginManagerWrapper();
     VibratorWrapper getVibratorWrapper();
     MSDLPlayerWrapper getMSDLPlayerWrapper();
+    WindowManagerProxy getWmProxy();
 
     /** Builder for LauncherBaseAppComponent. */
     interface Builder {

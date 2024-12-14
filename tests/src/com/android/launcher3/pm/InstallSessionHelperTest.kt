@@ -23,6 +23,7 @@ import android.content.pm.LauncherApps
 import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.os.Process.myUserHandle
 import android.os.UserHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
@@ -73,14 +74,14 @@ class InstallSessionHelperTest {
                 sessionId = 0
                 installerPackageName = expectedInstallerPackage
                 appPackageName = expectedAppPackage
-                userId = 0
+                userId = myUserHandle().identifier
             }
         val expectedVerifiedSession2 =
             PackageInstaller.SessionInfo().apply {
                 sessionId = 1
                 installerPackageName = expectedInstallerPackage
                 appPackageName = "app2"
-                userId = 0
+                userId = myUserHandle().identifier
             }
         val expectedSessions = listOf(expectedVerifiedSession1, expectedVerifiedSession2)
         whenever(launcherApps.allPackageInstallerSessions).thenReturn(expectedSessions)
@@ -97,7 +98,7 @@ class InstallSessionHelperTest {
             PackageInstaller.SessionInfo().apply {
                 installerPackageName = expectedInstallerPackage
                 appPackageName = expectedAppPackage
-                userId = 0
+                userId = myUserHandle().identifier
             }
         whenever(launcherApps.allPackageInstallerSessions)
             .thenReturn(listOf(expectedVerifiedSession))
@@ -116,7 +117,7 @@ class InstallSessionHelperTest {
                 sessionId = 1
                 installerPackageName = expectedInstallerPackage
                 appPackageName = expectedAppPackage
-                userId = 0
+                userId = myUserHandle().identifier
             }
         whenever(mockPackageInstaller.getSessionInfo(1)).thenReturn(expectedSession)
         // When
@@ -147,14 +148,14 @@ class InstallSessionHelperTest {
                 sessionId = 0
                 installerPackageName = expectedInstallerPackage
                 appPackageName = expectedAppPackage
-                userId = 0
+                userId = myUserHandle().identifier
             }
         val expectedVerifiedSession2 =
             PackageInstaller.SessionInfo().apply {
                 sessionId = 1
                 installerPackageName = expectedInstallerPackage
                 appPackageName = "app2"
-                userId = 0
+                userId = myUserHandle().identifier
             }
         val expectedSessions = listOf(expectedVerifiedSession1, expectedVerifiedSession2)
         whenever(launcherApps.allPackageInstallerSessions).thenReturn(expectedSessions)
@@ -174,7 +175,7 @@ class InstallSessionHelperTest {
                 sessionId = 1
                 installerPackageName = expectedInstallerPackage
                 appPackageName = "app2"
-                userId = 0
+                userId = myUserHandle().identifier
             }
         whenever(launcherApps.allPackageInstallerSessions).thenReturn(listOf(expectedSession))
         // When
@@ -196,7 +197,7 @@ class InstallSessionHelperTest {
                 sessionId = 1
                 installerPackageName = expectedInstallerPackage
                 appPackageName = "app2"
-                userId = 0
+                userId = myUserHandle().identifier
             }
         whenever(launcherApps.allPackageInstallerSessions).thenReturn(listOf(expectedSession))
         // When
@@ -219,7 +220,7 @@ class InstallSessionHelperTest {
                 sessionId = 1
                 installerPackageName = expectedInstallerPackage
                 appPackageName = "appPackage"
-                userId = 0
+                userId = myUserHandle().identifier
                 appIcon = Bitmap.createBitmap(1, 1, Bitmap.Config.ALPHA_8)
                 appLabel = "appLabel"
                 installReason = PackageManager.INSTALL_REASON_USER
@@ -249,7 +250,7 @@ class InstallSessionHelperTest {
                 sessionId = 1
                 installerPackageName = expectedInstallerPackage
                 appPackageName = "appPackage"
-                userId = 0
+                userId = myUserHandle().identifier
                 appIcon = Bitmap.createBitmap(1, 1, Bitmap.Config.ALPHA_8)
                 appLabel = "appLabel"
                 installReason = PackageManager.INSTALL_REASON_USER

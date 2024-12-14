@@ -544,3 +544,13 @@ flag {
   description: "Enable launcher icon shape customizations"
   bug: "348708061"
 }
+
+flag {
+  name: "predictive_back_to_home_polish"
+  namespace: "launcher"
+  description: "Enables workspace reveal animation for predictive back-to-home"
+  bug: "382453424"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+}

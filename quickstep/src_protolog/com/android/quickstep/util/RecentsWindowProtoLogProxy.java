@@ -18,6 +18,7 @@ package com.android.quickstep.util;
 
 import static com.android.launcher3.Flags.enableRecentsWindowProtoLog;
 import static com.android.quickstep.util.QuickstepProtoLogGroup.RECENTS_WINDOW;
+import static com.android.quickstep.util.QuickstepProtoLogGroup.isProtoLogInitialized;
 
 import androidx.annotation.NonNull;
 
@@ -36,17 +37,17 @@ import com.android.internal.protolog.common.IProtoLogGroup;
 public class RecentsWindowProtoLogProxy {
 
     public static void logOnStateSetStart(@NonNull String stateName) {
-        if (!enableRecentsWindowProtoLog()) return;
+        if (!enableRecentsWindowProtoLog() || !isProtoLogInitialized()) return;
         ProtoLog.d(RECENTS_WINDOW, "onStateSetStart: %s", stateName);
     }
 
     public static void logOnStateSetEnd(@NonNull String stateName) {
-        if (!enableRecentsWindowProtoLog()) return;
+        if (!enableRecentsWindowProtoLog() || !isProtoLogInitialized()) return;
         ProtoLog.d(RECENTS_WINDOW, "onStateSetEnd: %s", stateName);
     }
 
     public static void logStartRecentsWindow(boolean isShown, boolean windowViewIsNull) {
-        if (!enableRecentsWindowProtoLog()) return;
+        if (!enableRecentsWindowProtoLog() || !isProtoLogInitialized()) return;
         ProtoLog.d(RECENTS_WINDOW,
                 "Starting recents window: isShow= %b, windowViewIsNull=%b",
                 isShown,
@@ -54,7 +55,7 @@ public class RecentsWindowProtoLogProxy {
     }
 
     public static void logCleanup(boolean isShown) {
-        if (!enableRecentsWindowProtoLog()) return;
+        if (!enableRecentsWindowProtoLog() || !isProtoLogInitialized()) return;
         ProtoLog.d(RECENTS_WINDOW, "Cleaning up recents window: isShow= %b", isShown);
     }
 }
