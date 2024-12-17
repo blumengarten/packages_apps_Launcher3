@@ -650,10 +650,12 @@ public class BubbleBarViewController {
     }
 
     private void updateVisibilityForStateChange() {
-        if (!mHiddenForSysui && !mHiddenForNoBubbles && !mHiddenForStashed) {
-            mBarView.setVisibility(VISIBLE);
-        } else {
+        boolean hiddenForStashedAndNotAnimating =
+                mHiddenForStashed && !mBubbleBarViewAnimator.isAnimating();
+        if (mHiddenForSysui || mHiddenForNoBubbles || hiddenForStashedAndNotAnimating) {
             mBarView.setVisibility(INVISIBLE);
+        } else {
+            mBarView.setVisibility(VISIBLE);
         }
     }
 
@@ -1215,6 +1217,7 @@ public class BubbleBarViewController {
         pw.println("Bubble bar view controller state:");
         pw.println("  mHiddenForSysui: " + mHiddenForSysui);
         pw.println("  mHiddenForNoBubbles: " + mHiddenForNoBubbles);
+        pw.println("  mHiddenForStashed: " + mHiddenForStashed);
         pw.println("  mShouldShowEducation: " + mShouldShowEducation);
         pw.println("  mBubbleBarTranslationY.value: " + mBubbleBarTranslationY.value);
         pw.println("  mBubbleBarSwipeUpTranslationY: " + mBubbleBarSwipeUpTranslationY);

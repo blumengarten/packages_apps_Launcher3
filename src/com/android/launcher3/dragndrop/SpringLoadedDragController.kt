@@ -47,7 +47,11 @@ class SpringLoadedDragController(private val launcher: Launcher) : OnAlarmListen
     override fun onAlarm(alarm: Alarm) {
         if (screen != null) {
             // Snap to the screen that we are hovering over now
-            with(launcher.workspace) { if (!isVisible(screen)) snapToPage(indexOfChild(screen)) }
+            with(launcher.workspace) {
+                if (!isVisible(screen) && launcher.dragController.mDistanceSinceScroll != 0) {
+                    snapToPage(indexOfChild(screen))
+                }
+            }
         } else {
             launcher.dragController.cancelDrag()
         }

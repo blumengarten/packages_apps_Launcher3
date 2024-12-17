@@ -554,3 +554,13 @@ flag {
     purpose: PURPOSE_BUGFIX
   }
 }
+
+flag {
+  name: "predictive_back_to_home_blur"
+  namespace: "launcher"
+  description: "Adds blur for predictive back-to-home"
+  bug: "342178850"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+}

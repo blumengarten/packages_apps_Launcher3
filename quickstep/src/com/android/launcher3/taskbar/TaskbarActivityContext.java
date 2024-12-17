@@ -1317,25 +1317,9 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         } else if (tag instanceof TaskItemInfo info) {
             RemoteTransition remoteTransition = canUnminimizeDesktopTask(info.getTaskId())
                     ? createUnminimizeRemoteTransition() : null;
-
-            if (areDesktopTasksVisible() && recents != null) {
-                TaskView taskView = recents.getTaskViewByTaskId(info.getTaskId());
-                if (taskView == null) return;
-                RunnableList runnableList = taskView.launchWithAnimation();
-                if (runnableList != null) {
-                    runnableList.add(() ->
-                            // wrapped it in runnable here since we need the post for DW to be
-                            // ready. if we don't other DW will be gone and only the launched task
-                            // will show.
-                            UI_HELPER_EXECUTOR.execute(() ->
-                                    SystemUiProxy.INSTANCE.get(this).showDesktopApp(
-                                            info.getTaskId(), remoteTransition)));
-                }
-            } else {
-                UI_HELPER_EXECUTOR.execute(() ->
-                        SystemUiProxy.INSTANCE.get(this).showDesktopApp(
-                                info.getTaskId(), remoteTransition));
-            }
+            UI_HELPER_EXECUTOR.execute(() ->
+                    SystemUiProxy.INSTANCE.get(this).showDesktopApp(
+                            info.getTaskId(), remoteTransition));
             mControllers.taskbarStashController.updateAndAnimateTransientTaskbar(
                     /* stash= */ true);
         } else if (tag instanceof WorkspaceItemInfo) {
@@ -1579,17 +1563,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                                                 .launchAppPair((AppPairIcon) launchingIconView,
                                                         -1 /*cuj*/)));
                     } else {
-                        if (areDesktopTasksVisible()) {
-                            RunnableList runnableList = recents.launchDesktopTaskView();
-                            // Wrapping it in runnable so we post after DW is ready for the app
-                            // launch.
-                            if (runnableList != null) {
-                                runnableList.add(() -> UI_HELPER_EXECUTOR.execute(
-                                        () -> startItemInfoActivity(itemInfos.get(0), foundTask)));
-                            }
-                        } else {
-                            startItemInfoActivity(itemInfos.get(0), foundTask);
-                        }
+                        startItemInfoActivity(itemInfos.get(0), foundTask);
                     }
                 }
         );

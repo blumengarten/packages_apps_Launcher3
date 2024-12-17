@@ -134,7 +134,8 @@ public class WorkUtilityView extends LinearLayout implements Insettable,
         if (shouldUseScheduler()) {
             mSchedulerButton.setVisibility(VISIBLE);
             mSchedulerButton.setOnClickListener(view ->
-                    mContext.startActivity(new Intent(mWorkSchedulerIntentAction)));
+                    mActivityContext.startActivitySafely(view,
+                            new Intent(mWorkSchedulerIntentAction), null /* itemInfo */));
         }
     }
 
