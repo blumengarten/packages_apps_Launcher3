@@ -58,6 +58,7 @@ import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
@@ -74,10 +75,16 @@ import org.mockito.kotlin.whenever
 @RunWith(AndroidJUnit4::class)
 class FolderTest {
 
-    private val context: Context =
-        ActivityContextWrapper(ApplicationProvider.getApplicationContext())
-    private val workspaceBuilder = TestWorkspaceBuilder(context)
-    private val folder: Folder = spy(Folder(context, null))
+    private lateinit var context: Context
+    private lateinit var workspaceBuilder: TestWorkspaceBuilder
+    private lateinit var folder: Folder
+
+    @Before
+    fun setUp() {
+        context = ActivityContextWrapper(ApplicationProvider.getApplicationContext())
+        workspaceBuilder = TestWorkspaceBuilder(context)
+        folder = spy(Folder(context, null))
+    }
 
     @After
     fun tearDown() {
@@ -412,7 +419,7 @@ class FolderTest {
             folder.onEditorAction(
                 Mockito.mock(TextView::class.java),
                 EditorInfo.IME_ACTION_DONE,
-                Mockito.mock(KeyEvent::class.java)
+                Mockito.mock(KeyEvent::class.java),
             )
 
         assertTrue(result)
@@ -427,7 +434,7 @@ class FolderTest {
             folder.onEditorAction(
                 Mockito.mock(TextView::class.java),
                 EditorInfo.IME_ACTION_NONE,
-                Mockito.mock(KeyEvent::class.java)
+                Mockito.mock(KeyEvent::class.java),
             )
 
         assertFalse(result)
@@ -824,7 +831,7 @@ class FolderTest {
         val items =
             arrayListOf<ItemInfo>(
                 Mockito.mock(ItemInfo::class.java),
-                Mockito.mock(ItemInfo::class.java)
+                Mockito.mock(ItemInfo::class.java),
             )
         val view1 = Mockito.mock(View::class.java)
         val view2 = Mockito.mock(View::class.java)
@@ -845,7 +852,7 @@ class FolderTest {
         val items =
             arrayListOf<ItemInfo>(
                 Mockito.mock(ItemInfo::class.java),
-                Mockito.mock(ItemInfo::class.java)
+                Mockito.mock(ItemInfo::class.java),
             )
         val view1 = Mockito.mock(View::class.java)
         val view2 = Mockito.mock(View::class.java)
@@ -867,7 +874,7 @@ class FolderTest {
         val items =
             arrayListOf<ItemInfo>(
                 Mockito.mock(ItemInfo::class.java),
-                Mockito.mock(ItemInfo::class.java)
+                Mockito.mock(ItemInfo::class.java),
             )
         val view1 = Mockito.mock(View::class.java)
         val view2 = Mockito.mock(View::class.java)
@@ -887,7 +894,7 @@ class FolderTest {
         val items =
             arrayListOf<ItemInfo>(
                 Mockito.mock(ItemInfo::class.java),
-                Mockito.mock(ItemInfo::class.java)
+                Mockito.mock(ItemInfo::class.java),
             )
         val view1 = Mockito.mock(View::class.java)
         val view2 = Mockito.mock(View::class.java)
@@ -908,7 +915,7 @@ class FolderTest {
         val items =
             arrayListOf<ItemInfo>(
                 Mockito.mock(ItemInfo::class.java),
-                Mockito.mock(ItemInfo::class.java)
+                Mockito.mock(ItemInfo::class.java),
             )
         val view1 = Mockito.mock(View::class.java)
         val view2 = Mockito.mock(View::class.java)

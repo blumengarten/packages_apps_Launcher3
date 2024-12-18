@@ -246,10 +246,6 @@ public class InvariantDeviceProfile implements SafeCloseable {
     @TargetApi(23)
     private InvariantDeviceProfile(Context context) {
         String gridName = getCurrentGridName(context);
-        FileLog.d(TAG, "New InvariantDeviceProfile, before initGrid(): "
-                + "gridName:" + gridName
-                + ", LauncherPrefs GRID_NAME:" + LauncherPrefs.get(context).get(GRID_NAME)
-                + ", LauncherPrefs DB_FILE:" + LauncherPrefs.get(context).get(DB_FILE));
         initGrid(context, gridName);
         DisplayController.INSTANCE.get(context).setPriorityListener(
                 (displayContext, info, flags) -> {
@@ -358,6 +354,11 @@ public class InvariantDeviceProfile implements SafeCloseable {
     }
 
     private String initGrid(Context context, String gridName) {
+        FileLog.d(TAG, "Before initGrid:"
+                + "gridName:" + gridName
+                + ", dbFile:" + dbFile
+                + ", LauncherPrefs GRID_NAME:" + LauncherPrefs.get(context).get(GRID_NAME)
+                + ", LauncherPrefs DB_FILE:" + LauncherPrefs.get(context).get(DB_FILE));
         Info displayInfo = DisplayController.INSTANCE.get(context).getInfo();
         List<DisplayOption> allOptions = getPredefinedDeviceProfiles(
                 context,
@@ -383,8 +384,9 @@ public class InvariantDeviceProfile implements SafeCloseable {
         }
 
         initGrid(context, displayInfo, displayOption);
-        FileLog.d(TAG, "initGrid: "
+        FileLog.d(TAG, "After initGrid:"
                 + "gridName:" + gridName
+                + ", dbFile:" + dbFile
                 + ", LauncherPrefs GRID_NAME:" + LauncherPrefs.get(context).get(GRID_NAME)
                 + ", LauncherPrefs DB_FILE:" + LauncherPrefs.get(context).get(DB_FILE));
         return displayOption.grid.name;
@@ -402,7 +404,7 @@ public class InvariantDeviceProfile implements SafeCloseable {
      */
     @Deprecated
     public void reset(Context context) {
-        initGrid(context, getDefaultGridName(context));
+        initGrid(context, getCurrentGridName(context));
     }
 
     @VisibleForTesting
