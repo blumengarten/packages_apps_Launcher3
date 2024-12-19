@@ -36,6 +36,7 @@ import static com.android.launcher3.AbstractFloatingView.TYPE_TASK_MENU;
 import static com.android.launcher3.AbstractFloatingView.getTopOpenViewWithType;
 import static com.android.launcher3.BaseActivity.STATE_HANDLER_INVISIBILITY_FLAGS;
 import static com.android.launcher3.Flags.enableAdditionalHomeAnimations;
+import static com.android.launcher3.Flags.enableDesktopExplodedView;
 import static com.android.launcher3.Flags.enableDesktopTaskAlphaAnimation;
 import static com.android.launcher3.Flags.enableGridOnlyOverview;
 import static com.android.launcher3.Flags.enableLargeDesktopWindowingTile;
@@ -2893,12 +2894,25 @@ public abstract class RecentsView<
      */
     public void onPrepareGestureEndAnimation(
             @Nullable AnimatorSet animatorSet, GestureState.GestureEndTarget endTarget,
-            TaskViewSimulator[] taskViewSimulators) {
+            RemoteTargetHandle[] remoteTargetHandles) {
         Log.d(TAG, "onPrepareGestureEndAnimation - endTarget: " + endTarget);
         mCurrentGestureEndTarget = endTarget;
         boolean isOverviewEndTarget = endTarget == GestureState.GestureEndTarget.RECENTS;
         if (isOverviewEndTarget) {
             updateGridProperties();
+        }
+
+        if (enableDesktopExplodedView()) {
+            for (TaskView taskView : getTaskViews()) {
+                if (taskView instanceof DesktopTaskView desktopTaskView) {
+                    if (animatorSet == null) {
+                        desktopTaskView.setExplodeProgress(1.0f);
+                    } else {
+                        animatorSet.play(desktopTaskView.startWindowExplodeAnimation());
+                    }
+                    desktopTaskView.setRemoteTargetHandles(remoteTargetHandles);
+                }
+            }
         }
 
         BaseState<?> endState = mSizeStrategy.stateFromGestureEndTarget(endTarget);
@@ -2913,7 +2927,8 @@ public abstract class RecentsView<
                         - runningTaskView.getNonGridTranslationX();
                 runningTaskSecondaryGridTranslation = runningTaskView.getGridTranslationY();
             }
-            for (TaskViewSimulator tvs : taskViewSimulators) {
+            for (RemoteTargetHandle remoteTargetHandle : remoteTargetHandles) {
+                TaskViewSimulator tvs = remoteTargetHandle.getTaskViewSimulator();
                 if (animatorSet == null) {
                     setGridProgress(1);
                     tvs.taskPrimaryTranslation.value = runningTaskPrimaryGridTranslation;
@@ -2960,6 +2975,12 @@ public abstract class RecentsView<
         setRunningTaskHidden(false);
         startIconFadeInOnGestureComplete();
         animateActionsViewIn();
+
+        for (TaskView taskView : getTaskViews()) {
+            if (taskView instanceof DesktopTaskView desktopTaskView) {
+                desktopTaskView.setRemoteTargetHandles(mRemoteTargetHandles);
+            }
+        }
 
         mCurrentGestureEndTarget = null;
     }
