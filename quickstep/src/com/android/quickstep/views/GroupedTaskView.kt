@@ -38,6 +38,7 @@ import com.android.quickstep.util.RecentsOrientedState
 import com.android.quickstep.util.SplitSelectStateController
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.system.InteractionJankMonitorWrapper
+import com.android.wm.shell.Flags.enableFlexibleTwoAppSplit
 import com.android.wm.shell.shared.split.SplitScreenConstants.PersistentSnapPosition
 
 /**
@@ -52,6 +53,9 @@ import com.android.wm.shell.shared.split.SplitScreenConstants.PersistentSnapPosi
  */
 class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
     TaskView(context, attrs, type = TaskViewType.GROUPED) {
+
+    private val MINIMUM_RATIO_TO_SHOW_ICON = 0.2f
+
     // TODO(b/336612373): Support new TTV for GroupedTaskView
     var splitBoundsConfig: SplitConfigurationOptions.SplitBounds? = null
         private set
@@ -176,14 +180,32 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     private fun updateIconPlacement() {
         val splitBoundsConfig = splitBoundsConfig ?: return
-        val taskIconHeight = container.deviceProfile.overviewTaskIconSizePx
+        val deviceProfile = container.deviceProfile
+        val taskIconHeight = deviceProfile.overviewTaskIconSizePx
         val isRtl = layoutDirection == LAYOUT_DIRECTION_RTL
         val inSplitSelection = getThisTaskCurrentlyInSplitSelection() != INVALID_TASK_ID
+
+        if (enableFlexibleTwoAppSplit()) {
+            val topLeftTaskPercent =
+                if (deviceProfile.isLeftRightSplit) splitBoundsConfig.leftTaskPercent
+                else splitBoundsConfig.topTaskPercent
+            val bottomRightTaskPercent = 1 - topLeftTaskPercent
+            taskContainers[0]
+                .iconView
+                .setFlexSplitAlpha(
+                    if (topLeftTaskPercent < MINIMUM_RATIO_TO_SHOW_ICON) 0f else 1f
+                )
+            taskContainers[1]
+                .iconView
+                .setFlexSplitAlpha(
+                    if (bottomRightTaskPercent < MINIMUM_RATIO_TO_SHOW_ICON) 0f else 1f
+                )
+        }
 
         if (enableOverviewIconMenu()) {
             val groupedTaskViewSizes =
                 pagedOrientationHandler.getGroupedTaskViewSizes(
-                    container.deviceProfile,
+                    deviceProfile,
                     splitBoundsConfig,
                     layoutParams.width,
                     layoutParams.height,
@@ -197,7 +219,7 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
                 layoutParams.height,
                 layoutParams.width,
                 isRtl,
-                container.deviceProfile,
+                deviceProfile,
                 splitBoundsConfig,
                 inSplitSelection,
             )
@@ -211,7 +233,7 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
                 measuredHeight,
                 measuredWidth,
                 isRtl,
-                container.deviceProfile,
+                deviceProfile,
                 splitBoundsConfig,
                 inSplitSelection,
             )

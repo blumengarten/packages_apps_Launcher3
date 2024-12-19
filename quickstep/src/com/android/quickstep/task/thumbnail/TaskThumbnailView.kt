@@ -29,6 +29,7 @@ import androidx.annotation.ColorInt
 import androidx.core.view.isInvisible
 import com.android.launcher3.R
 import com.android.launcher3.util.ViewPool
+import com.android.launcher3.util.coroutines.DispatcherProvider
 import com.android.quickstep.recents.di.RecentsDependencies
 import com.android.quickstep.recents.di.get
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.BackgroundOnly
@@ -45,8 +46,12 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
+    private val recentsCoroutineScope: CoroutineScope = RecentsDependencies.get()
+    private val dispatcherProvider: DispatcherProvider = RecentsDependencies.get()
+
     private lateinit var viewData: TaskThumbnailViewData
     private lateinit var viewModel: TaskThumbnailViewModel
 
@@ -119,7 +124,9 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        viewAttachedScope.cancel("TaskThumbnailView detaching from window")
+        recentsCoroutineScope.launch(dispatcherProvider.background) {
+            viewAttachedScope.cancel("TaskThumbnailView detaching from window")
+        }
     }
 
     override fun onRecycle() {

@@ -183,6 +183,11 @@ public class BubbleBarViewController {
         if (!Flags.enableOptionalBubbleOverflow()) {
             showOverflow(true);
         }
+        if (!mBubbleStashController.isTransientTaskBar()) {
+            // TODO(b/380274085) for transient taskbar mode, the click is also handled by the input
+            //  consumer. This check can be removed once b/380274085 is fixed.
+            mBarView.setOnClickListener(v -> setExpanded(!mBarView.isExpanded()));
+        }
         mBarView.addOnLayoutChangeListener(
                 (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
                     mTaskbarInsetsController.onTaskbarOrBubblebarWindowHeightOrInsetsChanged();

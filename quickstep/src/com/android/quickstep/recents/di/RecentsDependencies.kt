@@ -39,7 +39,6 @@ import com.android.quickstep.task.viewmodel.TaskThumbnailViewModelImpl
 import com.android.systemui.shared.recents.model.Task
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
 internal typealias RecentsScopeId = String
@@ -58,10 +57,13 @@ class RecentsDependencies private constructor(private val appContext: Context) {
     private fun startDefaultScope(appContext: Context) {
         createScope(DEFAULT_SCOPE_ID).apply {
             set(RecentsViewData::class.java.simpleName, RecentsViewData())
+            val dispatcherProvider: DispatcherProvider = ProductionDispatchers
             val recentsCoroutineScope =
-                CoroutineScope(SupervisorJob() + Dispatchers.Main + CoroutineName("RecentsView"))
+                CoroutineScope(
+                    SupervisorJob() + dispatcherProvider.unconfined + CoroutineName("RecentsView")
+                )
             set(CoroutineScope::class.java.simpleName, recentsCoroutineScope)
-            set(DispatcherProvider::class.java.simpleName, ProductionDispatchers)
+            set(DispatcherProvider::class.java.simpleName, dispatcherProvider)
             val recentsModel = RecentsModel.INSTANCE.get(appContext)
             val taskVisualsChangedDelegate =
                 TaskVisualsChangedDelegateImpl(
@@ -170,18 +172,6 @@ class RecentsDependencies private constructor(private val appContext: Context) {
         log("linked scopes: ${getScope(scopeId).scopeIdsLinked}")
         val instance: Any =
             when (modelClass) {
-                RecentTasksRepository::class.java -> {
-                    with(RecentsModel.INSTANCE.get(appContext)) {
-                        TasksRepository(
-                            this,
-                            thumbnailCache,
-                            iconCache,
-                            get(),
-                            get(),
-                            ProductionDispatchers,
-                        )
-                    }
-                }
                 RecentsViewData::class.java -> RecentsViewData()
                 TaskContainerData::class.java -> TaskContainerData()
                 TaskThumbnailViewData::class.java -> TaskThumbnailViewData()

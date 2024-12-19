@@ -16,28 +16,24 @@
 
 package com.android.quickstep.views
 
+import com.android.launcher3.util.coroutines.DispatcherProvider
 import com.android.quickstep.ViewUtils
 import com.android.quickstep.recents.viewmodel.RecentsViewModel
 import com.android.systemui.shared.recents.model.ThumbnailData
-import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** Helper for [RecentsView] to interact with the [RecentsViewModel]. */
-class RecentsViewModelHelper(private val recentsViewModel: RecentsViewModel) {
-    private lateinit var viewAttachedScope: CoroutineScope
-
-    fun onAttachedToWindow() {
-        viewAttachedScope =
-            CoroutineScope(SupervisorJob() + Dispatchers.Default + CoroutineName("RecentsView"))
-    }
-
+class RecentsViewModelHelper(
+    private val recentsViewModel: RecentsViewModel,
+    private val recentsCoroutineScope: CoroutineScope,
+    private val dispatcherProvider: DispatcherProvider,
+) {
     fun onDetachedFromWindow() {
-        viewAttachedScope.cancel("RecentsView detaching from window")
+        recentsCoroutineScope.cancel("RecentsView detaching from window")
     }
 
     fun switchToScreenshot(
@@ -48,7 +44,7 @@ class RecentsViewModelHelper(private val recentsViewModel: RecentsViewModel) {
         // Update recentsViewModel and apply the thumbnailOverride ASAP, before waiting inside
         // viewAttachedScope.
         recentsViewModel.setRunningTaskShowScreenshot(true)
-        viewAttachedScope.launch {
+        recentsCoroutineScope.launch(dispatcherProvider.main) {
             recentsViewModel.waitForRunningTaskShowScreenshotToUpdate()
             recentsViewModel.waitForThumbnailsToUpdate(updatedThumbnails)
             withContext(Dispatchers.Main) { ViewUtils.postFrameDrawn(taskView, onFinishRunnable) }

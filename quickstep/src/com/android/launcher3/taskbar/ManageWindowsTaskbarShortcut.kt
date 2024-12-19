@@ -148,9 +148,17 @@ class ManageWindowsTaskbarShortcut<T>(
                         FLAG_AUTOHIDE_SUSPEND_MULTI_INSTANCE_MENU_OPEN,
                         false,
                     )
+                    controllers.taskbarPopupController.cleanUpMultiInstanceMenuReference()
                 }
             }
         )
+    }
+
+    /** Closes the multi-instance menu if it has been initialized. */
+    fun closeMultiInstanceMenu() {
+        if (::taskbarShortcutAllWindowsView.isInitialized) {
+            taskbarShortcutAllWindowsView.animateClose()
+        }
     }
 
     /**
@@ -238,6 +246,7 @@ class ManageWindowsTaskbarShortcut<T>(
             )
             taskbarOverlayContext.dragLayer?.removeView(menuView.rootView)
             taskbarOverlayContext.dragLayer.removeTouchController(this)
+            controllers.taskbarPopupController.cleanUpMultiInstanceMenuReference()
         }
 
         /** TouchController implementations for closing the carousel when touched outside */

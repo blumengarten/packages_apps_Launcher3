@@ -263,6 +263,9 @@ public class LoaderTask implements Runnable {
             // sanitizeData should not be invoked if the workspace is loaded from a db different
             // from the main db as defined in the invariant device profile.
             // (e.g. both grid preview and minimal device mode uses a different db)
+            // TODO(b/384731096): Write Unit Test to make sure sanitizeWidgetsShortcutsAndPackages
+            //  actually re-pins shortcuts that are in model but not in ShortcutManager, if possible
+            //  after a simulated restore.
             if (Objects.equals(mApp.getInvariantDeviceProfile().dbFile, mDbName)) {
                 verifyNotStopped();
                 sanitizeFolders(mItemsDeleted);

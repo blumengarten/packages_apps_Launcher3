@@ -141,6 +141,7 @@ public final class TaskbarAllAppsController {
         if (isOpen()) {
             mSlideInView.close(true);
         } else {
+            mControllers.taskbarPopupController.maybeCloseMultiInstanceMenu();
             show(true, showKeyboard);
         }
     }

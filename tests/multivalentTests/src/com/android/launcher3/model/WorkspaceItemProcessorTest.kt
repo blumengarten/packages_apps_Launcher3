@@ -393,6 +393,39 @@ class WorkspaceItemProcessorTest {
     }
 
     @Test
+    fun `When Pinned Deep Shortcut is not stored in ShortcutManager re-query by Shortcut ID`() {
+        // Given
+        mockCursor.itemType = ITEM_TYPE_DEEP_SHORTCUT
+        val si =
+            mock<ShortcutInfo>().apply {
+                whenever(id).thenReturn("")
+                whenever(`package`).thenReturn("")
+                whenever(activity).thenReturn(mock())
+                whenever(longLabel).thenReturn("")
+                whenever(isEnabled).thenReturn(true)
+                whenever(disabledMessage).thenReturn("")
+                whenever(disabledReason).thenReturn(0)
+                whenever(persons).thenReturn(EMPTY_PERSON_ARRAY)
+            }
+        whenever(mockLauncherApps.getShortcuts(any(), any())).thenReturn(listOf(si))
+        mKeyToPinnedShortcutsMap.clear()
+        mIconRequestInfos = mutableListOf()
+
+        // When
+        itemProcessorUnderTest =
+            createWorkspaceItemProcessorUnderTest(allDeepShortcuts = mAllDeepShortcuts)
+        itemProcessorUnderTest.processItem()
+
+        // Then
+        verify(mockLauncherApps).getShortcuts(any(), any())
+        assertWithMessage("item restoreFlag should be set to 0")
+            .that(mockCursor.restoreFlag)
+            .isEqualTo(0)
+        verify(mockCursor).markRestored()
+        verify(mockCursor).checkAndAddItem(any(), any(), anyOrNull())
+    }
+
+    @Test
     fun `When Pinned Deep Shortcut not found then mark deleted`() {
 
         // Given
