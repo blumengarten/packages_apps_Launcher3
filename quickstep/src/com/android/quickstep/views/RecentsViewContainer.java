@@ -25,7 +25,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.launcher3.BaseActivity;
@@ -34,7 +33,6 @@ import com.android.launcher3.statehandlers.DesktopVisibilityController;
 import com.android.launcher3.taskbar.TaskbarUIController;
 import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.views.ScrimView;
-import com.android.quickstep.util.TISBindHelper;
 
 /**
  * Interface to be implemented by the parent view of RecentsView
@@ -217,6 +215,4 @@ public interface RecentsViewContainer extends ActivityContext {
     void setTaskbarUIController(@Nullable TaskbarUIController taskbarUIController);
 
     @Nullable TaskbarUIController getTaskbarUIController();
-
-    @NonNull TISBindHelper getTISBindHelper();
 }

@@ -14,40 +14,39 @@
  * limitations under the License.
  */
 
-package com.android.quickstep.fallback.window
+package com.android.quickstep
 
 import android.content.Context
 import android.hardware.display.DisplayManager
-import android.os.Handler
 import android.util.Log
 import android.util.SparseArray
-import android.view.Display
 import androidx.core.util.valueIterator
+import com.android.quickstep.DisplayModel.DisplayResource
 
-
-/**
- * Factory for creating [RecentsWindowManager] instances based on context per display.
- */
-class RecentsWindowFactory(private val context: Context) {
+/** data model for managing resources with lifecycles that match that of the connected display */
+abstract class DisplayModel<RESOURCE_TYPE : DisplayResource>(val context: Context) {
 
     companion object {
-        private const val TAG = "RecentsWindowFactory"
+        private const val TAG = "DisplayViewModel"
         private const val DEBUG = false
     }
 
-    private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-    private val managerArray = SparseArray<RecentsWindowManager>()
+    protected val displayManager =
+        context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+    protected val displayResourceArray = SparseArray<RESOURCE_TYPE>()
 
-    private val displayListener: DisplayManager.DisplayListener =
+    abstract fun createDisplayResource(displayId: Int)
+
+    protected val displayListener: DisplayManager.DisplayListener =
         (object : DisplayManager.DisplayListener {
             override fun onDisplayAdded(displayId: Int) {
                 if (DEBUG) Log.d(TAG, "onDisplayAdded: displayId=$displayId")
-                create(displayId)
+                createDisplayResource(displayId)
             }
 
             override fun onDisplayRemoved(displayId: Int) {
                 if (DEBUG) Log.d(TAG, "onDisplayRemoved: displayId=$displayId")
-                delete(displayId)
+                deleteDisplayResource(displayId)
             }
 
             override fun onDisplayChanged(displayId: Int) {
@@ -55,39 +54,26 @@ class RecentsWindowFactory(private val context: Context) {
             }
         })
 
-    init {
-        create(Display.DEFAULT_DISPLAY) // create manager for first display early.
-        displayManager.registerDisplayListener(displayListener, Handler.getMain())
-    }
-
     fun destroy() {
-        managerArray.valueIterator().forEach { manager ->
-            manager.destroy()
+        displayResourceArray.valueIterator().forEach { displayResource ->
+            displayResource.cleanup()
         }
-        managerArray.clear()
+        displayResourceArray.clear()
         displayManager.unregisterDisplayListener(displayListener)
     }
 
-    fun get(displayId: Int): RecentsWindowManager? {
+    fun getDisplayResource(displayId: Int): RESOURCE_TYPE? {
         if (DEBUG) Log.d(TAG, "get: displayId=$displayId")
-        return managerArray[displayId]
+        return displayResourceArray[displayId]
     }
 
-    fun delete(displayId: Int) {
+    fun deleteDisplayResource(displayId: Int) {
         if (DEBUG) Log.d(TAG, "delete: displayId=$displayId")
-        get(displayId)?.destroy()
-        managerArray.remove(displayId)
+        getDisplayResource(displayId)?.cleanup()
+        displayResourceArray.remove(displayId)
     }
 
-    fun create(displayId: Int): RecentsWindowManager {
-        if (DEBUG) Log.d(TAG, "create: displayId=$displayId")
-        get(displayId)?.let {
-            return it
-        }
-        val display = displayManager.getDisplay(displayId)
-        val displayContext = context.createDisplayContext(display)
-        val recentsWindowManager = RecentsWindowManager(displayId, displayContext)
-        managerArray[displayId] = recentsWindowManager
-        return recentsWindowManager
+    abstract class DisplayResource() {
+        abstract fun cleanup()
     }
 }

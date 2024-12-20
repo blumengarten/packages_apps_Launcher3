@@ -56,7 +56,6 @@ import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController;
 import com.android.launcher3.util.LockedUserState;
 import com.android.launcher3.util.MainThreadInitializedObject;
 import com.android.launcher3.views.BaseDragLayer;
-import com.android.quickstep.fallback.window.RecentsWindowFactory;
 import com.android.quickstep.inputconsumers.AccessibilityInputConsumer;
 import com.android.quickstep.inputconsumers.BubbleBarInputConsumer;
 import com.android.quickstep.inputconsumers.DeviceLockedInputConsumer;
@@ -122,7 +121,7 @@ public class InputConsumerUtilsTest {
     @Before
     public void setupTaskAnimationManager() {
         mTaskAnimationManager = new TaskAnimationManager(
-                mContext, mock(RecentsWindowFactory.class), mDeviceState);
+                mContext, mDeviceState);
     }
 
     @Before

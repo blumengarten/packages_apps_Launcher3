@@ -96,7 +96,7 @@ import java.util.List;
  * around it.
  */
 public class ModelDbController {
-    private static final String TAG = "LauncherProvider";
+    private static final String TAG = "ModelDbController";
 
     private static final String EMPTY_DATABASE_CREATED = "EMPTY_DATABASE_CREATED";
     public static final String EXTRA_DB_NAME = "db_name";
@@ -303,7 +303,7 @@ public class ModelDbController {
         if (restoreEventLogger != null) {
             sendMetricsForFailedMigration(restoreEventLogger, getDb());
         }
-        FileLog.d(TAG, "Migration failed: resetting launcher database");
+        FileLog.d(TAG, "resetLauncherDb: Migration failed: resetting launcher database");
         createEmptyDB();
         LauncherPrefs.get(mContext).putSync(
                 getEmptyDbCreatedKey(mOpenHelper.getDatabaseName()).to(true));
@@ -331,7 +331,7 @@ public class ModelDbController {
     private boolean isThereExistingDb() {
         if (LauncherPrefs.get(mContext).get(getEmptyDbCreatedKey())) {
             // If we already have a new DB, ignore migration
-            FileLog.d(TAG, "migrateGridIfNeeded: new DB already created, skipping migration");
+            FileLog.d(TAG, "isThereExistingDb: new DB already created, skipping migration");
             return true;
         }
         return false;
@@ -342,7 +342,7 @@ public class ModelDbController {
         if (GridSizeMigrationDBController.needsToMigrate(mContext, idp)) {
             return true;
         }
-        FileLog.d(TAG, "migrateGridIfNeeded: no grid migration needed");
+        FileLog.d(TAG, "isGridMigrationNecessary: no grid migration needed");
         return false;
     }
 
@@ -350,7 +350,9 @@ public class ModelDbController {
         InvariantDeviceProfile idp = LauncherAppState.getIDP(mContext);
         String targetDbName = new DeviceGridState(idp).getDbFile();
         if (TextUtils.equals(targetDbName, mOpenHelper.getDatabaseName())) {
-            FileLog.e(TAG, "migrateGridIfNeeded: target db is same as current: " + targetDbName);
+            FileLog.e(TAG, "isCurrentDbSameAsTarget: target db is same as current"
+                    + " current db: " + mOpenHelper.getDatabaseName()
+                    + " target db: " + targetDbName);
             return true;
         }
         return false;
@@ -385,13 +387,12 @@ public class ModelDbController {
             DeviceGridState destDeviceState = new DeviceGridState(idp);
 
             boolean isDestNewDb = !existingDBs.contains(destDeviceState.getDbFile());
-
             GridSizeMigrationLogic gridSizeMigrationLogic = new GridSizeMigrationLogic();
             gridSizeMigrationLogic.migrateGrid(mContext, srcDeviceState, destDeviceState,
                     mOpenHelper, oldHelper.getWritableDatabase(), isDestNewDb);
         } catch (Exception e) {
             resetLauncherDb(restoreEventLogger);
-            throw new Exception("Failed to migrate grid", e);
+            throw new Exception("attemptMigrateDb: Failed to migrate grid", e);
         } finally {
             if (mOpenHelper != oldHelper) {
                 oldHelper.close();
@@ -415,7 +416,7 @@ public class ModelDbController {
                     sendMetricsForFailedMigration(restoreEventLogger, getDb());
                 }
             }
-            FileLog.d(TAG, "Migration failed: resetting launcher database");
+            FileLog.d(TAG, "tryMigrateDB: Migration failed: resetting launcher database");
             createEmptyDB();
             LauncherPrefs.get(mContext).putSync(
                     getEmptyDbCreatedKey(mOpenHelper.getDatabaseName()).to(true));
@@ -447,17 +448,17 @@ public class ModelDbController {
         }
         String targetDbName = new DeviceGridState(idp).getDbFile();
         if (TextUtils.equals(targetDbName, mOpenHelper.getDatabaseName())) {
-            FileLog.e(TAG, "migrateGridIfNeeded: target db is same as current: " + targetDbName);
+            FileLog.e(TAG, "migrateGridIfNeeded: target db is same as current"
+                    + " current db: " + mOpenHelper.getDatabaseName()
+                    + " target db: " + targetDbName);
             return false;
         }
         DatabaseHelper oldHelper = mOpenHelper;
-
         // We save the existing db's before creating the destination db helper so we know what logic
         // to run in grid migration based on if that grid already existed before migration or not.
         List<String> existingDBs = LauncherFiles.GRID_DB_FILES.stream()
                 .filter(dbName -> mContext.getDatabasePath(dbName).exists())
                 .toList();
-
         mOpenHelper = (mContext instanceof SandboxContext) ? oldHelper
                 : createDatabaseHelper(true /* forMigration */, targetDbName);
         try {
@@ -465,13 +466,11 @@ public class ModelDbController {
             DeviceGridState srcDeviceState = new DeviceGridState(mContext);
             // This is the state we want to migrate to that is given by the idp
             DeviceGridState destDeviceState = new DeviceGridState(idp);
-
             boolean isDestNewDb = !existingDBs.contains(destDeviceState.getDbFile());
-
             return GridSizeMigrationDBController.migrateGridIfNeeded(mContext, srcDeviceState,
                     destDeviceState, mOpenHelper, oldHelper.getWritableDatabase(), isDestNewDb);
         } catch (Exception e) {
-            FileLog.e(TAG, "Failed to migrate grid", e);
+            FileLog.e(TAG, "migrateGridIfNeeded: Failed to migrate grid", e);
             return false;
         } finally {
             if (mOpenHelper != oldHelper) {

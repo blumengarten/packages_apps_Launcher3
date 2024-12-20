@@ -164,13 +164,14 @@ public class LauncherRecentsView extends RecentsView<QuickstepLauncher, Launcher
         }
 
         setFreezeViewVisibility(true);
-        if (mContainer.getDesktopVisibilityController() != null) {
-            mContainer.getDesktopVisibilityController().onLauncherStateChanged(toState);
-        }
     }
 
     @Override
     public void onStateTransitionComplete(LauncherState finalState) {
+        if (mContainer.getDesktopVisibilityController() != null) {
+            mContainer.getDesktopVisibilityController().onLauncherStateChanged(finalState);
+        }
+
         if (!finalState.isRecentsViewVisible) {
             // Clean-up logic that occurs when recents is no longer in use/visible.
             reset();

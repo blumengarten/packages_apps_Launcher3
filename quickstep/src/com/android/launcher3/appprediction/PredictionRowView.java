@@ -16,12 +16,16 @@
 
 package com.android.launcher3.appprediction;
 
+import static android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE;
+
 import android.content.Context;
 import android.graphics.Canvas;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
@@ -88,6 +92,14 @@ public class PredictionRowView<T extends Context & ActivityContext>
         mVerticalPadding = getResources().getDimensionPixelSize(
                 R.dimen.all_apps_predicted_icon_vertical_padding);
         updateVisibility();
+    }
+
+    @Override
+    public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
+        super.onInitializeAccessibilityNodeInfo(info);
+        if (Build.VERSION.SDK_INT >= UPSIDE_DOWN_CAKE) {
+            info.setContainerTitle(mActivityContext.getString(R.string.title_app_suggestions));
+        }
     }
 
     @Override

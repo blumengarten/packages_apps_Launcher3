@@ -658,10 +658,10 @@ constructor(
 
             recentsView?.let {
                 collectionItemInfo =
-                    AccessibilityNodeInfo.CollectionItemInfo.obtain(
+                    AccessibilityNodeInfo.CollectionItemInfo(
                         0,
                         1,
-                        it.taskViewCount - it.indexOfChild(this@TaskView) - 1,
+                        it.getAccessibilityChildren().indexOf(this@TaskView),
                         1,
                         false,
                     )

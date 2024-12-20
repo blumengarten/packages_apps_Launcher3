@@ -106,7 +106,7 @@ public class FallbackSwipeHandler extends
             boolean continuingLastGesture, InputConsumerController inputConsumer,
             MSDLPlayerWrapper msdlPlayerWrapper) {
         super(context, deviceState, taskAnimationManager, gestureState, touchTimeMs,
-                continuingLastGesture, inputConsumer, null, msdlPlayerWrapper);
+                continuingLastGesture, inputConsumer, msdlPlayerWrapper);
 
         mRunningOverHome = mGestureState.getRunningTask() != null
                 && mGestureState.getRunningTask().isHomeTask();

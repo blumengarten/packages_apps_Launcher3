@@ -52,7 +52,6 @@ import android.view.SurfaceControl;
 import android.view.ViewTreeObserver;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.launcher3.DeviceProfile;
@@ -60,9 +59,9 @@ import com.android.launcher3.LauncherRootView;
 import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.statemanager.BaseState;
 import com.android.launcher3.statemanager.StatefulContainer;
+import com.android.launcher3.util.LauncherModelHelper;
 import com.android.launcher3.util.MSDLPlayerWrapper;
 import com.android.launcher3.util.SystemUiController;
-import com.android.quickstep.fallback.window.RecentsWindowFactory;
 import com.android.quickstep.util.ContextInitListener;
 import com.android.quickstep.util.MotionPauseDetector;
 import com.android.quickstep.views.RecentsView;
@@ -90,8 +89,9 @@ public abstract class AbsSwipeUpHandlerTestCase<
         SWIPE_HANDLER extends AbsSwipeUpHandler<RECENTS_CONTAINER, RECENTS_VIEW, STATE_TYPE>,
         CONTAINER_INTERFACE extends BaseContainerInterface<STATE_TYPE, RECENTS_CONTAINER>> {
 
-    protected final Context mContext =
-            InstrumentationRegistry.getInstrumentation().getTargetContext();
+    protected final LauncherModelHelper mLauncherModelHelper = new LauncherModelHelper();
+    protected final LauncherModelHelper.SandboxModelContext mContext =
+            mLauncherModelHelper.sandboxContext;
     protected final InputConsumerController mInputConsumerController =
             InputConsumerController.getRecentsAnimationInputConsumer();
     protected final ActivityManager.RunningTaskInfo mRunningTaskInfo =
@@ -180,8 +180,7 @@ public abstract class AbsSwipeUpHandlerTestCase<
 
     @Before
     public void setUpRecentsContainer() {
-        mTaskAnimationManager = new TaskAnimationManager(mContext, getRecentsWindowFactory(),
-                mRecentsAnimationDeviceState);
+        mTaskAnimationManager = new TaskAnimationManager(mContext, mRecentsAnimationDeviceState);
         RecentsViewContainer recentsContainer = getRecentsContainer();
         RECENTS_VIEW recentsView = getRecentsView();
 
@@ -381,11 +380,6 @@ public abstract class AbsSwipeUpHandlerTestCase<
     @NonNull
     private SWIPE_HANDLER createSwipeHandler() {
         return createSwipeHandler(SystemClock.uptimeMillis(), false);
-    }
-
-    @Nullable
-    protected RecentsWindowFactory getRecentsWindowFactory() {
-        return null;
     }
 
     @NonNull

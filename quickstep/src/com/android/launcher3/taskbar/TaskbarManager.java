@@ -47,6 +47,7 @@ import android.os.Trace;
 import android.provider.Settings;
 import android.util.Log;
 import android.util.SparseArray;
+import android.util.SparseBooleanArray;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.WindowManager;
@@ -116,7 +117,6 @@ public class TaskbarManager {
     private final Context mWindowContext;
     private final @Nullable Context mNavigationBarPanelContext;
     private WindowManager mWindowManager;
-    private boolean mAddedWindow;
     private final TaskbarNavButtonController mDefaultNavButtonController;
     private final ComponentCallbacks mDefaultComponentCallbacks;
 
@@ -133,6 +133,8 @@ public class TaskbarManager {
     private final SparseArray<TaskbarActivityContext> mTaskbars = new SparseArray<>();
     /** DisplayId - {@link FrameLayout} map for Connected Display. */
     private final SparseArray<FrameLayout> mRootLayouts = new SparseArray<>();
+    /** DisplayId - {@link Boolean} map indicating if RootLayout was added to window. */
+    private final SparseBooleanArray mAddedRootLayouts = new SparseBooleanArray();
     private StatefulActivity mActivity;
     private RecentsViewContainer mRecentsViewContainer;
 
@@ -742,20 +744,39 @@ public class TaskbarManager {
 
     private void addTaskbarRootViewToWindow(int displayId) {
         TaskbarActivityContext taskbar = getTaskbarForDisplay(displayId);
-        if (enableTaskbarNoRecreate() && !mAddedWindow && taskbar != null) {
+        if (!enableTaskbarNoRecreate() || taskbar == null) {
+            return;
+        }
+
+        if (!isTaskbarRootLayoutAddedForDisplay(displayId)) {
             mWindowManager.addView(getTaskbarRootLayoutForDisplay(displayId),
                     taskbar.getWindowLayoutParams());
-            mAddedWindow = true;
+            mAddedRootLayouts.put(displayId, true);
         }
     }
 
     private void removeTaskbarRootViewFromWindow(int displayId) {
         FrameLayout rootLayout = getTaskbarRootLayoutForDisplay(displayId);
-        if (enableTaskbarNoRecreate() && mAddedWindow && rootLayout != null) {
+        if (!enableTaskbarNoRecreate() || rootLayout == null) {
+            return;
+        }
+
+        if (isTaskbarRootLayoutAddedForDisplay(displayId)) {
             mWindowManager.removeViewImmediate(rootLayout);
-            mAddedWindow = false;
+            mAddedRootLayouts.put(displayId, false);
             removeTaskbarRootLayoutFromMap(displayId);
         }
+    }
+
+    /**
+     * Retrieves whether RootLayout was added to window for specific display, or false if no
+     * such mapping has been made.
+     *
+     * @param displayId The ID of the display for which to retrieve the taskbar root layout.
+     * @return if RootLayout was added to window {@link Boolean} for a display or {@code false}.
+     */
+    private boolean isTaskbarRootLayoutAddedForDisplay(int displayId) {
+        return mAddedRootLayouts.get(displayId);
     }
 
     /**
@@ -853,6 +874,7 @@ public class TaskbarManager {
      */
     private void removeTaskbarRootLayoutFromMap(int displayId) {
         if (mRootLayouts.contains(displayId)) {
+            mAddedRootLayouts.delete(displayId);
             mRootLayouts.delete(displayId);
         }
     }

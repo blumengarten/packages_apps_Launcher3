@@ -42,6 +42,7 @@ import androidx.annotation.UiThread;
 import com.android.launcher3.Flags;
 import com.android.launcher3.R;
 import com.android.launcher3.util.SimpleBroadcastReceiver;
+import com.android.quickstep.fallback.window.RecentsDisplayModel;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.systemui.shared.system.PackageManagerWrapper;
 
@@ -181,7 +182,8 @@ public final class OverviewComponentObserver {
 
             if (Flags.enableLauncherOverviewInWindow() || Flags.enableFallbackOverviewInWindow()) {
                 mContainerInterface =
-                        FallbackWindowInterface.getInstance(mDeviceState.getDisplayId());
+                        RecentsDisplayModel.getINSTANCE().get(mContext)
+                                .getFallbackWindowInterface(mDeviceState.getDisplayId());
             } else {
                 mContainerInterface = FallbackActivityInterface.INSTANCE;
             }

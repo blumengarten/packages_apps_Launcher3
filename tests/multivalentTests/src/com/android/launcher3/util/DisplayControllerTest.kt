@@ -30,6 +30,7 @@ import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherPrefs.Companion.TASKBAR_PINNING
 import com.android.launcher3.LauncherPrefs.Companion.TASKBAR_PINNING_IN_DESKTOP_MODE
 import com.android.launcher3.dagger.LauncherAppComponent
+import com.android.launcher3.dagger.LauncherAppModule
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.util.DisplayController.CHANGE_DENSITY
 import com.android.launcher3.util.DisplayController.CHANGE_ROTATION
@@ -64,7 +65,7 @@ import org.mockito.stubbing.Answer
 class DisplayControllerTest {
 
     private val context = spy(SandboxModelContext())
-    private val windowManagerProxy: WindowManagerProxy = mock()
+    private val windowManagerProxy: MyWmProxy = mock()
     private val launcherPrefs: LauncherPrefs = mock()
     private lateinit var displayManager: DisplayManager
     private val display: Display = mock()
@@ -230,12 +231,17 @@ class DisplayControllerTest {
     }
 }
 
+class MyWmProxy : WindowManagerProxy()
+
 @LauncherAppSingleton
-@Component
+@Component(modules = [LauncherAppModule::class])
 interface DisplayControllerTestComponent : LauncherAppComponent {
+
+    override fun getWmProxy(): MyWmProxy
+
     @Component.Builder
     interface Builder : LauncherAppComponent.Builder {
-        @BindsInstance fun bindWMProxy(proxy: WindowManagerProxy): Builder
+        @BindsInstance fun bindWMProxy(proxy: MyWmProxy): Builder
 
         override fun build(): DisplayControllerTestComponent
     }

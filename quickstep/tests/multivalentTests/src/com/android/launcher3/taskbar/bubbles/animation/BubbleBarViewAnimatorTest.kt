@@ -240,6 +240,7 @@ class BubbleBarViewAnimatorTest {
         // verify the hide bubble animation is pending
         assertThat(animatorScheduler.delayedBlock).isNotNull()
 
+        whenever(bubbleStashController.isStashed).thenReturn(true)
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             animator.onStashStateChangingWhileAnimating()
         }
@@ -249,7 +250,7 @@ class BubbleBarViewAnimatorTest {
         assertThat(animator.isAnimating).isFalse()
         assertThat(bubbleBarView.scaleX).isEqualTo(1)
         assertThat(bubbleBarView.scaleY).isEqualTo(1)
-        verify(bubbleStashController).onNewBubbleAnimationInterrupted(any(), any())
+        verify(bubbleStashController).onNewBubbleAnimationInterrupted(eq(true), any())
 
         // PhysicsAnimatorTestUtils posts the cancellation to the main thread so we need to wait
         // again

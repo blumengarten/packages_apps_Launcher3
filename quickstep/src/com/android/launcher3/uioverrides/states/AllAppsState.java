@@ -102,7 +102,7 @@ public class AllAppsState extends LauncherState {
 
     @Override
     public int getTitle() {
-        return R.string.all_apps_label;
+        return R.string.all_apps_list_label;
     }
 
     @Override

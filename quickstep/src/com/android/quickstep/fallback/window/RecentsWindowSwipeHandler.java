@@ -101,6 +101,8 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
     private static StaticMessageReceiver sMessageReceiver = null;
 
     private FallbackHomeAnimationFactory mActiveAnimationFactory;
+    private final RecentsDisplayModel mRecentsDisplayModel;
+
     private final boolean mRunningOverHome;
 
     private final Matrix mTmpMatrix = new Matrix();
@@ -111,10 +113,11 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
     public RecentsWindowSwipeHandler(Context context, RecentsAnimationDeviceState deviceState,
             TaskAnimationManager taskAnimationManager, GestureState gestureState, long touchTimeMs,
             boolean continuingLastGesture, InputConsumerController inputConsumer,
-            RecentsWindowFactory recentsWindowFactory, MSDLPlayerWrapper msdlPlayerWrapper) {
+            MSDLPlayerWrapper msdlPlayerWrapper) {
         super(context, deviceState, taskAnimationManager, gestureState, touchTimeMs,
-                continuingLastGesture, inputConsumer, recentsWindowFactory, msdlPlayerWrapper);
+                continuingLastGesture, inputConsumer, msdlPlayerWrapper);
 
+        mRecentsDisplayModel = RecentsDisplayModel.getINSTANCE().get(context);
         mRunningOverHome = mGestureState.getRunningTask() != null
                 && mGestureState.getRunningTask().isHomeTask();
 
@@ -160,7 +163,8 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
         boolean fromHomeToHome = mRunningOverHome
                 && endTarget == GestureState.GestureEndTarget.HOME;
         if (fromHomeToHome) {
-            RecentsWindowManager manager = mRecentsWindowFactory.get(mDeviceState.getDisplayId());
+            RecentsWindowManager manager =
+                    mRecentsDisplayModel.getRecentsWindowManager(mDeviceState.getDisplayId());
             if (manager != null) {
                 manager.startHome(/* finishRecentsAnimation= */ false);
             }
@@ -225,7 +229,7 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
             recentsCallback = () -> {
                 callback.run();
                 RecentsWindowManager manager =
-                        mRecentsWindowFactory.get(mDeviceState.getDisplayId());
+                        mRecentsDisplayModel.getRecentsWindowManager(mDeviceState.getDisplayId());
                 if (manager != null) {
                     manager.startHome();
                 }

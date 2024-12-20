@@ -71,7 +71,7 @@ public class LauncherSwipeHandlerV2 extends AbsSwipeUpHandler<
             boolean continuingLastGesture, InputConsumerController inputConsumer,
             MSDLPlayerWrapper msdlPlayerWrapper) {
         super(context, deviceState, taskAnimationManager, gestureState, touchTimeMs,
-                continuingLastGesture, inputConsumer, null, msdlPlayerWrapper);
+                continuingLastGesture, inputConsumer, msdlPlayerWrapper);
     }
 
 

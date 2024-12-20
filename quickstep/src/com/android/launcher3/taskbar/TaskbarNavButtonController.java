@@ -344,6 +344,10 @@ public class TaskbarNavButtonController implements TaskbarControllers.LoggableTa
         mCallbacks.onToggleOverview();
     }
 
+    public void hideOverview() {
+        mCallbacks.onHideOverview();
+    }
+
     void sendBackKeyEvent(int action, boolean cancelled) {
         if (action == mLastSentBackAction) {
             // There must always be an alternating sequence of ACTION_DOWN and ACTION_UP events
@@ -411,5 +415,8 @@ public class TaskbarNavButtonController implements TaskbarControllers.LoggableTa
 
         /** Callback invoked when the overview button is pressed. */
         default void onToggleOverview() {}
+
+        /** Callback invoken when a visible overview needs to be hidden. */
+        default void onHideOverview() { }
     }
 }

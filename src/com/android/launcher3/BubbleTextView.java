@@ -743,7 +743,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         appTitleBounds = new RectF((tmpRect.width() - titleLength) / 2.f - getCompoundPaddingLeft(),
                 0, (tmpRect.width() + titleLength) / 2.f + getCompoundPaddingRight(),
                 (int) Math.ceil(fm.bottom - fm.top));
-        appTitleBounds.inset(mRoundRectPadding * 2, 0);
+        appTitleBounds.inset((mAppTitleHorizontalPadding) * 2, 0);
 
 
         if (mIcon != null) {

@@ -28,7 +28,6 @@ import com.android.launcher3.statemanager.StateManager;
 import com.android.launcher3.statemanager.StatefulContainer;
 import com.android.quickstep.TopTaskTracker;
 import com.android.quickstep.fallback.RecentsState;
-import com.android.quickstep.util.TISBindHelper;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
 
@@ -137,12 +136,6 @@ public class FallbackTaskbarUIController
         TopTaskTracker.CachedTaskInfo topTask = TopTaskTracker.INSTANCE
                 .get(mControllers.taskbarActivityContext).getCachedTopTask(true);
         return topTask.isHomeTask() || topTask.isRecentsTask();
-    }
-
-    @Nullable
-    @Override
-    protected TISBindHelper getTISBindHelper() {
-        return mRecentsContainer.getTISBindHelper();
     }
 
     @Override

@@ -49,7 +49,6 @@ import com.android.quickstep.HomeVisibilityState;
 import com.android.quickstep.RecentsAnimationCallbacks;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.util.GroupTask;
-import com.android.quickstep.util.TISBindHelper;
 import com.android.quickstep.views.RecentsView;
 import com.android.systemui.shared.system.QuickStepContract.SystemUiStateFlags;
 import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
@@ -483,12 +482,6 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
     @Override
     protected void onIconLayoutBoundsChanged() {
         mTaskbarLauncherStateController.resetIconAlignment();
-    }
-
-    @Nullable
-    @Override
-    protected TISBindHelper getTISBindHelper() {
-        return mLauncher.getTISBindHelper();
     }
 
     @Override

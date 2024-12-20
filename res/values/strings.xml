@@ -190,6 +190,8 @@
     <!-- Label for the header text of the All Apps section in All Apps view, used to separate Predicted Apps and Actions section from All Apps section. [CHAR_LIMIT=50] -->
     <string name="all_apps_label">All apps</string>
 
+    <string name="all_apps_list_label">Apps list</string>
+
     <!-- Popup items -->
     <!-- Text to display as the header above notifications. [CHAR_LIMIT=30] -->
     <string name="notifications_header">Notifications</string>

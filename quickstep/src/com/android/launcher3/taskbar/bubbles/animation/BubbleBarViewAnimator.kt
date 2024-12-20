@@ -531,7 +531,7 @@ constructor(
         bubbleStashController.getStashedHandlePhysicsAnimator().cancelIfRunning()
         resetBubbleBarPropertiesOnInterrupt()
         bubbleStashController.onNewBubbleAnimationInterrupted(
-            /* isStashed= */ bubbleBarView.alpha == 0f,
+            /* isStashed= */ bubbleStashController.isStashed,
             bubbleBarView.translationY,
         )
     }

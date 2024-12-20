@@ -30,6 +30,7 @@ import com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME
 import com.android.launcher3.LauncherSettings.Favorites.TMP_TABLE
 import com.android.launcher3.Utilities
 import com.android.launcher3.config.FeatureFlags
+import com.android.launcher3.logging.FileLog
 import com.android.launcher3.model.GridSizeMigrationDBController.DbReader
 import com.android.launcher3.provider.LauncherDbUtils.SQLiteTransaction
 import com.android.launcher3.provider.LauncherDbUtils.copyTable
@@ -57,10 +58,10 @@ class GridSizeMigrationLogic {
             return
         }
 
-        val isFirstLoad = get(context).get(LauncherPrefs.IS_FIRST_LOAD_AFTER_RESTORE)
-        Log.d(
+        val isAfterRestore = get(context).get(LauncherPrefs.IS_FIRST_LOAD_AFTER_RESTORE)
+        FileLog.d(
             TAG,
-            "Begin grid migration. First load: $isFirstLoad\n srcDeviceState: " +
+            "Begin grid migration. isAfterRestore: $isAfterRestore\nsrcDeviceState: " +
                 "$srcDeviceState\ndestDeviceState: $destDeviceState\nisDestNewDb: $isDestNewDb",
         )
 
@@ -112,7 +113,7 @@ class GridSizeMigrationLogic {
                 t.commit()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error during grid migration", e)
+            FileLog.e(TAG, "Error during grid migration", e)
         } finally {
             Log.v(
                 TAG,

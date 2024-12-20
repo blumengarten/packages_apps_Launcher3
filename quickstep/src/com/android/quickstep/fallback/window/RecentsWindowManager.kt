@@ -50,7 +50,6 @@ import com.android.launcher3.util.RunnableList
 import com.android.launcher3.util.SystemUiController
 import com.android.launcher3.views.BaseDragLayer
 import com.android.launcher3.views.ScrimView
-import com.android.quickstep.FallbackWindowInterface
 import com.android.quickstep.OverviewComponentObserver
 import com.android.quickstep.RecentsAnimationCallbacks
 import com.android.quickstep.RecentsAnimationCallbacks.RecentsAnimationListener
@@ -89,7 +88,7 @@ import java.util.function.Predicate
  * To add new protologs, see [RecentsWindowProtoLogProxy]. To enable logging to logcat, see
  * [QuickstepProtoLogGroup.Constants.DEBUG_RECENTS_WINDOW]
  */
-class RecentsWindowManager(private val displayId: Int, context: Context) :
+class RecentsWindowManager(context: Context) :
     RecentsWindowContext(context), RecentsViewContainer, StatefulContainer<RecentsState> {
 
     companion object {
@@ -98,6 +97,9 @@ class RecentsWindowManager(private val displayId: Int, context: Context) :
 
         class RecentsWindowTracker : ContextTracker<RecentsWindowManager?>() {
             override fun isHomeStarted(context: RecentsWindowManager?): Boolean {
+                // if we need to change this block to use context in some way, we will need to
+                // refactor RecentsWindowTracker to be an instance (instead of a singleton) managed
+                // by RecentsDisplayModel. Otherwise bad things will occur.
                 return true
             }
         }
@@ -152,14 +154,12 @@ class RecentsWindowManager(private val displayId: Int, context: Context) :
         }
 
     init {
-        FallbackWindowInterface.init(displayId, this)
         TaskStackChangeListeners.getInstance().registerTaskStackListener(taskStackChangeListener)
     }
 
     override fun destroy() {
         super.destroy()
         cleanupRecentsWindow()
-        FallbackWindowInterface.getInstance(displayId)?.destroy()
         TaskStackChangeListeners.getInstance().unregisterTaskStackListener(taskStackChangeListener)
         callbacks?.removeListener(recentsAnimationListener)
         recentsWindowTracker.onContextDestroyed(this)
@@ -320,10 +320,6 @@ class RecentsWindowManager(private val displayId: Int, context: Context) :
 
     override fun getTaskbarUIController(): TaskbarUIController? {
         return taskbarUIController
-    }
-
-    override fun getTISBindHelper(): TISBindHelper {
-        return tisBindHelper
     }
 
     fun registerInitListener(onInitListener: Predicate<Boolean>) {

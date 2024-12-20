@@ -25,6 +25,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.android.launcher3.FakeLauncherPrefs
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.dagger.LauncherAppComponent
+import com.android.launcher3.dagger.LauncherAppModule
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.util.MainThreadInitializedObject.ObjectSandbox
 import com.android.launcher3.util.SandboxApplication
@@ -116,7 +117,7 @@ private constructor(
 }
 
 @LauncherAppSingleton
-@Component
+@Component(modules = [LauncherAppModule::class])
 interface TaskbarSandboxComponent : LauncherAppComponent {
     @Component.Builder
     interface Builder : LauncherAppComponent.Builder {

@@ -16,6 +16,8 @@
 
 package com.android.quickstep.views
 
+import android.view.View
+import androidx.core.view.children
 import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
 import com.android.quickstep.util.GroupTask
 import com.android.quickstep.views.RecentsView.RUNNING_TASK_ATTACH_ALPHA
@@ -93,6 +95,12 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
 
     /** Returns the last TaskView that should be displayed as a large tile. */
     fun getLastLargeTaskView(): TaskView? = recentsView.taskViews.lastOrNull { it.isLargeTile }
+
+    /**
+     * Gets the list of accessibility children. Currently all the children of RecentsViews are
+     * added, and in the reverse order to the list.
+     */
+    fun getAccessibilityChildren(): List<View> = recentsView.children.toList().reversed()
 
     @JvmOverloads
     /** Returns the first [TaskView], with some tasks possibly hidden in the carousel. */

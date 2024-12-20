@@ -30,8 +30,6 @@ import android.content.Intent;
 import androidx.test.filters.SmallTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.quickstep.fallback.window.RecentsWindowFactory;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -43,9 +41,6 @@ public class TaskAnimationManagerTest {
 
     protected final Context mContext =
             InstrumentationRegistry.getInstrumentation().getTargetContext();
-
-    @Mock
-    private RecentsWindowFactory mRecentsWindowFactory;
 
     @Mock
     private SystemUiProxy mSystemUiProxy;
@@ -62,8 +57,7 @@ public class TaskAnimationManagerTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        mTaskAnimationManager = new TaskAnimationManager(mContext, mRecentsWindowFactory,
-                mRecentsAnimationDeviceState) {
+        mTaskAnimationManager = new TaskAnimationManager(mContext, mRecentsAnimationDeviceState) {
             @Override
             SystemUiProxy getSystemUiProxy() {
                 return mSystemUiProxy;

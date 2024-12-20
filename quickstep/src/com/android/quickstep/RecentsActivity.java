@@ -554,12 +554,6 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
         return overviewCommandHelper == null || overviewCommandHelper.canStartHomeSafely();
     }
 
-    @NonNull
-    @Override
-    public TISBindHelper getTISBindHelper() {
-        return mTISBindHelper;
-    }
-
     @Override
     public boolean isRecentsViewVisible() {
         return getStateManager().getState().isRecentsViewVisible();

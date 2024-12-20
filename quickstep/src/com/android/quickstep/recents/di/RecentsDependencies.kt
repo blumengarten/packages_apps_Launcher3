@@ -243,13 +243,17 @@ class RecentsDependencies private constructor(private val appContext: Context) {
         private const val DEFAULT_SCOPE_ID = "RecentsDependencies::GlobalScope"
         private const val TAG = "RecentsDependencies"
         private const val DEBUG = false
+        private var activeRecentsCount = 0
 
         @Volatile private lateinit var instance: RecentsDependencies
 
         fun initialize(view: View): RecentsDependencies = initialize(view.context)
 
         fun initialize(context: Context): RecentsDependencies {
-            synchronized(this) { instance = RecentsDependencies(context.applicationContext) }
+            synchronized(this) {
+                activeRecentsCount++
+                instance = RecentsDependencies(context.applicationContext)
+            }
             return instance
         }
 
@@ -263,9 +267,29 @@ class RecentsDependencies private constructor(private val appContext: Context) {
             return instance
         }
 
+        @JvmStatic
         fun destroy() {
-            instance.scopes.clear()
-            instance.startDefaultScope(instance.appContext)
+            // When Launcher Activity restarts, the old view's RecentsView.onDetachedFromWindow
+            // happens after the new view's creation. This means that destroy can be called after a
+            // new initialisation. This check prevents a newly initialised tree from being
+            // destroyed. Ideally we would have 1 instance of the dependency tree for each
+            // RecentsView.
+            //
+            // This check is sufficient to avoid a leak of the dependency tree after the Activity is
+            // destroyed while also allowing Launcher auto-restarts (production behaviour) to easily
+            // reinitialise the dependency tree.
+            //
+            // TODO(b/353917593): Better lifecycle decisions will be implemented in this bug or when
+            //  replacing with Dagger (b/371370483).
+            activeRecentsCount--
+            if (activeRecentsCount == 0) {
+                instance.scopes.clear()
+            } else {
+                instance.log(
+                    "RecentsDependencies was not destroyed. " +
+                        "There is still an active RecentsView instance."
+                )
+            }
         }
     }
 }

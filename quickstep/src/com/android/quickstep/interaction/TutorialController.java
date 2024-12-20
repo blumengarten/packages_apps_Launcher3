@@ -318,11 +318,6 @@ abstract class TutorialController implements BackGestureAttemptCallback,
     }
 
     @StringRes
-    public int getSpokenIntroductionSubtitle() {
-        return NO_ID;
-    }
-
-    @StringRes
     public int getSuccessFeedbackSubtitle() {
         return NO_ID;
     }
@@ -401,17 +396,13 @@ abstract class TutorialController implements BackGestureAttemptCallback,
                 isGestureSuccessful
                         ? getSuccessFeedbackTitle() : R.string.gesture_tutorial_try_again,
                 subtitleResId,
-                NO_ID,
-                isGestureSuccessful,
-                false);
+                isGestureSuccessful);
     }
 
     void showFeedback(
             int titleResId,
             int subtitleResId,
-            int spokenSubtitleResId,
-            boolean isGestureSuccessful,
-            boolean useGestureAnimationDelay) {
+            boolean isGestureSuccessful) {
         mFeedbackTitleView.removeCallbacks(mTitleViewCallback);
         if (mFeedbackViewCallback != null) {
             mFeedbackView.removeCallbacks(mFeedbackViewCallback);
@@ -512,7 +503,6 @@ abstract class TutorialController implements BackGestureAttemptCallback,
             if (mTutorialType == TutorialType.BACK_NAVIGATION) {
                 resetViewsForBackGesture();
             }
-
         }
 
         mGestureCompleted = false;

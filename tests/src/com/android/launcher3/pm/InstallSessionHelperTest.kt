@@ -104,7 +104,7 @@ class InstallSessionHelperTest {
             .thenReturn(listOf(expectedVerifiedSession))
         // When
         val actualSession =
-            installSessionHelper.getActiveSessionInfo(UserHandle(0), expectedAppPackage)
+            installSessionHelper.getActiveSessionInfo(myUserHandle(), expectedAppPackage)
         // Then
         assertThat(actualSession).isEqualTo(expectedVerifiedSession)
     }

@@ -58,6 +58,7 @@ import static com.android.launcher3.LauncherConstants.TraceEvents.ON_CREATE_EVT;
 import static com.android.launcher3.LauncherConstants.TraceEvents.ON_NEW_INTENT_EVT;
 import static com.android.launcher3.LauncherConstants.TraceEvents.ON_RESUME_EVT;
 import static com.android.launcher3.LauncherConstants.TraceEvents.ON_START_EVT;
+import static com.android.launcher3.LauncherPrefs.FIXED_LANDSCAPE_MODE;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_DESKTOP;
 import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APPLICATION;
 import static com.android.launcher3.LauncherState.ALL_APPS;
@@ -785,9 +786,13 @@ public class Launcher extends StatefulActivity<LauncherState>
             return;
         }
         // When the flag oneGridSpecs is on we want to disable ALLOW_ROTATION which is replaced
-        // by FIXED_LANDSCAPE_MODE, ALLOW_ROTATION will only be used on Tablets afterwards.
-        if (getDeviceProfile().isPhone || getDeviceProfile().isTwoPanels) {
+        // by FIXED_LANDSCAPE_MODE, ALLOW_ROTATION will only be used on Tablets and foldables
+        // afterwards.
+        if (getDeviceProfile().isPhone) {
             LauncherPrefs.get(this).put(LauncherPrefs.ALLOW_ROTATION, false);
+        } else if (getDeviceProfile().isTablet) {
+            // Tablet do not use fixed landscape mode, make sure it can't be activated by mistake
+            LauncherPrefs.get(this).put(FIXED_LANDSCAPE_MODE, false);
         }
         getRotationHelper().setFixedLandscape(
                 Objects.requireNonNull(mDeviceProfile.inv).isFixedLandscape
