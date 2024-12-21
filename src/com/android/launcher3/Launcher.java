@@ -869,7 +869,6 @@ public class Launcher extends StatefulActivity<LauncherState>
             case REQUEST_CREATE_SHORTCUT:
                 completeAddShortcut(intent, info.container, screenId,
                         cellPos.cellX, cellPos.cellY, info);
-                announceForAccessibility(R.string.item_added_to_workspace);
                 break;
             case REQUEST_CREATE_APPWIDGET:
                 completeAddAppWidget(appWidgetId, info, null, null, false, true, null);
