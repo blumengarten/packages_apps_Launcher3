@@ -21,6 +21,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.platform.test.annotations.EnableFlags
 import android.platform.test.flag.junit.SetFlagsRule
+import androidx.test.core.app.ApplicationProvider
 import com.android.launcher3.Flags.FLAG_TASKBAR_OVERFLOW
 import com.android.launcher3.R
 import com.android.launcher3.taskbar.TaskbarControllerTestUtil.runOnMainSync
@@ -50,6 +51,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.whenever
 
 @RunWith(LauncherMultivalentJUnit::class)
 @EmulatedDevices(["pixelTablet2023"])
@@ -66,10 +71,10 @@ class TaskbarOverflowTest {
     val context =
         TaskbarWindowSandboxContext.create { builder ->
             builder.bindSystemUiProxy(
-                object : SystemUiProxy(this) {
-                    override fun setDesktopTaskListener(listener: IDesktopTaskListener?) {
-                        desktopTaskListener = listener
-                    }
+                spy(SystemUiProxy(ApplicationProvider.getApplicationContext())) { proxy ->
+                    doAnswer { desktopTaskListener = it.getArgument(0) }
+                        .whenever(proxy)
+                        .setDesktopTaskListener(anyOrNull())
                 }
             )
         }

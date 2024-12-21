@@ -252,6 +252,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -611,7 +612,8 @@ public abstract class RecentsView<
     private int mKeyboardTaskFocusSnapAnimationDuration;
     private int mKeyboardTaskFocusIndex = INVALID_PAGE;
 
-    private int[] mDismissPrimaryTranslations;
+    private Map<TaskView, Integer> mTaskViewsDismissPrimaryTranslations =
+            new HashMap<TaskView, Integer>();
 
     /**
      * TODO: Call reloadIdNeeded in onTaskStackChanged.
@@ -855,6 +857,19 @@ public abstract class RecentsView<
     private final TaskViewsIterable mTaskViewsIterable = new TaskViewsIterable();
 
     public class TaskViewsIterable implements Iterable<TaskView> {
+
+        /**
+         * Iterates TaskViews when its index inside the RecentsView is needed.
+         */
+        public void forEachWithIndexInParent(BiConsumer<TaskView, Integer> consumer) {
+            int childCount = getChildCount();
+            for (int index = 0; index < childCount; index++) {
+                if (getChildAt(index) instanceof TaskView taskView) {
+                    consumer.accept(taskView, index);
+                }
+            }
+        }
+
         @Override
         public TaskViewsIterator iterator() {
             return new TaskViewsIterator();
@@ -1528,6 +1543,19 @@ public abstract class RecentsView<
     private int getLastTaskScroll(int clearAllScroll, int clearAllWidth) {
         int distance = clearAllWidth + getClearAllExtraPageSpacing();
         return clearAllScroll + (mIsRtl ? distance : -distance);
+    }
+
+    /**
+     * Launch running task view if it is instance of DesktopTaskView.
+     * @return provides runnable list to attach runnable at end of Desktop Mode launch
+     */
+    @Nullable
+    public RunnableList launchRunningDesktopTaskView() {
+        TaskView taskView = getRunningTaskView();
+        if (taskView instanceof DesktopTaskView) {
+            return taskView.launchWithAnimation();
+        }
+        return null;
     }
 
     /*
@@ -2519,41 +2547,39 @@ public abstract class RecentsView<
             return;
         }
 
-        int lower = 0;
-        int upper = 0;
-        int visibleStart = 0;
-        int visibleEnd = 0;
+        int lowerIndex, upperIndex, visibleStart, visibleEnd;
         if (showAsGrid()) {
             int screenStart = getPagedOrientationHandler().getPrimaryScroll(this);
             int pageOrientedSize = getPagedOrientationHandler().getMeasuredSize(this);
             // For GRID_ONLY_OVERVIEW, use +/- 1 task column as visible area for preloading
             // adjacent thumbnails, otherwise use +/-50% screen width
-            int extraWidth = enableGridOnlyOverview() ? getLastComputedTaskSize().width()
-                    + getPageSpacing() : pageOrientedSize / 2;
+            int extraWidth =
+                    enableGridOnlyOverview() ? getLastComputedTaskSize().width() + getPageSpacing()
+                            : pageOrientedSize / 2;
+            lowerIndex = upperIndex = 0;
             visibleStart = screenStart - extraWidth;
             visibleEnd = screenStart + pageOrientedSize + extraWidth;
         } else {
             int centerPageIndex = getPageNearestToCenterOfScreen();
             int numChildren = getChildCount();
-            lower = Math.max(0, centerPageIndex - 2);
-            upper = Math.min(centerPageIndex + 2, numChildren - 1);
+            lowerIndex = Math.max(0, centerPageIndex - 2);
+            upperIndex = Math.min(centerPageIndex + 2, numChildren - 1);
+            visibleStart = visibleEnd = 0;
         }
 
         List<Integer> visibleTaskIds = new ArrayList<>();
-
         // Update the task data for the in/visible children
-        for (int i = 0; i < getTaskViewCount(); i++) {
-            TaskView taskView = requireTaskViewAt(i);
+        getTaskViews().forEachWithIndexInParent((taskView, index) -> {
             List<TaskContainer> containers = taskView.getTaskContainers();
             if (containers.isEmpty()) {
-                continue;
+                return;
             }
             boolean visible;
             if (showAsGrid()) {
                 visible = isTaskViewWithinBounds(taskView, visibleStart, visibleEnd,
-                        mDismissPrimaryTranslations != null ? mDismissPrimaryTranslations[i] : 0);
+                        mTaskViewsDismissPrimaryTranslations.getOrDefault(taskView, 0));
             } else {
-                visible = lower <= i && i <= upper;
+                visible = index >= lowerIndex && index <= upperIndex;
             }
             if (visible) {
                 // Default update all non-null tasks, then remove running ones
@@ -2565,7 +2591,7 @@ public abstract class RecentsView<
                             tasksToUpdate.stream().map((task) -> task.key.id).toList());
                 }
                 if (tasksToUpdate.isEmpty()) {
-                    continue;
+                    return;
                 }
                 int visibilityChanges = 0;
                 for (Task task : tasksToUpdate) {
@@ -2599,7 +2625,7 @@ public abstract class RecentsView<
                     taskView.onTaskListVisibilityChanged(false /* visible */, visibilityChanges);
                 }
             }
-        }
+        });
         if (enableRefactorTaskThumbnail()) {
             mRecentsViewModel.updateVisibleTasks(visibleTaskIds);
         }
@@ -3922,7 +3948,7 @@ public abstract class RecentsView<
             slidingTranslation += mIsRtl ? newClearAllShortTotalWidthTranslation
                     : -newClearAllShortTotalWidthTranslation;
         }
-        mDismissPrimaryTranslations = new int[taskCount];
+        mTaskViewsDismissPrimaryTranslations.clear();
         int lastTaskViewIndex = indexOfChild(mUtils.getLastTaskView());
         for (int i = 0; i < count; i++) {
             View child = getChildAt(i);
@@ -4034,7 +4060,7 @@ public abstract class RecentsView<
                             clampToProgress(dismissInterpolator, animationStartProgress,
                                     animationEndProgress));
                     anim.add(dismissAnimator);
-                    mDismissPrimaryTranslations[i] = (int) finalTranslation;
+                    mTaskViewsDismissPrimaryTranslations.put(taskView, (int) finalTranslation);
                     distanceFromDismissedTask++;
                 }
             }
@@ -4164,7 +4190,7 @@ public abstract class RecentsView<
                                 mCurrentPageScrollDiff = primaryScroll - currentPageScroll;
                             }
                         }
-                    } else if (dismissedIndex < pageToSnapTo || pageToSnapTo == taskCount - 1) {
+                    } else if (dismissedIndex < pageToSnapTo || pageToSnapTo == lastTaskViewIndex) {
                         pageToSnapTo--;
                     }
                     boolean isHomeTaskDismissed = dismissedTaskView == getHomeTaskView();
@@ -4270,7 +4296,7 @@ public abstract class RecentsView<
                 updateCurrentTaskActionsVisibility();
                 onDismissAnimationEnds();
                 mPendingAnimation = null;
-                mDismissPrimaryTranslations = null;
+                mTaskViewsDismissPrimaryTranslations.clear();
             }
         });
     }
@@ -4345,7 +4371,7 @@ public abstract class RecentsView<
         );
 
         if (view instanceof TaskView) {
-            mDismissPrimaryTranslations[index] = scrollDiffPerPage;
+            mTaskViewsDismissPrimaryTranslations.put((TaskView) view, scrollDiffPerPage);
         }
         if (mEnableDrawingLiveTile && view instanceof TaskView
                 && ((TaskView) view).isRunningTask()) {
@@ -5213,20 +5239,16 @@ public abstract class RecentsView<
         SplitAnimationTimings timings = AnimUtils.getDeviceOverviewToSplitTimings(
                 mContainer.getDeviceProfile().isTablet);
         if (enableLargeDesktopWindowingTile()) {
-            TaskView currentPageTaskView = getCurrentPageTaskView();
-            TaskView nextPageTaskView = getTaskViewAt(mCurrentPage + 1);
-            TaskView previousPageTaskView = getTaskViewAt(mCurrentPage - 1);
-            for (TaskView taskView : getTaskViews()) {
+            getTaskViews().forEachWithIndexInParent((taskView, index) -> {
                 if (taskView instanceof DesktopTaskView) {
                     // Setting pivot to scale down from screen centre.
-                    if (taskView == previousPageTaskView || taskView == currentPageTaskView
-                            || taskView == nextPageTaskView) {
+                    if (isTaskViewVisible(taskView)) {
                         float pivotX = 0f;
-                        if (taskView == previousPageTaskView) {
+                        if (index < mCurrentPage) {
                             pivotX = mIsRtl ? taskView.getWidth() / 2f - mPageSpacing
                                     - taskView.getWidth()
                                     : taskView.getWidth() / 2f + mPageSpacing + taskView.getWidth();
-                        } else if (taskView == currentPageTaskView) {
+                        } else if (index == mCurrentPage) {
                             pivotX = taskView.getWidth() / 2f;
                         } else {
                             pivotX = mIsRtl ? taskView.getWidth() + mPageSpacing
@@ -5245,7 +5267,7 @@ public abstract class RecentsView<
                             clampToProgress(deskTopFadeInterPolator, 0f,
                                     timings.getDesktopFadeSplitAnimationEndOffset()));
                 }
-            }
+            });
         }
     }
 
@@ -6155,44 +6177,34 @@ public abstract class RecentsView<
             mClearAllButton.setScrollOffsetPrimary(mIsRtl ? clearAllWidthDiff : -clearAllWidthDiff);
         }
 
-        boolean pageScrollChanged = false;
-
+        int[] oldPageScrolls = Arrays.copyOf(outPageScrolls, outPageScrolls.length);
         int clearAllIndex = indexOfChild(mClearAllButton);
         int clearAllScroll = 0;
         int clearAllWidth = getPagedOrientationHandler().getPrimarySize(mClearAllButton);
         if (clearAllIndex != -1 && clearAllIndex < outPageScrolls.length) {
             float scrollDiff = mClearAllButton.getScrollAdjustment(showAsFullscreen, showAsGrid);
-            clearAllScroll = newPageScrolls[clearAllIndex] + (int) scrollDiff;
-            if (outPageScrolls[clearAllIndex] != clearAllScroll) {
-                pageScrollChanged = true;
-                outPageScrolls[clearAllIndex] = clearAllScroll;
-            }
+            clearAllScroll = newPageScrolls[clearAllIndex] + Math.round(scrollDiff);
+            outPageScrolls[clearAllIndex] = clearAllScroll;
         }
 
         int lastTaskScroll = getLastTaskScroll(clearAllScroll, clearAllWidth);
-        for (int i = 0; i < getChildCount(); i++) {
-            TaskView taskView = getTaskViewAt(i);
-            if (taskView == null) {
-                continue;
-            }
+        getTaskViews().forEachWithIndexInParent((taskView, index) -> {
             float scrollDiff = taskView.getScrollAdjustment(showAsGrid);
-            int pageScroll = newPageScrolls[i] + Math.round(scrollDiff);
+            int pageScroll = newPageScrolls[index] + Math.round(scrollDiff);
             if ((mIsRtl && pageScroll < lastTaskScroll)
                     || (!mIsRtl && pageScroll > lastTaskScroll)) {
                 pageScroll = lastTaskScroll;
             }
-            if (outPageScrolls[i] != pageScroll) {
-                pageScrollChanged = true;
-                outPageScrolls[i] = pageScroll;
-            }
+            outPageScrolls[index] = pageScroll;
             if (DEBUG) {
-                Log.d(TAG, "getPageScrolls - outPageScrolls[" + i + "]: " + outPageScrolls[i]);
+                Log.d(TAG,
+                        "getPageScrolls - outPageScrolls[" + index + "]: " + outPageScrolls[index]);
             }
-        }
+        });
         if (DEBUG) {
             Log.d(TAG, "getPageScrolls - clearAllScroll: " + clearAllScroll);
         }
-        return pageScrollChanged;
+        return !Arrays.equals(oldPageScrolls, outPageScrolls);
     }
 
     @Override

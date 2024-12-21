@@ -592,9 +592,12 @@ public class TaskbarManager {
         }
     }
 
-    public void setWallpaperVisible(boolean isVisible) {
+    /**
+     * Sets wallpaper visibility for specific display.
+     */
+    public void setWallpaperVisible(int displayId, boolean isVisible) {
         mSharedState.wallpaperVisible = isVisible;
-        TaskbarActivityContext taskbar = getTaskbarForDisplay(getDefaultDisplayId());
+        TaskbarActivityContext taskbar = getTaskbarForDisplay(displayId);
         if (taskbar != null) {
             taskbar.setWallpaperVisible(isVisible);
         }
@@ -797,7 +800,7 @@ public class TaskbarManager {
     private TaskbarActivityContext createTaskbarActivityContext(DeviceProfile dp, int displayId) {
         TaskbarActivityContext newTaskbar = new TaskbarActivityContext(mWindowContext,
                 mNavigationBarPanelContext, dp, mDefaultNavButtonController,
-                mUnfoldProgressProvider, mDesktopVisibilityController);
+                mUnfoldProgressProvider, mDesktopVisibilityController, isDefaultDisplay(displayId));
 
         addTaskbarToMap(displayId, newTaskbar);
         return newTaskbar;
@@ -843,6 +846,10 @@ public class TaskbarManager {
             }
         };
         addTaskbarRootLayoutToMap(displayId, newTaskbarRootLayout);
+    }
+
+    private boolean isDefaultDisplay(int displayId) {
+        return displayId == getDefaultDisplayId();
     }
 
     /**

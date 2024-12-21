@@ -27,6 +27,9 @@ class TaskbarDesktopModeController(
     private lateinit var taskbarControllers: TaskbarControllers
     private lateinit var taskbarSharedState: TaskbarSharedState
 
+    val areDesktopTasksVisibleAndNotInOverview: Boolean
+        get() = desktopVisibilityController.areDesktopTasksVisibleAndNotInOverview()
+
     val areDesktopTasksVisible: Boolean
         get() = desktopVisibilityController.areDesktopTasksVisible()
 

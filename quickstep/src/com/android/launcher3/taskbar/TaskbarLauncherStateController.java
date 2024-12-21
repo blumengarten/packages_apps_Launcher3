@@ -635,7 +635,7 @@ public class TaskbarLauncherStateController {
 
         float cornerRoundness = isInLauncher ? 0 : 1;
 
-        if (mControllers.taskbarDesktopModeController.getAreDesktopTasksVisible()
+        if (mControllers.taskbarDesktopModeController.getAreDesktopTasksVisibleAndNotInOverview()
                 && mControllers.getSharedState() != null) {
             cornerRoundness =
                     mControllers.taskbarDesktopModeController.getTaskbarCornerRoundness(

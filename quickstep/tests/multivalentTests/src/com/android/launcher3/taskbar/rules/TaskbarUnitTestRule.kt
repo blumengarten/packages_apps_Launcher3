@@ -29,7 +29,6 @@ import com.android.launcher3.taskbar.TaskbarActivityContext
 import com.android.launcher3.taskbar.TaskbarControllers
 import com.android.launcher3.taskbar.TaskbarManager
 import com.android.launcher3.taskbar.TaskbarNavButtonController.TaskbarNavButtonCallbacks
-import com.android.launcher3.taskbar.TaskbarViewController
 import com.android.launcher3.taskbar.bubbles.BubbleControllers
 import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule.InjectController
 import com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR
@@ -130,15 +129,12 @@ class TaskbarUnitTestRule(
                 }
 
                 try {
-                    TaskbarViewController.enableModelLoadingForTests(false)
-
                     // Required to complete initialization.
                     instrumentation.runOnMainSync { taskbarManager.onUserUnlocked() }
 
                     base.evaluate()
                 } finally {
                     instrumentation.runOnMainSync { taskbarManager.destroy() }
-                    TaskbarViewController.enableModelLoadingForTests(true)
                 }
             }
         }

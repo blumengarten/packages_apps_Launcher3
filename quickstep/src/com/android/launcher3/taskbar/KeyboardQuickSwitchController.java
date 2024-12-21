@@ -188,8 +188,8 @@ public final class KeyboardQuickSwitchController implements
         mQuickSwitchViewController = new KeyboardQuickSwitchViewController(
                 mControllers, mOverlayContext, keyboardQuickSwitchView, mControllerCallbacks);
 
-        final boolean onDesktop =
-                mControllers.taskbarDesktopModeController.getAreDesktopTasksVisible();
+        final boolean onDesktop = mControllers.taskbarDesktopModeController
+                .getAreDesktopTasksVisibleAndNotInOverview();
 
         if (mModel.isTaskListValid(mTaskListChangeId)
                 && taskIdsToExclude.equals(mExcludedTaskIds)) {
@@ -233,7 +233,7 @@ public final class KeyboardQuickSwitchController implements
     private void processLoadedTasks(List<GroupTask> tasks, Set<Integer> taskIdsToExclude) {
         mHasDesktopTask = false;
         mWasDesktopTaskFilteredOut = false;
-        if (mControllers.taskbarDesktopModeController.getAreDesktopTasksVisible()) {
+        if (mControllers.taskbarDesktopModeController.getAreDesktopTasksVisibleAndNotInOverview()) {
             processLoadedTasksOnDesktop(tasks, taskIdsToExclude);
         } else {
             processLoadedTasksOutsideDesktop(tasks, taskIdsToExclude);

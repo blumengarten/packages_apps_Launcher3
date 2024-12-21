@@ -77,8 +77,7 @@ class LauncherSwipeHandlerV2Test {
 
         val deviceState = mock(RecentsAnimationDeviceState::class.java)
         whenever(deviceState.rotationTouchHelper).thenReturn(mock(RotationTouchHelper::class.java))
-
-        gestureState = spy(GestureState(OverviewComponentObserver(sandboxContext, deviceState), 0))
+        gestureState = spy(GestureState(OverviewComponentObserver.INSTANCE.get(sandboxContext), 0))
 
         underTest =
             LauncherSwipeHandlerV2(

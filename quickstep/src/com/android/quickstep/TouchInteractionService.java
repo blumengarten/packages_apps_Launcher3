@@ -90,6 +90,7 @@ import com.android.launcher3.util.SafeCloseable;
 import com.android.launcher3.util.ScreenOnTracker;
 import com.android.launcher3.util.TraceHelper;
 import com.android.quickstep.OverviewCommandHelper.CommandType;
+import com.android.quickstep.OverviewComponentObserver.OverviewChangeListener;
 import com.android.quickstep.fallback.window.RecentsWindowSwipeHandler;
 import com.android.quickstep.inputconsumers.BubbleBarInputConsumer;
 import com.android.quickstep.inputconsumers.OneHandedModeInputConsumer;
@@ -103,7 +104,6 @@ import com.android.quickstep.views.RecentsViewContainer;
 import com.android.systemui.shared.recents.IOverviewProxy;
 import com.android.systemui.shared.recents.ISystemUiProxy;
 import com.android.systemui.shared.statusbar.phone.BarTransitions;
-import com.android.systemui.shared.system.ActivityManagerWrapper;
 import com.android.systemui.shared.system.InputChannelCompat.InputEventReceiver;
 import com.android.systemui.shared.system.InputConsumerController;
 import com.android.systemui.shared.system.InputMonitorCompat;
@@ -124,7 +124,6 @@ import com.android.wm.shell.startingsurface.IStartingWindow;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.lang.ref.WeakReference;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -149,8 +148,6 @@ public class TouchInteractionService extends Service {
     public static class TISBinder extends IOverviewProxy.Stub {
 
         private final WeakReference<TouchInteractionService> mTis;
-
-        private final Set<Runnable> mOnOverviewTargetChangeListeners = new HashSet<>();
 
         private TISBinder(TouchInteractionService tis) {
             mTis = new WeakReference<>(tis);
@@ -308,10 +305,10 @@ public class TouchInteractionService extends Service {
         @BinderThread
         @Override
         public void updateWallpaperVisibility(int displayId, boolean visible) {
-            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(tis ->
-                    executeForTaskbarManager(
-                            taskbarManager -> taskbarManager.setWallpaperVisible(visible))
-            ));
+            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(
+                    tis -> executeForTaskbarManager(
+                            taskbarManager -> taskbarManager.setWallpaperVisible(displayId,
+                                    visible))));
         }
 
         @BinderThread
@@ -498,28 +495,11 @@ public class TouchInteractionService extends Service {
                     tis -> tis.mDeviceState.setGestureBlockingTaskId(taskId));
         }
 
-        /** Registers a listener to be run on Overview Target updates. */
-        public void registerOverviewTargetChangeListener(@NonNull Runnable listener) {
-            mOnOverviewTargetChangeListeners.add(listener);
-        }
-
-        /** Unregisters an OverviewTargetChange listener. */
-        public void unregisterOverviewTargetChangeListener(@NonNull Runnable listener) {
-            mOnOverviewTargetChangeListeners.remove(listener);
-        }
-
-        protected void onOverviewTargetChange() {
-            Set<Runnable> listeners = new HashSet<>(mOnOverviewTargetChangeListeners);
-            for (Runnable listener : listeners) {
-                listener.run();
-            }
-        }
-
         /** Refreshes the current overview target. */
         public void refreshOverviewTarget() {
             executeForTouchInteractionService(tis -> {
                 tis.mAllAppsActionManager.onDestroy();
-                tis.onOverviewTargetChange(tis.mOverviewComponentObserver.isHomeAndOverviewSame());
+                tis.onOverviewTargetChanged(tis.mOverviewComponentObserver.isHomeAndOverviewSame());
             });
         }
     }
@@ -601,6 +581,7 @@ public class TouchInteractionService extends Service {
     private final Runnable mUserUnlockedRunnable = this::onUserUnlocked;
 
     private final ScreenOnTracker.ScreenOnListener mScreenOnListener = this::onScreenOnChanged;
+    private final OverviewChangeListener mOverviewChangeListener = this::onOverviewTargetChanged;
 
     private final TaskbarNavButtonCallbacks mNavCallbacks = new TaskbarNavButtonCallbacks() {
         @Override
@@ -619,7 +600,6 @@ public class TouchInteractionService extends Service {
         }
     };
 
-    private ActivityManagerWrapper mAM;
     private OverviewCommandHelper mOverviewCommandHelper;
     private OverviewComponentObserver mOverviewComponentObserver;
     private InputConsumerController mInputConsumer;
@@ -654,7 +634,6 @@ public class TouchInteractionService extends Service {
         // Initialize anything here that is needed in direct boot mode.
         // Everything else should be initialized in onUserUnlocked() below.
         mMainChoreographer = Choreographer.getInstance();
-        mAM = ActivityManagerWrapper.getInstance();
         mDeviceState = new RecentsAnimationDeviceState(this, true);
         mRotationTouchHelper = mDeviceState.getRotationTouchHelper();
         mAllAppsActionManager = new AllAppsActionManager(
@@ -724,7 +703,7 @@ public class TouchInteractionService extends Service {
         Log.d(TAG, "onUserUnlocked: userId=" + getUserId()
                 + " instance=" + System.identityHashCode(this));
         mTaskAnimationManager = new TaskAnimationManager(this, mDeviceState);
-        mOverviewComponentObserver = new OverviewComponentObserver(this, mDeviceState);
+        mOverviewComponentObserver = OverviewComponentObserver.INSTANCE.get(this);
         mOverviewCommandHelper = new OverviewCommandHelper(this,
                 mOverviewComponentObserver, mTaskAnimationManager);
         mResetGestureInputConsumer = new ResetGestureInputConsumer(
@@ -740,8 +719,8 @@ public class TouchInteractionService extends Service {
         // new ModelPreload().start(this);
         resetHomeBounceSeenOnQuickstepEnabledFirstTime();
 
-        mOverviewComponentObserver.setOverviewChangeListener(this::onOverviewTargetChange);
-        onOverviewTargetChange(mOverviewComponentObserver.isHomeAndOverviewSame());
+        mOverviewComponentObserver.addOverviewChangeListener(mOverviewChangeListener);
+        onOverviewTargetChanged(mOverviewComponentObserver.isHomeAndOverviewSame());
 
         mTaskbarManager.onUserUnlocked();
     }
@@ -766,7 +745,7 @@ public class TouchInteractionService extends Service {
         }
     }
 
-    private void onOverviewTargetChange(boolean isHomeAndOverviewSame) {
+    private void onOverviewTargetChanged(boolean isHomeAndOverviewSame) {
         mAllAppsActionManager.setHomeAndOverviewSame(isHomeAndOverviewSame);
         RecentsViewContainer newOverviewContainer =
                 mOverviewComponentObserver.getContainerInterface().getCreatedContainer();
@@ -778,7 +757,6 @@ public class TouchInteractionService extends Service {
                 mTaskbarManager.setRecentsViewContainer(newOverviewContainer);
             }
         }
-        mTISBinder.onOverviewTargetChange();
     }
 
     private PendingIntent createAllAppsPendingIntent() {
@@ -797,7 +775,7 @@ public class TouchInteractionService extends Service {
         if (LockedUserState.get(this).isUserUnlocked()) {
             long systemUiStateFlags = mDeviceState.getSystemUiStateFlags();
             SystemUiProxy.INSTANCE.get(this).setLastSystemUiStateFlags(systemUiStateFlags);
-            mOverviewComponentObserver.onSystemUiStateChanged();
+            mOverviewComponentObserver.setHomeDisabled(mDeviceState.isHomeDisabled());
             mTaskbarManager.onSystemUiFlagsChanged(systemUiStateFlags);
             mTaskAnimationManager.onSystemUiFlagsChanged(lastSysUIFlags, systemUiStateFlags);
         }
@@ -818,7 +796,8 @@ public class TouchInteractionService extends Service {
         sIsInitialized = false;
         if (LockedUserState.get(this).isUserUnlocked()) {
             mInputConsumer.unregisterInputConsumer();
-            mOverviewComponentObserver.onDestroy();
+            mOverviewComponentObserver.setHomeDisabled(false);
+            mOverviewComponentObserver.removeOverviewChangeListener(mOverviewChangeListener);
         }
         disposeEventHandlers("TouchInteractionService onDestroy()");
         mDeviceState.destroy();

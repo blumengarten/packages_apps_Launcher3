@@ -34,7 +34,6 @@ import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_LAUN
 import com.android.quickstep.BaseContainerInterface
 import com.android.quickstep.DeviceConfigWrapper
 import com.android.quickstep.OverviewComponentObserver
-import com.android.quickstep.RecentsAnimationDeviceState
 import com.android.quickstep.SystemUiProxy
 import com.android.quickstep.TopTaskTracker
 import com.android.quickstep.views.RecentsView
@@ -212,14 +211,7 @@ internal constructor(
 
     @VisibleForTesting
     fun getRecentsContainerInterface(): BaseContainerInterface<*, *>? {
-        val rads = RecentsAnimationDeviceState(context)
-        val observer = OverviewComponentObserver(context, rads)
-        try {
-            return observer.containerInterface
-        } finally {
-            observer.onDestroy()
-            rads.destroy()
-        }
+        return OverviewComponentObserver.INSTANCE.get(context).containerInterface
     }
 
     /**

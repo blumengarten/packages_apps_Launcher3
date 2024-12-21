@@ -244,7 +244,8 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
         }
 
         if (!ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY.isTrue()
-                && mControllers.taskbarDesktopModeController.getAreDesktopTasksVisible()) {
+                && mControllers.taskbarDesktopModeController
+                    .getAreDesktopTasksVisibleAndNotInOverview()) {
             // TODO: b/333533253 - Remove after flag rollout
             isVisible = false;
         }

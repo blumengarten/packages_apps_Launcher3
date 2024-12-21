@@ -63,12 +63,11 @@ public class SplitWithKeyboardShortcutController {
 
     public SplitWithKeyboardShortcutController(QuickstepLauncher launcher,
             SplitSelectStateController controller,
-            OverviewComponentObserver overviewComponentObserver,
             RecentsAnimationDeviceState deviceState) {
         mLauncher = launcher;
         mController = controller;
         mDeviceState = deviceState;
-        mOverviewComponentObserver = overviewComponentObserver;
+        mOverviewComponentObserver = OverviewComponentObserver.INSTANCE.get(launcher);
 
         mSplitPlaceholderSize = mLauncher.getResources().getDimensionPixelSize(
                 R.dimen.split_placeholder_size);
@@ -106,7 +105,6 @@ public class SplitWithKeyboardShortcutController {
     }
 
     public void onDestroy() {
-        mOverviewComponentObserver.onDestroy();
         mDeviceState.destroy();
     }
 

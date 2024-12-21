@@ -17,6 +17,7 @@
 package com.android.launcher3.taskbar
 
 import android.animation.AnimatorTestRule
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import com.android.launcher3.taskbar.TaskbarAutohideSuspendController.FLAG_AUTOHIDE_SUSPEND_DRAGGING
 import com.android.launcher3.taskbar.TaskbarAutohideSuspendController.FLAG_AUTOHIDE_SUSPEND_IN_LAUNCHER
@@ -34,6 +35,10 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.whenever
 
 @RunWith(LauncherMultivalentJUnit::class)
 @EmulatedDevices(["pixelTablet2023"])
@@ -43,11 +48,10 @@ class TaskbarAutohideSuspendControllerTest {
     val context =
         TaskbarWindowSandboxContext.create { builder ->
             builder.bindSystemUiProxy(
-                object : SystemUiProxy(this) {
-                    override fun notifyTaskbarAutohideSuspend(suspend: Boolean) {
-                        super.notifyTaskbarAutohideSuspend(suspend)
-                        latestSuspendNotification = suspend
-                    }
+                spy(SystemUiProxy(ApplicationProvider.getApplicationContext())) { proxy ->
+                    doAnswer { latestSuspendNotification = it.getArgument(0) }
+                        .whenever(proxy)
+                        .notifyTaskbarAutohideSuspend(anyOrNull())
                 }
             )
         }

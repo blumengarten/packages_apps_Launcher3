@@ -257,7 +257,7 @@ public class RecentTasksList {
         mRecentTasksChangedListener = null;
     }
 
-    private void initRunningTasks(ArrayList<RunningTaskInfo> runningTasks) {
+    private void initRunningTasks(List<RunningTaskInfo> runningTasks) {
         // Tasks are retrieved in order of most recently launched/used to least recently launched.
         mRunningTasks = new ArrayList<>(runningTasks);
         Collections.reverse(mRunningTasks);

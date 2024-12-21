@@ -111,6 +111,17 @@ public class DesktopVisibilityController {
     public boolean areDesktopTasksVisible() {
         boolean desktopTasksVisible = mVisibleDesktopTasksCount > 0;
         if (DEBUG) {
+            Log.d(TAG, "areDesktopTasksVisible: desktopVisible=" + desktopTasksVisible);
+        }
+        return desktopTasksVisible;
+    }
+
+    /**
+     * Whether desktop tasks are visible in desktop mode.
+     */
+    public boolean areDesktopTasksVisibleAndNotInOverview() {
+        boolean desktopTasksVisible = mVisibleDesktopTasksCount > 0;
+        if (DEBUG) {
             Log.d(TAG, "areDesktopTasksVisible: desktopVisible=" + desktopTasksVisible
                     + " overview=" + mInOverviewState);
         }
@@ -160,9 +171,9 @@ public class DesktopVisibilityController {
         if (visibleTasksCount != mVisibleDesktopTasksCount) {
             final boolean wasVisible = mVisibleDesktopTasksCount > 0;
             final boolean isVisible = visibleTasksCount > 0;
-            final boolean wereDesktopTasksVisibleBefore = areDesktopTasksVisible();
+            final boolean wereDesktopTasksVisibleBefore = areDesktopTasksVisibleAndNotInOverview();
             mVisibleDesktopTasksCount = visibleTasksCount;
-            final boolean areDesktopTasksVisibleNow = areDesktopTasksVisible();
+            final boolean areDesktopTasksVisibleNow = areDesktopTasksVisibleAndNotInOverview();
             if (wereDesktopTasksVisibleBefore != areDesktopTasksVisibleNow) {
                 notifyDesktopVisibilityListeners(areDesktopTasksVisibleNow);
             }
@@ -219,13 +230,12 @@ public class DesktopVisibilityController {
                     + " currentValue=" + mInOverviewState);
         }
         if (overviewStateEnabled != mInOverviewState) {
-            final boolean wereDesktopTasksVisibleBefore = areDesktopTasksVisible();
+            final boolean wereDesktopTasksVisibleBefore = areDesktopTasksVisibleAndNotInOverview();
             mInOverviewState = overviewStateEnabled;
-            final boolean areDesktopTasksVisibleNow = areDesktopTasksVisible();
+            final boolean areDesktopTasksVisibleNow = areDesktopTasksVisibleAndNotInOverview();
             if (wereDesktopTasksVisibleBefore != areDesktopTasksVisibleNow) {
                 notifyDesktopVisibilityListeners(areDesktopTasksVisibleNow);
             }
-
             if (ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY.isTrue()) {
                 return;
             }
@@ -279,7 +289,7 @@ public class DesktopVisibilityController {
             if (mBackgroundStateEnabled) {
                 setLauncherViewsVisibility(View.VISIBLE);
                 markLauncherResumed();
-            } else if (areDesktopTasksVisible() && !mGestureInProgress) {
+            } else if (areDesktopTasksVisibleAndNotInOverview() && !mGestureInProgress) {
                 // Switching out of background state. If desktop tasks are visible, pause launcher.
                 setLauncherViewsVisibility(View.INVISIBLE);
                 markLauncherPaused();

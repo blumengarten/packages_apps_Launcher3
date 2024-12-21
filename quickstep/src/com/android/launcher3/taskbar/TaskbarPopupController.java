@@ -215,7 +215,8 @@ public class TaskbarPopupController implements TaskbarControllers.LoggableTaskba
             shortcuts.add(PIN_UNPIN_ITEM);
         }
         shortcuts.add(APP_INFO);
-        if (!mControllers.taskbarDesktopModeController.getAreDesktopTasksVisible()) {
+        if (!mControllers.taskbarDesktopModeController
+                .getAreDesktopTasksVisibleAndNotInOverview()) {
             shortcuts.addAll(mControllers.uiController.getSplitMenuOptions().toList());
         }
         if (com.android.wm.shell.Flags.enableBubbleAnything()) {

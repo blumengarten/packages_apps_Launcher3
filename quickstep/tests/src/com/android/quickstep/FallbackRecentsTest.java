@@ -64,6 +64,7 @@ import com.android.launcher3.util.rule.ScreenRecordRule;
 import com.android.launcher3.util.rule.TestIsolationRule;
 import com.android.launcher3.util.rule.TestStabilityRule;
 import com.android.launcher3.util.rule.ViewCaptureRule;
+import com.android.quickstep.OverviewComponentObserver.OverviewChangeListener;
 import com.android.quickstep.fallback.window.RecentsWindowManager;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
@@ -330,7 +331,7 @@ public class FallbackRecentsTest {
         return recentsViewContainer.<RecentsView>getOverviewPanel().getTaskViewCount();
     }
 
-    private class OverviewUpdateHandler {
+    private class OverviewUpdateHandler implements OverviewChangeListener {
 
         final RecentsAnimationDeviceState mRads;
         final OverviewComponentObserver mObserver;
@@ -339,19 +340,24 @@ public class FallbackRecentsTest {
         OverviewUpdateHandler() {
             Context ctx = getInstrumentation().getTargetContext();
             mRads = new RecentsAnimationDeviceState(ctx);
-            mObserver = new OverviewComponentObserver(ctx, mRads);
+            mObserver = OverviewComponentObserver.INSTANCE.get(ctx);
             mChangeCounter = new CountDownLatch(1);
             if (mObserver.getHomeIntent().getComponent()
                     .getPackageName().equals(mOtherLauncherActivity.packageName)) {
                 // Home already same
                 mChangeCounter.countDown();
             } else {
-                mObserver.setOverviewChangeListener(b -> mChangeCounter.countDown());
+                mObserver.addOverviewChangeListener(this);
             }
         }
 
+        @Override
+        public void onOverviewTargetChange(boolean isHomeAndOverviewSame) {
+            mChangeCounter.countDown();
+        }
+
         void destroy() {
-            mObserver.onDestroy();
+            mObserver.removeOverviewChangeListener(this);
             mRads.destroy();
         }
     }

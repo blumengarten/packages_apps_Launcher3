@@ -729,7 +729,8 @@ public class BubbleBarView extends FrameLayout {
             Runnable onEndRunnable) {
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams((int) mIconSize, (int) mIconSize,
                 Gravity.LEFT);
-        boolean isOverflowSelected = mSelectedBubbleView.isOverflow();
+        boolean isOverflowSelected =
+                mSelectedBubbleView != null && mSelectedBubbleView.isOverflow();
         boolean removingOverflow = removedBubble.isOverflow();
         boolean addingOverflow = addedBubble.isOverflow();
 

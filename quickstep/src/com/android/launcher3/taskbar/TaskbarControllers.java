@@ -194,7 +194,7 @@ public class TaskbarControllers {
                 voiceInteractionWindowController
         };
 
-        if (taskbarDesktopModeController.getAreDesktopTasksVisible()) {
+        if (taskbarDesktopModeController.getAreDesktopTasksVisibleAndNotInOverview()) {
             mCornerRoundness.value = taskbarDesktopModeController.getTaskbarCornerRoundness(
                     mSharedState.showCornerRadiusInDesktopMode);
         } else {

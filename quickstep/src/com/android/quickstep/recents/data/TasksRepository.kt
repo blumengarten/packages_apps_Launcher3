@@ -51,17 +51,32 @@ class TasksRepository(
     override fun getAllTaskData(forceRefresh: Boolean): Flow<List<Task>> {
         if (forceRefresh) {
             recentsModel.getTasks { result ->
-                tasks.value =
-                    MapForStateFlow(
-                        result
-                            .flatMap { groupTask -> groupTask.tasks }
-                            .associateBy { it.key.id }
-                            .also {
-                                // Clean tasks that are not in the latest group tasks list.
-                                val tasksNoLongerVisible = it.keys.subtract(tasks.value.keys)
-                                removeTasks(tasksNoLongerVisible)
+                val recentTasks =
+                    result
+                        .flatMap { groupTask -> groupTask.tasks }
+                        .associateBy { it.key.id }
+                        .also { hashMap ->
+                            // Clean tasks that are not in the latest group tasks list.
+                            val tasksNoLongerVisible = hashMap.keys.subtract(tasks.value.keys)
+                            removeTasks(tasksNoLongerVisible)
+
+                            // Use pre-loaded thumbnail data and icon from the previous list.
+                            // This reduces the Thumbnail loading time in the Overview and prevent
+                            // empty thumbnail and icon.
+                            val cache =
+                                taskRequests.keys
+                                    .mapNotNull { key ->
+                                        val task = tasks.value[key] ?: return@mapNotNull null
+                                        key to Pair(task.thumbnail, task.icon)
+                                    }
+                                    .toMap()
+
+                            hashMap.values.forEach { task ->
+                                task.thumbnail = task.thumbnail ?: cache[task.key.id]?.first
+                                task.icon = task.icon ?: cache[task.key.id]?.second
                             }
-                    )
+                        }
+                tasks.value = MapForStateFlow(recentTasks)
             }
         }
         return tasks.map { it.values.toList() }

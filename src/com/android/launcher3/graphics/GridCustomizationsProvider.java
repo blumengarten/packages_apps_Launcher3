@@ -139,7 +139,7 @@ public class GridCustomizationsProvider extends ContentProvider {
 
         switch (path) {
             case KEY_SHAPE_OPTIONS: {
-                if (Flags.newCustomizationPickerUi()) {
+                if (Flags.newCustomizationPickerUi() && Flags.enableLauncherIconShapes()) {
                     MatrixCursor cursor = new MatrixCursor(new String[]{
                             KEY_SHAPE_KEY, KEY_SHAPE_TITLE, KEY_PATH, KEY_IS_DEFAULT});
                     List<AppShape> shapes =  AppShapesProvider.INSTANCE.getShapes();
@@ -355,7 +355,7 @@ public class GridCustomizationsProvider extends ContentProvider {
                     renderer.hideBottomRow(message.getData().getBoolean(KEY_HIDE_BOTTOM_ROW));
                     break;
                 case MESSAGE_ID_UPDATE_SHAPE:
-                    if (Flags.newCustomizationPickerUi()) {
+                    if (Flags.newCustomizationPickerUi() && Flags.enableLauncherIconShapes()) {
                         String shapeKey = message.getData().getString(KEY_SHAPE_KEY);
                         Optional<AppShape> optionalShape = AppShapesProvider.INSTANCE.getShapes()
                                 .stream()

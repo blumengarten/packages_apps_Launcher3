@@ -242,7 +242,7 @@ public abstract class BaseContainerInterface<STATE_TYPE extends BaseState<STATE_
             // We were on our way to this state when we got canceled, end there instead.
             startState = stateFromGestureEndTarget(endTarget);
             DesktopVisibilityController controller = getDesktopVisibilityController();
-            if (controller != null && controller.areDesktopTasksVisible()
+            if (controller != null && controller.areDesktopTasksVisibleAndNotInOverview()
                     && endTarget == LAST_TASK) {
                 // When we are cancelling the transition and going back to last task, move to
                 // rest state instead when desktop tasks are visible.

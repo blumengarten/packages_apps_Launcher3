@@ -84,6 +84,7 @@ import com.android.launcher3.taskbar.bubbles.BubbleBarController;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.ItemInfoMatcher;
 import com.android.launcher3.util.LauncherBindableItemsContainer;
+import com.android.launcher3.util.MainThreadInitializedObject.SandboxContext;
 import com.android.launcher3.util.MultiPropertyFactory;
 import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
 import com.android.launcher3.util.MultiTranslateDelegate;
@@ -129,8 +130,6 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
     private static final int TRANSITION_DEFAULT_DURATION = 500;
     private static final int TRANSITION_FADE_IN_DURATION = 167;
     private static final int TRANSITION_FADE_OUT_DURATION = 83;
-
-    private static boolean sEnableModelLoadingForTests = true;
 
     private final TaskbarActivityContext mActivity;
     private final TaskbarView mTaskbarView;
@@ -243,7 +242,8 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         mTaskbarIconTranslationXForPinning.updateValue(pinningValue);
 
         mModelCallbacks.init(controllers);
-        if (mActivity.isUserSetupComplete() && sEnableModelLoadingForTests) {
+        if (mActivity.isUserSetupComplete()
+                && !(mActivity.getApplicationContext() instanceof SandboxContext)) {
             // Only load the callbacks if user setup is completed
             controllers.runAfterInit(() -> LauncherAppState.getInstance(mActivity).getModel()
                     .addCallbacksAndLoad(mModelCallbacks));
@@ -1213,12 +1213,6 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
                 "ALPHA_INDEX_SMALL_SCREEN");
 
         mModelCallbacks.dumpLogs(prefix + "\t", pw);
-    }
-
-    /** Enables model loading for tests. */
-    @VisibleForTesting
-    public static void enableModelLoadingForTests(boolean enable) {
-        sEnableModelLoadingForTests = enable;
     }
 
     private ObjectAnimator createTaskbarIconsShiftAnimator(float translationX) {

@@ -169,6 +169,7 @@ import com.android.launcher3.util.TouchController;
 import com.android.launcher3.widget.LauncherWidgetHolder;
 import com.android.quickstep.OverviewCommandHelper;
 import com.android.quickstep.OverviewComponentObserver;
+import com.android.quickstep.OverviewComponentObserver.OverviewChangeListener;
 import com.android.quickstep.RecentsAnimationDeviceState;
 import com.android.quickstep.RecentsModel;
 import com.android.quickstep.SystemUiProxy;
@@ -224,7 +225,6 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
             SystemProperties.getBoolean("persist.debug.trace_layouts", false);
     private static final String TRACE_RELAYOUT_CLASS =
             SystemProperties.get("persist.debug.trace_request_layout_class", null);
-    public static final boolean GO_LOW_RAM_RECENTS_ENABLED = false;
 
     protected static final String RING_APPEAR_ANIMATION_PREFIX = "RingAppearAnimation\t";
 
@@ -264,7 +264,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
     private boolean mIsOverlayVisible;
 
-    private final Runnable mOverviewTargetChangeRunnable = this::onOverviewTargetChanged;
+    private final OverviewChangeListener mOverviewChangeListener = this::onOverviewTargetChanged;
 
     public static QuickstepLauncher getLauncher(Context context) {
         return fromContext(context);
@@ -283,9 +283,6 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
                         systemUiProxy, RecentsModel.INSTANCE.get(this),
                         () -> onStateBack());
         RecentsAnimationDeviceState deviceState = new RecentsAnimationDeviceState(asContext());
-        // TODO(b/337863494): Explore use of the same OverviewComponentObserver across launcher
-        OverviewComponentObserver overviewComponentObserver = new OverviewComponentObserver(
-                asContext(), deviceState);
         if (DesktopModeStatus.canEnterDesktopMode(this)) {
             mDesktopRecentsTransitionController = new DesktopRecentsTransitionController(
                     getStateManager(), systemUiProxy, getIApplicationThread(),
@@ -294,7 +291,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         overviewPanel.init(mActionsView, mSplitSelectStateController,
                 mDesktopRecentsTransitionController);
         mSplitWithKeyboardShortcutController = new SplitWithKeyboardShortcutController(this,
-                mSplitSelectStateController, overviewComponentObserver, deviceState);
+                mSplitSelectStateController, deviceState);
         mSplitToWorkspaceController = new SplitToWorkspaceController(this,
                 mSplitSelectStateController);
         mActionsView.updateDimension(getDeviceProfile(), overviewPanel.getLastComputedTaskSize());
@@ -307,8 +304,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         mTISBindHelper = new TISBindHelper(this, this::onTISConnected);
         mDepthController = new DepthController(this);
         if (DesktopModeStatus.canEnterDesktopModeOrShowAppHandle(this)) {
-            mSplitSelectStateController.initSplitFromDesktopController(this,
-                    overviewComponentObserver);
+            mSplitSelectStateController.initSplitFromDesktopController(this);
         }
         mHotseatPredictionController = new HotseatPredictionController(this);
 
@@ -556,10 +552,8 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
             mUnfoldTransitionProgressProvider.destroy();
         }
 
-        TISBinder binder = mTISBindHelper.getBinder();
-        if (binder != null) {
-            binder.unregisterOverviewTargetChangeListener(mOverviewTargetChangeRunnable);
-        }
+        OverviewComponentObserver.INSTANCE.get(this)
+                .removeOverviewChangeListener(mOverviewChangeListener);
         mTISBindHelper.onDestroy();
 
         if (mLauncherUnfoldAnimationController != null) {
@@ -701,6 +695,8 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         QuickstepOnboardingPrefs.setup(this);
         View.setTraceLayoutSteps(TRACE_LAYOUTS);
         View.setTracedRequestLayoutClassClass(TRACE_RELAYOUT_CLASS);
+        OverviewComponentObserver.INSTANCE.get(this)
+                .addOverviewChangeListener(mOverviewChangeListener);
     }
 
     @Override
@@ -1025,7 +1021,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         DesktopVisibilityController desktopVisibilityController = getDesktopVisibilityController();
         if (!ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY.isTrue()
                 && desktopVisibilityController != null
-                && desktopVisibilityController.areDesktopTasksVisible()
+                && desktopVisibilityController.areDesktopTasksVisibleAndNotInOverview()
                 && !desktopVisibilityController.isRecentsGestureInProgress()) {
             // Return early to skip setting activity to appear as resumed
             // TODO: b/333533253 - Remove after flag rollout
@@ -1051,7 +1047,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         }
     }
 
-    private void onOverviewTargetChanged() {
+    private void onOverviewTargetChanged(boolean isHomeAndOverviewSame) {
         QuickstepTransitionManager transitionManager = getAppTransitionManager();
         if (transitionManager != null) {
             transitionManager.onOverviewTargetChange();
@@ -1064,7 +1060,6 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
             taskbarManager.setActivity(this);
         }
         mTISBindHelper.setPredictiveBackToHomeInProgress(mIsPredictiveBackToHomeInProgress);
-        binder.registerOverviewTargetChangeListener(mOverviewTargetChangeRunnable);
     }
 
     @Override
@@ -1354,7 +1349,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     public boolean areDesktopTasksVisible() {
         DesktopVisibilityController desktopVisibilityController = getDesktopVisibilityController();
         if (desktopVisibilityController != null) {
-            return desktopVisibilityController.areDesktopTasksVisible();
+            return desktopVisibilityController.areDesktopTasksVisibleAndNotInOverview();
         }
         return false;
     }

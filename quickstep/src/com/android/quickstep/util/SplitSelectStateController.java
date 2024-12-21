@@ -583,10 +583,8 @@ public class SplitSelectStateController {
     /**
      * Init {@code SplitFromDesktopController}
      */
-    public void initSplitFromDesktopController(QuickstepLauncher launcher,
-            OverviewComponentObserver overviewComponentObserver) {
-        initSplitFromDesktopController(
-                new SplitFromDesktopController(launcher, overviewComponentObserver));
+    public void initSplitFromDesktopController(QuickstepLauncher launcher) {
+        initSplitFromDesktopController(new SplitFromDesktopController(launcher));
     }
 
     @VisibleForTesting
@@ -853,10 +851,9 @@ public class SplitSelectStateController {
         private DesktopSplitSelectListenerImpl mSplitSelectListener;
         private Drawable mAppIcon;
 
-        public SplitFromDesktopController(QuickstepLauncher launcher,
-                OverviewComponentObserver overviewComponentObserver) {
+        public SplitFromDesktopController(QuickstepLauncher launcher) {
             mLauncher = launcher;
-            mOverviewComponentObserver = overviewComponentObserver;
+            mOverviewComponentObserver = OverviewComponentObserver.INSTANCE.get(launcher);
             mSplitPlaceholderSize = mLauncher.getResources().getDimensionPixelSize(
                     R.dimen.split_placeholder_size);
             mSplitPlaceholderInset = mLauncher.getResources().getDimensionPixelSize(

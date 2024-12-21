@@ -19,6 +19,7 @@ package com.android.quickstep;
 import static android.content.Intent.ACTION_PACKAGE_ADDED;
 import static android.content.Intent.ACTION_PACKAGE_CHANGED;
 import static android.content.Intent.ACTION_PACKAGE_REMOVED;
+import static android.view.Display.DEFAULT_DISPLAY;
 
 import static com.android.launcher3.config.FeatureFlags.SEPARATE_RECENTS_ACTIVITY;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
@@ -41,6 +42,11 @@ import androidx.annotation.UiThread;
 
 import com.android.launcher3.Flags;
 import com.android.launcher3.R;
+import com.android.launcher3.dagger.ApplicationContext;
+import com.android.launcher3.dagger.LauncherAppComponent;
+import com.android.launcher3.dagger.LauncherAppSingleton;
+import com.android.launcher3.util.DaggerSingletonObject;
+import com.android.launcher3.util.DaggerSingletonTracker;
 import com.android.launcher3.util.SimpleBroadcastReceiver;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
@@ -48,15 +54,22 @@ import com.android.systemui.shared.system.PackageManagerWrapper;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-import java.util.function.Consumer;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.inject.Inject;
 
 /**
  * Class to keep track of the current overview component based off user preferences and app updates
  * and provide callers the relevant classes.
  */
+@LauncherAppSingleton
 public final class OverviewComponentObserver {
     private static final String TAG = "OverviewComponentObserver";
+
+    public static final DaggerSingletonObject<OverviewComponentObserver> INSTANCE =
+            new DaggerSingletonObject<>(LauncherAppComponent::getOverviewComponentObserver);
 
     // We register broadcast receivers on main thread to avoid missing updates.
     private final SimpleBroadcastReceiver mUserPreferenceChangeReceiver =
@@ -65,14 +78,16 @@ public final class OverviewComponentObserver {
             new SimpleBroadcastReceiver(MAIN_EXECUTOR, this::updateOverviewTargets);
 
     private final Context mContext;
-    private final RecentsAnimationDeviceState mDeviceState;
+    private final RecentsDisplayModel mRecentsDisplayModel;
+
     private final Intent mCurrentHomeIntent;
     private final Intent mMyHomeIntent;
     private final Intent mFallbackIntent;
     private final SparseIntArray mConfigChangesMap = new SparseIntArray();
     private final String mSetupWizardPkg;
 
-    private Consumer<Boolean> mOverviewChangeListener = b -> { };
+    private final List<OverviewChangeListener> mOverviewChangeListeners =
+            new CopyOnWriteArrayList<>();
 
     private String mUpdateRegisteredPackage;
     private BaseContainerInterface mContainerInterface;
@@ -81,10 +96,13 @@ public final class OverviewComponentObserver {
     private boolean mIsDefaultHome;
     private boolean mIsHomeDisabled;
 
-
-    public OverviewComponentObserver(Context context, RecentsAnimationDeviceState deviceState) {
+    @Inject
+    public OverviewComponentObserver(
+            @ApplicationContext Context context,
+            RecentsDisplayModel recentsDisplayModel,
+            DaggerSingletonTracker lifecycleTracker) {
         mContext = context;
-        mDeviceState = deviceState;
+        mRecentsDisplayModel = recentsDisplayModel;
         mCurrentHomeIntent = createHomeIntent();
         mMyHomeIntent = new Intent(mCurrentHomeIntent).setPackage(mContext.getPackageName());
         ResolveInfo info = context.getPackageManager().resolveActivity(mMyHomeIntent, 0);
@@ -108,21 +126,27 @@ public final class OverviewComponentObserver {
 
         mUserPreferenceChangeReceiver.register(mContext, ACTION_PREFERRED_ACTIVITY_CHANGED);
         updateOverviewTargets();
+
+        lifecycleTracker.addCloseable(this::onDestroy);
+    }
+
+    /** Adds a listener for changes in {@link #isHomeAndOverviewSame()} */
+    public void addOverviewChangeListener(OverviewChangeListener overviewChangeListener) {
+        mOverviewChangeListeners.add(overviewChangeListener);
+    }
+
+    /** Removes a previously added listener */
+    public void removeOverviewChangeListener(OverviewChangeListener overviewChangeListener) {
+        mOverviewChangeListeners.remove(overviewChangeListener);
     }
 
     /**
-     * Sets a listener for changes in {@link #isHomeAndOverviewSame()}
+     * Called to set home enabled/disabled state via systemUI
+     * @param isHomeDisabled
      */
-    public void setOverviewChangeListener(Consumer<Boolean> overviewChangeListener) {
-        // TODO(b/337861962): This method should be able to support multiple listeners instead of
-        // one so that we can reuse the same instance of this class across multiple places
-        mOverviewChangeListener = overviewChangeListener;
-    }
-
-    /** Called on {@link TouchInteractionService#onSystemUiFlagsChanged} */
-    @UiThread
-    public void onSystemUiStateChanged() {
-        if (mDeviceState.isHomeDisabled() != mIsHomeDisabled) {
+    public void setHomeDisabled(boolean isHomeDisabled) {
+        if (isHomeDisabled != mIsHomeDisabled) {
+            mIsHomeDisabled = isHomeDisabled;
             updateOverviewTargets();
         }
     }
@@ -146,7 +170,6 @@ public final class OverviewComponentObserver {
             defaultHome = null;
         }
 
-        mIsHomeDisabled = mDeviceState.isHomeDisabled();
         mIsDefaultHome = Objects.equals(mMyHomeIntent.getComponent(), defaultHome);
 
         // Set assistant visibility to 0 from launcher's perspective, ensures any elements that
@@ -182,8 +205,7 @@ public final class OverviewComponentObserver {
 
             if (Flags.enableLauncherOverviewInWindow() || Flags.enableFallbackOverviewInWindow()) {
                 mContainerInterface =
-                        RecentsDisplayModel.getINSTANCE().get(mContext)
-                                .getFallbackWindowInterface(mDeviceState.getDisplayId());
+                        mRecentsDisplayModel.getFallbackWindowInterface(DEFAULT_DISPLAY);
             } else {
                 mContainerInterface = FallbackActivityInterface.INSTANCE;
             }
@@ -206,13 +228,13 @@ public final class OverviewComponentObserver {
                         ACTION_PACKAGE_CHANGED, ACTION_PACKAGE_REMOVED);
             }
         }
-        mOverviewChangeListener.accept(mIsHomeAndOverviewSame);
+        mOverviewChangeListeners.forEach(l -> l.onOverviewTargetChange(mIsHomeAndOverviewSame));
     }
 
     /**
      * Clean up any registered receivers.
      */
-    public void onDestroy() {
+    private void onDestroy() {
         mUserPreferenceChangeReceiver.unregisterReceiverSafely(mContext);
         unregisterOtherHomeAppUpdateReceiver();
     }
@@ -296,11 +318,7 @@ public final class OverviewComponentObserver {
      */
     public static void startHomeIntentSafely(@NonNull Context context, @Nullable Bundle options,
             @NonNull String reason) {
-        RecentsAnimationDeviceState deviceState = new RecentsAnimationDeviceState(context);
-        OverviewComponentObserver observer = new OverviewComponentObserver(context, deviceState);
-        Intent intent = observer.getHomeIntent();
-        observer.onDestroy();
-        deviceState.destroy();
+        Intent intent = OverviewComponentObserver.INSTANCE.get(context).getHomeIntent();
         startHomeIntentSafely(context, intent, options, reason);
     }
 
@@ -318,6 +336,17 @@ public final class OverviewComponentObserver {
         } catch (NullPointerException | ActivityNotFoundException | SecurityException e) {
             context.startActivity(createHomeIntent(), options);
         }
+    }
+
+    /**
+     * Interface for listening to overview changes
+     */
+    public interface OverviewChangeListener {
+
+        /**
+         * Called when the overview target changes
+         */
+        void onOverviewTargetChange(boolean isHomeAndOverviewSame);
     }
 
     private static Intent createHomeIntent() {

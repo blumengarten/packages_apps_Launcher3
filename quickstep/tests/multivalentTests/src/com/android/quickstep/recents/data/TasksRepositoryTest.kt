@@ -117,6 +117,20 @@ class TasksRepositoryTest {
         }
 
     @Test
+    fun whenThumbnailIsLoaded_getAllTaskData_usesPreviousLoadedThumbnailAndIcon() =
+        testScope.runTest {
+            recentsModel.seedTasks(defaultTaskList)
+            systemUnderTest.getAllTaskData(forceRefresh = true)
+            val bitmap1 = taskThumbnailDataSource.taskIdToBitmap[1]
+
+            systemUnderTest.setVisibleTasks(setOf(1))
+            assertThat(systemUnderTest.getThumbnailById(1).first()!!.thumbnail).isEqualTo(bitmap1)
+
+            systemUnderTest.getAllTaskData(forceRefresh = true)
+            assertThat(systemUnderTest.getThumbnailById(1).first()!!.thumbnail).isEqualTo(bitmap1)
+        }
+
+    @Test
     fun getCurrentThumbnailByIdReturnsThumbnailWithLoadedThumbnails() =
         testScope.runTest {
             recentsModel.seedTasks(defaultTaskList)

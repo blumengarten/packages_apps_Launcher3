@@ -344,7 +344,8 @@ public class TaskbarDragController extends DragController<BaseTaskbarContext> im
         // TODO(297921594) clean it up when taskbar to desktop drag is implemented.
         // Pre-drag has ended, start the global system drag.
         if (mDisallowGlobalDrag
-                || mControllers.taskbarDesktopModeController.getAreDesktopTasksVisible()) {
+                || mControllers.taskbarDesktopModeController
+                    .getAreDesktopTasksVisibleAndNotInOverview()) {
             AbstractFloatingView.closeAllOpenViewsExcept(mActivity, TYPE_TASKBAR_ALL_APPS);
             return;
         }

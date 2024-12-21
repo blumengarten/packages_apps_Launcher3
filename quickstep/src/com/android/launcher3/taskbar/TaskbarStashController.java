@@ -84,8 +84,6 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
     private static final String TAG = "TaskbarStashController";
     private static final boolean DEBUG = false;
 
-    private static boolean sEnableSoftwareImeForTests = false;
-
     /**
      * Def. value for @param shouldBubblesFollow in
      * {@link #updateAndAnimateTransientTaskbar(boolean)} */
@@ -1172,15 +1170,16 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         }
 
         // Do not stash if pinned taskbar, hardware keyboard is attached and no IME is docked
-        if (isHardwareKeyboard() && DisplayController.isPinnedTaskbar(mActivity)
+        if (mActivity.isHardwareKeyboard() && DisplayController.isPinnedTaskbar(mActivity)
                 && !mActivity.isImeDocked()) {
             return false;
         }
 
         // Do not stash if hardware keyboard is attached, in 3 button nav and desktop windowing mode
-        if (isHardwareKeyboard()
+        if (mActivity.isHardwareKeyboard()
                 && mActivity.isThreeButtonNav()
-                && mControllers.taskbarDesktopModeController.getAreDesktopTasksVisible()) {
+                && mControllers.taskbarDesktopModeController
+                    .getAreDesktopTasksVisibleAndNotInOverview()) {
             return false;
         }
 
@@ -1190,21 +1189,6 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         }
 
         return mIsImeShowing || mIsImeSwitcherShowing;
-    }
-
-    private boolean isHardwareKeyboard() {
-        return mActivity.isHardwareKeyboard() && !sEnableSoftwareImeForTests;
-    }
-
-    /**
-     * Overrides {@link #isHardwareKeyboard()} to {@code false} for testing, if enabled.
-     * <p>
-     * Virtual devices are sometimes in hardware keyboard mode, leading to an inconsistent
-     * testing environment.
-     */
-    @VisibleForTesting
-    static void enableSoftwareImeForTests(boolean enable) {
-        sEnableSoftwareImeForTests = enable;
     }
 
     /**

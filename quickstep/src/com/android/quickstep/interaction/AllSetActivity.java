@@ -70,6 +70,8 @@ import com.android.launcher3.anim.AnimatorPlaybackController;
 import com.android.launcher3.taskbar.TaskbarManager;
 import com.android.launcher3.util.Executors;
 import com.android.quickstep.GestureState;
+import com.android.quickstep.OverviewComponentObserver;
+import com.android.quickstep.OverviewComponentObserver.OverviewChangeListener;
 import com.android.quickstep.TouchInteractionService.TISBinder;
 import com.android.quickstep.util.LottieAnimationColorUtils;
 import com.android.quickstep.util.TISBindHelper;
@@ -121,7 +123,7 @@ public class AllSetActivity extends Activity {
 
     private TextView mHintView;
 
-    private final Runnable mOverviewTargetChangeRunnable = this::onOverviewTargetChanged;
+    private final OverviewChangeListener mOverviewChangeListener = this::onOverviewTargetChange;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -197,6 +199,9 @@ public class AllSetActivity extends Activity {
 
         setUpBackgroundAnimation(getDP().isTablet);
         getIDP().addOnChangeListener(mOnIDPChangeListener);
+
+        OverviewComponentObserver.INSTANCE.get(this)
+                .addOverviewChangeListener(mOverviewChangeListener);
     }
 
     private InvariantDeviceProfile getIDP() {
@@ -286,7 +291,6 @@ public class AllSetActivity extends Activity {
     private void onTISConnected(TISBinder binder) {
         setSetupUIVisible(isResumed());
         binder.setSwipeUpProxy(isResumed() ? this::createSwipeUpProxy : null);
-        binder.registerOverviewTargetChangeListener(mOverviewTargetChangeRunnable);
         binder.preloadOverviewForSUWAllSet();
         TaskbarManager taskbarManager = binder.getTaskbarManager();
         if (taskbarManager != null) {
@@ -294,11 +298,10 @@ public class AllSetActivity extends Activity {
         }
     }
 
-    private void onOverviewTargetChanged() {
+    private void onOverviewTargetChange(boolean isHomeAndOverviewSame) {
         TISBinder binder = mTISBindHelper.getBinder();
         if (binder != null) {
             binder.preloadOverviewForSUWAllSet();
-            binder.unregisterOverviewTargetChangeListener(mOverviewTargetChangeRunnable);
         }
     }
 
@@ -318,7 +321,6 @@ public class AllSetActivity extends Activity {
         if (binder != null) {
             setSetupUIVisible(false);
             binder.setSwipeUpProxy(null);
-            binder.unregisterOverviewTargetChangeListener(mOverviewTargetChangeRunnable);
         }
     }
 
@@ -346,6 +348,8 @@ public class AllSetActivity extends Activity {
         if (!isChangingConfigurations()) {
             dispatchLauncherAnimStartEnd();
         }
+        OverviewComponentObserver.INSTANCE.get(this)
+                .removeOverviewChangeListener(mOverviewChangeListener);
     }
 
     private AnimatedFloat createSwipeUpProxy(GestureState state) {
