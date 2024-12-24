@@ -246,13 +246,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -853,72 +851,6 @@ public abstract class RecentsView<
     private final Matrix mTmpMatrix = new Matrix();
 
     private int mTaskViewCount = 0;
-
-    private final TaskViewsIterable mTaskViewsIterable = new TaskViewsIterable();
-
-    public class TaskViewsIterable implements Iterable<TaskView> {
-
-        /**
-         * Iterates TaskViews when its index inside the RecentsView is needed.
-         */
-        public void forEachWithIndexInParent(BiConsumer<TaskView, Integer> consumer) {
-            int childCount = getChildCount();
-            for (int index = 0; index < childCount; index++) {
-                if (getChildAt(index) instanceof TaskView taskView) {
-                    consumer.accept(taskView, index);
-                }
-            }
-        }
-
-        @Override
-        public TaskViewsIterator iterator() {
-            return new TaskViewsIterator();
-        }
-    }
-
-    // An Iterator to iterate all the current TaskViews inside the RecentsView.
-    public class TaskViewsIterator implements Iterator<TaskView> {
-        // Refers to the index of the `TaskView` that will be returned when `next()` is called.
-        private int mNextIndex = 0;
-
-        // The "limit" of this iterator. This is the number of children of the RecentsView when
-        // the iterator was created. Adding & removing elements will invalidate the iteration
-        // anyway (and cause next() to throw) so saving this value will guarantee that the
-        // value of hasNext() remains stable and won't flap between true and false when elements
-        // are added and removed from the RecentsView.
-        private final int mLimit = getChildCount();
-
-        TaskViewsIterator() {
-            advanceIfNeeded();
-        }
-
-        @Override
-        public boolean hasNext() {
-            return mNextIndex < mLimit && mNextIndex < getChildCount();
-        }
-
-        @Override
-        public TaskView next() {
-            if (!hasNext()) {
-                throw new IndexOutOfBoundsException(
-                        String.format("mNextIndex: %d, child count: %d", mNextIndex,
-                                getChildCount()));
-            }
-            TaskView taskView = requireTaskViewAt(mNextIndex);
-            mNextIndex++;
-            advanceIfNeeded();
-            return taskView;
-        }
-
-        // Advances `mNextIndex` until it either points to a `TaskView` or to the end of the
-        // Iterator.
-        private void advanceIfNeeded() {
-            while (mNextIndex < mLimit && mNextIndex < getChildCount() && !(getChildAt(
-                    mNextIndex) instanceof TaskView)) {
-                mNextIndex++;
-            }
-        }
-    }
 
     @Nullable
     public TaskView getFirstTaskView() {
@@ -2569,7 +2501,7 @@ public abstract class RecentsView<
 
         List<Integer> visibleTaskIds = new ArrayList<>();
         // Update the task data for the in/visible children
-        getTaskViews().forEachWithIndexInParent((taskView, index) -> {
+        getTaskViews().forEachWithIndexInParent((index, taskView) -> {
             List<TaskContainer> containers = taskView.getTaskContainers();
             if (containers.isEmpty()) {
                 return;
@@ -4805,8 +4737,8 @@ public abstract class RecentsView<
     /**
      * Returns iterable [TaskView] children.
      */
-    public TaskViewsIterable getTaskViews() {
-        return mTaskViewsIterable;
+    public RecentsViewUtils.TaskViewsIterable getTaskViews() {
+        return mUtils.getTaskViews();
     }
 
     public void setOnEmptyMessageUpdatedListener(OnEmptyMessageUpdatedListener listener) {
@@ -5239,7 +5171,7 @@ public abstract class RecentsView<
         SplitAnimationTimings timings = AnimUtils.getDeviceOverviewToSplitTimings(
                 mContainer.getDeviceProfile().isTablet);
         if (enableLargeDesktopWindowingTile()) {
-            getTaskViews().forEachWithIndexInParent((taskView, index) -> {
+            getTaskViews().forEachWithIndexInParent((index, taskView) -> {
                 if (taskView instanceof DesktopTaskView) {
                     // Setting pivot to scale down from screen centre.
                     if (isTaskViewVisible(taskView)) {
@@ -6188,7 +6120,7 @@ public abstract class RecentsView<
         }
 
         int lastTaskScroll = getLastTaskScroll(clearAllScroll, clearAllWidth);
-        getTaskViews().forEachWithIndexInParent((taskView, index) -> {
+        getTaskViews().forEachWithIndexInParent((index, taskView) -> {
             float scrollDiff = taskView.getScrollAdjustment(showAsGrid);
             int pageScroll = newPageScrolls[index] + Math.round(scrollDiff);
             if ((mIsRtl && pageScroll < lastTaskScroll)

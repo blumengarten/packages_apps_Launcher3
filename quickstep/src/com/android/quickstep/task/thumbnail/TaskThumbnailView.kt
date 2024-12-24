@@ -52,7 +52,10 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
     private val recentsCoroutineScope: CoroutineScope = RecentsDependencies.get()
     private val dispatcherProvider: DispatcherProvider = RecentsDependencies.get()
 
-    private lateinit var viewData: TaskThumbnailViewData
+    // This is initialised here and set in onAttachedToWindow because onLayout can be called before
+    // onAttachedToWindow so this property needs to be initialised as it is used below.
+    private var viewData: TaskThumbnailViewData = RecentsDependencies.get(this)
+
     private lateinit var viewModel: TaskThumbnailViewModel
 
     private lateinit var viewAttachedScope: CoroutineScope

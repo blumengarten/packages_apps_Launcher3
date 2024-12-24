@@ -22,12 +22,15 @@ import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
 import com.android.quickstep.util.GroupTask
 import com.android.quickstep.views.RecentsView.RUNNING_TASK_ATTACH_ALPHA
 import com.android.systemui.shared.recents.model.ThumbnailData
+import java.util.function.BiConsumer
 
 /**
  * Helper class for [RecentsView]. This util class contains refactored and extracted functions from
  * RecentsView to facilitate the implementation of unit tests.
  */
 class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
+    val taskViews = TaskViewsIterable(recentsView)
+
     /** Takes a screenshot of all [taskView] and return map of taskId to the screenshot */
     fun screenshotTasks(taskView: TaskView): Map<Int, ThumbnailData> {
         val recentsAnimationController = recentsView.recentsAnimationController ?: return emptyMap()
@@ -47,27 +50,37 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
         return otherTasks + desktopTasks
     }
 
+    class TaskViewsIterable(val recentsView: RecentsView<*, *>) : Iterable<TaskView> {
+        /** Iterates TaskViews when its index inside the RecentsView is needed. */
+        fun forEachWithIndexInParent(consumer: BiConsumer<Int, TaskView>) {
+            recentsView.children.forEachIndexed { index, child ->
+                (child as? TaskView)?.let { consumer.accept(index, it) }
+            }
+        }
+
+        override fun iterator(): Iterator<TaskView> =
+            recentsView.children.mapNotNull { it as? TaskView }.iterator()
+    }
+
     /** Counts [TaskView]s that are [DesktopTaskView] instances. */
-    fun getDesktopTaskViewCount(): Int = recentsView.taskViews.count { it is DesktopTaskView }
+    fun getDesktopTaskViewCount(): Int = taskViews.count { it is DesktopTaskView }
 
     /** Returns a list of all large TaskView Ids from [TaskView]s */
-    fun getLargeTaskViewIds(): List<Int> =
-        recentsView.taskViews.filter { it.isLargeTile }.map { it.taskViewId }
+    fun getLargeTaskViewIds(): List<Int> = taskViews.filter { it.isLargeTile }.map { it.taskViewId }
 
     /** Counts [TaskView]s that are large tiles. */
-    fun getLargeTileCount(): Int = recentsView.taskViews.count { it.isLargeTile }
+    fun getLargeTileCount(): Int = taskViews.count { it.isLargeTile }
 
     /** Returns the first TaskView that should be displayed as a large tile. */
     fun getFirstLargeTaskView(): TaskView? =
-        recentsView.taskViews.firstOrNull {
+        taskViews.firstOrNull {
             it.isLargeTile && !(recentsView.isSplitSelectionActive && it is DesktopTaskView)
         }
 
     /** Returns the expected focus task. */
     fun getExpectedFocusedTask(): TaskView? =
-        if (enableLargeDesktopWindowingTile())
-            recentsView.taskViews.firstOrNull { it !is DesktopTaskView }
-        else recentsView.taskViews.firstOrNull()
+        if (enableLargeDesktopWindowingTile()) taskViews.firstOrNull { it !is DesktopTaskView }
+        else taskViews.firstOrNull()
 
     /**
      * Returns the [TaskView] that should be the current page during task binding, in the following
@@ -81,20 +94,20 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
     fun getExpectedCurrentTask(runningTaskView: TaskView?, focusedTaskView: TaskView?): TaskView? =
         runningTaskView
             ?: focusedTaskView
-            ?: recentsView.taskViews.firstOrNull { it !is DesktopTaskView }
-            ?: recentsView.taskViews.lastOrNull()
+            ?: taskViews.firstOrNull { it !is DesktopTaskView }
+            ?: taskViews.lastOrNull()
 
     /** Returns the first TaskView if it exists, or null otherwise. */
-    fun getFirstTaskView(): TaskView? = recentsView.taskViews.firstOrNull()
+    fun getFirstTaskView(): TaskView? = taskViews.firstOrNull()
 
     /** Returns the last TaskView if it exists, or null otherwise. */
-    fun getLastTaskView(): TaskView? = recentsView.taskViews.lastOrNull()
+    fun getLastTaskView(): TaskView? = taskViews.lastOrNull()
 
     /** Returns the first TaskView that is not large */
-    fun getFirstSmallTaskView(): TaskView? = recentsView.taskViews.firstOrNull { !it.isLargeTile }
+    fun getFirstSmallTaskView(): TaskView? = taskViews.firstOrNull { !it.isLargeTile }
 
     /** Returns the last TaskView that should be displayed as a large tile. */
-    fun getLastLargeTaskView(): TaskView? = recentsView.taskViews.lastOrNull { it.isLargeTile }
+    fun getLastLargeTaskView(): TaskView? = taskViews.lastOrNull { it.isLargeTile }
 
     /**
      * Gets the list of accessibility children. Currently all the children of RecentsViews are
@@ -108,23 +121,23 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
         nonRunningTaskCarouselHidden: Boolean,
         runningTaskView: TaskView? = recentsView.runningTaskView,
     ): TaskView? =
-        recentsView.taskViews.firstOrNull {
+        taskViews.firstOrNull {
             it.isVisibleInCarousel(runningTaskView, nonRunningTaskCarouselHidden)
         }
 
     /** Returns the last [TaskView], with some tasks possibly hidden in the carousel. */
     fun getLastTaskViewInCarousel(nonRunningTaskCarouselHidden: Boolean): TaskView? =
-        recentsView.taskViews.lastOrNull {
+        taskViews.lastOrNull {
             it.isVisibleInCarousel(recentsView.runningTaskView, nonRunningTaskCarouselHidden)
         }
 
     /** Returns if any small tasks are fully visible */
     fun isAnySmallTaskFullyVisible(): Boolean =
-        recentsView.taskViews.any { !it.isLargeTile && recentsView.isTaskViewFullyVisible(it) }
+        taskViews.any { !it.isLargeTile && recentsView.isTaskViewFullyVisible(it) }
 
     /** Apply attachAlpha to all [TaskView] accordingly to different conditions. */
     fun applyAttachAlpha(nonRunningTaskCarouselHidden: Boolean) {
-        recentsView.taskViews.forEach { taskView ->
+        taskViews.forEach { taskView ->
             taskView.attachAlpha =
                 if (taskView == recentsView.runningTaskView) {
                     RUNNING_TASK_ATTACH_ALPHA.get(recentsView)

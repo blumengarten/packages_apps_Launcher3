@@ -290,8 +290,20 @@ public final class WidgetRecommendationsView extends PagedView<PageIndicatorDots
             }
             setCurrentPage(requestedPage);
             mPageIndicator.setActiveMarker(requestedPage);
-            mRecommendationPageTitle.setText(mCategoryTitles.get(requestedPage));
+            updatePageTitle(requestedPage);
         }
+    }
+
+    @Override
+    protected boolean canAnnouncePageDescription() {
+        // Disable announcement as our page title reads out the needed page description
+        return false;
+    }
+
+    private void updatePageTitle(int requestedPage) {
+        String title = mCategoryTitles.get(requestedPage);
+        mRecommendationPageTitle.setText(title);
+        mRecommendationPageTitle.setContentDescription(title + ", " + getCurrentPageDescription());
     }
 
     @Override
@@ -299,7 +311,7 @@ public final class WidgetRecommendationsView extends PagedView<PageIndicatorDots
         if (getPageCount() > 1) {
             // Since the title is outside the paging scroll, we update the title on page switch.
             int nextPage = getNextPage();
-            mRecommendationPageTitle.setText(mCategoryTitles.get(nextPage));
+            updatePageTitle(nextPage);
             mPageSwitchListeners.forEach(listener -> listener.accept(nextPage));
             super.notifyPageSwitchListener(prevPage);
         }

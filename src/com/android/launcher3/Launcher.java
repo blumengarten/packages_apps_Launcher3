@@ -1569,7 +1569,6 @@ public class Launcher extends StatefulActivity<LauncherState>
         if (!enableAddAppWidgetViaConfigActivityV2() || hostView.getParent() == null) {
             mWorkspace.addInScreen(hostView, launcherInfo);
         }
-        announceForAccessibility(R.string.item_added_to_workspace);
 
         // Show the widget resize frame.
         if (hostView instanceof LauncherAppWidgetHostView) {
