@@ -3169,7 +3169,7 @@ public abstract class RecentsView<
      * Skips rebalance.
      */
     private void updateGridProperties() {
-        updateGridProperties(Integer.MAX_VALUE);
+        updateGridProperties(null);
     }
 
     /**
@@ -3179,10 +3179,10 @@ public abstract class RecentsView<
      * This method only calculates the potential position and depends on {@link #setGridProgress} to
      * apply the actual scaling and translation.
      *
-     * @param startRebalanceAfter which view index to start rebalancing from. Use Integer.MAX_VALUE
-     *                            to skip rebalance
+     * @param lastVisibleTaskViewDuringDismiss which TaskView to start rebalancing from. Use
+     *                                         `null` to skip rebalance.
      */
-    private void updateGridProperties(int startRebalanceAfter) {
+    private void updateGridProperties(TaskView lastVisibleTaskViewDuringDismiss) {
         if (!hasTaskViews()) {
             return;
         }
@@ -3195,19 +3195,10 @@ public abstract class RecentsView<
         float topAccumulatedTranslationX = 0;
         float bottomAccumulatedTranslationX = 0;
 
-        // Contains whether the child index is in top or bottom of grid (for non-focused task)
-        // Different from mTopRowIdSet, which contains the taskViewId of what task is in top row
-        IntSet topSet = new IntSet();
-        IntSet bottomSet = new IntSet();
-
-        final int taskCount = getTaskViewCount();
-        // Horizontal grid translation for each task
-        float[] gridTranslations = new float[taskCount];
+        // Horizontal grid translation for each task.
+        Map<TaskView, Float> gridTranslations = new HashMap<>();
 
         TaskView lastLargeTaskView = mUtils.getLastLargeTaskView();
-        int lastLargeTaskIndex =
-                (lastLargeTaskView == null) ? Integer.MAX_VALUE : indexOfChild(lastLargeTaskView);
-        Set<Integer> largeTasksIndices = new HashSet<>();
         int focusedTaskShift = 0;
         int largeTaskWidthAndSpacing = 0;
         int snappedTaskRowWidth = 0;
@@ -3220,29 +3211,46 @@ public abstract class RecentsView<
         if (!mAnyTaskHasBeenDismissed) {
             mTopRowIdSet.clear();
         }
-        for (int i = 0; i < taskCount; i++) {
-            TaskView taskView = requireTaskViewAt(i);
+
+        // Consecutive task views in the top row or bottom row, which means another one set will
+        // be cleared up while starting to add TaskViews to one of them. Also means only one of
+        // them can be non-empty at most.
+        Set<TaskView> lastTopTaskViews = new HashSet<>();
+        Set<TaskView> lastBottomTaskViews = new HashSet<>();
+
+        int largeTasksCount = 0;
+        // True if the last large TaskView has been visited during the TaskViews iteration.
+        boolean encounteredLastLargeTaskView = false;
+        // True if the highest index visible TaskView has been visited during the TaskViews
+        // iteration.
+        boolean encounteredLastVisibleTaskView = false;
+        for (TaskView taskView : getTaskViews()) {
+            if (taskView == lastLargeTaskView) {
+                encounteredLastLargeTaskView = true;
+            }
+            if (taskView == lastVisibleTaskViewDuringDismiss) {
+                encounteredLastVisibleTaskView = true;
+            }
+            float gridTranslation = 0f;
             int taskWidthAndSpacing = taskView.getLayoutParams().width + mPageSpacing;
             // Evenly distribute tasks between rows unless rearranging due to task dismissal, in
             // which case keep tasks in their respective rows. For the running task, don't join
             // the grid.
-            boolean isLargeTile = taskView.isLargeTile();
-
-            if (isLargeTile) {
+            if (taskView.isLargeTile()) {
+                largeTasksCount++;
                 // DesktopTaskView`s are hidden during split select state, so we shouldn't count
                 // them when calculating row width.
                 if (!(taskView instanceof DesktopTaskView && isSplitSelectionActive())) {
                     topRowWidth += taskWidthAndSpacing;
                     bottomRowWidth += taskWidthAndSpacing;
                 }
-                gridTranslations[i] += focusedTaskShift;
-                gridTranslations[i] += mIsRtl ? taskWidthAndSpacing : -taskWidthAndSpacing;
+                gridTranslation += focusedTaskShift;
+                gridTranslation += mIsRtl ? taskWidthAndSpacing : -taskWidthAndSpacing;
 
                 // Center view vertically in case it's from different orientation.
                 taskView.setGridTranslationY((mLastComputedTaskSize.height() + taskTopMargin
                         - taskView.getLayoutParams().height) / 2f);
 
-                largeTasksIndices.add(i);
                 largeTaskWidthAndSpacing = taskWidthAndSpacing;
 
                 if (taskView == snappedTaskView) {
@@ -3250,9 +3258,9 @@ public abstract class RecentsView<
                     snappedTaskRowWidth = taskWidthAndSpacing;
                 }
             } else {
-                if (i > lastLargeTaskIndex) {
+                if (encounteredLastLargeTaskView) {
                     // For tasks after the last large task, shift by large task's width and spacing.
-                    gridTranslations[i] +=
+                    gridTranslation +=
                             mIsRtl ? largeTaskWidthAndSpacing : -largeTaskWidthAndSpacing;
                 } else {
                     // For task before the focused task, accumulate the width and spacing to
@@ -3261,10 +3269,10 @@ public abstract class RecentsView<
                 }
                 int taskViewId = taskView.getTaskViewId();
 
-                // Rebalance the grid starting after a certain index
                 boolean isTopRow;
                 if (mAnyTaskHasBeenDismissed) {
-                    if (i > startRebalanceAfter) {
+                    // Rebalance the grid starting after a certain index.
+                    if (encounteredLastVisibleTaskView) {
                         mTopRowIdSet.remove(taskViewId);
                         isTopRow = topRowWidth <= bottomRowWidth;
                     } else {
@@ -3281,47 +3289,43 @@ public abstract class RecentsView<
                     } else {
                         topRowWidth += taskWidthAndSpacing;
                     }
-                    topSet.add(i);
                     mTopRowIdSet.add(taskViewId);
-
                     taskView.setGridTranslationY(mTaskGridVerticalDiff);
 
                     // Move horizontally into empty space.
                     float widthOffset = 0;
-                    for (int j = i - 1; !topSet.contains(j) && j >= 0; j--) {
-                        if (largeTasksIndices.contains(j)) {
-                            continue;
-                        }
-                        widthOffset += requireTaskViewAt(j).getLayoutParams().width + mPageSpacing;
+                    for (TaskView bottomTaskView : lastBottomTaskViews) {
+                        widthOffset += bottomTaskView.getLayoutParams().width + mPageSpacing;
                     }
 
                     float currentTaskTranslationX = mIsRtl ? widthOffset : -widthOffset;
-                    gridTranslations[i] += topAccumulatedTranslationX + currentTaskTranslationX;
+                    gridTranslation += topAccumulatedTranslationX + currentTaskTranslationX;
                     topAccumulatedTranslationX += currentTaskTranslationX;
+                    lastTopTaskViews.add(taskView);
+                    lastBottomTaskViews.clear();
                 } else {
                     bottomRowWidth += taskWidthAndSpacing;
-                    bottomSet.add(i);
 
                     // Move into bottom row.
                     taskView.setGridTranslationY(mTopBottomRowHeightDiff + mTaskGridVerticalDiff);
 
                     // Move horizontally into empty space.
                     float widthOffset = 0;
-                    for (int j = i - 1; !bottomSet.contains(j) && j >= 0; j--) {
-                        if (largeTasksIndices.contains(j)) {
-                            continue;
-                        }
-                        widthOffset += requireTaskViewAt(j).getLayoutParams().width + mPageSpacing;
+                    for (TaskView topTaskView : lastTopTaskViews) {
+                        widthOffset += topTaskView.getLayoutParams().width + mPageSpacing;
                     }
 
                     float currentTaskTranslationX = mIsRtl ? widthOffset : -widthOffset;
-                    gridTranslations[i] += bottomAccumulatedTranslationX + currentTaskTranslationX;
+                    gridTranslation += bottomAccumulatedTranslationX + currentTaskTranslationX;
                     bottomAccumulatedTranslationX += currentTaskTranslationX;
+                    lastBottomTaskViews.add(taskView);
+                    lastTopTaskViews.clear();
                 }
                 if (taskView == snappedTaskView) {
                     snappedTaskRowWidth = isTopRow ? topRowWidth : bottomRowWidth;
                 }
             }
+            gridTranslations.put(taskView, gridTranslation);
         }
 
         // We need to maintain snapped task's page scroll invariant between quick switch and
@@ -3332,22 +3336,22 @@ public abstract class RecentsView<
         if (snappedTaskView != null) {
             snappedTaskNonGridScrollAdjustment = snappedTaskView.getScrollAdjustment(
                     /*gridEnabled=*/false);
-            snappedTaskGridTranslationX = gridTranslations[snappedPage];
+            snappedTaskGridTranslationX = gridTranslations.get(snappedTaskView);
         }
 
         // Use the accumulated translation of the row containing the last task.
-        float clearAllAccumulatedTranslation = topSet.contains(taskCount - 1)
+        float clearAllAccumulatedTranslation = !lastTopTaskViews.isEmpty()
                 ? topAccumulatedTranslationX : bottomAccumulatedTranslationX;
 
         // If the last task is on the shorter row, ClearAllButton will embed into the shorter row
         // which is not what we want. Compensate the width difference of the 2 rows in that case.
         float shorterRowCompensation = 0;
         if (topRowWidth <= bottomRowWidth) {
-            if (topSet.contains(taskCount - 1)) {
+            if (!lastTopTaskViews.isEmpty()) {
                 shorterRowCompensation = bottomRowWidth - topRowWidth;
             }
         } else {
-            if (bottomSet.contains(taskCount - 1)) {
+            if (!lastBottomTaskViews.isEmpty()) {
                 shorterRowCompensation = topRowWidth - bottomRowWidth;
             }
         }
@@ -3363,8 +3367,7 @@ public abstract class RecentsView<
         // for ClearAllButton translation. The space at the left side of the large task will be
         // empty and it should be move ClearAllButton further away as well.
         // TODO(b/359573248): Validate the translation for ClearAllButton for grid only.
-        boolean hasOnlyLargeTasks = taskCount == largeTasksIndices.size();
-        if (enableLargeDesktopWindowingTile() && hasOnlyLargeTasks) {
+        if (enableLargeDesktopWindowingTile() && largeTasksCount == getTaskViewCount()) {
             longRowWidth = largeTaskWidthAndSpacing;
         }
 
@@ -3388,7 +3391,7 @@ public abstract class RecentsView<
         float clearAllTotalTranslationX =
                 clearAllAccumulatedTranslation + clearAllShorterRowCompensation
                         + clearAllShortTotalWidthTranslation + snappedTaskNonGridScrollAdjustment;
-        if (!largeTasksIndices.isEmpty()) {
+        if (largeTasksCount > 0) {
             // Shift by focused task's width and spacing if a task is focused.
             clearAllTotalTranslationX +=
                     mIsRtl ? largeTaskWidthAndSpacing : -largeTaskWidthAndSpacing;
@@ -3412,10 +3415,10 @@ public abstract class RecentsView<
             }
         }
 
-        for (int i = 0; i < taskCount; i++) {
-            TaskView taskView = requireTaskViewAt(i);
-            taskView.setGridTranslationX(gridTranslations[i] - snappedTaskGridTranslationX
-                    + snappedTaskNonGridScrollAdjustment);
+        for (TaskView taskView : getTaskViews()) {
+            taskView.setGridTranslationX(
+                    gridTranslations.get(taskView) - snappedTaskGridTranslationX
+                            + snappedTaskNonGridScrollAdjustment);
         }
 
         final TaskView runningTask = getRunningTaskView();
@@ -4154,7 +4157,8 @@ public abstract class RecentsView<
                             // Rebalance tasks in the grid
                             int highestVisibleTaskIndex = getHighestVisibleTaskIndex();
                             if (highestVisibleTaskIndex < Integer.MAX_VALUE) {
-                                TaskView taskView = requireTaskViewAt(highestVisibleTaskIndex);
+                                final TaskView taskView = requireTaskViewAt(
+                                        highestVisibleTaskIndex);
 
                                 boolean shouldRebalance;
                                 int screenStart = getPagedOrientationHandler().getPrimaryScroll(
@@ -4182,7 +4186,7 @@ public abstract class RecentsView<
                                 }
 
                                 if (shouldRebalance) {
-                                    updateGridProperties(highestVisibleTaskIndex);
+                                    updateGridProperties(taskView);
                                     updateScrollSynchronously();
                                 }
                             }

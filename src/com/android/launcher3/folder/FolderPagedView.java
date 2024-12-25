@@ -100,6 +100,8 @@ public class FolderPagedView extends PagedView<PageIndicatorDots> implements Cli
     // animating or is open.
     private boolean mViewsBound = false;
 
+    private boolean mCanAnnouncePageDescription;
+
     public FolderPagedView(Context context, AttributeSet attrs) {
         this(
                 context,
@@ -168,6 +170,19 @@ public class FolderPagedView extends PagedView<PageIndicatorDots> implements Cli
         }
         arrangeChildren(items.stream().map(this::createNewView).collect(Collectors.toList()));
         mViewsBound = true;
+    }
+
+    void setCanAnnouncePageDescriptionForFolder(boolean canAnnounce) {
+        mCanAnnouncePageDescription = canAnnounce;
+    }
+
+    private boolean canAnnouncePageDescriptionForFolder() {
+        return mCanAnnouncePageDescription;
+    }
+
+    @Override
+    protected boolean canAnnouncePageDescription() {
+        return super.canAnnouncePageDescription() && canAnnouncePageDescriptionForFolder();
     }
 
     /**

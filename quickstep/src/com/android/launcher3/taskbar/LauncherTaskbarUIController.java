@@ -41,6 +41,7 @@ import com.android.launcher3.logging.InstanceId;
 import com.android.launcher3.logging.InstanceIdSequence;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.taskbar.bubbles.BubbleBarController;
+import com.android.launcher3.taskbar.bubbles.BubbleControllers;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.MultiPropertyFactory;
@@ -86,7 +87,7 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
     private final DeviceProfile.OnDeviceProfileChangeListener mOnDeviceProfileChangeListener =
             dp -> {
                 onStashedInAppChanged(dp);
-                adjustHotseatForBubbleBar();
+                postAdjustHotseatForBubbleBar();
                 if (mControllers != null && mControllers.taskbarViewController != null) {
                     mControllers.taskbarViewController.onRotationChanged(dp);
                 }
@@ -275,13 +276,16 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
         }
     }
 
-    private void adjustHotseatForBubbleBar() {
+    private void postAdjustHotseatForBubbleBar() {
         Hotseat hotseat = mLauncher.getHotseat();
-        if (mControllers.bubbleControllers.isEmpty() || hotseat == null) return;
-        boolean hiddenForBubbles =
-                mControllers.bubbleControllers.get().bubbleBarViewController.isHiddenForNoBubbles();
-        if (hiddenForBubbles) return;
-        hotseat.post(() -> adjustHotseatForBubbleBar(/* isBubbleBarVisible= */ true));
+        if (hotseat == null || !isBubbleBarVisible()) return;
+        hotseat.post(() -> adjustHotseatForBubbleBar(isBubbleBarVisible()));
+    }
+
+    private boolean isBubbleBarVisible() {
+        BubbleControllers bubbleControllers = mControllers.bubbleControllers.orElse(null);
+        return bubbleControllers != null
+                && bubbleControllers.bubbleBarViewController.isBubbleBarVisible();
     }
 
     /**

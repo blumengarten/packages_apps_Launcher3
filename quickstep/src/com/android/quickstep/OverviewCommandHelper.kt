@@ -470,7 +470,7 @@ constructor(
         // Stops requesting focused after first view gets focused.
         recentsView.getTaskViewAt(keyboardTaskFocusIndex).requestFocus() ||
             recentsView.nextTaskView.requestFocus() ||
-            recentsView.getTaskViewAt(0).requestFocus() ||
+            recentsView.getFirstTaskView().requestFocus() ||
             recentsView.requestFocus()
     }
 

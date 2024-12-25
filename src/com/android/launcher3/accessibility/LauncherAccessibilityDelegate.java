@@ -305,7 +305,6 @@ public class LauncherAccessibilityDelegate extends BaseAccessibilityDelegate<Lau
                 info.spanX, info.spanY);
         host.requestLayout();
         mContext.getModelWriter().updateItemInDatabase(info);
-        announceConfirmation(mContext.getString(R.string.widget_resized, info.spanX, info.spanY));
         return true;
     }
 
