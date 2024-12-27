@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"Usa Impostazioni per cambiare sensibilità del gesto Indietro"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"Scorri per tornare indietro"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"Per tornare all\'ultima schermata, scorri dal bordo sinistro o destro verso il centro dello schermo."</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"Per tornare all\'ultima schermata, scorri con 2 dita dal bordo sinistro o destro verso il centro dello schermo."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"Vai indietro"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"Scorri dal bordo sinistro o destro verso il centro dello schermo"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"Assicurati di scorrere verso l\'alto dal bordo inferiore dello schermo"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"Hai completato il gesto Vai alla schermata Home"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"Scorri per andare alla schermata Home"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"Scorri verso l\'alto dalla parte inferiore dello schermo. Questo gesto ti porta sempre alla schermata Home."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"Scorri verso l\'alto con 2 dita dal basso. Questo gesto ti porta sempre alla schermata Home."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Vai alla schermata Home"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"Scorri verso l\'alto dalla parte inferiore dello schermo"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"Ottimo lavoro!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"Hai completato il gesto Cambia app"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Scorri per passare da un\'app all\'altra"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"Per spostarti tra le app, scorri dal basso verso l\'alto sullo schermo, tieni premuto e rilascia."</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"Per spostarti tra le app, scorri verso l\'alto con 2 dita, tieni premuto e rilascia."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Cambia app"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Scorri verso l\'alto dalla parte inferiore dello schermo, tieni premuto e poi rilascia"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"Ben fatto!"</string>

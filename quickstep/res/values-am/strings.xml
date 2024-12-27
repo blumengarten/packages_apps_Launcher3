@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"ከኋላ ስሜት ሰጭነት ደረጃ ለመለወጥ ወደ ቅንብሮች ይመለሱ"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"ወደኋላ ለመመለስ ያንሸራትቱ"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"ወደ መጨረሻው ማያ ገፅ ለመመለስ ከግራ ወይም ከቀኝ ጠርዝ ወደ ማያ ገጹ መሃል ያንሸራትቱ።"</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"ወደ መጨረሻው ማያ ገፅ ለመመለስ በ2 ጣቶች ከግራ ወይም ከቀኝ ጠርዝ ወደ ማያ ገጹ መሃል ያንሸራትቱ።"</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"ተመለስ"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"ከግራ ወይም ከቀኝ ጠርዝ ወደ ማያ ገጹ መካከል ያንሸራትቱ"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"ከማያ ገጹ የታችኛው ጠርዝ ወደ ላይ ማንሸራተትዎን ያረጋግጡ"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"ወደ መነሻ ሂድ ምልክትን አጠናቅቀዋል"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"ወደ መነሻ ለመሄድ ያንሸራትቱ"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"ከእርስዎ ማያ ገፅ ግርጌ ላይ ወደ ላይ በጣት ጠረግ ያድርጉ። ይህ የእጅ ውዝዋዜ ሁልጊዜ ወደ መነሻ ማያ ገፅ ይወስድዎታል።"</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"በ2 ጣቶች ከማያ ገጹ ግርጌ ወደ ላይ ያንሸራትቱ። ይህ የእጅ ምልክት ሁልጊዜ ወደ መነሻ ማያ ገፅ ይወስደዎታል።"</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"ወደ መነሻ ይሂዱ"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"ከማያ ገጽዎ የታችኛው ክፍል ወደ ላይ ያንሸራትቱ"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"ጥሩ ሠርተዋል!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"መተግበሪያዎችን ቀይር ምልክትን አጠናቅቀዋል"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"መተግበሪያዎችን ለመቀየር ያንሸራትቱ"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"በመተግበሪያዎች መካከል ለመቀያየር ከማያ ገጽዎ ግርጌ ወደ ላይ ያንሸራትቱ፣ ይያዙ፣ ከዚያ ይለቀቁ።"</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"በመተግበሪያዎች መካከል ለመቀያየር ከማያ ገጽዎ ግርጌ ላይ በ2 ጣቶች ያንሸራትቱ፣ ይያዙ፣ ከዚያ ይለቀቁ።"</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"መተግበሪያዎችን ይቀያይሩ"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"ከማያ ገጽዎ የታችኛው ክፍል ወደ ላይ ያንሸራትቱ፣ ይያዙ፣ ከዚያ ይልቀቁ"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"ጥሩ ሰርተዋል!"</string>

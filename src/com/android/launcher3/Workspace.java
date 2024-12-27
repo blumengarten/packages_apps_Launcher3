@@ -3519,9 +3519,8 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
 
     @Override
     protected boolean canAnnouncePageDescription() {
-        // Disable announcements while overscrolling potentially to overlay screen because if we end
-        // up on the overlay screen, it will take care of announcing itself.
-        return Float.compare(mOverlayProgress, 0f) == 0;
+        // b/383247157: Disable disruptive home screen page announcement
+        return false;
     }
 
     @Override

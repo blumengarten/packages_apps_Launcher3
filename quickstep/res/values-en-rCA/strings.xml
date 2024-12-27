@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"To change the sensitivity of the back gesture, go to Settings"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"Swipe to go back"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"To go back to the last screen, swipe from the left or right edge to the middle of the screen."</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"To go back to the last screen, swipe with 2 fingers from the left or right edge to the middle of the screen."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"Go back"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"Swipe from the left or right edge to the middle of the screen"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"Make sure you swipe up from the bottom edge of the screen"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"You completed the go home gesture"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"Swipe to go home"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"Swipe up from the bottom of your screen. This gesture always takes you to the Home screen."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"Swipe up with 2 fingers from the bottom of the screen. This gesture always takes you to the Home screen."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Go home"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"Swipe up from the bottom of your screen"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"Great job!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"You completed the switch apps gesture"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Swipe to switch apps"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"To switch between apps, swipe up from the bottom of your screen, hold, then release."</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"To switch between apps, swipe up with 2 fingers from the bottom of your screen, hold, then release."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Switch apps"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Swipe up from the bottom of your screen, hold, then release"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"Well done!"</string>

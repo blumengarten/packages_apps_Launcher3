@@ -107,9 +107,9 @@ public class IconCache extends BaseIconCache {
             IconProvider iconProvider) {
         super(context, dbFileName, MODEL_EXECUTOR.getLooper(),
                 idp.fillResIconDpi, idp.iconBitmapSize, true /* inMemoryCache */, iconProvider);
-        mLauncherApps = mContext.getSystemService(LauncherApps.class);
-        mUserManager = UserCache.INSTANCE.get(mContext);
-        mInstantAppResolver = InstantAppResolver.newInstance(mContext);
+        mLauncherApps = context.getSystemService(LauncherApps.class);
+        mUserManager = UserCache.INSTANCE.get(context);
+        mInstantAppResolver = InstantAppResolver.newInstance(context);
         mWidgetCategoryBitmapInfos = new SparseArray<>();
 
         mCancelledTask = new CancellableTask(() -> null, MAIN_EXECUTOR, c -> { });
@@ -117,7 +117,7 @@ public class IconCache extends BaseIconCache {
     }
 
     @Override
-    protected long getSerialNumberForUser(@NonNull UserHandle user) {
+    public long getSerialNumberForUser(@NonNull UserHandle user) {
         return mUserManager.getSerialNumberForUser(user);
     }
 
@@ -129,7 +129,7 @@ public class IconCache extends BaseIconCache {
     @NonNull
     @Override
     public BaseIconFactory getIconFactory() {
-        return LauncherIcons.obtain(mContext);
+        return LauncherIcons.obtain(context);
     }
 
     /**
@@ -151,7 +151,7 @@ public class IconCache extends BaseIconCache {
         // This will clear all pending updates
         getUpdateHandler();
 
-        mIconDb.close();
+        iconDb.close();
     }
 
     /**
@@ -231,7 +231,7 @@ public class IconCache extends BaseIconCache {
      * Fill in {@code info} with the icon for {@code si}
      */
     public void getShortcutIcon(ItemInfoWithIcon info, ShortcutInfo si) {
-        getShortcutIcon(info, new CacheableShortcutInfo(si, mContext));
+        getShortcutIcon(info, new CacheableShortcutInfo(si, context));
     }
 
     /**
@@ -279,7 +279,7 @@ public class IconCache extends BaseIconCache {
         String override = shortcutInfo.getExtras() == null ? null
                 : shortcutInfo.getExtras().getString(EXTRA_SHORTCUT_BADGE_OVERRIDE_PACKAGE);
         if (!TextUtils.isEmpty(override)
-                && InstallSessionHelper.INSTANCE.get(mContext)
+                && InstallSessionHelper.INSTANCE.get(context)
                 .isTrustedPackage(pkg, shortcutInfo.getUserHandle())) {
             pkg = override;
         } else {
@@ -364,11 +364,11 @@ public class IconCache extends BaseIconCache {
         String componentNameQuery = TextUtils.join(
                 ",", Collections.nCopies(queryParams.length - 1, "?"));
 
-        return mIconDb.query(
-                useLowResIcons ? IconDB.COLUMNS_LOW_RES : IconDB.COLUMNS_HIGH_RES,
-                IconDB.COLUMN_COMPONENT
+        return iconDb.query(
+                useLowResIcons ? COLUMNS_LOW_RES : COLUMNS_HIGH_RES,
+                COLUMN_COMPONENT
                         + " IN ( " + componentNameQuery + " )"
-                        + " AND " + IconDB.COLUMN_USER + " = ?",
+                        + " AND " + COLUMN_USER + " = ?",
                 queryParams);
     }
 
@@ -428,7 +428,7 @@ public class IconCache extends BaseIconCache {
                 /* user = */ sectionKey.first,
                 /* useLowResIcons = */ sectionKey.second)) {
             // Database title and icon loading
-            int componentNameColumnIndex = c.getColumnIndexOrThrow(IconDB.COLUMN_COMPONENT);
+            int componentNameColumnIndex = c.getColumnIndexOrThrow(COLUMN_COMPONENT);
             while (c.moveToNext()) {
                 ComponentName cn = ComponentName.unflattenFromString(
                         c.getString(componentNameColumnIndex));
@@ -525,9 +525,9 @@ public class IconCache extends BaseIconCache {
             return;
         }
 
-        WidgetSection widgetSection = WidgetSections.getWidgetSections(mContext)
+        WidgetSection widgetSection = WidgetSections.getWidgetSections(context)
                 .get(infoInOut.widgetCategory);
-        infoInOut.title = mContext.getString(widgetSection.mSectionTitle);
+        infoInOut.title = context.getString(widgetSection.mSectionTitle);
         infoInOut.contentDescription = getUserBadgedLabel(infoInOut.title, infoInOut.user);
         final BitmapInfo cachedBitmap = mWidgetCategoryBitmapInfos.get(infoInOut.widgetCategory);
         if (cachedBitmap != null) {
@@ -535,9 +535,9 @@ public class IconCache extends BaseIconCache {
             return;
         }
 
-        try (LauncherIcons li = LauncherIcons.obtain(mContext)) {
+        try (LauncherIcons li = LauncherIcons.obtain(context)) {
             final BitmapInfo tempBitmap = li.createBadgedIconBitmap(
-                    mContext.getDrawable(widgetSection.mSectionDrawable),
+                    context.getDrawable(widgetSection.mSectionDrawable),
                     new BaseIconFactory.IconOptions());
             mWidgetCategoryBitmapInfos.put(infoInOut.widgetCategory, tempBitmap);
             infoInOut.bitmap = getBadgedIcon(tempBitmap, infoInOut.user);
@@ -606,7 +606,7 @@ public class IconCache extends BaseIconCache {
 
     /** Log persistently to FileLog.d for debugging. */
     @Override
-    protected void logdPersistently(String tag, String message, @Nullable Exception e) {
-        FileLog.d(tag, message, e);
+    protected void logPersistently(@NonNull String message, @Nullable Exception e) {
+        FileLog.d(BaseIconCache.TAG, message, e);
     }
 }

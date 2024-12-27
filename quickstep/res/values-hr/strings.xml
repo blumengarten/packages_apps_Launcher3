@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"Osjetljivost pokreta povratka promijenite u postavkama"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"Prijeđite prstom da biste se vratili"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"Da biste se vratili na prethodni zaslon, prijeđite prstom od lijevog ili desnog ruba do sredine zaslona."</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"Da biste se vratili na posljednji zaslon, prijeđite s dva prsta od lijevog ili desnog ruba do sredine zaslona."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"Povratak"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"Prijeđite prstom od lijevog ili desnog ruba do sredine zaslona"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"Pazite da prijeđete prstom prema gore od donjeg ruba zaslona"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"Napravili ste pokret za otvaranje početnog zaslona"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"Prijeđite prstom da biste otvorili početni zaslon"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"Prijeđite prstom od dna zaslona prema gore. Tim pokretom uvijek će se otvoriti početni zaslon."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"Prijeđite s dva prsta od dna zaslona prema gore. Tim pokretom uvijek će se otvoriti početni zaslon."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Otvaranje početnog zaslona"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"Prijeđite prstom od dna zaslona prema gore"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"Sjajno!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"Napravili ste pokret za promjenu aplikacije"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Povlačenje prstom za promjenu aplikacije"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"Da biste promijenili aplikaciju, prijeđite prstom od dna zaslona prema gore, zadržite pritisak pa pustite."</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"Za promjenu aplikacije prijeđite s dva prsta od dna zaslona prema gore, zadržite pritisak i pustite."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Promjena aplikacije"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Prijeđite prstom od dna zaslona prema gore, zadržite pritisak pa pustite"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"Odlično!"</string>

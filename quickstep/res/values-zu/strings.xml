@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"Ukuze ushintshe ukuzwela kokuthinta emuva, iya Kumasethingi"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"Swayipha ukuze uye emuva"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"Ukuze ubuyele emuva esikrinini sokugcina, swapha kusuka emngceleni wesobunxele noma wesokudla kuya phakathi kwesikrini."</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"Ukuze ubuyele esikrinini sokugcina, swayipha ngeminwe emi-2 ukusuka kwesokunxele noma kwesokudla emphethweni uye phakathi kwesikrini."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"Iya emuva"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"Swayipha ukusuka kwesokunxele noma kwesokudla ukuya phakathi kwesikrini"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"Qiniseka ukuthi uswayiphela phezulu ukusuka emngceleni ophansi wesikrini"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"Ukuqedile ukuthinta kokuya ekhaya"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"Swayipha ukuze uye ekhaya"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"Swayiphela phezulu kusuka phansi kwesikrini sakho.Lokhu kuthinta kuhlala kukusa esikrinini sasekhaya."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"Swayiphela phezulu ngeminwe emi-2 kusukela phansi esikrinini. Lesi senzo sihlala sikuyisa esikrinini Sasekhaya."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Iya ekhasini lokuqala"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"Swayiphela phezulu ukusuka phansi esikrinini sakho"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"Umsebenzi omuhle!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"Ukuqedile ukuthinta kokushintsha ama-app"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Swayipha ukuze ushintshe ama-app"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"Ukuze ushintshe phakathi kwama-app, swayiphela phezulu kusuka ngezansi kwesikrini sakho, bese uyadedela."</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"Ukuze ushintshe phakathi kwama-app, swayiphela phezulu ngeminwe emi-2 kusukela phansi esikrinini sakho, ubambe, bese uyakhulula."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Shintsha ama-app"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Swayiphela phezulu ukusuka phansi esikrinini sakho, ubambe, bese uyadedela"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"Wenze kahle!"</string>

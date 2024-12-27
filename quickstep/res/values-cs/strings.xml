@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"Citlivost gesta pro přechod zpět můžete změnit v Nastavení"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"Přejetím prstem se vrátíte zpět"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"Na předchozí obrazovku se vrátíte tak, že přejedete prstem z levého nebo pravého okraje obrazovky doprostřed."</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"Pokud se chcete vrátit na poslední obrazovku, přejeďte dvěma prsty z levého nebo pravého okraje doprostřed obrazovky."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"Návrat zpět"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"Přejeďte prstem z levého nebo pravého okraje do středu obrazovky"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"Přejeďte prstem nahoru z dolního okraje obrazovky"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"Provedli jste gesto pro přechod na plochu"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"Přechod na plochu přejetím prstem"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"Přejeďte prstem ze spodní části obrazovky nahoru. Tímto gestem se vždy dostanete na plochu."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"Přejeďte dvěma prsty z dolního okraje obrazovky nahoru. Tímto gestem se vždy dostanete na plochu."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Přechod na plochu"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"Přejeďte prstem ze spodní části obrazovky nahoru"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"Výborně!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"Provedli jste gesto pro přepínání aplikací"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Přepínání aplikací přejetím prstem"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"Přejeďte nahoru z dolního okraje obrazovky, podržte obrazovku a uvolněte."</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"Přepínání mezi aplikacemi: Přejeďte dvěma prsty nahoru z dolního okraje obrazovky, podržte obrazovku a uvolněte."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Přepínání aplikací"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Přejeďte prstem nahoru z dolního okraje obrazovky, podržte obrazovku a potom prst uvolněte"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"Výborně!"</string>

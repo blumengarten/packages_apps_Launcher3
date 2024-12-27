@@ -124,7 +124,7 @@ class LoaderTaskTest {
         `when`(app.invariantDeviceProfile).thenReturn(idp)
         `when`(launcherBinder.newIdleLock(any())).thenReturn(idleLock)
         `when`(idleLock.awaitLocked(1000)).thenReturn(false)
-        `when`(iconCache.updateHandler).thenReturn(iconCacheUpdateHandler)
+        `when`(iconCache.getUpdateHandler()).thenReturn(iconCacheUpdateHandler)
         `when`(widgetsFilterDataProvider.getDefaultWidgetsFilter()).thenReturn(Predicate { true })
         context.putObject(UserCache.INSTANCE, userCache)
 

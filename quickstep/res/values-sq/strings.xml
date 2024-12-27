@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"Për të ndryshuar ndjeshmërinë e gjestit të kthimit prapa, shko te \"Cilësimet\""</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"Rrëshqit shpejt për t\'u kthyer prapa"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"Për t\'u kthyer prapa tek ekrani i fundit, rrëshqit shpejt nga skaji i majtë ose i djathtë drejt mesit të ekranit"</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"Për t\'u kthyer prapa tek ekrani i fundit, rrëshqit shpejt me 2 gishta nga skaji i majtë ose i djathtë drejt mesit të ekranit."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"Kthehu prapa"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"Rrëshqit shpejt nga skaji i majtë ose i djathtë drejt mesit të ekranit"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"Sigurohu që të rrëshqasësh shpejt lart nga skaji i poshtëm i ekranit"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"E ke përfunduar gjestin e kalimit tek ekrani bazë"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"Rrëshqit shpejt për të kaluar tek ekrani bazë"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"Rrëshqit shpejt lart nga fundi i ekranit tënd. Ky gjest të dërgon gjithmonë tek ekrani bazë."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"Rrëshqit shpejt lart me 2 gishta nga fundi i ekranit. Ky gjest të dërgon gjithmonë tek ekrani bazë."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Shko tek ekrani bazë"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"Rrëshqit shpejt lart nga pjesa e poshtme e ekranit"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"Punë e shkëlqyer!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"E ke përfunduar gjestin e ndërrimit të aplikacioneve"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Rrëshqit shpejt për të ndërruar aplikacionet"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"Për të ndërruar mes aplikacioneve, rrëshqit shpejt lart nga fundi i ekranit tënd, mbaj dhe pastaj lësho."</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"Për të ndërruar mes aplikacioneve, rrëshqit lart me 2 gishta nga fundi i ekranit, mbaje dhe lëshoje."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Ndërro aplikacionet"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Rrëshqit shpejt lart nga fundi i ekranit, mbaje të shtypur dhe më pas lëshoje"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"Shumë mirë!"</string>

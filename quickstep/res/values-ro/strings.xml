@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"Schimbă sensibilitatea gestului „Înapoi” accesând Setările"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"Glisează pentru a reveni"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"Pentru a reveni la ultimul ecran, glisează de la marginea stângă sau dreaptă spre mijlocul ecranului."</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"Pentru a reveni la ultimul ecran, glisează cu două degete dinspre marginea stângă sau dreaptă spre mijlocul ecranului."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"Înapoi"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"Glisează dinspre marginea stângă sau dreaptă până la jumătatea ecranului"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"Glisează în sus dinspre marginea de jos a ecranului"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"Ai finalizat gestul „accesează ecranul de pornire”"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"Glisează pentru a accesa ecranul de pornire"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"Glisează în sus din partea de jos a ecranului. Cu acest gest accesezi mereu ecranul de pornire."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"Glisează în sus cu două degete din partea de jos. Cu acest gest accesezi mereu ecranul de pornire."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Înapoi la ecranul de pornire"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"Glisează în sus din partea de jos a ecranului"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"Excelent!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"Ai finalizat gestul „comută între aplicații”"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Glisează pentru a comuta între aplicații"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"Ca să comuți între aplicații, glisează de jos în sus, ține degetul pe ecran, apoi ridică-l."</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"Ca să comuți între aplicații, glisează cu 2 degete de jos în sus, ține-le pe ecran, apoi ridică-le."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Comută între aplicații"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Glisează în sus din partea de jos a ecranului, ține apăsat, apoi eliberează"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"Felicitări!"</string>

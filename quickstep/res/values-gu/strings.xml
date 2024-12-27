@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"પાછા જવાના સંકેતની સંવેદિતા બદલવા માટે, સેટિંગમાં જાઓ"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"પાછળ જવા માટે સ્વાઇપ કરો"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"છેલ્લી સ્ક્રીન પર પાછા જવા, ડાબી કે જમણી કિનારીએથી સ્ક્રીનના મધ્ય ભાગ સુધી સ્વાઇપ કરો."</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"છેલ્લી સ્ક્રીન પર પાછા જવા માટે, 2 આંગળી વડે ડાબી કે જમણી કિનારીએથી સ્ક્રીનના મધ્ય ભાગ સુધી સ્વાઇપ કરો."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"પાછા જાઓ"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"જમણી કે ડાબી કિનારીએથી સ્ક્રીનના મધ્ય ભાગ સુધી સ્વાઇપ કરો"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"ખાતરી કરો કે તમે સ્ક્રીનની નીચેની કિનારીએથી ઉપરની તરફ સ્વાઇપ કરો છો"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"તમે હોમ સ્ક્રીન પર જવાનો સંકેત પૂર્ણ કર્યો"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"હોમ સ્ક્રીન પર જવા માટે સ્વાઇપ કરો"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"તમારી સ્ક્રીનના નીચેના ભાગથી ઉપરની તરફ સ્વાઇપ કરો. આ સંકેત તમને હંમેશાં હોમ સ્ક્રીન પર લઈ જાય છે."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"2 આંગળી વડે સ્ક્રીનના સૌથી નીચેના ભાગથી ઉપરની તરફ સ્વાઇપ કરો. આ સંકેત તમને હંમેશાં હોમ સ્ક્રીન પર લઈ જાય છે."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"હોમ પર જાઓ"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"તમારી સ્ક્રીનની સૌથી નીચેથી ઉપરની તરફ સ્વાઇપ કરો"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"ખૂબ સરસ કામ!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"તમે ઍપ સ્વિચ કરવાનો સંકેત પૂર્ણ કર્યો."</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"ઍપ સ્વિચ કરવા સ્વાઇપ કરો"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"એક ઍપ પરથી બીજી ઍપ પર સ્વિચ કરવા માટે, તમારી સ્ક્રીનના નીચેના ભાગથી ઉપરની તરફ સ્વાઇપ કરીને, થોડીવાર દબાવી રાખો, પછી છોડી દો."</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"એક ઍપ પરથી બીજી ઍપ પર સ્વિચ કરવા માટે, 2 આંગળી વડે તમારી સ્ક્રીનના સૌથી નીચેના ભાગથી ઉપરની તરફ સ્વાઇપ કરીને, થોડીવાર દબાવી રાખો, પછી છોડી દો."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"ઍપ સ્વિચ કરો"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"તમારી સ્ક્રીનના નીચેના ભાગથી ઉપરની તરફ સ્વાઇપ કરીને થોડીવાર દબાવી રાખો પછી છોડી દો"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"વાહ!"</string>

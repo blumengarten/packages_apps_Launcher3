@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"لتغيير مستوى حساسية إيماءة الرجوع، انتقِل إلى \"الإعدادات\""</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"مرِّر سريعًا للرجوع."</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"للرجوع إلى الشاشة السابقة، مرِّر سريعًا من الحافة اليسرى أو الحافة اليمنى إلى وسط الشاشة."</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"للرجوع إلى الشاشة السابقة، عليك التمرير سريعًا بإصبعين من الحافة اليسرى أو اليمنى نحو وسط الشاشة."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"الرجوع"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"مرِّر سريعًا من الحافة اليمنى أو اليسرى إلى منتصف الشاشة."</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"تأكَّد من التمرير سريعًا من الحافة السفلية للشاشة إلى أعلاها."</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"لقد أكملت التدريب على إيماءة الانتقال إلى الشاشة الرئيسية."</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"مرِّر سريعًا للانتقال إلى الشاشة الرئيسية"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"مرِّر سريعًا من أسفل الشاشة إلى أعلاها. تنقلك هذه الإيماءة دائمًا إلى الشاشة الرئيسية."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"مرِّر سريعًا بإصبعين من أسفل الشاشة إلى أعلاها. تنقلك هذه الإيماءة دائمًا إلى الشاشة الرئيسية."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"الانتقال إلى الشاشة الرئيسية"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"مرِّر سريعًا من أسفل الشاشة إلى أعلاها."</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"أحسنت صنعًا."</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"لقد أكملت التدريب على إيماءة التبديل بين التطبيقات."</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"التمرير سريعًا للتبديل بين التطبيقات"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"للتبديل بين التطبيقات، مرِّر سريعًا من أسفل الشاشة إلى الأعلى ثمّ ثبِّت إصبعك قليلاً قبل رفعه."</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"للتبديل بين التطبيقات، مرِّر سريعًا من أسفل الشاشة إلى أعلاها بإصبعين، ثمّ ثبّتهما قليلاً قبل رفعهما."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"تبديل التطبيقات"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"مرِّر سريعًا من أسفل الشاشة إلى أعلاها، وأبقِ إصبعك على الشاشة قليلاً ثم ارفعه."</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"أحسنت."</string>

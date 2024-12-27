@@ -245,6 +245,10 @@ class BubbleBarViewAnimatorTest {
             animator.onStashStateChangingWhileAnimating()
         }
 
+        // The physics animation test util posts the cancellation to the looper thread, so we have
+        // to wait again and let it finish.
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+
         // verify that the hide animation was canceled
         assertThat(animatorScheduler.delayedBlock).isNull()
         assertThat(animator.isAnimating).isFalse()
@@ -1296,7 +1300,7 @@ class BubbleBarViewAnimatorTest {
             animator.animateBubbleInForStashed(updatedBubble, isExpanding = false)
         }
 
-        // since animation was interrupted there shouldn`t be additional calls to adjust window
+        // since animation was interrupted there shouldn't be additional calls to adjust window
         assertThat(bubbleBarParentViewController.timesInvoked).isEqualTo(1)
 
         InstrumentationRegistry.getInstrumentation().runOnMainSync {}

@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"Уровень чувствительности можно изменить в настройках."</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"Возврат к предыдущему экрану"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"Чтобы вернуться к предыдущему экрану, проведите от левого или правого края дисплея к центру."</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"Чтобы вернуться на предыдущий экран, проведите двумя пальцами от левого или правого края экрана к центру."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"Как вернуться к предыдущему экрану"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"Проведите от левого или правого края экрана к центру."</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"Проведите снизу вверх от самого края экрана."</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"Вы выполнили жест для перехода на главный экран."</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"Переход на главный экран"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"Проведите вверх от нижнего края дисплея. Этот жест открывает главный экран."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"Проведите двумя пальцами вверх от нижнего края экрана. Этот жест открывает главный экран."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Как перейти на главный экран"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"Проведите вверх от нижнего края экрана."</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"У вас получилось!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"Вы выполнили жест для переключения между приложениями."</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Переключение между приложениями"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"Чтобы переключиться между приложениями‚ проведите по экрану снизу вверх, задержите палец, а затем отпустите."</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"Чтобы сменить приложение, проведите двумя пальцами снизу вверх, задержите пальцы, а затем отпустите."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Как переключаться между приложениями"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Проведите вверх от нижнего края экрана, задержите палец в одной точке и отпустите."</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"Отлично!"</string>

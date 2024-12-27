@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"Հետ գնալու ժեստի զգայունությունը փոփոխեք կարգավորումներում"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"Սահեցրեք մատը՝ հետ գնալու համար"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"Վերջին էկրանին վերադառնալու համար էկրանի աջ կամ ձախ եզրից մատը սահեցրեք դեպի կենտրոն։"</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"Վերջին էկրանին վերադառնալու համար 2 մատը սահեցրեք ձախ կամ աջ եզրից դեպի կենտրոն։"</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"Հետ գնալ"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"Էկրանի աջ կամ ձախ եզրից մատը սահեցրեք դեպի կենտրոն"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"Համոզվեք, որ մատն էկրանի ներքևի եզրից վերև եք սահեցնում"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"Դուք սովորեցիք հիմնական էկրան անցնելու ժեստը"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"Սահեցրեք մատը՝ հիմնական էկրան անցնելու համար"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"Մատը սահեցրեք էկրանի ներքևից վերև։ Այս ժեստը բացում է հիմնական էկրանը։"</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"Երկու մատը էկրանի ներքևից սահեցրեք վերև։ Այս ժեստը բացում է հիմնական էկրանը։"</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Անցնել հիմնական էկրան"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"Մատը սահեցրեք էկրանի ներքևից վերև"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"Կեցցե՛ք"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"Դուք սովորեցիք մի հավելվածից մյուսն անցնելու ժեստը"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Մատը սահեցրեք՝ մյուս հավելվածին անցնելու համար"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"Մեկ հավելվածից մյուսն անցնելու համար մատը էկրանի ներքևից սահեցրեք վերև, պահեք, ապա բաց թողեք։"</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"Մեկ հավելվածից մյուսն անցնելու համար 2 մատը էկրանի ներքևից սահեցրեք վերև, պահեք, ապա բաց թողեք։"</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Անցում մեկ հավելվածից մյուսին"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Մատը սահեցրեք էկրանի ներքևից վերև, պահեք և բաց թողեք"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"Հիանալի՛ է"</string>

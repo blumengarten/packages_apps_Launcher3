@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"Gaan na Instellings om sensitiwiteit van teruggebaar te verander"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"Swiep om terug te gaan"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"Swiep van die linker- of regterrand na die middel van die skerm om na die vorige skerm terug te gaan."</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"Swiep met 2 vingers van die linker- of regterkant van die skerm af na die middel toe om terug te keer na die vorige skerm."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"Gaan terug"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"Swiep van die linker- of regterrand af na die middel van die skerm toe"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"Maak seker dat jy van die onderrand van die skerm af opswiep"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"Jy het die Gaan na Tuisskerm-gebaar voltooi"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"Swiep om na tuisskerm toe te gaan"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"Swiep op van die onderkant van jou skerm af. Hierdie gebaar neem jou altyd na die tuisskerm toe."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"Swiep met 2 vingers op van die onderkant van die skerm af. Dié gebaar neem jou altyd na die tuisskerm toe."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Gaan na tuisskerm"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"Swiep van die onderkant van jou skerm af op"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"Knap gedaan!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"Jy het die Wissel Apps-gebaar voltooi"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Swiep om tussen programme te wissel"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"Swiep van die onderkant van jou skerm af op, hou en laat los dan om tussen apps te wissel."</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"Swiep met 2 vingers op van die onderkant van jou skerm af, hou en laat los dan om tussen apps te wissel."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Wissel apps"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Swiep van die onderkant van jou skerm af op, hou, en los dan"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"Welgedaan!"</string>

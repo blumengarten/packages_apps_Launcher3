@@ -82,6 +82,8 @@
     <string name="all_apps_no_search_results" msgid="3200346862396363786">"\"<xliff:g id="QUERY">%1$s</xliff:g>\" से मिलता-जुलता कोई ऐप्लिकेशन नहीं मिला"</string>
     <string name="label_application" msgid="8531721983832654978">"ऐप्लिकेशन"</string>
     <string name="all_apps_label" msgid="5015784846527570951">"सभी ऐप्लिकेशन"</string>
+    <!-- no translation found for all_apps_list_label (5106226764073070906) -->
+    <skip />
     <string name="notifications_header" msgid="1404149926117359025">"सूचनाएं"</string>
     <string name="long_press_shortcut_to_add" msgid="5405328730817637737">"किसी शॉर्टकट को एक से दूसरी जगह ले जाने के लिए, उसे दबाकर रखें."</string>
     <string name="long_accessible_way_to_add_shortcut" msgid="2199537273817090740">"किसी शॉर्टकट को एक से दूसरी जगह ले जाने के लिए, उस पर दो बार टैप करके दबाकर रखें या पसंद के मुताबिक कार्रवाइयां इस्तेमाल करें."</string>
@@ -100,8 +102,7 @@
     <string name="dismiss_prediction_label" msgid="3357562989568808658">"ऐप्लिकेशन का सुझाव न दें"</string>
     <string name="pin_prediction" msgid="4196423321649756498">"सुझाए गए ऐप पिन करें"</string>
     <string name="bubble" msgid="3072951361014076670">"बबल"</string>
-    <!-- no translation found for pin_to_taskbar (1281337899690299038) -->
-    <skip />
+    <string name="pin_to_taskbar" msgid="1281337899690299038">"टास्कबार में पिन करें"</string>
     <string name="permlab_install_shortcut" msgid="5632423390354674437">"शॉर्टकट इंस्‍टॉल करें"</string>
     <string name="permdesc_install_shortcut" msgid="923466509822011139">"ऐप को उपयोगकर्ता के हस्‍तक्षेप के बिना शॉर्टकट जोड़ने देती है."</string>
     <string name="permlab_read_settings" msgid="5136500343007704955">"होम स्क्रीन की सेटिंग और शॉर्टकट पढ़ने की अनुमति"</string>

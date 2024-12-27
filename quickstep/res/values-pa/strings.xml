@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"ਪਿੱਛੇ ਜਾਣ ਦੇ ਸੰਕੇਤ ਦੀ ਸੰਵੇਦਨਸ਼ੀਲਤਾ ਬਦਲਣ ਲਈ, ਸੈਟਿੰਗਾਂ \'ਤੇ ਜਾਓ"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"ਪਿੱਛੇ ਜਾਣ ਲਈ ਸਵਾਈਪ ਕਰੋ"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"ਪਿਛਲੀ ਸਕ੍ਰੀਨ \'ਤੇ ਵਾਪਸ ਜਾਣ ਲਈ, ਖੱਬੇ ਜਾਂ ਸੱਜੇ ਕਿਨਾਰੇ ਤੋਂ ਸਕ੍ਰੀਨ ਦੇ ਵਿਚਕਾਰ ਤੱਕ ਸਵਾਈਪ ਕਰੋ।"</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"ਪਿਛਲੀ ਸਕ੍ਰੀਨ \'ਤੇ ਵਾਪਸ ਜਾਣ ਲਈ, ਖੱਬੇ ਜਾਂ ਸੱਜੇ ਕਿਨਾਰੇ ਤੋਂ ਸਕ੍ਰੀਨ ਦੇ ਵਿਚਕਾਰ ਤੱਕ 2 ਉਂਗਲਾਂ ਨਾਲ ਸਵਾਈਪ ਕਰੋ।"</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"ਵਾਪਸ ਜਾਓ"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"ਖੱਬੇ ਜਾਂ ਸੱਜੇ ਕਿਨਾਰੇ ਤੋਂ ਸਕ੍ਰੀਨ ਦੇ ਵਿਚਕਾਰ ਤੱਕ ਸਵਾਈਪ ਕਰੋ"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"ਇਹ ਪੱਕਾ ਕਰੋ ਕਿ ਤੁਸੀਂ ਸਕ੍ਰੀਨ ਦੇ ਹੇਠਲੇ ਕਿਨਾਰੇ ਤੋਂ ਉੱਪਰ ਵੱਲ ਸਵਾਈਪ ਕਰੋ"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"ਤੁਸੀਂ \'ਹੋਮ \'ਤੇ ਜਾਓ\' ਦਾ ਇਸ਼ਾਰਾ ਪੂਰਾ ਕੀਤਾ"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"ਹੋਮ \'ਤੇ ਜਾਣ ਲਈ ਸਵਾਈਪ ਕਰੋ"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"ਆਪਣੀ ਸਕ੍ਰੀਨ ਦੇ ਹੇਠਾਂ ਤੋਂ ਉੱਪਰ ਵੱਲ ਸਵਾਈਪ ਕਰੋ। ਇਹ ਇਸ਼ਾਰਾ ਹਮੇਸ਼ਾਂ ਤੁਹਾਨੂੰ ਹੋਮ ਸਕ੍ਰੀਨ \'ਤੇ ਲੈ ਜਾਂਦਾ ਹੈ।"</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"ਸਕ੍ਰੀਨ ਦੇ ਹੇਠਾਂ ਤੋਂ 2 ਉਂਗਲਾਂ ਨਾਲ ਉੱਪਰ ਵੱਲ ਸਵਾਈਪ ਕਰੋ। ਇਹ ਇਸ਼ਾਰਾ ਹਮੇਸ਼ਾਂ ਤੁਹਾਨੂੰ ਹੋਮ ਸਕ੍ਰੀਨ \'ਤੇ ਲੈ ਜਾਂਦਾ ਹੈ।"</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"ਹੋਮ ਸਕ੍ਰੀਨ \'ਤੇ ਜਾਓ"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"ਆਪਣੀ ਸਕ੍ਰੀਨ ਦੇ ਹੇਠਾਂ ਤੋਂ ਉੱਪਰ ਵੱਲ ਸਵਾਈਪ ਕਰੋ"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"ਬਹੁਤ ਵਧੀਆ!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"ਤੁਸੀਂ \'ਐਪਾਂ ਵਿਚਾਲੇ ਅਦਲਾ-ਬਦਲੀ ਕਰੋ\' ਦਾ ਇਸ਼ਾਰਾ ਪੂਰਾ ਕੀਤਾ"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"ਐਪਾਂ ਵਿਚਾਲੇ ਅਦਲਾ-ਬਦਲੀ ਕਰਨ ਲਈ ਸਵਾਈਪ ਕਰੋ"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"ਐਪਾਂ ਵਿਚਾਲੇ ਸਵਿੱਚ ਕਰਨ ਲਈ, ਸਕ੍ਰੀਨ ਦੇ ਹੇਠਾਂ ਤੋਂ ਉੱਤੇ ਸਵਾਈਪ ਕਰ ਕੇ ਦਬਾਈ ਰੱਖੋ ਅਤੇ ਫਿਰ ਛੱਡੋ।"</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"ਐਪਾਂ ਵਿਚਾਲੇ ਸਵਿੱਚ ਕਰਨ ਲਈ, ਸਕ੍ਰੀਨ ਦੇ ਹੇਠਾਂ ਤੋਂ 2 ਉਂਗਲਾਂ ਨਾਲ ਉੱਤੇ ਸਵਾਈਪ ਕਰ ਕੇ ਦਬਾਈ ਰੱਖੋ ਅਤੇ ਫਿਰ ਛੱਡੋ।"</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"ਐਪਾਂ ਸਵਿੱਚ ਕਰੋ"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"ਆਪਣੀ ਸਕ੍ਰੀਨ ਦੇ ਹੇਠਾਂ ਤੋਂ ਉੱਪਰ ਵੱਲ ਸਵਾਈਪ ਕਰ ਕੇ ਦਬਾਈ ਰੱਖੋ, ਅਤੇ ਫਿਰ ਛੱਡੋ"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"ਬਹੁਤ ਵਧੀਆ!"</string>

@@ -82,6 +82,8 @@
     <string name="all_apps_no_search_results" msgid="3200346862396363786">"No hay apps que coincidan con \"<xliff:g id="QUERY">%1$s</xliff:g>\""</string>
     <string name="label_application" msgid="8531721983832654978">"App"</string>
     <string name="all_apps_label" msgid="5015784846527570951">"Todas las apps"</string>
+    <!-- no translation found for all_apps_list_label (5106226764073070906) -->
+    <skip />
     <string name="notifications_header" msgid="1404149926117359025">"Notificaciones"</string>
     <string name="long_press_shortcut_to_add" msgid="5405328730817637737">"Mantén presionado para mover un acceso directo."</string>
     <string name="long_accessible_way_to_add_shortcut" msgid="2199537273817090740">"Presiona dos veces y mantén presionado para mover un acceso directo o usar acciones personalizadas."</string>
@@ -100,8 +102,7 @@
     <string name="dismiss_prediction_label" msgid="3357562989568808658">"No sugerir app"</string>
     <string name="pin_prediction" msgid="4196423321649756498">"Fijar predicción"</string>
     <string name="bubble" msgid="3072951361014076670">"Burbuja"</string>
-    <!-- no translation found for pin_to_taskbar (1281337899690299038) -->
-    <skip />
+    <string name="pin_to_taskbar" msgid="1281337899690299038">"Fijar a barra"</string>
     <string name="permlab_install_shortcut" msgid="5632423390354674437">"instalar accesos directos"</string>
     <string name="permdesc_install_shortcut" msgid="923466509822011139">"Permite que una aplicación agregue accesos directos sin que el usuario intervenga."</string>
     <string name="permlab_read_settings" msgid="5136500343007704955">"leer parámetros de configuración y accesos directos de la página principal"</string>

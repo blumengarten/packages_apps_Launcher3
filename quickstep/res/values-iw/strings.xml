@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"כדי לשנות את מידת הרגישות של תנועת החזרה, יש לעבור להגדרות"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"יש להחליק כדי לחזור"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"כדי לחזור למסך הקודם, יש להחליק מהקצה השמאלי או הימני למרכז המסך."</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"כדי לחזור למסך הקודם, יש להחליק עם שתי אצבעות מהקצה השמאלי או הימני למרכז המסך."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"הקודם"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"מחליקים מהקצה השמאלי או הימני למרכז המסך"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"חשוב להחליק למעלה מהקצה התחתון של המסך"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"השלמת את תנועת המעבר למסך הבית"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"יש להחליק כדי לעבור למסך הבית"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"החלקה למעלה מתחתית המסך תמיד תעביר אותך למסך הבית."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"יש להחליק למעלה עם שתי אצבעות מתחתית המסך. התנועה הזו תמיד מעבירה אותך למסך הבית."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"מעבר למסך הבית"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"מחליקים כלפי מעלה מהחלק התחתון של המסך"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"מעולה!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"השלמת את תנועת המעבר בין האפליקציות"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"יש להחליק כדי לעבור בין אפליקציות"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"כדי לעבור בין אפלקציות, יש להחליק למעלה מתחתית המסך, להחזיק ולאחר מכן לשחרר."</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"כדי לעבור בין אפלקציות, יש להחליק למעלה עם שתי אצבעות מתחתית המסך, להחזיק ולאחר מכן לשחרר."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"מעבר בין אפליקציות"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"מחליקים כלפי מעלה מתחתית המסך, מחזיקים ואז משחררים"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"כל הכבוד!"</string>

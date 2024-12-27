@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"Voit muuttaa Takaisin-eleen herkkyyttä asetuksista"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"Siirry takaisin pyyhkäisemällä"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"Voit palata edelliseen näkymään pyyhkäisemällä näytön vasemmasta tai oikeasta reunasta keskelle."</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"Palaa takaisin edelliselle näytölle pyyhkäisemällä kahdella sormella vasemmasta tai oikeasta reunasta näytön keskikohtaan."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"Edelliseen siirtyminen"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"Pyyhkäise vasemmasta tai oikeasta reunasta näytön keskelle"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"Pyyhkäise ylös näytön alareunasta"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"Olet oppinut aloitusnäytölle palaamiseleen"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"Siirry aloitusnäytölle pyyhkäisemällä"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"Pyyhkäise ylös näytön alareunasta. Tämä ele vie sinut aina aloitusnäytölle."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"Pyyhkäise näytön alareunasta ylöspäin kahdella sormella. Tämä ele vie sinut aina aloitusnäytölle."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Aloitusnäytölle siirtyminen"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"Pyyhkäise ylös näytön alareunasta"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"Hienoa!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"Olet oppinut sovellusten vaihtamiseleen"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Vaihda sovellusta pyyhkäisemällä"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"Voit vaihtaa sovelluksesta toiseen pyyhkäisemällä ylöspäin näytön alareunasta ja päästämällä sitten irti."</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"Vaihda sovelluksia pyyhkäisemällä ylös näytön alareunasta kahdella sormella ja päästä sitten irti."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Sovelluksen vaihtaminen"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Pyyhkäise ylöspäin näytön alareunasta ja päästä irti"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"Hienoa!"</string>

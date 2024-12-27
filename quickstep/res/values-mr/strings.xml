@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"बॅक जेश्चरची संवेदनशीलता बदलण्यासाठी, सेटिंग्ज वर जा"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"परत जाण्यासाठी स्वाइप करा"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"मागील स्क्रीनवर परत जाण्यासाठी, स्क्रीनच्या डाव्या किंवा उजव्या कडेपासून मध्यावर स्‍वाइप करा."</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"मागील स्क्रीनवर परत जाण्यासाठी, दोन बोटांनी डाव्या किंवा उजव्या कडेपासून स्क्रीनच्या मध्यभागी स्वाइप करा."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"मागे जा"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"डाव्या किंवा उजव्या कडेपासून स्क्रीनच्या मध्यभागी स्वाइप करा"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"तुम्ही स्क्रीनच्या तळाच्या कडेपासून वर स्वाइप करत आहात याची खात्री करा"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"तुम्ही गो होम जेश्चर पूर्ण केले आहे"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"होमवर जाण्यासाठी स्‍वाइप करा"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"तुमच्या स्क्रीनच्या तळाकडून वर स्वाइप करा. हे जेश्चर तुम्हाला नेहमी होम स्क्रीनवर घेऊन जाते."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"स्क्रीनच्या तळापासून दोन बोटांनी वर स्वाइप करा. हे जेश्चर तुम्हाला नेहमी होम स्क्रीनवर घेऊन जाते."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"होमवर जा"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"तुमच्या स्क्रीनच्या तळापासून वर स्‍वाइप करा"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"उत्तम कामगिरी!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"तुम्ही स्विच ॲप्स जेश्चर पूर्ण केले आहे"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"अ‍ॅप्स स्विच करण्यासाठी स्वाइप करा"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"ॲप्सदरम्यान स्विच करण्यासाठी, स्क्रीनच्या तळापासून वर स्वाइप करा, धरून ठेवा, त्यानंतर सोडून द्या."</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"ॲप्सदरम्यान स्विच करण्यासाठी, स्क्रीनच्या तळापासून दोन बोटांनी वर स्वाइप करा, धरून ठेवा नंतर सोडा."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"अ‍ॅप्स स्विच करा"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"तुमच्या स्क्रीनच्या तळापासून वर स्वाइप करा, धरून ठेवा, त्यानंतर सोडा"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"छान!"</string>

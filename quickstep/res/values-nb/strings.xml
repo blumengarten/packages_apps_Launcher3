@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"Gå til Innstillinger for å endre tilbakebevegelsefølsomheten"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"Sveip for å gå tilbake"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"For å gå tilbake til forrige skjerm, sveip fra venstre eller høyre kant til midten av skjermen."</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"For å gå tilbake til den forrige skjermen, sveip med to fingre fra den venstre eller høyre kanten til midten av skjermen."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"Gå tilbake"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"Sveip fra venstre eller høyre kant til midten av skjermen"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"Sørg for at du sveiper opp fra den nederste kanten av skjermen"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"Du har fullført bevegelsen for å gå til startskjermen"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"Sveip for å gå til startskjermen"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"Sveip opp fra bunnen av skjermen. Denne bevegelsen tar deg alltid til startskjermen."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"Sveip opp med to fingre fra bunnen av skjermen. Denne bevegelsen tar deg alltid til startskjermen."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Gå til startskjermen"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"Sveip opp fra bunnen av skjermen"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"Bra jobbet!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"Du har fullført bevegelsen for å bytte app"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Sveip for å bytte app"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"For å bytte mellom apper, sveip opp fra bunnen av skjermen, hold, og slipp"</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"For å bytte mellom apper, sveip opp med to fingre fra bunnen av skjermen, hold, og slipp."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Bytt app"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Sveip opp fra bunnen av skjermen, hold, og slipp"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"Bra!"</string>

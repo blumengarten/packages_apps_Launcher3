@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"Til að breyta næmi til baka-bendingar ferðu í stillingar"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"Strjúktu til að fara til baka"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"Til að fara til baka á síðasta skjá skaltu strjúka frá vinstri eða hægri brún að miðju skjásins."</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"Strjúktu frá vinstri eða hægri brún að miðju skjásins með 2 fingrum til að fara aftur á síðasta skjá."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"Til baka"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"Strjúktu frá vinstri eða hægri brún að miðju skjásins"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"Passaðu að strjúka upp frá neðri brún skjásins"</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"Þú laukst við að kynna þér bendinguna „heim“"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"Strjúktu til að fara heim"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"Strjúktu upp frá neðri hluta skjásins. Þetta flytur þig alltaf á heimaskjáinn."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"Strjúktu frá neðri brún skjásins með 2 fingrum. Þessi bending opnar ávallt heimaskjáinn."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Fara á heimaskjá"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"Strjúktu upp frá neðri hluta skjásins"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"Vel gert!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"Þú laukst við að kynna þér bendinguna „skipta um forrit“"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Strjúktu til að skipta á milli forrita"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"Strjúktu upp frá neðri hluta skjásins, haltu og slepptu svo til að skipta á milli forrita."</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"Strjúktu upp frá neðri brún skjásins með 2 fingrum, haltu og slepptu til að skipta á milli forrita."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Skipta um forrit"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Strjúktu upp frá neðri hluta skjásins, haltu inni og slepptu svo"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"Vel gert!"</string>

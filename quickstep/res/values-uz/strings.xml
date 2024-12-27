@@ -58,7 +58,6 @@
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"Orqaga ishorasi sezuvchanligi Sozlamalardan oʻzgartiriladi"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"Orqaga qaytish"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"Ortga qaytish uchun barmoqni ekranning yon chekkalaridan oʻrtasigacha suring."</string>
-    <string name="back_gesture_spoken_intro_subtitle" msgid="2162043199263088592">"Oxirgi ekranga qaytish uchun 2 barmoq bilan ekranning chap yoki oʻng chekkasidan oʻrtasigacha suring."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"Orqaga"</string>
     <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"Chap yoki oʻng chetidan ekranning oʻrtasiga suring"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"Barmoqni ekranning pastki chetidan yuqoriga suring."</string>
@@ -68,7 +67,6 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"Bosh ekranni ochish ishorasi darsini tamomladingiz"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"Svayp bilan bosh ekranni ochish"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"Ekranning pastidan tepaga qarab suring. Bu ishora doim Bosh ekranni ochadi."</string>
-    <string name="home_gesture_spoken_intro_subtitle" msgid="1030987707382031750">"2 barmoq bilan ekranning quyidan tepasiga suring. Bu ishora har doim Bosh ekranni ochadi."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Boshiga"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"Ekranning quyi qismidan tepaga torting"</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"Barakalla!"</string>
@@ -79,7 +77,6 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"Ilovalarni almashtirish darsini tamomladingiz"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Ilovalar orasida almashish"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"Ilovalarni ochish uchun ekranning pastidan tepaga qarab suring, biroz ushlab turing va qoʻyib yuboring"</string>
-    <string name="overview_gesture_spoken_intro_subtitle" msgid="3853371838260201751">"Ilovalarni almashtirish uchun 2 barmoq bilan ekranning quyidan tepasiga surib turib, qoʻyib yuboring"</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Ilovalarni almashtirish"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Ekranning pastidan tepaga qarab suring, biroz ushlab turing va qoʻyib yuboring"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"Juda soz!"</string>
