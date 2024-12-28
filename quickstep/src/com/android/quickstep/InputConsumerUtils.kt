@@ -56,8 +56,7 @@ object InputConsumerUtils {
 
     @JvmStatic
     fun <S : BaseState<S>, T> newConsumer(
-        baseContext: Context,
-        tisContext: Context,
+        context: Context,
         resetGestureInputConsumer: ResetGestureInputConsumer?,
         overviewComponentObserver: OverviewComponentObserver,
         deviceState: RecentsAnimationDeviceState,
@@ -77,7 +76,7 @@ object InputConsumerUtils {
         val bubbleControllers = tac?.bubbleControllers
         if (bubbleControllers != null && BubbleBarInputConsumer.isEventOnBubbles(tac, event)) {
             val consumer: InputConsumer =
-                BubbleBarInputConsumer(tisContext, bubbleControllers, inputMonitorCompat)
+                BubbleBarInputConsumer(context, bubbleControllers, inputMonitorCompat)
             logInputConsumerSelectionReason(
                 consumer,
                 newCompoundString("event is on bubbles, creating new input consumer"),
@@ -88,7 +87,7 @@ object InputConsumerUtils {
         if (progressProxy != null) {
             val consumer: InputConsumer =
                 ProgressDelegateInputConsumer(
-                    tisContext,
+                    context,
                     taskAnimationManager,
                     gestureState,
                     inputMonitorCompat,
@@ -109,7 +108,7 @@ object InputConsumerUtils {
             if (gestureState.isTrackpadGesture) deviceState.canStartTrackpadGesture()
             else deviceState.canStartSystemGesture()
 
-        if (!get(tisContext).isUserUnlocked) {
+        if (!get(context).isUserUnlocked) {
             val reasonString = newCompoundString("device locked")
             val consumer =
                 if (canStartSystemGesture) {
@@ -117,7 +116,7 @@ object InputConsumerUtils {
                     // launched while device is locked even after exiting direct boot mode (e.g.
                     // camera).
                     createDeviceLockedInputConsumer(
-                        tisContext,
+                        context,
                         resetGestureInputConsumer,
                         deviceState,
                         gestureState,
@@ -148,7 +147,7 @@ object InputConsumerUtils {
                 )
             base =
                 newBaseConsumer<S, T>(
-                    tisContext,
+                    context,
                     resetGestureInputConsumer,
                     overviewComponentObserver,
                     deviceState,
@@ -186,7 +185,7 @@ object InputConsumerUtils {
                 )
                 base =
                     tryCreateAssistantInputConsumer(
-                        tisContext,
+                        context,
                         deviceState,
                         inputMonitorCompat,
                         base,
@@ -213,7 +212,7 @@ object InputConsumerUtils {
                     )
                     base =
                         TaskbarUnstashInputConsumer(
-                            tisContext,
+                            context,
                             base,
                             inputMonitorCompat,
                             tac,
@@ -237,7 +236,7 @@ object InputConsumerUtils {
                 }
             }
 
-            val navHandle = tac?.navHandle ?: SystemUiProxy.INSTANCE[tisContext]
+            val navHandle = tac?.navHandle ?: SystemUiProxy.INSTANCE[context]
             if (
                 canStartSystemGesture &&
                     !previousGestureState.isRecentsAnimationRunning &&
@@ -256,7 +255,7 @@ object InputConsumerUtils {
                 reasonString.append("using NavHandleLongPressInputConsumer")
                 base =
                     NavHandleLongPressInputConsumer(
-                        tisContext,
+                        context,
                         base,
                         inputMonitorCompat,
                         deviceState,
@@ -286,7 +285,7 @@ object InputConsumerUtils {
                             "%ssystem dialog is showing, using SysUiOverlayInputConsumer",
                             SUBSTRING_PREFIX,
                         )
-                base = SysUiOverlayInputConsumer(baseContext, deviceState, inputMonitorCompat)
+                base = SysUiOverlayInputConsumer(context, deviceState, inputMonitorCompat)
             }
 
             if (
@@ -300,7 +299,7 @@ object InputConsumerUtils {
                             "%sTrackpad 3-finger gesture, using TrackpadStatusBarInputConsumer",
                             SUBSTRING_PREFIX,
                         )
-                base = TrackpadStatusBarInputConsumer(baseContext, base, inputMonitorCompat)
+                base = TrackpadStatusBarInputConsumer(context, base, inputMonitorCompat)
             }
 
             if (deviceState.isScreenPinningActive) {
@@ -312,7 +311,7 @@ object InputConsumerUtils {
                         )
                 // Note: we only allow accessibility to wrap this, and it replaces the previous
                 // base input consumer (which should be NO_OP anyway since topTaskLocked == true).
-                base = ScreenPinnedInputConsumer(tisContext, gestureState)
+                base = ScreenPinnedInputConsumer(context, gestureState)
             }
 
             if (deviceState.canTriggerOneHandedAction(event)) {
@@ -323,7 +322,7 @@ object InputConsumerUtils {
                     reasonPrefix,
                     SUBSTRING_PREFIX,
                 )
-                base = OneHandedModeInputConsumer(tisContext, deviceState, base, inputMonitorCompat)
+                base = OneHandedModeInputConsumer(context, deviceState, base, inputMonitorCompat)
             }
 
             if (deviceState.isAccessibilityMenuAvailable) {
@@ -335,7 +334,7 @@ object InputConsumerUtils {
                 )
                 base =
                     AccessibilityInputConsumer(
-                        tisContext,
+                        context,
                         deviceState,
                         gestureState,
                         base,
@@ -362,7 +361,7 @@ object InputConsumerUtils {
                     reasonPrefix,
                     SUBSTRING_PREFIX,
                 )
-                base = OneHandedModeInputConsumer(tisContext, deviceState, base, inputMonitorCompat)
+                base = OneHandedModeInputConsumer(context, deviceState, base, inputMonitorCompat)
             }
         }
         logInputConsumerSelectionReason(base, reasonString)

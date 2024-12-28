@@ -41,6 +41,7 @@ import android.content.ComponentName;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import android.content.res.Configuration;
@@ -79,7 +80,6 @@ import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
 
 import com.android.launcher3.testing.shared.ResourceUtils;
-import com.android.launcher3.testing.shared.TestInformationRequest;
 import com.android.launcher3.testing.shared.TestProtocol;
 import com.android.systemui.shared.system.QuickStepContract;
 
@@ -377,10 +377,8 @@ public final class LauncherInstrumentation {
         }
     }
 
-    Bundle getTestInfo(TestInformationRequest request) {
-        Bundle extra = new Bundle();
-        extra.putParcelable(TestProtocol.TEST_INFO_REQUEST_FIELD, request);
-        return getTestInfo(request.getRequestName(), null, extra);
+    Bundle getTestInfo(Intent request) {
+        return getTestInfo(request.getAction(), null, request.getExtras());
     }
 
     Insets getTargetInsets() {

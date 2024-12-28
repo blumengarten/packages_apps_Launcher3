@@ -18,9 +18,9 @@ package com.android.launcher3.model.data
 
 import android.content.Context
 import com.android.launcher3.LauncherSettings
+import com.android.launcher3.LauncherSettings.Favorites.DESKTOP_ICON_FLAG
 import com.android.launcher3.R
 import com.android.launcher3.icons.IconCache
-import com.android.launcher3.icons.cache.CacheLookupFlag.Companion.DEFAULT_LOOKUP_FLAG
 import com.android.launcher3.logger.LauncherAtom
 import com.android.launcher3.views.ActivityContext
 
@@ -82,8 +82,8 @@ class AppPairInfo() : CollectionInfo() {
     fun fetchHiResIconsIfNeeded(iconCache: IconCache) {
         getAppContents()
             .stream()
-            .filter { it.matchingLookupFlag.useLowRes() }
-            .forEach { member -> iconCache.getTitleAndIcon(member, DEFAULT_LOOKUP_FLAG) }
+            .filter { it.matchingLookupFlag.isVisuallyLessThan(DESKTOP_ICON_FLAG) }
+            .forEach { member -> iconCache.getTitleAndIcon(member, DESKTOP_ICON_FLAG) }
     }
 
     /**

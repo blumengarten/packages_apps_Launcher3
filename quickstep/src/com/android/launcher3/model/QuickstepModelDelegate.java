@@ -23,6 +23,7 @@ import static com.android.launcher3.LauncherPrefs.nonRestorableItem;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT_PREDICTION;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_PREDICTION;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_WIDGETS_PREDICTION;
+import static com.android.launcher3.LauncherSettings.Favorites.DESKTOP_ICON_FLAG;
 import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APPLICATION;
 import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT;
 import static com.android.launcher3.hybridhotseat.HotseatPredictionModel.convertDataModelToAppTargetBundle;
@@ -60,6 +61,7 @@ import com.android.launcher3.ConstantItem;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherPrefs;
+import com.android.launcher3.icons.cache.CacheLookupFlag;
 import com.android.launcher3.logger.LauncherAtom;
 import com.android.launcher3.logging.InstanceId;
 import com.android.launcher3.logging.InstanceIdSequence;
@@ -102,14 +104,14 @@ public class QuickstepModelDelegate extends ModelDelegate {
             nonRestorableItem("LAST_SNAPSHOT_TIME_MILLIS", 0L, ENCRYPTED);
 
     @VisibleForTesting
-    final PredictorState mAllAppsState =
-            new PredictorState(CONTAINER_PREDICTION, "all_apps_predictions");
+    final PredictorState mAllAppsState = new PredictorState(
+            CONTAINER_PREDICTION, "all_apps_predictions", DEFAULT_LOOKUP_FLAG);
     @VisibleForTesting
-    final PredictorState mHotseatState =
-            new PredictorState(CONTAINER_HOTSEAT_PREDICTION, "hotseat_predictions");
+    final PredictorState mHotseatState = new PredictorState(
+            CONTAINER_HOTSEAT_PREDICTION, "hotseat_predictions", DESKTOP_ICON_FLAG);
     @VisibleForTesting
-    final PredictorState mWidgetsRecommendationState =
-            new PredictorState(CONTAINER_WIDGETS_PREDICTION, "widgets_prediction");
+    final PredictorState mWidgetsRecommendationState = new PredictorState(
+            CONTAINER_WIDGETS_PREDICTION, "widgets_prediction", DESKTOP_ICON_FLAG);
 
     private final InvariantDeviceProfile mIDP;
     private final AppEventProducer mAppEventProducer;
@@ -153,7 +155,7 @@ public class QuickstepModelDelegate extends ModelDelegate {
 
         WorkspaceItemFactory factory =
                 new WorkspaceItemFactory(mApp, ums, mPmHelper, pinnedShortcuts, numColumns,
-                        state.containerId);
+                        state.containerId, state.lookupFlag);
         FixedContainerItems fci = new FixedContainerItems(state.containerId,
                 state.storage.read(mApp.getContext(), factory, ums.allUsers::get));
         mDataModel.extraItems.put(state.containerId, fci);
@@ -479,13 +481,15 @@ public class QuickstepModelDelegate extends ModelDelegate {
         public final int containerId;
         public final PersistedItemArray<ItemInfo> storage;
         public AppPredictor predictor;
+        public CacheLookupFlag lookupFlag;
 
         private List<AppTarget> mLastTargets;
 
-        PredictorState(int containerId, String storageName) {
+        PredictorState(int containerId, String storageName, CacheLookupFlag lookupFlag) {
             this.containerId = containerId;
             storage = new PersistedItemArray<>(storageName);
             mLastTargets = Collections.emptyList();
+            this.lookupFlag = lookupFlag;
         }
 
         public void destroyPredictor() {
@@ -538,18 +542,20 @@ public class QuickstepModelDelegate extends ModelDelegate {
         private final Map<ShortcutKey, ShortcutInfo> mPinnedShortcuts;
         private final int mMaxCount;
         private final int mContainer;
+        private final CacheLookupFlag mLookupFlag;
 
         private int mReadCount = 0;
 
         protected WorkspaceItemFactory(LauncherAppState appState, UserManagerState ums,
                 PackageManagerHelper pmHelper, Map<ShortcutKey, ShortcutInfo> pinnedShortcuts,
-                int maxCount, int container) {
+                int maxCount, int container, CacheLookupFlag lookupFlag) {
             mAppState = appState;
             mUMS = ums;
             mPmHelper = pmHelper;
             mPinnedShortcuts = pinnedShortcuts;
             mMaxCount = maxCount;
             mContainer = container;
+            mLookupFlag = lookupFlag;
         }
 
         @Nullable
@@ -573,7 +579,7 @@ public class QuickstepModelDelegate extends ModelDelegate {
                             mPmHelper,
                             mUMS.isUserQuiet(user));
                     info.container = mContainer;
-                    mAppState.getIconCache().getTitleAndIcon(info, lai, DEFAULT_LOOKUP_FLAG);
+                    mAppState.getIconCache().getTitleAndIcon(info, lai, mLookupFlag);
                     mReadCount++;
                     return info.makeWorkspaceItem(mAppState.getContext());
                 }

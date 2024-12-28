@@ -478,7 +478,6 @@ public class InputConsumerUtilsTest {
         MotionEvent event = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         InputConsumer inputConsumer = newConsumer(
                 mContext,
-                mContext,
                 mResetGestureInputConsumer,
                 mOverviewComponentObserver,
                 mDeviceState,

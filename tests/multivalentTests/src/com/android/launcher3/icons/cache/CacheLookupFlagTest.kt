@@ -78,4 +78,25 @@ class CacheLookupFlagTest {
         assertTrue(flag.useLowRes())
         assertFalse(flag.usePackageIcon())
     }
+
+    @Test
+    fun `isVisuallyLessThan does not depend on package icon`() {
+        assertFalse(DEFAULT_LOOKUP_FLAG.isVisuallyLessThan(DEFAULT_LOOKUP_FLAG))
+        assertFalse(
+            DEFAULT_LOOKUP_FLAG.withUsePackageIcon().isVisuallyLessThan(DEFAULT_LOOKUP_FLAG)
+        )
+        assertFalse(
+            DEFAULT_LOOKUP_FLAG.isVisuallyLessThan(DEFAULT_LOOKUP_FLAG.withUsePackageIcon())
+        )
+    }
+
+    @Test
+    fun `isVisuallyLessThan depends on low res`() {
+        assertTrue(DEFAULT_LOOKUP_FLAG.withUseLowRes().isVisuallyLessThan(DEFAULT_LOOKUP_FLAG))
+        assertFalse(DEFAULT_LOOKUP_FLAG.isVisuallyLessThan(DEFAULT_LOOKUP_FLAG.withUseLowRes()))
+        assertTrue(
+            DEFAULT_LOOKUP_FLAG.withUseLowRes()
+                .isVisuallyLessThan(DEFAULT_LOOKUP_FLAG.withUsePackageIcon())
+        )
+    }
 }

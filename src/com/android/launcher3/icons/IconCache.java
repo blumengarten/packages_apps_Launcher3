@@ -349,10 +349,10 @@ public class IconCache extends BaseIconCache {
      *
      * @param iconRequestInfos List of IconRequestInfos representing titles and icons to query.
      * @param user UserHandle all the given iconRequestInfos share
-     * @param useLowResIcons whether we should exclude the icon column from the sql results.
+     * @param lookupFlag what flags to use when loading the icon.
      */
     private <T extends ItemInfoWithIcon> Cursor createBulkQueryCursor(
-            List<IconRequestInfo<T>> iconRequestInfos, UserHandle user, boolean useLowResIcons)
+            List<IconRequestInfo<T>> iconRequestInfos, UserHandle user, CacheLookupFlag lookupFlag)
             throws SQLiteException {
         String[] queryParams = Stream.concat(
                 iconRequestInfos.stream()
@@ -365,7 +365,7 @@ public class IconCache extends BaseIconCache {
                 ",", Collections.nCopies(queryParams.length - 1, "?"));
 
         return iconDb.query(
-                useLowResIcons ? COLUMNS_LOW_RES : COLUMNS_HIGH_RES,
+                toLookupColumns(lookupFlag),
                 COLUMN_COMPONENT
                         + " IN ( " + componentNameQuery + " )"
                         + " AND " + COLUMN_USER + " = ?",
@@ -423,10 +423,11 @@ public class IconCache extends BaseIconCache {
             List<IconRequestInfo<T>> filteredList,
             Map<ComponentName, List<IconRequestInfo<T>>> duplicateIconRequestsMap) {
         Trace.beginSection("loadIconSubsectionWithDatabase");
+        CacheLookupFlag lookupFlag = DEFAULT_LOOKUP_FLAG.withUseLowRes(sectionKey.second);
         try (Cursor c = createBulkQueryCursor(
                 filteredList,
                 /* user = */ sectionKey.first,
-                /* useLowResIcons = */ sectionKey.second)) {
+                lookupFlag)) {
             // Database title and icon loading
             int componentNameColumnIndex = c.getColumnIndexOrThrow(COLUMN_COMPONENT);
             while (c.moveToNext()) {
@@ -442,7 +443,7 @@ public class IconCache extends BaseIconCache {
                                 /* user = */ sectionKey.first,
                                 () -> duplicateIconRequests.get(0).launcherActivityInfo,
                                 LauncherActivityCachingLogic.INSTANCE,
-                                DEFAULT_LOOKUP_FLAG.withUseLowRes(sectionKey.second),
+                                lookupFlag,
                                 c);
 
                         for (IconRequestInfo<T> iconRequest : duplicateIconRequests) {
@@ -519,7 +520,7 @@ public class IconCache extends BaseIconCache {
             @NonNull final PackageItemInfo infoInOut,
             @NonNull CacheLookupFlag lookupFlag) {
         CacheEntry entry = getEntryForPackageLocked(
-                infoInOut.packageName, infoInOut.user, lookupFlag.useLowRes());
+                infoInOut.packageName, infoInOut.user, lookupFlag);
         applyCacheEntry(entry, infoInOut);
         if (infoInOut.widgetCategory == NO_CATEGORY) {
             return;
@@ -593,7 +594,7 @@ public class IconCache extends BaseIconCache {
 
     @VisibleForTesting
     synchronized boolean isItemInDb(ComponentKey cacheKey) {
-        return getEntryFromDBLocked(cacheKey, new CacheEntry(), false);
+        return getEntryFromDBLocked(cacheKey, new CacheEntry(), DEFAULT_LOOKUP_FLAG);
     }
 
     /**

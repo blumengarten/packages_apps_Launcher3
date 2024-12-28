@@ -96,7 +96,7 @@ public class PredictionUpdateTask implements ModelUpdateTask {
                 itemInfo = apps.data.stream()
                         .filter(info -> user.equals(info.user) && cn.equals(info.componentName))
                         .map(ai -> {
-                            app.getIconCache().getTitleAndIcon(ai, DEFAULT_LOOKUP_FLAG);
+                            app.getIconCache().getTitleAndIcon(ai, mPredictorState.lookupFlag);
                             return ai.makeWorkspaceItem(context);
                         })
                         .findAny()

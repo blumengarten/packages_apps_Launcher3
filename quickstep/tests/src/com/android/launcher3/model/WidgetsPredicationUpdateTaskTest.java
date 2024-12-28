@@ -20,6 +20,7 @@ import static android.content.pm.ApplicationInfo.FLAG_INSTALLED;
 import static android.os.Process.myUserHandle;
 
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_WIDGETS_PREDICTION;
+import static com.android.launcher3.icons.cache.CacheLookupFlag.DEFAULT_LOOKUP_FLAG;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
 import static com.android.launcher3.util.TestUtil.runOnExecutorSync;
@@ -277,7 +278,8 @@ public final class WidgetsPredicationUpdateTaskTest {
 
     private WidgetsPredictionUpdateTask newWidgetsPredicationTask(List<AppTarget> appTargets) {
         return new WidgetsPredictionUpdateTask(
-                new PredictorState(CONTAINER_WIDGETS_PREDICTION, "test_widgets_prediction"),
+                new PredictorState(CONTAINER_WIDGETS_PREDICTION, "test_widgets_prediction",
+                        DEFAULT_LOOKUP_FLAG),
                 appTargets);
     }
 

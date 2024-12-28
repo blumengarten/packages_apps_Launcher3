@@ -15,6 +15,8 @@
  */
 package com.android.launcher3.model;
 
+import static com.android.launcher3.LauncherSettings.Favorites.DESKTOP_ICON_FLAG;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.LauncherActivityInfo;
@@ -194,7 +196,7 @@ public class AddWorkspaceItemsTask implements ModelUpdateTask {
                         WorkspaceItemInfo wii = (WorkspaceItemInfo) itemInfo;
                         wii.title = "";
                         wii.bitmap = cache.getDefaultIcon(item.user);
-                        cache.getTitleAndIcon(wii, wii.getMatchingLookupFlag());
+                        cache.getTitleAndIcon(wii, DESKTOP_ICON_FLAG);
                     }
                 }
 

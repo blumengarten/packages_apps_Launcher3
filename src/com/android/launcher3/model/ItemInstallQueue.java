@@ -18,10 +18,10 @@ package com.android.launcher3.model;
 
 import static android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_ID;
 
+import static com.android.launcher3.LauncherSettings.Favorites.DESKTOP_ICON_FLAG;
 import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APPLICATION;
 import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET;
 import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT;
-import static com.android.launcher3.icons.cache.CacheLookupFlag.DEFAULT_LOOKUP_FLAG;
 import static com.android.launcher3.model.data.AppInfo.makeLaunchIntent;
 import static com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_ARCHIVED;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
@@ -310,7 +310,7 @@ public class ItemInstallQueue {
                     }
                     LauncherAppState.getInstance(context).getIconCache()
                             .getTitleAndIcon(si, () -> lai,
-                                    DEFAULT_LOOKUP_FLAG.withUsePackageIcon(usePackageIcon));
+                                    DESKTOP_ICON_FLAG.withUsePackageIcon(usePackageIcon));
                     return Pair.create(si, null);
                 }
                 case ITEM_TYPE_DEEP_SHORTCUT: {

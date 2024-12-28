@@ -933,7 +933,6 @@ public class TouchInteractionService extends Service {
                 mConsumer.onConsumerAboutToBeSwitched();
                 mGestureState = newGestureState;
                 mConsumer = newConsumer(
-                        getBaseContext(),
                         this,
                         mResetGestureInputConsumer,
                         mOverviewComponentObserver,

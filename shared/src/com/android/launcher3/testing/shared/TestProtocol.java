@@ -76,8 +76,9 @@ public final class TestProtocol {
         }
     }
 
-    public static final String TEST_INFO_REQUEST_FIELD = "request";
     public static final String TEST_INFO_RESPONSE_FIELD = "response";
+    public static final String TEST_INFO_PARAM_INDEX = "index";
+    public static final String TEST_INFO_PARAM_CELL_SPAN = "cell-span";
 
     public static final String REQUEST_HOME_TO_OVERVIEW_SWIPE_HEIGHT =
             "home-to-overview-swipe-height";

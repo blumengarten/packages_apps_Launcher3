@@ -55,9 +55,7 @@ import com.android.launcher3.ShortcutAndWidgetContainer;
 import com.android.launcher3.Workspace;
 import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.icons.ClockDrawableWrapper;
-import com.android.launcher3.testing.shared.HotseatCellCenterRequest;
 import com.android.launcher3.testing.shared.TestProtocol;
-import com.android.launcher3.testing.shared.WorkspaceCellCenterRequest;
 import com.android.launcher3.util.ActivityLifecycleCallbacksAdapter;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.ResourceBasedOverride;
@@ -265,15 +263,15 @@ public class TestInformationHandler implements ResourceBasedOverride {
                 });
 
             case TestProtocol.REQUEST_WORKSPACE_CELL_CENTER: {
-                final WorkspaceCellCenterRequest request = extra.getParcelable(
-                        TestProtocol.TEST_INFO_REQUEST_FIELD);
+                Rect cellPos = extra.getParcelable(TestProtocol.TEST_INFO_PARAM_CELL_SPAN);
                 return getLauncherUIProperty(Bundle::putParcelable, launcher -> {
                     final Workspace<?> workspace = launcher.getWorkspace();
                     // TODO(b/216387249): allow caller selecting different pages.
                     CellLayout cellLayout = (CellLayout) workspace.getPageAt(
                             workspace.getCurrentPage());
                     final Rect cellRect = getDescendantRectRelativeToDragLayerForCell(launcher,
-                            cellLayout, request.cellX, request.cellY, request.spanX, request.spanY);
+                            cellLayout, cellPos.left, cellPos.top, cellPos.width(),
+                            cellPos.height());
                     return new Point(cellRect.centerX(), cellRect.centerY());
                 });
             }
@@ -292,12 +290,11 @@ public class TestInformationHandler implements ResourceBasedOverride {
             }
 
             case TestProtocol.REQUEST_HOTSEAT_CELL_CENTER: {
-                final HotseatCellCenterRequest request = extra.getParcelable(
-                        TestProtocol.TEST_INFO_REQUEST_FIELD);
+                int cellIndex = extra.getInt(TestProtocol.TEST_INFO_PARAM_INDEX);
                 return getLauncherUIProperty(Bundle::putParcelable, launcher -> {
                     final Hotseat hotseat = launcher.getHotseat();
                     final Rect cellRect = getDescendantRectRelativeToDragLayerForCell(launcher,
-                            hotseat, request.cellInd, /* cellY= */ 0,
+                            hotseat, cellIndex, /* cellY= */ 0,
                             /* spanX= */ 1, /* spanY= */ 1);
                     // TODO(b/234322284): return the real center point.
                     return new Point(cellRect.left + (cellRect.right - cellRect.left) / 3,
