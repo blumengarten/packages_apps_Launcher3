@@ -70,6 +70,7 @@ import static com.android.launcher3.LauncherState.NO_OFFSET;
 import static com.android.launcher3.LauncherState.NO_SCALE;
 import static com.android.launcher3.LauncherState.SPRING_LOADED;
 import static com.android.launcher3.Utilities.postAsyncCallback;
+import static com.android.launcher3.anim.AnimatorListeners.forEndCallback;
 import static com.android.launcher3.config.FeatureFlags.FOLDABLE_SINGLE_PAGE;
 import static com.android.launcher3.config.FeatureFlags.MULTI_SELECT_EDIT_MODE;
 import static com.android.launcher3.logging.KeyboardStateManager.KeyboardState.HIDE;
@@ -1459,7 +1460,10 @@ public class Launcher extends StatefulActivity<LauncherState>
             }
 
             getModelWriter().addItemToDatabase(info, container, screenId, cellXY[0], cellXY[1]);
-            mWorkspace.addInScreen(view, info);
+            AnimatorSet anim = new AnimatorSet();
+            anim.addListener(forEndCallback(() ->
+                    view.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)));
+            bindInflatedItems(Collections.singletonList(Pair.create(info, view)), anim);
         } else {
             // Adding a shortcut to a Folder.
             FolderIcon folderIcon = findFolderIcon(container);
