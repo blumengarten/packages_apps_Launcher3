@@ -200,7 +200,7 @@ public final class TaskbarOverlayController {
     private LayoutParams createLayoutParams() {
         LayoutParams layoutParams = new LayoutParams(
                 TYPE_APPLICATION_OVERLAY,
-                LayoutParams.FLAG_SPLIT_TOUCH,
+                /* flags = */ 0,
                 PixelFormat.TRANSLUCENT);
         layoutParams.setTitle(WINDOW_TITLE);
         layoutParams.gravity = Gravity.BOTTOM;
