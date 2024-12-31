@@ -37,7 +37,9 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.spy
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -56,7 +58,7 @@ class TasksRepositoryTest {
     private val taskVisualsChangeNotifier = FakeTaskVisualsChangeNotifier()
     private val highResLoadingStateNotifier = FakeHighResLoadingStateNotifier()
     private val taskVisualsChangedDelegate =
-        TaskVisualsChangedDelegateImpl(taskVisualsChangeNotifier, highResLoadingStateNotifier)
+        spy(TaskVisualsChangedDelegateImpl(taskVisualsChangeNotifier, highResLoadingStateNotifier))
 
     private val dispatcher = UnconfinedTestDispatcher()
     private val testScope = TestScope(dispatcher)
@@ -128,6 +130,29 @@ class TasksRepositoryTest {
 
             systemUnderTest.getAllTaskData(forceRefresh = true)
             assertThat(systemUnderTest.getThumbnailById(1).first()!!.thumbnail).isEqualTo(bitmap1)
+        }
+
+    @Test
+    fun getAllTaskData_clearsPreviouslyLoadedImagesForRemovedTasks() =
+        testScope.runTest {
+            // Setup data
+            recentsModel.seedTasks(defaultTaskList)
+            systemUnderTest.getAllTaskData(forceRefresh = true)
+            val bitmap1 = taskThumbnailDataSource.taskIdToBitmap[1]
+
+            // Load images for task 1
+            systemUnderTest.setVisibleTasks(setOf(1))
+            assertThat(systemUnderTest.getThumbnailById(1).first()!!.thumbnail).isEqualTo(bitmap1)
+
+            // Remove task 1 from "all data"
+            recentsModel.seedTasks(
+                defaultTaskList.filterNot { groupTask -> groupTask.tasks.any { it.key.id == 1 } }
+            )
+            systemUnderTest.getAllTaskData(forceRefresh = true)
+
+            // Assert task 1 was fully removed
+            assertThat(systemUnderTest.getThumbnailById(1).first()?.thumbnail).isNull()
+            verify(taskVisualsChangedDelegate).unregisterTaskThumbnailChangedCallback(tasks[1].key)
         }
 
     @Test

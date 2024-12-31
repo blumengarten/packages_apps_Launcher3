@@ -45,13 +45,11 @@ import android.content.IIntentSender;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Region;
-import android.hardware.input.InputManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.os.Trace;
-import android.util.ArraySet;
 import android.util.Log;
 import android.view.Choreographer;
 import android.view.InputDevice;
@@ -59,7 +57,6 @@ import android.view.InputEvent;
 import android.view.MotionEvent;
 
 import androidx.annotation.BinderThread;
-import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
@@ -98,6 +95,7 @@ import com.android.quickstep.inputconsumers.ResetGestureInputConsumer;
 import com.android.quickstep.util.ActiveGestureLog;
 import com.android.quickstep.util.ActiveGestureLog.CompoundString;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
+import com.android.quickstep.util.ActiveTrackpadList;
 import com.android.quickstep.util.ContextualSearchInvoker;
 import com.android.quickstep.util.ContextualSearchStateManager;
 import com.android.quickstep.views.RecentsViewContainer;
@@ -124,7 +122,6 @@ import com.android.wm.shell.startingsurface.IStartingWindow;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.lang.ref.WeakReference;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -188,7 +185,6 @@ public class TouchInteractionService extends Service {
                 tis.initInputMonitor("TISBinder#onInitialize()");
                 tis.preloadOverview(true /* fromInit */);
             }));
-            sIsInitialized = true;
         }
 
         @BinderThread
@@ -504,71 +500,7 @@ public class TouchInteractionService extends Service {
         }
     }
 
-    private final InputManager.InputDeviceListener mInputDeviceListener =
-            new InputManager.InputDeviceListener() {
-                @Override
-                public void onInputDeviceAdded(int deviceId) {
-                    if (isTrackpadDevice(deviceId)) {
-                        // This updates internal TIS state so it needs to also run on the main
-                        // thread.
-                        MAIN_EXECUTOR.execute(() -> {
-                            boolean wasEmpty = mTrackpadsConnected.isEmpty();
-                            mTrackpadsConnected.add(deviceId);
-                            if (wasEmpty) {
-                                update();
-                            }
-                        });
-                    }
-                }
-
-                @Override
-                public void onInputDeviceChanged(int deviceId) {
-                }
-
-                @Override
-                public void onInputDeviceRemoved(int deviceId) {
-                    // This updates internal TIS state so it needs to also run on the main
-                    // thread.
-                    MAIN_EXECUTOR.execute(() -> {
-                        mTrackpadsConnected.remove(deviceId);
-                        if (mTrackpadsConnected.isEmpty()) {
-                            update();
-                        }
-                    });
-                }
-
-                @MainThread
-                private void update() {
-                    if (mInputMonitorCompat != null && !mTrackpadsConnected.isEmpty()) {
-                        // Don't destroy and reinitialize input monitor due to trackpad
-                        // connecting when it's already set up.
-                        return;
-                    }
-                    initInputMonitor("onTrackpadConnected()");
-                }
-
-                private boolean isTrackpadDevice(int deviceId) {
-                    // This is a blocking binder call that should run on a bg thread.
-                    InputDevice inputDevice = mInputManager.getInputDevice(deviceId);
-                    if (inputDevice == null) {
-                        return false;
-                    }
-                    return inputDevice.getSources() == (InputDevice.SOURCE_MOUSE
-                            | InputDevice.SOURCE_TOUCHPAD);
-                }
-            };
-
-    private static boolean sConnected = false;
-    private static boolean sIsInitialized = false;
     private RotationTouchHelper mRotationTouchHelper;
-
-    public static boolean isConnected() {
-        return sConnected;
-    }
-
-    public static boolean isInitialized() {
-        return sIsInitialized;
-    }
 
     private final AbsSwipeUpHandler.Factory mLauncherSwipeHandlerFactory =
             this::createLauncherSwipeHandler;
@@ -618,8 +550,7 @@ public class TouchInteractionService extends Service {
     private TaskbarManager mTaskbarManager;
     private Function<GestureState, AnimatedFloat> mSwipeUpProxyProvider = i -> null;
     private AllAppsActionManager mAllAppsActionManager;
-    private InputManager mInputManager;
-    private final Set<Integer> mTrackpadsConnected = new ArraySet<>();
+    private ActiveTrackpadList mTrackpadsConnected;
 
     private NavigationMode mGestureStartNavMode = null;
 
@@ -638,13 +569,15 @@ public class TouchInteractionService extends Service {
         mRotationTouchHelper = mDeviceState.getRotationTouchHelper();
         mAllAppsActionManager = new AllAppsActionManager(
                 this, UI_HELPER_EXECUTOR, this::createAllAppsPendingIntent);
-        mInputManager = getSystemService(InputManager.class);
-        mInputManager.registerInputDeviceListener(mInputDeviceListener,
-                UI_HELPER_EXECUTOR.getHandler());
-        int [] inputDevices = mInputManager.getInputDeviceIds();
-        for (int inputDeviceId : inputDevices) {
-            mInputDeviceListener.onInputDeviceAdded(inputDeviceId);
-        }
+        mTrackpadsConnected = new ActiveTrackpadList(this, () -> {
+            if (mInputMonitorCompat != null && !mTrackpadsConnected.isEmpty()) {
+                // Don't destroy and reinitialize input monitor due to trackpad
+                // connecting when it's already set up.
+                return;
+            }
+            initInputMonitor("onTrackpadConnected()");
+        });
+
         mDesktopVisibilityController = new DesktopVisibilityController(this);
         mTaskbarManager = new TaskbarManager(
                 this, mAllAppsActionManager, mNavCallbacks, mDesktopVisibilityController);
@@ -656,8 +589,6 @@ public class TouchInteractionService extends Service {
         // Call runOnUserUnlocked() before any other callbacks to ensure everything is initialized.
         LockedUserState.get(this).runOnUserUnlocked(mUserUnlockedRunnable);
         mDeviceState.addNavigationModeChangedCallback(this::onNavigationModeChanged);
-        sConnected = true;
-
         ScreenOnTracker.INSTANCE.get(this).addListener(mScreenOnListener);
     }
 
@@ -793,7 +724,6 @@ public class TouchInteractionService extends Service {
     public void onDestroy() {
         Log.d(TAG, "onDestroy: user=" + getUserId()
                 + " instance=" + System.identityHashCode(this));
-        sIsInitialized = false;
         if (LockedUserState.get(this).isUserUnlocked()) {
             mInputConsumer.unregisterInputConsumer();
             mOverviewComponentObserver.setHomeDisabled(false);
@@ -805,16 +735,13 @@ public class TouchInteractionService extends Service {
 
         mAllAppsActionManager.onDestroy();
 
-        mInputManager.unregisterInputDeviceListener(mInputDeviceListener);
-        mTrackpadsConnected.clear();
-
+        mTrackpadsConnected.destroy();
         mTaskbarManager.destroy();
         if (mDesktopAppLaunchTransitionManager != null) {
             mDesktopAppLaunchTransitionManager.unregisterTransitions();
         }
         mDesktopAppLaunchTransitionManager = null;
         mDesktopVisibilityController.onDestroy();
-        sConnected = false;
 
         LockedUserState.get(this).removeOnUserUnlockedRunnable(mUserUnlockedRunnable);
         ScreenOnTracker.INSTANCE.get(this).removeListener(mScreenOnListener);

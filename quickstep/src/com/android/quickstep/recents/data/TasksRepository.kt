@@ -50,14 +50,15 @@ class TasksRepository(
 
     override fun getAllTaskData(forceRefresh: Boolean): Flow<List<Task>> {
         if (forceRefresh) {
-            recentsModel.getTasks { result ->
+            recentsModel.getTasks { newTaskList ->
+                val oldTaskMap = tasks.value
                 val recentTasks =
-                    result
+                    newTaskList
                         .flatMap { groupTask -> groupTask.tasks }
                         .associateBy { it.key.id }
-                        .also { hashMap ->
+                        .also { newTaskMap ->
                             // Clean tasks that are not in the latest group tasks list.
-                            val tasksNoLongerVisible = hashMap.keys.subtract(tasks.value.keys)
+                            val tasksNoLongerVisible = oldTaskMap.keys.subtract(newTaskMap.keys)
                             removeTasks(tasksNoLongerVisible)
 
                             // Use pre-loaded thumbnail data and icon from the previous list.
@@ -66,12 +67,12 @@ class TasksRepository(
                             val cache =
                                 taskRequests.keys
                                     .mapNotNull { key ->
-                                        val task = tasks.value[key] ?: return@mapNotNull null
+                                        val task = oldTaskMap[key] ?: return@mapNotNull null
                                         key to Pair(task.thumbnail, task.icon)
                                     }
                                     .toMap()
 
-                            hashMap.values.forEach { task ->
+                            newTaskMap.values.forEach { task ->
                                 task.thumbnail = task.thumbnail ?: cache[task.key.id]?.first
                                 task.icon = task.icon ?: cache[task.key.id]?.second
                             }

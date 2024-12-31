@@ -127,8 +127,9 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
+        val scopeToCancel = viewAttachedScope
         recentsCoroutineScope.launch(dispatcherProvider.background) {
-            viewAttachedScope.cancel("TaskThumbnailView detaching from window")
+            scopeToCancel.cancel("TaskThumbnailView detaching from window")
         }
     }
 

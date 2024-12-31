@@ -217,7 +217,7 @@ public class QuickstepTestInformationHandler extends TestInformationHandler {
 
     @Override
     protected boolean isLauncherInitialized() {
-        return super.isLauncherInitialized() && TouchInteractionService.isInitialized();
+        return super.isLauncherInitialized() && SystemUiProxy.INSTANCE.get(mContext).isActive();
     }
 
     private void enableBlockingTimeout(
