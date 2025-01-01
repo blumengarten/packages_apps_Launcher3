@@ -64,6 +64,7 @@ import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
 import com.android.launcher3.taskbar.customization.TaskbarAllAppsButtonContainer;
 import com.android.launcher3.taskbar.customization.TaskbarDividerContainer;
+import com.android.launcher3.uioverrides.PredictedAppIcon;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.LauncherBindableItemsContainer;
 import com.android.launcher3.util.Themes;
@@ -595,10 +596,12 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
             // Apply the Hotseat ItemInfos, or hide the view if there is none for a given index.
             if (hotseatView instanceof BubbleTextView btv
                     && hotseatItemInfo instanceof WorkspaceItemInfo workspaceInfo) {
-                boolean animate = btv.shouldAnimateIconChange((WorkspaceItemInfo) hotseatItemInfo);
-                btv.applyFromWorkspaceItem(workspaceInfo, animate, numViewsAnimated);
-                if (animate) {
-                    numViewsAnimated++;
+                if (btv instanceof PredictedAppIcon pai) {
+                    if (pai.applyFromWorkspaceItemWithAnimation(workspaceInfo, numViewsAnimated)) {
+                        numViewsAnimated++;
+                    }
+                } else {
+                    btv.applyFromWorkspaceItem(workspaceInfo);
                 }
             }
             setClickAndLongClickListenersForIcon(hotseatView);

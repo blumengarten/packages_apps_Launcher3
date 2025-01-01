@@ -308,6 +308,8 @@
     <string name="folder_name_format_exact">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> items</string>
     <!-- Folder name format when folder has 4 or more items shown in preview-->
     <string name="folder_name_format_overflow">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> or more items</string>
+    <!-- Accessibility announement for unnamed folders -->
+    <string name="unnamed_folder">Unnamed folder</string>
 
     <!-- App pair accessibility -->
     <!-- App pair name -->

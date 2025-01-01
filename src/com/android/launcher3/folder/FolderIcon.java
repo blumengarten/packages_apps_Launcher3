@@ -816,6 +816,10 @@ public class FolderIcon extends FrameLayout implements FolderListener, FloatingI
      * Returns a formatted accessibility title for folder
      */
     public String getAccessiblityTitle(CharSequence title) {
+        if (title == null) {
+            // Avoids "Talkback -> Folder: null" announcement.
+            title = getContext().getString(R.string.unnamed_folder);
+        }
         int size = mInfo.getContents().size();
         if (size < MAX_NUM_ITEMS_IN_PREVIEW) {
             return getContext().getString(R.string.folder_name_format_exact, title, size);
