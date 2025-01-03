@@ -17,21 +17,22 @@
 package com.android.launcher3.folder
 
 import android.R
-import android.content.Context
 import android.graphics.Bitmap
 import android.os.Process
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
-import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
+import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherPrefs.Companion.THEMED_ICONS
 import com.android.launcher3.LauncherPrefs.Companion.get
 import com.android.launcher3.graphics.PreloadIconDrawable
+import com.android.launcher3.icons.BitmapInfo
 import com.android.launcher3.icons.FastBitmapDrawable
+import com.android.launcher3.icons.IconCache
+import com.android.launcher3.icons.IconCache.ItemInfoUpdateReceiver
+import com.android.launcher3.icons.PlaceHolderIconDrawable
 import com.android.launcher3.icons.UserBadgeDrawable
 import com.android.launcher3.icons.mono.MonoThemedBitmap
 import com.android.launcher3.model.data.FolderInfo
-import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_ARCHIVED
 import com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_INSTALL_SESSION_ACTIVE
 import com.android.launcher3.model.data.WorkspaceItemInfo
@@ -40,6 +41,7 @@ import com.android.launcher3.util.Executors
 import com.android.launcher3.util.FlagOp
 import com.android.launcher3.util.LauncherLayoutBuilder
 import com.android.launcher3.util.LauncherModelHelper
+import com.android.launcher3.util.LauncherModelHelper.SandboxModelContext
 import com.android.launcher3.util.TestUtil
 import com.android.launcher3.util.UserIconInfo
 import com.google.common.truth.Truth.assertThat
@@ -47,6 +49,13 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 /** Tests for [PreviewItemManager] */
 @SmallTest
@@ -54,22 +63,27 @@ import org.junit.runner.RunWith
 class PreviewItemManagerTest {
 
     private lateinit var previewItemManager: PreviewItemManager
-    private lateinit var context: Context
-    private lateinit var folderItems: ArrayList<ItemInfo>
+    private lateinit var context: SandboxModelContext
+    private lateinit var folderItems: ArrayList<WorkspaceItemInfo>
     private lateinit var modelHelper: LauncherModelHelper
     private lateinit var folderIcon: FolderIcon
+    private lateinit var iconCache: IconCache
 
     private var defaultThemedIcons = false
 
     @Before
     fun setup() {
-        getInstrumentation().runOnMainSync {
-            folderIcon =
-                FolderIcon(ActivityContextWrapper(ApplicationProvider.getApplicationContext()))
-        }
-        context = getInstrumentation().targetContext
-        previewItemManager = PreviewItemManager(folderIcon)
         modelHelper = LauncherModelHelper()
+        context = modelHelper.sandboxContext
+        folderIcon = FolderIcon(ActivityContextWrapper(context))
+
+        val app = spy(LauncherAppState.getInstance(context))
+        iconCache = spy(app.iconCache)
+        doReturn(iconCache).whenever(app).iconCache
+        context.putObject(LauncherAppState.INSTANCE, app)
+        doReturn(null).whenever(iconCache).updateIconInBackground(any(), any())
+
+        previewItemManager = PreviewItemManager(folderIcon)
         modelHelper
             .setupDefaultLayoutProvider(
                 LauncherLayoutBuilder()
@@ -82,33 +96,35 @@ class PreviewItemManagerTest {
                     .build()
             )
             .loadModelSync()
-        folderItems = modelHelper.bgDataModel.collections.valueAt(0).getContents()
+
+        // Use getAppContents() to "cast" contents to WorkspaceItemInfo so we can set bitmaps
+        folderItems = modelHelper.bgDataModel.collections.valueAt(0).getAppContents()
         folderIcon.mInfo = modelHelper.bgDataModel.collections.valueAt(0) as FolderInfo
         folderIcon.mInfo.getContents().addAll(folderItems)
 
-        // Use getAppContents() to "cast" contents to WorkspaceItemInfo so we can set bitmaps
-        val folderApps = modelHelper.bgDataModel.collections.valueAt(0).getAppContents()
         // Set first icon to be themed.
-        folderApps[0].bitmap.themedBitmap =
+        folderItems[0].bitmap.themedBitmap =
             MonoThemedBitmap(
-                folderApps[0].bitmap.icon,
+                folderItems[0].bitmap.icon,
                 Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888),
             )
 
         // Set second icon to be non-themed.
-        folderApps[1].bitmap.themedBitmap = null
+        folderItems[1].bitmap.themedBitmap = null
 
         // Set third icon to be themed with badge.
-        folderApps[2].bitmap.themedBitmap =
+        folderItems[2].bitmap.themedBitmap =
             MonoThemedBitmap(
-                folderApps[2].bitmap.icon,
+                folderItems[2].bitmap.icon,
                 Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888),
             )
-        folderApps[2].bitmap = folderApps[2].bitmap.withFlags(profileFlagOp(UserIconInfo.TYPE_WORK))
+        folderItems[2].bitmap =
+            folderItems[2].bitmap.withFlags(profileFlagOp(UserIconInfo.TYPE_WORK))
 
         // Set fourth icon to be non-themed with badge.
-        folderApps[3].bitmap = folderApps[3].bitmap.withFlags(profileFlagOp(UserIconInfo.TYPE_WORK))
-        folderApps[3].bitmap.themedBitmap = null
+        folderItems[3].bitmap =
+            folderItems[3].bitmap.withFlags(profileFlagOp(UserIconInfo.TYPE_WORK))
+        folderItems[3].bitmap.themedBitmap = null
 
         defaultThemedIcons = get(context).get(THEMED_ICONS)
     }
@@ -230,6 +246,31 @@ class PreviewItemManagerTest {
         }
         // Then
         assertThat(drawingParams.drawable).isInstanceOf(PreloadIconDrawable::class.java)
+    }
+
+    @Test
+    fun `Preview item loads and apply high res icon`() {
+        val drawingParams = PreviewItemDrawingParams(0f, 0f, 0f)
+        val originalBitmap = folderItems[3].bitmap
+        folderItems[3].bitmap = BitmapInfo.LOW_RES_INFO
+
+        previewItemManager.setDrawable(drawingParams, folderItems[3])
+        assertThat(drawingParams.drawable).isInstanceOf(PlaceHolderIconDrawable::class.java)
+
+        val callbackCaptor = argumentCaptor<ItemInfoUpdateReceiver>()
+        verify(iconCache).updateIconInBackground(callbackCaptor.capture(), eq(folderItems[3]))
+
+        // Restore high-res icon
+        folderItems[3].bitmap = originalBitmap
+
+        // Calling with a different item info will ignore the update
+        callbackCaptor.firstValue.reapplyItemInfo(folderItems[2])
+        assertThat(drawingParams.drawable).isInstanceOf(PlaceHolderIconDrawable::class.java)
+
+        // Calling with correct value will update the drawable to high-res
+        callbackCaptor.firstValue.reapplyItemInfo(folderItems[3])
+        assertThat(drawingParams.drawable).isNotInstanceOf(PlaceHolderIconDrawable::class.java)
+        assertThat(drawingParams.drawable).isInstanceOf(FastBitmapDrawable::class.java)
     }
 
     private fun profileFlagOp(type: Int) =

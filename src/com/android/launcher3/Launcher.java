@@ -72,7 +72,6 @@ import static com.android.launcher3.LauncherState.SPRING_LOADED;
 import static com.android.launcher3.Utilities.postAsyncCallback;
 import static com.android.launcher3.config.FeatureFlags.FOLDABLE_SINGLE_PAGE;
 import static com.android.launcher3.config.FeatureFlags.MULTI_SELECT_EDIT_MODE;
-import static com.android.launcher3.folder.FolderGridOrganizer.createFolderGridOrganizer;
 import static com.android.launcher3.logging.KeyboardStateManager.KeyboardState.HIDE;
 import static com.android.launcher3.logging.KeyboardStateManager.KeyboardState.SHOW;
 import static com.android.launcher3.logging.StatsLogManager.EventEnum;
@@ -206,7 +205,6 @@ import com.android.launcher3.model.ItemInstallQueue;
 import com.android.launcher3.model.ModelWriter;
 import com.android.launcher3.model.StringCache;
 import com.android.launcher3.model.data.AppInfo;
-import com.android.launcher3.model.data.AppPairInfo;
 import com.android.launcher3.model.data.CollectionInfo;
 import com.android.launcher3.model.data.FolderInfo;
 import com.android.launcher3.model.data.ItemInfo;
@@ -829,26 +827,6 @@ public class Launcher extends StatefulActivity<LauncherState>
         mModelWriter = mModel.getWriter(true, mCellPosMapper, this);
         updateFixedLandscape();
         return true;
-    }
-
-    @Override
-    public void invalidateParent(ItemInfo info) {
-        if (info.container >= 0) {
-            View collectionIcon = getWorkspace().getHomescreenIconByItemId(info.container);
-            if (collectionIcon instanceof FolderIcon folderIcon
-                    && collectionIcon.getTag() instanceof FolderInfo) {
-                if (createFolderGridOrganizer(getDeviceProfile())
-                        .setFolderInfo((FolderInfo) folderIcon.getTag())
-                        .isItemInPreview(info.rank)) {
-                    folderIcon.invalidate();
-                }
-            } else if (collectionIcon instanceof AppPairIcon appPairIcon
-                    && collectionIcon.getTag() instanceof AppPairInfo appPairInfo) {
-                if (appPairInfo.getContents().contains(info)) {
-                    appPairIcon.getIconDrawableArea().redraw();
-                }
-            }
-        }
     }
 
     /**

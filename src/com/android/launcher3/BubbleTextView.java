@@ -1315,7 +1315,6 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
                 applyFromApplicationInfo((AppInfo) info);
             } else if (info instanceof WorkspaceItemInfo) {
                 applyFromWorkspaceItem((WorkspaceItemInfo) info);
-                mActivity.invalidateParent(info);
             } else if (info != null) {
                 applyFromItemInfoWithIcon(info);
             }
@@ -1329,12 +1328,11 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
      * Verifies that the current icon is high-res otherwise posts a request to load the icon.
      */
     public void verifyHighRes() {
-        if (mIconLoadRequest != null) {
-            mIconLoadRequest.cancel();
-            mIconLoadRequest = null;
-        }
         if (getTag() instanceof ItemInfoWithIcon info && !mHighResUpdateInProgress
                 && info.getMatchingLookupFlag().useLowRes()) {
+            if (mIconLoadRequest != null) {
+                mIconLoadRequest.cancel();
+            }
             mIconLoadRequest = LauncherAppState.getInstance(getContext()).getIconCache()
                     .updateIconInBackground(BubbleTextView.this, info);
         }

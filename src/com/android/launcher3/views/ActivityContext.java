@@ -105,13 +105,6 @@ public interface ActivityContext {
         return null;
     }
 
-    /**
-     * For items with tree hierarchy, notifies the activity to invalidate the parent when a root
-     * is invalidated
-     * @param info info associated with a root node.
-     */
-    default void invalidateParent(ItemInfo info) { }
-
     default AccessibilityDelegate getAccessibilityDelegate() {
         return null;
     }

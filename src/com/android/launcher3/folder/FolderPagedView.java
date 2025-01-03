@@ -24,7 +24,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Path;
-import android.graphics.drawable.Drawable;
 import android.util.ArrayMap;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -541,19 +540,10 @@ public class FolderPagedView extends PagedView<PageIndicatorDots> implements Cli
             ShortcutAndWidgetContainer parent = page.getShortcutsAndWidgets();
             for (int i = parent.getChildCount() - 1; i >= 0; i--) {
                 View iconView = parent.getChildAt(i);
-                Drawable d = null;
                 if (iconView instanceof BubbleTextView btv) {
                     btv.verifyHighRes();
-                    d = btv.getIcon();
                 } else if (iconView instanceof AppPairIcon api) {
                     api.verifyHighRes();
-                    d = api.getIconDrawableArea().getDrawable();
-                }
-
-                // Set the callback back to the actual icon, in case
-                // it was captured by the FolderIcon
-                if (d != null) {
-                    d.setCallback(iconView);
                 }
             }
         }

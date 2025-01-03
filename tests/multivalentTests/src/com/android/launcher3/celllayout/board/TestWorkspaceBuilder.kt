@@ -80,6 +80,15 @@ class TestWorkspaceBuilder(private val mContext: Context) {
             )
     }
 
+    /**
+     * Sets the test app for app icons to the specified Component
+     *
+     * @param testAppComponent ComponentName to use for app icons
+     */
+    fun setTestAppComponent(testAppComponent: ComponentName) {
+        appComponentName = testAppComponent
+    }
+
     private fun addCorrespondingWidgetRect(
         widgetRect: WidgetRect,
         transaction: FavoriteItemsTransaction,
