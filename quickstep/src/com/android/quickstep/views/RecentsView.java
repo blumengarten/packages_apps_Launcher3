@@ -2664,6 +2664,7 @@ public abstract class RecentsView<
     private void onReset() {
         if (enableRefactorTaskThumbnail()) {
             mRecentsViewModel.onReset();
+            removeAllViews();
         }
         unloadVisibleTaskData(TaskView.FLAG_UPDATE_ALL);
         setCurrentPage(0);

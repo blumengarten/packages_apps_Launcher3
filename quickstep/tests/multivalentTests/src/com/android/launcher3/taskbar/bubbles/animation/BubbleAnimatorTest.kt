@@ -44,7 +44,7 @@ class BubbleAnimatorTest {
             )
         val listener = TestBubbleAnimatorListener()
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            bubbleAnimator.animateNewBubble(selectedBubbleIndex = 2, listener)
+            bubbleAnimator.animateNewBubble(selectedBubbleIndex = 2, listener = listener)
         }
 
         assertThat(bubbleAnimator.isRunning).isTrue()

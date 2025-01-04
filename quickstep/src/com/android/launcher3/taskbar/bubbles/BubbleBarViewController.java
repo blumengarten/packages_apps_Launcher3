@@ -902,9 +902,15 @@ public class BubbleBarViewController {
     /**
      * Adds the provided bubble to the bubble bar.
      */
-    public void addBubble(BubbleBarItem b, boolean isExpanding, boolean suppressAnimation) {
+    public void addBubble(BubbleBarItem b,
+            boolean isExpanding,
+            boolean suppressAnimation,
+            @Nullable BubbleBarBubble bubbleToSelect
+    ) {
         if (b != null) {
-            mBarView.addBubble(b.getView());
+            BubbleView bubbleToSelectView =
+                    bubbleToSelect == null ? null : bubbleToSelect.getView();
+            mBarView.addBubble(b.getView(), bubbleToSelectView);
             b.getView().setOnClickListener(mBubbleClickListener);
             mBubbleDragController.setupBubbleView(b.getView());
             b.getView().setController(mBubbleViewController);

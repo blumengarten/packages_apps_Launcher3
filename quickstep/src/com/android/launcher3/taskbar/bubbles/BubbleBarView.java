@@ -681,8 +681,18 @@ public class BubbleBarView extends FrameLayout {
         return mRelativePivotY;
     }
 
-    /** Add a new bubble to the bubble bar. */
+    /** Add a new bubble to the bubble bar without updating the selected bubble. */
     public void addBubble(BubbleView bubble) {
+        addBubble(bubble, /* bubbleToSelect = */ null);
+    }
+
+    /**
+     * Add a new bubble to the bubble bar and selects the provided bubble.
+     *
+     * @param bubble         bubble to add
+     * @param bubbleToSelect if {@code null}, then selected bubble does not change
+     */
+    public void addBubble(BubbleView bubble, @Nullable BubbleView bubbleToSelect) {
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams((int) mIconSize, (int) mIconSize,
                 Gravity.LEFT);
         final int index = bubble.isOverflow() ? getChildCount() : 0;
@@ -718,7 +728,12 @@ public class BubbleBarView extends FrameLayout {
                     invalidate();
                 }
             };
-            mBubbleAnimator.animateNewBubble(indexOfChild(mSelectedBubbleView), listener);
+            if (bubbleToSelect != null) {
+                mBubbleAnimator.animateNewBubble(indexOfChild(mSelectedBubbleView),
+                        indexOfChild(bubbleToSelect), listener);
+            } else {
+                mBubbleAnimator.animateNewBubble(indexOfChild(mSelectedBubbleView), listener);
+            }
         } else {
             addView(bubble, index, lp);
         }
