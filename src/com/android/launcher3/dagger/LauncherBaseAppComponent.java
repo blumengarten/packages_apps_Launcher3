@@ -18,6 +18,7 @@ package com.android.launcher3.dagger;
 
 import android.content.Context;
 
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.contextualeducation.ContextualEduStatsManager;
 import com.android.launcher3.graphics.IconShape;
 import com.android.launcher3.model.ItemInstallQueue;
@@ -62,6 +63,7 @@ public interface LauncherBaseAppComponent {
     VibratorWrapper getVibratorWrapper();
     MSDLPlayerWrapper getMSDLPlayerWrapper();
     WindowManagerProxy getWmProxy();
+    LauncherPrefs getLauncherPrefs();
 
     /** Builder for LauncherBaseAppComponent. */
     interface Builder {

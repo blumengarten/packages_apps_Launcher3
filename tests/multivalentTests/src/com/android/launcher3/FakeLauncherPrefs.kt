@@ -17,61 +17,24 @@
 package com.android.launcher3
 
 import android.content.Context
-import com.android.launcher3.util.Executors.MAIN_EXECUTOR
+import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
+import com.android.launcher3.dagger.ApplicationContext
+import com.android.launcher3.dagger.LauncherAppSingleton
+import java.io.File
+import javax.inject.Inject
 
 /** Emulates Launcher preferences for a test environment. */
-class FakeLauncherPrefs(private val context: Context) : LauncherPrefs() {
-    private val prefsMap = mutableMapOf<String, Any>()
-    private val listeners = mutableSetOf<LauncherPrefChangeListener>()
+@LauncherAppSingleton
+class FakeLauncherPrefs @Inject constructor(@ApplicationContext context: Context) :
+    LauncherPrefs(context) {
 
-    @Suppress("UNCHECKED_CAST")
-    override fun <T> get(item: ContextualItem<T>): T {
-        return prefsMap.getOrDefault(item.sharedPrefKey, item.defaultValueFromContext(context)) as T
-    }
+    private val backingPrefs =
+        context.getSharedPreferences(
+            File.createTempFile("fake-pref", ".xml", context.filesDir),
+            MODE_PRIVATE,
+        )
 
-    @Suppress("UNCHECKED_CAST")
-    override fun <T> get(item: ConstantItem<T>): T {
-        return prefsMap.getOrDefault(item.sharedPrefKey, item.defaultValue) as T
-    }
-
-    override fun put(vararg itemsToValues: Pair<Item, Any>) = putSync(*itemsToValues)
-
-    override fun <T : Any> put(item: Item, value: T) = putSync(item to value)
-
-    override fun putSync(vararg itemsToValues: Pair<Item, Any>) {
-        itemsToValues
-            .map { (i, v) -> i.sharedPrefKey to v }
-            .forEach { (k, v) ->
-                prefsMap[k] = v
-                notifyChange(k)
-            }
-    }
-
-    override fun addListener(listener: LauncherPrefChangeListener, vararg items: Item) {
-        listeners.add(listener)
-    }
-
-    override fun removeListener(listener: LauncherPrefChangeListener, vararg items: Item) {
-        listeners.remove(listener)
-    }
-
-    override fun has(vararg items: Item) = items.all { it.sharedPrefKey in prefsMap }
-
-    override fun remove(vararg items: Item) = removeSync(*items)
-
-    override fun removeSync(vararg items: Item) {
-        items
-            .filter { it.sharedPrefKey in prefsMap }
-            .forEach {
-                prefsMap.remove(it.sharedPrefKey)
-                notifyChange(it.sharedPrefKey)
-            }
-    }
-
-    override fun close() = Unit
-
-    private fun notifyChange(key: String) {
-        // Mimics SharedPreferencesImpl#notifyListeners main thread dispatching.
-        MAIN_EXECUTOR.execute { listeners.forEach { it.onPrefChanged(key) } }
-    }
+    override val Item.sharedPrefs: SharedPreferences
+        get() = backingPrefs
 }

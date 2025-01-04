@@ -299,7 +299,7 @@ public class BubbleDragController {
         private final PointF mTouchDownLocation = new PointF();
         private final PointF mViewInitialPosition = new PointF();
         private final VelocityTracker mVelocityTracker = VelocityTracker.obtain();
-        private final long mPressToDragTimeout = ViewConfiguration.getLongPressTimeout() / 2;
+        private final long mPressToDragTimeout = ViewConfiguration.getLongPressTimeout();
         private State mState = State.IDLE;
         private int mTouchSlop = -1;
         private BubbleDragAnimator mAnimator;

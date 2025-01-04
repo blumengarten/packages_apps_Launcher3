@@ -128,7 +128,7 @@ class FakeLauncherPrefsTest {
         val listener = LauncherPrefChangeListener { changedKey = it }
         launcherPrefs.addListener(listener, TEST_CONSTANT_ITEM)
 
-        launcherPrefs.removeListener(listener)
+        launcherPrefs.removeListener(listener, TEST_CONSTANT_ITEM)
         getInstrumentation().runOnMainSync { launcherPrefs.put(TEST_CONSTANT_ITEM, true) }
         assertThat(changedKey).isNull()
     }

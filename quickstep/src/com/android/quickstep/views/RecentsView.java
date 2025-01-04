@@ -182,6 +182,7 @@ import com.android.launcher3.util.ViewPool;
 import com.android.launcher3.util.coroutines.DispatcherProvider;
 import com.android.quickstep.BaseContainerInterface;
 import com.android.quickstep.GestureState;
+import com.android.quickstep.HighResLoadingState;
 import com.android.quickstep.OverviewCommandHelper;
 import com.android.quickstep.RecentsAnimationController;
 import com.android.quickstep.RecentsAnimationTargets;
@@ -194,7 +195,6 @@ import com.android.quickstep.RotationTouchHelper;
 import com.android.quickstep.SplitSelectionListener;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.TaskOverlayFactory;
-import com.android.quickstep.TaskThumbnailCache;
 import com.android.quickstep.TaskViewUtils;
 import com.android.quickstep.TopTaskTracker;
 import com.android.quickstep.ViewUtils;
@@ -263,14 +263,14 @@ import java.util.stream.Collectors;
 public abstract class RecentsView<
         CONTAINER_TYPE extends Context & RecentsViewContainer & StatefulContainer<STATE_TYPE>,
         STATE_TYPE extends BaseState<STATE_TYPE>> extends PagedView implements Insettable,
-        TaskThumbnailCache.HighResLoadingState.HighResLoadingStateChangedCallback,
+        HighResLoadingState.HighResLoadingStateChangedCallback,
         TaskVisualsChangeListener {
 
     private static final String TAG = "RecentsView";
     private static final boolean DEBUG = false;
 
-    public static final FloatProperty<RecentsView> CONTENT_ALPHA =
-            new FloatProperty<RecentsView>("contentAlpha") {
+    public static final FloatProperty<RecentsView<?, ?>> CONTENT_ALPHA =
+            new FloatProperty<>("contentAlpha") {
                 @Override
                 public void setValue(RecentsView view, float v) {
                     view.setContentAlpha(v);
@@ -282,8 +282,8 @@ public abstract class RecentsView<
                 }
             };
 
-    public static final FloatProperty<RecentsView> FULLSCREEN_PROGRESS =
-            new FloatProperty<RecentsView>("fullscreenProgress") {
+    public static final FloatProperty<RecentsView<?, ?>> FULLSCREEN_PROGRESS =
+            new FloatProperty<>("fullscreenProgress") {
                 @Override
                 public void setValue(RecentsView recentsView, float v) {
                     recentsView.setFullscreenProgress(v);
@@ -295,8 +295,8 @@ public abstract class RecentsView<
                 }
             };
 
-    public static final FloatProperty<RecentsView> TASK_MODALNESS =
-            new FloatProperty<RecentsView>("taskModalness") {
+    public static final FloatProperty<RecentsView<?, ?>> TASK_MODALNESS =
+            new FloatProperty<>("taskModalness") {
                 @Override
                 public void setValue(RecentsView recentsView, float v) {
                     recentsView.setTaskModalness(v);
@@ -308,8 +308,8 @@ public abstract class RecentsView<
                 }
             };
 
-    public static final FloatProperty<RecentsView> ADJACENT_PAGE_HORIZONTAL_OFFSET =
-            new FloatProperty<RecentsView>("adjacentPageHorizontalOffset") {
+    public static final FloatProperty<RecentsView<?, ?>> ADJACENT_PAGE_HORIZONTAL_OFFSET =
+            new FloatProperty<>("adjacentPageHorizontalOffset") {
                 @Override
                 public void setValue(RecentsView recentsView, float v) {
                     if (recentsView.mAdjacentPageHorizontalOffset != v) {
@@ -324,8 +324,8 @@ public abstract class RecentsView<
                 }
             };
 
-    public static final FloatProperty<RecentsView> RUNNING_TASK_ATTACH_ALPHA =
-            new FloatProperty<RecentsView>("runningTaskAttachAlpha") {
+    public static final FloatProperty<RecentsView<?, ?>> RUNNING_TASK_ATTACH_ALPHA =
+            new FloatProperty<>("runningTaskAttachAlpha") {
                 @Override
                 public void setValue(RecentsView recentsView, float v) {
                     recentsView.mRunningTaskAttachAlpha = v;
@@ -349,8 +349,8 @@ public abstract class RecentsView<
      * Can be used to tint the color of the RecentsView to simulate a scrim that can views
      * excluded from. Really should be a proper scrim.
      */
-    private static final FloatProperty<RecentsView> COLOR_TINT =
-            new FloatProperty<RecentsView>("colorTint") {
+    private static final FloatProperty<RecentsView<?, ?>> COLOR_TINT =
+            new FloatProperty<>("colorTint") {
                 @Override
                 public void setValue(RecentsView recentsView, float v) {
                     recentsView.setColorTint(v);
@@ -368,8 +368,8 @@ public abstract class RecentsView<
      * more specific, we'd want to create a similar FloatProperty just for a TaskView's
      * offsetX/Y property
      */
-    public static final FloatProperty<RecentsView> TASK_SECONDARY_TRANSLATION =
-            new FloatProperty<RecentsView>("taskSecondaryTranslation") {
+    public static final FloatProperty<RecentsView<?, ?>> TASK_SECONDARY_TRANSLATION =
+            new FloatProperty<>("taskSecondaryTranslation") {
                 @Override
                 public void setValue(RecentsView recentsView, float v) {
                     recentsView.setTaskViewsResistanceTranslation(v);
@@ -387,8 +387,8 @@ public abstract class RecentsView<
      * more specific, we'd want to create a similar FloatProperty just for a TaskView's
      * offsetX/Y property
      */
-    public static final FloatProperty<RecentsView> TASK_PRIMARY_SPLIT_TRANSLATION =
-            new FloatProperty<RecentsView>("taskPrimarySplitTranslation") {
+    public static final FloatProperty<RecentsView<?, ?>> TASK_PRIMARY_SPLIT_TRANSLATION =
+            new FloatProperty<>("taskPrimarySplitTranslation") {
                 @Override
                 public void setValue(RecentsView recentsView, float v) {
                     recentsView.setTaskViewsPrimarySplitTranslation(v);
@@ -400,8 +400,8 @@ public abstract class RecentsView<
                 }
             };
 
-    public static final FloatProperty<RecentsView> TASK_SECONDARY_SPLIT_TRANSLATION =
-            new FloatProperty<RecentsView>("taskSecondarySplitTranslation") {
+    public static final FloatProperty<RecentsView<?, ?>> TASK_SECONDARY_SPLIT_TRANSLATION =
+            new FloatProperty<>("taskSecondarySplitTranslation") {
                 @Override
                 public void setValue(RecentsView recentsView, float v) {
                     recentsView.setTaskViewsSecondarySplitTranslation(v);
@@ -414,8 +414,8 @@ public abstract class RecentsView<
             };
 
     /** Same as normal SCALE_PROPERTY, but also updates page offsets that depend on this scale. */
-    public static final FloatProperty<RecentsView> RECENTS_SCALE_PROPERTY =
-            new FloatProperty<RecentsView>("recentsScale") {
+    public static final FloatProperty<RecentsView<?, ?>> RECENTS_SCALE_PROPERTY =
+            new FloatProperty<>("recentsScale") {
                 @Override
                 public void setValue(RecentsView view, float scale) {
                     view.setScaleX(scale);
@@ -444,8 +444,8 @@ public abstract class RecentsView<
      * Progress of Recents view from carousel layout to grid layout. If Recents is not shown as a
      * grid, then the value remains 0.
      */
-    public static final FloatProperty<RecentsView> RECENTS_GRID_PROGRESS =
-            new FloatProperty<RecentsView>("recentsGrid") {
+    public static final FloatProperty<RecentsView<?, ?>> RECENTS_GRID_PROGRESS =
+            new FloatProperty<>("recentsGrid") {
                 @Override
                 public void setValue(RecentsView view, float gridProgress) {
                     view.setGridProgress(gridProgress);
@@ -457,7 +457,7 @@ public abstract class RecentsView<
                 }
             };
 
-    public static final FloatProperty<RecentsView> DESKTOP_CAROUSEL_DETACH_PROGRESS =
+    public static final FloatProperty<RecentsView<?, ?>> DESKTOP_CAROUSEL_DETACH_PROGRESS =
             new FloatProperty<>("desktopCarouselDetachProgress") {
                 @Override
                 public void setValue(RecentsView view, float offset) {
@@ -476,8 +476,8 @@ public abstract class RecentsView<
      * Alpha of the task thumbnail splash, where being in BackgroundAppState has a value of 1, and
      * being in any other state has a value of 0.
      */
-    public static final FloatProperty<RecentsView> TASK_THUMBNAIL_SPLASH_ALPHA =
-            new FloatProperty<RecentsView>("taskThumbnailSplashAlpha") {
+    public static final FloatProperty<RecentsView<?, ?>> TASK_THUMBNAIL_SPLASH_ALPHA =
+            new FloatProperty<>("taskThumbnailSplashAlpha") {
                 @Override
                 public void setValue(RecentsView view, float taskThumbnailSplashAlpha) {
                     view.setTaskThumbnailSplashAlpha(taskThumbnailSplashAlpha);
@@ -5484,7 +5484,7 @@ public abstract class RecentsView<
         firstFloatingTaskView.update(mTempRectF, /*progress=*/1f);
 
         RecentsPagedOrientationHandler orientationHandler = getPagedOrientationHandler();
-        Pair<FloatProperty<RecentsView>, FloatProperty<RecentsView>> taskViewsFloat =
+        Pair<FloatProperty<RecentsView<?, ?>>, FloatProperty<RecentsView<?, ?>>> taskViewsFloat =
                 orientationHandler.getSplitSelectTaskOffset(
                         TASK_PRIMARY_SPLIT_TRANSLATION, TASK_SECONDARY_SPLIT_TRANSLATION,
                         mContainer.getDeviceProfile());

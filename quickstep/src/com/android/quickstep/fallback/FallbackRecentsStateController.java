@@ -136,7 +136,7 @@ public class FallbackRecentsStateController implements StateHandler<RecentsState
             setter.add(pa.buildAnim());
         }
 
-        Pair<FloatProperty<RecentsView>, FloatProperty<RecentsView>> taskViewsFloat =
+        Pair<FloatProperty<RecentsView<?, ?>>, FloatProperty<RecentsView<?, ?>>> taskViewsFloat =
                 mRecentsView.getPagedOrientationHandler().getSplitSelectTaskOffset(
                         TASK_PRIMARY_SPLIT_TRANSLATION, TASK_SECONDARY_SPLIT_TRANSLATION,
                         mRecentsViewContainer.getDeviceProfile());

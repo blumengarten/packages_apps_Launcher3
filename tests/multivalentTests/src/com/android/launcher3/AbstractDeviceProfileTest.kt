@@ -284,7 +284,6 @@ abstract class AbstractDeviceProfileTest {
         isFixedLandscape: Boolean = false,
     ) {
         setFlagsRule.setFlags(true, Flags.FLAG_ENABLE_TWOLINE_TOGGLE)
-        LauncherPrefs.get(testContext).put(LauncherPrefs.ENABLE_TWOLINE_ALLAPPS_TOGGLE, true)
         val windowsBounds = perDisplayBoundsCache[displayInfo]!!
         val realBounds = windowsBounds[rotation]
         whenever(windowManagerProxy.getDisplayInfo(any())).thenReturn(displayInfo)
@@ -310,10 +309,11 @@ abstract class AbstractDeviceProfileTest {
         val configurationContext = runningContext.createConfigurationContext(config)
         context = SandboxContext(configurationContext)
         context.initDaggerComponent(
-            DaggerAbsDPTestSandboxComponent.builder().bindWMProxy(windowManagerProxy)
+            DaggerAbsDPTestSandboxComponent.builder()
+                .bindWMProxy(windowManagerProxy)
+                .bindLauncherPrefs(launcherPrefs)
         )
         context.putObject(DisplayController.INSTANCE, displayController)
-        context.putObject(LauncherPrefs.INSTANCE, launcherPrefs)
 
         whenever(launcherPrefs.get(LauncherPrefs.TASKBAR_PINNING)).thenReturn(false)
         whenever(launcherPrefs.get(LauncherPrefs.TASKBAR_PINNING_IN_DESKTOP_MODE)).thenReturn(true)
@@ -322,6 +322,7 @@ abstract class AbstractDeviceProfileTest {
         whenever(launcherPrefs.get(LauncherPrefs.DEVICE_TYPE)).thenReturn(-1)
         whenever(launcherPrefs.get(LauncherPrefs.WORKSPACE_SIZE)).thenReturn("")
         whenever(launcherPrefs.get(LauncherPrefs.DB_FILE)).thenReturn("")
+        whenever(launcherPrefs.get(LauncherPrefs.ENABLE_TWOLINE_ALLAPPS_TOGGLE)).thenReturn(true)
         val info = spy(DisplayController.Info(context, windowManagerProxy, perDisplayBoundsCache))
         whenever(displayController.info).thenReturn(info)
         whenever(info.isTransientTaskbar).thenReturn(isGestureMode)
@@ -374,6 +375,8 @@ interface AbsDPTestSandboxComponent : LauncherAppComponent {
     @Component.Builder
     interface Builder : LauncherAppComponent.Builder {
         @BindsInstance fun bindWMProxy(proxy: MyWmProxy): Builder
+
+        @BindsInstance fun bindLauncherPrefs(prefs: LauncherPrefs): Builder
 
         override fun build(): AbsDPTestSandboxComponent
     }

@@ -161,7 +161,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     };
 
     private final MultiTranslateDelegate mTranslateDelegate = new MultiTranslateDelegate(this);
-    private final ActivityContext mActivity;
+    protected final ActivityContext mActivity;
     private FastBitmapDrawable mIcon;
     private DeviceProfile mDeviceProfile;
     private boolean mCenterVertically;
@@ -190,7 +190,6 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     @ViewDebug.ExportedProperty(category = "launcher")
     private DotInfo mDotInfo;
     private DotRenderer mDotRenderer;
-    private String mCurrentLanguage;
     @ViewDebug.ExportedProperty(category = "launcher", deepExport = true)
     protected DotRenderer.DrawParams mDotParams;
     private Animator mDotScaleAnim;
@@ -302,7 +301,6 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
         mDotParams = new DotRenderer.DrawParams();
 
-        mCurrentLanguage = context.getResources().getConfiguration().locale.getLanguage();
         setEllipsize(TruncateAt.END);
         setAccessibilityDelegate(mActivity.getAccessibilityDelegate());
         setTextAlpha(1f);
@@ -474,13 +472,8 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
      * Only if actual text can be displayed in two line, the {@code true} value will be effective.
      */
     protected boolean shouldUseTwoLine() {
-        return isCurrentLanguageEnglish() && (mDisplay == DISPLAY_ALL_APPS
-                || mDisplay == DISPLAY_PREDICTION_ROW) && (Flags.enableTwolineToggle()
-                && LauncherPrefs.ENABLE_TWOLINE_ALLAPPS_TOGGLE.get(getContext()));
-    }
-
-    protected boolean isCurrentLanguageEnglish() {
-        return mCurrentLanguage.equals(Locale.ENGLISH.getLanguage());
+        return mDeviceProfile.inv.enableTwoLinesInAllApps
+                && (mDisplay == DISPLAY_ALL_APPS || mDisplay == DISPLAY_PREDICTION_ROW);
     }
 
     @UiThread

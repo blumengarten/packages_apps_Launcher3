@@ -24,7 +24,6 @@ import static com.android.launcher3.InvariantDeviceProfile.INDEX_LANDSCAPE;
 import static com.android.launcher3.InvariantDeviceProfile.INDEX_TWO_PANEL_LANDSCAPE;
 import static com.android.launcher3.InvariantDeviceProfile.INDEX_TWO_PANEL_PORTRAIT;
 import static com.android.launcher3.Utilities.dpiFromPx;
-import static com.android.launcher3.Utilities.isEnglishLanguage;
 import static com.android.launcher3.Utilities.pxFromSp;
 import static com.android.launcher3.folder.ClippedFolderIconLayoutRule.ICON_OVERLAP_FACTOR;
 import static com.android.launcher3.icons.GraphicsUtils.getShapePath;
@@ -1362,16 +1361,9 @@ public class DeviceProfile {
         if (isVerticalLayout && !mIsResponsiveGrid) {
             hideWorkspaceLabelsIfNotEnoughSpace();
         }
-        if ((Flags.enableTwolineToggle()
-                && LauncherPrefs.ENABLE_TWOLINE_ALLAPPS_TOGGLE.get(context))) {
-            if (!isEnglishLanguage(context)) {
-                // Set toggle preference value to false if not english here as it's possible the
-                // preference is stale after language change.
-                LauncherPrefs.get(context).put(LauncherPrefs.ENABLE_TWOLINE_ALLAPPS_TOGGLE, false);
-            } else {
-                // Add extra textHeight to the existing allAppsCellHeight.
-                allAppsCellHeightPx += Utilities.calculateTextHeight(allAppsIconTextSizePx);
-            }
+        if (inv.enableTwoLinesInAllApps) {
+            // Add extra textHeight to the existing allAppsCellHeight.
+            allAppsCellHeightPx += Utilities.calculateTextHeight(allAppsIconTextSizePx);
         }
 
         updateHotseatSizes(iconSizePx);

@@ -20,8 +20,6 @@ import static android.graphics.fonts.FontStyle.FONT_WEIGHT_BOLD;
 import static android.graphics.fonts.FontStyle.FONT_WEIGHT_NORMAL;
 import static android.text.style.DynamicDrawableSpan.ALIGN_CENTER;
 
-import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
-
 import static com.android.launcher3.BubbleTextView.DISPLAY_ALL_APPS;
 import static com.android.launcher3.BubbleTextView.DISPLAY_PREDICTION_ROW;
 import static com.android.launcher3.BubbleTextView.DISPLAY_SEARCH_RESULT;
@@ -44,6 +42,7 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.UserHandle;
+import android.platform.test.annotations.DisableFlags;
 import android.platform.test.annotations.EnableFlags;
 import android.platform.test.flag.junit.SetFlagsRule;
 import android.text.SpannedString;
@@ -64,8 +63,10 @@ import com.android.launcher3.search.StringMatcherUtility;
 import com.android.launcher3.util.ActivityContextWrapper;
 import com.android.launcher3.util.FlagOp;
 import com.android.launcher3.util.IntArray;
+import com.android.launcher3.util.LauncherModelHelper.SandboxModelContext;
 import com.android.launcher3.views.BaseDragLayer;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -111,19 +112,22 @@ public class BubbleTextViewTest {
     private static final float SPACE_MULTIPLIER = 1;
     private static final float SPACE_EXTRA = 0;
 
+    private SandboxModelContext mModelContext;
+
     private BubbleTextView mBubbleTextView;
     private ItemInfoWithIcon mItemInfoWithIcon;
     private Context mContext;
     private int mLimitedWidth;
     private AppInfo mGmailAppInfo;
-    private LauncherPrefs mLauncherPrefs;
 
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
         Utilities.enableRunningInTestHarnessForTests();
-        mContext = new ActivityContextWrapper(getApplicationContext());
-        mLauncherPrefs = LauncherPrefs.get(mContext);
+        mModelContext = new SandboxModelContext();
+        LauncherPrefs.get(mModelContext).put(ENABLE_TWOLINE_ALLAPPS_TOGGLE, true);
+
+        mContext = new ActivityContextWrapper(mModelContext);
         mBubbleTextView = new BubbleTextView(mContext);
         mBubbleTextView.reset();
 
@@ -149,10 +153,14 @@ public class BubbleTextViewTest {
         mGmailAppInfo = new AppInfo(componentName, "Gmail", WORK_HANDLE, new Intent());
     }
 
+    @After
+    public void tearDown() {
+        mModelContext.onDestroy();
+    }
+
     @Test
+    @EnableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE)
     public void testEmptyString_flagOn() {
-        mSetFlagsRule.enableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE);
-        mLauncherPrefs.put(ENABLE_TWOLINE_ALLAPPS_TOGGLE, true);
         mItemInfoWithIcon.title = EMPTY_STRING;
         mBubbleTextView.setDisplay(DISPLAY_ALL_APPS);
         mBubbleTextView.applyLabel(mItemInfoWithIcon);
@@ -165,8 +173,8 @@ public class BubbleTextViewTest {
     }
 
     @Test
+    @DisableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE)
     public void testEmptyString_flagOff() {
-        mSetFlagsRule.disableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE);
         mItemInfoWithIcon.title = EMPTY_STRING;
         mBubbleTextView.setDisplay(DISPLAY_ALL_APPS);
         mBubbleTextView.applyLabel(mItemInfoWithIcon);
@@ -179,9 +187,8 @@ public class BubbleTextViewTest {
     }
 
     @Test
+    @EnableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE)
     public void testStringWithSpaceLongerThanCharLimit_flagOn() {
-        mSetFlagsRule.enableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE);
-        mLauncherPrefs.put(ENABLE_TWOLINE_ALLAPPS_TOGGLE, true);
         // test string: "Battery Stats"
         mItemInfoWithIcon.title = TEST_STRING_WITH_SPACE_LONGER_THAN_CHAR_LIMIT;
         mBubbleTextView.applyLabel(mItemInfoWithIcon);
@@ -195,8 +202,8 @@ public class BubbleTextViewTest {
     }
 
     @Test
+    @DisableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE)
     public void testStringWithSpaceLongerThanCharLimit_flagOff() {
-        mSetFlagsRule.disableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE);
         // test string: "Battery Stats"
         mItemInfoWithIcon.title = TEST_STRING_WITH_SPACE_LONGER_THAN_CHAR_LIMIT;
         mBubbleTextView.applyLabel(mItemInfoWithIcon);
@@ -210,9 +217,8 @@ public class BubbleTextViewTest {
     }
 
     @Test
+    @EnableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE)
     public void testLongStringNoSpaceLongerThanCharLimit_flagOn() {
-        mSetFlagsRule.enableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE);
-        mLauncherPrefs.put(ENABLE_TWOLINE_ALLAPPS_TOGGLE, true);
         // test string: "flutterappflorafy"
         mItemInfoWithIcon.title = TEST_LONG_STRING_NO_SPACE_LONGER_THAN_CHAR_LIMIT;
         mBubbleTextView.applyLabel(mItemInfoWithIcon);
@@ -226,8 +232,8 @@ public class BubbleTextViewTest {
     }
 
     @Test
+    @DisableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE)
     public void testLongStringNoSpaceLongerThanCharLimit_flagOff() {
-        mSetFlagsRule.disableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE);
         // test string: "flutterappflorafy"
         mItemInfoWithIcon.title = TEST_LONG_STRING_NO_SPACE_LONGER_THAN_CHAR_LIMIT;
         mBubbleTextView.applyLabel(mItemInfoWithIcon);
@@ -241,9 +247,8 @@ public class BubbleTextViewTest {
     }
 
     @Test
+    @EnableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE)
     public void testLongStringWithSpaceLongerThanCharLimit_flagOn() {
-        mSetFlagsRule.enableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE);
-        mLauncherPrefs.put(ENABLE_TWOLINE_ALLAPPS_TOGGLE, true);
         // test string: "System UWB Field Test"
         mItemInfoWithIcon.title = TEST_LONG_STRING_WITH_SPACE_LONGER_THAN_CHAR_LIMIT;
         mBubbleTextView.applyLabel(mItemInfoWithIcon);
@@ -257,8 +262,8 @@ public class BubbleTextViewTest {
     }
 
     @Test
+    @DisableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE)
     public void testLongStringWithSpaceLongerThanCharLimit_flagOff() {
-        mSetFlagsRule.disableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE);
         // test string: "System UWB Field Test"
         mItemInfoWithIcon.title = TEST_LONG_STRING_WITH_SPACE_LONGER_THAN_CHAR_LIMIT;
         mBubbleTextView.applyLabel(mItemInfoWithIcon);
@@ -272,9 +277,8 @@ public class BubbleTextViewTest {
     }
 
     @Test
+    @EnableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE)
     public void testLongStringSymbolLongerThanCharLimit_flagOn() {
-        mSetFlagsRule.enableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE);
-        mLauncherPrefs.put(ENABLE_TWOLINE_ALLAPPS_TOGGLE, true);
         // test string: "LEGO®Builder"
         mItemInfoWithIcon.title = TEST_LONG_STRING_SYMBOL_LONGER_THAN_CHAR_LIMIT;
         mBubbleTextView.applyLabel(mItemInfoWithIcon);
@@ -288,8 +292,8 @@ public class BubbleTextViewTest {
     }
 
     @Test
+    @DisableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE)
     public void testLongStringSymbolLongerThanCharLimit_flagOff() {
-        mSetFlagsRule.disableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE);
         // test string: "LEGO®Builder"
         mItemInfoWithIcon.title = TEST_LONG_STRING_SYMBOL_LONGER_THAN_CHAR_LIMIT;
         mBubbleTextView.applyLabel(mItemInfoWithIcon);
@@ -359,9 +363,8 @@ public class BubbleTextViewTest {
     }
 
     @Test
+    @EnableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE)
     public void testEnsurePredictionRowIsTwoLine() {
-        mSetFlagsRule.enableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE);
-        mLauncherPrefs.put(ENABLE_TWOLINE_ALLAPPS_TOGGLE, true);
         // test string: "Battery Stats"
         mItemInfoWithIcon.title = TEST_STRING_WITH_SPACE_LONGER_THAN_CHAR_LIMIT;
         mBubbleTextView.setDisplay(DISPLAY_PREDICTION_ROW);
@@ -375,9 +378,8 @@ public class BubbleTextViewTest {
     }
 
     @Test
+    @EnableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE)
     public void modifyTitleToSupportMultiLine_whenLimitedHeight_shouldBeOneLine() {
-        mSetFlagsRule.enableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE);
-        mLauncherPrefs.put(ENABLE_TWOLINE_ALLAPPS_TOGGLE, true);
         // test string: "LEGO®Builder"
         mItemInfoWithIcon.title = TEST_LONG_STRING_SYMBOL_LONGER_THAN_CHAR_LIMIT;
         mBubbleTextView.applyLabel(mItemInfoWithIcon);
@@ -390,9 +392,8 @@ public class BubbleTextViewTest {
     }
 
     @Test
+    @EnableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE)
     public void modifyTitleToSupportMultiLine_whenUnlimitedHeight_shouldBeTwoLine() {
-        mSetFlagsRule.enableFlags(Flags.FLAG_ENABLE_TWOLINE_TOGGLE);
-        mLauncherPrefs.put(ENABLE_TWOLINE_ALLAPPS_TOGGLE, true);
         // test string: "LEGO®Builder"
         mItemInfoWithIcon.title = TEST_LONG_STRING_SYMBOL_LONGER_THAN_CHAR_LIMIT;
         mBubbleTextView.setDisplay(DISPLAY_ALL_APPS);

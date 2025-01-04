@@ -22,6 +22,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Matrix
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.launcher3.util.TestDispatcherProvider
 import com.android.quickstep.recents.data.FakeTasksRepository
 import com.android.quickstep.recents.usecase.GetThumbnailPositionUseCase
 import com.android.quickstep.recents.usecase.ThumbnailPositionState.MatrixScaling
@@ -33,7 +34,10 @@ import com.android.quickstep.task.viewmodel.TaskOverlayViewModel.ThumbnailPositi
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.ThumbnailData
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -41,6 +45,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
 /** Test for [TaskOverlayViewModel] */
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 class TaskOverlayViewModelTest {
     private val task =
@@ -58,104 +63,123 @@ class TaskOverlayViewModelTest {
     private val recentsViewData = RecentsViewData()
     private val tasksRepository = FakeTasksRepository()
     private val mGetThumbnailPositionUseCase = mock<GetThumbnailPositionUseCase>()
+    private val dispatcher = UnconfinedTestDispatcher()
+    private val testScope = TestScope(dispatcher)
     private val systemUnderTest =
-        TaskOverlayViewModel(task, recentsViewData, mGetThumbnailPositionUseCase, tasksRepository)
+        TaskOverlayViewModel(
+            task,
+            recentsViewData,
+            mGetThumbnailPositionUseCase,
+            tasksRepository,
+            TestDispatcherProvider(dispatcher),
+        )
 
     @Test
-    fun initialStateIsDisabled() = runTest {
-        assertThat(systemUnderTest.overlayState.first()).isEqualTo(Disabled)
-    }
+    fun initialStateIsDisabled() =
+        testScope.runTest { assertThat(systemUnderTest.overlayState.first()).isEqualTo(Disabled) }
 
     @Test
-    fun recentsViewOverlayDisabled_Disabled() = runTest {
-        recentsViewData.overlayEnabled.value = false
-        recentsViewData.settledFullyVisibleTaskIds.value = setOf(TASK_ID)
+    fun recentsViewOverlayDisabled_Disabled() =
+        testScope.runTest {
+            recentsViewData.overlayEnabled.value = false
+            recentsViewData.settledFullyVisibleTaskIds.value = setOf(TASK_ID)
 
-        assertThat(systemUnderTest.overlayState.first()).isEqualTo(Disabled)
-    }
-
-    @Test
-    fun taskNotFullyVisible_Disabled() = runTest {
-        recentsViewData.overlayEnabled.value = true
-        recentsViewData.settledFullyVisibleTaskIds.value = setOf()
-
-        assertThat(systemUnderTest.overlayState.first()).isEqualTo(Disabled)
-    }
+            assertThat(systemUnderTest.overlayState.first()).isEqualTo(Disabled)
+        }
 
     @Test
-    fun noThumbnail_Enabled() = runTest {
-        recentsViewData.overlayEnabled.value = true
-        recentsViewData.settledFullyVisibleTaskIds.value = setOf(TASK_ID)
-        task.isLocked = false
+    fun taskNotFullyVisible_Disabled() =
+        testScope.runTest {
+            recentsViewData.overlayEnabled.value = true
+            recentsViewData.settledFullyVisibleTaskIds.value = setOf()
 
-        assertThat(systemUnderTest.overlayState.first())
-            .isEqualTo(Enabled(isRealSnapshot = false, thumbnail = null))
-    }
-
-    @Test
-    fun withThumbnail_RealSnapshot_NotLocked_Enabled() = runTest {
-        recentsViewData.overlayEnabled.value = true
-        recentsViewData.settledFullyVisibleTaskIds.value = setOf(TASK_ID)
-        tasksRepository.seedTasks(listOf(task))
-        tasksRepository.seedThumbnailData(mapOf(TASK_ID to thumbnailData))
-        tasksRepository.setVisibleTasks(setOf(TASK_ID))
-        thumbnailData.isRealSnapshot = true
-        task.isLocked = false
-
-        assertThat(systemUnderTest.overlayState.first())
-            .isEqualTo(Enabled(isRealSnapshot = true, thumbnail = thumbnailData.thumbnail))
-    }
+            assertThat(systemUnderTest.overlayState.first()).isEqualTo(Disabled)
+        }
 
     @Test
-    fun withThumbnail_RealSnapshot_Locked_Enabled() = runTest {
-        recentsViewData.overlayEnabled.value = true
-        recentsViewData.settledFullyVisibleTaskIds.value = setOf(TASK_ID)
-        tasksRepository.seedTasks(listOf(task))
-        tasksRepository.seedThumbnailData(mapOf(TASK_ID to thumbnailData))
-        tasksRepository.setVisibleTasks(setOf(TASK_ID))
-        thumbnailData.isRealSnapshot = true
-        task.isLocked = true
+    fun noThumbnail_Enabled() =
+        testScope.runTest {
+            recentsViewData.overlayEnabled.value = true
+            recentsViewData.settledFullyVisibleTaskIds.value = setOf(TASK_ID)
+            task.isLocked = false
 
-        assertThat(systemUnderTest.overlayState.first())
-            .isEqualTo(Enabled(isRealSnapshot = false, thumbnail = thumbnailData.thumbnail))
-    }
+            assertThat(systemUnderTest.overlayState.first())
+                .isEqualTo(Enabled(isRealSnapshot = false, thumbnail = null))
+        }
 
     @Test
-    fun withThumbnail_FakeSnapshot_Enabled() = runTest {
-        recentsViewData.overlayEnabled.value = true
-        recentsViewData.settledFullyVisibleTaskIds.value = setOf(TASK_ID)
-        tasksRepository.seedTasks(listOf(task))
-        tasksRepository.seedThumbnailData(mapOf(TASK_ID to thumbnailData))
-        tasksRepository.setVisibleTasks(setOf(TASK_ID))
-        thumbnailData.isRealSnapshot = false
-        task.isLocked = false
+    fun withThumbnail_RealSnapshot_NotLocked_Enabled() =
+        testScope.runTest {
+            recentsViewData.overlayEnabled.value = true
+            recentsViewData.settledFullyVisibleTaskIds.value = setOf(TASK_ID)
+            tasksRepository.seedTasks(listOf(task))
+            tasksRepository.seedThumbnailData(mapOf(TASK_ID to thumbnailData))
+            tasksRepository.setVisibleTasks(setOf(TASK_ID))
+            thumbnailData.isRealSnapshot = true
+            task.isLocked = false
 
-        assertThat(systemUnderTest.overlayState.first())
-            .isEqualTo(Enabled(isRealSnapshot = false, thumbnail = thumbnailData.thumbnail))
-    }
-
-    @Test
-    fun getThumbnailMatrix_MissingThumbnail() = runTest {
-        val isRtl = true
-
-        whenever(mGetThumbnailPositionUseCase.run(TASK_ID, CANVAS_WIDTH, CANVAS_HEIGHT, isRtl))
-            .thenReturn(MissingThumbnail)
-
-        assertThat(systemUnderTest.getThumbnailPositionState(CANVAS_WIDTH, CANVAS_HEIGHT, isRtl))
-            .isEqualTo(ThumbnailPositionState(Matrix.IDENTITY_MATRIX, isRotated = false))
-    }
+            assertThat(systemUnderTest.overlayState.first())
+                .isEqualTo(Enabled(isRealSnapshot = true, thumbnail = thumbnailData.thumbnail))
+        }
 
     @Test
-    fun getThumbnailMatrix_MatrixScaling() = runTest {
-        val isRtl = true
-        val isRotated = true
+    fun withThumbnail_RealSnapshot_Locked_Enabled() =
+        testScope.runTest {
+            recentsViewData.overlayEnabled.value = true
+            recentsViewData.settledFullyVisibleTaskIds.value = setOf(TASK_ID)
+            tasksRepository.seedTasks(listOf(task))
+            tasksRepository.seedThumbnailData(mapOf(TASK_ID to thumbnailData))
+            tasksRepository.setVisibleTasks(setOf(TASK_ID))
+            thumbnailData.isRealSnapshot = true
+            task.isLocked = true
 
-        whenever(mGetThumbnailPositionUseCase.run(TASK_ID, CANVAS_WIDTH, CANVAS_HEIGHT, isRtl))
-            .thenReturn(MatrixScaling(MATRIX, isRotated))
+            assertThat(systemUnderTest.overlayState.first())
+                .isEqualTo(Enabled(isRealSnapshot = false, thumbnail = thumbnailData.thumbnail))
+        }
 
-        assertThat(systemUnderTest.getThumbnailPositionState(CANVAS_WIDTH, CANVAS_HEIGHT, isRtl))
-            .isEqualTo(ThumbnailPositionState(MATRIX, isRotated))
-    }
+    @Test
+    fun withThumbnail_FakeSnapshot_Enabled() =
+        testScope.runTest {
+            recentsViewData.overlayEnabled.value = true
+            recentsViewData.settledFullyVisibleTaskIds.value = setOf(TASK_ID)
+            tasksRepository.seedTasks(listOf(task))
+            tasksRepository.seedThumbnailData(mapOf(TASK_ID to thumbnailData))
+            tasksRepository.setVisibleTasks(setOf(TASK_ID))
+            thumbnailData.isRealSnapshot = false
+            task.isLocked = false
+
+            assertThat(systemUnderTest.overlayState.first())
+                .isEqualTo(Enabled(isRealSnapshot = false, thumbnail = thumbnailData.thumbnail))
+        }
+
+    @Test
+    fun getThumbnailMatrix_MissingThumbnail() =
+        testScope.runTest {
+            val isRtl = true
+
+            whenever(mGetThumbnailPositionUseCase.run(TASK_ID, CANVAS_WIDTH, CANVAS_HEIGHT, isRtl))
+                .thenReturn(MissingThumbnail)
+
+            assertThat(
+                    systemUnderTest.getThumbnailPositionState(CANVAS_WIDTH, CANVAS_HEIGHT, isRtl)
+                )
+                .isEqualTo(ThumbnailPositionState(Matrix.IDENTITY_MATRIX, isRotated = false))
+        }
+
+    @Test
+    fun getThumbnailMatrix_MatrixScaling() =
+        testScope.runTest {
+            val isRtl = true
+            val isRotated = true
+
+            whenever(mGetThumbnailPositionUseCase.run(TASK_ID, CANVAS_WIDTH, CANVAS_HEIGHT, isRtl))
+                .thenReturn(MatrixScaling(MATRIX, isRotated))
+
+            assertThat(
+                    systemUnderTest.getThumbnailPositionState(CANVAS_WIDTH, CANVAS_HEIGHT, isRtl)
+                )
+                .isEqualTo(ThumbnailPositionState(MATRIX, isRotated))
+        }
 
     companion object {
         const val TASK_ID = 0

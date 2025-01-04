@@ -176,7 +176,6 @@ class LauncherModel(
     fun onBroadcastIntent(intent: Intent) {
         if (DEBUG_RECEIVER || sDebugTracing) Log.d(TAG, "onReceive intent=$intent")
         when (intent.action) {
-            Intent.ACTION_LOCALE_CHANGED,
             LauncherAppState.ACTION_FORCE_ROLOAD ->
                 // If we have changed locale we need to clear out the labels in all apps/workspace.
                 forceReload()

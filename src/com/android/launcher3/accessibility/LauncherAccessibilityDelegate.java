@@ -199,6 +199,8 @@ public class LauncherAccessibilityDelegate extends BaseAccessibilityDelegate<Lau
                 host.requestFocus();
                 host.sendAccessibilityEvent(TYPE_VIEW_FOCUSED);
                 host.performAccessibilityAction(ACTION_ACCESSIBILITY_FOCUS, null);
+                AbstractFloatingView.closeOpenViews(mContext, /* animate= */ false,
+                        AbstractFloatingView.TYPE_WIDGET_RESIZE_FRAME);
             });
             return true;
         } else if (action == DEEP_SHORTCUTS) {

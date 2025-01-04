@@ -17,6 +17,7 @@
 package com.android.quickstep.recents.data
 
 import android.graphics.drawable.Drawable
+import android.graphics.drawable.ShapeDrawable
 import android.util.Log
 import com.android.launcher3.util.coroutines.DispatcherProvider
 import com.android.quickstep.recents.data.TaskVisualsChangedDelegate.TaskIconChangedCallback
@@ -25,16 +26,16 @@ import com.android.quickstep.task.thumbnail.data.TaskIconDataSource
 import com.android.quickstep.task.thumbnail.data.TaskThumbnailDataSource
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.ThumbnailData
-import kotlin.coroutines.resume
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
 class TasksRepository(
@@ -112,10 +113,11 @@ class TasksRepository(
         taskRequests[taskId] =
             Pair(
                 task.key,
-                recentsCoroutineScope.launch(dispatcherProvider.main) {
+                recentsCoroutineScope.launch(dispatcherProvider.background) {
                     Log.i(TAG, "requestTaskData: $taskId")
-                    fetchIcon(task)
-                    fetchThumbnail(task)
+                    val thumbnailFetchDeferred = async { fetchThumbnail(task) }
+                    val iconFetchDeferred = async { fetchIcon(task) }
+                    awaitAll(thumbnailFetchDeferred, iconFetchDeferred)
                 },
             )
     }
@@ -150,7 +152,7 @@ class TasksRepository(
             task.key,
             object : TaskIconChangedCallback {
                 override fun onTaskIconChanged() {
-                    recentsCoroutineScope.launch(dispatcherProvider.main) {
+                    recentsCoroutineScope.launch(dispatcherProvider.background) {
                         updateIcon(task.key.id, getIconFromDataSource(task))
                     }
                 }
@@ -168,7 +170,7 @@ class TasksRepository(
                 }
 
                 override fun onHighResLoadingStateChanged() {
-                    recentsCoroutineScope.launch(dispatcherProvider.main) {
+                    recentsCoroutineScope.launch(dispatcherProvider.background) {
                         updateThumbnail(task.key.id, getThumbnailFromDataSource(task))
                     }
                 }
@@ -191,34 +193,18 @@ class TasksRepository(
     }
 
     private suspend fun getThumbnailFromDataSource(task: Task) =
-        withContext(dispatcherProvider.main) {
-            suspendCancellableCoroutine { continuation ->
-                val cancellableTask =
-                    taskThumbnailDataSource.getThumbnailInBackground(task) {
-                        continuation.resume(it)
-                    }
-                continuation.invokeOnCancellation { cancellableTask?.cancel() }
-            }
-        }
+        withContext(dispatcherProvider.background) { taskThumbnailDataSource.getThumbnail(task) }
 
     private suspend fun getIconFromDataSource(task: Task) =
-        withContext(dispatcherProvider.main) {
-            suspendCancellableCoroutine { continuation ->
-                val cancellableTask =
-                    taskIconDataSource.getIconInBackground(task) { icon, contentDescription, title
-                        ->
-                        icon.constantState?.let {
-                            continuation.resume(
-                                IconData(it.newDrawable().mutate(), contentDescription, title)
-                            )
-                        }
-                    }
-                continuation.invokeOnCancellation { cancellableTask?.cancel() }
-            }
+        withContext(dispatcherProvider.background) {
+            val iconCacheEntry = taskIconDataSource.getIcon(task)
+            val icon = iconCacheEntry.icon.constantState?.newDrawable()?.mutate() ?: EMPTY_DRAWABLE
+            IconData(icon, iconCacheEntry.contentDescription, iconCacheEntry.title)
         }
 
     companion object {
         private const val TAG = "TasksRepository"
+        private val EMPTY_DRAWABLE = ShapeDrawable()
     }
 
     /** Helper class to support StateFlow emissions when using a Map with a MutableStateFlow. */

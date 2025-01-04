@@ -74,6 +74,7 @@ class TaskOverlayHelper(val task: Task, val overlay: TaskOverlayFactory.TaskOver
                 recentsViewData = RecentsDependencies.get(),
                 getThumbnailPositionUseCase = RecentsDependencies.get(),
                 recentTasksRepository = RecentsDependencies.get(),
+                dispatcherProvider = RecentsDependencies.get(),
             )
         viewModel.overlayState
             .onEach {

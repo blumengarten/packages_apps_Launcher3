@@ -34,8 +34,6 @@ import static com.android.launcher3.util.SettingsCache.PRIVATE_SPACE_HIDE_WHEN_L
 
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.pm.LauncherApps;
@@ -69,9 +67,6 @@ import com.android.launcher3.util.SimpleBroadcastReceiver;
 import com.android.launcher3.util.Themes;
 import com.android.launcher3.util.TraceHelper;
 import com.android.launcher3.widget.custom.CustomWidgetManager;
-
-import java.util.Locale;
-import java.util.Objects;
 
 public class LauncherAppState implements SafeCloseable {
 
@@ -128,22 +123,11 @@ public class LauncherAppState implements SafeCloseable {
 
         SimpleBroadcastReceiver modelChangeReceiver =
                 new SimpleBroadcastReceiver(UI_HELPER_EXECUTOR, mModel::onBroadcastIntent);
-        final Locale oldLocale = mContext.getResources().getConfiguration().locale;
         modelChangeReceiver.register(
                 mContext,
-                () -> {
-                    // if local has changed before receiver is registered on bg thread,
-                    // mModel needs to reload.
-                    Locale newLocale = mContext.getResources().getConfiguration().locale;
-                    if (!Objects.equals(oldLocale, newLocale)) {
-                        mModel.forceReload();
-                    }
-                },
-                Intent.ACTION_LOCALE_CHANGED,
                 ACTION_DEVICE_POLICY_RESOURCE_UPDATED);
         if (BuildConfig.IS_STUDIO_BUILD) {
-            mContext.registerReceiver(modelChangeReceiver, new IntentFilter(ACTION_FORCE_ROLOAD),
-                    RECEIVER_EXPORTED);
+            modelChangeReceiver.register(mContext, RECEIVER_EXPORTED, ACTION_FORCE_ROLOAD);
         }
         mOnTerminateCallback.add(() -> modelChangeReceiver.unregisterReceiverSafely(mContext));
 

@@ -53,7 +53,7 @@ public class BubbleBarInputConsumer implements InputConsumer {
     private final int mTouchSlop;
     private final PointF mDownPos = new PointF();
     private final PointF mLastPos = new PointF();
-    private final long mTimeForTap;
+    private final long mTimeForLongPress;
     private int mActivePointerId = INVALID_POINTER_ID;
 
     public BubbleBarInputConsumer(Context context, BubbleControllers bubbleControllers,
@@ -64,7 +64,7 @@ public class BubbleBarInputConsumer implements InputConsumer {
 
         mInputMonitorCompat = inputMonitorCompat;
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
-        mTimeForTap = ViewConfiguration.getTapTimeout();
+        mTimeForLongPress = ViewConfiguration.getLongPressTimeout();
     }
 
     @Override
@@ -110,7 +110,8 @@ public class BubbleBarInputConsumer implements InputConsumer {
             case MotionEvent.ACTION_UP:
                 boolean swipeUpOnBubbleHandle = mBubbleBarSwipeController != null
                         && mBubbleBarSwipeController.isSwipeGesture();
-                boolean isWithinTapTime = ev.getEventTime() - ev.getDownTime() <= mTimeForTap;
+                // Anything less than a long-press is a tap
+                boolean isWithinTapTime = ev.getEventTime() - ev.getDownTime() <= mTimeForLongPress;
                 if (isWithinTapTime && !swipeUpOnBubbleHandle && !mPassedTouchSlop
                         && mStashedOrCollapsedOnDown) {
                     // Taps on the handle / collapsed state should open the bar

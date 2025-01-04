@@ -43,7 +43,6 @@ import dagger.BindsInstance
 import dagger.Component
 import junit.framework.Assert.assertFalse
 import junit.framework.Assert.assertTrue
-import kotlin.math.min
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -58,6 +57,7 @@ import org.mockito.kotlin.spy
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.stubbing.Answer
+import kotlin.math.min
 
 /** Unit tests for {@link DisplayController} */
 @SmallTest
@@ -97,9 +97,10 @@ class DisplayControllerTest {
     @Before
     fun setUp() {
         context.initDaggerComponent(
-            DaggerDisplayControllerTestComponent.builder().bindWMProxy(windowManagerProxy)
+            DaggerDisplayControllerTestComponent.builder()
+                .bindWMProxy(windowManagerProxy)
+                .bindLauncherPrefs(launcherPrefs)
         )
-        context.putObject(LauncherPrefs.INSTANCE, launcherPrefs)
         displayManager = context.spyService(DisplayManager::class.java)
 
         whenever(launcherPrefs.get(TASKBAR_PINNING)).thenReturn(false)
@@ -242,6 +243,8 @@ interface DisplayControllerTestComponent : LauncherAppComponent {
     @Component.Builder
     interface Builder : LauncherAppComponent.Builder {
         @BindsInstance fun bindWMProxy(proxy: MyWmProxy): Builder
+
+        @BindsInstance fun bindLauncherPrefs(prefs: LauncherPrefs): Builder
 
         override fun build(): DisplayControllerTestComponent
     }

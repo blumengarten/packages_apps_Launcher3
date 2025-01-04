@@ -17,7 +17,7 @@
 package com.android.quickstep.recents.data
 
 import android.os.UserHandle
-import com.android.quickstep.TaskThumbnailCache.HighResLoadingState.HighResLoadingStateChangedCallback
+import com.android.quickstep.HighResLoadingState.HighResLoadingStateChangedCallback
 import com.android.quickstep.recents.data.TaskVisualsChangedDelegate.TaskIconChangedCallback
 import com.android.quickstep.recents.data.TaskVisualsChangedDelegate.TaskThumbnailChangedCallback
 import com.android.quickstep.util.TaskVisualsChangeListener

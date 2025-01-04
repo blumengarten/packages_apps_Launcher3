@@ -245,9 +245,11 @@ class BubbleBarViewAnimatorTest {
             animator.onStashStateChangingWhileAnimating()
         }
 
-        // The physics animation test util posts the cancellation to the looper thread, so we have
-        // to wait again and let it finish.
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+        // wait for the animation to cancel
+        PhysicsAnimatorTestUtils.blockUntilAnimationsEnd(
+            handleAnimator,
+            DynamicAnimation.TRANSLATION_Y,
+        )
 
         // verify that the hide animation was canceled
         assertThat(animatorScheduler.delayedBlock).isNull()

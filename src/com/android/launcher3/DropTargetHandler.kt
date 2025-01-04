@@ -66,6 +66,11 @@ class DropTargetHandler(launcher: Launcher) {
 
     fun onDeleteComplete(item: ItemInfo) {
         removeItemAndStripEmptyScreens(null /* view */, item)
+        AbstractFloatingView.closeOpenViews(
+            mLauncher,
+            false,
+            AbstractFloatingView.TYPE_WIDGET_RESIZE_FRAME,
+        )
         var pageItem: ItemInfo = item
         if (item.container <= 0) {
             val v = mLauncher.workspace.getHomescreenIconByItemId(item.container)

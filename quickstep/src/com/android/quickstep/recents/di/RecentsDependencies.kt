@@ -191,6 +191,7 @@ class RecentsDependencies private constructor(private val appContext: Context) {
                         recentsViewData = inject(),
                         recentTasksRepository = inject(),
                         getThumbnailPositionUseCase = inject(),
+                        dispatcherProvider = inject(),
                     )
                 }
                 GetThumbnailUseCase::class.java -> GetThumbnailUseCase(taskRepository = inject())

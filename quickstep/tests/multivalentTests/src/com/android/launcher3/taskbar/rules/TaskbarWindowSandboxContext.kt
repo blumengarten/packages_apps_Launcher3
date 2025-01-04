@@ -23,7 +23,6 @@ import android.hardware.display.VirtualDisplay
 import android.view.Display.DEFAULT_DISPLAY
 import androidx.test.core.app.ApplicationProvider
 import com.android.launcher3.FakeLauncherPrefs
-import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.dagger.LauncherAppComponent
 import com.android.launcher3.dagger.LauncherAppModule
 import com.android.launcher3.dagger.LauncherAppSingleton
@@ -74,8 +73,6 @@ private constructor(
                         .bindSettingsCache(settingsCacheSandbox.cache)
                 componentBinder?.invoke(context, builder)
                 base.initDaggerComponent(builder)
-
-                putObject(LauncherPrefs.INSTANCE, FakeLauncherPrefs(context))
             }
         }
 
@@ -119,6 +116,9 @@ private constructor(
 @LauncherAppSingleton
 @Component(modules = [LauncherAppModule::class])
 interface TaskbarSandboxComponent : LauncherAppComponent {
+
+    override fun getLauncherPrefs(): FakeLauncherPrefs
+
     @Component.Builder
     interface Builder : LauncherAppComponent.Builder {
         @BindsInstance fun bindSystemUiProxy(proxy: SystemUiProxy): Builder
