@@ -82,8 +82,7 @@
     <string name="all_apps_no_search_results" msgid="3200346862396363786">"\"<xliff:g id="QUERY">%1$s</xliff:g>\" ସହିତ ମେଳ ହେଉଥିବା କୌଣସି ଆପ୍‌ ମିଳିଲା ନାହିଁ"</string>
     <string name="label_application" msgid="8531721983832654978">"ଆପ୍"</string>
     <string name="all_apps_label" msgid="5015784846527570951">"ସବୁ ଆପ"</string>
-    <!-- no translation found for all_apps_list_label (5106226764073070906) -->
-    <skip />
+    <string name="all_apps_list_label" msgid="5106226764073070906">"ଆପ୍ସ ତାଲିକା"</string>
     <string name="notifications_header" msgid="1404149926117359025">"ବିଜ୍ଞପ୍ତି"</string>
     <string name="long_press_shortcut_to_add" msgid="5405328730817637737">"ଏକ ସର୍ଟକଟକୁ ମୁଭ୍ କରିବା ପାଇଁ ସ୍ପର୍ଶ କରି ଧରି ରଖନ୍ତୁ।"</string>
     <string name="long_accessible_way_to_add_shortcut" msgid="2199537273817090740">"ଏକ ସର୍ଟକଟକୁ ମୁଭ୍ କରିବା ପାଇଁ ଦୁଇଥର-ଟାପ୍ କରି ଧରି ରଖନ୍ତୁ କିମ୍ବା କଷ୍ଟମ୍ କାର୍ଯ୍ୟଗୁଡ଼ିକୁ ବ୍ୟବହାର କରନ୍ତୁ।"</string>
@@ -126,6 +125,8 @@
     <string name="folder_renamed" msgid="1794088362165669656">"ଫୋଲ୍ଡରର ନାମ <xliff:g id="NAME">%1$s</xliff:g>କୁ ବଦଳାଗଲା"</string>
     <string name="folder_name_format_exact" msgid="8626242716117004803">"ଫୋଲ୍ଡର୍: <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="SIZE">%2$d</xliff:g> ଆଇଟମଗୁଡ଼ିକ"</string>
     <string name="folder_name_format_overflow" msgid="4270108890534995199">"ଫୋଲ୍ଡର୍: <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="SIZE">%2$d</xliff:g> କିମ୍ବା ଅଧିକ ଆଇଟମ୍"</string>
+    <!-- no translation found for unnamed_folder (2420192029474044442) -->
+    <skip />
     <string name="app_pair_name_format" msgid="8134106404716224054">"ଆପ ପେୟାର: <xliff:g id="APP1">%1$s</xliff:g> ଏବଂ <xliff:g id="APP2">%2$s</xliff:g>"</string>
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"ୱାଲପେପର ଏବଂ ଷ୍ଟାଇଲ"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"ହୋମ ସ୍କ୍ରିନକୁ ଏଡିଟ କରନ୍ତୁ"</string>

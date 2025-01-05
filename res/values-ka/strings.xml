@@ -82,8 +82,7 @@
     <string name="all_apps_no_search_results" msgid="3200346862396363786">"„<xliff:g id="QUERY">%1$s</xliff:g>“-ის თანხვედრი აპები არ მოიძებნა"</string>
     <string name="label_application" msgid="8531721983832654978">"აპი"</string>
     <string name="all_apps_label" msgid="5015784846527570951">"ყველა აპი"</string>
-    <!-- no translation found for all_apps_list_label (5106226764073070906) -->
-    <skip />
+    <string name="all_apps_list_label" msgid="5106226764073070906">"აპების სია"</string>
     <string name="notifications_header" msgid="1404149926117359025">"შეტყობინებები"</string>
     <string name="long_press_shortcut_to_add" msgid="5405328730817637737">"შეხებით აირჩიეთ და გეჭიროთ მალსახმობის გადასაადგილებლად."</string>
     <string name="long_accessible_way_to_add_shortcut" msgid="2199537273817090740">"ორმაგი შეხებით აირჩიეთ და გეჭიროთ მალსახმობის გადასაადგილებლად ან მორგებული მოქმედებების გამოსაყენებლად."</string>
@@ -126,6 +125,8 @@
     <string name="folder_renamed" msgid="1794088362165669656">"საქაღალდეს შეეცვალა სახელი „<xliff:g id="NAME">%1$s</xliff:g>“-ად"</string>
     <string name="folder_name_format_exact" msgid="8626242716117004803">"საქაღალდე: <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="SIZE">%2$d</xliff:g> ერთეული"</string>
     <string name="folder_name_format_overflow" msgid="4270108890534995199">"საქაღალდე: <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="SIZE">%2$d</xliff:g> ან მეტი ერთეული"</string>
+    <!-- no translation found for unnamed_folder (2420192029474044442) -->
+    <skip />
     <string name="app_pair_name_format" msgid="8134106404716224054">"აპთა წყვილი: <xliff:g id="APP1">%1$s</xliff:g> და <xliff:g id="APP2">%2$s</xliff:g>"</string>
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"ფონი და სტილი"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"მთავარი ეკრანის რედაქტირება"</string>

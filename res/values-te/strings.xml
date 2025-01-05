@@ -82,8 +82,7 @@
     <string name="all_apps_no_search_results" msgid="3200346862396363786">"\"<xliff:g id="QUERY">%1$s</xliff:g>\"కి మ్యాచ్ అయ్యే అప్లికేషన్‌లేవీ కనుగొనబడలేదు"</string>
     <string name="label_application" msgid="8531721983832654978">"యాప్"</string>
     <string name="all_apps_label" msgid="5015784846527570951">"అన్ని యాప్‌లు"</string>
-    <!-- no translation found for all_apps_list_label (5106226764073070906) -->
-    <skip />
+    <string name="all_apps_list_label" msgid="5106226764073070906">"యాప్‌ల లిస్ట్"</string>
     <string name="notifications_header" msgid="1404149926117359025">"నోటిఫికేషన్‌లు"</string>
     <string name="long_press_shortcut_to_add" msgid="5405328730817637737">"షార్ట్‌కట్‌ను తరలించడానికి తాకి &amp; నొక్కి ఉంచు."</string>
     <string name="long_accessible_way_to_add_shortcut" msgid="2199537273817090740">"షార్ట్‌కట్‌ను తరలించడానికి లేదా అనుకూల చర్యలను ఉపయోగించడానికి రెండుసార్లు నొక్కండి &amp; హోల్డ్ చేయండి."</string>
@@ -126,6 +125,8 @@
     <string name="folder_renamed" msgid="1794088362165669656">"ఫోల్డర్ పేరు <xliff:g id="NAME">%1$s</xliff:g>గా మార్చబడింది"</string>
     <string name="folder_name_format_exact" msgid="8626242716117004803">"ఫోల్డర్: <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="SIZE">%2$d</xliff:g> ఐటెమ్‌లు"</string>
     <string name="folder_name_format_overflow" msgid="4270108890534995199">"ఫోల్డర్: <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="SIZE">%2$d</xliff:g> లేదా అంతకంటే ఎక్కువ ఐటెమ్‌లు"</string>
+    <!-- no translation found for unnamed_folder (2420192029474044442) -->
+    <skip />
     <string name="app_pair_name_format" msgid="8134106404716224054">"యాప్ పెయిర్: <xliff:g id="APP1">%1$s</xliff:g>, <xliff:g id="APP2">%2$s</xliff:g>"</string>
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"వాల్‌పేపర్ &amp; స్టయిల్"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"మొదటి స్క్రీన్‌ను ఎడిట్ చేయండి"</string>
