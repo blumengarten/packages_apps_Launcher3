@@ -89,7 +89,9 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         viewAttachedScope =
-            CoroutineScope(SupervisorJob() + Dispatchers.Main + CoroutineName("TaskThumbnailView"))
+            CoroutineScope(
+                SupervisorJob() + Dispatchers.Main.immediate + CoroutineName("TaskThumbnailView")
+            )
         viewData = RecentsDependencies.get(this)
         updateViewDataValues()
         viewModel = RecentsDependencies.get(this)

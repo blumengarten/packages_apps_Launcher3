@@ -278,6 +278,10 @@ public class LauncherBackAnimationController {
 
     private void onCancelFinished() {
         customizeStatusBarAppearance(false);
+        if (Flags.predictiveBackToHomePolish() && !mLauncher.getWorkspace().isOverlayShown()
+                && !mLauncher.isInState(LauncherState.ALL_APPS)) {
+            setLauncherScale(ScalingWorkspaceRevealAnim.MAX_SIZE);
+        }
         finishAnimation();
     }
 
@@ -538,12 +542,10 @@ public class LauncherBackAnimationController {
         if (mScrimLayer != null) {
             removeScrimLayer();
         }
-        if (Flags.predictiveBackToHomePolish() && !mLauncher.getWorkspace().isOverlayShown()
+        if (Flags.predictiveBackToHomePolish() && Flags.predictiveBackToHomeBlur()
+                && !mLauncher.getWorkspace().isOverlayShown()
                 && !mLauncher.isInState(LauncherState.ALL_APPS)) {
-            setLauncherScale(ScalingWorkspaceRevealAnim.MAX_SIZE);
-            if (Flags.predictiveBackToHomeBlur()) {
-                mLauncher.getDepthController().pauseBlursOnWindows(false);
-            }
+            mLauncher.getDepthController().pauseBlursOnWindows(false);
         }
         mLastBlurRadius = 0;
     }

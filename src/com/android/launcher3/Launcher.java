@@ -630,6 +630,10 @@ public class Launcher extends StatefulActivity<LauncherState>
         return new ColdRebootStartupLatencyLogger();
     }
 
+    @NonNull View getAccessibilityActionView() {
+        return findViewById(R.id.accessibility_action_view);
+    }
+
     /**
      * Provide {@link OnBackAnimationCallback} in below order:
      * <ol>

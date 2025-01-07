@@ -70,6 +70,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.core.view.ViewCompat;
 
 import com.android.app.animation.Interpolators;
 import com.android.launcher3.accessibility.AccessibleDragListenerAdapter;
@@ -303,6 +304,8 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
     private final StatsLogManager mStatsLogManager;
 
     private final MSDLPlayerWrapper mMSDLPlayerWrapper;
+    @Nullable
+    private DragController.DragListener mAccessibilityDragListener;
 
     /**
      * Used to inflate the Workspace from XML.
@@ -512,6 +515,9 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
             }
         }
 
+        if (mAccessibilityDragListener != null) {
+            mAccessibilityDragListener.onDragStart(dragObject, options);
+        }
         if (!mLauncher.isInState(EDIT_MODE)) {
             mLauncher.getStateManager().goToState(SPRING_LOADED);
         }
@@ -548,6 +554,9 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
             }
         });
 
+        if (mAccessibilityDragListener != null) {
+            mAccessibilityDragListener.onDragEnd();
+        }
         mDragInfo = null;
         mDragSourceInternal = null;
     }
@@ -1656,7 +1665,7 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         child.setVisibility(INVISIBLE);
 
         if (options.isAccessibleDrag) {
-            mDragController.addDragListener(
+            mAccessibilityDragListener =
                     new AccessibleDragListenerAdapter(this, WorkspaceAccessibilityHelper::new) {
                         @Override
                         protected void enableAccessibleDrag(boolean enable,
@@ -1669,7 +1678,7 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
                                         IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
                             }
                         }
-                    });
+                    };
         }
 
         beginDragShared(child, this, options);
@@ -3519,8 +3528,15 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
 
     @Override
     protected boolean canAnnouncePageDescription() {
-        // b/383247157: Disable disruptive home screen page announcement
-        return false;
+        return Float.compare(mOverlayProgress, 0f) == 0;
+    }
+
+    @Override
+    protected void announcePageForAccessibility() {
+        // Talkback focuses on AccessibilityActionView by default, so we need to modify the state
+        // description there in order for the change in page scroll to be announced.
+        ViewCompat.setStateDescription(mLauncher.getAccessibilityActionView(),
+                getCurrentPageDescription());
     }
 
     @Override

@@ -44,10 +44,12 @@ class RecentsViewModelHelper(
         // Update recentsViewModel and apply the thumbnailOverride ASAP, before waiting inside
         // viewAttachedScope.
         recentsViewModel.setRunningTaskShowScreenshot(true)
-        recentsCoroutineScope.launch(dispatcherProvider.main) {
+        recentsCoroutineScope.launch(dispatcherProvider.background) {
             recentsViewModel.waitForRunningTaskShowScreenshotToUpdate()
             recentsViewModel.waitForThumbnailsToUpdate(updatedThumbnails)
-            withContext(Dispatchers.Main) { ViewUtils.postFrameDrawn(taskView, onFinishRunnable) }
+            withContext(Dispatchers.Main.immediate) {
+                ViewUtils.postFrameDrawn(taskView, onFinishRunnable)
+            }
         }
     }
 }
