@@ -21,8 +21,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherPrefs.Companion.ALLOW_ROTATION
-import com.android.launcher3.LauncherPrefs.Companion.THEMED_ICONS
 import com.android.launcher3.SessionCommitReceiver.ADD_ICON_PREFERENCE_KEY
+import com.android.launcher3.graphics.ThemeManager
 import com.android.launcher3.logging.InstanceId
 import com.android.launcher3.logging.StatsLogManager
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_ADD_NEW_APPS_TO_HOME_SCREEN_ENABLED
@@ -66,16 +66,19 @@ class SettingsChangeLoggerTest {
     private var mDefaultThemedIcons = false
     private var mDefaultAllowRotation = false
 
+    private val themeManager: ThemeManager
+        get() = ThemeManager.INSTANCE.get(mContext)
+
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
 
         whenever(mStatsLogManager.logger()).doReturn(mMockLogger)
         whenever(mStatsLogManager.logger().withInstanceId(any())).doReturn(mMockLogger)
-        mDefaultThemedIcons = LauncherPrefs.get(mContext).get(THEMED_ICONS)
+        mDefaultThemedIcons = themeManager.isMonoThemeEnabled
         mDefaultAllowRotation = LauncherPrefs.get(mContext).get(ALLOW_ROTATION)
         // To match the default value of THEMED_ICONS
-        LauncherPrefs.get(mContext).put(THEMED_ICONS, false)
+        themeManager.isMonoThemeEnabled = false
         // To match the default value of ALLOW_ROTATION
         LauncherPrefs.get(mContext).put(item = ALLOW_ROTATION, value = false)
 
@@ -84,7 +87,7 @@ class SettingsChangeLoggerTest {
 
     @After
     fun tearDown() {
-        LauncherPrefs.get(mContext).put(THEMED_ICONS, mDefaultThemedIcons)
+        themeManager.isMonoThemeEnabled = mDefaultThemedIcons
         LauncherPrefs.get(mContext).put(ALLOW_ROTATION, mDefaultAllowRotation)
     }
 

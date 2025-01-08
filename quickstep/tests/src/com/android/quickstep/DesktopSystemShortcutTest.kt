@@ -18,6 +18,7 @@ package com.android.quickstep
 
 import android.content.ComponentName
 import android.content.Intent
+import androidx.test.platform.app.InstrumentationRegistry
 import com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession
 import com.android.dx.mockito.inline.extended.StaticMockitoSession
 import com.android.launcher3.AbstractFloatingView
@@ -113,6 +114,8 @@ class DesktopSystemShortcutTest {
         whenever(launcher.statsLogManager).thenReturn(statsLogManager)
         whenever(statsLogManager.logger()).thenReturn(statsLogger)
         whenever(statsLogger.withItemInfo(any())).thenReturn(statsLogger)
+        whenever(taskView.context)
+            .thenReturn(InstrumentationRegistry.getInstrumentation().targetContext)
         whenever(recentsView.moveTaskToDesktop(any(), any(), any())).thenAnswer {
             val successCallback = it.getArgument<Runnable>(2)
             successCallback.run()

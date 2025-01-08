@@ -424,18 +424,6 @@ public class TouchInteractionService extends Service {
             return tis.mTaskbarManager;
         }
 
-        /**
-         * Returns the {@link DesktopVisibilityController}
-         * <p>
-         * Returns {@code null} if TouchInteractionService is not connected
-         */
-        @Nullable
-        public DesktopVisibilityController getDesktopVisibilityController() {
-            TouchInteractionService tis = mTis.get();
-            if (tis == null) return null;
-            return tis.mDesktopVisibilityController;
-        }
-
         @VisibleForTesting
         public void injectFakeTrackpadForTesting() {
             TouchInteractionService tis = mTis.get();
@@ -554,7 +542,6 @@ public class TouchInteractionService extends Service {
 
     private NavigationMode mGestureStartNavMode = null;
 
-    private DesktopVisibilityController mDesktopVisibilityController;
     private DesktopAppLaunchTransitionManager mDesktopAppLaunchTransitionManager;
 
     @Override
@@ -578,9 +565,7 @@ public class TouchInteractionService extends Service {
             initInputMonitor("onTrackpadConnected()");
         });
 
-        mDesktopVisibilityController = new DesktopVisibilityController(this);
-        mTaskbarManager = new TaskbarManager(
-                this, mAllAppsActionManager, mNavCallbacks, mDesktopVisibilityController);
+        mTaskbarManager = new TaskbarManager(this, mAllAppsActionManager, mNavCallbacks);
         mDesktopAppLaunchTransitionManager =
                 new DesktopAppLaunchTransitionManager(this, SystemUiProxy.INSTANCE.get(this));
         mDesktopAppLaunchTransitionManager.registerTransitions();
@@ -741,7 +726,6 @@ public class TouchInteractionService extends Service {
             mDesktopAppLaunchTransitionManager.unregisterTransitions();
         }
         mDesktopAppLaunchTransitionManager = null;
-        mDesktopVisibilityController.onDestroy();
 
         LockedUserState.get(this).removeOnUserUnlockedRunnable(mUserUnlockedRunnable);
         ScreenOnTracker.INSTANCE.get(this).removeListener(mScreenOnListener);
@@ -1164,7 +1148,7 @@ public class TouchInteractionService extends Service {
             createdOverviewContainer.getDeviceProfile().dump(this, "", pw);
         }
         mTaskbarManager.dumpLogs("", pw);
-        mDesktopVisibilityController.dumpLogs("", pw);
+        DesktopVisibilityController.INSTANCE.get(this).dumpLogs("", pw);
         pw.println("ContextualSearchStateManager:");
         ContextualSearchStateManager.INSTANCE.get(this).dump("\t", pw);
         SystemUiProxy.INSTANCE.get(this).dump(pw);

@@ -39,6 +39,7 @@ import androidx.annotation.Nullable;
 import com.android.launcher3.LauncherState;
 import com.android.launcher3.anim.AnimatorPlaybackController;
 import com.android.launcher3.model.data.ItemInfo;
+import com.android.launcher3.statehandlers.DesktopVisibilityController;
 import com.android.launcher3.states.StateAnimationConfig;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.MSDLPlayerWrapper;
@@ -105,9 +106,8 @@ public class LauncherSwipeHandlerV2 extends AbsSwipeUpHandler<
         boolean canUseWorkspaceView = workspaceView != null
                 && workspaceView.isAttachedToWindow()
                 && workspaceView.getHeight() > 0
-                && (mContainer.getDesktopVisibilityController() == null
-                || !mContainer.getDesktopVisibilityController()
-                    .areDesktopTasksVisibleAndNotInOverview());
+                && !DesktopVisibilityController.INSTANCE.get(mContainer)
+                        .areDesktopTasksVisibleAndNotInOverview();
 
         mContainer.getRootView().setForceHideBackArrow(true);
 

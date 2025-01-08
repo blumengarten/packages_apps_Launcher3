@@ -27,10 +27,8 @@ import android.view.WindowManager;
 import android.view.WindowMetrics;
 
 import com.android.internal.policy.SystemBarUtils;
-import com.android.launcher3.dagger.ApplicationContext;
 import com.android.launcher3.dagger.LauncherAppSingleton;
 import com.android.launcher3.statehandlers.DesktopVisibilityController;
-import com.android.launcher3.util.DaggerSingletonTracker;
 import com.android.launcher3.util.WindowBounds;
 import com.android.launcher3.util.window.CachedDisplayInfo;
 import com.android.launcher3.util.window.WindowManagerProxy;
@@ -48,14 +46,13 @@ import javax.inject.Inject;
 @LauncherAppSingleton
 public class SystemWindowManagerProxy extends WindowManagerProxy {
 
-    private final TISBindHelper mTISBindHelper;
+    private final DesktopVisibilityController mDesktopVisibilityController;
+
 
     @Inject
-    public SystemWindowManagerProxy(@ApplicationContext Context context,
-            DaggerSingletonTracker lifecycleTracker) {
+    public SystemWindowManagerProxy(DesktopVisibilityController desktopVisibilityController) {
         super(true);
-        mTISBindHelper = new TISBindHelper(context, binder -> {});
-        lifecycleTracker.addCloseable(mTISBindHelper::onDestroy);
+        mDesktopVisibilityController = desktopVisibilityController;
     }
 
     @Override
@@ -65,10 +62,18 @@ public class SystemWindowManagerProxy extends WindowManagerProxy {
     }
 
     @Override
+    public void registerDesktopVisibilityListener(DesktopVisibilityListener listener) {
+        mDesktopVisibilityController.registerDesktopVisibilityListener(listener);
+    }
+
+    @Override
+    public void unregisterDesktopVisibilityListener(DesktopVisibilityListener listener) {
+        mDesktopVisibilityController.unregisterDesktopVisibilityListener(listener);
+    }
+
+    @Override
     public boolean isInDesktopMode() {
-        DesktopVisibilityController desktopController =
-                mTISBindHelper.getDesktopVisibilityController();
-        return desktopController != null && desktopController.areDesktopTasksVisible();
+        return mDesktopVisibilityController.areDesktopTasksVisible();
     }
 
     @Override

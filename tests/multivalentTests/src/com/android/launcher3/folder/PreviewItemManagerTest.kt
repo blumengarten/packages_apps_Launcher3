@@ -22,9 +22,8 @@ import android.os.Process
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.android.launcher3.LauncherAppState
-import com.android.launcher3.LauncherPrefs.Companion.THEMED_ICONS
-import com.android.launcher3.LauncherPrefs.Companion.get
 import com.android.launcher3.graphics.PreloadIconDrawable
+import com.android.launcher3.graphics.ThemeManager
 import com.android.launcher3.icons.BitmapInfo
 import com.android.launcher3.icons.FastBitmapDrawable
 import com.android.launcher3.icons.IconCache
@@ -70,6 +69,9 @@ class PreviewItemManagerTest {
     private lateinit var iconCache: IconCache
 
     private var defaultThemedIcons = false
+
+    private val themeManager: ThemeManager
+        get() = ThemeManager.INSTANCE.get(context)
 
     @Before
     fun setup() {
@@ -126,19 +128,19 @@ class PreviewItemManagerTest {
             folderItems[3].bitmap.withFlags(profileFlagOp(UserIconInfo.TYPE_WORK))
         folderItems[3].bitmap.themedBitmap = null
 
-        defaultThemedIcons = get(context).get(THEMED_ICONS)
+        defaultThemedIcons = themeManager.isMonoThemeEnabled
     }
 
     @After
     @Throws(Exception::class)
     fun tearDown() {
-        get(context).put(THEMED_ICONS, defaultThemedIcons)
+        themeManager.isMonoThemeEnabled = defaultThemedIcons
         modelHelper.destroy()
     }
 
     @Test
     fun checkThemedIconWithThemingOn_iconShouldBeThemed() {
-        get(context).put(THEMED_ICONS, true)
+        themeManager.isMonoThemeEnabled = true
         val drawingParams = PreviewItemDrawingParams(0f, 0f, 0f)
 
         previewItemManager.setDrawable(drawingParams, folderItems[0])
@@ -148,7 +150,7 @@ class PreviewItemManagerTest {
 
     @Test
     fun checkThemedIconWithThemingOff_iconShouldNotBeThemed() {
-        get(context).put(THEMED_ICONS, false)
+        themeManager.isMonoThemeEnabled = false
         val drawingParams = PreviewItemDrawingParams(0f, 0f, 0f)
 
         previewItemManager.setDrawable(drawingParams, folderItems[0])
@@ -158,7 +160,7 @@ class PreviewItemManagerTest {
 
     @Test
     fun checkUnthemedIconWithThemingOn_iconShouldNotBeThemed() {
-        get(context).put(THEMED_ICONS, true)
+        themeManager.isMonoThemeEnabled = true
         val drawingParams = PreviewItemDrawingParams(0f, 0f, 0f)
 
         previewItemManager.setDrawable(drawingParams, folderItems[1])
@@ -168,7 +170,7 @@ class PreviewItemManagerTest {
 
     @Test
     fun checkUnthemedIconWithThemingOff_iconShouldNotBeThemed() {
-        get(context).put(THEMED_ICONS, false)
+        themeManager.isMonoThemeEnabled = false
         val drawingParams = PreviewItemDrawingParams(0f, 0f, 0f)
 
         previewItemManager.setDrawable(drawingParams, folderItems[1])
@@ -178,7 +180,7 @@ class PreviewItemManagerTest {
 
     @Test
     fun checkThemedIconWithBadgeWithThemingOn_iconAndBadgeShouldBeThemed() {
-        get(context).put(THEMED_ICONS, true)
+        themeManager.isMonoThemeEnabled = true
         val drawingParams = PreviewItemDrawingParams(0f, 0f, 0f)
 
         previewItemManager.setDrawable(drawingParams, folderItems[2])
@@ -191,7 +193,7 @@ class PreviewItemManagerTest {
 
     @Test
     fun checkUnthemedIconWithBadgeWithThemingOn_badgeShouldBeThemed() {
-        get(context).put(THEMED_ICONS, true)
+        themeManager.isMonoThemeEnabled = true
         val drawingParams = PreviewItemDrawingParams(0f, 0f, 0f)
 
         previewItemManager.setDrawable(drawingParams, folderItems[3])
@@ -204,7 +206,7 @@ class PreviewItemManagerTest {
 
     @Test
     fun checkUnthemedIconWithBadgeWithThemingOff_iconAndBadgeShouldNotBeThemed() {
-        get(context).put(THEMED_ICONS, false)
+        themeManager.isMonoThemeEnabled = false
         val drawingParams = PreviewItemDrawingParams(0f, 0f, 0f)
 
         previewItemManager.setDrawable(drawingParams, folderItems[3])

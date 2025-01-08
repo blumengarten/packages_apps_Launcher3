@@ -485,4 +485,21 @@ public class WindowManagerProxy {
         return new Rect(cutout.getSafeInsetLeft(), cutout.getSafeInsetTop(),
                 cutout.getSafeInsetRight(), cutout.getSafeInsetBottom());
     }
+
+    /** Registers a listener for Taskbar changes in Desktop Mode.  */
+    public void registerDesktopVisibilityListener(DesktopVisibilityListener listener) { }
+
+    /** Removes a previously registered listener for Taskbar changes in Desktop Mode.  */
+    public void unregisterDesktopVisibilityListener(DesktopVisibilityListener listener) { }
+
+    /** A listener for when the user enters/exits Desktop Mode.  */
+    public interface DesktopVisibilityListener {
+        /**
+         * Callback for when the user enters or exits Desktop Mode
+         *
+         * @param visible whether Desktop Mode is now visible
+         */
+        void onDesktopVisibilityChanged(boolean visible);
+    }
+
 }

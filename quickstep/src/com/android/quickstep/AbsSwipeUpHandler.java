@@ -43,6 +43,8 @@ import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCH
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_QUICKSWITCH_EXIT_DESKTOP_MODE;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_QUICKSWITCH_LEFT;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_QUICKSWITCH_RIGHT;
+import static com.android.launcher3.testing.shared.TestProtocol.NORMAL_STATE_ORDINAL;
+import static com.android.launcher3.testing.shared.TestProtocol.OVERVIEW_STATE_ORDINAL;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 import static com.android.launcher3.util.SystemUiController.UI_STATE_FULLSCREEN_TASK;
@@ -114,6 +116,7 @@ import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.anim.AnimationSuccessListener;
 import com.android.launcher3.anim.AnimatorPlaybackController;
+import com.android.launcher3.compat.AccessibilityManagerCompat;
 import com.android.launcher3.contextualeducation.ContextualEduStatsManager;
 import com.android.launcher3.dragndrop.DragView;
 import com.android.launcher3.logging.StatsLogManager;
@@ -170,8 +173,6 @@ import com.android.wm.shell.shared.startingsurface.SplashScreenExitAnimationUtil
 
 import com.google.android.msdl.data.model.MSDLToken;
 
-import kotlin.Unit;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -180,6 +181,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Consumer;
+
+import kotlin.Unit;
 
 /**
  * Handles the navigation gestures when Launcher is the default home activity.
@@ -1185,11 +1188,13 @@ public abstract class AbsSwipeUpHandler<
         if (endTarget != HOME) {
             InteractionJankMonitorWrapper.cancel(Cuj.CUJ_LAUNCHER_APP_CLOSE_TO_HOME);
         } else {
+            AccessibilityManagerCompat.sendStateEventToTest(mContext, NORMAL_STATE_ORDINAL);
             InteractionJankMonitorWrapper.end(Cuj.CUJ_LAUNCHER_APP_CLOSE_TO_HOME);
         }
         if (endTarget != RECENTS) {
             InteractionJankMonitorWrapper.cancel(Cuj.CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS);
         } else {
+            AccessibilityManagerCompat.sendStateEventToTest(mContext, OVERVIEW_STATE_ORDINAL);
             InteractionJankMonitorWrapper.end(Cuj.CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS);
         }
 

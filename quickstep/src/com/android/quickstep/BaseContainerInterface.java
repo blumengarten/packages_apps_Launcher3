@@ -179,13 +179,6 @@ public abstract class BaseContainerInterface<STATE_TYPE extends BaseState<STATE_
         mOnInitBackgroundStateUICallback = callback;
     }
 
-    @Nullable
-    public DesktopVisibilityController getDesktopVisibilityController() {
-        CONTAINER_TYPE container = getCreatedContainer();
-
-        return container == null ? null : container.getDesktopVisibilityController();
-    }
-
     /**
      * Called when the gesture ends and the animation starts towards the given target. Used to add
      * an optional additional animation with the same duration.
@@ -241,9 +234,8 @@ public abstract class BaseContainerInterface<STATE_TYPE extends BaseState<STATE_
         if (endTarget != null) {
             // We were on our way to this state when we got canceled, end there instead.
             startState = stateFromGestureEndTarget(endTarget);
-            DesktopVisibilityController controller = getDesktopVisibilityController();
-            if (controller != null && controller.areDesktopTasksVisibleAndNotInOverview()
-                    && endTarget == LAST_TASK) {
+            if (DesktopVisibilityController.INSTANCE.get(recentsView.getContext())
+                    .areDesktopTasksVisibleAndNotInOverview() && endTarget == LAST_TASK) {
                 // When we are cancelling the transition and going back to last task, move to
                 // rest state instead when desktop tasks are visible.
                 // If a fullscreen task is visible, launcher goes to normal state when the

@@ -237,7 +237,6 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
             @Nullable Context navigationBarPanelContext, DeviceProfile launcherDp,
             TaskbarNavButtonController buttonController,
             ScopedUnfoldTransitionProgressProvider unfoldTransitionProgressProvider,
-            @NonNull DesktopVisibilityController desktopVisibilityController,
             boolean isPrimaryDisplay) {
         super(windowContext);
         mIsPrimaryDisplay = isPrimaryDisplay;
@@ -363,7 +362,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                 new KeyboardQuickSwitchController(),
                 new TaskbarPinningController(this),
                 bubbleControllersOptional,
-                new TaskbarDesktopModeController(desktopVisibilityController));
+                new TaskbarDesktopModeController(DesktopVisibilityController.INSTANCE.get(this)));
 
         mLauncherPrefs = LauncherPrefs.get(this);
     }

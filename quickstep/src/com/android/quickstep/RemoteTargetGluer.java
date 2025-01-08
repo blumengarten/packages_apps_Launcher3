@@ -67,16 +67,13 @@ public class RemoteTargetGluer {
      * running tasks
      */
     public RemoteTargetGluer(Context context, BaseContainerInterface sizingStrategy) {
-        DesktopVisibilityController desktopVisibilityController =
-                sizingStrategy.getDesktopVisibilityController();
-        if (desktopVisibilityController != null) {
-            int visibleTasksCount = desktopVisibilityController.getVisibleDesktopTasksCount();
-            if (visibleTasksCount > 0) {
-                // Allocate +1 to account for a new task added to the desktop mode
-                int numHandles = visibleTasksCount + 1;
-                init(context, sizingStrategy, numHandles, true /* forDesktop */);
-                return;
-            }
+        int visibleTasksCount = DesktopVisibilityController.INSTANCE.get(context)
+                .getVisibleDesktopTasksCount();
+        if (visibleTasksCount > 0) {
+            // Allocate +1 to account for a new task added to the desktop mode
+            int numHandles = visibleTasksCount + 1;
+            init(context, sizingStrategy, numHandles, true /* forDesktop */);
+            return;
         }
 
         // Assume 2 handles needed for split, scale down as needed later on when we actually

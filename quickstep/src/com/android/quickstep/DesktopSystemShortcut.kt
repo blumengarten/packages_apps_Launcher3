@@ -17,6 +17,7 @@
 package com.android.quickstep
 
 import android.view.View
+import com.android.internal.jank.Cuj
 import com.android.launcher3.AbstractFloatingViewHelper
 import com.android.launcher3.R
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent
@@ -24,6 +25,7 @@ import com.android.launcher3.popup.SystemShortcut
 import com.android.quickstep.views.RecentsView
 import com.android.quickstep.views.RecentsViewContainer
 import com.android.quickstep.views.TaskContainer
+import com.android.systemui.shared.system.InteractionJankMonitorWrapper
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus
 import com.android.wm.shell.shared.desktopmode.DesktopModeTransitionSource
 
@@ -31,7 +33,7 @@ import com.android.wm.shell.shared.desktopmode.DesktopModeTransitionSource
 class DesktopSystemShortcut(
     container: RecentsViewContainer,
     private val taskContainer: TaskContainer,
-    abstractFloatingViewHelper: AbstractFloatingViewHelper
+    abstractFloatingViewHelper: AbstractFloatingViewHelper,
 ) :
     SystemShortcut<RecentsViewContainer>(
         R.drawable.ic_desktop,
@@ -39,15 +41,17 @@ class DesktopSystemShortcut(
         container,
         taskContainer.itemInfo,
         taskContainer.taskView,
-        abstractFloatingViewHelper
+        abstractFloatingViewHelper,
     ) {
     override fun onClick(view: View) {
+        InteractionJankMonitorWrapper.begin(view, Cuj.CUJ_DESKTOP_MODE_ENTER_FROM_OVERVIEW_MENU)
         dismissTaskMenuView()
         val recentsView = mTarget.getOverviewPanel<RecentsView<*, *>>()
         recentsView.moveTaskToDesktop(
             taskContainer,
-            DesktopModeTransitionSource.APP_FROM_OVERVIEW
+            DesktopModeTransitionSource.APP_FROM_OVERVIEW,
         ) {
+            InteractionJankMonitorWrapper.end(Cuj.CUJ_DESKTOP_MODE_ENTER_FROM_OVERVIEW_MENU)
             mTarget.statsLogManager
                 .logger()
                 .withItemInfo(taskContainer.itemInfo)
@@ -64,7 +68,7 @@ class DesktopSystemShortcut(
             return object : TaskShortcutFactory {
                 override fun getShortcuts(
                     container: RecentsViewContainer,
-                    taskContainer: TaskContainer
+                    taskContainer: TaskContainer,
                 ): List<DesktopSystemShortcut>? {
                     return if (!DesktopModeStatus.canEnterDesktopMode(container.asContext())) null
                     else if (!taskContainer.task.isDockable) null
@@ -73,7 +77,7 @@ class DesktopSystemShortcut(
                             DesktopSystemShortcut(
                                 container,
                                 taskContainer,
-                                abstractFloatingViewHelper
+                                abstractFloatingViewHelper,
                             )
                         )
                 }

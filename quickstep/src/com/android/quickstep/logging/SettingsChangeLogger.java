@@ -16,9 +16,10 @@
 
 package com.android.quickstep.logging;
 
-import static com.android.launcher3.LauncherPrefs.THEMED_ICONS;
 import static com.android.launcher3.LauncherPrefs.getDevicePrefs;
 import static com.android.launcher3.LauncherPrefs.getPrefs;
+import static com.android.launcher3.graphics.ThemeManager.KEY_THEMED_ICONS;
+import static com.android.launcher3.graphics.ThemeManager.THEMED_ICONS;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_HOME_SCREEN_SUGGESTIONS_DISABLED;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_HOME_SCREEN_SUGGESTIONS_ENABLED;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_NOTIFICATION_DOT_DISABLED;
@@ -29,7 +30,6 @@ import static com.android.launcher3.model.DeviceGridState.KEY_WORKSPACE_SIZE;
 import static com.android.launcher3.model.PredictionUpdateTask.LAST_PREDICTION_ENABLED;
 import static com.android.launcher3.util.DisplayController.CHANGE_NAVIGATION_MODE;
 import static com.android.launcher3.util.SettingsCache.NOTIFICATION_BADGING_URI;
-import static com.android.launcher3.util.Themes.KEY_THEMED_ICONS;
 
 import android.content.Context;
 import android.content.SharedPreferences;

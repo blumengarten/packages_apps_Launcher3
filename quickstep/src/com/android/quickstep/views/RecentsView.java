@@ -248,7 +248,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -4158,16 +4157,15 @@ public abstract class RecentsView<
 
                         if (showAsGrid) {
                             // Rebalance tasks in the grid
-                            int highestVisibleTaskIndex = getHighestVisibleTaskIndex();
-                            if (highestVisibleTaskIndex < Integer.MAX_VALUE) {
-                                final TaskView taskView = requireTaskViewAt(
-                                        highestVisibleTaskIndex);
-
+                            TaskView highestVisibleTaskView = getHighestVisibleTaskView();
+                            if (highestVisibleTaskView != null) {
                                 boolean shouldRebalance;
                                 int screenStart = getPagedOrientationHandler().getPrimaryScroll(
                                         RecentsView.this);
-                                int taskStart = getPagedOrientationHandler().getChildStart(taskView)
-                                        + (int) taskView.getOffsetAdjustment(/*gridEnabled=*/ true);
+                                int taskStart = getPagedOrientationHandler().getChildStart(
+                                        highestVisibleTaskView)
+                                        + (int) highestVisibleTaskView.getOffsetAdjustment(
+                                                /*gridEnabled=*/true);
 
                                 // Rebalance only if there is a maximum gap between the task and the
                                 // screen's edge; this ensures that rebalanced tasks are outside the
@@ -4180,7 +4178,7 @@ public abstract class RecentsView<
                                             RecentsView.this);
                                     int taskSize = (int) (
                                             getPagedOrientationHandler().getMeasuredSize(
-                                                    taskView) * taskView
+                                                    highestVisibleTaskView) * highestVisibleTaskView
                                                     .getSizeAdjustment(/*fullscreenEnabled=*/
                                                             false));
                                     int taskEnd = taskStart + taskSize;
@@ -4189,7 +4187,7 @@ public abstract class RecentsView<
                                 }
 
                                 if (shouldRebalance) {
-                                    updateGridProperties(taskView);
+                                    updateGridProperties(highestVisibleTaskView);
                                     updateScrollSynchronously();
                                 }
                             }
@@ -4397,12 +4395,12 @@ public abstract class RecentsView<
      * Iterate the grid by columns instead of by TaskView index, starting after the focused task and
      * up to the last balanced column.
      *
-     * @return the highest visible TaskView index between both rows
+     * @return the highest visible TaskView between both rows
      */
-    private int getHighestVisibleTaskIndex() {
-        if (mTopRowIdSet.isEmpty()) return Integer.MAX_VALUE; // return earlier
+    private TaskView getHighestVisibleTaskView() {
+        if (mTopRowIdSet.isEmpty()) return null; // return earlier
 
-        int lastVisibleIndex = Integer.MAX_VALUE;
+        TaskView lastVisibleTaskView = null;
         IntArray topRowIdArray = getTopRowIdArray();
         IntArray bottomRowIdArray = getBottomRowIdArray();
         int balancedColumns = Math.min(bottomRowIdArray.size(), topRowIdArray.size());
@@ -4412,13 +4410,14 @@ public abstract class RecentsView<
 
             if (isTaskViewVisible(topTask)) {
                 TaskView bottomTask = getTaskViewFromTaskViewId(bottomRowIdArray.get(i));
-                lastVisibleIndex = Math.max(indexOfChild(topTask), indexOfChild(bottomTask));
-            } else if (lastVisibleIndex < Integer.MAX_VALUE) {
+                lastVisibleTaskView =
+                        indexOfChild(topTask) > indexOfChild(bottomTask) ? topTask : bottomTask;
+            } else if (lastVisibleTaskView != null) {
                 break;
             }
         }
 
-        return lastVisibleIndex;
+        return lastVisibleTaskView;
     }
 
   private void removeTaskInternal(@NonNull TaskView dismissedTaskView) {
@@ -4731,14 +4730,6 @@ public abstract class RecentsView<
     public TaskView getTaskViewAt(int index) {
         View child = getChildAt(index);
         return child instanceof TaskView ? (TaskView) child : null;
-    }
-
-    /**
-     * A version of {@link #getTaskViewAt} when the caller is sure about the input index.
-     */
-    @NonNull
-    private TaskView requireTaskViewAt(int index) {
-        return Objects.requireNonNull(getTaskViewAt(index));
     }
 
     /**
@@ -6814,6 +6805,8 @@ public abstract class RecentsView<
         }
 
         mDesktopRecentsTransitionController.moveToDesktop(taskContainer, transitionSource);
+        // TODO(b/387471509): Invoke successCallback after actual transition completion of
+        //  overview menu to desktop
         successCallback.run();
     }
 

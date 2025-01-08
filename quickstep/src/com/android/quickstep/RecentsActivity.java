@@ -65,7 +65,6 @@ import com.android.launcher3.anim.PendingAnimation;
 import com.android.launcher3.compat.AccessibilityManagerCompat;
 import com.android.launcher3.desktop.DesktopRecentsTransitionController;
 import com.android.launcher3.model.data.ItemInfo;
-import com.android.launcher3.statehandlers.DesktopVisibilityController;
 import com.android.launcher3.statemanager.StateManager;
 import com.android.launcher3.statemanager.StateManager.AtomicAnimationFactory;
 import com.android.launcher3.statemanager.StateManager.StateHandler;
@@ -364,14 +363,6 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
     }
 
     @Override
-    public void onUiChangedWhileSleeping() {
-        super.onUiChangedWhileSleeping();
-        // Dismiss recents and navigate to home if the device goes to sleep
-        // while in recents.
-        startHome();
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
         AccessibilityManagerCompat.sendStateEventToTest(getBaseContext(), OVERVIEW_STATE_ORDINAL);
@@ -557,11 +548,5 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
     @Override
     public boolean isRecentsViewVisible() {
         return getStateManager().getState().isRecentsViewVisible();
-    }
-
-    @Nullable
-    @Override
-    public DesktopVisibilityController getDesktopVisibilityController() {
-        return mTISBindHelper.getDesktopVisibilityController();
     }
 }

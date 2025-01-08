@@ -74,9 +74,11 @@ import androidx.annotation.WorkerThread;
 import androidx.core.graphics.ColorUtils;
 
 import com.android.launcher3.dragndrop.FolderAdaptiveIcon;
+import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.graphics.TintedDrawableSpan;
 import com.android.launcher3.icons.BitmapInfo;
 import com.android.launcher3.icons.CacheableShortcutInfo;
+import com.android.launcher3.icons.IconThemeController;
 import com.android.launcher3.icons.LauncherIcons;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
@@ -88,7 +90,6 @@ import com.android.launcher3.testing.shared.ResourceUtils;
 import com.android.launcher3.util.FlagOp;
 import com.android.launcher3.util.IntArray;
 import com.android.launcher3.util.SplitConfigurationOptions.SplitPositionOption;
-import com.android.launcher3.util.Themes;
 import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.views.BaseDragLayer;
 import com.android.launcher3.widget.PendingAddShortcutInfo;
@@ -626,7 +627,6 @@ public final class Utilities {
     @WorkerThread
     public static <T extends Context & ActivityContext> Pair<AdaptiveIconDrawable, Drawable>
             getFullDrawable(T context, ItemInfo info, int width, int height, boolean useTheme) {
-        useTheme &= Themes.isThemedIconEnabled(context);
         LauncherAppState appState = LauncherAppState.getInstance(context);
         Drawable mainIcon = null;
 
@@ -690,15 +690,15 @@ public final class Utilities {
 
         // Inject theme icon drawable
         if (ATLEAST_T && useTheme) {
-            try (LauncherIcons li = LauncherIcons.obtain(context)) {
-                if (li.getThemeController() != null) {
-                    AdaptiveIconDrawable themed = li.getThemeController().createThemedAdaptiveIcon(
-                            context,
-                            result,
-                            info instanceof ItemInfoWithIcon iiwi ? iiwi.bitmap : null);
-                    if (themed != null) {
-                        result = themed;
-                    }
+            IconThemeController themeController =
+                    ThemeManager.INSTANCE.get(context).getThemeController();
+            if (themeController != null) {
+                AdaptiveIconDrawable themed = themeController.createThemedAdaptiveIcon(
+                        context,
+                        result,
+                        info instanceof ItemInfoWithIcon iiwi ? iiwi.bitmap : null);
+                if (themed != null) {
+                    result = themed;
                 }
             }
         }

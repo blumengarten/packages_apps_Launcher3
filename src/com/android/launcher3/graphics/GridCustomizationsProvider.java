@@ -15,10 +15,8 @@
  */
 package com.android.launcher3.graphics;
 
-import static com.android.launcher3.LauncherPrefs.THEMED_ICONS;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
-import static com.android.launcher3.util.Themes.isThemedIconEnabled;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -42,7 +40,6 @@ import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.InvariantDeviceProfile.GridOption;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherModel;
-import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.model.BgDataModel;
 import com.android.launcher3.shapes.AppShape;
 import com.android.launcher3.shapes.AppShapesProvider;
@@ -178,7 +175,8 @@ public class GridCustomizationsProvider extends ContentProvider {
             case GET_ICON_THEMED:
             case ICON_THEMED: {
                 MatrixCursor cursor = new MatrixCursor(new String[]{BOOLEAN_VALUE});
-                cursor.newRow().add(BOOLEAN_VALUE, isThemedIconEnabled(getContext()) ? 1 : 0);
+                cursor.newRow().add(BOOLEAN_VALUE,
+                        ThemeManager.INSTANCE.get(getContext()).isMonoThemeEnabled() ? 1 : 0);
                 return cursor;
             }
             default:
@@ -247,8 +245,8 @@ public class GridCustomizationsProvider extends ContentProvider {
             }
             case ICON_THEMED:
             case SET_ICON_THEMED: {
-                LauncherPrefs.get(context)
-                        .put(THEMED_ICONS, values.getAsBoolean(BOOLEAN_VALUE));
+                ThemeManager.INSTANCE.get(context)
+                        .setMonoThemeEnabled(values.getAsBoolean(BOOLEAN_VALUE));
                 context.getContentResolver().notifyChange(uri, null);
                 return 1;
             }

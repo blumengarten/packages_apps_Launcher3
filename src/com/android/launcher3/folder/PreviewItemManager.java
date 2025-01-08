@@ -53,7 +53,6 @@ import com.android.launcher3.model.data.AppPairInfo;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
-import com.android.launcher3.util.Themes;
 import com.android.launcher3.views.ActivityContext;
 
 import java.util.ArrayList;
@@ -448,8 +447,7 @@ public class PreviewItemManager {
             if (isActivePendingIcon(wii)) {
                 p.drawable = newPendingIcon(mContext, wii);
             } else {
-                p.drawable = wii.newIcon(mContext,
-                        Themes.isThemedIconEnabled(mContext) ? FLAG_THEMED : 0);
+                p.drawable = wii.newIcon(mContext, FLAG_THEMED);
             }
             p.drawable.setBounds(0, 0, mIconSize, mIconSize);
         } else if (item instanceof AppPairInfo api) {

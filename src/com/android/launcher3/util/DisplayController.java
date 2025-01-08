@@ -56,6 +56,7 @@ import com.android.launcher3.Utilities;
 import com.android.launcher3.logging.FileLog;
 import com.android.launcher3.util.window.CachedDisplayInfo;
 import com.android.launcher3.util.window.WindowManagerProxy;
+import com.android.launcher3.util.window.WindowManagerProxy.DesktopVisibilityListener;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -70,7 +71,8 @@ import java.util.StringJoiner;
  * Utility class to cache properties of default display to avoid a system RPC on every call.
  */
 @SuppressLint("NewApi")
-public class DisplayController implements ComponentCallbacks, SafeCloseable {
+public class DisplayController implements ComponentCallbacks, SafeCloseable,
+        DesktopVisibilityListener {
 
     private static final String TAG = "DisplayController";
     private static final boolean DEBUG = false;
@@ -99,7 +101,6 @@ public class DisplayController implements ComponentCallbacks, SafeCloseable {
     private static final String TARGET_OVERLAY_PACKAGE = "android";
 
     private final Context mContext;
-    private final DisplayManager mDM;
 
     // Null for SDK < S
     private final Context mWindowContext;
@@ -121,13 +122,12 @@ public class DisplayController implements ComponentCallbacks, SafeCloseable {
     @VisibleForTesting
     protected DisplayController(Context context) {
         mContext = context;
-        mDM = context.getSystemService(DisplayManager.class);
-
         if (enableTaskbarPinning()) {
             attachTaskbarPinningSharedPreferenceChangeListener(mContext);
         }
 
-        Display display = mDM.getDisplay(DEFAULT_DISPLAY);
+        Display display = context.getSystemService(DisplayManager.class)
+                .getDisplay(DEFAULT_DISPLAY);
         mWindowContext = mContext.createWindowContext(display, TYPE_APPLICATION, null);
         mWindowContext.registerComponentCallbacks(this);
 
@@ -137,6 +137,7 @@ public class DisplayController implements ComponentCallbacks, SafeCloseable {
         WindowManagerProxy wmProxy = WindowManagerProxy.INSTANCE.get(context);
         mInfo = new Info(mWindowContext, wmProxy,
                 wmProxy.estimateInternalDisplayBounds(mWindowContext));
+        wmProxy.registerDesktopVisibilityListener(this);
         FileLog.i(TAG, "(CTOR) perDisplayBounds: " + mInfo.mPerDisplayBounds);
     }
 
@@ -215,12 +216,14 @@ public class DisplayController implements ComponentCallbacks, SafeCloseable {
             LauncherPrefs.get(mContext).removeListener(
                     mTaskbarPinningPreferenceChangeListener, TASKBAR_PINNING_IN_DESKTOP_MODE);
         }
-        if (mWindowContext != null) {
-            mWindowContext.unregisterComponentCallbacks(this);
-        } else {
-            // TODO: unregister broadcast receiver
-        }
+        mWindowContext.unregisterComponentCallbacks(this);
         mReceiver.unregisterReceiverSafely(mContext);
+        WindowManagerProxy.INSTANCE.get(mContext).unregisterDesktopVisibilityListener(this);
+    }
+
+    @Override
+    public void onDesktopVisibilityChanged(boolean visible) {
+        notifyConfigChange();
     }
 
     /**

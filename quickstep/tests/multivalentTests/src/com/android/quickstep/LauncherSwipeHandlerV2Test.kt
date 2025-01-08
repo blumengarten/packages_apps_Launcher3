@@ -53,8 +53,6 @@ class LauncherSwipeHandlerV2Test {
 
     @Mock private lateinit var systemUiProxy: SystemUiProxy
 
-    @Mock private lateinit var recentsDisplayModel: RecentsDisplayModel
-
     @Mock private lateinit var msdlPlayerWrapper: MSDLPlayerWrapper
 
     private lateinit var underTest: LauncherSwipeHandlerV2
@@ -72,7 +70,7 @@ class LauncherSwipeHandlerV2Test {
         sandboxContext.initDaggerComponent(
             DaggerTestComponent.builder()
                 .bindSystemUiProxy(systemUiProxy)
-                .bindRecentsDisplayModel(recentsDisplayModel)
+                .bindRecentsDisplayModel(RecentsDisplayModel(sandboxContext))
         )
 
         val deviceState = mock(RecentsAnimationDeviceState::class.java)

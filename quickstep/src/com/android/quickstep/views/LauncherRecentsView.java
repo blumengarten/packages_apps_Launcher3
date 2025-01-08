@@ -168,9 +168,7 @@ public class LauncherRecentsView extends RecentsView<QuickstepLauncher, Launcher
 
     @Override
     public void onStateTransitionComplete(LauncherState finalState) {
-        if (mContainer.getDesktopVisibilityController() != null) {
-            mContainer.getDesktopVisibilityController().onLauncherStateChanged(finalState);
-        }
+        DesktopVisibilityController.INSTANCE.get(mContainer).onLauncherStateChanged(finalState);
 
         if (!finalState.isRecentsViewVisible) {
             // Clean-up logic that occurs when recents is no longer in use/visible.
@@ -269,34 +267,26 @@ public class LauncherRecentsView extends RecentsView<QuickstepLauncher, Launcher
     public void onGestureAnimationStart(Task[] runningTasks,
             RotationTouchHelper rotationTouchHelper) {
         super.onGestureAnimationStart(runningTasks, rotationTouchHelper);
-        DesktopVisibilityController desktopVisibilityController =
-                mContainer.getDesktopVisibilityController();
-        if (!ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY.isTrue()
-                && desktopVisibilityController != null) {
+        if (!ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY.isTrue()) {
             // TODO: b/333533253 - Remove after flag rollout
-            desktopVisibilityController.setRecentsGestureStart();
+            DesktopVisibilityController.INSTANCE.get(mContainer).setRecentsGestureStart();
         }
     }
 
     @Override
     public void onGestureAnimationEnd() {
-        DesktopVisibilityController desktopVisibilityController =
-                mContainer.getDesktopVisibilityController();
+        final DesktopVisibilityController desktopVisibilityController =
+                DesktopVisibilityController.INSTANCE.get(mContainer);
         boolean showDesktopApps = false;
-        GestureState.GestureEndTarget endTarget = null;
-        if (desktopVisibilityController != null) {
-            desktopVisibilityController = mContainer.getDesktopVisibilityController();
-            endTarget = mCurrentGestureEndTarget;
-            if (endTarget == GestureState.GestureEndTarget.LAST_TASK
-                    && desktopVisibilityController.areDesktopTasksVisibleAndNotInOverview()) {
-                // Recents gesture was cancelled and we are returning to the previous task.
-                // After super class has handled clean up, show desktop apps on top again
-                showDesktopApps = true;
-            }
+        GestureState.GestureEndTarget endTarget = mCurrentGestureEndTarget;
+        if (endTarget == GestureState.GestureEndTarget.LAST_TASK
+                && desktopVisibilityController.areDesktopTasksVisibleAndNotInOverview()) {
+            // Recents gesture was cancelled and we are returning to the previous task.
+            // After super class has handled clean up, show desktop apps on top again
+            showDesktopApps = true;
         }
         super.onGestureAnimationEnd();
-        if (!ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY.isTrue()
-                && desktopVisibilityController != null) {
+        if (!ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY.isTrue()) {
             // TODO: b/333533253 - Remove after flag rollout
             desktopVisibilityController.setRecentsGestureEnd(endTarget);
         }

@@ -24,7 +24,6 @@ import android.provider.Settings.Secure.USER_SETUP_COMPLETE
 import android.provider.Settings.Secure.getUriFor
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.launcher3.LauncherAppState
-import com.android.launcher3.statehandlers.DesktopVisibilityController
 import com.android.launcher3.taskbar.TaskbarActivityContext
 import com.android.launcher3.taskbar.TaskbarControllers
 import com.android.launcher3.taskbar.TaskbarManager
@@ -72,6 +71,7 @@ import org.junit.runners.model.Statement
 class TaskbarUnitTestRule(
     private val testInstance: Any,
     private val context: TaskbarWindowSandboxContext,
+    private val controllerInjectionCallback: () -> Unit = {},
 ) : TestRule {
 
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -110,11 +110,13 @@ class TaskbarUnitTestRule(
                                     PendingIntent(IIntentSender.Default())
                                 },
                                 object : TaskbarNavButtonCallbacks {},
-                                DesktopVisibilityController(context),
                             ) {
                             override fun recreateTaskbar() {
                                 super.recreateTaskbar()
-                                if (currentActivityContext != null) injectControllers()
+                                if (currentActivityContext != null) {
+                                    injectControllers()
+                                    controllerInjectionCallback.invoke()
+                                }
                             }
                         }
                     }

@@ -37,8 +37,9 @@ import android.os.UserHandle;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.android.launcher3.graphics.ThemeManager;
+import com.android.launcher3.graphics.ThemeManager.ThemeChangeListener;
 import com.android.launcher3.icons.IconProvider;
-import com.android.launcher3.icons.IconProvider.IconChangeListener;
 import com.android.launcher3.util.Executors.SimpleThreadFactory;
 import com.android.launcher3.util.MainThreadInitializedObject;
 import com.android.launcher3.util.SafeCloseable;
@@ -66,9 +67,9 @@ import java.util.function.Predicate;
  * Singleton class to load and manage recents model.
  */
 @TargetApi(Build.VERSION_CODES.O)
-public class RecentsModel implements RecentTasksDataSource, IconChangeListener,
-        TaskStackChangeListener, TaskVisualsChangeListener, TaskVisualsChangeNotifier,
-        SafeCloseable {
+public class RecentsModel implements RecentTasksDataSource, TaskStackChangeListener,
+        TaskVisualsChangeListener, TaskVisualsChangeNotifier,
+        ThemeChangeListener, SafeCloseable {
 
     // We do not need any synchronization for this variable as its only written on UI thread.
     public static final MainThreadInitializedObject<RecentsModel> INSTANCE =
@@ -85,8 +86,10 @@ public class RecentsModel implements RecentTasksDataSource, IconChangeListener,
     private final TaskIconCache mIconCache;
     private final TaskThumbnailCache mThumbnailCache;
     private final ComponentCallbacks mCallbacks;
+    private final ThemeManager mThemeManager;
 
     private final TaskStackChangeListeners mTaskStackChangeListeners;
+    private final SafeCloseable mIconChangeCloseable;
 
     private RecentsModel(Context context) {
         this(context, new IconProvider(context));
@@ -103,13 +106,15 @@ public class RecentsModel implements RecentTasksDataSource, IconChangeListener,
                 new TaskIconCache(context, RECENTS_MODEL_EXECUTOR, iconProvider),
                 new TaskThumbnailCache(context, RECENTS_MODEL_EXECUTOR),
                 iconProvider,
-                TaskStackChangeListeners.getInstance());
+                TaskStackChangeListeners.getInstance(),
+                ThemeManager.INSTANCE.get(context));
     }
 
     @VisibleForTesting
     RecentsModel(Context context, RecentTasksList taskList, TaskIconCache iconCache,
             TaskThumbnailCache thumbnailCache, IconProvider iconProvider,
-            TaskStackChangeListeners taskStackChangeListeners) {
+            TaskStackChangeListeners taskStackChangeListeners,
+            ThemeManager themeManager) {
         mContext = context;
         mTaskList = taskList;
         mIconCache = iconCache;
@@ -133,7 +138,10 @@ public class RecentsModel implements RecentTasksDataSource, IconChangeListener,
 
         mTaskStackChangeListeners = taskStackChangeListeners;
         mTaskStackChangeListeners.registerTaskStackListener(this);
-        iconProvider.registerIconChangeListener(this, MAIN_EXECUTOR.getHandler());
+        mIconChangeCloseable = iconProvider.registerIconChangeListener(
+                this::onAppIconChanged, MAIN_EXECUTOR.getHandler());
+        mThemeManager = themeManager;
+        themeManager.addChangeListener(this);
     }
 
     public TaskIconCache getIconCache() {
@@ -268,8 +276,7 @@ public class RecentsModel implements RecentTasksDataSource, IconChangeListener,
         }
     }
 
-    @Override
-    public void onAppIconChanged(String packageName, UserHandle user) {
+    private void onAppIconChanged(String packageName, UserHandle user) {
         mIconCache.invalidateCacheEntries(packageName, user);
         for (TaskVisualsChangeListener listener : mThumbnailChangeListeners) {
             listener.onTaskIconChanged(packageName, user);
@@ -284,7 +291,7 @@ public class RecentsModel implements RecentTasksDataSource, IconChangeListener,
     }
 
     @Override
-    public void onSystemIconStateChanged(String iconState) {
+    public void onThemeChanged() {
         mIconCache.clearCache();
     }
 
@@ -394,6 +401,8 @@ public class RecentsModel implements RecentTasksDataSource, IconChangeListener,
         }
         mIconCache.removeTaskVisualsChangeListener();
         mTaskStackChangeListeners.unregisterTaskStackListener(this);
+        mIconChangeCloseable.close();
+        mThemeManager.removeChangeListener(this);
     }
 
     private boolean isCachePreloadingEnabled() {

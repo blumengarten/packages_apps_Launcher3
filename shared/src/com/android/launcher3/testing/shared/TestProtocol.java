@@ -170,6 +170,7 @@ public final class TestProtocol {
     public static final String ICON_MISSING = "b/282963545";
     public static final String REQUEST_FLAG_ENABLE_GRID_ONLY_OVERVIEW = "enable-grid-only-overview";
     public static final String REQUEST_FLAG_ENABLE_APP_PAIRS = "enable-app-pairs";
+    public static final String REQUEST_IS_RECENTS_WINDOW_ENABLED = "recents-window-enabled";
 
     public static final String REQUEST_UNSTASH_BUBBLE_BAR_IF_STASHED =
             "unstash-bubble-bar-if-stashed";

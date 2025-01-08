@@ -36,6 +36,7 @@ import com.android.launcher3.anim.PendingAnimation;
 import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.desktop.DesktopRecentsTransitionController;
 import com.android.launcher3.logging.StatsLogManager;
+import com.android.launcher3.statehandlers.DesktopVisibilityController;
 import com.android.launcher3.statemanager.StateManager;
 import com.android.launcher3.statemanager.StateManager.StateListener;
 import com.android.launcher3.statemanager.StatefulContainer;
@@ -268,9 +269,7 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
 
     @Override
     public void onStateTransitionComplete(RecentsState finalState) {
-        if (mContainer.getDesktopVisibilityController() != null) {
-            mContainer.getDesktopVisibilityController().onLauncherStateChanged(finalState);
-        }
+        DesktopVisibilityController.INSTANCE.get(mContainer).onLauncherStateChanged(finalState);
         if (!finalState.isRecentsViewVisible()) {
             // Clean-up logic that occurs when recents is no longer in use/visible.
             reset();

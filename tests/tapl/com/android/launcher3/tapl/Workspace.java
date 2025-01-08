@@ -843,7 +843,9 @@ public final class Workspace extends Home {
 
     @Override
     protected String getSwipeHeightRequestName() {
-        return TestProtocol.REQUEST_HOME_TO_OVERVIEW_SWIPE_HEIGHT;
+        return mLauncher.isRecentsWindowEnabled()
+                ? super.getSwipeHeightRequestName()
+                : TestProtocol.REQUEST_HOME_TO_OVERVIEW_SWIPE_HEIGHT;
     }
 
     @Override

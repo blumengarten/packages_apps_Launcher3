@@ -27,8 +27,8 @@ import androidx.annotation.NonNull;
 
 import com.android.launcher3.R;
 import com.android.launcher3.config.FeatureFlags;
+import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.util.ApiWrapper;
-import com.android.launcher3.util.Themes;
 
 import org.xmlpull.v1.XmlPullParser;
 
@@ -48,18 +48,16 @@ public class LauncherIconProvider extends IconProvider {
     private static final Map<String, ThemeData> DISABLED_MAP = Collections.emptyMap();
 
     private Map<String, ThemeData> mThemedIconMap;
-    private boolean mSupportsIconTheme;
 
     public LauncherIconProvider(Context context) {
         super(context);
-        setIconThemeSupported(Themes.isThemedIconEnabled(context));
+        setIconThemeSupported(ThemeManager.INSTANCE.get(context).isMonoThemeEnabled());
     }
 
     /**
      * Enables or disables icon theme support
      */
     public void setIconThemeSupported(boolean isSupported) {
-        mSupportsIconTheme = isSupported;
         mThemedIconMap = isSupported && FeatureFlags.USE_LOCAL_ICON_OVERRIDES.get()
                 ? null : DISABLED_MAP;
     }
@@ -70,8 +68,9 @@ public class LauncherIconProvider extends IconProvider {
     }
 
     @Override
-    public String getSystemIconState() {
-        return super.getSystemIconState() + (mSupportsIconTheme ? ",with-theme" : ",no-theme");
+    public void updateSystemState() {
+        super.updateSystemState();
+        mSystemState += "," + ThemeManager.INSTANCE.get(mContext).getIconState().toUniqueId();
     }
 
     @Override
