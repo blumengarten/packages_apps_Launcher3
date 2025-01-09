@@ -62,7 +62,6 @@ public class RecentsWindowSwipeHandlerTestCase extends AbsSwipeUpHandlerTestCase
             boolean continuingLastGesture) {
         return new RecentsWindowSwipeHandler(
                 mContext,
-                mRecentsAnimationDeviceState,
                 mTaskAnimationManager,
                 mGestureState,
                 touchTimeMs,

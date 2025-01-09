@@ -332,14 +332,7 @@ object InputConsumerUtils {
                     reasonPrefix,
                     SUBSTRING_PREFIX,
                 )
-                base =
-                    AccessibilityInputConsumer(
-                        context,
-                        deviceState,
-                        gestureState,
-                        base,
-                        inputMonitorCompat,
-                    )
+                base = AccessibilityInputConsumer(context, deviceState, base, inputMonitorCompat)
             }
         } else {
             val reasonPrefix = "device is not in gesture navigation mode"

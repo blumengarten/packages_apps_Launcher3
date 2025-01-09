@@ -28,14 +28,9 @@ import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.launcher3.Flags.FLAG_ENABLE_FALLBACK_OVERVIEW_IN_WINDOW
 import com.android.launcher3.Flags.FLAG_ENABLE_LAUNCHER_OVERVIEW_IN_WINDOW
-import com.android.launcher3.dagger.LauncherAppComponent
-import com.android.launcher3.dagger.LauncherAppModule
-import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.util.LauncherModelHelper
 import com.android.launcher3.util.window.CachedDisplayInfo
 import com.android.quickstep.fallback.window.RecentsDisplayModel
-import dagger.BindsInstance
-import dagger.Component
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -75,10 +70,6 @@ class RecentsDisplayModelTest {
         whenever(displayManager.getDisplay(anyInt())).thenReturn(display)
 
         runOnMainSync { recentsDisplayModel = RecentsDisplayModel.INSTANCE.get(context) }
-        context.initDaggerComponent(
-            DaggerRecentsDisplayModelComponent.builder()
-                .bindRecentsDisplayModel(recentsDisplayModel)
-        )
     }
 
     @Test
@@ -123,16 +114,5 @@ class RecentsDisplayModelTest {
 
     private fun runOnMainSync(f: Runnable) {
         InstrumentationRegistry.getInstrumentation().runOnMainSync { f.run() }
-    }
-}
-
-@LauncherAppSingleton
-@Component(modules = [LauncherAppModule::class])
-interface RecentsDisplayModelComponent : LauncherAppComponent {
-    @Component.Builder
-    interface Builder : LauncherAppComponent.Builder {
-        @BindsInstance fun bindRecentsDisplayModel(model: RecentsDisplayModel): Builder
-
-        override fun build(): RecentsDisplayModelComponent
     }
 }

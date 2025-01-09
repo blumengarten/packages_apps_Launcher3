@@ -45,6 +45,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.launcher3.dagger.LauncherAppComponent;
+import com.android.launcher3.dagger.LauncherAppModule;
+import com.android.launcher3.dagger.LauncherAppSingleton;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.MainThreadInitializedObject.SandboxContext;
 import com.android.quickstep.DeviceConfigWrapper;
@@ -55,6 +58,9 @@ import com.android.quickstep.RecentsAnimationDeviceState;
 import com.android.quickstep.TopTaskTracker;
 import com.android.quickstep.util.TestExtensions;
 import com.android.systemui.shared.system.InputMonitorCompat;
+
+import dagger.BindsInstance;
+import dagger.Component;
 
 import org.junit.After;
 import org.junit.Before;
@@ -423,7 +429,10 @@ public class NavHandleLongPressInputConsumerTest {
             mContext.onDestroy();
         }
         mContext = new SandboxContext(getApplicationContext());
-        mContext.putObject(TopTaskTracker.INSTANCE, mTopTaskTracker);
+        mContext.initDaggerComponent(
+                DaggerNavHandleLongPressInputConsumerTest_TopTaskTrackerComponent
+                        .builder()
+                        .bindTopTaskTracker(mTopTaskTracker));
         mScreenWidth = DisplayController.INSTANCE.get(mContext).getInfo().currentSize.x;
         mUnderTest = new NavHandleLongPressInputConsumer(mContext, mDelegate, mInputMonitor,
                 mDeviceState, mNavHandle, mGestureState);
@@ -449,5 +458,18 @@ public class NavHandleLongPressInputConsumerTest {
                 "ENABLE_LPNH_TWO_STAGES",
                 value,
                 () -> DeviceConfigWrapper.get().getEnableLpnhTwoStages());
+    }
+
+    @LauncherAppSingleton
+    @Component(modules = LauncherAppModule.class)
+    public interface TopTaskTrackerComponent extends LauncherAppComponent {
+        @Component.Builder
+        interface Builder extends LauncherAppComponent.Builder {
+            @BindsInstance
+            Builder bindTopTaskTracker(TopTaskTracker topTaskTracker);
+
+            @Override
+            TopTaskTrackerComponent build();
+        }
     }
 }

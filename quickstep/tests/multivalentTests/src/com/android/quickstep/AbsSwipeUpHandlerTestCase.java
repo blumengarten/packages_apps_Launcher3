@@ -118,7 +118,6 @@ public abstract class AbsSwipeUpHandlerTestCase<
 
     protected RecentsAnimationTargets mRecentsAnimationTargets;
     protected TaskAnimationManager mTaskAnimationManager;
-    protected RecentsAnimationDeviceState mRecentsAnimationDeviceState;
 
     @Mock protected CONTAINER_INTERFACE mActivityInterface;
     @Mock protected ContextInitListener<?> mContextInitListener;
@@ -180,7 +179,8 @@ public abstract class AbsSwipeUpHandlerTestCase<
 
     @Before
     public void setUpRecentsContainer() {
-        mTaskAnimationManager = new TaskAnimationManager(mContext, mRecentsAnimationDeviceState);
+        mTaskAnimationManager = new TaskAnimationManager(mContext,
+                RecentsAnimationDeviceState.INSTANCE.get(mContext));
         RecentsViewContainer recentsContainer = getRecentsContainer();
         RECENTS_VIEW recentsView = getRecentsView();
 
@@ -196,12 +196,6 @@ public abstract class AbsSwipeUpHandlerTestCase<
             answer.<Runnable>getArgument(0).run();
             return this;
         }).when(recentsContainer).runOnBindToTouchInteractionService(any());
-    }
-
-    @Before
-    public void setUpRecentsAnimationDeviceState() {
-        runOnMainSync(() ->
-                mRecentsAnimationDeviceState = new RecentsAnimationDeviceState(mContext, true));
     }
 
     @Test

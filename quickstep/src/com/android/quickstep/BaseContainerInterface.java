@@ -131,7 +131,7 @@ public abstract class BaseContainerInterface<STATE_TYPE extends BaseState<STATE_
     }
 
     public abstract BaseContainerInterface.AnimationFactory prepareRecentsUI(
-            RecentsAnimationDeviceState deviceState, boolean activityVisible,
+            boolean activityVisible,
             Consumer<AnimatorControllerWithResistance> callback);
 
     public abstract ContextInitListener createActivityInitListener(
@@ -151,11 +151,10 @@ public abstract class BaseContainerInterface<STATE_TYPE extends BaseState<STATE_
 
     public abstract void onLaunchTaskFailed();
 
-    public abstract void onExitOverview(RotationTouchHelper deviceState,
-            Runnable exitRunnable);
+    public abstract void onExitOverview(Runnable exitRunnable);
 
     /** Called when the animation to home has fully settled. */
-    public void onSwipeUpToHomeComplete(RecentsAnimationDeviceState deviceState) {}
+    public void onSwipeUpToHomeComplete() {}
 
     /**
      * Sets a callback to be run when an activity launch happens while launcher is not yet resumed.

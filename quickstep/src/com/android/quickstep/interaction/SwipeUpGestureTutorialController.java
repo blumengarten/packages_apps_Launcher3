@@ -50,7 +50,6 @@ import com.android.launcher3.anim.AnimatorPlaybackController;
 import com.android.launcher3.anim.PendingAnimation;
 import com.android.quickstep.GestureState;
 import com.android.quickstep.OverviewComponentObserver;
-import com.android.quickstep.RecentsAnimationDeviceState;
 import com.android.quickstep.RemoteTargetGluer;
 import com.android.quickstep.SwipeUpAnimationLogic;
 import com.android.quickstep.SwipeUpAnimationLogic.RunningWindowAnim;
@@ -85,10 +84,8 @@ abstract class SwipeUpGestureTutorialController extends TutorialController {
 
     SwipeUpGestureTutorialController(TutorialFragment tutorialFragment, TutorialType tutorialType) {
         super(tutorialFragment, tutorialType);
-        RecentsAnimationDeviceState deviceState = new RecentsAnimationDeviceState(mContext);
-        mTaskViewSwipeUpAnimation = new ViewSwipeUpAnimation(mContext, deviceState,
+        mTaskViewSwipeUpAnimation = new ViewSwipeUpAnimation(mContext,
                 new GestureState(OverviewComponentObserver.INSTANCE.get(mContext), -1));
-        deviceState.destroy();
 
         DeviceProfile dp = InvariantDeviceProfile.INSTANCE.get(mContext)
                 .getDeviceProfile(mContext)
@@ -311,9 +308,8 @@ abstract class SwipeUpGestureTutorialController extends TutorialController {
 
     class ViewSwipeUpAnimation extends SwipeUpAnimationLogic {
 
-        ViewSwipeUpAnimation(Context context, RecentsAnimationDeviceState deviceState,
-                             GestureState gestureState) {
-            super(context, deviceState, gestureState);
+        ViewSwipeUpAnimation(Context context, GestureState gestureState) {
+            super(context, gestureState);
             mRemoteTargetHandles[0] = new RemoteTargetGluer.RemoteTargetHandle(
                     mRemoteTargetHandles[0].getTaskViewSimulator(), new FakeTransformParams());
 

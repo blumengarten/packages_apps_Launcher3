@@ -552,8 +552,8 @@ public class TouchInteractionService extends Service {
         // Initialize anything here that is needed in direct boot mode.
         // Everything else should be initialized in onUserUnlocked() below.
         mMainChoreographer = Choreographer.getInstance();
-        mDeviceState = new RecentsAnimationDeviceState(this, true);
-        mRotationTouchHelper = mDeviceState.getRotationTouchHelper();
+        mDeviceState = RecentsAnimationDeviceState.INSTANCE.get(this);
+        mRotationTouchHelper = RotationTouchHelper.INSTANCE.get(this);
         mAllAppsActionManager = new AllAppsActionManager(
                 this, UI_HELPER_EXECUTOR, this::createAllAppsPendingIntent);
         mTrackpadsConnected = new ActiveTrackpadList(this, () -> {
@@ -715,7 +715,6 @@ public class TouchInteractionService extends Service {
             mOverviewComponentObserver.removeOverviewChangeListener(mOverviewChangeListener);
         }
         disposeEventHandlers("TouchInteractionService onDestroy()");
-        mDeviceState.destroy();
         SystemUiProxy.INSTANCE.get(this).clearProxy();
 
         mAllAppsActionManager.onDestroy();
@@ -1158,21 +1157,21 @@ public class TouchInteractionService extends Service {
 
     private AbsSwipeUpHandler createLauncherSwipeHandler(
             GestureState gestureState, long touchTimeMs) {
-        return new LauncherSwipeHandlerV2(this, mDeviceState, mTaskAnimationManager,
+        return new LauncherSwipeHandlerV2(this, mTaskAnimationManager,
                 gestureState, touchTimeMs, mTaskAnimationManager.isRecentsAnimationRunning(),
                 mInputConsumer, MSDLPlayerWrapper.INSTANCE.get(this));
     }
 
     private AbsSwipeUpHandler createFallbackSwipeHandler(
             GestureState gestureState, long touchTimeMs) {
-        return new FallbackSwipeHandler(this, mDeviceState, mTaskAnimationManager,
+        return new FallbackSwipeHandler(this, mTaskAnimationManager,
                 gestureState, touchTimeMs, mTaskAnimationManager.isRecentsAnimationRunning(),
                 mInputConsumer, MSDLPlayerWrapper.INSTANCE.get(this));
     }
 
     private AbsSwipeUpHandler createRecentsWindowSwipeHandler(
             GestureState gestureState, long touchTimeMs) {
-        return new RecentsWindowSwipeHandler(this, mDeviceState, mTaskAnimationManager,
+        return new RecentsWindowSwipeHandler(this, mTaskAnimationManager,
                 gestureState, touchTimeMs, mTaskAnimationManager.isRecentsAnimationRunning(),
                 mInputConsumer, MSDLPlayerWrapper.INSTANCE.get(this));
     }

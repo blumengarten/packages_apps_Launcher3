@@ -73,7 +73,6 @@ public class LauncherSwipeHandlerV2TestCase extends AbsSwipeUpHandlerTestCase<
             long touchTimeMs, boolean continuingLastGesture) {
         return new LauncherSwipeHandlerV2(
                 mContext,
-                mRecentsAnimationDeviceState,
                 mTaskAnimationManager,
                 mGestureState,
                 touchTimeMs,

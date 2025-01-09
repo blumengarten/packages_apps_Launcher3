@@ -74,9 +74,9 @@ constructor(
             if (visibleTasksCount != field) {
                 val wasVisible = field > 0
                 val isVisible = visibleTasksCount > 0
-                val wereDesktopTasksVisibleBefore = areDesktopTasksVisible()
+                val wereDesktopTasksVisibleBefore = areDesktopTasksVisibleAndNotInOverview()
                 field = visibleTasksCount
-                val areDesktopTasksVisibleNow = areDesktopTasksVisible()
+                val areDesktopTasksVisibleNow = areDesktopTasksVisibleAndNotInOverview()
                 if (wereDesktopTasksVisibleBefore != areDesktopTasksVisibleNow) {
                     notifyDesktopVisibilityListeners(areDesktopTasksVisibleNow)
                 }
@@ -192,9 +192,9 @@ constructor(
             )
         }
         if (overviewStateEnabled != inOverviewState) {
-            val wereDesktopTasksVisibleBefore = areDesktopTasksVisible()
+            val wereDesktopTasksVisibleBefore = areDesktopTasksVisibleAndNotInOverview()
             inOverviewState = overviewStateEnabled
-            val areDesktopTasksVisibleNow = areDesktopTasksVisible()
+            val areDesktopTasksVisibleNow = areDesktopTasksVisibleAndNotInOverview()
             if (wereDesktopTasksVisibleBefore != areDesktopTasksVisibleNow) {
                 notifyDesktopVisibilityListeners(areDesktopTasksVisibleNow)
             }
@@ -261,7 +261,7 @@ constructor(
             this.backgroundStateEnabled = backgroundStateEnabled
             if (this.backgroundStateEnabled) {
                 markLauncherResumed()
-            } else if (areDesktopTasksVisible() && !gestureInProgress) {
+            } else if (areDesktopTasksVisibleAndNotInOverview() && !gestureInProgress) {
                 // Switching out of background state. If desktop tasks are visible, pause launcher.
                 markLauncherPaused()
             }

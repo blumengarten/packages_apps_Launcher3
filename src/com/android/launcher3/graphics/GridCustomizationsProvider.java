@@ -136,7 +136,7 @@ public class GridCustomizationsProvider extends ContentProvider {
 
         switch (path) {
             case KEY_SHAPE_OPTIONS: {
-                if (Flags.newCustomizationPickerUi() && Flags.enableLauncherIconShapes()) {
+                if (Flags.newCustomizationPickerUi()) {
                     MatrixCursor cursor = new MatrixCursor(new String[]{
                             KEY_SHAPE_KEY, KEY_SHAPE_TITLE, KEY_PATH, KEY_IS_DEFAULT});
                     List<AppShape> shapes =  AppShapesProvider.INSTANCE.getShapes();

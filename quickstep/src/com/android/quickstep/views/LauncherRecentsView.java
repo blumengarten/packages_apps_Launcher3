@@ -50,7 +50,6 @@ import com.android.launcher3.util.SplitConfigurationOptions.SplitSelectSource;
 import com.android.quickstep.BaseContainerInterface;
 import com.android.quickstep.GestureState;
 import com.android.quickstep.LauncherActivityInterface;
-import com.android.quickstep.RotationTouchHelper;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.util.AnimUtils;
 import com.android.quickstep.util.SplitSelectStateController;
@@ -264,9 +263,8 @@ public class LauncherRecentsView extends RecentsView<QuickstepLauncher, Launcher
     }
 
     @Override
-    public void onGestureAnimationStart(Task[] runningTasks,
-            RotationTouchHelper rotationTouchHelper) {
-        super.onGestureAnimationStart(runningTasks, rotationTouchHelper);
+    public void onGestureAnimationStart(Task[] runningTasks) {
+        super.onGestureAnimationStart(runningTasks);
         if (!ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY.isTrue()) {
             // TODO: b/333533253 - Remove after flag rollout
             DesktopVisibilityController.INSTANCE.get(mContainer).setRecentsGestureStart();

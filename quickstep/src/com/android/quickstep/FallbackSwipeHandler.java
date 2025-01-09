@@ -101,11 +101,11 @@ public class FallbackSwipeHandler extends
 
     private boolean mAppCanEnterPip;
 
-    public FallbackSwipeHandler(Context context, RecentsAnimationDeviceState deviceState,
+    public FallbackSwipeHandler(Context context,
             TaskAnimationManager taskAnimationManager, GestureState gestureState, long touchTimeMs,
             boolean continuingLastGesture, InputConsumerController inputConsumer,
             MSDLPlayerWrapper msdlPlayerWrapper) {
-        super(context, deviceState, taskAnimationManager, gestureState, touchTimeMs,
+        super(context, taskAnimationManager, gestureState, touchTimeMs,
                 continuingLastGesture, inputConsumer, msdlPlayerWrapper);
 
         mRunningOverHome = mGestureState.getRunningTask() != null
@@ -216,8 +216,7 @@ public class FallbackSwipeHandler extends
         if (mRunningOverHome) {
             if (DisplayController.getNavigationMode(mContext).hasGestures) {
                 mRecentsView.onGestureAnimationStartOnHome(
-                        mGestureState.getRunningTask().getPlaceholderTasks(),
-                        mDeviceState.getRotationTouchHelper());
+                        mGestureState.getRunningTask().getPlaceholderTasks());
             }
         } else {
             super.notifyGestureAnimationStartToRecents();

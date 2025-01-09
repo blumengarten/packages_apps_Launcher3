@@ -685,7 +685,7 @@ public class InvariantDeviceProfile implements SafeCloseable {
         }
 
         // Finds the min width and height in dp for all displays.
-        int[] dimens = findMinWidthAndHeightDpForDevice(displayInfo);
+        int[] dimens = findMinWidthAndHeightPxForDevice(displayInfo);
 
         return findBestGridSize(gridSizes, dimens[0], dimens[1]);
     }
@@ -694,11 +694,11 @@ public class InvariantDeviceProfile implements SafeCloseable {
      * @return the biggest grid size that fits the display dimensions.
      * If no best grid size is found, return null.
      */
-    private static GridSize findBestGridSize(List<GridSize> list, int minWidthDp,
-            int minHeightDp) {
+    private static GridSize findBestGridSize(List<GridSize> list, int minWidthPx,
+            int minHeightPx) {
         GridSize selectedGridSize = null;
         for (GridSize item: list) {
-            if (minWidthDp >= item.mMinDeviceWidthDp && minHeightDp >= item.mMinDeviceHeightDp) {
+            if (minWidthPx >= item.mMinDeviceWidthPx && minHeightPx >= item.mMinDeviceHeightPx) {
                 if (selectedGridSize == null
                         || (selectedGridSize.mNumColumns <= item.mNumColumns
                         && selectedGridSize.mNumRows <= item.mNumRows)) {
@@ -709,16 +709,14 @@ public class InvariantDeviceProfile implements SafeCloseable {
         return selectedGridSize;
     }
 
-    private static int[] findMinWidthAndHeightDpForDevice(Info displayInfo) {
-        int minDisplayWidthDp = Integer.MAX_VALUE;
-        int minDisplayHeightDp = Integer.MAX_VALUE;
+    private static int[] findMinWidthAndHeightPxForDevice(Info displayInfo) {
+        int minDisplayWidthPx = Integer.MAX_VALUE;
+        int minDisplayHeightPx = Integer.MAX_VALUE;
         for (CachedDisplayInfo display: displayInfo.getAllDisplays()) {
-            minDisplayWidthDp = Math.min(minDisplayWidthDp,
-                    (int) dpiFromPx(display.size.x, DisplayMetrics.DENSITY_DEVICE_STABLE));
-            minDisplayHeightDp = Math.min(minDisplayHeightDp,
-                    (int) dpiFromPx(display.size.y, DisplayMetrics.DENSITY_DEVICE_STABLE));
+            minDisplayWidthPx = Math.min(minDisplayWidthPx, display.size.x);
+            minDisplayHeightPx = Math.min(minDisplayHeightPx, display.size.y);
         }
-        return new int[]{minDisplayWidthDp, minDisplayHeightDp};
+        return new int[]{minDisplayWidthPx, minDisplayHeightPx};
     }
 
     /**
@@ -1246,8 +1244,8 @@ public class InvariantDeviceProfile implements SafeCloseable {
     public static final class GridSize {
         final int mNumRows;
         final int mNumColumns;
-        final float mMinDeviceWidthDp;
-        final float mMinDeviceHeightDp;
+        final float mMinDeviceWidthPx;
+        final float mMinDeviceHeightPx;
         final String mDbFile;
         final int mDefaultLayoutId;
         final int mDemoModeLayoutId;
@@ -1258,8 +1256,8 @@ public class InvariantDeviceProfile implements SafeCloseable {
 
             mNumRows = (int) a.getFloat(R.styleable.GridSize_numGridRows, 0);
             mNumColumns = (int) a.getFloat(R.styleable.GridSize_numGridColumns, 0);
-            mMinDeviceWidthDp = a.getFloat(R.styleable.GridSize_minDeviceWidthDp, 0);
-            mMinDeviceHeightDp = a.getFloat(R.styleable.GridSize_minDeviceHeightDp, 0);
+            mMinDeviceWidthPx = a.getFloat(R.styleable.GridSize_minDeviceWidthPx, 0);
+            mMinDeviceHeightPx = a.getFloat(R.styleable.GridSize_minDeviceHeightPx, 0);
             mDbFile = a.getString(R.styleable.GridSize_dbFile);
             mDefaultLayoutId = a.getResourceId(
                     R.styleable.GridSize_defaultLayoutId, 0);

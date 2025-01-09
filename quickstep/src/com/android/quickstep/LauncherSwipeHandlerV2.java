@@ -67,11 +67,10 @@ import java.util.List;
 public class LauncherSwipeHandlerV2 extends AbsSwipeUpHandler<
         QuickstepLauncher, RecentsView<QuickstepLauncher, LauncherState>, LauncherState> {
 
-    public LauncherSwipeHandlerV2(Context context, RecentsAnimationDeviceState deviceState,
-            TaskAnimationManager taskAnimationManager, GestureState gestureState, long touchTimeMs,
-            boolean continuingLastGesture, InputConsumerController inputConsumer,
-            MSDLPlayerWrapper msdlPlayerWrapper) {
-        super(context, deviceState, taskAnimationManager, gestureState, touchTimeMs,
+    public LauncherSwipeHandlerV2(Context context, TaskAnimationManager taskAnimationManager,
+            GestureState gestureState, long touchTimeMs, boolean continuingLastGesture,
+            InputConsumerController inputConsumer, MSDLPlayerWrapper msdlPlayerWrapper) {
+        super(context, taskAnimationManager, gestureState, touchTimeMs,
                 continuingLastGesture, inputConsumer, msdlPlayerWrapper);
     }
 

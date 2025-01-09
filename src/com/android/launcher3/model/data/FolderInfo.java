@@ -164,7 +164,7 @@ public class FolderInfo extends CollectionInfo {
     }
 
     /**
-     * Returns the folder's contents as an ArrayList of {@link ItemInfo}. Includes
+     * Returns the folder's contents as an unsorted ArrayList of {@link ItemInfo}. Includes
      * {@link WorkspaceItemInfo} and {@link AppPairInfo}s.
      */
     @NonNull

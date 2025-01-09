@@ -37,13 +37,16 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 
-import com.android.launcher3.util.MainThreadInitializedObject;
-import com.android.launcher3.util.SafeCloseable;
+import com.android.launcher3.dagger.ApplicationContext;
+import com.android.launcher3.dagger.LauncherAppSingleton;
+import com.android.launcher3.util.DaggerSingletonObject;
+import com.android.launcher3.util.DaggerSingletonTracker;
 import com.android.launcher3.util.SplitConfigurationOptions;
 import com.android.launcher3.util.SplitConfigurationOptions.SplitStageInfo;
 import com.android.launcher3.util.SplitConfigurationOptions.StagePosition;
 import com.android.launcher3.util.SplitConfigurationOptions.StageType;
 import com.android.launcher3.util.TraceHelper;
+import com.android.quickstep.dagger.QuickstepBaseAppComponent;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.recents.model.Task.TaskKey;
 import com.android.systemui.shared.system.ActivityManagerWrapper;
@@ -60,15 +63,17 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * This class tracked the top-most task and  some 'approximate' task history to allow faster
  * system state estimation during touch interaction
  */
-public class TopTaskTracker extends ISplitScreenListener.Stub
-        implements TaskStackChangeListener, SafeCloseable {
+@LauncherAppSingleton
+public class TopTaskTracker extends ISplitScreenListener.Stub implements TaskStackChangeListener {
     private static final String TAG = "TopTaskTracker";
-    public static MainThreadInitializedObject<TopTaskTracker> INSTANCE =
-            new MainThreadInitializedObject<>(TopTaskTracker::new);
+    public static DaggerSingletonObject<TopTaskTracker> INSTANCE =
+            new DaggerSingletonObject<>(QuickstepBaseAppComponent::getTopTaskTracker);
 
     private static final int HISTORY_SIZE = 5;
 
@@ -86,7 +91,9 @@ public class TopTaskTracker extends ISplitScreenListener.Stub
     // bottom most.
     private ArrayMap<Integer, ArrayList<GroupedTaskInfo>> mVisibleTasks = new ArrayMap<>();
 
-    private TopTaskTracker(Context context) {
+    @Inject
+    public TopTaskTracker(@ApplicationContext Context context, DaggerSingletonTracker tracker,
+            SystemUiProxy systemUiProxy) {
         mContext = context;
 
         if (com.android.wm.shell.Flags.enableShellTopTaskTracking()) {
@@ -98,18 +105,17 @@ public class TopTaskTracker extends ISplitScreenListener.Stub
             mSideStagePosition.stageType = SplitConfigurationOptions.STAGE_TYPE_SIDE;
 
             TaskStackChangeListeners.getInstance().registerTaskStackListener(this);
-            SystemUiProxy.INSTANCE.get(context).registerSplitScreenListener(this);
-        }
-    }
-
-    @Override
-    public void close() {
-        if (com.android.wm.shell.Flags.enableShellTopTaskTracking()) {
-            return;
+            systemUiProxy.registerSplitScreenListener(this);
         }
 
-        TaskStackChangeListeners.getInstance().unregisterTaskStackListener(this);
-        SystemUiProxy.INSTANCE.get(mContext).unregisterSplitScreenListener(this);
+        tracker.addCloseable(() -> {
+            if (com.android.wm.shell.Flags.enableShellTopTaskTracking()) {
+                return;
+            }
+
+            TaskStackChangeListeners.getInstance().unregisterTaskStackListener(this);
+            systemUiProxy.unregisterSplitScreenListener(this);
+        });
     }
 
     @Override

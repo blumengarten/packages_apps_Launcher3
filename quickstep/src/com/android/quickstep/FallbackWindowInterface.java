@@ -80,10 +80,9 @@ public final class FallbackWindowInterface extends BaseWindowInterface{
 
     /** 6 */
     @Override
-    public BaseWindowInterface.AnimationFactory prepareRecentsUI(RecentsAnimationDeviceState
-            deviceState, boolean activityVisible,
+    public BaseWindowInterface.AnimationFactory prepareRecentsUI(boolean activityVisible,
             Consumer<AnimatorControllerWithResistance> callback) {
-        notifyRecentsOfOrientation(deviceState.getRotationTouchHelper());
+        notifyRecentsOfOrientation();
         BaseWindowInterface.DefaultAnimationFactory factory =
                 new BaseWindowInterface.DefaultAnimationFactory(callback);
         factory.initBackgroundStateUI();
@@ -153,12 +152,12 @@ public final class FallbackWindowInterface extends BaseWindowInterface{
     }
 
     @Override
-    public void onExitOverview(RotationTouchHelper deviceState, Runnable exitRunnable) {
+    public void onExitOverview(Runnable exitRunnable) {
         final StateManager<RecentsState, RecentsWindowManager> stateManager =
                 getCreatedContainer().getStateManager();
         if (stateManager.getState() == HOME) {
             exitRunnable.run();
-            notifyRecentsOfOrientation(deviceState);
+            notifyRecentsOfOrientation();
             return;
         }
 
@@ -169,7 +168,7 @@ public final class FallbackWindowInterface extends BaseWindowInterface{
                         // Are we going from Recents to Workspace?
                         if (toState == HOME) {
                             exitRunnable.run();
-                            notifyRecentsOfOrientation(deviceState);
+                            notifyRecentsOfOrientation();
                             stateManager.removeStateListener(this);
                         }
                     }
@@ -208,11 +207,9 @@ public final class FallbackWindowInterface extends BaseWindowInterface{
         }
     }
 
-    private void notifyRecentsOfOrientation(RotationTouchHelper rotationTouchHelper) {
+    private void notifyRecentsOfOrientation() {
         // reset layout on swipe to home
-        RecentsView recentsView = getCreatedContainer().getOverviewPanel();
-        recentsView.setLayoutRotation(rotationTouchHelper.getCurrentActiveRotation(),
-                rotationTouchHelper.getDisplayRotation());
+        ((RecentsView) getCreatedContainer().getOverviewPanel()).reapplyActiveRotation();
     }
 
     @Override

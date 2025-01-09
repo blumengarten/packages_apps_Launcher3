@@ -24,6 +24,8 @@ import com.android.launcher3.Flags
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.util.DaggerSingletonObject
+import com.android.launcher3.util.DaggerSingletonTracker
+import com.android.launcher3.util.Executors.MAIN_EXECUTOR
 import com.android.quickstep.DisplayModel
 import com.android.quickstep.FallbackWindowInterface
 import com.android.quickstep.dagger.QuickstepBaseAppComponent
@@ -31,7 +33,9 @@ import com.android.quickstep.fallback.window.RecentsDisplayModel.RecentsDisplayR
 import javax.inject.Inject
 
 @LauncherAppSingleton
-class RecentsDisplayModel @Inject constructor(@ApplicationContext context: Context) :
+class RecentsDisplayModel
+@Inject
+constructor(@ApplicationContext context: Context, tracker: DaggerSingletonTracker) :
     DisplayModel<RecentsDisplayResource>(context) {
 
     companion object {
@@ -47,17 +51,38 @@ class RecentsDisplayModel @Inject constructor(@ApplicationContext context: Conte
 
     init {
         if (Flags.enableFallbackOverviewInWindow() || Flags.enableLauncherOverviewInWindow()) {
-            displayManager.registerDisplayListener(displayListener, Handler.getMain())
-            createDisplayResource(Display.DEFAULT_DISPLAY)
+            MAIN_EXECUTOR.execute {
+                displayManager.registerDisplayListener(displayListener, Handler.getMain())
+                // In the scenario where displays were added before this display listener was
+                // registered, we should store the RecentsDisplayResources for those displays
+                // directly.
+                displayManager.displays
+                    .filter { getDisplayResource(it.displayId) == null }
+                    .forEach { storeRecentsDisplayResource(it.displayId, it) }
+            }
+            tracker.addCloseable { destroy() }
         }
     }
 
     override fun createDisplayResource(displayId: Int) {
-        if (DEBUG) Log.d(TAG, "create: displayId=$displayId")
+        if (DEBUG) Log.d(TAG, "createDisplayResource: displayId=$displayId")
         getDisplayResource(displayId)?.let {
             return
         }
         val display = displayManager.getDisplay(displayId)
+        if (display == null) {
+            if (DEBUG)
+                Log.w(
+                    TAG,
+                    "createDisplayResource: could not create display for displayId=$displayId",
+                    Exception(),
+                )
+            return
+        }
+        storeRecentsDisplayResource(displayId, display)
+    }
+
+    private fun storeRecentsDisplayResource(displayId: Int, display: Display) {
         displayResourceArray[displayId] =
             RecentsDisplayResource(displayId, context.createDisplayContext(display))
     }

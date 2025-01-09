@@ -46,18 +46,12 @@ public class TaskAnimationManagerTest {
     private SystemUiProxy mSystemUiProxy;
 
     private TaskAnimationManager mTaskAnimationManager;
-    protected RecentsAnimationDeviceState mRecentsAnimationDeviceState;
-
-    @Before
-    public void setUpRecentsAnimationDeviceState() {
-        runOnMainSync(() ->
-                mRecentsAnimationDeviceState = new RecentsAnimationDeviceState(mContext, true));
-    }
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        mTaskAnimationManager = new TaskAnimationManager(mContext, mRecentsAnimationDeviceState) {
+        mTaskAnimationManager = new TaskAnimationManager(mContext,
+                RecentsAnimationDeviceState.INSTANCE.get(mContext)) {
             @Override
             SystemUiProxy getSystemUiProxy() {
                 return mSystemUiProxy;

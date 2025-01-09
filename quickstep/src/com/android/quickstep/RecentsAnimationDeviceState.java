@@ -67,7 +67,9 @@ import androidx.annotation.VisibleForTesting;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.DisplayController.DisplayInfoChangeListener;
 import com.android.launcher3.util.DisplayController.Info;
+import com.android.launcher3.util.MainThreadInitializedObject;
 import com.android.launcher3.util.NavigationMode;
+import com.android.launcher3.util.SafeCloseable;
 import com.android.launcher3.util.SettingsCache;
 import com.android.quickstep.TopTaskTracker.CachedTaskInfo;
 import com.android.quickstep.util.ActiveGestureLog;
@@ -88,15 +90,17 @@ import java.util.ArrayList;
 /**
  * Manages the state of the system during a swipe up gesture.
  */
-public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, ExclusionListener {
-
-    private static final String TAG = "RecentsAnimationDeviceState";
+public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, ExclusionListener,
+        SafeCloseable {
 
     static final String SUPPORT_ONE_HANDED_MODE = "ro.support_one_handed_mode";
 
     // TODO: Move to quickstep contract
     private static final float QUICKSTEP_TOUCH_SLOP_RATIO_TWO_BUTTON = 3f;
     private static final float QUICKSTEP_TOUCH_SLOP_RATIO_GESTURAL = 1.414f;
+
+    public static MainThreadInitializedObject<RecentsAnimationDeviceState> INSTANCE =
+            new MainThreadInitializedObject<>(RecentsAnimationDeviceState::new);
 
     private final Context mContext;
     private final DisplayController mDisplayController;
@@ -130,41 +134,21 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
     private @NonNull Region mExclusionRegion = GestureExclusionManager.EMPTY_REGION;
     private boolean mExclusionListenerRegistered;
 
-    public RecentsAnimationDeviceState(Context context) {
-        this(context, false, GestureExclusionManager.INSTANCE);
-    }
-
-    public RecentsAnimationDeviceState(Context context, boolean isInstanceForTouches) {
-        this(context, isInstanceForTouches, GestureExclusionManager.INSTANCE);
+    private RecentsAnimationDeviceState(Context context) {
+        this(context, GestureExclusionManager.INSTANCE);
     }
 
     @VisibleForTesting
     RecentsAnimationDeviceState(Context context, GestureExclusionManager exclusionManager) {
-        this(context, false, exclusionManager);
-    }
-
-    /**
-     * @param isInstanceForTouches {@code true} if this is the persistent instance being used for
-     *                                   gesture touch handling
-     */
-    RecentsAnimationDeviceState(
-            Context context, boolean isInstanceForTouches,
-            GestureExclusionManager exclusionManager) {
         mContext = context;
         mDisplayController = DisplayController.INSTANCE.get(context);
         mExclusionManager = exclusionManager;
         mContextualSearchStateManager = ContextualSearchStateManager.INSTANCE.get(context);
         mIsOneHandedModeSupported = SystemProperties.getBoolean(SUPPORT_ONE_HANDED_MODE, false);
         mRotationTouchHelper = RotationTouchHelper.INSTANCE.get(context);
-        if (isInstanceForTouches) {
-            // rotationTouchHelper doesn't get initialized after being destroyed, so only destroy
-            // if primary TouchInteractionService instance needs to be destroyed.
-            mRotationTouchHelper.init();
-            runOnDestroy(mRotationTouchHelper::destroy);
-        }
 
         // Register for exclusion updates
-        runOnDestroy(() -> unregisterExclusionListener());
+        runOnDestroy(this::unregisterExclusionListener);
 
         // Register for display changes changes
         mDisplayController.addChangeListener(this);
@@ -225,10 +209,8 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
         mOnDestroyActions.add(action);
     }
 
-    /**
-     * Cleans up all the registered listeners and receivers.
-     */
-    public void destroy() {
+    @Override
+    public void close() {
         for (Runnable r : mOnDestroyActions) {
             r.run();
         }
@@ -601,10 +583,6 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
 
     public boolean isPipActive() {
         return mPipIsActive;
-    }
-
-    public RotationTouchHelper getRotationTouchHelper() {
-        return mRotationTouchHelper;
     }
 
     /** Returns whether IME is rendering nav buttons, and IME is currently showing. */

@@ -163,6 +163,7 @@ class RecentsWindowManager(context: Context) :
         TaskStackChangeListeners.getInstance().unregisterTaskStackListener(taskStackChangeListener)
         callbacks?.removeListener(recentsAnimationListener)
         recentsWindowTracker.onContextDestroyed(this)
+        recentsView?.destroy()
     }
 
     override fun startHome() {

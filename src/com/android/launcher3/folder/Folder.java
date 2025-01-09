@@ -110,7 +110,6 @@ import com.android.launcher3.widget.PendingAddShortcutInfo;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -517,8 +516,6 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         mInfo = info;
         mFromTitle = info.title;
         mFromLabelState = info.getFromLabelState();
-        ArrayList<ItemInfo> children = info.getContents();
-        Collections.sort(children, ITEM_POS_COMPARATOR);
         updateItemLocationsInDatabaseBatch(true);
 
         BaseDragLayer.LayoutParams lp = (BaseDragLayer.LayoutParams) getLayoutParams();

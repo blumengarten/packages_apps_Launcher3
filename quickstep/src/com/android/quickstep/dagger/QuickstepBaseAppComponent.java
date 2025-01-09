@@ -22,6 +22,7 @@ import com.android.launcher3.model.WellbeingModel;
 import com.android.launcher3.statehandlers.DesktopVisibilityController;
 import com.android.quickstep.OverviewComponentObserver;
 import com.android.quickstep.SystemUiProxy;
+import com.android.quickstep.TopTaskTracker;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
 import com.android.quickstep.util.AsyncClockEventDelegate;
 
@@ -46,4 +47,6 @@ public interface QuickstepBaseAppComponent extends LauncherBaseAppComponent {
     OverviewComponentObserver getOverviewComponentObserver();
 
     DesktopVisibilityController getDesktopVisibilityController();
+
+    TopTaskTracker getTopTaskTracker();
 }

@@ -163,8 +163,8 @@
     </declare-styleable>
 
     <declare-styleable name="GridSize">
-        <attr name="minDeviceWidthDp" format="float"/>
-        <attr name="minDeviceHeightDp" format="float"/>
+        <attr name="minDeviceWidthPx" format="float"/>
+        <attr name="minDeviceHeightPx" format="float"/>
         <attr name="numGridRows" format="integer"/>
         <attr name="numGridColumns" format="integer"/>
         <attr name="dbFile" />

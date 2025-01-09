@@ -452,6 +452,10 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
 
     @Override
     protected void onDestroy() {
+        RecentsView recentsView = getOverviewPanel();
+        if (recentsView != null) {
+            recentsView.destroy();
+        }
         super.onDestroy();
         ACTIVITY_TRACKER.onContextDestroyed(this);
         mActivityLaunchAnimationRunner = null;

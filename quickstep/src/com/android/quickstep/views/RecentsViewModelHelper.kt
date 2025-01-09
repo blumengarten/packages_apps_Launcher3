@@ -32,8 +32,8 @@ class RecentsViewModelHelper(
     private val recentsCoroutineScope: CoroutineScope,
     private val dispatcherProvider: DispatcherProvider,
 ) {
-    fun onDetachedFromWindow() {
-        recentsCoroutineScope.cancel("RecentsView detaching from window")
+    fun onDestroy() {
+        recentsCoroutineScope.cancel("RecentsView is being destroyed")
     }
 
     fun switchToScreenshot(

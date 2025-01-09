@@ -226,6 +226,5 @@ android_robolectric_test {
     ],
     instrumentation_for: "Launcher3",
     plugins: ["dagger2-compiler"],
-    upstream: true,
     strict_mode: false,
 }

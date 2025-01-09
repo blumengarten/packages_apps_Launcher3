@@ -40,7 +40,6 @@ import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.quickstep.OverviewComponentObserver;
 import com.android.quickstep.RecentsAnimationCallbacks;
 import com.android.quickstep.RecentsAnimationController;
-import com.android.quickstep.RecentsAnimationDeviceState;
 import com.android.quickstep.RecentsAnimationTargets;
 import com.android.quickstep.RecentsModel;
 import com.android.quickstep.SystemUiProxy;
@@ -55,18 +54,15 @@ public class SplitWithKeyboardShortcutController {
 
     private final QuickstepLauncher mLauncher;
     private final SplitSelectStateController mController;
-    private final RecentsAnimationDeviceState mDeviceState;
     private final OverviewComponentObserver mOverviewComponentObserver;
 
     private final int mSplitPlaceholderSize;
     private final int mSplitPlaceholderInset;
 
-    public SplitWithKeyboardShortcutController(QuickstepLauncher launcher,
-            SplitSelectStateController controller,
-            RecentsAnimationDeviceState deviceState) {
+    public SplitWithKeyboardShortcutController(
+            QuickstepLauncher launcher, SplitSelectStateController controller) {
         mLauncher = launcher;
         mController = controller;
-        mDeviceState = deviceState;
         mOverviewComponentObserver = OverviewComponentObserver.INSTANCE.get(launcher);
 
         mSplitPlaceholderSize = mLauncher.getResources().getDimensionPixelSize(
@@ -102,10 +98,6 @@ public class SplitWithKeyboardShortcutController {
                                 false /* useSyntheticRecentsTransition */);
             });
         });
-    }
-
-    public void onDestroy() {
-        mDeviceState.destroy();
     }
 
     private class SplitWithKeyboardShortcutRecentsAnimationListener implements

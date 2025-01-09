@@ -156,8 +156,7 @@ public class OtherActivityInputConsumer extends ContextWrapper implements InputC
         mPassedPilferInputSlop = mPassedWindowMoveSlop = continuingPreviousGesture;
         mStartDisplacement = continuingPreviousGesture ? 0 : -mTouchSlop;
         mDisableHorizontalSwipe = !mPassedPilferInputSlop && disableHorizontalSwipe;
-        mRotationTouchHelper = mDeviceState.getRotationTouchHelper();
-
+        mRotationTouchHelper = RotationTouchHelper.INSTANCE.get(this);
     }
 
     @Override

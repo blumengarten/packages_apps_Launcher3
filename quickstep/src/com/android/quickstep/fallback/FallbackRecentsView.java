@@ -45,7 +45,6 @@ import com.android.launcher3.util.SplitConfigurationOptions.SplitSelectSource;
 import com.android.quickstep.BaseContainerInterface;
 import com.android.quickstep.FallbackActivityInterface;
 import com.android.quickstep.GestureState;
-import com.android.quickstep.RotationTouchHelper;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
 import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.SplitSelectStateController;
@@ -114,12 +113,11 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
      * to the home task. This allows us to handle quick-switch similarly to a quick-switching
      * from a foreground task.
      */
-    public void onGestureAnimationStartOnHome(Task[] homeTask,
-            RotationTouchHelper rotationTouchHelper) {
+    public void onGestureAnimationStartOnHome(Task[] homeTask) {
         // TODO(b/195607777) General fallback love, but this might be correct
         //  Home task should be defined as the front-most task info I think?
         mHomeTask = homeTask.length > 0 ? homeTask[0] : null;
-        onGestureAnimationStart(homeTask, rotationTouchHelper);
+        onGestureAnimationStart(homeTask);
     }
 
     /**

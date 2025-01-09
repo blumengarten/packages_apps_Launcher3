@@ -127,6 +127,8 @@ public class InputConsumerUtilsTest {
     @Before
     public void setupMainThreadInitializedObjects() {
         mContext.putObject(LockedUserState.INSTANCE, mLockedUserState);
+        mContext.putObject(RotationTouchHelper.INSTANCE, mock(RotationTouchHelper.class));
+        mContext.putObject(RecentsAnimationDeviceState.INSTANCE, mDeviceState);
     }
 
     @Before
@@ -193,7 +195,6 @@ public class InputConsumerUtilsTest {
         when(mDeviceState.canStartSystemGesture()).thenReturn(true);
         when(mDeviceState.isFullyGesturalNavMode()).thenReturn(true);
         when(mDeviceState.getNavBarPosition()).thenReturn(mock(NavBarPosition.class));
-        when(mDeviceState.getRotationTouchHelper()).thenReturn(mock(RotationTouchHelper.class));
     }
 
     @After

@@ -199,6 +199,7 @@ public abstract class AbsSwipeUpHandler<
     // Fraction of the scroll and transform animation in which the current task fades out
     private static final float KQS_TASK_FADE_ANIMATION_FRACTION = 0.4f;
 
+    protected final RecentsAnimationDeviceState mDeviceState;
     protected final BaseContainerInterface<STATE, RECENTS_CONTAINER> mContainerInterface;
     protected final InputConsumerProxy mInputConsumerProxy;
     protected final ContextInitListener mContextInitListener;
@@ -374,12 +375,13 @@ public abstract class AbsSwipeUpHandler<
 
     private final MSDLPlayerWrapper mMSDLPlayerWrapper;
 
-    public AbsSwipeUpHandler(Context context, RecentsAnimationDeviceState deviceState,
+    public AbsSwipeUpHandler(Context context,
             TaskAnimationManager taskAnimationManager, GestureState gestureState,
             long touchTimeMs, boolean continuingLastGesture,
             InputConsumerController inputConsumer,
             MSDLPlayerWrapper msdlPlayerWrapper) {
-        super(context, deviceState, gestureState);
+        super(context, gestureState);
+        mDeviceState = RecentsAnimationDeviceState.INSTANCE.get(mContext);
         mContainerInterface = gestureState.getContainerInterface();
         mContextInitListener =
                 mContainerInterface.createActivityInitListener(this::onActivityInit);
@@ -597,7 +599,7 @@ public abstract class AbsSwipeUpHandler<
         // as that will set the state as BACKGROUND_APP, overriding the animation to NORMAL.
         if (mGestureState.getEndTarget() != HOME) {
             Runnable initAnimFactory = () -> {
-                mAnimationFactory = mContainerInterface.prepareRecentsUI(mDeviceState,
+                mAnimationFactory = mContainerInterface.prepareRecentsUI(
                         mWasLauncherAlreadyVisible, this::onAnimatorPlaybackControllerCreated);
                 maybeUpdateRecentsAttachedState(false /* animate */);
                 if (mGestureState.getEndTarget() != null) {
@@ -663,12 +665,9 @@ public abstract class AbsSwipeUpHandler<
         mGestureState.getContainerInterface().setOnDeferredActivityLaunchCallback(
                 mOnDeferredActivityLaunch);
 
-        mGestureState.runOnceAtState(STATE_END_TARGET_SET,
-                () -> {
-                    mDeviceState.getRotationTouchHelper()
-                            .onEndTargetCalculated(mGestureState.getEndTarget(),
-                                    mContainerInterface);
-                });
+        mGestureState.runOnceAtState(STATE_END_TARGET_SET, () ->
+                RotationTouchHelper.INSTANCE.get(mContext)
+                        .onEndTargetCalculated(mGestureState.getEndTarget(), mContainerInterface));
 
         notifyGestureStarted();
     }
@@ -708,7 +707,7 @@ public abstract class AbsSwipeUpHandler<
         if (mRecentsView == null) {
             return;
         }
-        mRecentsView.onGestureAnimationStart(runningTasks, mDeviceState.getRotationTouchHelper());
+        mRecentsView.onGestureAnimationStart(runningTasks);
         TaskView currentPageTaskView = mRecentsView.getCurrentPageTaskView();
         if (currentPageTaskView != null) {
             mPreviousTaskViewType = currentPageTaskView.getType();
@@ -1985,7 +1984,7 @@ public abstract class AbsSwipeUpHandler<
                 }
                 // Make sure recents is in its final state
                 maybeUpdateRecentsAttachedState(false);
-                mContainerInterface.onSwipeUpToHomeComplete(mDeviceState);
+                mContainerInterface.onSwipeUpToHomeComplete();
             }
         });
         if (mRecentsAnimationTargets != null) {

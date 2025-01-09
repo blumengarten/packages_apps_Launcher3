@@ -21,7 +21,7 @@ import com.android.systemui.shared.Flags
 object AppShapesProvider {
 
     val shapes =
-        if (Flags.newCustomizationPickerUi())
+        if (Flags.newCustomizationPickerUi() && Flags.enableLauncherIconShapes())
             listOf(
                 AppShape(
                     "arch",
@@ -53,6 +53,14 @@ object AppShapesProvider {
                     "square",
                     "M99.18 53.689C99.18 67.434 99.18 74.306 97.022 79.758 93.897 87.649 87.649 93.897 79.758 97.022 74.306 99.18 67.434 99.18 53.689 99.18H46.311C32.566 99.18 25.694 99.18 20.242 97.022 12.351 93.897 6.103 87.649 2.978 79.758.82 74.306.82 67.434.82 53.689L.82 46.311C.82 32.566.82 25.694 2.978 20.242 6.103 12.351 12.351 6.103 20.242 2.978 25.694.82 32.566.82 46.311.82L53.689.82C67.434.82 74.306.82 79.758 2.978 87.649 6.103 93.897 12.351 97.022 20.242 99.18 25.694 99.18 32.566 99.18 46.311V53.689Z\n",
                 ),
+            )
+        else if (Flags.newCustomizationPickerUi() && !Flags.enableLauncherIconShapes())
+            listOf(
+                AppShape(
+                    "circle",
+                    "circle",
+                    "M99.18 50C99.18 77.162 77.162 99.18 50 99.18 22.838 99.18.82 77.162.82 50 .82 22.839 22.838.82 50 .82 77.162.82 99.18 22.839 99.18 50Z",
+                )
             )
         else emptyList()
 }

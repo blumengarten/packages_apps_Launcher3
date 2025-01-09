@@ -80,7 +80,7 @@ public final class LauncherActivityInterface extends
     }
 
     @Override
-    public void onSwipeUpToHomeComplete(RecentsAnimationDeviceState deviceState) {
+    public void onSwipeUpToHomeComplete() {
         QuickstepLauncher launcher = getCreatedContainer();
         if (launcher == null) {
             return;
@@ -93,7 +93,7 @@ public final class LauncherActivityInterface extends
         MAIN_EXECUTOR.getHandler().post(launcher.getStateManager()::reapplyState);
 
         launcher.getRootView().setForceHideBackArrow(false);
-        notifyRecentsOfOrientation(deviceState.getRotationTouchHelper());
+        notifyRecentsOfOrientation();
     }
 
     @Override
@@ -106,9 +106,9 @@ public final class LauncherActivityInterface extends
     }
 
     @Override
-    public AnimationFactory prepareRecentsUI(RecentsAnimationDeviceState deviceState,
+    public AnimationFactory prepareRecentsUI(
             boolean activityVisible, Consumer<AnimatorControllerWithResistance> callback) {
-        notifyRecentsOfOrientation(deviceState.getRotationTouchHelper());
+        notifyRecentsOfOrientation();
         DefaultAnimationFactory factory = new DefaultAnimationFactory(callback) {
             @Override
             protected void createBackgroundToOverviewAnim(QuickstepLauncher activity,
@@ -227,7 +227,7 @@ public final class LauncherActivityInterface extends
 
 
     @Override
-    public void onExitOverview(RotationTouchHelper deviceState, Runnable exitRunnable) {
+    public void onExitOverview(Runnable exitRunnable) {
         final StateManager<LauncherState, Launcher> stateManager =
                 getCreatedContainer().getStateManager();
         stateManager.addStateListener(
@@ -237,18 +237,16 @@ public final class LauncherActivityInterface extends
                         // Are we going from Recents to Workspace?
                         if (toState == LauncherState.NORMAL) {
                             exitRunnable.run();
-                            notifyRecentsOfOrientation(deviceState);
+                            notifyRecentsOfOrientation();
                             stateManager.removeStateListener(this);
                         }
                     }
                 });
     }
 
-    private void notifyRecentsOfOrientation(RotationTouchHelper rotationTouchHelper) {
+    private void notifyRecentsOfOrientation() {
         // reset layout on swipe to home
-        RecentsView recentsView = getCreatedContainer().getOverviewPanel();
-        recentsView.setLayoutRotation(rotationTouchHelper.getCurrentActiveRotation(),
-                rotationTouchHelper.getDisplayRotation());
+        ((RecentsView) getCreatedContainer().getOverviewPanel()).reapplyActiveRotation();
     }
 
     @Override
