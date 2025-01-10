@@ -30,7 +30,6 @@ import android.app.ActivityManager;
 import android.app.ActivityOptions;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.window.TransitionInfo;
 
 import androidx.annotation.BinderThread;
 
@@ -115,7 +114,7 @@ public class SplitWithKeyboardShortcutController {
 
         @Override
         public void onRecentsAnimationStart(RecentsAnimationController controller,
-                RecentsAnimationTargets targets, TransitionInfo transitionInfo) {
+                RecentsAnimationTargets targets) {
             mController.setInitialTaskSelect(mRunningTaskInfo,
                     mLeftOrTop ? STAGE_POSITION_TOP_OR_LEFT : STAGE_POSITION_BOTTOM_OR_RIGHT,
                     null /* itemInfo */,
