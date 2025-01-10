@@ -58,6 +58,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 
@@ -529,6 +530,16 @@ public class FolderPagedView extends PagedView<PageIndicatorDots> implements Cli
         // Ensure that adjacent pages have high resolution icons
         verifyVisibleHighResIcons(getCurrentPage() - 1);
         verifyVisibleHighResIcons(getCurrentPage() + 1);
+    }
+
+    int getTotalChildCount() {
+        AtomicInteger count = new AtomicInteger();
+        iterateOverItems((i, v) -> {
+            count.getAndIncrement();
+            return false;
+        });
+
+        return count.get();
     }
 
     /**

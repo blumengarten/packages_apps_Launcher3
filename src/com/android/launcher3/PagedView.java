@@ -718,12 +718,14 @@ public abstract class PagedView<T extends View & PageIndicator> extends ViewGrou
     }
 
     /**
-     * Queues the given callback to be run once {@code mPageScrolls} has been initialized.
+     * Run the given `callback` immediately once {@code mPageScrolls} has been initialized,
+     * otherwise queue the callback to `mOnPageScrollsInitializedCallbacks`.
      */
     public void runOnPageScrollsInitialized(Runnable callback) {
-        mOnPageScrollsInitializedCallbacks.add(callback);
         if (isPageScrollsInitialized()) {
-            onPageScrollsInitialized();
+            callback.run();
+        } else {
+            mOnPageScrollsInitializedCallbacks.add(callback);
         }
     }
 

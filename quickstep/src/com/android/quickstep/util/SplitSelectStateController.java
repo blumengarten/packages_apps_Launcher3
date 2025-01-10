@@ -678,7 +678,7 @@ public class SplitSelectStateController {
         }
 
         @Override
-        public void startAnimation(IBinder transition, TransitionInfo info,
+        public void startAnimation(IBinder transition, TransitionInfo transitionInfo,
                 SurfaceControl.Transaction t,
                 IRemoteTransitionFinishedCallback finishedCallback) {
             final Runnable finishAdapter = () ->  {
@@ -708,7 +708,7 @@ public class SplitSelectStateController {
                         null /* nonApps */,
                         mStateManager,
                         mDepthController,
-                        info, t, () -> {
+                        transitionInfo, t, () -> {
                             finishAdapter.run();
                             cleanup(true /*success*/);
                         },
@@ -920,7 +920,7 @@ public class SplitSelectStateController {
 
             @Override
             public void onRecentsAnimationStart(RecentsAnimationController controller,
-                    RecentsAnimationTargets targets) {
+                    RecentsAnimationTargets targets, TransitionInfo transitionInfo) {
                 StatsLogManager.LauncherEvent launcherDesktopSplitEvent =
                         mSplitPosition == STAGE_POSITION_BOTTOM_OR_RIGHT ?
                         LAUNCHER_DESKTOP_MODE_SPLIT_RIGHT_BOTTOM :

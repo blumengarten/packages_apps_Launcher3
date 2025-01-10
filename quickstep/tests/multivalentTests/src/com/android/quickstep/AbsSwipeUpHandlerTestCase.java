@@ -364,7 +364,7 @@ public abstract class AbsSwipeUpHandlerTestCase<
 
     private void onRecentsAnimationStart(SWIPE_HANDLER absSwipeUpHandler) {
         runOnMainSync(() -> absSwipeUpHandler.onRecentsAnimationStart(
-                mRecentsAnimationController, mRecentsAnimationTargets));
+                mRecentsAnimationController, mRecentsAnimationTargets, /* transitionInfo= */null));
     }
 
     protected static void runOnMainSync(Runnable runnable) {

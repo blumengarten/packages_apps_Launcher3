@@ -57,6 +57,7 @@ public class BubbleBarInputConsumer implements InputConsumer {
     private final int mTouchSlop;
     private final PointF mDownPos = new PointF();
     private final PointF mLastPos = new PointF();
+    private long mDownTime;
     private final long mTimeForLongPress;
     private int mActivePointerId = INVALID_POINTER_ID;
 
@@ -81,6 +82,7 @@ public class BubbleBarInputConsumer implements InputConsumer {
         final int action = ev.getAction();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
+                mDownTime = System.currentTimeMillis();
                 mActivePointerId = ev.getPointerId(0);
                 mDownPos.set(ev.getX(), ev.getY());
                 mLastPos.set(mDownPos);
@@ -120,13 +122,15 @@ public class BubbleBarInputConsumer implements InputConsumer {
                 }
                 break;
             case MotionEvent.ACTION_UP:
+                long tapTime = System.currentTimeMillis() - mDownTime;
                 boolean swipeUpOnBubbleHandle = mBubbleBarSwipeController != null
                         && mBubbleBarSwipeController.isSwipeGesture();
                 // Anything less than a long-press is a tap
-                boolean isWithinTapTime = ev.getEventTime() - ev.getDownTime() <= mTimeForLongPress;
+                boolean isWithinTapTime = tapTime <= mTimeForLongPress;
                 Log.d(TAG, "ACTION_UP swipeUp=" + swipeUpOnBubbleHandle + " isInTapTime="
-                        + isWithinTapTime + " passedTouchSlop=" + mPassedTouchSlop
-                        + " stashedOrCollapsedOnDown=" + mStashedOrCollapsedOnDown);
+                        + isWithinTapTime + " tapTime=" + tapTime + " passedTouchSlop="
+                        + mPassedTouchSlop + " stashedOrCollapsedOnDown="
+                        + mStashedOrCollapsedOnDown);
                 if (isWithinTapTime && !swipeUpOnBubbleHandle && !mPassedTouchSlop
                         && mStashedOrCollapsedOnDown) {
                     Log.d(TAG, "ACTION_UP showing bubble bar");
@@ -153,6 +157,7 @@ public class BubbleBarInputConsumer implements InputConsumer {
         }
         mPassedTouchSlop = false;
         mPilfered = false;
+        mDownTime = 0;
     }
 
     private boolean isCollapsed() {

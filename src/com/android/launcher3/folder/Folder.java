@@ -697,8 +697,14 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
             }
         }
 
+        Log.d("b/383526431", "animateOpen: content child count before: "
+                + mContent.getTotalChildCount());
+
         mContent.completePendingPageChanges();
         mContent.setCurrentPage(pageNo);
+
+        Log.d("b/383526431", "animateOpen: content child count after pending page"
+                + " changes: " + mContent.getTotalChildCount());
 
         // This is set to true in close(), but isn't reset to false until onDropCompleted(). This
         // leads to an inconsistent state if you drag out of the folder and drag back in without
@@ -706,6 +712,8 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         mDeleteFolderOnDropCompleted = false;
 
         cancelRunningAnimations();
+        Log.d("b/383526431", "animateOpen: content child count after cancelling"
+                + " animation: " + mContent.getTotalChildCount());
         FolderAnimationManager fam = new FolderAnimationManager(this, true /* isOpening */);
         AnimatorSet anim = fam.getAnimator();
         anim.addListener(new AnimatorListenerAdapter() {

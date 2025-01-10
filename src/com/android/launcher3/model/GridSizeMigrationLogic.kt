@@ -65,33 +65,42 @@ class GridSizeMigrationLogic {
                 "$srcDeviceState\ndestDeviceState: $destDeviceState\nisDestNewDb: $isDestNewDb",
         )
 
-        // This is a special case where if the grid is the same amount of columns but a larger
-        // amount of rows we simply copy over the source grid to the destination grid, rather
-        // than undergoing the general grid migration.
-        if (shouldMigrateToStrictlyTallerGrid(isDestNewDb, srcDeviceState, destDeviceState)) {
-            Log.d(TAG, "Migrating to strictly taller grid")
+        val shouldMigrateToStrtictlyTallerGrid =
+            shouldMigrateToStrictlyTallerGrid(isDestNewDb, srcDeviceState, destDeviceState)
+        if (shouldMigrateToStrtictlyTallerGrid) {
             copyTable(source, TABLE_NAME, target.writableDatabase, TABLE_NAME, context)
-            if (oneGridSpecs()) {
-                val destReader = DbReader(target.writableDatabase, TABLE_NAME, context)
-                val shouldShiftCells = shouldShiftCells(destReader, srcDeviceState.rows)
-                if (shouldShiftCells) {
-                    shiftTableByXCells(
-                        target.writableDatabase,
-                        (destDeviceState.rows - srcDeviceState.rows),
-                        TABLE_NAME,
-                    )
-                }
-            }
-            // Save current configuration, so that the migration does not run again.
-            destDeviceState.writeToPrefs(context)
-            return
+        } else {
+            copyTable(source, TABLE_NAME, target.writableDatabase, TMP_TABLE, context)
         }
-
-        copyTable(source, TABLE_NAME, target.writableDatabase, TMP_TABLE, context)
 
         val migrationStartTime = System.currentTimeMillis()
         try {
             SQLiteTransaction(target.writableDatabase).use { t ->
+                // This is a special case where if the grid is the same amount of columns but a
+                // larger amount of rows we simply copy over the source grid to the destination
+                // grid, rather than undergoing the general grid migration. If there are more icons
+                // on the bottom of the first page then we shift the icons down to the bottom of the
+                // grid so that the icons remain bottom-anchored.
+                if (shouldMigrateToStrtictlyTallerGrid) {
+                    Log.d(TAG, "Migrating to strictly taller grid")
+                    if (oneGridSpecs()) {
+                        val destReader = DbReader(target.writableDatabase, TABLE_NAME, context)
+                        val shouldShiftCells = shouldShiftCells(destReader, srcDeviceState.rows)
+                        if (shouldShiftCells) {
+                            Log.i("TAGTAG", "should shift cells")
+                            shiftTableByXCells(
+                                target.writableDatabase,
+                                (destDeviceState.rows - srcDeviceState.rows),
+                                TABLE_NAME,
+                            )
+                        }
+                    }
+                    // Save current configuration, so that the migration does not run again.
+                    destDeviceState.writeToPrefs(context)
+                    t.commit()
+                    return
+                }
+
                 val srcReader = DbReader(t.db, TMP_TABLE, context)
                 val destReader = DbReader(t.db, TABLE_NAME, context)
 

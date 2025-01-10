@@ -126,33 +126,43 @@ public class GridSizeMigrationDBController {
             return true;
         }
 
-        if (isDestNewDb
+        boolean shouldMigrateToStrictlyTallerGrid = isDestNewDb
                 && srcDeviceState.getColumns().equals(destDeviceState.getColumns())
-                && srcDeviceState.getRows() < destDeviceState.getRows()) {
-            // Only use this strategy when comparing the previous grid to the new grid and the
-            // columns are the same and the destination has more rows
+                && srcDeviceState.getRows() < destDeviceState.getRows();
+        if (shouldMigrateToStrictlyTallerGrid) {
             copyTable(source, TABLE_NAME, target.getWritableDatabase(), TABLE_NAME, context);
-
-            if (oneGridSpecs()) {
-                DbReader destReader = new DbReader(
-                        target.getWritableDatabase(), TABLE_NAME, context);
-                boolean shouldShiftCells = shouldShiftCells(destReader, srcDeviceState.getRows());
-                if (shouldShiftCells) {
-                    shiftTableByXCells(
-                            target.getWritableDatabase(),
-                            (destDeviceState.getRows() - srcDeviceState.getRows()),
-                            TABLE_NAME);
-                }
-            }
-
-            // Save current configuration, so that the migration does not run again.
-            destDeviceState.writeToPrefs(context);
-            return true;
+        } else {
+            copyTable(source, TABLE_NAME, target.getWritableDatabase(), TMP_TABLE, context);
         }
-        copyTable(source, TABLE_NAME, target.getWritableDatabase(), TMP_TABLE, context);
 
         long migrationStartTime = System.currentTimeMillis();
         try (SQLiteTransaction t = new SQLiteTransaction(target.getWritableDatabase())) {
+
+            if (shouldMigrateToStrictlyTallerGrid) {
+                // This is a special case where if the grid is the same amount of columns but a
+                // larger amount of rows we simply copy over the source grid to the destination
+                // grid, rather than undergoing the general grid migration. If there are more icons
+                // on the bottom of the first page then we shift the icons down to the bottom of the
+                // grid so that the icons remain bottom-anchored.
+                if (oneGridSpecs()) {
+                    DbReader destReader = new DbReader(
+                            target.getWritableDatabase(), TABLE_NAME, context);
+                    boolean shouldShiftCells =
+                            shouldShiftCells(destReader, srcDeviceState.getRows());
+                    if (shouldShiftCells) {
+                        shiftTableByXCells(
+                                target.getWritableDatabase(),
+                                (destDeviceState.getRows() - srcDeviceState.getRows()),
+                                TABLE_NAME);
+                    }
+                }
+
+                // Save current configuration, so that the migration does not run again.
+                destDeviceState.writeToPrefs(context);
+                t.commit();
+                return true;
+            }
+
             DbReader srcReader = new DbReader(t.getDb(), TMP_TABLE, context);
             DbReader destReader = new DbReader(t.getDb(), TABLE_NAME, context);
 

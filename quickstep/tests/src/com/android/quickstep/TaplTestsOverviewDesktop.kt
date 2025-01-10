@@ -57,16 +57,25 @@ class TaplTestsOverviewDesktop : AbstractLauncherUiTest<QuickstepLauncher?>() {
             .switchToOverview()
             .apply { flingForward() }
             .also { moveTaskToDesktop(TEST_ACTIVITY_1) }
-
         TEST_ACTIVITIES.forEach { assertTestAppLaunched(it) }
 
-        // Launch static DesktopTaskView
-        val desktop =
+        // Launch static DesktopTaskView without live tile in Overview
+        val desktopTask =
             mLauncher.goHome().switchToOverview().getTestActivityTask(TEST_ACTIVITIES).open()
         TEST_ACTIVITIES.forEach { assertTestAppLaunched(it) }
 
         // Launch live-tile DesktopTaskView
-        desktop.switchToOverview().getTestActivityTask(TEST_ACTIVITIES).open()
+        desktopTask.switchToOverview().getTestActivityTask(TEST_ACTIVITIES).open()
+        TEST_ACTIVITIES.forEach { assertTestAppLaunched(it) }
+
+        // Launch static DesktopTaskView with live tile in Overview
+        mLauncher.goHome()
+        startTestActivity(TEST_ACTIVITY_EXTRA)
+        mLauncher.launchedAppState
+            .switchToOverview()
+            .apply { flingBackward() }
+            .getTestActivityTask(TEST_ACTIVITIES)
+            .open()
         TEST_ACTIVITIES.forEach { assertTestAppLaunched(it) }
     }
 

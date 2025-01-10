@@ -37,6 +37,7 @@ import android.graphics.PointF;
 import android.view.MotionEvent;
 import android.view.RemoteAnimationTarget;
 import android.view.VelocityTracker;
+import android.window.TransitionInfo;
 
 import com.android.app.animation.Interpolators;
 import com.android.launcher3.R;
@@ -249,7 +250,7 @@ public class DeviceLockedInputConsumer implements InputConsumer,
 
     @Override
     public void onRecentsAnimationStart(RecentsAnimationController controller,
-            RecentsAnimationTargets targets) {
+            RecentsAnimationTargets targets, TransitionInfo transitionInfo) {
         mRecentsAnimationController = controller;
         mTransformParams.setTargetSet(targets);
         applyTransform();

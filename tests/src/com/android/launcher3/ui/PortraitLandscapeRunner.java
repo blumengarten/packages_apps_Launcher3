@@ -76,8 +76,8 @@ public class PortraitLandscapeRunner<LAUNCHER_TYPE extends Launcher> implements 
                     mTest.mDevice.setOrientationNatural();
                     mTest.executeOnLauncher(launcher ->
                     {
-                        LauncherPrefs.get(launcher).put(FIXED_LANDSCAPE_MODE, false);
                         if (launcher != null) {
+                            LauncherPrefs.get(launcher).put(FIXED_LANDSCAPE_MODE, false);
                             launcher.getRotationHelper().forceAllowRotationForTesting(false);
                         }
                     });

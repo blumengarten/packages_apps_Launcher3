@@ -633,7 +633,11 @@ constructor(
         with(info) {
             // Only make actions available if the app icon menu is visible to the user.
             // When modalness is >0, the user is in select mode and the icon menu is hidden.
-            if (modalness == 0f) {
+            // When split selection is active, they should only be able to select the app and not
+            // take any other action.
+            val shouldPopulateAccessibilityMenu =
+                modalness == 0f && recentsView?.isSplitSelectionActive == false
+            if (shouldPopulateAccessibilityMenu) {
                 addAction(
                     AccessibilityAction(
                         R.id.action_close,

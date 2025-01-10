@@ -23,6 +23,7 @@ import android.os.SystemClock
 import android.os.Trace
 import android.util.Log
 import android.view.View
+import android.window.TransitionInfo
 import androidx.annotation.BinderThread
 import androidx.annotation.UiThread
 import androidx.annotation.VisibleForTesting
@@ -369,6 +370,7 @@ constructor(
                 override fun onRecentsAnimationStart(
                     controller: RecentsAnimationController,
                     targets: RecentsAnimationTargets,
+                    transitionInfo: TransitionInfo,
                 ) {
                     Log.d(TAG, "recents animation started: $command")
                     updateRecentsViewFocus(command)

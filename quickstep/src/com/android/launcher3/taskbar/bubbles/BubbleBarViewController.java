@@ -481,7 +481,7 @@ public class BubbleBarViewController {
 
     /** Whether the bubble bar has bubbles. */
     public boolean hasBubbles() {
-        return mBubbleBarController.getSelectedBubbleKey() != null;
+        return mBarView.getBubbleChildCount() > 0;
     }
 
     /**

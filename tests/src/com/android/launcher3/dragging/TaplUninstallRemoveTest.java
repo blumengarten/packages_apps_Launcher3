@@ -110,6 +110,9 @@ public class TaplUninstallRemoveTest extends AbstractLauncherUiTest<Launcher> {
     @PortraitLandscape
     @PlatinumTest(focusArea = "launcher")
     public void testUninstallFromAllApps() throws Exception {
+        // Ensure no existing app icons on the workspace cause scroll to all apps interruptions
+        mLauncher.clearLauncherData();
+
         installDummyAppAndWaitForUIUpdate();
         try {
             Workspace workspace = mLauncher.getWorkspace();

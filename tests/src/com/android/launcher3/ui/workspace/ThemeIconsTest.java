@@ -61,8 +61,7 @@ public class ThemeIconsTest extends BaseLauncherActivityTest<Launcher> {
         setThemeEnabled(false);
         new FavoriteItemsTransaction(targetContext()).commit();
         loadLauncherSync();
-        goToState(LauncherState.ALL_APPS);
-        freezeAllApps();
+        switchToAllApps();
 
         scrollToAppIcon(APP_NAME);
         BubbleTextView btv = getFromLauncher(
@@ -76,8 +75,7 @@ public class ThemeIconsTest extends BaseLauncherActivityTest<Launcher> {
         setThemeEnabled(false);
         new FavoriteItemsTransaction(targetContext()).commit();
         loadLauncherSync();
-        goToState(LauncherState.ALL_APPS);
-        freezeAllApps();
+        switchToAllApps();
 
         scrollToAppIcon(TEST_APP_NAME);
         BubbleTextView btv = getFromLauncher(l -> findBtv(TEST_APP_NAME, l.getAppsView()));
@@ -95,8 +93,7 @@ public class ThemeIconsTest extends BaseLauncherActivityTest<Launcher> {
         setThemeEnabled(true);
         new FavoriteItemsTransaction(targetContext()).commit();
         loadLauncherSync();
-        goToState(LauncherState.ALL_APPS);
-        freezeAllApps();
+        switchToAllApps();
 
         scrollToAppIcon(APP_NAME);
         BubbleTextView btv = getFromLauncher(l ->
@@ -109,8 +106,7 @@ public class ThemeIconsTest extends BaseLauncherActivityTest<Launcher> {
     public void testShortcutIconWithTheme() throws Exception {
         setThemeEnabled(true);
         loadLauncherSync();
-        goToState(LauncherState.ALL_APPS);
-        freezeAllApps();
+        switchToAllApps();
 
         scrollToAppIcon(TEST_APP_NAME);
         BubbleTextView btv = getFromLauncher(l -> findBtv(TEST_APP_NAME, l.getAppsView()));
@@ -156,6 +152,13 @@ public class ThemeIconsTest extends BaseLauncherActivityTest<Launcher> {
             int result = client.update(uri, values, null);
             assertTrue(result > 0);
         }
+    }
+
+    private void switchToAllApps() {
+        goToState(LauncherState.ALL_APPS);
+        waitForState("Launcher internal state didn't switch to All Apps",
+                () -> LauncherState.ALL_APPS);
+        freezeAllApps();
     }
 
     private void scrollToAppIcon(String appName) {
