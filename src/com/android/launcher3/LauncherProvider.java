@@ -24,24 +24,37 @@ import android.content.ComponentName;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.Process;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.android.launcher3.LauncherSettings.Favorites;
 import com.android.launcher3.model.ModelDbController;
+import com.android.launcher3.util.LayoutImportExportHelper;
 import com.android.launcher3.widget.LauncherWidgetHolder;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.ToIntFunction;
 
 public class LauncherProvider extends ContentProvider {
     private static final String TAG = "LauncherProvider";
+
+    // Method API For Provider#call method.
+    private static final String METHOD_EXPORT_LAYOUT_XML = "EXPORT_LAYOUT_XML";
+    private static final String METHOD_IMPORT_LAYOUT_XML = "IMPORT_LAYOUT_XML";
+    private static final String KEY_RESULT = "KEY_RESULT";
+    private static final String KEY_LAYOUT = "KEY_LAYOUT";
+    private static final String SUCCESS = "success";
+    private static final String FAILURE = "failure";
 
     /**
      * $ adb shell dumpsys activity provider com.android.launcher3
@@ -140,6 +153,43 @@ public class LauncherProvider extends ContentProvider {
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         SqlArguments args = new SqlArguments(uri, selection, selectionArgs);
         return executeControllerTask(c -> c.update(args.table, values, args.where, args.args));
+    }
+
+    @Override
+    public Bundle call(String method, String arg, Bundle extras) {
+        Bundle b = new Bundle();
+
+        // The caller must have the read or write permission for this content provider to
+        // access the "call" method at all. We also enforce the appropriate per-method permissions.
+        switch(method) {
+            case METHOD_EXPORT_LAYOUT_XML:
+                if (getContext().checkCallingOrSelfPermission(getReadPermission())
+                        != PackageManager.PERMISSION_GRANTED) {
+                    throw new SecurityException("Caller doesn't have read permission");
+                }
+
+                CompletableFuture<String> resultFuture = LayoutImportExportHelper.INSTANCE
+                        .exportModelDbAsXmlFuture(getContext());
+                try {
+                    b.putString(KEY_LAYOUT, resultFuture.get());
+                    b.putString(KEY_RESULT, SUCCESS);
+                } catch (ExecutionException | InterruptedException e) {
+                    b.putString(KEY_RESULT, FAILURE);
+                }
+                return b;
+
+            case METHOD_IMPORT_LAYOUT_XML:
+                if (getContext().checkCallingOrSelfPermission(getWritePermission())
+                        != PackageManager.PERMISSION_GRANTED) {
+                    throw new SecurityException("Caller doesn't have write permission");
+                }
+
+                LayoutImportExportHelper.INSTANCE.importModelFromXml(getContext(), arg);
+                b.putString(KEY_RESULT, SUCCESS);
+                return b;
+            default:
+                return null;
+        }
     }
 
     private int executeControllerTask(ToIntFunction<ModelDbController> task) {

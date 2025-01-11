@@ -94,7 +94,9 @@ class BubbleAnimatorTest {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             bubbleAnimator.animateNewAndRemoveOld(
                 selectedBubbleIndex = 3,
-                removedBubbleIndex = 2,
+                newlySelectedBubbleIndex = 2,
+                removedBubbleIndex = 1,
+                addedBubbleIndex = 3,
                 listener,
             )
         }

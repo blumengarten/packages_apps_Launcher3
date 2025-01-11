@@ -342,10 +342,10 @@ public class BubbleBarController extends IBubblesListener.Stub {
             mBubbleBarViewController.showOverflow(update.showOverflow);
         }
 
-        BubbleBarBubble bubbleToSelect = null;
         if (update.addedBubble != null) {
             mBubbles.put(update.addedBubble.getKey(), update.addedBubble);
         }
+        BubbleBarBubble bubbleToSelect = null;
         if (update.selectedBubbleKey != null) {
             if (mSelectedBubble == null
                     || !update.selectedBubbleKey.equals(mSelectedBubble.getKey())) {
@@ -363,7 +363,7 @@ public class BubbleBarController extends IBubblesListener.Stub {
                 && update.removedBubbles.isEmpty()
                 && !mBubbles.isEmpty()) {
             // A bubble was added from the overflow (& now it's empty / not showing)
-            mBubbleBarViewController.removeOverflowAndAddBubble(update.addedBubble);
+            mBubbleBarViewController.removeOverflowAndAddBubble(update.addedBubble, bubbleToSelect);
         } else if (update.addedBubble != null && update.removedBubbles.size() == 1) {
             // we're adding and removing a bubble at the same time. handle this as a single update.
             RemovedBubble removedBubble = update.removedBubbles.get(0);
@@ -371,7 +371,8 @@ public class BubbleBarController extends IBubblesListener.Stub {
             boolean showOverflow = update.showOverflowChanged && update.showOverflow;
             if (bubbleToRemove != null) {
                 mBubbleBarViewController.addBubbleAndRemoveBubble(update.addedBubble,
-                        bubbleToRemove, isExpanding, suppressAnimation, showOverflow);
+                        bubbleToRemove, bubbleToSelect, isExpanding, suppressAnimation,
+                        showOverflow);
             } else {
                 mBubbleBarViewController.addBubble(update.addedBubble, isExpanding,
                         suppressAnimation, bubbleToSelect);
@@ -387,7 +388,7 @@ public class BubbleBarController extends IBubblesListener.Stub {
                     if (bubble != null && overflowNeedsToBeAdded) {
                         // First removal, show the overflow
                         overflowNeedsToBeAdded = false;
-                        mBubbleBarViewController.addOverflowAndRemoveBubble(bubble);
+                        mBubbleBarViewController.addOverflowAndRemoveBubble(bubble, bubbleToSelect);
                     } else if (bubble != null) {
                         mBubbleBarViewController.removeBubble(bubble);
                     } else {
