@@ -268,7 +268,7 @@ public final class OverviewComponentObserver {
      *
      * @return the overview intent
      */
-    Intent getOverviewIntentIgnoreSysUiState() {
+    public Intent getOverviewIntentIgnoreSysUiState() {
         return mIsDefaultHome ? mMyHomeIntent : mOverviewIntent;
     }
 

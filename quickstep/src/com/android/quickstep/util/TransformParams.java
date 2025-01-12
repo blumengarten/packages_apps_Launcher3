@@ -19,12 +19,9 @@ import static android.app.WindowConfiguration.ACTIVITY_TYPE_HOME;
 
 import android.util.FloatProperty;
 import android.view.RemoteAnimationTarget;
-import android.view.SurfaceControl;
-import android.window.TransitionInfo;
 
 import com.android.quickstep.RemoteAnimationTargets;
 import com.android.quickstep.util.SurfaceTransaction.SurfaceProperties;
-import com.android.window.flags.Flags;
 
 public class TransformParams {
 
@@ -59,7 +56,6 @@ public class TransformParams {
     private float mTargetAlpha;
     private float mCornerRadius;
     private RemoteAnimationTargets mTargetSet;
-    private TransitionInfo mTransitionInfo;
     private SurfaceTransactionApplier mSyncTransactionApplier;
 
     private BuilderProxy mHomeBuilderProxy = BuilderProxy.ALWAYS_VISIBLE;
@@ -111,14 +107,6 @@ public class TransformParams {
     }
 
     /**
-     * Provides the {@code TransitionInfo} of the transition that this transformation stems from.
-     */
-    public TransformParams setTransitionInfo(TransitionInfo transitionInfo) {
-        mTransitionInfo = transitionInfo;
-        return this;
-    }
-
-    /**
      * Sets the SyncRtSurfaceTransactionApplierCompat that will apply the SurfaceParams that
      * are computed based on these TransformParams.
      */
@@ -164,9 +152,6 @@ public class TransformParams {
                 builder.setAlpha(getTargetAlpha());
             }
             targetProxy.onBuildTargetParams(builder, app, this);
-            // Override the corner radius for {@code app} with the leash used by Shell, so that it
-            // doesn't interfere with the window clip and corner radius applied here.
-            overrideChangeLeashCornerRadiusToZero(app, transaction.getTransaction());
         }
 
         // always put wallpaper layer to bottom.
@@ -176,28 +161,6 @@ public class TransformParams {
             transaction.forSurface(wallpaper.leash).setLayer(Integer.MIN_VALUE);
         }
         return transaction;
-    }
-
-    private void overrideChangeLeashCornerRadiusToZero(
-            RemoteAnimationTarget app, SurfaceControl.Transaction transaction) {
-        if (!Flags.enableDesktopRecentsTransitionsCornersBugfix()) {
-            return;
-        }
-        SurfaceControl changeLeash = getChangeLeashForApp(app);
-        if (changeLeash != null) {
-            transaction.setCornerRadius(changeLeash, 0);
-        }
-    }
-
-    private SurfaceControl getChangeLeashForApp(RemoteAnimationTarget app) {
-        if (mTransitionInfo == null) return null;
-        for (TransitionInfo.Change change : mTransitionInfo.getChanges()) {
-            if (change.getTaskInfo() == null) continue;
-            if (change.getTaskInfo().taskId == app.taskId) {
-                return change.getLeash();
-            }
-        }
-        return null;
     }
 
     // Pubic getters so outside packages can read the values.

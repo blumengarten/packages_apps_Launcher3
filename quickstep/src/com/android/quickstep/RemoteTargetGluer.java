@@ -24,7 +24,6 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.util.Log;
 import android.view.RemoteAnimationTarget;
-import android.window.TransitionInfo;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -214,8 +213,7 @@ public class RemoteTargetGluer {
      * Similar to {@link #assignTargets(RemoteAnimationTargets)}, except this creates distinct
      * transform params per app in {@code targets.apps} list.
      */
-    public RemoteTargetHandle[] assignTargetsForDesktop(
-            RemoteAnimationTargets targets, TransitionInfo transitionInfo) {
+    public RemoteTargetHandle[] assignTargetsForDesktop(RemoteAnimationTargets targets) {
         resizeRemoteTargetHandles(targets);
 
         for (int i = 0; i < mRemoteTargetHandles.length; i++) {
@@ -224,7 +222,6 @@ public class RemoteTargetGluer {
                     .filter(target -> target.taskId != primaryTaskTarget.taskId).toList();
             mRemoteTargetHandles[i].mTransformParams.setTargetSet(
                     createRemoteAnimationTargetsForTarget(targets, excludeTargets));
-            mRemoteTargetHandles[i].mTransformParams.setTransitionInfo(transitionInfo);
             mRemoteTargetHandles[i].mTaskViewSimulator.setPreview(primaryTaskTarget, null);
         }
         return mRemoteTargetHandles;

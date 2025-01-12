@@ -73,6 +73,7 @@ import com.android.quickstep.GestureState;
 import com.android.quickstep.OverviewComponentObserver;
 import com.android.quickstep.OverviewComponentObserver.OverviewChangeListener;
 import com.android.quickstep.TouchInteractionService.TISBinder;
+import com.android.quickstep.util.ActivityPreloadUtil;
 import com.android.quickstep.util.LottieAnimationColorUtils;
 import com.android.quickstep.util.TISBindHelper;
 
@@ -202,6 +203,7 @@ public class AllSetActivity extends Activity {
 
         OverviewComponentObserver.INSTANCE.get(this)
                 .addOverviewChangeListener(mOverviewChangeListener);
+        ActivityPreloadUtil.preloadOverviewForSUWAllSet(this);
     }
 
     private InvariantDeviceProfile getIDP() {
@@ -291,7 +293,6 @@ public class AllSetActivity extends Activity {
     private void onTISConnected(TISBinder binder) {
         setSetupUIVisible(isResumed());
         binder.setSwipeUpProxy(isResumed() ? this::createSwipeUpProxy : null);
-        binder.preloadOverviewForSUWAllSet();
         TaskbarManager taskbarManager = binder.getTaskbarManager();
         if (taskbarManager != null) {
             mLauncherStartAnim = taskbarManager.createLauncherStartFromSuwAnim(MAX_SWIPE_DURATION);
@@ -299,10 +300,7 @@ public class AllSetActivity extends Activity {
     }
 
     private void onOverviewTargetChange(boolean isHomeAndOverviewSame) {
-        TISBinder binder = mTISBindHelper.getBinder();
-        if (binder != null) {
-            binder.preloadOverviewForSUWAllSet();
-        }
+        ActivityPreloadUtil.preloadOverviewForSUWAllSet(this);
     }
 
     @Override

@@ -26,7 +26,6 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.ArraySet;
 import android.view.RemoteAnimationTarget;
-import android.window.TransitionInfo;
 
 import androidx.annotation.BinderThread;
 import androidx.annotation.NonNull;
@@ -94,7 +93,7 @@ public class RecentsAnimationCallbacks implements
             RemoteAnimationTarget[] appTargets, Rect homeContentInsets,
             Rect minimizedHomeBounds, Bundle extras) {
         onAnimationStart(controller, appTargets, new RemoteAnimationTarget[0],
-                homeContentInsets, minimizedHomeBounds, extras, /* transitionInfo= */ null);
+                homeContentInsets, minimizedHomeBounds, extras);
     }
 
     // Called only in R+ platform
@@ -102,8 +101,7 @@ public class RecentsAnimationCallbacks implements
     public final void onAnimationStart(RecentsAnimationControllerCompat animationController,
             RemoteAnimationTarget[] appTargets,
             RemoteAnimationTarget[] wallpaperTargets,
-            Rect homeContentInsets, Rect minimizedHomeBounds, Bundle extras,
-            TransitionInfo transitionInfo) {
+            Rect homeContentInsets, Rect minimizedHomeBounds, Bundle extras) {
         long appCount = Arrays.stream(appTargets)
                 .filter(app -> app.mode == MODE_CLOSING)
                 .count();
@@ -143,7 +141,7 @@ public class RecentsAnimationCallbacks implements
             Utilities.postAsyncCallback(MAIN_EXECUTOR.getHandler(), () -> {
                 ActiveGestureProtoLogProxy.logOnRecentsAnimationStart(targets.apps.length);
                 for (RecentsAnimationListener listener : getListeners()) {
-                    listener.onRecentsAnimationStart(mController, targets, transitionInfo);
+                    listener.onRecentsAnimationStart(mController, targets);
                 }
             });
         }
@@ -207,7 +205,7 @@ public class RecentsAnimationCallbacks implements
      */
     public interface RecentsAnimationListener {
         default void onRecentsAnimationStart(RecentsAnimationController controller,
-                RecentsAnimationTargets targets, TransitionInfo transitionInfo) {}
+                RecentsAnimationTargets targets) {}
 
         /**
          * Callback from the system when the recents animation is canceled. {@param thumbnailData}

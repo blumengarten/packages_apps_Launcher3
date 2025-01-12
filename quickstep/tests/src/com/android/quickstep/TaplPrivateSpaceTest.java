@@ -165,7 +165,6 @@ public class TaplPrivateSpaceTest extends AbstractQuickStepTest {
     }
 
     @Test
-    @ScreenRecordRule.ScreenRecord // b/355466672
     public void testPrivateSpaceLockingBehaviour() throws IOException {
         assumeFalse(mLauncher.isTablet()); // b/367258373
         // Scroll to the bottom of All Apps

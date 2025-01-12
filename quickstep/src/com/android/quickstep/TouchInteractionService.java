@@ -49,7 +49,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.os.Trace;
 import android.util.Log;
 import android.view.Choreographer;
 import android.view.InputDevice;
@@ -68,7 +67,6 @@ import com.android.launcher3.Flags;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.anim.AnimatedFloat;
 import com.android.launcher3.desktop.DesktopAppLaunchTransitionManager;
-import com.android.launcher3.provider.RestoreDbTask;
 import com.android.launcher3.statehandlers.DesktopVisibilityController;
 import com.android.launcher3.statemanager.StatefulActivity;
 import com.android.launcher3.taskbar.TaskbarActivityContext;
@@ -96,6 +94,7 @@ import com.android.quickstep.util.ActiveGestureLog;
 import com.android.quickstep.util.ActiveGestureLog.CompoundString;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.quickstep.util.ActiveTrackpadList;
+import com.android.quickstep.util.ActivityPreloadUtil;
 import com.android.quickstep.util.ContextualSearchInvoker;
 import com.android.quickstep.util.ContextualSearchStateManager;
 import com.android.quickstep.views.RecentsViewContainer;
@@ -183,7 +182,7 @@ public class TouchInteractionService extends Service {
                         recentTasks, launcherUnlockAnimationController, backAnimation, desktopMode,
                         unfoldTransition, dragAndDrop);
                 tis.initInputMonitor("TISBinder#onInitialize()");
-                tis.preloadOverview(true /* fromInit */);
+                ActivityPreloadUtil.preloadOverviewForTIS(tis, true /* fromInit */);
             }));
         }
 
@@ -348,16 +347,6 @@ public class TouchInteractionService extends Service {
                     executeForTaskbarManager(
                             taskbarManager -> taskbarManager.appTransitionPending(pending))
             ));
-        }
-
-        /**
-         * Preloads the Overview activity.
-         * <p>
-         * This method should only be used when the All Set page of the SUW is reached to safely
-         * preload the Launcher for the SUW first reveal.
-         */
-        public void preloadOverviewForSUWAllSet() {
-            executeForTouchInteractionService(tis -> tis.preloadOverview(false, true));
         }
 
         @Override
@@ -1035,47 +1024,6 @@ public class TouchInteractionService extends Service {
         }
     }
 
-    private void preloadOverview(boolean fromInit) {
-        Trace.beginSection("preloadOverview(fromInit=" + fromInit + ")");
-        preloadOverview(fromInit, false);
-        Trace.endSection();
-    }
-
-    private void preloadOverview(boolean fromInit, boolean forSUWAllSet) {
-        if (!LockedUserState.get(this).isUserUnlocked()) {
-            return;
-        }
-
-        if (mDeviceState.isButtonNavMode() && !mOverviewComponentObserver.isHomeAndOverviewSame()) {
-            // Prevent the overview from being started before the real home on first boot.
-            return;
-        }
-
-        if ((RestoreDbTask.isPending(this) && !forSUWAllSet)
-                || !mDeviceState.isUserSetupComplete()) {
-            // Preloading while a restore is pending may cause launcher to start the restore
-            // too early.
-            return;
-        }
-
-        final BaseContainerInterface containerInterface =
-                mOverviewComponentObserver.getContainerInterface();
-        final Intent overviewIntent = new Intent(
-                mOverviewComponentObserver.getOverviewIntentIgnoreSysUiState());
-        if (containerInterface.getCreatedContainer() != null && fromInit) {
-            // The activity has been created before the initialization of overview service. It is
-            // usually happens when booting or launcher is the top activity, so we should already
-            // have the latest state.
-            return;
-        }
-
-        // TODO(b/258022658): Remove temporary logging.
-        Log.i(TAG, "preloadOverview: forSUWAllSet=" + forSUWAllSet
-                + ", isHomeAndOverviewSame=" + mOverviewComponentObserver.isHomeAndOverviewSame());
-        ActiveGestureProtoLogProxy.logPreloadRecentsAnimation();
-        mTaskAnimationManager.preloadRecentsAnimation(overviewIntent);
-    }
-
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         if (!LockedUserState.get(this).isUserUnlocked()) {
@@ -1103,7 +1051,7 @@ public class TouchInteractionService extends Service {
             return;
         }
 
-        preloadOverview(false /* fromInit */);
+        ActivityPreloadUtil.preloadOverviewForTIS(this, false /* fromInit */);
     }
 
     private static boolean isTablet(Configuration config) {
