@@ -20,6 +20,7 @@ import static com.android.launcher3.Flags.enableAdditionalHomeAnimations;
 import static com.android.launcher3.Utilities.boundToRange;
 import static com.android.launcher3.Utilities.mapToRange;
 import static com.android.launcher3.anim.AnimatorListeners.forEndCallback;
+import static com.android.launcher3.icons.IconNormalizer.ICON_VISIBLE_AREA_FACTOR;
 import static com.android.launcher3.views.FloatingIconView.SHAPE_PROGRESS_DURATION;
 
 import static java.lang.Math.max;
@@ -47,7 +48,6 @@ import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.dragndrop.FolderAdaptiveIcon;
-import com.android.launcher3.graphics.ShapeDelegate;
 import com.android.launcher3.graphics.ThemeManager;
 
 /**
@@ -259,8 +259,7 @@ public class ClipIconView extends View implements ClipPathView {
             mStartRevealRect.set(0, 0, originalWidth, originalHeight);
 
             if (!isFolderIcon) {
-                Utilities.scaleRectAboutCenter(mStartRevealRect,
-                        ShapeDelegate.getNormalizationScale());
+                Utilities.scaleRectAboutCenter(mStartRevealRect, ICON_VISIBLE_AREA_FACTOR);
             }
 
             if (dp.isLandscape) {

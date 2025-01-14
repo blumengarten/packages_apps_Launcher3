@@ -62,7 +62,7 @@ import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.FastBitmapDrawable;
-import com.android.launcher3.icons.LauncherIcons;
+import com.android.launcher3.icons.IconNormalizer;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.views.ActivityContext;
@@ -261,12 +261,7 @@ public abstract class DragView<T extends Context & ActivityContext> extends Fram
                 // be scaled down due to icon normalization.
                 mBadge = fullDrawable.second;
                 FastBitmapDrawable.setBadgeBounds(mBadge, bounds);
-
-                try (LauncherIcons li = LauncherIcons.obtain(mActivity)) {
-                    // Since we just want the scale, avoid heavy drawing operations
-                    Utilities.scaleRectAboutCenter(bounds, li.getNormalizer().getScale(
-                            new AdaptiveIconDrawable(new ColorDrawable(Color.BLACK), null)));
-                }
+                Utilities.scaleRectAboutCenter(bounds, IconNormalizer.ICON_VISIBLE_AREA_FACTOR);
 
                 // Shrink very tiny bit so that the clip path is smaller than the original bitmap
                 // that has anti aliased edges and shadows.
@@ -567,7 +562,7 @@ public abstract class DragView<T extends Context & ActivityContext> extends Fram
         return mContentViewParent;
     }
 
-    /** Return true if {@link mContent} is a {@link AppWidgetHostView}. */
+    /** Return true if {@link #mContent} is a {@link AppWidgetHostView}. */
     public boolean containsAppWidgetHostView() {
         return mContent instanceof AppWidgetHostView;
     }

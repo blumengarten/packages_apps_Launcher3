@@ -43,7 +43,6 @@ import androidx.graphics.shapes.toPath
 import androidx.graphics.shapes.transformed
 import com.android.launcher3.anim.RoundedRectRevealOutlineProvider
 import com.android.launcher3.icons.GraphicsUtils
-import com.android.launcher3.icons.IconNormalizer.normalizeAdaptiveIcon
 import com.android.launcher3.views.ClipPathView
 
 /** Abstract representation of the shape of an icon shape */
@@ -341,13 +340,6 @@ interface ShapeDelegate {
                 centerX = (right - left) / 2,
                 centerY = (bottom - top) / 2,
                 rounding = CornerRounding(cornerR),
-            )
-
-        @JvmStatic
-        val normalizationScale =
-            normalizeAdaptiveIcon(
-                AdaptiveIconDrawable(null, ColorDrawable(Color.BLACK)),
-                AREA_CALC_SIZE,
             )
     }
 }
