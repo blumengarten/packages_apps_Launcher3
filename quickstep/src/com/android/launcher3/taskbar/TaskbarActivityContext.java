@@ -140,6 +140,7 @@ import com.android.launcher3.util.ApplicationInfoWrapper;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.Executors;
+import com.android.launcher3.util.MultiPropertyFactory;
 import com.android.launcher3.util.NavigationMode;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.SettingsCache;
@@ -194,6 +195,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
     private WindowManager.LayoutParams mWindowLayoutParams;
     private WindowManager.LayoutParams mLastUpdatedLayoutParams;
     private boolean mIsFullscreen;
+    private boolean mIsNotificationShadeExpanded = false;
     // The size we should return to when we call setTaskbarWindowFullscreen(false)
     private int mLastRequestedNonFullscreenSize;
     /**
@@ -269,8 +271,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         mWindowManager = c.getSystemService(WindowManager.class);
 
         // Inflate views.
-        final boolean isTransientTaskbar = DisplayController.isTransientTaskbar(this)
-                && !isPhoneMode();
+        boolean isTransientTaskbar = isTransientTaskbar();
         int taskbarLayout = isTransientTaskbar ? R.layout.transient_taskbar : R.layout.taskbar;
         mDragLayer = (TaskbarDragLayer) mLayoutInflater.inflate(taskbarLayout, null, false);
         TaskbarView taskbarView = mDragLayer.findViewById(R.id.taskbar_view);
@@ -381,6 +382,11 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         setTaskbarWindowFullscreen(mIsFullscreen);
 
         dispatchDeviceProfileChanged();
+    }
+
+    /** Returns whether current taskbar is transient. */
+    public boolean isTransientTaskbar() {
+        return DisplayController.isTransientTaskbar(this) && !isPhoneMode();
     }
 
     /**
@@ -1005,6 +1011,8 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
      * Hides the taskbar icons and background when the notification shade is expanded.
      */
     private void onNotificationShadeExpandChanged(boolean isExpanded, boolean skipAnim) {
+        boolean isExpandedUpdated = isExpanded != mIsNotificationShadeExpanded;
+        mIsNotificationShadeExpanded = isExpanded;
         // Close all floating views within the Taskbar window to make sure nothing is shown over
         // the notification shade.
         if (isExpanded) {
@@ -1018,11 +1026,18 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         anim.play(mControllers.taskbarDragLayerController.getNotificationShadeBgTaskbar()
                 .animateToValue(alpha));
 
-        mControllers.bubbleControllers.ifPresent(controllers -> {
-            BubbleBarViewController bubbleBarViewController = controllers.bubbleBarViewController;
-            anim.play(bubbleBarViewController.getBubbleBarAlpha().get(0).animateToValue(alpha));
-        });
-
+        if (isExpandedUpdated) {
+            mControllers.bubbleControllers.ifPresent(controllers -> {
+                BubbleBarViewController bubbleBarViewController =
+                        controllers.bubbleBarViewController;
+                anim.play(bubbleBarViewController.getBubbleBarAlpha().get(0).animateToValue(alpha));
+                MultiPropertyFactory<View>.MultiProperty handleAlpha =
+                        controllers.bubbleStashController.getHandleViewAlpha();
+                if (handleAlpha != null) {
+                    anim.play(handleAlpha.animateToValue(alpha));
+                }
+            });
+        }
         anim.start();
         if (skipAnim) {
             anim.end();

@@ -17,7 +17,6 @@
 package com.android.quickstep.fallback.window
 
 import android.content.Context
-import android.os.Handler
 import android.util.Log
 import android.view.Display
 import com.android.launcher3.Flags
@@ -25,7 +24,7 @@ import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.util.DaggerSingletonObject
 import com.android.launcher3.util.DaggerSingletonTracker
-import com.android.launcher3.util.Executors.MAIN_EXECUTOR
+import com.android.launcher3.util.Executors
 import com.android.quickstep.DisplayModel
 import com.android.quickstep.FallbackWindowInterface
 import com.android.quickstep.dagger.QuickstepBaseAppComponent
@@ -51,15 +50,13 @@ constructor(@ApplicationContext context: Context, tracker: DaggerSingletonTracke
 
     init {
         if (Flags.enableFallbackOverviewInWindow() || Flags.enableLauncherOverviewInWindow()) {
-            MAIN_EXECUTOR.execute {
-                displayManager.registerDisplayListener(displayListener, Handler.getMain())
-                // In the scenario where displays were added before this display listener was
-                // registered, we should store the RecentsDisplayResources for those displays
-                // directly.
-                displayManager.displays
-                    .filter { getDisplayResource(it.displayId) == null }
-                    .forEach { storeRecentsDisplayResource(it.displayId, it) }
-            }
+            displayManager.registerDisplayListener(displayListener, Executors.MAIN_EXECUTOR.handler)
+            // In the scenario where displays were added before this display listener was
+            // registered, we should store the RecentsDisplayResources for those displays
+            // directly.
+            displayManager.displays
+                .filter { getDisplayResource(it.displayId) == null }
+                .forEach { storeRecentsDisplayResource(it.displayId, it) }
             tracker.addCloseable { destroy() }
         }
     }

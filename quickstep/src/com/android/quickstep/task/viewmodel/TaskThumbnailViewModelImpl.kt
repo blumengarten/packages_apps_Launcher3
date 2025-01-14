@@ -18,11 +18,14 @@ package com.android.quickstep.task.viewmodel
 
 import android.annotation.ColorInt
 import android.app.ActivityTaskManager.INVALID_TASK_ID
+import android.app.WindowConfiguration.WINDOWING_MODE_FREEFORM
 import android.graphics.Matrix
 import android.util.Log
 import androidx.core.graphics.ColorUtils
+import com.android.launcher3.Flags.enableDesktopExplodedView
 import com.android.launcher3.util.coroutines.DispatcherProvider
 import com.android.quickstep.recents.data.RecentTasksRepository
+import com.android.quickstep.recents.data.RecentsDeviceProfileRepository
 import com.android.quickstep.recents.usecase.GetThumbnailPositionUseCase
 import com.android.quickstep.recents.usecase.ThumbnailPositionState
 import com.android.quickstep.recents.viewmodel.RecentsViewData
@@ -32,6 +35,7 @@ import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.BackgroundOnly
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.LiveTile
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.Snapshot
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.SnapshotSplash
+import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.ThumbnailHeader
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.Uninitialized
 import com.android.systemui.shared.recents.model.Task
 import kotlin.math.max
@@ -51,6 +55,7 @@ class TaskThumbnailViewModelImpl(
     taskContainerData: TaskContainerData,
     dispatcherProvider: DispatcherProvider,
     private val tasksRepository: RecentTasksRepository,
+    private val deviceProfileRepository: RecentsDeviceProfileRepository,
     private val getThumbnailPositionUseCase: GetThumbnailPositionUseCase,
     private val splashAlphaUseCase: SplashAlphaUseCase,
 ) : TaskThumbnailViewModel {
@@ -90,7 +95,7 @@ class TaskThumbnailViewModelImpl(
                 //                )
                 when {
                     taskVal == null -> Uninitialized
-                    isRunning -> LiveTile
+                    isRunning -> createLiveTileState(taskVal)
                     isBackgroundOnly(taskVal) ->
                         BackgroundOnly(taskVal.colorBackground.removeAlpha())
                     isSnapshotSplashState(taskVal) ->
@@ -129,7 +134,46 @@ class TaskThumbnailViewModelImpl(
     private fun createSnapshotState(task: Task): Snapshot {
         val thumbnailData = task.thumbnail
         val bitmap = thumbnailData?.thumbnail!!
-        return Snapshot(bitmap, thumbnailData.rotation, task.colorBackground.removeAlpha())
+        var thumbnailHeader = maybeCreateHeader(task)
+        return if (thumbnailHeader != null)
+            Snapshot.WithHeader(
+                bitmap,
+                thumbnailData.rotation,
+                task.colorBackground.removeAlpha(),
+                thumbnailHeader,
+            )
+        else
+            Snapshot.WithoutHeader(
+                bitmap,
+                thumbnailData.rotation,
+                task.colorBackground.removeAlpha(),
+            )
+    }
+
+    private fun shouldHaveThumbnailHeader(task: Task): Boolean {
+        return deviceProfileRepository.getRecentsDeviceProfile().canEnterDesktopMode &&
+            enableDesktopExplodedView() &&
+            task.key.windowingMode == WINDOWING_MODE_FREEFORM
+    }
+
+    private fun maybeCreateHeader(task: Task): ThumbnailHeader? {
+        // Header is only needed when this task is a desktop task and Overivew exploded view is
+        // enabled.
+        if (!shouldHaveThumbnailHeader(task)) {
+            return null
+        }
+
+        // TODO(http://b/353965691): figure out what to do when `icon` or `titleDescription` is
+        // null.
+        val icon = task.icon ?: return null
+        val titleDescription = task.titleDescription ?: return null
+        return ThumbnailHeader(icon, titleDescription)
+    }
+
+    private fun createLiveTileState(task: Task): LiveTile {
+        val thumbnailHeader = maybeCreateHeader(task)
+        return if (thumbnailHeader != null) LiveTile.WithHeader(thumbnailHeader)
+        else LiveTile.WithoutHeader
     }
 
     @ColorInt private fun Int.removeAlpha(): Int = ColorUtils.setAlphaComponent(this, 0xff)

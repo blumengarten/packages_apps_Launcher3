@@ -512,6 +512,14 @@ class TransientBubbleStashController(
         }
     }
 
+    override fun getHandleViewAlpha(): MultiPropertyFactory<View>.MultiProperty? =
+        // only return handle alpha if the bubble bar is stashed and has bubbles
+        if (isStashed && bubbleBarViewController.hasBubbles()) {
+            stashHandleViewAlpha
+        } else {
+            null
+        }
+
     private fun Animator.updateTouchRegionOnAnimationEnd(): Animator {
         doOnEnd { onIsStashedChanged() }
         return this

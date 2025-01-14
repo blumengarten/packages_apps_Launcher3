@@ -357,4 +357,12 @@
     <!-- Name of Google's new feature to circle to search anything on your phone screen, without
      switching apps. [CHAR_LIMIT=60] -->
     <string name="search_gesture_feature_title">Circle to Search</string>
+
+    <!-- Strings for task thumbnail header in Overview -->
+    <!-- Content description for the header app icon. [CHAR LIMIT=NONE] -->
+    <string name="header_app_icon_description">App icon</string>
+    <!-- Default app title for a task view in Overview. [CHAR LIMIT=NONE] -->
+    <string name="header_default_app_title">App title</string>
+    <!-- Content description for the header close button. [CHAR LIMIT=NONE] -->
+    <string name="header_close_icon_description">Close button</string>
 </resources>

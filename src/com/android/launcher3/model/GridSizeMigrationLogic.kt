@@ -53,6 +53,7 @@ class GridSizeMigrationLogic {
         target: DatabaseHelper,
         source: SQLiteDatabase,
         isDestNewDb: Boolean,
+        modelDelegate: ModelDelegate,
     ) {
         if (!GridSizeMigrationDBController.needsToMigrate(srcDeviceState, destDeviceState)) {
             return
@@ -132,6 +133,9 @@ class GridSizeMigrationLogic {
 
             // Save current configuration, so that the migration does not run again.
             destDeviceState.writeToPrefs(context)
+
+            // Notify if we've migrated successfully
+            modelDelegate.gridMigrationComplete(srcDeviceState, destDeviceState)
         }
     }
 

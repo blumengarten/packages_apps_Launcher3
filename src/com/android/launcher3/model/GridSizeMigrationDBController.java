@@ -120,7 +120,8 @@ public class GridSizeMigrationDBController {
             @NonNull DeviceGridState destDeviceState,
             @NonNull DatabaseHelper target,
             @NonNull SQLiteDatabase source,
-            boolean isDestNewDb) {
+            boolean isDestNewDb,
+            ModelDelegate modelDelegate) {
 
         if (!needsToMigrate(srcDeviceState, destDeviceState)) {
             return true;
@@ -174,7 +175,6 @@ public class GridSizeMigrationDBController {
             return true;
         } catch (Exception e) {
             Log.e(TAG, "Error during grid migration", e);
-
             return false;
         } finally {
             Log.v(TAG, "Workspace migration completed in "
@@ -182,6 +182,8 @@ public class GridSizeMigrationDBController {
 
             // Save current configuration, so that the migration does not run again.
             destDeviceState.writeToPrefs(context);
+            // Notify if we've migrated successfully
+            modelDelegate.gridMigrationComplete(srcDeviceState, destDeviceState);
         }
     }
 

@@ -361,7 +361,8 @@ public class ModelDbController {
     /**
      * Migrates the DB. If the migration failed, it clears the DB.
      */
-    public void attemptMigrateDb(LauncherRestoreEventLogger restoreEventLogger) throws Exception {
+    public void attemptMigrateDb(LauncherRestoreEventLogger restoreEventLogger,
+            ModelDelegate modelDelegate) throws Exception {
         createDbIfNotExists();
 
         if (shouldResetDb()) {
@@ -389,7 +390,7 @@ public class ModelDbController {
             boolean isDestNewDb = !existingDBs.contains(destDeviceState.getDbFile());
             GridSizeMigrationLogic gridSizeMigrationLogic = new GridSizeMigrationLogic();
             gridSizeMigrationLogic.migrateGrid(mContext, srcDeviceState, destDeviceState,
-                    mOpenHelper, oldHelper.getWritableDatabase(), isDestNewDb);
+                    mOpenHelper, oldHelper.getWritableDatabase(), isDestNewDb, modelDelegate);
         } catch (Exception e) {
             resetLauncherDb(restoreEventLogger);
             throw new Exception("attemptMigrateDb: Failed to migrate grid", e);
@@ -403,8 +404,9 @@ public class ModelDbController {
     /**
      * Migrates the DB if needed. If the migration failed, it clears the DB.
      */
-    public void tryMigrateDB(@Nullable LauncherRestoreEventLogger restoreEventLogger) {
-        if (!migrateGridIfNeeded()) {
+    public void tryMigrateDB(@Nullable LauncherRestoreEventLogger restoreEventLogger,
+            ModelDelegate modelDelegate) {
+        if (!migrateGridIfNeeded(modelDelegate)) {
             if (restoreEventLogger != null) {
                 if (LauncherPrefs.get(mContext).get(NO_DB_FILES_RESTORED)) {
                     restoreEventLogger.logLauncherItemsRestoreFailed(DATA_TYPE_DB_FILE, 1,
@@ -434,7 +436,7 @@ public class ModelDbController {
      * @return true if migration was success or ignored, false if migration failed
      * and the DB should be reset.
      */
-    private boolean migrateGridIfNeeded() {
+    private boolean migrateGridIfNeeded(ModelDelegate modelDelegate) {
         createDbIfNotExists();
         if (LauncherPrefs.get(mContext).get(getEmptyDbCreatedKey())) {
             // If we have already create a new DB, ignore migration
@@ -468,7 +470,8 @@ public class ModelDbController {
             DeviceGridState destDeviceState = new DeviceGridState(idp);
             boolean isDestNewDb = !existingDBs.contains(destDeviceState.getDbFile());
             return GridSizeMigrationDBController.migrateGridIfNeeded(mContext, srcDeviceState,
-                    destDeviceState, mOpenHelper, oldHelper.getWritableDatabase(), isDestNewDb);
+                    destDeviceState, mOpenHelper, oldHelper.getWritableDatabase(), isDestNewDb,
+                    modelDelegate);
         } catch (Exception e) {
             FileLog.e(TAG, "migrateGridIfNeeded: Failed to migrate grid", e);
             return false;

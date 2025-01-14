@@ -123,6 +123,11 @@ public class ModelDelegate implements ResourceBasedOverride {
     @WorkerThread
     public void modelLoadComplete() { }
 
+    /** Called when grid migration has completed as part of grid size refactor. */
+    @WorkerThread
+    public void gridMigrationComplete(
+            @NonNull DeviceGridState src, @NonNull DeviceGridState dest) { }
+
     /**
      * Called when the delegate is no loner needed
      */

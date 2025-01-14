@@ -198,6 +198,13 @@ public class TaskbarDragLayerController implements TaskbarControllers.LoggableTa
     }
 
     /**
+     * Sets the translation of the background for the bubble bar.
+     */
+    public void setTranslationXForBubbleBar(float transX) {
+        mTaskbarDragLayer.setBackgroundTranslationXForBubbleBar(transX);
+    }
+
+    /**
      * Sets the translation of the background during the spring on stash animation.
      */
     public void setTranslationYForStash(float transY) {

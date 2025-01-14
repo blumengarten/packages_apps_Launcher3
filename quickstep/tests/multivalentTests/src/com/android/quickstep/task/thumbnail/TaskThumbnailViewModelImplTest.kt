@@ -16,16 +16,23 @@
 
 package com.android.quickstep.task.thumbnail
 
+import android.app.WindowConfiguration.WINDOWING_MODE_FREEFORM
+import android.app.WindowConfiguration.WINDOWING_MODE_FULLSCREEN
 import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.drawable.Drawable
+import android.platform.test.annotations.EnableFlags
+import android.platform.test.flag.junit.SetFlagsRule
 import android.view.Surface
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.launcher3.Flags
 import com.android.launcher3.util.TestDispatcherProvider
+import com.android.quickstep.recents.data.FakeRecentsDeviceProfileRepository
 import com.android.quickstep.recents.data.FakeTasksRepository
+import com.android.quickstep.recents.data.RecentsDeviceProfile
 import com.android.quickstep.recents.usecase.GetThumbnailPositionUseCase
 import com.android.quickstep.recents.usecase.ThumbnailPositionState.MatrixScaling
 import com.android.quickstep.recents.usecase.ThumbnailPositionState.MissingThumbnail
@@ -34,6 +41,7 @@ import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.BackgroundOnly
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.LiveTile
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.Snapshot
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.SnapshotSplash
+import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.ThumbnailHeader
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.Uninitialized
 import com.android.quickstep.task.viewmodel.TaskContainerData
 import com.android.quickstep.task.viewmodel.TaskThumbnailViewModelImpl
@@ -44,6 +52,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
@@ -52,6 +61,8 @@ import org.mockito.kotlin.whenever
 /** Test for [TaskThumbnailView] */
 @RunWith(AndroidJUnit4::class)
 class TaskThumbnailViewModelImplTest {
+    @get:Rule val setFlagsRule = SetFlagsRule()
+
     private val dispatcher = StandardTestDispatcher()
     private val testScope = TestScope(dispatcher)
 
@@ -59,6 +70,7 @@ class TaskThumbnailViewModelImplTest {
     private val taskContainerData = TaskContainerData()
     private val dispatcherProvider = TestDispatcherProvider(dispatcher)
     private val tasksRepository = FakeTasksRepository()
+    private val deviceProfileRepository = FakeRecentsDeviceProfileRepository()
     private val mGetThumbnailPositionUseCase = mock<GetThumbnailPositionUseCase>()
     private val splashAlphaUseCase: SplashAlphaUseCase = mock()
 
@@ -68,12 +80,18 @@ class TaskThumbnailViewModelImplTest {
             taskContainerData,
             dispatcherProvider,
             tasksRepository,
+            deviceProfileRepository,
             mGetThumbnailPositionUseCase,
             splashAlphaUseCase,
         )
     }
 
-    private val tasks = (0..5).map(::createTaskWithId)
+    private val fullscreenTaskIdRange: IntRange = 0..5
+    private val freeformTaskIdRange: IntRange = 6..10
+
+    private val fullscreenTasks = fullscreenTaskIdRange.map(::createTaskWithId)
+    private val freeformTasks = freeformTaskIdRange.map(::createFreeformTaskWithId)
+    private val tasks = fullscreenTasks + freeformTasks
 
     @Test
     fun initialStateIsUninitialized() =
@@ -88,7 +106,7 @@ class TaskThumbnailViewModelImplTest {
             recentsViewData.runningTaskIds.value = setOf(taskId)
             systemUnderTest.bind(taskId)
 
-            assertThat(systemUnderTest.uiState.first()).isEqualTo(LiveTile)
+            assertThat(systemUnderTest.uiState.first()).isEqualTo(LiveTile.WithoutHeader)
         }
 
     @Test
@@ -108,7 +126,7 @@ class TaskThumbnailViewModelImplTest {
             assertThat(systemUnderTest.uiState.first())
                 .isEqualTo(
                     SnapshotSplash(
-                        Snapshot(
+                        Snapshot.WithoutHeader(
                             backgroundColor = Color.rgb(1, 1, 1),
                             bitmap = expectedThumbnailData.thumbnail!!,
                             thumbnailRotation = Surface.ROTATION_0,
@@ -127,7 +145,7 @@ class TaskThumbnailViewModelImplTest {
             tasksRepository.setVisibleTasks(setOf(runningTaskId, stoppedTaskId))
             recentsViewData.runningTaskIds.value = setOf(runningTaskId)
             systemUnderTest.bind(runningTaskId)
-            assertThat(systemUnderTest.uiState.first()).isEqualTo(LiveTile)
+            assertThat(systemUnderTest.uiState.first()).isEqualTo(LiveTile.WithoutHeader)
 
             systemUnderTest.bind(stoppedTaskId)
             assertThat(systemUnderTest.uiState.first())
@@ -175,7 +193,7 @@ class TaskThumbnailViewModelImplTest {
             assertThat(systemUnderTest.uiState.first())
                 .isEqualTo(
                     SnapshotSplash(
-                        Snapshot(
+                        Snapshot.WithoutHeader(
                             backgroundColor = Color.rgb(2, 2, 2),
                             bitmap = expectedThumbnailData.thumbnail!!,
                             thumbnailRotation = Surface.ROTATION_270,
@@ -202,10 +220,61 @@ class TaskThumbnailViewModelImplTest {
             assertThat(systemUnderTest.uiState.first())
                 .isEqualTo(
                     SnapshotSplash(
-                        Snapshot(
+                        Snapshot.WithoutHeader(
                             backgroundColor = Color.rgb(2, 2, 2),
                             bitmap = expectedThumbnailData.thumbnail!!,
                             thumbnailRotation = Surface.ROTATION_0,
+                        ),
+                        expectedIconData,
+                    )
+                )
+        }
+
+    @Test
+    @EnableFlags(Flags.FLAG_ENABLE_DESKTOP_EXPLODED_VIEW)
+    fun bindRunningTask_inDesktop_thenStateIs_LiveTile_withHeader() =
+        testScope.runTest {
+            deviceProfileRepository.setRecentsDeviceProfile(
+                RecentsDeviceProfile(isLargeScreen = true, canEnterDesktopMode = true)
+            )
+
+            val taskId = freeformTaskIdRange.first
+            val expectedIconData = mock<Drawable>()
+            tasksRepository.seedIconData(taskId, "Task $taskId", "Task $taskId", expectedIconData)
+            tasksRepository.seedTasks(freeformTasks)
+            tasksRepository.setVisibleTasks(setOf(taskId))
+            recentsViewData.runningTaskIds.value = setOf(taskId)
+            systemUnderTest.bind(taskId)
+
+            assertThat(systemUnderTest.uiState.first())
+                .isEqualTo(LiveTile.WithHeader(ThumbnailHeader(expectedIconData, "Task $taskId")))
+        }
+
+    @Test
+    @EnableFlags(Flags.FLAG_ENABLE_DESKTOP_EXPLODED_VIEW)
+    fun bindStoppedTaskWithThumbnail_inDesktop_thenStateIs_SnapshotSplash_withHeader() =
+        testScope.runTest {
+            deviceProfileRepository.setRecentsDeviceProfile(
+                RecentsDeviceProfile(isLargeScreen = true, canEnterDesktopMode = true)
+            )
+
+            val taskId = freeformTaskIdRange.first
+            val expectedThumbnailData = createThumbnailData(rotation = Surface.ROTATION_0)
+            tasksRepository.seedThumbnailData(mapOf(taskId to expectedThumbnailData))
+            val expectedIconData = mock<Drawable>()
+            tasksRepository.seedIconData(taskId, "Task $taskId", "Task $taskId", expectedIconData)
+            tasksRepository.seedTasks(freeformTasks)
+            tasksRepository.setVisibleTasks(setOf(taskId))
+
+            systemUnderTest.bind(taskId)
+            assertThat(systemUnderTest.uiState.first())
+                .isEqualTo(
+                    SnapshotSplash(
+                        Snapshot.WithHeader(
+                            backgroundColor = Color.rgb(taskId, taskId, taskId),
+                            bitmap = expectedThumbnailData.thumbnail!!,
+                            thumbnailRotation = Surface.ROTATION_0,
+                            header = ThumbnailHeader(expectedIconData, "Task $taskId"),
                         ),
                         expectedIconData,
                     )
@@ -269,9 +338,38 @@ class TaskThumbnailViewModelImplTest {
         }
 
     private fun createTaskWithId(taskId: Int) =
-        Task(Task.TaskKey(taskId, 0, Intent(), ComponentName("", ""), 0, 2000)).apply {
-            colorBackground = Color.argb(taskId, taskId, taskId, taskId)
-        }
+        Task(
+                Task.TaskKey(
+                    taskId,
+                    WINDOWING_MODE_FULLSCREEN,
+                    Intent(),
+                    ComponentName("", ""),
+                    0,
+                    2000,
+                )
+            )
+            .apply {
+                colorBackground = Color.argb(taskId, taskId, taskId, taskId)
+                titleDescription = "Task $taskId"
+                icon = mock<Drawable>()
+            }
+
+    private fun createFreeformTaskWithId(taskId: Int) =
+        Task(
+                Task.TaskKey(
+                    taskId,
+                    WINDOWING_MODE_FREEFORM,
+                    Intent(),
+                    ComponentName("", ""),
+                    0,
+                    2000,
+                )
+            )
+            .apply {
+                colorBackground = Color.argb(taskId, taskId, taskId, taskId)
+                titleDescription = "Task $taskId"
+                icon = mock<Drawable>()
+            }
 
     private fun createThumbnailData(rotation: Int = Surface.ROTATION_0): ThumbnailData {
         val bitmap = mock<Bitmap>()

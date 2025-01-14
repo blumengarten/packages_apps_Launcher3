@@ -1339,6 +1339,14 @@ public class BubbleBarView extends FrameLayout {
         return getScaledIconSize() + mIconOverlapAmount + 2 * mBubbleBarPadding;
     }
 
+    float getCollapsedWidthForIconSizeAndPadding(int iconSize, int bubbleBarPadding) {
+        final int bubbleChildCount = Math.min(getBubbleChildCount(), MAX_VISIBLE_BUBBLES_COLLAPSED);
+        if (bubbleChildCount == 0) return 0;
+        final int spacesCount = bubbleChildCount - 1;
+        final float horizontalPadding = 2 * bubbleBarPadding;
+        return iconSize * bubbleChildCount + mIconOverlapAmount * spacesCount + horizontalPadding;
+    }
+
     /** Returns the child count excluding the overflow if it's present. */
     int getBubbleChildCount() {
         return hasOverflow() ? getChildCount() - 1 : getChildCount();

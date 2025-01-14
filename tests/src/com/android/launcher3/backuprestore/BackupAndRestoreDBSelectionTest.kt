@@ -25,6 +25,7 @@ import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import com.android.launcher3.Flags
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.model.ModelDbController
+import com.android.launcher3.model.ModelDelegate
 import com.android.launcher3.provider.RestoreDbTask
 import com.android.launcher3.util.Executors.MODEL_EXECUTOR
 import com.android.launcher3.util.TestUtil
@@ -34,6 +35,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.mock
 
 /**
  * Makes sure to test {@code RestoreDbTask#removeOldDBs}, we need to remove all the dbs that are not
@@ -48,6 +50,8 @@ class BackupAndRestoreDBSelectionTest {
     @JvmField
     @Rule
     val setFlagsRule = SetFlagsRule(SetFlagsRule.DefaultInitValueType.DEVICE_DEFAULT)
+
+    val modelDelegate = mock<ModelDelegate>()
 
     @Before
     fun setUp() {
@@ -68,9 +72,9 @@ class BackupAndRestoreDBSelectionTest {
     fun oldDatabasesNotPresentAfterRestore() {
         val dbController = ModelDbController(getInstrumentation().targetContext)
         if (Flags.gridMigrationRefactor()) {
-            dbController.attemptMigrateDb(null)
+            dbController.attemptMigrateDb(null, modelDelegate)
         } else {
-            dbController.tryMigrateDB(null)
+            dbController.tryMigrateDB(null, modelDelegate)
         }
         TestUtil.runOnExecutorSync(MODEL_EXECUTOR) {
             assert(backAndRestoreRule.getDatabaseFiles().size == 1) {

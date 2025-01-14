@@ -31,8 +31,9 @@ object ModelTestExtensions {
         loadModelSync()
         TestUtil.runOnExecutorSync(Executors.MODEL_EXECUTOR) {
             modelDbController.run {
-                if (Flags.gridMigrationRefactor()) attemptMigrateDb(null /* restoreEventLogger */)
-                else tryMigrateDB(null /* restoreEventLogger */)
+                if (Flags.gridMigrationRefactor())
+                    attemptMigrateDb(null /* restoreEventLogger */, modelDelegate)
+                else tryMigrateDB(null /* restoreEventLogger */, modelDelegate)
                 createEmptyDB()
                 clearEmptyDbFlag()
             }
@@ -74,7 +75,7 @@ object ModelTestExtensions {
         loadModelSync()
         TestUtil.runOnExecutorSync(Executors.MODEL_EXECUTOR) {
             val controller: ModelDbController = modelDbController
-            controller.attemptMigrateDb(null /* restoreEventLogger */)
+            controller.attemptMigrateDb(null /* restoreEventLogger */, modelDelegate)
             modelDbController.newTransaction().use { transaction ->
                 val values =
                     ContentValues().apply {

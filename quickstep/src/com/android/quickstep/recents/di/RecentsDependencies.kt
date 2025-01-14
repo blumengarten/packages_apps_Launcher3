@@ -182,6 +182,7 @@ class RecentsDependencies private constructor(private val appContext: Context) {
                         dispatcherProvider = inject(),
                         getThumbnailPositionUseCase = inject(),
                         tasksRepository = inject(),
+                        deviceProfileRepository = inject(),
                         splashAlphaUseCase = inject(scopeId),
                     )
                 TaskOverlayViewModel::class.java -> {

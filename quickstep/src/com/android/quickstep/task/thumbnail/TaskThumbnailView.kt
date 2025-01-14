@@ -22,11 +22,13 @@ import android.graphics.Outline
 import android.graphics.Rect
 import android.util.AttributeSet
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import androidx.annotation.ColorInt
 import androidx.core.view.isInvisible
+import com.android.launcher3.Flags.enableDesktopExplodedView
 import com.android.launcher3.R
 import com.android.launcher3.util.ViewPool
 import com.android.launcher3.util.coroutines.DispatcherProvider
@@ -39,6 +41,7 @@ import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.SnapshotSplash
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.Uninitialized
 import com.android.quickstep.task.viewmodel.TaskThumbnailViewModel
 import com.android.quickstep.views.FixedSizeImageView
+import com.android.quickstep.views.TaskThumbnailViewHeader
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -66,6 +69,8 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
     private val splashBackground: View by lazy { findViewById(R.id.splash_background) }
     private val splashIcon: FixedSizeImageView by lazy { findViewById(R.id.splash_icon) }
 
+    private var taskThumbnailViewHeader: TaskThumbnailViewHeader? = null
+
     private var uiState: TaskThumbnailUiState = Uninitialized
 
     private val bounds = Rect()
@@ -86,6 +91,12 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
         defStyleAttr: Int,
     ) : super(context, attrs, defStyleAttr)
 
+    override fun onFinishInflate() {
+        super.onFinishInflate()
+
+        maybeCreateHeader()
+    }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         viewAttachedScope =
@@ -102,7 +113,7 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
                 resetViews()
                 when (viewModelUiState) {
                     is Uninitialized -> {}
-                    is LiveTile -> drawLiveWindow()
+                    is LiveTile -> drawLiveWindow(viewModelUiState)
                     is SnapshotSplash -> drawSnapshotSplash(viewModelUiState)
                     is BackgroundOnly -> drawBackground(viewModelUiState.backgroundColor)
                 }
@@ -179,14 +190,20 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
         splashIcon.alpha = 0f
         scrimView.alpha = 0f
         setBackgroundColor(Color.BLACK)
+        taskThumbnailViewHeader?.isInvisible = true
     }
 
     private fun drawBackground(@ColorInt background: Int) {
         setBackgroundColor(background)
     }
 
-    private fun drawLiveWindow() {
+    private fun drawLiveWindow(liveTile: LiveTile) {
         liveTileView.isInvisible = false
+
+        if (liveTile is LiveTile.WithHeader) {
+            taskThumbnailViewHeader?.isInvisible = false
+            taskThumbnailViewHeader?.setHeader(liveTile.header)
+        }
     }
 
     private fun drawSnapshotSplash(snapshotSplash: SnapshotSplash) {
@@ -197,6 +214,11 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
     }
 
     private fun drawSnapshot(snapshot: Snapshot) {
+        if (snapshot is Snapshot.WithHeader) {
+            taskThumbnailViewHeader?.isInvisible = false
+            taskThumbnailViewHeader?.setHeader(snapshot.header)
+        }
+
         drawBackground(snapshot.backgroundColor)
         thumbnailView.setImageBitmap(snapshot.bitmap)
         thumbnailView.isInvisible = false
@@ -209,5 +231,15 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
 
     private companion object {
         const val TAG = "TaskThumbnailView"
+    }
+
+    private fun maybeCreateHeader() {
+        if (enableDesktopExplodedView() && taskThumbnailViewHeader == null) {
+            taskThumbnailViewHeader =
+                LayoutInflater.from(context)
+                    .inflate(R.layout.task_thumbnail_view_header, this, false)
+                    as TaskThumbnailViewHeader
+            addView(taskThumbnailViewHeader)
+        }
     }
 }

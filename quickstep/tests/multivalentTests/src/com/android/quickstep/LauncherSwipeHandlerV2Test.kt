@@ -17,6 +17,12 @@
 package com.android.quickstep
 
 import android.graphics.PointF
+import android.hardware.display.DisplayManager
+import android.hardware.display.DisplayManagerGlobal
+import android.view.Display
+import android.view.Display.DEFAULT_DISPLAY
+import android.view.DisplayAdjustments.DEFAULT_DISPLAY_ADJUSTMENTS
+import android.view.DisplayInfo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.android.launcher3.R
@@ -39,6 +45,7 @@ import org.mockito.Mockito.spy
 import org.mockito.junit.MockitoJUnit
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 @SmallTest
 @RunWith(AndroidJUnit4::class)
@@ -63,8 +70,21 @@ class LauncherSwipeHandlerV2Test {
     private val flingSpeed =
         -(sandboxContext.resources.getDimension(R.dimen.quickstep_fling_threshold_speed) + 1)
 
+    private val displayManager: DisplayManager =
+        sandboxContext.spyService(DisplayManager::class.java)
+
     @Before
     fun setup() {
+        val display =
+            Display(
+                DisplayManagerGlobal.getInstance(),
+                DEFAULT_DISPLAY,
+                DisplayInfo(),
+                DEFAULT_DISPLAY_ADJUSTMENTS,
+            )
+        whenever(displayManager.getDisplay(eq(DEFAULT_DISPLAY))).thenReturn(display)
+        whenever(displayManager.displays).thenReturn(arrayOf(display))
+
         sandboxContext.initDaggerComponent(
             DaggerTestComponent.builder().bindSystemUiProxy(systemUiProxy)
         )
@@ -72,8 +92,10 @@ class LauncherSwipeHandlerV2Test {
             RotationTouchHelper.INSTANCE,
             mock(RotationTouchHelper::class.java),
         )
-        val deviceState = mock(RecentsAnimationDeviceState::class.java)
-        sandboxContext.putObject(RecentsAnimationDeviceState.INSTANCE, deviceState)
+        sandboxContext.putObject(
+            RecentsAnimationDeviceState.INSTANCE,
+            mock(RecentsAnimationDeviceState::class.java),
+        )
 
         gestureState = spy(GestureState(OverviewComponentObserver.INSTANCE.get(sandboxContext), 0))
 

@@ -254,6 +254,11 @@ public class TaskbarDragLayer extends BaseDragLayer<TaskbarActivityContext> {
         invalidate();
     }
 
+    protected void setBackgroundTranslationXForBubbleBar(float translationX) {
+        mBackgroundRenderer.setTranslationXForBubbleBar(translationX);
+        invalidate();
+    }
+
     /** Returns the bounds in DragLayer coordinates of where the transient background was drawn. */
     protected RectF getLastDrawnTransientRect() {
         return mBackgroundRenderer.getLastDrawnTransientRect();

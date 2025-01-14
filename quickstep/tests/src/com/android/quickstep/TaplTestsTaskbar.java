@@ -124,6 +124,7 @@ public class TaplTestsTaskbar extends AbstractTaplTestsTaskbar {
     }
 
     @Test
+    @ScreenRecordRule.ScreenRecord // b/373417111
     public void testLaunchShortcut_fromTaskbarAllApps() {
         getTaskbar().openAllApps()
                 .getAppIcon(TEST_APP_NAME)
@@ -134,7 +135,6 @@ public class TaplTestsTaskbar extends AbstractTaplTestsTaskbar {
 
     @Test
     @PortraitLandscape
-    @ScreenRecordRule.ScreenRecord // b/349439239
     public void testLaunchAppInSplitscreen_fromTaskbarAllApps() {
         getTaskbar().openAllApps()
                 .getAppIcon(TEST_APP_NAME)

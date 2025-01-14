@@ -58,7 +58,7 @@ abstract class FakeInvariantDeviceProfileTest {
     @Rule @JvmField val limitDevicesRule = LimitDevicesRule()
 
     @Before
-    fun setUp() {
+    open fun setUp() {
         context = ApplicationProvider.getApplicationContext()
         // make sure to reset values
         useTwoPanels = false
@@ -83,7 +83,7 @@ abstract class FakeInvariantDeviceProfileTest {
 
     protected fun initializeVarsForPhone(
         isGestureMode: Boolean = true,
-        isVerticalBar: Boolean = false
+        isVerticalBar: Boolean = false,
     ) {
         val (x, y) = if (isVerticalBar) Pair(2400, 1080) else Pair(1080, 2400)
 
@@ -94,8 +94,8 @@ abstract class FakeInvariantDeviceProfileTest {
                     if (isVerticalBar) 118 else 0,
                     if (isVerticalBar) 74 else 118,
                     if (!isGestureMode && isVerticalBar) 126 else 0,
-                    if (isGestureMode) 63 else if (isVerticalBar) 0 else 126
-                )
+                    if (isGestureMode) 63 else if (isVerticalBar) 0 else 126,
+                ),
             )
 
         whenever(info.isTablet(any())).thenReturn(false)
@@ -121,7 +121,7 @@ abstract class FakeInvariantDeviceProfileTest {
                             PointF(80f, 104f),
                             PointF(80f, 104f),
                             PointF(80f, 104f),
-                            PointF(80f, 104f)
+                            PointF(80f, 104f),
                         )
                         .toTypedArray()
 
@@ -143,7 +143,7 @@ abstract class FakeInvariantDeviceProfileTest {
                             PointF(80f, 104f),
                             PointF(80f, 104f),
                             PointF(80f, 104f),
-                            PointF(80f, 104f)
+                            PointF(80f, 104f),
                         )
                         .toTypedArray()
                 allAppsIconSize = floatArrayOf(60f, 60f, 60f, 60f)
@@ -174,7 +174,7 @@ abstract class FakeInvariantDeviceProfileTest {
 
     protected fun initializeVarsForTablet(
         isLandscape: Boolean = false,
-        isGestureMode: Boolean = true
+        isGestureMode: Boolean = true,
     ) {
         val (x, y) = if (isLandscape) Pair(2560, 1600) else Pair(1600, 2560)
 
@@ -203,7 +203,7 @@ abstract class FakeInvariantDeviceProfileTest {
                             PointF(102f, 120f),
                             PointF(120f, 104f),
                             PointF(102f, 120f),
-                            PointF(102f, 120f)
+                            PointF(102f, 120f),
                         )
                         .toTypedArray()
 
@@ -225,7 +225,7 @@ abstract class FakeInvariantDeviceProfileTest {
                             PointF(96f, 142f),
                             PointF(126f, 126f),
                             PointF(96f, 142f),
-                            PointF(96f, 142f)
+                            PointF(96f, 142f),
                         )
                         .toTypedArray()
                 allAppsIconSize = FloatArray(4) { 60f }
@@ -288,7 +288,7 @@ abstract class FakeInvariantDeviceProfileTest {
                             PointF(80f, 104f),
                             PointF(80f, 104f),
                             PointF(68f, 116f),
-                            PointF(80f, 102f)
+                            PointF(80f, 102f),
                         )
                         .toTypedArray()
 

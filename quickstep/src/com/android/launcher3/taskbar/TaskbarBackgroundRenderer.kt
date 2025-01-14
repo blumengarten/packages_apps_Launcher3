@@ -57,6 +57,7 @@ class TaskbarBackgroundRenderer(private val context: TaskbarActivityContext) {
     var backgroundHeight = context.deviceProfile.taskbarHeight.toFloat()
     var translationYForSwipe = 0f
     var translationYForStash = 0f
+    var translationXForBubbleBar = 0f
 
     private val transientBackgroundBounds = context.transientTaskbarBounds
 
@@ -244,12 +245,12 @@ class TaskbarBackgroundRenderer(private val context: TaskbarActivityContext) {
             setColorAlphaBound(Color.BLACK, Math.round(newShadowAlpha)),
         )
         strokePaint.alpha = (paint.alpha * strokeAlpha) / 255
-
+        val currentTranslationX = translationXForBubbleBar * progress
         lastDrawnTransientRect.set(
-            transientBackgroundBounds.left + halfWidthDelta,
+            transientBackgroundBounds.left + halfWidthDelta + currentTranslationX,
             bottom - newBackgroundHeight,
-            transientBackgroundBounds.right - halfWidthDelta,
-            bottom
+            transientBackgroundBounds.right - halfWidthDelta + currentTranslationX,
+            bottom,
         )
         val horizontalInset = fullWidth * widthInsetPercentage
         lastDrawnTransientRect.inset(horizontalInset, 0f)

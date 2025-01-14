@@ -55,7 +55,6 @@ public class TaplUninstallRemoveTest extends AbstractLauncherUiTest<Launcher> {
      */
     @Test
     @PortraitLandscape
-    @ScreenRecordRule.ScreenRecord // b/349439239
     public void testDeleteFromWorkspace() {
         for (String appName : new String[]{GMAIL_APP_NAME, STORE_APP_NAME, TEST_APP_NAME}) {
             final HomeAppIcon homeAppIcon = createShortcutInCenterIfNotExist(appName);

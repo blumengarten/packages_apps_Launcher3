@@ -40,6 +40,7 @@ import static com.android.launcher3.taskbar.TaskbarPinningController.PINNING_TRA
 import static com.android.launcher3.taskbar.bubbles.BubbleBarView.FADE_IN_ANIM_ALPHA_DURATION_MS;
 import static com.android.launcher3.taskbar.bubbles.BubbleBarView.FADE_OUT_ANIM_POSITION_DURATION_MS;
 import static com.android.launcher3.util.MultiPropertyFactory.MULTI_PROPERTY_VALUE;
+import static com.android.launcher3.util.MultiTranslateDelegate.INDEX_BUBBLE_BAR_ANIM;
 import static com.android.launcher3.util.MultiTranslateDelegate.INDEX_NAV_BAR_ANIM;
 import static com.android.launcher3.util.MultiTranslateDelegate.INDEX_TASKBAR_ALIGNMENT_ANIM;
 import static com.android.launcher3.util.MultiTranslateDelegate.INDEX_TASKBAR_PINNING_ANIM;
@@ -81,6 +82,7 @@ import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.TaskItemInfo;
 import com.android.launcher3.taskbar.bubbles.BubbleBarController;
+import com.android.launcher3.taskbar.bubbles.BubbleControllers;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.ItemInfoMatcher;
 import com.android.launcher3.util.LauncherBindableItemsContainer;
@@ -109,6 +111,8 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
 
     private static final Runnable NO_OP = () -> { };
 
+    public static long TRANSLATION_X_FOR_BUBBLEBAR_ANIM_DURATION_MS = 250;
+
     public static final int ALPHA_INDEX_HOME = 0;
     public static final int ALPHA_INDEX_KEYGUARD = 1;
     public static final int ALPHA_INDEX_STASH = 2;
@@ -132,6 +136,7 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
     private static final int TRANSITION_FADE_OUT_DURATION = 83;
 
     private final TaskbarActivityContext mActivity;
+    private @Nullable TaskbarDragLayerController mDragLayerController;
     private final TaskbarView mTaskbarView;
     private final MultiValueAlpha mTaskbarIconAlpha;
     private final AnimatedFloat mTaskbarIconScaleForStash = new AnimatedFloat(this::updateScale);
@@ -144,15 +149,22 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
             this::updateTaskbarIconsScale);
 
     private final AnimatedFloat mTaskbarIconTranslationXForPinning = new AnimatedFloat(
-            this::updateTaskbarIconTranslationXForPinning);
+            () -> updateTaskbarIconTranslationXForPinning());
 
     private final AnimatedFloat mIconsTranslationXForNavbar = new AnimatedFloat(
             this::updateTranslationXForNavBar);
+
+    private final AnimatedFloat mTranslationXForBubbleBar = new AnimatedFloat(
+            this::updateTranslationXForBubbleBar);
 
     @Nullable
     private Animator mTaskbarShiftXAnim;
     @Nullable
     private BubbleBarLocation mCurrentBubbleBarLocation;
+    @Nullable
+    private BubbleControllers mBubbleControllers = null;
+    @Nullable
+    private ObjectAnimator mTranslationXAnimation;
 
     private final AnimatedFloat mTaskbarIconTranslationYForPinning = new AnimatedFloat(
             this::updateTranslationY);
@@ -174,11 +186,12 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
     private final View.OnLayoutChangeListener mTaskbarViewLayoutChangeListener =
             (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
                 if (!taskbarRecentsLayoutTransition()) {
-                    updateTaskbarIconTranslationXForPinning();
+                    // update shiftX is handled with the animation at the end of the method
+                    updateTaskbarIconTranslationXForPinning(/* updateShiftXForBubbleBar = */ false);
                 }
-                if (BubbleBarController.isBubbleBarEnabled()) {
-                    mControllers.navbarButtonsViewController.onLayoutsUpdated();
-                }
+                if (mBubbleControllers == null) return;
+                mControllers.navbarButtonsViewController.onLayoutsUpdated();
+                adjustTaskbarXForBubbleBar();
             };
 
     // Animation to align icons with Launcher, created lazily. This allows the controller to be
@@ -222,11 +235,11 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         mIsRtl = Utilities.isRtl(mTaskbarView.getResources());
         mTaskbarLeftRightMargin = mActivity.getResources().getDimensionPixelSize(
                 R.dimen.transient_taskbar_padding);
-
     }
 
     public void init(TaskbarControllers controllers) {
         mControllers = controllers;
+        controllers.bubbleControllers.ifPresent(bc -> mBubbleControllers = bc);
         mTaskbarView.init(TaskbarViewCallbacksFactory.newInstance(mActivity).create(
                 mActivity, mControllers, mTaskbarView));
         mTaskbarView.getLayoutParams().height = mActivity.isPhoneMode()
@@ -252,7 +265,7 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
                 controllers.navbarButtonsViewController.getTaskbarNavButtonTranslationY();
         mTaskbarNavButtonTranslationYForInAppDisplay = controllers.navbarButtonsViewController
                 .getTaskbarNavButtonTranslationYForInAppDisplay();
-
+        mDragLayerController = controllers.taskbarDragLayerController;
         mActivity.addOnDeviceProfileChangeListener(mDeviceProfileChangeListener);
 
         if (ENABLE_TASKBAR_NAVBAR_UNIFICATION) {
@@ -270,24 +283,59 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
     @Override
     public void onBubbleBarLocationUpdated(BubbleBarLocation location) {
         updateCurrentBubbleBarLocation(location);
-        if (!shouldMoveTaskbarOnBubbleBarLocationUpdate()) return;
-        cancelTaskbarShiftAnimation();
-        // reset translation x, taskbar will position icons with the updated location
-        mIconsTranslationXForNavbar.updateValue(0);
-        mTaskbarView.onBubbleBarLocationUpdated(location);
+        if (mActivity.isTransientTaskbar()) {
+            translateTaskbarXForBubbleBar(/* animate= */ false);
+        } else if (mActivity.shouldStartAlignTaskbar()) {
+            cancelTaskbarShiftAnimation();
+            // reset translation x, taskbar will position icons with the updated location
+            mIconsTranslationXForNavbar.updateValue(0);
+            mTaskbarView.onBubbleBarLocationUpdated(location);
+        }
     }
 
     /** Animates start aligned taskbar accordingly to the bubble bar position. */
     @Override
     public void onBubbleBarLocationAnimated(BubbleBarLocation location) {
-        if (!updateCurrentBubbleBarLocation(location)
-                || !shouldMoveTaskbarOnBubbleBarLocationUpdate()) {
-            return;
+        boolean locationUpdated = updateCurrentBubbleBarLocation(location);
+        if (mActivity.isTransientTaskbar()) {
+            translateTaskbarXForBubbleBar(/* animate= */ true);
+        } else if (locationUpdated && mActivity.shouldStartAlignTaskbar()) {
+            cancelTaskbarShiftAnimation();
+            float translationX = mTaskbarView.getTranslationXForBubbleBarPosition(location);
+            mTaskbarShiftXAnim = createTaskbarIconsShiftAnimator(translationX);
+            mTaskbarShiftXAnim.start();
         }
-        cancelTaskbarShiftAnimation();
-        float translationX = mTaskbarView.getTranslationXForBubbleBarPosition(location);
-        mTaskbarShiftXAnim = createTaskbarIconsShiftAnimator(translationX);
-        mTaskbarShiftXAnim.start();
+    }
+
+    private void translateTaskbarXForBubbleBar(boolean animate) {
+        cancelCurrentTranslationXAnimation();
+        if (!mActivity.isTransientTaskbar()) return;
+        int shiftX = getTransientTaskbarShiftXForBubbleBar();
+        if (animate) {
+            mTranslationXAnimation = mTranslationXForBubbleBar.animateToValue(shiftX);
+            mTranslationXAnimation.setInterpolator(EMPHASIZED);
+            mTranslationXAnimation.setDuration(TRANSLATION_X_FOR_BUBBLEBAR_ANIM_DURATION_MS);
+            mTranslationXAnimation.start();
+        } else {
+            mTranslationXForBubbleBar.updateValue(shiftX);
+        }
+    }
+
+    private void cancelCurrentTranslationXAnimation() {
+        if (mTranslationXAnimation != null) {
+            if (mTranslationXAnimation.isRunning()) {
+                mTranslationXAnimation.cancel();
+            }
+            mTranslationXAnimation = null;
+        }
+    }
+
+    private int getTransientTaskbarShiftXForBubbleBar() {
+        if (mBubbleControllers == null || !mActivity.isTransientTaskbar()) {
+            return 0;
+        }
+        return mBubbleControllers.bubbleBarViewController
+                .getTransientTaskbarTranslationXForBubbleBar(mCurrentBubbleBarLocation);
     }
 
     /** Updates the mCurrentBubbleBarLocation, returns {@code} true if location is updated. */
@@ -298,13 +346,6 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
             mCurrentBubbleBarLocation = location;
             return true;
         }
-    }
-
-    /** Returns whether taskbar should be moved on the bubble bar location update. */
-    private boolean shouldMoveTaskbarOnBubbleBarLocationUpdate() {
-        return mControllers.bubbleControllers.isPresent()
-                && mActivity.shouldStartAlignTaskbar()
-                && mActivity.isThreeButtonNav();
     }
 
     private void cancelTaskbarShiftAnimation() {
@@ -450,16 +491,26 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
     }
 
     void updateTaskbarIconTranslationXForPinning() {
+        updateTaskbarIconTranslationXForPinning(/* updateShiftXForBubbleBar = */ true);
+    }
+
+    void updateTaskbarIconTranslationXForPinning(boolean updateShiftXForBubbleBar) {
         View[] iconViews = mTaskbarView.getIconViews();
         float scale = mTaskbarIconTranslationXForPinning.value;
         float transientTaskbarAllAppsOffset = mActivity.getResources().getDimension(
                 mTaskbarView.getAllAppsButtonContainer().getAllAppsButtonTranslationXOffset(true));
         float persistentTaskbarAllAppsOffset = mActivity.getResources().getDimension(
                 mTaskbarView.getAllAppsButtonContainer().getAllAppsButtonTranslationXOffset(false));
-
+        if (mBubbleControllers != null && updateShiftXForBubbleBar) {
+            cancelCurrentTranslationXAnimation();
+            int translationXForTransientTaskbar = mBubbleControllers.bubbleBarViewController
+                    .getTransientTaskbarTranslationXForBubbleBar(mCurrentBubbleBarLocation);
+            float currentTranslationXForTransientTaskbar = mapRange(scale,
+                    translationXForTransientTaskbar, 0);
+            mTranslationXForBubbleBar.updateValue(currentTranslationXForTransientTaskbar);
+        }
         float allAppIconTranslateRange = mapRange(scale, transientTaskbarAllAppsOffset,
                 persistentTaskbarAllAppsOffset);
-
         // Task icons are laid out so the taskbar content is centered. The taskbar width (used for
         // centering taskbar icons) depends on the all apps button X translation, and is different
         // for persistent and transient taskbar. If the offset used for current taskbar layout is
@@ -551,13 +602,23 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
     }
 
     private void updateTranslationXForNavBar() {
+        updateIconViewsTranslationX(INDEX_NAV_BAR_ANIM, mIconsTranslationXForNavbar.value);
+    }
+
+    private void updateTranslationXForBubbleBar() {
+        float translationX = mTranslationXForBubbleBar.value;
+        updateIconViewsTranslationX(INDEX_BUBBLE_BAR_ANIM, translationX);
+        if (mDragLayerController != null) {
+            mDragLayerController.setTranslationXForBubbleBar(translationX);
+        }
+    }
+
+    private void updateIconViewsTranslationX(int translationXChannel, float translationX) {
         View[] iconViews = mTaskbarView.getIconViews();
-        float translationX = mIconsTranslationXForNavbar.value;
-        for (int iconIndex = 0; iconIndex < iconViews.length; iconIndex++) {
-            View iconView = iconViews[iconIndex];
+        for (View iconView : iconViews) {
             MultiTranslateDelegate translateDelegate =
                     ((Reorderable) iconView).getTranslateDelegate();
-            translateDelegate.getTranslationX(INDEX_NAV_BAR_ANIM).setValue(translationX);
+            translateDelegate.getTranslationX(translationXChannel).setValue(translationX);
         }
     }
 
@@ -811,6 +872,13 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         if (mTaskbarView.updateMaxNumIcons()) {
             commitRunningAppsToUI();
         }
+        adjustTaskbarXForBubbleBar();
+    }
+
+    private void adjustTaskbarXForBubbleBar() {
+        if (mBubbleControllers != null && mActivity.isTransientTaskbar()) {
+            translateTaskbarXForBubbleBar(/* animate= */ true);
+        }
     }
 
     /**
@@ -841,7 +909,17 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         setter.setFloat(mTaskbarIconTranslationYForHome, VALUE, -offsetY, interpolator);
         setter.setFloat(mTaskbarNavButtonTranslationY, VALUE, -offsetY, interpolator);
         setter.setFloat(mTaskbarNavButtonTranslationYForInAppDisplay, VALUE, offsetY, interpolator);
-
+        if (mBubbleControllers != null
+                && mCurrentBubbleBarLocation != null
+                && mActivity.isTransientTaskbar()) {
+            int offsetX = mBubbleControllers.bubbleBarViewController
+                    .getTransientTaskbarTranslationXForBubbleBar(mCurrentBubbleBarLocation);
+            if (offsetX != 0) {
+                // if taskbar should be adjusted for the bubble bar adjust the taskbar translation
+                mTranslationXForBubbleBar.updateValue(offsetX);
+                setter.setFloat(mTranslationXForBubbleBar, VALUE, 0, interpolator);
+            }
+        }
         int collapsedHeight = mActivity.getDefaultTaskbarWindowSize();
         int expandedHeight = Math.max(collapsedHeight, taskbarDp.taskbarHeight + offsetY);
         setter.addOnFrameListener(anim -> mActivity.setTaskbarWindowSize(
@@ -1042,8 +1120,8 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
     }
 
     private boolean bubbleBarHasBubbles() {
-        return mControllers.bubbleControllers.isPresent()
-                && mControllers.bubbleControllers.get().bubbleBarViewController.hasBubbles();
+        return mBubbleControllers != null
+                && mBubbleControllers.bubbleBarViewController.hasBubbles();
     }
 
     public void onRotationChanged(DeviceProfile deviceProfile) {

@@ -24,6 +24,7 @@ import com.android.launcher3.taskbar.TaskbarInsetsController
 import com.android.launcher3.taskbar.bubbles.BubbleBarView
 import com.android.launcher3.taskbar.bubbles.BubbleBarViewController
 import com.android.launcher3.taskbar.bubbles.BubbleStashedHandleViewController
+import com.android.launcher3.util.MultiPropertyFactory
 import com.android.wm.shell.shared.animation.PhysicsAnimator
 import com.android.wm.shell.shared.bubbles.BubbleBarLocation
 import java.io.PrintWriter
@@ -171,6 +172,9 @@ interface BubbleStashController {
 
     /** Returns bounds of the handle */
     fun getHandleBounds(bounds: Rect)
+
+    /** Returns MultiValueAlpha of the handle view when the handle view is shown. */
+    fun getHandleViewAlpha(): MultiPropertyFactory<View>.MultiProperty? = null
 
     /**
      * Returns bubble bar Y position according to [isBubblesShowingOnHome] and

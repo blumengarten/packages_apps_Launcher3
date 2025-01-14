@@ -438,12 +438,12 @@ public class LoaderTask implements Runnable {
         ModelDbController dbController = mApp.getModel().getModelDbController();
         if (Flags.gridMigrationRefactor()) {
             try {
-                dbController.attemptMigrateDb(restoreEventLogger);
+                dbController.attemptMigrateDb(restoreEventLogger, mModelDelegate);
             } catch (Exception e) {
                 FileLog.e(TAG, "Failed to migrate grid", e);
             }
         } else {
-            dbController.tryMigrateDB(restoreEventLogger);
+            dbController.tryMigrateDB(restoreEventLogger, mModelDelegate);
         }
         Log.d(TAG, "loadWorkspace: loading default favorites if necessary");
         dbController.loadDefaultFavoritesIfNecessary();
