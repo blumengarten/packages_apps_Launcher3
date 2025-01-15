@@ -486,11 +486,7 @@ class SplitAnimationController(val splitSelectStateController: SplitSelectStateC
 
         pendingAnimation.addEndListener {
             splitSelectStateController.launchInitialAppFullscreen {
-                if (FeatureFlags.enableSplitContextually()) {
-                    splitSelectStateController.resetState()
-                } else if (resetCallback.isPresent) {
-                    resetCallback.get().run()
-                }
+                splitSelectStateController.resetState()
             }
         }
 

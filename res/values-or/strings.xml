@@ -125,8 +125,7 @@
     <string name="folder_renamed" msgid="1794088362165669656">"ଫୋଲ୍ଡରର ନାମ <xliff:g id="NAME">%1$s</xliff:g>କୁ ବଦଳାଗଲା"</string>
     <string name="folder_name_format_exact" msgid="8626242716117004803">"ଫୋଲ୍ଡର୍: <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="SIZE">%2$d</xliff:g> ଆଇଟମଗୁଡ଼ିକ"</string>
     <string name="folder_name_format_overflow" msgid="4270108890534995199">"ଫୋଲ୍ଡର୍: <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="SIZE">%2$d</xliff:g> କିମ୍ବା ଅଧିକ ଆଇଟମ୍"</string>
-    <!-- no translation found for unnamed_folder (2420192029474044442) -->
-    <skip />
+    <string name="unnamed_folder" msgid="2420192029474044442">"ବେନାମୀ ଫୋଲ୍ଡର"</string>
     <string name="app_pair_name_format" msgid="8134106404716224054">"ଆପ ପେୟାର: <xliff:g id="APP1">%1$s</xliff:g> ଏବଂ <xliff:g id="APP2">%2$s</xliff:g>"</string>
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"ୱାଲପେପର ଏବଂ ଷ୍ଟାଇଲ"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"ହୋମ ସ୍କ୍ରିନକୁ ଏଡିଟ କରନ୍ତୁ"</string>
@@ -164,7 +163,6 @@
     <string name="widgets_list_closed" msgid="6141506579418771922">"ୱିଜେଟ୍ ତାଲିକା ବନ୍ଦ ହୋଇଛି"</string>
     <string name="action_add_to_workspace" msgid="215894119683164916">"ହୋମ ସ୍କ୍ରିନରେ ଯୋଗ କରନ୍ତୁ"</string>
     <string name="action_move_here" msgid="2170188780612570250">"ଆଇଟମ୍‌କୁ ଏଠାକୁ ଘୁଞ୍ଚାନ୍ତୁ"</string>
-    <string name="item_added_to_workspace" msgid="4211073925752213539">"ହୋମ ସ୍କ୍ରିନରେ ଆଇଟମ ଯୋଗ କରାଗଲା"</string>
     <string name="item_removed" msgid="851119963877842327">"ଆଇଟମକୁ କାଢ଼ି ଦିଆଯାଇଛି"</string>
     <string name="undo" msgid="4151576204245173321">"ପୂର୍ବବତ କରନ୍ତୁ"</string>
     <string name="action_move" msgid="4339390619886385032">"ଆଇଟମ୍‌ ଘୁଞ୍ଚାନ୍ତୁ"</string>

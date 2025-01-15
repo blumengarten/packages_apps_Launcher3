@@ -465,8 +465,7 @@ public class FloatingIconView extends FrameLayout implements
         bounds.inset(blurSizeOutline / 2, blurSizeOutline / 2);
 
         try (LauncherIcons li = LauncherIcons.obtain(l)) {
-            Utilities.scaleRectAboutCenter(bounds, li.getNormalizer().getScale(drawable, null,
-                    null, null));
+            Utilities.scaleRectAboutCenter(bounds, li.getNormalizer().getScale(drawable));
         }
 
         bounds.inset(

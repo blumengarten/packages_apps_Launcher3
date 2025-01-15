@@ -16,7 +16,6 @@
 
 package com.android.quickstep.views;
 
-import static com.android.launcher3.Flags.enableGridOnlyOverview;
 import static com.android.quickstep.util.BorderAnimator.DEFAULT_BORDER_COLOR;
 
 import android.content.Context;
@@ -331,13 +330,7 @@ public class ClearAllButton extends Button {
     private float getOriginalTranslationY() {
         DeviceProfile deviceProfile = mContainer.getDeviceProfile();
         if (deviceProfile.isTablet) {
-            if (enableGridOnlyOverview()) {
-                return (getRecentsView().getLastComputedTaskSize().height()
-                        + deviceProfile.overviewTaskThumbnailTopMarginPx) / 2.0f
-                        + deviceProfile.overviewRowSpacing;
-            } else {
-                return deviceProfile.overviewRowSpacing;
-            }
+            return deviceProfile.overviewRowSpacing;
         }
         return deviceProfile.overviewTaskThumbnailTopMarginPx / 2.0f;
     }

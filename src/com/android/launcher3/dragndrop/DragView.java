@@ -264,8 +264,7 @@ public abstract class DragView<T extends Context & ActivityContext> extends Fram
                 try (LauncherIcons li = LauncherIcons.obtain(mActivity)) {
                     // Since we just want the scale, avoid heavy drawing operations
                     Utilities.scaleRectAboutCenter(bounds, li.getNormalizer().getScale(
-                            new AdaptiveIconDrawable(new ColorDrawable(Color.BLACK), null),
-                            null, null, null));
+                            new AdaptiveIconDrawable(new ColorDrawable(Color.BLACK), null)));
                 }
 
                 // Shrink very tiny bit so that the clip path is smaller than the original bitmap

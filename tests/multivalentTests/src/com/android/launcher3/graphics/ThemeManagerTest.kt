@@ -20,9 +20,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.android.launcher3.FakeLauncherPrefs
 import com.android.launcher3.dagger.LauncherAppComponent
-import com.android.launcher3.dagger.LauncherAppModule
 import com.android.launcher3.dagger.LauncherAppSingleton
+import com.android.launcher3.util.AllModulesForTest
 import com.android.launcher3.util.Executors.MAIN_EXECUTOR
+import com.android.launcher3.util.FakePrefsModule
 import com.android.launcher3.util.SandboxApplication
 import com.android.launcher3.util.TestUtil
 import dagger.Component
@@ -91,7 +92,7 @@ class ThemeManagerTest {
 }
 
 @LauncherAppSingleton
-@Component(modules = [LauncherAppModule::class])
+@Component(modules = [AllModulesForTest::class, FakePrefsModule::class])
 interface ThemeManagerComponent : LauncherAppComponent {
 
     override fun getLauncherPrefs(): FakeLauncherPrefs

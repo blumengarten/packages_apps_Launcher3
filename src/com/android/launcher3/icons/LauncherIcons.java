@@ -17,14 +17,22 @@
 package com.android.launcher3.icons;
 
 import android.content.Context;
+import android.graphics.Matrix;
+import android.graphics.Path;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.drawable.AdaptiveIconDrawable;
 import android.os.UserHandle;
 
 import androidx.annotation.NonNull;
+import androidx.core.graphics.PathParser;
 
+import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.graphics.IconShape;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.pm.UserCache;
+import com.android.launcher3.shapes.IconShapeModel;
 import com.android.launcher3.util.MainThreadInitializedObject;
 import com.android.launcher3.util.SafeCloseable;
 import com.android.launcher3.util.UserIconInfo;
@@ -56,8 +64,7 @@ public class LauncherIcons extends BaseIconFactory implements AutoCloseable {
 
     protected LauncherIcons(Context context, int fillResIconDpi, int iconBitmapSize,
             ConcurrentLinkedQueue<LauncherIcons> pool) {
-        super(context, fillResIconDpi, iconBitmapSize,
-                IconShape.INSTANCE.get(context).getShape().enableShapeDetection());
+        super(context, fillResIconDpi, iconBitmapSize);
         mThemeController = ThemeManager.INSTANCE.get(context).getThemeController();
         mPool = pool;
     }
@@ -74,6 +81,28 @@ public class LauncherIcons extends BaseIconFactory implements AutoCloseable {
     @Override
     protected UserIconInfo getUserInfo(@NonNull UserHandle user) {
         return UserCache.INSTANCE.get(mContext).getUserInfo(user);
+    }
+
+    @NonNull
+    @Override
+    public Path getShapePath(AdaptiveIconDrawable drawable, Rect iconBounds) {
+        if (!Flags.enableLauncherIconShapes()) return drawable.getIconMask();
+
+        IconShapeModel shapeOverride = IconShape.INSTANCE.get(mContext).getShapeOverride();
+        if (shapeOverride != null) {
+            Path maskPath = PathParser.createPathFromPathData(shapeOverride.getPathString());
+            Matrix matrix = new Matrix();
+            // Assuming Path is in [0, 0, 100, 100] coordinate space.
+            matrix.setRectToRect(
+                    new RectF(0, 0, 100, 100),
+                    new RectF(iconBounds),
+                    Matrix.ScaleToFit.CENTER // Todo: CENTER or FILL?
+            );
+            maskPath.transform(matrix);
+            return maskPath;
+        } else {
+            return drawable.getIconMask();
+        }
     }
 
     @Override

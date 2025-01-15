@@ -46,8 +46,8 @@ import androidx.test.filters.SmallTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.launcher3.dagger.LauncherAppComponent;
-import com.android.launcher3.dagger.LauncherAppModule;
 import com.android.launcher3.dagger.LauncherAppSingleton;
+import com.android.launcher3.util.AllModulesForTest;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.MainThreadInitializedObject.SandboxContext;
 import com.android.quickstep.DeviceConfigWrapper;
@@ -461,12 +461,11 @@ public class NavHandleLongPressInputConsumerTest {
     }
 
     @LauncherAppSingleton
-    @Component(modules = LauncherAppModule.class)
+    @Component(modules = AllModulesForTest.class)
     public interface TopTaskTrackerComponent extends LauncherAppComponent {
         @Component.Builder
         interface Builder extends LauncherAppComponent.Builder {
-            @BindsInstance
-            Builder bindTopTaskTracker(TopTaskTracker topTaskTracker);
+            @BindsInstance Builder bindTopTaskTracker(TopTaskTracker topTaskTracker);
 
             @Override
             TopTaskTrackerComponent build();

@@ -42,10 +42,10 @@ import com.android.launcher3.LauncherSettings.Favorites.SPANX
 import com.android.launcher3.LauncherSettings.Favorites.SPANY
 import com.android.launcher3.LauncherSettings.Favorites._ID
 import com.android.launcher3.dagger.LauncherAppComponent
-import com.android.launcher3.dagger.LauncherAppModule
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.model.data.AppInfo
 import com.android.launcher3.pm.UserCache
+import com.android.launcher3.util.AllModulesMinusApiWrapper
 import com.android.launcher3.util.ApiWrapper
 import com.android.launcher3.util.Executors
 import com.android.launcher3.util.LauncherLayoutBuilder
@@ -224,17 +224,15 @@ class AutoInstallsLayoutTest {
     }
 }
 
-class MyApiWrapper : ApiWrapper(null) {}
+class MyApiWrapper : ApiWrapper(null)
 
 @LauncherAppSingleton
-@Component(modules = [LauncherAppModule::class])
+@Component(modules = [AllModulesMinusApiWrapper::class])
 interface AutoInstallsLayoutTestComponent : LauncherAppComponent {
-
-    override fun getApiWrapper(): MyApiWrapper
 
     @Component.Builder
     interface Builder : LauncherAppComponent.Builder {
-        @BindsInstance fun bindApiWrapper(wrapper: MyApiWrapper): Builder
+        @BindsInstance fun bindApiWrapper(wrapper: ApiWrapper): Builder
 
         override fun build(): AutoInstallsLayoutTestComponent
     }

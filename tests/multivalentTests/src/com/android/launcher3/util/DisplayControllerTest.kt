@@ -30,7 +30,6 @@ import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherPrefs.Companion.TASKBAR_PINNING
 import com.android.launcher3.LauncherPrefs.Companion.TASKBAR_PINNING_IN_DESKTOP_MODE
 import com.android.launcher3.dagger.LauncherAppComponent
-import com.android.launcher3.dagger.LauncherAppModule
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.util.DisplayController.CHANGE_DENSITY
 import com.android.launcher3.util.DisplayController.CHANGE_ROTATION
@@ -43,6 +42,7 @@ import dagger.BindsInstance
 import dagger.Component
 import junit.framework.Assert.assertFalse
 import junit.framework.Assert.assertTrue
+import kotlin.math.min
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -57,7 +57,6 @@ import org.mockito.kotlin.spy
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.stubbing.Answer
-import kotlin.math.min
 
 /** Unit tests for {@link DisplayController} */
 @SmallTest
@@ -139,7 +138,7 @@ class DisplayControllerTest {
         whenever(context.resources).thenReturn(resources)
 
         // Initialize DisplayController
-        displayController = DisplayController(context)
+        displayController = DisplayController.INSTANCE.get(context)
         displayController.addChangeListener(displayInfoChangeListener)
     }
 
@@ -235,14 +234,12 @@ class DisplayControllerTest {
 class MyWmProxy : WindowManagerProxy()
 
 @LauncherAppSingleton
-@Component(modules = [LauncherAppModule::class])
+@Component(modules = [AllModulesMinusWMProxy::class])
 interface DisplayControllerTestComponent : LauncherAppComponent {
-
-    override fun getWmProxy(): MyWmProxy
 
     @Component.Builder
     interface Builder : LauncherAppComponent.Builder {
-        @BindsInstance fun bindWMProxy(proxy: MyWmProxy): Builder
+        @BindsInstance fun bindWMProxy(proxy: WindowManagerProxy): Builder
 
         @BindsInstance fun bindLauncherPrefs(prefs: LauncherPrefs): Builder
 

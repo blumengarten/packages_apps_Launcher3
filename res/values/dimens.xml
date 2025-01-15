@@ -488,8 +488,6 @@
     <dimen name="overview_grid_side_margin">0dp</dimen>
     <dimen name="overview_grid_row_spacing">0dp</dimen>
     <dimen name="overview_page_spacing">0dp</dimen>
-    <dimen name="overview_top_margin_grid_only">0dp</dimen>
-    <dimen name="overview_bottom_margin_grid_only">0dp</dimen>
 
     <dimen name="split_placeholder_size">72dp</dimen>
     <dimen name="split_placeholder_inset">16dp</dimen>

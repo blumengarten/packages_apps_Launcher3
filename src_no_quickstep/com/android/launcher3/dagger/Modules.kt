@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 The Android Open Source Project
+ * Copyright (C) 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.launcher3.shapes
+package com.android.launcher3.dagger
 
-class AppShape(val key: String, val title: String, val path: String)
+import dagger.Module
+
+private object Modules {}
+
+@Module abstract class WindowManagerProxyModule {}
+
+@Module abstract class ApiWrapperModule {}
+
+@Module abstract class PluginManagerWrapperModule {}

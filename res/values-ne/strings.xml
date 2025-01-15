@@ -125,8 +125,7 @@
     <string name="folder_renamed" msgid="1794088362165669656">"फोल्डर <xliff:g id="NAME">%1$s</xliff:g> मा पुनःनामाकरण गरियो।"</string>
     <string name="folder_name_format_exact" msgid="8626242716117004803">"फोल्डर: <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="SIZE">%2$d</xliff:g> वस्तुहरू"</string>
     <string name="folder_name_format_overflow" msgid="4270108890534995199">"फोल्डर: <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="SIZE">%2$d</xliff:g> वा सोभन्दा बढी वस्तुहरू"</string>
-    <!-- no translation found for unnamed_folder (2420192029474044442) -->
-    <skip />
+    <string name="unnamed_folder" msgid="2420192029474044442">"नामरहित फोल्डर"</string>
     <string name="app_pair_name_format" msgid="8134106404716224054">"एप पेयर: <xliff:g id="APP1">%1$s</xliff:g> र <xliff:g id="APP2">%2$s</xliff:g>"</string>
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"वालपेपर तथा शैली"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"होम स्क्रिन बदल्नुहोस्"</string>
@@ -164,7 +163,6 @@
     <string name="widgets_list_closed" msgid="6141506579418771922">"विजेटहरूको सूची बन्द गरियो"</string>
     <string name="action_add_to_workspace" msgid="215894119683164916">"होम स्क्रिनमा राख्नुहोस्"</string>
     <string name="action_move_here" msgid="2170188780612570250">"वस्तु यहाँ सार्नुहोस्"</string>
-    <string name="item_added_to_workspace" msgid="4211073925752213539">"वस्तु गृह स्क्रिनमा थपियो"</string>
     <string name="item_removed" msgid="851119963877842327">"वस्तु हटाइयो"</string>
     <string name="undo" msgid="4151576204245173321">"अन्डू गर्नुहोस्"</string>
     <string name="action_move" msgid="4339390619886385032">"वस्तु सार्नुहोस्"</string>

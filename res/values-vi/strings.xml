@@ -125,8 +125,7 @@
     <string name="folder_renamed" msgid="1794088362165669656">"Đã đổi tên thư mục thành <xliff:g id="NAME">%1$s</xliff:g>"</string>
     <string name="folder_name_format_exact" msgid="8626242716117004803">"Thư mục: <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="SIZE">%2$d</xliff:g> mục"</string>
     <string name="folder_name_format_overflow" msgid="4270108890534995199">"Thư mục: <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="SIZE">%2$d</xliff:g> mục trở lên"</string>
-    <!-- no translation found for unnamed_folder (2420192029474044442) -->
-    <skip />
+    <string name="unnamed_folder" msgid="2420192029474044442">"Thư mục chưa đặt tên"</string>
     <string name="app_pair_name_format" msgid="8134106404716224054">"Cặp ứng dụng: <xliff:g id="APP1">%1$s</xliff:g> và <xliff:g id="APP2">%2$s</xliff:g>"</string>
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"Hình nền và phong cách"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"Chỉnh sửa Màn hình chính"</string>
@@ -164,7 +163,6 @@
     <string name="widgets_list_closed" msgid="6141506579418771922">"Đã đóng danh sách tiện ích"</string>
     <string name="action_add_to_workspace" msgid="215894119683164916">"Thêm vào màn hình chính"</string>
     <string name="action_move_here" msgid="2170188780612570250">"Di chuyển mục vào đây"</string>
-    <string name="item_added_to_workspace" msgid="4211073925752213539">"Đã thêm mục vào màn hình chính"</string>
     <string name="item_removed" msgid="851119963877842327">"Đã xóa mục"</string>
     <string name="undo" msgid="4151576204245173321">"Hủy"</string>
     <string name="action_move" msgid="4339390619886385032">"Di chuyển mục"</string>

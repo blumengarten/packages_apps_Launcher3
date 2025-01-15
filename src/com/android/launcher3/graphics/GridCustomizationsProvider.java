@@ -15,6 +15,8 @@
  */
 package com.android.launcher3.graphics;
 
+
+import static com.android.launcher3.graphics.IconShape.PREF_ICON_SHAPE;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 
@@ -40,9 +42,10 @@ import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.InvariantDeviceProfile.GridOption;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherModel;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.model.BgDataModel;
-import com.android.launcher3.shapes.AppShape;
-import com.android.launcher3.shapes.AppShapesProvider;
+import com.android.launcher3.shapes.IconShapeModel;
+import com.android.launcher3.shapes.IconShapesProvider;
 import com.android.launcher3.util.Executors;
 import com.android.launcher3.util.Preconditions;
 import com.android.launcher3.util.RunnableList;
@@ -50,7 +53,6 @@ import com.android.systemui.shared.Flags;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
@@ -139,16 +141,23 @@ public class GridCustomizationsProvider extends ContentProvider {
                 if (Flags.newCustomizationPickerUi()) {
                     MatrixCursor cursor = new MatrixCursor(new String[]{
                             KEY_SHAPE_KEY, KEY_SHAPE_TITLE, KEY_PATH, KEY_IS_DEFAULT});
-                    List<AppShape> shapes =  AppShapesProvider.INSTANCE.getShapes();
+                    List<IconShapeModel> shapes = IconShapesProvider.INSTANCE.getShapes()
+                            .values()
+                            .stream()
+                            .toList();
+                    String currentPath = LauncherPrefs.get(context).get(PREF_ICON_SHAPE);
+                    IconShapeModel currentShape = shapes.stream()
+                            .filter(shape -> currentPath.equals(shape.getPathString()))
+                            .findFirst()
+                            .orElse(IconShapesProvider.INSTANCE.getShapes().get("circle"));
+
                     for (int i = 0; i < shapes.size(); i++) {
-                        AppShape shape = shapes.get(i);
+                        IconShapeModel shape = shapes.get(i);
                         cursor.newRow()
                                 .add(KEY_SHAPE_KEY, shape.getKey())
                                 .add(KEY_SHAPE_TITLE, shape.getTitle())
-                                .add(KEY_PATH, shape.getPath())
-                                // TODO (b/348664593): We should fetch the currently-set shape
-                                //  option from the preferences.
-                                .add(KEY_IS_DEFAULT, i == 0);
+                                .add(KEY_PATH, shape.getPathString())
+                                .add(KEY_IS_DEFAULT, shape.equals(currentShape));
                     }
                     return cursor;
                 } else  {
@@ -210,11 +219,8 @@ public class GridCustomizationsProvider extends ContentProvider {
             case KEY_DEFAULT_GRID: {
                 if (Flags.newCustomizationPickerUi()) {
                     String shapeKey = values.getAsString(KEY_SHAPE_KEY);
-                    Optional<AppShape> optionalShape = AppShapesProvider.INSTANCE.getShapes()
-                            .stream().filter(shape -> shape.getKey().equals(shapeKey)).findFirst();
-                    String pathToSet = optionalShape.map(AppShape::getPath).orElse(null);
-                    // TODO (b/348664593): Apply shapeName to the system. This needs to be a
-                    //  synchronous call.
+                    IconShapeModel shape = IconShapesProvider.INSTANCE.getShapes().get(shapeKey);
+                    IconShape.INSTANCE.get(context).setShapeOverride(shape);
                 }
                 String gridName = values.getAsString(KEY_NAME);
                 InvariantDeviceProfile idp = InvariantDeviceProfile.INSTANCE.get(context);
@@ -353,14 +359,12 @@ public class GridCustomizationsProvider extends ContentProvider {
                     renderer.hideBottomRow(message.getData().getBoolean(KEY_HIDE_BOTTOM_ROW));
                     break;
                 case MESSAGE_ID_UPDATE_SHAPE:
-                    if (Flags.newCustomizationPickerUi() && Flags.enableLauncherIconShapes()) {
+                    if (Flags.newCustomizationPickerUi()
+                            && com.android.launcher3.Flags.enableLauncherIconShapes()) {
                         String shapeKey = message.getData().getString(KEY_SHAPE_KEY);
-                        Optional<AppShape> optionalShape = AppShapesProvider.INSTANCE.getShapes()
-                                .stream()
-                                .filter(shape -> shape.getKey().equals(shapeKey))
-                                .findFirst();
-                        String pathToSet = optionalShape.map(AppShape::getPath).orElse(null);
-                        // TODO (b/348664593): Update launcher preview with the given shape
+                        IconShapeModel shape =
+                                IconShapesProvider.INSTANCE.getShapes().get(shapeKey);
+                        renderer.updateShape(shape);
                     }
                     break;
                 case MESSAGE_ID_UPDATE_GRID:

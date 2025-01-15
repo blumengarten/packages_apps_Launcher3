@@ -284,11 +284,7 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
         }
 
         if (finalState != OVERVIEW_SPLIT_SELECT) {
-            if (FeatureFlags.enableSplitContextually()) {
-                mSplitSelectStateController.resetState();
-            } else {
-                resetFromSplitSelectionState();
-            }
+            mSplitSelectStateController.resetState();
         }
 
         // disabling this so app icons aren't drawn on top of recent tasks.

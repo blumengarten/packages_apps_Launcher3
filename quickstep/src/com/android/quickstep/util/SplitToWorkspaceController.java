@@ -219,6 +219,6 @@ public class SplitToWorkspaceController {
     }
 
     private boolean shouldIgnoreSecondSplitLaunch() {
-        return !FeatureFlags.enableSplitContextually() || !mController.isSplitSelectActive();
+        return !mController.isSplitSelectActive();
     }
 }

@@ -18,6 +18,7 @@ package com.android.launcher3.graphics
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
+import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
@@ -39,12 +40,19 @@ import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.SvgPathParser
 import androidx.graphics.shapes.toPath
 import androidx.graphics.shapes.transformed
+import com.android.launcher3.EncryptionType
+import com.android.launcher3.LauncherPrefs
+import com.android.launcher3.LauncherPrefs.Companion.backedUpItem
 import com.android.launcher3.anim.RoundedRectRevealOutlineProvider
+import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppComponent
 import com.android.launcher3.dagger.LauncherAppSingleton
+import com.android.launcher3.graphics.LauncherPreviewRenderer.PreviewContext
 import com.android.launcher3.graphics.ThemeManager.ThemeChangeListener
 import com.android.launcher3.icons.GraphicsUtils
 import com.android.launcher3.icons.IconNormalizer
+import com.android.launcher3.shapes.IconShapeModel
+import com.android.launcher3.shapes.IconShapesProvider
 import com.android.launcher3.util.DaggerSingletonObject
 import com.android.launcher3.util.DaggerSingletonTracker
 import com.android.launcher3.views.ClipPathView
@@ -52,7 +60,22 @@ import javax.inject.Inject
 
 /** Abstract representation of the shape of an icon shape */
 @LauncherAppSingleton
-class IconShape @Inject constructor(themeManager: ThemeManager, lifeCycle: DaggerSingletonTracker) {
+class IconShape
+@Inject
+constructor(
+    @ApplicationContext private val context: Context,
+    private val prefs: LauncherPrefs,
+    themeManager: ThemeManager,
+    lifeCycle: DaggerSingletonTracker,
+) {
+
+    var shapeOverride: IconShapeModel? = getShapeFromPathString(prefs.get(PREF_ICON_SHAPE))
+        set(value) {
+            field = value
+            if (context !is PreviewContext) {
+                value?.let { prefs.put(PREF_ICON_SHAPE, value.pathString) }
+            }
+        }
 
     var normalizationScale: Float = IconNormalizer.ICON_VISIBLE_AREA_FACTOR
         private set
@@ -62,7 +85,6 @@ class IconShape @Inject constructor(themeManager: ThemeManager, lifeCycle: Dagge
 
     init {
         val changeListener = ThemeChangeListener { shape = pickBestShape(themeManager) }
-
         themeManager.addChangeListener(changeListener)
         lifeCycle.addCloseable { themeManager.removeChangeListener(changeListener) }
     }
@@ -74,13 +96,11 @@ class IconShape @Inject constructor(themeManager: ThemeManager, lifeCycle: Dagge
                 setBounds(0, 0, AREA_CALC_SIZE, AREA_CALC_SIZE)
             }
 
-        normalizationScale = IconNormalizer.normalizeAdaptiveIcon(drawable, AREA_CALC_SIZE, null)
+        normalizationScale = IconNormalizer.normalizeAdaptiveIcon(drawable, AREA_CALC_SIZE)
         return pickBestShape(drawable.iconMask, themeManager.iconState.iconMask)
     }
 
     interface ShapeDelegate {
-        fun enableShapeDetection() = false
-
         fun drawShape(canvas: Canvas, offsetX: Float, offsetY: Float, radius: Float, paint: Paint)
 
         fun addToPath(path: Path, offsetX: Float, offsetY: Float, radius: Float)
@@ -107,8 +127,6 @@ class IconShape @Inject constructor(themeManager: ThemeManager, lifeCycle: Dagge
 
         override fun addToPath(path: Path, offsetX: Float, offsetY: Float, radius: Float) =
             path.addCircle(radius + offsetX, radius + offsetY, radius, Path.Direction.CW)
-
-        override fun enableShapeDetection() = true
     }
 
     /** Rounded square with [radiusRatio] as a ratio of its half edge size */
@@ -231,7 +249,7 @@ class IconShape @Inject constructor(themeManager: ThemeManager, lifeCycle: Dagge
                     private var oldOutlineProvider: ViewOutlineProvider? = null
 
                     override fun onAnimationStart(animation: Animator) {
-                        target?.apply {
+                        target.apply {
                             oldOutlineProvider = outlineProvider
                             outlineProvider = null
                             translationZ = -target.elevation
@@ -262,10 +280,18 @@ class IconShape @Inject constructor(themeManager: ThemeManager, lifeCycle: Dagge
         @JvmField var INSTANCE = DaggerSingletonObject(LauncherAppComponent::getIconShape)
 
         const val TAG = "IconShape"
-
+        const val KEY_ICON_SHAPE = "icon_shape"
         const val AREA_CALC_SIZE = 1000
         // .1% error margin
         const val AREA_DIFF_THRESHOLD = AREA_CALC_SIZE * AREA_CALC_SIZE / 1000
+
+        @JvmField val PREF_ICON_SHAPE = backedUpItem(KEY_ICON_SHAPE, "", EncryptionType.ENCRYPTED)
+
+        private fun getShapeFromPathString(pathString: String): IconShapeModel? {
+            return IconShapesProvider.shapes.values.firstOrNull { shape: IconShapeModel ->
+                shape.pathString == pathString
+            }
+        }
 
         /** Returns a function to calculate area diff from [base] */
         @VisibleForTesting
@@ -328,14 +354,19 @@ class IconShape @Inject constructor(themeManager: ThemeManager, lifeCycle: Dagge
             RoundedPolygon(
                 vertices =
                     floatArrayOf(
+                        // x1, y1
                         (left + right) / 2,
                         top,
+                        // x2, y2
                         right,
                         top,
+                        // x3, y3
                         right,
                         bottom,
+                        // x4, y4
                         left,
                         bottom,
+                        // x5, y5
                         left,
                         top,
                     ),

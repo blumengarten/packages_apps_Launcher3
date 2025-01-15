@@ -62,6 +62,7 @@ import com.android.launcher3.model.GridSizeMigrationDBController;
 import com.android.launcher3.model.LoaderTask;
 import com.android.launcher3.model.ModelDbController;
 import com.android.launcher3.provider.LauncherDbUtils;
+import com.android.launcher3.shapes.IconShapeModel;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.Themes;
@@ -77,9 +78,7 @@ import java.util.concurrent.TimeUnit;
 public class PreviewSurfaceRenderer {
 
     private static final String TAG = "PreviewSurfaceRenderer";
-
     private static final int FADE_IN_ANIMATION_DURATION = 200;
-
     private static final String KEY_HOST_TOKEN = "host_token";
     private static final String KEY_VIEW_WIDTH = "width";
     private static final String KEY_VIEW_HEIGHT = "height";
@@ -90,24 +89,24 @@ public class PreviewSurfaceRenderer {
     private static final String KEY_DARK_MODE = "use_dark_mode";
 
     private Context mContext;
-    private final IBinder mHostToken;
-    private final int mWidth;
-    private final int mHeight;
-    private String mGridName;
-
-    private final int mDisplayId;
-    private final Display mDisplay;
-    private final WallpaperColors mWallpaperColors;
     private SparseIntArray mPreviewColorOverride;
+    private String mGridName;
+    private IconShapeModel mShape;
     @Nullable private Boolean mDarkMode;
-    private final RunnableList mLifeCycleTracker;
-
-    private final SurfaceControlViewHost mSurfaceControlViewHost;
-
     private boolean mDestroyed = false;
     private LauncherPreviewRenderer mRenderer;
     private boolean mHideQsb;
     @Nullable private FrameLayout mViewRoot = null;
+
+    private final IBinder mHostToken;
+    private final int mWidth;
+    private final int mHeight;
+    private final int mDisplayId;
+    private final Display mDisplay;
+    private final WallpaperColors mWallpaperColors;
+    private final RunnableList mLifeCycleTracker;
+    private final SurfaceControlViewHost mSurfaceControlViewHost;
+
 
     public PreviewSurfaceRenderer(
             Context context, RunnableList lifecycleTracker, Bundle bundle) throws Exception {
@@ -135,10 +134,10 @@ public class PreviewSurfaceRenderer {
         }
 
         mSurfaceControlViewHost = MAIN_EXECUTOR.submit(() -> new MySurfaceControlViewHost(
-                mContext,
-                context.getSystemService(DisplayManager.class).getDisplay(DEFAULT_DISPLAY),
-                mHostToken,
-                mLifeCycleTracker))
+                        mContext,
+                        context.getSystemService(DisplayManager.class).getDisplay(DEFAULT_DISPLAY),
+                        mHostToken,
+                        mLifeCycleTracker))
                 .get(5, TimeUnit.SECONDS);
         mLifeCycleTracker.add(this::destroy);
     }
@@ -215,6 +214,20 @@ public class PreviewSurfaceRenderer {
             return;
         }
         mGridName = gridName;
+        loadAsync();
+    }
+
+    /**
+     * Update the shapes of the launcher preview
+     *
+     * @param shape path for shapes
+     */
+    public void updateShape(@NonNull IconShapeModel shape) {
+        if (shape.equals(mShape)) {
+            Log.w(TAG, "Preview shape already set, skipping. shape=" + shape);
+            return;
+        }
+        mShape = shape;
         loadAsync();
     }
 
@@ -303,9 +316,13 @@ public class PreviewSurfaceRenderer {
     private void loadModelData() {
         final Context inflationContext = getPreviewContext();
         final InvariantDeviceProfile idp = new InvariantDeviceProfile(inflationContext, mGridName);
-        if (GridSizeMigrationDBController.needsToMigrate(inflationContext, idp)) {
+        if (GridSizeMigrationDBController.needsToMigrate(inflationContext, idp)
+                || mShape != null) {
             // Start the migration
             PreviewContext previewContext = new PreviewContext(inflationContext, idp);
+            if (mShape != null) {
+                IconShape.INSTANCE.get(previewContext).setShapeOverride(mShape);
+            }
             // Copy existing data to preview DB
             LauncherDbUtils.copyTable(LauncherAppState.getInstance(mContext)
                             .getModel().getModelDbController().getDb(),

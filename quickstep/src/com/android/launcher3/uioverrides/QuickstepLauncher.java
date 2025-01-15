@@ -39,7 +39,6 @@ import static com.android.launcher3.LauncherState.OVERVIEW_MODAL_TASK;
 import static com.android.launcher3.LauncherState.OVERVIEW_SPLIT_SELECT;
 import static com.android.launcher3.Utilities.isRtl;
 import static com.android.launcher3.compat.AccessibilityManagerCompat.sendCustomAccessibilityEvent;
-import static com.android.launcher3.config.FeatureFlags.enableSplitContextually;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_APP_LAUNCH_TAP;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_SPLIT_SELECTION_EXIT_HOME;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_SPLIT_SELECTION_EXIT_INTERRUPTED;
@@ -723,11 +722,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
                     splitSelectSource.alreadyRunningTaskId = taskWasFound
                             ? foundTask.key.id
                             : INVALID_TASK_ID;
-                    if (enableSplitContextually()) {
-                        startSplitToHome(splitSelectSource);
-                    } else {
-                        recentsView.initiateSplitSelect(splitSelectSource);
-                    }
+                    startSplitToHome(splitSelectSource);
                 }
         );
     }
@@ -817,15 +812,13 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
         super.onPause();
 
-        if (enableSplitContextually()) {
-            // If Launcher pauses before both split apps are selected, exit split screen.
-            if (!mSplitSelectStateController.isBothSplitAppsConfirmed() &&
-                    !mSplitSelectStateController.isLaunchingFirstAppFullscreen()) {
-                mSplitSelectStateController
-                        .logExitReason(LAUNCHER_SPLIT_SELECTION_EXIT_INTERRUPTED);
-                mSplitSelectStateController.getSplitAnimationController()
-                        .playPlaceholderDismissAnim(this, LAUNCHER_SPLIT_SELECTION_EXIT_INTERRUPTED);
-            }
+        // If Launcher pauses before both split apps are selected, exit split screen.
+        if (!mSplitSelectStateController.isBothSplitAppsConfirmed() &&
+                !mSplitSelectStateController.isLaunchingFirstAppFullscreen()) {
+            mSplitSelectStateController
+                    .logExitReason(LAUNCHER_SPLIT_SELECTION_EXIT_INTERRUPTED);
+            mSplitSelectStateController.getSplitAnimationController()
+                    .playPlaceholderDismissAnim(this, LAUNCHER_SPLIT_SELECTION_EXIT_INTERRUPTED);
         }
 
         if (mTaskbarUIController != null && FeatureFlags.enableHomeTransitionListener()) {
@@ -1424,7 +1417,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
     @Override
     public boolean handleIncorrectSplitTargetSelection() {
-        if (!enableSplitContextually() || !mSplitSelectStateController.isSplitSelectActive()) {
+        if (!mSplitSelectStateController.isSplitSelectActive()) {
             return false;
         }
         mSplitSelectStateController.getSplitInstructionsView().goBoing();

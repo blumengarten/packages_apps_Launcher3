@@ -47,6 +47,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.dropWhile
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -107,6 +109,8 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
         updateViewDataValues()
         viewModel = RecentsDependencies.get(this)
         viewModel.uiState
+            .dropWhile { it == Uninitialized }
+            .flowOn(dispatcherProvider.background)
             .onEach { viewModelUiState ->
                 Log.d(TAG, "viewModelUiState changed from: $uiState to: $viewModelUiState")
                 uiState = viewModelUiState
@@ -120,9 +124,13 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
             }
             .launchIn(viewAttachedScope)
         viewModel.dimProgress
+            .dropWhile { it == 0f }
+            .flowOn(dispatcherProvider.background)
             .onEach { dimProgress -> scrimView.alpha = dimProgress }
             .launchIn(viewAttachedScope)
         viewModel.splashAlpha
+            .dropWhile { it == 0f }
+            .flowOn(dispatcherProvider.background)
             .onEach { splashAlpha ->
                 splashBackground.alpha = splashAlpha
                 splashIcon.alpha = splashAlpha
@@ -148,6 +156,7 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
 
     override fun onRecycle() {
         uiState = Uninitialized
+        resetViews()
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {

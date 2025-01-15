@@ -174,16 +174,8 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     @SuppressLint("RtlHardcoded")
-    override fun updateTaskSize(
-        lastComputedTaskSize: Rect,
-        lastComputedGridTaskSize: Rect,
-        lastComputedCarouselTaskSize: Rect,
-    ) {
-        super.updateTaskSize(
-            lastComputedTaskSize,
-            lastComputedGridTaskSize,
-            lastComputedCarouselTaskSize,
-        )
+    override fun updateTaskSize(lastComputedTaskSize: Rect, lastComputedGridTaskSize: Rect) {
+        super.updateTaskSize(lastComputedTaskSize, lastComputedGridTaskSize)
         if (taskContainers.isEmpty()) {
             return
         }

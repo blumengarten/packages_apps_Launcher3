@@ -125,8 +125,7 @@
     <string name="folder_renamed" msgid="1794088362165669656">"ఫోల్డర్ పేరు <xliff:g id="NAME">%1$s</xliff:g>గా మార్చబడింది"</string>
     <string name="folder_name_format_exact" msgid="8626242716117004803">"ఫోల్డర్: <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="SIZE">%2$d</xliff:g> ఐటెమ్‌లు"</string>
     <string name="folder_name_format_overflow" msgid="4270108890534995199">"ఫోల్డర్: <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="SIZE">%2$d</xliff:g> లేదా అంతకంటే ఎక్కువ ఐటెమ్‌లు"</string>
-    <!-- no translation found for unnamed_folder (2420192029474044442) -->
-    <skip />
+    <string name="unnamed_folder" msgid="2420192029474044442">"పేరు లేని ఫోల్డర్"</string>
     <string name="app_pair_name_format" msgid="8134106404716224054">"యాప్ పెయిర్: <xliff:g id="APP1">%1$s</xliff:g>, <xliff:g id="APP2">%2$s</xliff:g>"</string>
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"వాల్‌పేపర్ &amp; స్టయిల్"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"మొదటి స్క్రీన్‌ను ఎడిట్ చేయండి"</string>
@@ -164,7 +163,6 @@
     <string name="widgets_list_closed" msgid="6141506579418771922">"విడ్జెట్‌ల లిస్ట్‌ మూసివేయబడింది"</string>
     <string name="action_add_to_workspace" msgid="215894119683164916">"మొదటి స్క్రీన్‌కు జోడించండి"</string>
     <string name="action_move_here" msgid="2170188780612570250">"అంశాన్ని ఇక్కడికి తరలించు"</string>
-    <string name="item_added_to_workspace" msgid="4211073925752213539">"అంశం హోమ్‌స్క్రీన్‌కి జోడించబడింది"</string>
     <string name="item_removed" msgid="851119963877842327">"ఐటెమ్ తీసివేయబడింది"</string>
     <string name="undo" msgid="4151576204245173321">"చర్య రద్దు"</string>
     <string name="action_move" msgid="4339390619886385032">"అంశాన్ని తరలించు"</string>

@@ -21,8 +21,8 @@ import androidx.test.filters.SmallTest;
 
 import com.android.launcher3.dagger.LauncherAppComponent;
 import com.android.launcher3.dagger.LauncherAppSingleton;
+import com.android.launcher3.util.AllModulesForTest;
 import com.android.launcher3.util.LauncherMultivalentJUnit;
-import com.android.quickstep.dagger.QuickStepModule;
 import com.android.quickstep.fallback.FallbackRecentsView;
 import com.android.quickstep.fallback.RecentsState;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
@@ -30,12 +30,12 @@ import com.android.quickstep.fallback.window.RecentsWindowManager;
 import com.android.quickstep.fallback.window.RecentsWindowSwipeHandler;
 import com.android.quickstep.views.RecentsViewContainer;
 
+import dagger.BindsInstance;
+import dagger.Component;
+
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-
-import dagger.BindsInstance;
-import dagger.Component;
 
 @SmallTest
 @RunWith(LauncherMultivalentJUnit.class)
@@ -83,7 +83,7 @@ public class RecentsWindowSwipeHandlerTestCase extends AbsSwipeUpHandlerTestCase
     }
 
     @LauncherAppSingleton
-    @Component(modules = { QuickStepModule.class })
+    @Component(modules = {AllModulesForTest.class})
     interface TestComponent extends LauncherAppComponent {
         @Component.Builder
         interface Builder extends LauncherAppComponent.Builder {

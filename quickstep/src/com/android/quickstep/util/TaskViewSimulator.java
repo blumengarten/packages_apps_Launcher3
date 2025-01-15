@@ -41,7 +41,6 @@ import android.view.animation.Interpolator;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.android.app.animation.Interpolators;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.anim.AnimatedFloat;
@@ -101,8 +100,6 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
 
     // Carousel properties
     public final AnimatedFloat carouselScale = new AnimatedFloat();
-    public final AnimatedFloat carouselPrimaryTranslation = new AnimatedFloat();
-    public final AnimatedFloat carouselSecondaryTranslation = new AnimatedFloat();
 
     // RecentsView properties
     public final AnimatedFloat recentsViewScale = new AnimatedFloat();
@@ -118,7 +115,7 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
     private Boolean mDrawsBelowRecents = null;
     private boolean mIsGridTask;
     private final boolean mIsDesktopTask;
-    private boolean mScaleToCarouselTaskSize = false;
+    private boolean mIsAnimatingToCarousel = false;
     private int mTaskRectTranslationX;
     private int mTaskRectTranslationY;
     private int mDesktopTaskIndex = 0;
@@ -149,6 +146,9 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
         mDp = dp;
         mLayoutValid = false;
         mOrientationState.setDeviceProfile(dp);
+        if (enableGridOnlyOverview()) {
+            mIsGridTask = dp.isTablet && !mIsDesktopTask;
+        }
         calculateTaskSize();
     }
 
@@ -160,14 +160,16 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
         if (mIsGridTask) {
             mSizeStrategy.calculateGridTaskSize(mContext, mDp, mFullTaskSize,
                     mOrientationState.getOrientationHandler());
+            if (enableGridOnlyOverview()) {
+                mSizeStrategy.calculateTaskSize(mContext, mDp, mCarouselTaskSize,
+                        mOrientationState.getOrientationHandler());
+            }
         } else {
             mSizeStrategy.calculateTaskSize(mContext, mDp, mFullTaskSize,
                     mOrientationState.getOrientationHandler());
-        }
-
-        if (enableGridOnlyOverview()) {
-            mSizeStrategy.calculateCarouselTaskSize(mContext, mDp, mCarouselTaskSize,
-                    mOrientationState.getOrientationHandler());
+            if (enableGridOnlyOverview()) {
+                mCarouselTaskSize.set(mFullTaskSize);
+            }
         }
 
         if (mSplitBounds != null) {
@@ -222,12 +224,7 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
         }
         // Copy mFullTaskSize instead of updating it directly so it could be reused next time
         // without recalculating
-        Rect scaleRect = new Rect();
-        if (mScaleToCarouselTaskSize) {
-            scaleRect.set(mCarouselTaskSize);
-        } else {
-            scaleRect.set(mFullTaskSize);
-        }
+        Rect scaleRect = new Rect(mIsAnimatingToCarousel ? mCarouselTaskSize : mFullTaskSize);
         scaleRect.offset(mTaskRectTranslationX, mTaskRectTranslationY);
         float scale = mOrientationState.getFullScreenScaleAndPivot(scaleRect, mDp, mPivot);
         if (mPivotOverride != null) {
@@ -313,66 +310,16 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
     }
 
     /**
-     * Adds animation for all the components corresponding to transition from an app to overview.
+     * Adds animation for all the components corresponding to transition from an app to carousel.
      */
-    public void addAppToOverviewAnim(PendingAnimation pa, Interpolator interpolator) {
+    public void addAppToCarouselAnim(PendingAnimation pa, Interpolator interpolator) {
         pa.addFloat(fullScreenProgress, AnimatedFloat.VALUE, 1, 0, interpolator);
-        float fullScreenScale;
         if (enableGridOnlyOverview() && mDp.isTablet && mDp.isGestureMode) {
-            // Move pivot to top right edge of the screen, to avoid task scaling down in opposite
-            // direction of app window movement, otherwise the animation will wiggle left and right.
-            // Also translate the app window to top right edge of the screen to simplify
-            // calculations.
-            taskPrimaryTranslation.value = mIsRecentsRtl
-                    ? mDp.widthPx - mFullTaskSize.right
-                    : -mFullTaskSize.left;
-            taskSecondaryTranslation.value = -mFullTaskSize.top;
-            mPivotOverride = new PointF(mIsRecentsRtl ? mDp.widthPx : 0, 0);
-
-            // Scale down to the carousel and use the carousel Rect to calculate fullScreenScale.
-            mScaleToCarouselTaskSize = true;
+            mIsAnimatingToCarousel = true;
             carouselScale.value = mCarouselTaskSize.width() / (float) mFullTaskSize.width();
-            fullScreenScale = getFullScreenScale();
-
-            float carouselPrimaryTranslationTarget = mIsRecentsRtl
-                    ? mCarouselTaskSize.right - mDp.widthPx
-                    : mCarouselTaskSize.left;
-            float carouselSecondaryTranslationTarget = mCarouselTaskSize.top;
-
-            // Expected carousel position's center is in the middle, and invariant of
-            // recentsViewScale.
-            float exceptedCarouselCenterX = mCarouselTaskSize.centerX();
-            // Animating carousel translations linearly will result in a curved path, therefore
-            // we'll need to calculate the expected translation at each recentsView scale. Luckily
-            // primary and secondary follow the same translation, and primary is used here due to
-            // it being simpler.
-            Interpolator carouselTranslationInterpolator = t -> {
-                // recentsViewScale is calculated rather than using recentsViewScale.value, so that
-                // this interpolator works independently even if recentsViewScale don't animate.
-                float recentsViewScale =
-                        Utilities.mapToRange(t, 0, 1, fullScreenScale, 1, Interpolators.LINEAR);
-                // Without the translation, the app window will animate from fullscreen into top
-                // right corner.
-                float expectedTaskCenterX = mIsRecentsRtl
-                        ? mDp.widthPx - mCarouselTaskSize.width() * recentsViewScale / 2f
-                        : mCarouselTaskSize.width() * recentsViewScale / 2f;
-                // Calculate the expected translation, then work back the animatedFraction that
-                // results in this value.
-                float carouselPrimaryTranslation =
-                        (exceptedCarouselCenterX - expectedTaskCenterX) / recentsViewScale;
-                return carouselPrimaryTranslation / carouselPrimaryTranslationTarget;
-            };
-
-            // Use addAnimatedFloat so this animation can later be canceled and animate to a
-            // different value in RecentsView.onPrepareGestureEndAnimation.
-            pa.addAnimatedFloat(carouselPrimaryTranslation, 0, carouselPrimaryTranslationTarget,
-                    carouselTranslationInterpolator);
-            pa.addAnimatedFloat(carouselSecondaryTranslation, 0, carouselSecondaryTranslationTarget,
-                    carouselTranslationInterpolator);
-        } else {
-            fullScreenScale = getFullScreenScale();
         }
-        pa.addFloat(recentsViewScale, AnimatedFloat.VALUE, fullScreenScale, 1, interpolator);
+        pa.addFloat(recentsViewScale, AnimatedFloat.VALUE, getFullScreenScale(), 1,
+                interpolator);
     }
 
     /**
@@ -484,11 +431,9 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
         mOrientationState.getOrientationHandler().setSecondary(mMatrix, MATRIX_POST_TRANSLATE,
                 taskSecondaryTranslation.value);
 
-        mMatrix.postScale(carouselScale.value, carouselScale.value, mPivot.x, mPivot.y);
-        mOrientationState.getOrientationHandler().setPrimary(mMatrix, MATRIX_POST_TRANSLATE,
-                carouselPrimaryTranslation.value);
-        mOrientationState.getOrientationHandler().setSecondary(mMatrix, MATRIX_POST_TRANSLATE,
-                carouselSecondaryTranslation.value);
+        mMatrix.postScale(carouselScale.value, carouselScale.value,
+                mIsRecentsRtl ? mCarouselTaskSize.right : mCarouselTaskSize.left,
+                mCarouselTaskSize.top);
 
         mOrientationState.getOrientationHandler().setPrimary(
                 mMatrix, MATRIX_POST_TRANSLATE, recentsViewScroll.value);
@@ -524,8 +469,6 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
                 + " taskRect: " + mTaskRect
                 + " taskPrimaryT: " + taskPrimaryTranslation.value
                 + " taskSecondaryT: " + taskSecondaryTranslation.value
-                + " carouselPrimaryT: " + carouselPrimaryTranslation.value
-                + " carouselSecondaryT: " + carouselSecondaryTranslation.value
                 + " recentsPrimaryT: " + recentsViewPrimaryTranslation.value
                 + " recentsSecondaryT: " + recentsViewSecondaryTranslation.value
                 + " recentsScroll: " + recentsViewScroll.value

@@ -165,10 +165,7 @@ constructor(
          * Returns addition of translationX that is persistent (e.g. fullscreen and grid), and does
          * not change according to a temporary state (e.g. task offset).
          */
-        get() =
-            (getNonGridTrans(nonGridTranslationX) +
-                getGridTrans(this.gridTranslationX) +
-                getNonGridTrans(nonGridPivotTranslationX))
+        get() = (getNonGridTrans(nonGridTranslationX) + getGridTrans(this.gridTranslationX))
 
     protected val persistentTranslationY: Float
         /**
@@ -347,12 +344,6 @@ constructor(
     // Applied as a complement to gridTranslation, for adjusting the carousel overview and quick
     // switch.
     protected var nonGridTranslationX = 0f
-        set(value) {
-            field = value
-            applyTranslationX()
-        }
-
-    protected var nonGridPivotTranslationX = 0f
         set(value) {
             field = value
             applyTranslationX()
@@ -801,11 +792,7 @@ constructor(
      * Updates TaskView scaling and translation required to support variable width if enabled, while
      * ensuring TaskView fits into screen in fullscreen.
      */
-    open fun updateTaskSize(
-        lastComputedTaskSize: Rect,
-        lastComputedGridTaskSize: Rect,
-        lastComputedCarouselTaskSize: Rect,
-    ) {
+    open fun updateTaskSize(lastComputedTaskSize: Rect, lastComputedGridTaskSize: Rect) {
         val thumbnailPadding = container.deviceProfile.overviewTaskThumbnailTopMarginPx
         val taskWidth = lastComputedTaskSize.width()
         val taskHeight = lastComputedTaskSize.height()
@@ -833,12 +820,7 @@ constructor(
             expectedHeight = boxHeight + thumbnailPadding
 
             // Scale to to fit task Rect.
-            nonGridScale =
-                if (enableGridOnlyOverview()) {
-                    lastComputedCarouselTaskSize.width() / taskWidth.toFloat()
-                } else {
-                    taskWidth / boxWidth.toFloat()
-                }
+            nonGridScale = taskWidth / boxWidth.toFloat()
 
             // Align to top of task Rect.
             boxTranslationY = (expectedHeight - thumbnailPadding - taskHeight) / 2.0f
@@ -1591,7 +1573,6 @@ constructor(
         gridTranslationX = 0f
         gridTranslationY = 0f
         boxTranslationY = 0f
-        nonGridPivotTranslationX = 0f
         taskContainers.forEach {
             it.snapshotView.translationX = 0f
             it.snapshotView.translationY = 0f

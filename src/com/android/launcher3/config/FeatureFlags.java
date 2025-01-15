@@ -201,15 +201,6 @@ public final class FeatureFlags {
             "USE_LOCAL_ICON_OVERRIDES", ENABLED,
             "Use inbuilt monochrome icons if app doesn't provide one");
 
-    // Aconfig migration complete for ENABLE_SPLIT_FROM_WORKSPACE_TO_WORKSPACE.
-    public static final BooleanFlag ENABLE_SPLIT_FROM_WORKSPACE_TO_WORKSPACE = getDebugFlag(
-            270393453, "ENABLE_SPLIT_FROM_WORKSPACE_TO_WORKSPACE", DISABLED,
-            "Enable initiating split screen from workspace to workspace.");
-    public static boolean enableSplitContextually() {
-        return ENABLE_SPLIT_FROM_WORKSPACE_TO_WORKSPACE.get() ||
-                com.android.wm.shell.Flags.enableSplitContextual();
-    }
-
     // TODO(Block 29): Clean up flags
     // Aconfig migration complete for ENABLE_ALL_APPS_BUTTON_IN_HOTSEAT.
     public static final BooleanFlag ENABLE_ALL_APPS_BUTTON_IN_HOTSEAT = getDebugFlag(270393897,

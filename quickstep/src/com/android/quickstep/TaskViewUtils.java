@@ -22,6 +22,7 @@ import static android.view.WindowManager.LayoutParams.TYPE_DOCK_DIVIDER;
 import static com.android.app.animation.Interpolators.LINEAR;
 import static com.android.app.animation.Interpolators.TOUCH_RESPONSE;
 import static com.android.app.animation.Interpolators.clampToProgress;
+import static com.android.launcher3.Flags.enableGridOnlyOverview;
 import static com.android.launcher3.LauncherAnimUtils.VIEW_ALPHA;
 import static com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_X;
 import static com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_Y;
@@ -232,7 +233,9 @@ public final class TaskViewUtils {
 
                 tvsLocal.fullScreenProgress.value = 0;
                 tvsLocal.recentsViewScale.value = 1;
-                tvsLocal.setIsGridTask(v.isGridTask());
+                if (!enableGridOnlyOverview()) {
+                    tvsLocal.setIsGridTask(v.isGridTask());
+                }
                 tvsLocal.getOrientationState().getOrientationHandler().set(tvsLocal,
                         TaskViewSimulator::setTaskRectTranslation, taskRectTranslationPrimary,
                         taskRectTranslationSecondary);

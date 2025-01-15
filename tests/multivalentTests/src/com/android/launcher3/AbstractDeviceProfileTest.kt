@@ -29,9 +29,9 @@ import android.view.Surface
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.launcher3.dagger.LauncherAppComponent
-import com.android.launcher3.dagger.LauncherAppModule
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.testing.shared.ResourceUtils
+import com.android.launcher3.util.AllModulesMinusWMProxy
 import com.android.launcher3.util.DisplayController
 import com.android.launcher3.util.MainThreadInitializedObject.SandboxContext
 import com.android.launcher3.util.NavigationMode
@@ -69,7 +69,7 @@ abstract class AbstractDeviceProfileTest {
     protected lateinit var context: SandboxContext
     protected open val runningContext: Context = getApplicationContext()
     private val displayController: DisplayController = mock()
-    private val windowManagerProxy: MyWmProxy = mock()
+    private val windowManagerProxy: WindowManagerProxy = mock()
     private val launcherPrefs: LauncherPrefs = mock()
 
     @get:Rule val setFlagsRule = SetFlagsRule(SetFlagsRule.DefaultInitValueType.DEVICE_DEFAULT)
@@ -312,8 +312,8 @@ abstract class AbstractDeviceProfileTest {
             DaggerAbsDPTestSandboxComponent.builder()
                 .bindWMProxy(windowManagerProxy)
                 .bindLauncherPrefs(launcherPrefs)
+                .bindDisplayController(displayController)
         )
-        context.putObject(DisplayController.INSTANCE, displayController)
 
         whenever(launcherPrefs.get(LauncherPrefs.TASKBAR_PINNING)).thenReturn(false)
         whenever(launcherPrefs.get(LauncherPrefs.TASKBAR_PINNING_IN_DESKTOP_MODE)).thenReturn(true)
@@ -364,19 +364,17 @@ abstract class AbstractDeviceProfileTest {
     }
 }
 
-class MyWmProxy : WindowManagerProxy()
-
 @LauncherAppSingleton
-@Component(modules = [LauncherAppModule::class])
+@Component(modules = [AllModulesMinusWMProxy::class])
 interface AbsDPTestSandboxComponent : LauncherAppComponent {
-
-    override fun getWmProxy(): MyWmProxy
 
     @Component.Builder
     interface Builder : LauncherAppComponent.Builder {
-        @BindsInstance fun bindWMProxy(proxy: MyWmProxy): Builder
+        @BindsInstance fun bindWMProxy(proxy: WindowManagerProxy): Builder
 
         @BindsInstance fun bindLauncherPrefs(prefs: LauncherPrefs): Builder
+
+        @BindsInstance fun bindDisplayController(displayController: DisplayController): Builder
 
         override fun build(): AbsDPTestSandboxComponent
     }

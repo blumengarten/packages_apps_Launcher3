@@ -22,17 +22,25 @@ import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.view.Display.DEFAULT_DISPLAY
 import androidx.test.core.app.ApplicationProvider
-import com.android.launcher3.FakeLauncherPrefs
+import com.android.launcher3.LauncherPrefs
+import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppComponent
-import com.android.launcher3.dagger.LauncherAppModule
 import com.android.launcher3.dagger.LauncherAppSingleton
+import com.android.launcher3.util.AllModulesForTest
+import com.android.launcher3.util.DaggerSingletonTracker
+import com.android.launcher3.util.DisplayController
+import com.android.launcher3.util.FakePrefsModule
 import com.android.launcher3.util.MainThreadInitializedObject.ObjectSandbox
 import com.android.launcher3.util.SandboxApplication
 import com.android.launcher3.util.SettingsCache
 import com.android.launcher3.util.SettingsCacheSandbox
+import com.android.launcher3.util.window.WindowManagerProxy
 import com.android.quickstep.SystemUiProxy
+import dagger.Binds
 import dagger.BindsInstance
 import dagger.Component
+import dagger.Module
+import javax.inject.Inject
 import org.junit.rules.ExternalResource
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
@@ -113,11 +121,32 @@ private constructor(
     }
 }
 
+/** A wrapper over display controller which allows modifying the underlying info */
 @LauncherAppSingleton
-@Component(modules = [LauncherAppModule::class])
-interface TaskbarSandboxComponent : LauncherAppComponent {
+class DisplayControllerSpy
+@Inject
+constructor(
+    @ApplicationContext context: Context,
+    wmProxy: WindowManagerProxy,
+    prefs: LauncherPrefs,
+    lifecycle: DaggerSingletonTracker,
+) : DisplayController(context, wmProxy, prefs, lifecycle) {
 
-    override fun getLauncherPrefs(): FakeLauncherPrefs
+    var infoModifier: ((Info) -> Info)? = null
+
+    override fun getInfo(): Info = infoModifier?.invoke(super.getInfo()) ?: super.getInfo()
+}
+
+@Module
+abstract class DisplayControllerModule {
+    @Binds abstract fun bindDisplayController(controller: DisplayControllerSpy): DisplayController
+}
+
+@LauncherAppSingleton
+@Component(
+    modules = [AllModulesForTest::class, FakePrefsModule::class, DisplayControllerModule::class]
+)
+interface TaskbarSandboxComponent : LauncherAppComponent {
 
     @Component.Builder
     interface Builder : LauncherAppComponent.Builder {

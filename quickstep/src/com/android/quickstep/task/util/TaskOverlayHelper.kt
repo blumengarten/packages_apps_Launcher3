@@ -32,6 +32,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.dropWhile
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -79,6 +81,8 @@ class TaskOverlayHelper(val task: Task, val overlay: TaskOverlayFactory.TaskOver
                 dispatcherProvider = RecentsDependencies.get(),
             )
         viewModel.overlayState
+            .dropWhile { it == Disabled }
+            .flowOn(dispatcherProvider.background)
             .onEach {
                 uiState = it
                 if (it is Enabled) {

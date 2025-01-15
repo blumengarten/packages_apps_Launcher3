@@ -169,7 +169,7 @@ public class SplitSelectStateController {
     private final BackPressHandler mSplitBackHandler = new BackPressHandler() {
         @Override
         public boolean canHandleBack() {
-            return FeatureFlags.enableSplitContextually() && isSplitSelectActive();
+            return isSplitSelectActive();
         }
 
         @Override
@@ -739,8 +739,7 @@ public class SplitSelectStateController {
     }
 
     /**
-     * To be called whenever we exit split selection state. If
-     * {@link FeatureFlags#enableSplitContextually()} is set, this should be the
+     * To be called whenever we exit split selection state. This should be the
      * central way split is getting reset, which should then go through the callbacks to reset
      * other state.
      */

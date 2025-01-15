@@ -269,7 +269,7 @@ public final class KeyboardQuickSwitchController implements
         DesktopTask desktopTask = findDesktopTask(tasks);
 
         if (desktopTask != null) {
-            mTasks = desktopTask.tasks.stream()
+            mTasks = desktopTask.getTasks().stream()
                     .map(GroupTask::new)
                     .filter(task -> !shouldExcludeTask(task, taskIdsToExclude))
                     .collect(Collectors.toList());

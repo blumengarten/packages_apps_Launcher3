@@ -62,6 +62,7 @@ import com.android.launcher3.util.SplitConfigurationOptions.StagePosition
 import com.android.quickstep.util.ActiveGestureProtoLogProxy
 import com.android.quickstep.util.ContextualSearchInvoker
 import com.android.quickstep.util.unfold.ProxyUnfoldTransitionProvider
+import com.android.systemui.contextualeducation.GestureType
 import com.android.systemui.shared.recents.ISystemUiProxy
 import com.android.systemui.shared.recents.model.ThumbnailData.Companion.wrap
 import com.android.systemui.shared.system.QuickStepContract
@@ -215,9 +216,9 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
             systemUiProxy?.onImeSwitcherLongPress()
         }
 
-    fun updateContextualEduStats(isTrackpadGesture: Boolean, gestureType: String) =
+    fun updateContextualEduStats(isTrackpadGesture: Boolean, gestureType: GestureType) =
         executeWithErrorLog({ "Failed call updateContextualEduStats" }) {
-            systemUiProxy?.updateContextualEduStats(isTrackpadGesture, gestureType)
+            systemUiProxy?.updateContextualEduStats(isTrackpadGesture, gestureType.name)
         }
 
     fun setHomeRotationEnabled(enabled: Boolean) =

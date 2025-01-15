@@ -61,11 +61,10 @@ class TaskbarModeRule(private val context: TaskbarWindowSandboxContext) : TestRu
                 val mode = taskbarMode.mode
 
                 getInstrumentation().runOnMainSync {
-                    context.putObject(
-                        DisplayController.INSTANCE,
-                        object : DisplayController(context) {
-                            override fun getInfo(): Info {
-                                return spy(super.getInfo()) {
+                    DisplayController.INSTANCE[context].let {
+                        if (it is DisplayControllerSpy) {
+                            it.infoModifier = { info ->
+                                spy(info) {
                                     on { isTransientTaskbar } doReturn (mode == Mode.TRANSIENT)
                                     on { isPinnedTaskbar } doReturn (mode == Mode.PINNED)
                                     on { navigationMode } doReturn
@@ -76,8 +75,8 @@ class TaskbarModeRule(private val context: TaskbarWindowSandboxContext) : TestRu
                                         }
                                 }
                             }
-                        },
-                    )
+                        }
+                    }
                 }
 
                 base.evaluate()

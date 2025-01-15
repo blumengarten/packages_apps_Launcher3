@@ -28,7 +28,6 @@
     <string name="accessibility_app_usage_settings" msgid="6312864233673544149">"Aplikazioen erabileraren ezarpenak"</string>
     <string name="recents_clear_all" msgid="5328176793634888831">"Garbitu guztiak"</string>
     <string name="accessibility_recent_apps" msgid="4058661986695117371">"Azkenaldiko aplikazioak"</string>
-    <string name="task_view_closed" msgid="9170038230110856166">"Itxi da zeregina"</string>
     <string name="task_contents_description_with_remaining_time" msgid="4479688746574672685">"<xliff:g id="TASK_DESCRIPTION">%1$s</xliff:g> (<xliff:g id="REMAINING_TIME">%2$s</xliff:g>)"</string>
     <string name="shorter_duration_less_than_one_minute" msgid="4722015666335015336">"&lt; 1 min"</string>
     <string name="time_left_for_app" msgid="3111996412933644358">"<xliff:g id="TIME">%1$s</xliff:g> gelditzen dira gaur"</string>
@@ -55,7 +54,7 @@
     <string name="back_gesture_feedback_complete_with_follow_up" msgid="8653374779579748392">"Ikasi duzu atzera egiteko keinua. Jarraian, lortu aplikazioz aldatzeko argibideak."</string>
     <string name="back_gesture_feedback_complete_without_follow_up" msgid="197189945858268342">"Ikasi duzu atzera egiteko keinua"</string>
     <string name="back_gesture_feedback_swipe_in_nav_bar" msgid="9157480023651452969">"Ziurtatu hatza ez duzula pasatzen pantailaren behealdetik gertuegi"</string>
-    <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"Keinuaren sentikortasuna aldatzeko, joan ezarpenetara"</string>
+    <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"Keinuaren sentikortasuna aldatzeko, joan Ezarpenak atalera"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"Pasatu hatza atzera egiteko"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"Aurreko pantailara itzultzeko, pasatu hatza pantailaren ezkerreko edo eskuineko ertzetik erdialdera."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"Egin atzera"</string>
@@ -73,7 +72,7 @@
     <string name="overview_gesture_feedback_swipe_too_far_from_edge" msgid="6402349235265407385">"Ziurtatu hatza pantailaren beheko ertzetik gora pasatzen duzula"</string>
     <string name="overview_gesture_feedback_home_detected" msgid="663432226180397138">"Eduki sakatuta leihoa luzaroago hatza jaso aurretik"</string>
     <string name="overview_gesture_feedback_wrong_swipe_direction" msgid="1191055451018584958">"Ziurtatu hatza zuzen pasatzen duzula gora; ondoren, gelditu"</string>
-    <string name="overview_gesture_feedback_complete_with_follow_up" msgid="3544611727467765026">"Ikasi duzu keinuak erabiltzen. Keinuak desaktibatzeko, joan ezarpenetara."</string>
+    <string name="overview_gesture_feedback_complete_with_follow_up" msgid="3544611727467765026">"Ikasi duzu keinuak erabiltzen. Keinuak desaktibatzeko, joan Ezarpenak atalera."</string>
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"Ikasi duzu aplikazioz aldatzeko keinua"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Pasatu hatza aplikazioa aldatzeko"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"Aplikazio batetik bestera joateko, pasatu hatza pantailaren behealdetik gora, eduki pantaila sakatuta eta altxatu hatza."</string>

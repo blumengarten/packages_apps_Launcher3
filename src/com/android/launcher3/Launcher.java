@@ -1657,9 +1657,7 @@ public class Launcher extends StatefulActivity<LauncherState>
                 }
             }
 
-            if (FeatureFlags.enableSplitContextually()) {
-                handleSplitAnimationGoingToHome(LAUNCHER_SPLIT_SELECTION_EXIT_HOME);
-            }
+            handleSplitAnimationGoingToHome(LAUNCHER_SPLIT_SELECTION_EXIT_HOME);
             mOverlayManager.hideOverlay(isStarted());
             handleGestureContract(intent);
         } else if (Intent.ACTION_ALL_APPS.equals(intent.getAction())) {

@@ -251,11 +251,7 @@ public abstract class BaseContainerInterface<STATE_TYPE extends BaseState<STATE_
     public final void calculateTaskSize(Context context, DeviceProfile dp, Rect outRect,
             RecentsPagedOrientationHandler orientationHandler) {
         if (dp.isTablet) {
-            if (Flags.enableGridOnlyOverview()) {
-                calculateGridTaskSize(context, dp, outRect, orientationHandler);
-            } else {
-                calculateFocusTaskSize(context, dp, outRect);
-            }
+            calculateLargeTileSize(context, dp, outRect);
         } else {
             Resources res = context.getResources();
             float maxScale = res.getFloat(R.dimen.overview_max_scale);
@@ -276,24 +272,7 @@ public abstract class BaseContainerInterface<STATE_TYPE extends BaseState<STATE_
         }
     }
 
-    /**
-     * Calculates the taskView size for carousel during app to overview animation on tablets.
-     */
-    public final void calculateCarouselTaskSize(Context context, DeviceProfile dp, Rect outRect,
-            RecentsPagedOrientationHandler orientationHandler) {
-        if (dp.isTablet && dp.isGestureMode) {
-            Resources res = context.getResources();
-            float minScale = res.getFloat(R.dimen.overview_carousel_min_scale);
-            Rect gridRect = new Rect();
-            calculateGridSize(dp, context, gridRect);
-            calculateTaskSizeInternal(context, dp, gridRect, minScale, Gravity.CENTER | Gravity.TOP,
-                    outRect);
-        } else {
-            calculateTaskSize(context, dp, outRect, orientationHandler);
-        }
-    }
-
-    private void calculateFocusTaskSize(Context context, DeviceProfile dp, Rect outRect) {
+    private void calculateLargeTileSize(Context context, DeviceProfile dp, Rect outRect) {
         Resources res = context.getResources();
         float maxScale = res.getFloat(R.dimen.overview_max_scale);
         Rect gridRect = new Rect();
@@ -381,12 +360,6 @@ public abstract class BaseContainerInterface<STATE_TYPE extends BaseState<STATE_
         Rect insets = dp.getInsets();
         int topMargin = dp.overviewTaskThumbnailTopMarginPx;
         int bottomMargin = dp.getOverviewActionsClaimedSpace();
-        if (dp.isTaskbarPresent && Flags.enableGridOnlyOverview()) {
-            topMargin += context.getResources().getDimensionPixelSize(
-                    R.dimen.overview_top_margin_grid_only);
-            bottomMargin += context.getResources().getDimensionPixelSize(
-                    R.dimen.overview_bottom_margin_grid_only);
-        }
         int sideMargin = dp.overviewGridSideMargin;
 
         outRect.set(0, 0, dp.widthPx, dp.heightPx);
@@ -401,11 +374,7 @@ public abstract class BaseContainerInterface<STATE_TYPE extends BaseState<STATE_
             RecentsPagedOrientationHandler orientationHandler) {
         Resources res = context.getResources();
         Rect potentialTaskRect = new Rect();
-        if (Flags.enableGridOnlyOverview()) {
-            calculateGridSize(dp, context, potentialTaskRect);
-        } else {
-            calculateFocusTaskSize(context, dp, potentialTaskRect);
-        }
+        calculateLargeTileSize(context, dp, potentialTaskRect);
 
         float rowHeight = (potentialTaskRect.height() + dp.overviewTaskThumbnailTopMarginPx
                 - dp.overviewRowSpacing) / 2f;

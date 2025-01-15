@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-package com.android.launcher3.dagger;
+package com.android.launcher3.shapes
 
-import com.android.quickstep.dagger.QuickStepModule;
-
-import dagger.Module;
-
-@Module(includes = QuickStepModule.class)
-public class LauncherAppModule {}
+data class IconShapeModel(val key: String, val title: String, val pathString: String)

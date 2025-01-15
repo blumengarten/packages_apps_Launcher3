@@ -242,7 +242,7 @@ public class NavHandleLongPressInputConsumer extends DelegateInputConsumer {
 
     private void cancelLongPress(String reason) {
         if (DEBUG_NAV_HANDLE) {
-            Log.d(TAG, "cancelLongPress");
+            Log.d(TAG, "cancelLongPress: " + reason);
         }
         mGestureState.setIsInExtendedSlopRegion(false);
         MAIN_EXECUTOR.getHandler().removeCallbacks(mTriggerLongPress);

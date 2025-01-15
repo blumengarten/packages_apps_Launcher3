@@ -25,6 +25,8 @@ import com.android.launcher3.LauncherPrefs.Companion.backedUpItem
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppComponent
 import com.android.launcher3.dagger.LauncherAppSingleton
+import com.android.launcher3.graphics.IconShape.Companion.KEY_ICON_SHAPE
+import com.android.launcher3.graphics.IconShape.Companion.PREF_ICON_SHAPE
 import com.android.launcher3.icons.IconThemeController
 import com.android.launcher3.icons.mono.MonoIconThemeController
 import com.android.launcher3.util.DaggerSingletonObject
@@ -63,9 +65,12 @@ constructor(
         receiver.registerPkgActions(context, "android", ACTION_OVERLAY_CHANGED)
 
         val prefListener = LauncherPrefChangeListener { key ->
-            if (key == THEMED_ICONS.sharedPrefKey) verifyIconState()
+            when (key) {
+                KEY_THEMED_ICONS,
+                KEY_ICON_SHAPE -> verifyIconState()
+            }
         }
-        prefs.addListener(prefListener, THEMED_ICONS)
+        prefs.addListener(prefListener, THEMED_ICONS, PREF_ICON_SHAPE)
 
         lifecycle.addCloseable {
             receiver.unregisterReceiverSafely(context)
@@ -87,13 +92,18 @@ constructor(
 
     fun removeChangeListener(listener: ThemeChangeListener) = listeners.remove(listener)
 
-    private fun parseIconState() =
-        IconState(
+    private fun parseIconState(): IconState {
+        val shapeOverride = prefs.get(PREF_ICON_SHAPE)
+        return IconState(
             iconMask =
-                if (CONFIG_ICON_MASK_RES_ID == Resources.ID_NULL) ""
-                else context.resources.getString(CONFIG_ICON_MASK_RES_ID),
+                when {
+                    shapeOverride.isNotEmpty() -> shapeOverride
+                    CONFIG_ICON_MASK_RES_ID == Resources.ID_NULL -> ""
+                    else -> context.resources.getString(CONFIG_ICON_MASK_RES_ID)
+                },
             isMonoTheme = isMonoThemeEnabled,
         )
+    }
 
     data class IconState(
         val iconMask: String,

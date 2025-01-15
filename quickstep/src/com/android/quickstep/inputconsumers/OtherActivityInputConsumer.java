@@ -293,15 +293,15 @@ public class OtherActivityInputConsumer extends ContextWrapper implements InputC
                 float upDist = -displacement;
                 boolean isTrackpadGesture = mGestureState.isTrackpadGesture();
                 float squaredHypot = squaredHypot(displacementX, displacementY);
-                boolean isInExtendedSlopRegion = !mGestureState.isInExtendedSlopRegion();
+                boolean isInExtendedSlopRegion = mGestureState.isInExtendedSlopRegion();
                 boolean passedSlop = isTrackpadGesture
                         || (squaredHypot >= mSquaredTouchSlop
-                        && isInExtendedSlopRegion);
+                        && !isInExtendedSlopRegion);
                 if (DEBUG) {
                     Log.d(TAG, "ACTION_MOVE: passedSlop=" + passedSlop
                             + " ( " + isTrackpadGesture
                             + " || (" + squaredHypot + " >= " + mSquaredTouchSlop
-                            + " && " + isInExtendedSlopRegion + " ))");
+                            + " && " + !isInExtendedSlopRegion + " ))");
                 }
 
                 if (!mPassedSlopOnThisGesture && passedSlop) {

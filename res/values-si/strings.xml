@@ -125,8 +125,7 @@
     <string name="folder_renamed" msgid="1794088362165669656">"<xliff:g id="NAME">%1$s</xliff:g> වෙත ෆෝල්ඩරය නැවත නම් කෙරිණි"</string>
     <string name="folder_name_format_exact" msgid="8626242716117004803">"ෆෝල්ඩරය: <xliff:g id="NAME">%1$s</xliff:g>, අයිතම <xliff:g id="SIZE">%2$d</xliff:g>"</string>
     <string name="folder_name_format_overflow" msgid="4270108890534995199">"ෆෝල්ඩර: <xliff:g id="NAME">%1$s</xliff:g>, අයිතම <xliff:g id="SIZE">%2$d</xliff:g>ක් හෝ වැඩි ගණනක්"</string>
-    <!-- no translation found for unnamed_folder (2420192029474044442) -->
-    <skip />
+    <string name="unnamed_folder" msgid="2420192029474044442">"නම් නොකළ ෆෝල්ඩරය"</string>
     <string name="app_pair_name_format" msgid="8134106404716224054">"යෙදුම් යුගල: <xliff:g id="APP1">%1$s</xliff:g> සහ <xliff:g id="APP2">%2$s</xliff:g>"</string>
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"වෝල්පේපරය සහ මෝස්තරය"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"මුල් තිරය සංස්කරණය කරන්න"</string>
@@ -164,7 +163,6 @@
     <string name="widgets_list_closed" msgid="6141506579418771922">"විජට් ලැයිස්තුව වසා ඇත"</string>
     <string name="action_add_to_workspace" msgid="215894119683164916">"මුල් තිරය වෙත එක් කරන්න"</string>
     <string name="action_move_here" msgid="2170188780612570250">"මෙතනට අයිතමය ගෙන එන්න"</string>
-    <string name="item_added_to_workspace" msgid="4211073925752213539">"අයිතමය මුල් තිරය වෙත එකතු කරන ලදි"</string>
     <string name="item_removed" msgid="851119963877842327">"අයිතමය ඉවත් කරන ලදි"</string>
     <string name="undo" msgid="4151576204245173321">"අස් කරන්න"</string>
     <string name="action_move" msgid="4339390619886385032">"අයිතමය ගෙනයන්න"</string>

@@ -26,7 +26,6 @@ import com.android.launcher3.anim.AnimatedFloat
 import com.android.launcher3.anim.AnimatorListeners.forSuccessCallback
 import com.android.launcher3.anim.PendingAnimation
 import com.android.launcher3.anim.PropertySetter
-import com.android.launcher3.config.FeatureFlags.enableSplitContextually
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent
 import com.android.launcher3.statemanager.StateManager.StateHandler
 import com.android.launcher3.states.StateAnimationConfig
@@ -53,7 +52,6 @@ import com.android.quickstep.views.RecentsView.TASK_SECONDARY_SPLIT_TRANSLATION
 import com.android.quickstep.views.RecentsView.TASK_SECONDARY_TRANSLATION
 import com.android.quickstep.views.RecentsView.TASK_THUMBNAIL_SPLASH_ALPHA
 import com.android.quickstep.views.TaskView.Companion.FLAG_UPDATE_ALL
-import com.android.wm.shell.Flags.enableSplitContextual
 
 /**
  * State handler for handling UI changes for [com.android.quickstep.views.LauncherRecentsView]. In
@@ -128,23 +126,6 @@ class RecentsViewStateController(private val launcher: QuickstepLauncher) :
             0f,
             config.getInterpolator(ANIM_OVERVIEW_TRANSLATE_Y, LINEAR),
         )
-
-        val exitingOverview = !enableSplitContextually() && !toState.isRecentsViewVisible
-        if (recentsView.isSplitSelectionActive && exitingOverview) {
-            builder.add(
-                recentsView.splitSelectController.splitAnimationController
-                    .createPlaceholderDismissAnim(
-                        launcher,
-                        LauncherEvent.LAUNCHER_SPLIT_SELECTION_EXIT_HOME,
-                        builder.duration,
-                    )
-            )
-            builder.setViewAlpha(
-                recentsView.splitInstructionsView,
-                0f,
-                config.getInterpolator(ANIM_OVERVIEW_SPLIT_SELECT_INSTRUCTIONS_FADE, LINEAR),
-            )
-        }
 
         builder.setFloat(
             recentsView,
@@ -227,9 +208,7 @@ class RecentsViewStateController(private val launcher: QuickstepLauncher) :
         builder: PendingAnimation,
         animate: Boolean,
     ) {
-        val goingToOverviewFromWorkspaceContextual =
-            enableSplitContextual() &&
-                toState == LauncherState.OVERVIEW &&
+        val goingToOverviewFromWorkspaceContextual = toState == LauncherState.OVERVIEW &&
                 launcher.isSplitSelectionActive
         if (
             toState != LauncherState.OVERVIEW_SPLIT_SELECT &&

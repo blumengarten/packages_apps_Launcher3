@@ -16,9 +16,11 @@
 
 package com.android.quickstep.views
 
+import android.graphics.Rect
 import android.view.View
 import androidx.core.view.children
 import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
+import com.android.launcher3.util.IntArray
 import com.android.quickstep.util.GroupTask
 import com.android.quickstep.views.RecentsView.RUNNING_TASK_ATTACH_ALPHA
 import com.android.systemui.shared.recents.model.ThumbnailData
@@ -168,5 +170,79 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
     private enum class TaskViewCarousel {
         FULL_SCREEN,
         DESKTOP,
+    }
+
+    /** Returns true if there are at least one TaskView has been added to the RecentsView. */
+    fun hasTaskViews() = taskViews.any()
+
+    private fun getRowRect(firstView: View?, lastView: View?, outRowRect: Rect) {
+        outRowRect.setEmpty()
+        firstView?.let {
+            it.getHitRect(TEMP_RECT)
+            outRowRect.union(TEMP_RECT)
+        }
+        lastView?.let {
+            it.getHitRect(TEMP_RECT)
+            outRowRect.union(TEMP_RECT)
+        }
+    }
+
+    private fun getRowRect(rowTaskViewIds: IntArray, outRowRect: Rect) {
+        if (rowTaskViewIds.isEmpty) {
+            outRowRect.setEmpty()
+            return
+        }
+        getRowRect(
+            recentsView.getTaskViewFromTaskViewId(rowTaskViewIds.get(0)),
+            recentsView.getTaskViewFromTaskViewId(rowTaskViewIds.get(rowTaskViewIds.size() - 1)),
+            outRowRect,
+        )
+    }
+
+    fun updateTaskViewDeadZoneRect(
+        outTaskViewRowRect: Rect,
+        outTopRowRect: Rect,
+        outBottomRowRect: Rect,
+    ) {
+        if (!(recentsView.mContainer as RecentsViewContainer).deviceProfile.isTablet) {
+            getRowRect(getFirstTaskView(), getLastTaskView(), outTaskViewRowRect)
+            return
+        }
+        getRowRect(getFirstLargeTaskView(), getLastLargeTaskView(), outTaskViewRowRect)
+        getRowRect(recentsView.getTopRowIdArray(), outTopRowRect)
+        getRowRect(recentsView.getBottomRowIdArray(), outBottomRowRect)
+
+        // Expand large tile Rect to include space between top/bottom row.
+        val nonEmptyRowRect =
+            when {
+                !outTopRowRect.isEmpty -> outTopRowRect
+                !outBottomRowRect.isEmpty -> outBottomRowRect
+                else -> return
+            }
+        if (recentsView.isRtl) {
+            if (outTaskViewRowRect.left > nonEmptyRowRect.right) {
+                outTaskViewRowRect.left = nonEmptyRowRect.right
+            }
+        } else {
+            if (outTaskViewRowRect.right < nonEmptyRowRect.left) {
+                outTaskViewRowRect.right = nonEmptyRowRect.left
+            }
+        }
+
+        // Expand the shorter row Rect to include the space between the 2 rows.
+        if (outTopRowRect.isEmpty || outBottomRowRect.isEmpty) return
+        if (outTopRowRect.width() <= outBottomRowRect.width()) {
+            if (outTopRowRect.bottom < outBottomRowRect.top) {
+                outTopRowRect.bottom = outBottomRowRect.top
+            }
+        } else {
+            if (outBottomRowRect.top > outTopRowRect.bottom) {
+                outBottomRowRect.top = outTopRowRect.bottom
+            }
+        }
+    }
+
+    companion object {
+        val TEMP_RECT = Rect()
     }
 }
