@@ -364,7 +364,13 @@ abstract class AbstractDeviceProfileTest {
         context.assets.open("dumpTests/$fileName").bufferedReader().use(BufferedReader::readText)
 
     private fun writeToDevice(context: Context, fileName: String, content: String) {
-        File(context.getDir("dumpTests", Context.MODE_PRIVATE), fileName).writeText(content)
+        val dir =
+            File(context.filesDir, "dumpTests").also {
+                if (!it.exists()) {
+                    it.mkdirs()
+                }
+            }
+        File(dir, fileName).writeText(content)
     }
 
     protected fun Float.dpToPx(): Float {
