@@ -19,6 +19,7 @@ import com.android.quickstep.util.LayoutUtils;
 import com.android.quickstep.util.TISBindHelper;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
+import com.android.systemui.shared.recents.model.Task;
 
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -44,11 +45,9 @@ public class QuickstepTestInformationHandler extends TestInformationHandler {
                 CountDownLatch latch = new CountDownLatch(1);
                 RecentsModel.INSTANCE.get(mContext).getTasks((taskGroups) -> {
                     for (GroupTask group : taskGroups) {
-                        taskBaseIntentComponents.add(
-                                group.task1.key.baseIntent.getComponent().flattenToString());
-                        if (group.task2 != null) {
+                        for (Task t : group.getTasks()) {
                             taskBaseIntentComponents.add(
-                                    group.task2.key.baseIntent.getComponent().flattenToString());
+                                    t.key.baseIntent.getComponent().flattenToString());
                         }
                     }
                     latch.countDown();

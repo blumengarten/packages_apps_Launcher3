@@ -33,6 +33,7 @@ import android.content.Intent;
 import android.os.SystemClock;
 import android.view.MotionEvent;
 import android.view.RemoteAnimationTarget;
+import android.window.TransitionInfo;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -491,7 +492,7 @@ public class GestureState implements RecentsAnimationCallbacks.RecentsAnimationL
 
     @Override
     public void onRecentsAnimationStart(RecentsAnimationController controller,
-            RecentsAnimationTargets targets) {
+            RecentsAnimationTargets targets, TransitionInfo info) {
         mStateCallback.setState(STATE_RECENTS_ANIMATION_STARTED);
     }
 

@@ -35,6 +35,7 @@ import android.content.Intent;
 import android.os.SystemProperties;
 import android.util.Log;
 import android.view.RemoteAnimationTarget;
+import android.window.TransitionInfo;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -67,6 +68,7 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
     private RecentsAnimationController mController;
     private RecentsAnimationCallbacks mCallbacks;
     private RecentsAnimationTargets mTargets;
+    private TransitionInfo mTransitionInfo;
     private RecentsAnimationDeviceState mDeviceState;
 
     // Temporary until we can hook into gesture state events
@@ -154,7 +156,7 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
         mCallbacks.addListener(new RecentsAnimationCallbacks.RecentsAnimationListener() {
             @Override
             public void onRecentsAnimationStart(RecentsAnimationController controller,
-                    RecentsAnimationTargets targets) {
+                    RecentsAnimationTargets targets, TransitionInfo transitionInfo) {
                 if (enableHandleDelayedGestureCallbacks() && mRecentsAnimationStartPending) {
                     ActiveGestureProtoLogProxy.logStartRecentsAnimationCallback(
                             "onRecentsAnimationStart");
@@ -168,6 +170,7 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
                 }
                 mController = controller;
                 mTargets = targets;
+                mTransitionInfo = transitionInfo;
                 // TODO(b/236226779): We can probably get away w/ setting mLastAppearedTaskTargets
                 //  to all appeared targets directly vs just looking at running ones
                 int[] runningTaskIds = mLastGestureState.getRunningTaskIds(targets.apps.length > 1);
@@ -436,7 +439,7 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
     public void notifyRecentsAnimationState(
             RecentsAnimationCallbacks.RecentsAnimationListener listener) {
         if (isRecentsAnimationRunning()) {
-            listener.onRecentsAnimationStart(mController, mTargets);
+            listener.onRecentsAnimationStart(mController, mTargets, mTransitionInfo);
         }
         // TODO: Do we actually need to report canceled/finished?
     }
@@ -476,6 +479,7 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
         mController = null;
         mCallbacks = null;
         mTargets = null;
+        mTransitionInfo = null;
         mLastGestureState = null;
         mLastAppearedTaskTargets = null;
     }

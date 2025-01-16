@@ -28,6 +28,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Point;
 import android.view.MotionEvent;
+import android.window.TransitionInfo;
 
 import com.android.launcher3.anim.AnimatedFloat;
 import com.android.launcher3.anim.AnimatorListeners;
@@ -172,7 +173,7 @@ public class ProgressDelegateInputConsumer implements InputConsumer,
 
     @Override
     public void onRecentsAnimationStart(RecentsAnimationController controller,
-            RecentsAnimationTargets targets) {
+            RecentsAnimationTargets targets, TransitionInfo transitionInfo) {
         mRecentsAnimationController = controller;
         mStateCallback.setState(STATE_TARGET_RECEIVED);
     }

@@ -24,7 +24,6 @@ import static com.android.launcher3.tapl.OverviewTask.OverviewTaskContainer.SPLI
 import android.graphics.Rect;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.BySelector;
 import androidx.test.uiautomator.UiObject2;
@@ -281,10 +280,8 @@ public final class OverviewTask {
     /**
      * Returns whether the given String is contained in this Task's contentDescription. Also returns
      * true if both Strings are null.
-     *
-     * TODO(b/342627272): remove Nullable support once the bug causing it to be null is fixed.
      */
-    public boolean containsContentDescription(@Nullable String expected,
+    public boolean containsContentDescription(String expected,
             OverviewTaskContainer overviewTaskContainer) {
         String actual = findObjectInTask(overviewTaskContainer.snapshotRes).getContentDescription();
         if (actual == null && expected == null) {
@@ -300,7 +297,7 @@ public final class OverviewTask {
      * Returns whether the given String is contained in this Task's contentDescription. Also returns
      * true if both Strings are null
      */
-    public boolean containsContentDescription(@Nullable String expected) {
+    public boolean containsContentDescription(String expected) {
         return containsContentDescription(expected, DEFAULT);
     }
 

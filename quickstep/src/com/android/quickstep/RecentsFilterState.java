@@ -19,6 +19,7 @@ package com.android.quickstep;
 import androidx.annotation.Nullable;
 
 import com.android.quickstep.util.GroupTask;
+import com.android.systemui.shared.recents.model.Task;
 
 import java.util.HashMap;
 import java.util.List;
@@ -122,9 +123,7 @@ public class RecentsFilterState {
             return DEFAULT_FILTER;
         }
 
-        return (groupTask) -> (groupTask.task2 != null
-                && groupTask.task2.key.getPackageName().equals(packageName))
-                || groupTask.task1.key.getPackageName().equals(packageName);
+        return (groupTask) -> (groupTask.containsPackage(packageName));
     }
 
     /**
@@ -136,17 +135,9 @@ public class RecentsFilterState {
         Map<String, Integer> instanceCountMap = new HashMap<>();
 
         for (GroupTask groupTask : groupTasks) {
-            final String firstTaskPkgName = groupTask.task1.key.getPackageName();
-            final String secondTaskPkgName =
-                    groupTask.task2 == null ? null : groupTask.task2.key.getPackageName();
-
-            // increment the instance count for the first task's base activity package name
-            incrementOrAddIfNotExists(instanceCountMap, firstTaskPkgName);
-
-            // check if second task is non existent
-            if (secondTaskPkgName != null) {
-                // increment the instance count for the second task's base activity package name
-                incrementOrAddIfNotExists(instanceCountMap, secondTaskPkgName);
+            for (Task t : groupTask.getTasks()) {
+                final String taskPkgName = t.key.getPackageName();
+                incrementOrAddIfNotExists(instanceCountMap, taskPkgName);
             }
         }
 

@@ -30,7 +30,6 @@ import android.widget.Button;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Flags;
 import com.android.launcher3.R;
 import com.android.quickstep.orientation.RecentsPagedOrientationHandler;
@@ -66,7 +65,6 @@ public class ClearAllButton extends Button {
                 }
             };
 
-    private final RecentsViewContainer mContainer;
     private float mScrollAlpha = 1;
     private float mContentAlpha = 1;
     private float mVisibilityAlpha = 1;
@@ -78,6 +76,7 @@ public class ClearAllButton extends Button {
     private float mNormalTranslationPrimary;
     private float mFullscreenTranslationPrimary;
     private float mGridTranslationPrimary;
+    private float mTaskAlignmentTranslationY;
     private float mGridScrollOffset;
     private float mScrollOffsetPrimary;
 
@@ -90,7 +89,6 @@ public class ClearAllButton extends Button {
     public ClearAllButton(Context context, AttributeSet attrs) {
         super(context, attrs);
         mIsRtl = getLayoutDirection() == LAYOUT_DIRECTION_RTL;
-        mContainer = RecentsViewContainer.containerFromContext(context);
 
         if (Flags.enableFocusOutline()) {
             TypedArray styledAttrs = context.obtainStyledAttributes(attrs,
@@ -241,6 +239,15 @@ public class ClearAllButton extends Button {
         applyPrimaryTranslation();
     }
 
+    /**
+     * Sets `mTaskAlignmentTranslationY` to the given `value`. In order to put the button at the
+     * middle in the secondary coordinate.
+     */
+    public void setTaskAlignmentTranslationY(float value) {
+        mTaskAlignmentTranslationY = value;
+        applySecondaryTranslation();
+    }
+
     public void setGridTranslationPrimary(float gridTranslationPrimary) {
         mGridTranslationPrimary = gridTranslationPrimary;
         applyPrimaryTranslation();
@@ -299,7 +306,7 @@ public class ClearAllButton extends Button {
         RecentsPagedOrientationHandler orientationHandler =
                 recentsView.getPagedOrientationHandler();
         orientationHandler.getPrimaryViewTranslate().set(this,
-                orientationHandler.getPrimaryValue(0f, getOriginalTranslationY())
+                orientationHandler.getPrimaryValue(0f, mTaskAlignmentTranslationY)
                         + mNormalTranslationPrimary + getFullscreenTrans(
                         mFullscreenTranslationPrimary) + getGridTrans(mGridTranslationPrimary));
     }
@@ -313,7 +320,7 @@ public class ClearAllButton extends Button {
         RecentsPagedOrientationHandler orientationHandler =
                 recentsView.getPagedOrientationHandler();
         orientationHandler.getSecondaryViewTranslate().set(this,
-                orientationHandler.getSecondaryValue(0f, getOriginalTranslationY()));
+                orientationHandler.getSecondaryValue(0f, mTaskAlignmentTranslationY));
     }
 
     private float getFullscreenTrans(float endTranslation) {
@@ -322,16 +329,5 @@ public class ClearAllButton extends Button {
 
     private float getGridTrans(float endTranslation) {
         return mGridProgress > 0 ? endTranslation : 0;
-    }
-
-    /**
-     * Get the Y translation that is set in the original layout position, before scrolling.
-     */
-    private float getOriginalTranslationY() {
-        DeviceProfile deviceProfile = mContainer.getDeviceProfile();
-        if (deviceProfile.isTablet) {
-            return deviceProfile.overviewRowSpacing;
-        }
-        return deviceProfile.overviewTaskThumbnailTopMarginPx / 2.0f;
     }
 }

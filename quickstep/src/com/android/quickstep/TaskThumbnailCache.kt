@@ -119,7 +119,7 @@ internal constructor(
                 highResLoadingState.isEnabled
         ) {
             val newCachedThumbnail = cache.getAndInvalidateIfModified(task.key)
-            if (newCachedThumbnail.thumbnail != null && !newCachedThumbnail.reducedResolution) {
+            if (newCachedThumbnail?.thumbnail != null && !newCachedThumbnail.reducedResolution) {
                 return newCachedThumbnail
             }
         }

@@ -50,7 +50,6 @@ import com.android.launcher3.tapl.Workspace;
 import com.android.launcher3.ui.PortraitLandscapeRunner.PortraitLandscape;
 import com.android.launcher3.util.TestUtil;
 import com.android.launcher3.util.Wait;
-import com.android.launcher3.util.rule.ScreenRecordRule.ScreenRecord;
 import com.android.launcher3.util.rule.TestStabilityRule;
 import com.android.quickstep.NavigationModeSwitchRule.NavigationModeSwitch;
 import com.android.quickstep.TaskbarModeSwitchRule.TaskbarModeSwitch;
@@ -584,19 +583,14 @@ public class TaplTestsQuickstep extends AbstractQuickStepTest {
     public void testExcludeFromRecents() throws Exception {
         startExcludeFromRecentsTestActivity();
         OverviewTask currentTask = getAndAssertLaunchedApp().switchToOverview().getCurrentTask();
-        // TODO(b/342627272): the expected content description shouldn't be null but for now there
-        // is a bug that causes it to sometimes be for excludeForRecents tasks.
         assertTrue("Can't find ExcludeFromRecentsTestActivity after entering Overview from it",
-                currentTask.containsContentDescription("ExcludeFromRecents")
-                        || currentTask.containsContentDescription(null));
+                currentTask.containsContentDescription("ExcludeFromRecents"));
         // Going home should clear out the excludeFromRecents task.
         BaseOverview overview = mLauncher.goHome().switchToOverview();
         if (overview.hasTasks()) {
             currentTask = overview.getCurrentTask();
             assertFalse("Found ExcludeFromRecentsTestActivity after entering Overview from Home",
-                    currentTask.containsContentDescription(
-                            "ExcludeFromRecents")
-                            || currentTask.containsContentDescription(null));
+                    currentTask.containsContentDescription("ExcludeFromRecents"));
         } else {
             // Presumably the test started with 0 tasks and remains that way after going home.
         }

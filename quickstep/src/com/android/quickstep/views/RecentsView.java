@@ -1834,20 +1834,23 @@ public abstract class RecentsView<
     }
 
     private int getRunningTaskExpectedIndex(TaskView runningTaskView) {
+        int firstTaskViewIndex = indexOfChild(getFirstTaskView());
         if (mContainer.getDeviceProfile().isTablet) {
             if (runningTaskView instanceof DesktopTaskView) {
-                return 0; // Desktop running task is always in front.
+                return firstTaskViewIndex; // Desktop running task is always in front.
             } else if (enableLargeDesktopWindowingTile()) {
-                return getDesktopTaskViewCount(); // Other running task is behind desktop tasks.
+                // Other running task is behind desktop tasks.
+                return getDesktopTaskViewCount() + firstTaskViewIndex;
             } else {
-                return 0;
+                return firstTaskViewIndex;
             }
         } else {
             int currentIndex = indexOfChild(runningTaskView);
             if (currentIndex != -1) {
                 return currentIndex; // Keep the position if running task already in layout.
             } else {
-                return 0; // New running task are added to the front to begin with.
+                // New running task are added to the front to begin with.
+                return firstTaskViewIndex;
             }
         }
     }
@@ -1988,9 +1991,7 @@ public abstract class RecentsView<
             }
         }
 
-        if (!taskGroups.isEmpty()) {
-            addView(mClearAllButton);
-        }
+        addView(mClearAllButton);
 
         // Keep same previous focused task
         TaskView newFocusedTaskView = null;
@@ -2093,7 +2094,7 @@ public abstract class RecentsView<
         CollectionsKt
                 .filter(getTaskViews(), taskView -> !isGestureActive() || !taskView.isRunningTask())
                 .forEach(this::removeView);
-        if (!hasTaskViews() && indexOfChild(mClearAllButton) != -1) {
+        if (!hasTaskViews()) {
             removeView(mClearAllButton);
         }
     }
@@ -2321,6 +2322,9 @@ public abstract class RecentsView<
 
         mClearAllButton.setFullscreenTranslationPrimary(accumulatedTranslationX);
 
+        float taskAlignmentTranslationY = getTaskAlignmentTranslationY();
+        mClearAllButton.setTaskAlignmentTranslationY(taskAlignmentTranslationY);
+
         updateGridProperties();
     }
 
@@ -2345,6 +2349,19 @@ public abstract class RecentsView<
                     ? mLastComputedGridTaskSize : mLastComputedTaskSize;
         }
         return getTaskBounds(mSelectedTask);
+    }
+
+    /**
+     * Get the Y translation that should be applied to the non-TaskView item inside the RecentsView
+     * (ClearAllButton and AddDesktopButton) in the original layout position, before scrolling. This
+     * is done to make sure the button is aligned to the middle of Task thumbnail in y coordinate.
+     */
+    private float getTaskAlignmentTranslationY() {
+        DeviceProfile deviceProfile = mContainer.getDeviceProfile();
+        if (deviceProfile.isTablet) {
+            return deviceProfile.overviewRowSpacing;
+        }
+        return deviceProfile.overviewTaskThumbnailTopMarginPx / 2.0f;
     }
 
     private Rect getTaskBounds(TaskView taskView) {
@@ -2624,7 +2641,6 @@ public abstract class RecentsView<
         mTaskListChangeId = -1;
         setFocusedTaskViewId(INVALID_TASK_ID);
         mAnyTaskHasBeenDismissed = false;
-
 
         if (enableRefactorTaskThumbnail()) {
             // TODO(b/353917593): RecentsView is never destroyed, so its dependencies need to
@@ -4000,6 +4016,10 @@ public abstract class RecentsView<
             dismissedTaskView.setTranslationZ(0.1f);
         }
         loadVisibleTaskData(TaskView.FLAG_UPDATE_ALL);
+        if (!dismissingForSplitSelection) {
+            anim.addStartListener(() -> InteractionJankMonitorWrapper.begin(this,
+                    Cuj.CUJ_LAUNCHER_OVERVIEW_TASK_DISMISS));
+        }
         mPendingAnimation = anim;
         final TaskView finalNextFocusedTaskView = nextFocusedTaskView;
         final boolean finalCloseGapBetweenClearAll = closeGapBetweenClearAll;
@@ -4049,7 +4069,7 @@ public abstract class RecentsView<
                                 pageToSnapTo = indexOfChild(mClearAllButton);
                             } else if (isClearAllHidden) {
                                 // Snap to focused task if clear all is hidden.
-                                pageToSnapTo = 0;
+                                pageToSnapTo = indexOfChild(getFirstTaskView());
                             }
                         } else {
                             // Get the id of the task view we will snap to based on the current
@@ -4067,7 +4087,7 @@ public abstract class RecentsView<
                                     } else {
                                         // Won't focus next task in split select, so snap to the
                                         // first task.
-                                        pageToSnapTo = 0;
+                                        pageToSnapTo = indexOfChild(getFirstTaskView());
                                         calculateScrollDiff = false;
                                     }
                                 } else {
@@ -4524,7 +4544,6 @@ public abstract class RecentsView<
     }
 
     public void dismissTask(TaskView taskView, boolean animateTaskView, boolean removeTask) {
-        InteractionJankMonitorWrapper.begin(this, Cuj.CUJ_LAUNCHER_OVERVIEW_TASK_DISMISS);
         PendingAnimation pa = new PendingAnimation(DISMISS_TASK_DURATION);
         createTaskDismissAnimation(pa, taskView, animateTaskView, removeTask, DISMISS_TASK_DURATION,
                 false /* dismissingForSplitSelection*/);
@@ -5818,7 +5837,8 @@ public abstract class RecentsView<
         if (recentsAnimationTargets.hasDesktopTasks(mContext)) {
             gluer = new RemoteTargetGluer(getContext(), getSizeStrategy(), recentsAnimationTargets,
                     true /* forDesktop */);
-            mRemoteTargetHandles = gluer.assignTargetsForDesktop(recentsAnimationTargets);
+            mRemoteTargetHandles = gluer.assignTargetsForDesktop(
+                    recentsAnimationTargets, /* transitionInfo= */ null);
         } else {
             gluer = new RemoteTargetGluer(getContext(), getSizeStrategy(), recentsAnimationTargets,
                     false);

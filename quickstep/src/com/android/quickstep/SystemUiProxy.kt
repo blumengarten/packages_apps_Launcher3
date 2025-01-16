@@ -45,6 +45,7 @@ import android.window.IOnBackInvokedCallback
 import android.window.RemoteTransition
 import android.window.TaskSnapshot
 import android.window.TransitionFilter
+import android.window.TransitionInfo
 import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
@@ -1175,6 +1176,7 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
             homeContentInsets: Rect?,
             minimizedHomeBounds: Rect?,
             extras: Bundle?,
+            transitionInfo: TransitionInfo?,
         ) =
             listener.onAnimationStart(
                 RecentsAnimationControllerCompat(controller),
@@ -1187,6 +1189,7 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
                     // https://developer.android.com/guide/components/aidl#Bundles
                     classLoader = SplitBounds::class.java.classLoader
                 },
+                transitionInfo,
             )
 
         override fun onAnimationCanceled(taskIds: IntArray?, taskSnapshots: Array<TaskSnapshot>?) =

@@ -28,8 +28,8 @@ import java.util.Objects
 open class GroupTask
 @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
 constructor(
-    @JvmField val task1: Task,
-    @JvmField val task2: Task?,
+    @Deprecated("Prefer using `getTasks()` instead") @JvmField val task1: Task,
+    @Deprecated("Prefer using `getTasks()` instead") @JvmField val task2: Task?,
     @JvmField val mSplitBounds: SplitConfigurationOptions.SplitBounds?,
     @JvmField val taskViewType: TaskViewType,
 ) {
@@ -43,6 +43,11 @@ constructor(
 
     open fun containsTask(taskId: Int) =
         task1.key.id == taskId || (task2 != null && task2.key.id == taskId)
+
+    /**
+     * Returns true if a task in this group has a package name that matches the given `packageName`.
+     */
+    fun containsPackage(packageName: String) = tasks.any { it.key.packageName == packageName }
 
     open fun hasMultipleTasks() = task2 != null
 

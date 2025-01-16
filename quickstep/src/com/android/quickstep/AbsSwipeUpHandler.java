@@ -99,6 +99,7 @@ import android.view.animation.Interpolator;
 import android.widget.Toast;
 import android.window.DesktopModeFlags;
 import android.window.PictureInPictureSurfaceTransaction;
+import android.window.TransitionInfo;
 import android.window.WindowAnimationState;
 
 import androidx.annotation.NonNull;
@@ -954,10 +955,10 @@ public abstract class AbsSwipeUpHandler<
 
     @Override
     public void onRecentsAnimationStart(RecentsAnimationController controller,
-            RecentsAnimationTargets targets) {
-        super.onRecentsAnimationStart(controller, targets);
+            RecentsAnimationTargets targets, TransitionInfo transitionInfo) {
+        super.onRecentsAnimationStart(controller, targets, transitionInfo);
         if (targets.hasDesktopTasks(mContext)) {
-            mRemoteTargetHandles = mTargetGluer.assignTargetsForDesktop(targets);
+            mRemoteTargetHandles = mTargetGluer.assignTargetsForDesktop(targets, transitionInfo);
         } else {
             int untrimmedAppCount = mRemoteTargetHandles.length;
             mRemoteTargetHandles = mTargetGluer.assignTargetsForSplitScreen(targets);

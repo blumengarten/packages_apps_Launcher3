@@ -112,10 +112,12 @@ public class RecentsModelTest {
                 .updateThumbnailInCache(taskArgs.capture(), /* lowResolution= */ eq(false));
 
         GroupTask expectedGroupTask = mTaskResult.get(0);
-        assertThat(taskArgs.getAllValues().get(0)).isEqualTo(
-                expectedGroupTask.task1);
-        assertThat(taskArgs.getAllValues().get(1)).isEqualTo(
-                expectedGroupTask.task2);
+        var taskArgsValues = taskArgs.getAllValues();
+        var expectedTasks = expectedGroupTask.getTasks();
+        assertThat(taskArgsValues.size()).isEqualTo(expectedTasks.size());
+        for (int i = 0; i < expectedTasks.size(); ++i) {
+            assertThat(taskArgsValues.get(i)).isEqualTo(expectedTasks.get(i));
+        }
     }
 
     @Test

@@ -239,8 +239,8 @@ public class RecentsModel implements RecentTasksDataSource, TaskStackChangeListe
                     // time the user next enters overview
                     continue;
                 }
-                mThumbnailCache.updateThumbnailInCache(group.task1, /* lowResolution= */ true);
-                mThumbnailCache.updateThumbnailInCache(group.task2, /* lowResolution= */ true);
+                group.getTasks().forEach(
+                        t -> mThumbnailCache.updateThumbnailInCache(t, /* lowResolution= */ true));
             }
         });
     }
@@ -374,8 +374,8 @@ public class RecentsModel implements RecentTasksDataSource, TaskStackChangeListe
 
         mTaskList.getTaskKeys(mThumbnailCache.getCacheSize(), taskGroups -> {
             for (GroupTask group : taskGroups) {
-                mThumbnailCache.updateThumbnailInCache(group.task1, /* lowResolution= */ false);
-                mThumbnailCache.updateThumbnailInCache(group.task2, /* lowResolution= */ false);
+                group.getTasks().forEach(
+                        t -> mThumbnailCache.updateThumbnailInCache(t, /* lowResolution= */ false));
             }
         });
     }

@@ -38,6 +38,7 @@ import android.graphics.PointF;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
+import android.window.TransitionInfo;
 
 import androidx.annotation.UiThread;
 
@@ -573,8 +574,9 @@ public class OtherActivityInputConsumer extends ContextWrapper implements InputC
     private static class FinishImmediatelyHandler
             implements RecentsAnimationCallbacks.RecentsAnimationListener {
 
+        @Override
         public void onRecentsAnimationStart(RecentsAnimationController controller,
-                RecentsAnimationTargets targets) {
+                RecentsAnimationTargets targets, TransitionInfo transitionInfo) {
             if (DEBUG) {
                 Log.d(TAG, "FinishImmediatelyHandler: queuing callback");
             }

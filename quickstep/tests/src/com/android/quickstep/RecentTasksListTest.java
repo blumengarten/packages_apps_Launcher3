@@ -102,8 +102,7 @@ public class RecentTasksListTest {
                 true);
 
         assertEquals(1, taskList.size());
-        assertNull(taskList.get(0).task1.taskDescription.getLabel());
-        assertNull(taskList.get(0).task2.taskDescription.getLabel());
+        taskList.get(0).getTasks().forEach(t -> assertNull(t.taskDescription.getLabel()));
     }
 
     @Test
@@ -133,8 +132,10 @@ public class RecentTasksListTest {
                 false);
 
         assertEquals(1, taskList.size());
-        assertEquals(taskDescription, taskList.get(0).task1.taskDescription.getLabel());
-        assertNull(taskList.get(0).task2.taskDescription.getLabel());
+        var tasks = taskList.get(0).getTasks();
+        assertEquals(2, tasks.size());
+        assertEquals(taskDescription, tasks.get(0).taskDescription.getLabel());
+        assertNull(tasks.get(1).taskDescription.getLabel());
     }
 
     @Test

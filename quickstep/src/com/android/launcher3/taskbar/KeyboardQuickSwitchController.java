@@ -349,15 +349,12 @@ public final class KeyboardQuickSwitchController implements
         pw.println(prefix + "\tmWasDesktopTaskFilteredOut=" + mWasDesktopTaskFilteredOut);
         pw.println(prefix + "\tmTasks=[");
         for (GroupTask task : mTasks) {
-            Task task1 = task.task1;
-            Task task2 = task.task2;
-            ComponentName cn1 = task1.getTopComponent();
-            ComponentName cn2 = task2 != null ? task2.getTopComponent() : null;
-            pw.println(prefix + "\t\tt1: (id=" + task1.key.id
-                    + "; package=" + (cn1 != null ? cn1.getPackageName() + ")" : "no package)")
-                    + " t2: (id=" + (task2 != null ? task2.key.id : "-1")
-                    + "; package=" + (cn2 != null ? cn2.getPackageName() + ")"
-                    : "no package)"));
+            int count = 0;
+            for (Task t : task.getTasks()) {
+                ComponentName cn = t.getTopComponent();
+                pw.println(prefix + "\t\tt" + (++count) + ": (id=" + t.key.id
+                        + "; package=" + (cn != null ? cn.getPackageName() + ")" : "no package)"));
+            }
         }
         pw.println(prefix + "\t]");
 
@@ -411,10 +408,7 @@ public final class KeyboardQuickSwitchController implements
                 return false;
             }
             int runningTaskId = ActivityManagerWrapper.getInstance().getRunningTask().taskId;
-            Task task2 = task.task2;
-
-            return runningTaskId == task.task1.key.id
-                    || (task2 != null && runningTaskId == task2.key.id);
+            return task.containsTask(runningTaskId);
         }
 
         boolean isFirstTaskRunning() {
