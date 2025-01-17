@@ -687,6 +687,20 @@ public class TaskbarManager {
         }
     }
 
+    /**
+     * Signal from SysUI indicating that a non-mirroring display was just connected to the
+     * primary device.
+     */
+    public void onDisplayReady(int displayId) {
+    }
+
+    /**
+     * Signal from SysUI indicating that a previously connected non-mirroring display was just
+     * removed from the primary device.
+     */
+    public void onDisplayRemoved(int displayId) {
+    }
+
     private void removeActivityCallbacksAndListeners() {
         if (mActivity != null) {
             mActivity.removeOnDeviceProfileChangeListener(mDebugActivityDeviceProfileChanged);
@@ -793,7 +807,8 @@ public class TaskbarManager {
     private TaskbarActivityContext createTaskbarActivityContext(DeviceProfile dp, int displayId) {
         TaskbarActivityContext newTaskbar = new TaskbarActivityContext(mWindowContext,
                 mNavigationBarPanelContext, dp, mDefaultNavButtonController,
-                mUnfoldProgressProvider, isDefaultDisplay(displayId));
+                mUnfoldProgressProvider, isDefaultDisplay(displayId),
+                SystemUiProxy.INSTANCE.get(mWindowContext));
 
         addTaskbarToMap(displayId, newTaskbar);
         return newTaskbar;

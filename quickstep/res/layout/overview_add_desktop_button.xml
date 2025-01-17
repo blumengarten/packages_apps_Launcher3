@@ -18,7 +18,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:launcher="http://schemas.android.com/apgk/res-auto"
     android:id="@+id/add_desktop_button"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_width="@dimen/add_desktop_button_size"
+    android:layout_height="@dimen/add_desktop_button_size"
     android:src="@drawable/ic_desktop_add"
     android:padding="10dp" />

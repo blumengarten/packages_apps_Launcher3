@@ -23,10 +23,12 @@ import android.content.Intent
 import android.content.res.Resources
 import android.os.Process
 import android.os.UserHandle
+import android.platform.test.annotations.EnableFlags
 import android.platform.test.rule.TestWatcher
 import android.testing.AndroidTestingRunner
 import com.android.internal.R
 import com.android.launcher3.BubbleTextView.RunningAppState
+import com.android.launcher3.Flags
 import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT
 import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT_PREDICTION
 import com.android.launcher3.model.data.AppInfo
@@ -57,6 +59,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 @RunWith(AndroidTestingRunner::class)
+@EnableFlags(Flags.FLAG_ENABLE_MULTI_INSTANCE_MENU_TASKBAR)
 class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
 
     @get:Rule val mockitoRule = MockitoJUnit.rule()
@@ -323,8 +326,12 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
         assertThat(hotseatItem1.taskId).isEqualTo(1)
     }
 
+    /**
+     * Tests that in desktop mode, when two tasks have the same package name and one is in the
+     * hotseat, only the hotseat item represents the app, and no duplicate is shown in recent apps.
+     */
     @Test
-    fun updateHotseatItemInfos_inDesktopMode_twoRunningTasksSamePackage_hotseatCoversFirstTask() {
+    fun updateHotseatItemInfos_inDesktopMode_twoRunningTasksSamePackage_onlyHotseatCoversTask() {
         setInDesktopMode(true)
 
         val newHotseatItems =
@@ -338,16 +345,16 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
                 recentTaskPackages = emptyList(),
             )
 
-        // First task is in Hotseat Items
+        // The task is in Hotseat Items
         assertThat(newHotseatItems).hasLength(2)
         assertThat(newHotseatItems[0]).isInstanceOf(TaskItemInfo::class.java)
         assertThat(newHotseatItems[1]).isNotInstanceOf(TaskItemInfo::class.java)
         val hotseatItem1 = newHotseatItems[0] as TaskItemInfo
-        assertThat(hotseatItem1.taskId).isEqualTo(1)
-        // Second task is in shownTasks
+        assertThat(hotseatItem1.targetPackage).isEqualTo(HOTSEAT_PACKAGE_1)
+
+        // The other task of the same package is not in shownTasks
         val shownTasks = recentAppsController.shownTasks.map { it.task1 }
-        assertThat(shownTasks)
-            .containsExactlyElementsIn(listOf(createTask(id = 2, HOTSEAT_PACKAGE_1)))
+        assertThat(shownTasks).isEmpty()
     }
 
     @Test
@@ -530,8 +537,12 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
         assertThat(shownTasks).isEqualTo(listOf(task1, task2))
     }
 
+    /**
+     * Tests that when multiple instances of the same app are running in desktop mode and the app is
+     * not in the hotseat, only one instance is shown in the recent apps section.
+     */
     @Test
-    fun onRecentTasksChanged_inDesktopMode_multiInstance_shownTasks_maintainsOrder() {
+    fun onRecentTasksChanged_inDesktopMode_multiInstance_noHotseat_shownTasksHasOneInstance() {
         setInDesktopMode(true)
         val task1 = createTask(id = 1, RUNNING_APP_PACKAGE_1)
         val task2 = createTask(id = 2, RUNNING_APP_PACKAGE_1)
@@ -541,43 +552,10 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
             recentTaskPackages = emptyList(),
         )
 
-        prepareHotseatAndRunningAndRecentApps(
-            hotseatPackages = emptyList(),
-            runningTasks = listOf(task2, task1),
-            recentTaskPackages = emptyList(),
-        )
-
+        // Assert that shownTasks contains only one instance of the app
         val shownTasks = recentAppsController.shownTasks.map { it.task1 }
-        assertThat(shownTasks).isEqualTo(listOf(task1, task2))
-    }
-
-    @Test
-    fun updateHotseatItems_inDesktopMode_multiInstanceHotseatPackage_shownItems_maintainsOrder() {
-        setInDesktopMode(true)
-        val task1 = createTask(id = 1, RUNNING_APP_PACKAGE_1)
-        val task2 = createTask(id = 2, RUNNING_APP_PACKAGE_1)
-        prepareHotseatAndRunningAndRecentApps(
-            hotseatPackages = listOf(RUNNING_APP_PACKAGE_1),
-            runningTasks = listOf(task1, task2),
-            recentTaskPackages = emptyList(),
-        )
-        updateRecentTasks( // Trigger a recent-tasks change before calling updateHotseatItems()
-            runningTasks = listOf(task2, task1),
-            recentTaskPackages = emptyList(),
-        )
-
-        prepareHotseatAndRunningAndRecentApps(
-            hotseatPackages = listOf(RUNNING_APP_PACKAGE_1),
-            runningTasks = listOf(task2, task1),
-            recentTaskPackages = emptyList(),
-        )
-
-        val newHotseatItems = recentAppsController.shownHotseatItems
-        assertThat(newHotseatItems).hasSize(1)
-        assertThat(newHotseatItems[0]).isInstanceOf(TaskItemInfo::class.java)
-        assertThat((newHotseatItems[0] as TaskItemInfo).taskId).isEqualTo(1)
-        val shownTasks = recentAppsController.shownTasks.map { it.task1 }
-        assertThat(shownTasks).isEqualTo(listOf(task2))
+        assertThat(shownTasks).hasSize(1)
+        assertThat(shownTasks[0].key.packageName).isEqualTo(RUNNING_APP_PACKAGE_1)
     }
 
     @Test

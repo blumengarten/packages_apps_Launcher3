@@ -547,6 +547,8 @@ public abstract class RecentsView<
     private final int mSplitPlaceholderSize;
     private final int mSplitPlaceholderInset;
     private final ClearAllButton mClearAllButton;
+    @Nullable
+    private AddDesktopButton mAddDesktopButton = null;
     private final Rect mClearAllButtonDeadZoneRect = new Rect();
     private final Rect mTaskViewDeadZoneRect = new Rect();
     private final Rect mTopRowDeadZoneRect = new Rect();
@@ -902,6 +904,12 @@ public abstract class RecentsView<
         mClearAllButton = (ClearAllButton) LayoutInflater.from(context)
                 .inflate(R.layout.overview_clear_all_button, this, false);
         mClearAllButton.setOnClickListener(this::dismissAllTasks);
+
+        if (DesktopModeStatus.enableMultipleDesktops(mContext)) {
+            mAddDesktopButton = (AddDesktopButton) LayoutInflater.from(context).inflate(
+                    R.layout.overview_add_desktop_button, this, false);
+        }
+
         mTaskViewPool = new ViewPool<>(context, this, R.layout.task, 20 /* max size */,
                 10 /* initial size */);
         mGroupedTaskViewPool = new ViewPool<>(context, this,
@@ -1880,7 +1888,7 @@ public abstract class RecentsView<
         }
         mLoadPlanEverApplied = true;
         if (taskGroups == null || taskGroups.isEmpty()) {
-            removeTasksViewsAndClearAllButton();
+            removeAllTaskViews();
             onTaskStackUpdated();
             // With all tasks removed, touch handling in PagedView is disabled and we need to reset
             // touch state or otherwise values will be obsolete.
@@ -1941,6 +1949,11 @@ public abstract class RecentsView<
         // Move Desktop Tasks to the end of the list
         if (enableLargeDesktopWindowingTile()) {
             taskGroups = mUtils.sortDesktopTasksToFront(taskGroups);
+        }
+
+        if (mAddDesktopButton != null) {
+            // Add `mAddDesktopButton` as the first child.
+            addView(mAddDesktopButton);
         }
 
         // Add views as children based on whether it's grouped or single task. Looping through
@@ -2088,13 +2101,14 @@ public abstract class RecentsView<
         return mModel.isLoadingTasksInBackground();
     }
 
-    private void removeTasksViewsAndClearAllButton() {
+    private void removeAllTaskViews() {
         // This handles an edge case where applyLoadPlan happens during a gesture when the only
         // Task is one with excludeFromRecents, in which case we should not remove it.
         CollectionsKt
                 .filter(getTaskViews(), taskView -> !isGestureActive() || !taskView.isRunningTask())
                 .forEach(this::removeView);
         if (!hasTaskViews()) {
+            removeView(mAddDesktopButton);
             removeView(mClearAllButton);
         }
     }
@@ -2324,6 +2338,9 @@ public abstract class RecentsView<
 
         float taskAlignmentTranslationY = getTaskAlignmentTranslationY();
         mClearAllButton.setTaskAlignmentTranslationY(taskAlignmentTranslationY);
+        if (mAddDesktopButton != null) {
+            mAddDesktopButton.setTranslationY(taskAlignmentTranslationY);
+        }
 
         updateGridProperties();
     }
@@ -3006,6 +3023,9 @@ public abstract class RecentsView<
                 taskView = getTaskViewFromPool(TaskViewType.SINGLE);
                 taskView.bind(runningTasks[0], mOrientationState, mTaskOverlayFactory);
             }
+            if (mAddDesktopButton != null && wasEmpty) {
+                addView(mAddDesktopButton);
+            }
             addView(taskView, getRunningTaskExpectedIndex(taskView));
             runningTaskViewId = taskView.getTaskViewId();
             if (wasEmpty) {
@@ -3423,6 +3443,12 @@ public abstract class RecentsView<
         for (TaskView taskView : getTaskViews()) {
             taskView.setGridTranslationX(
                     gridTranslations.get(taskView) - snappedTaskGridTranslationX
+                            + snappedTaskNonGridScrollAdjustment);
+        }
+
+        if (mAddDesktopButton != null) {
+            mAddDesktopButton.setTranslationX(
+                    gridTranslations.get(getFirstTaskView()) - snappedTaskGridTranslationX
                             + snappedTaskNonGridScrollAdjustment);
         }
 
@@ -4137,6 +4163,7 @@ public abstract class RecentsView<
 
                     if (taskCount == 1) {
                         removeViewInLayout(mClearAllButton);
+                        removeViewInLayout(mAddDesktopButton);
                         if (isHomeTaskDismissed) {
                             updateEmptyMessage();
                         } else if (!mSplitSelectStateController.isSplitSelectActive()) {
@@ -4468,7 +4495,7 @@ public abstract class RecentsView<
                 finishRecentsAnimation(true /* toRecents */, false /* shouldPip */, () -> {
                     UI_HELPER_EXECUTOR.getHandler().post(
                             ActivityManagerWrapper.getInstance()::removeAllRecentTasks);
-                    removeTasksViewsAndClearAllButton();
+                    removeAllTaskViews();
                     startHome();
                 });
             }
@@ -4627,6 +4654,11 @@ public abstract class RecentsView<
             taskView.setStableAlpha(alpha);
         }
         mClearAllButton.setContentAlpha(mContentAlpha);
+
+        // TODO(b/389209338): Handle the visibility of the `mAddDesktopButton`.
+        if (mAddDesktopButton != null) {
+            mAddDesktopButton.setAlpha(mContentAlpha);
+        }
         int alphaInt = Math.round(alpha * 255);
         mEmptyMessagePaint.setAlpha(alphaInt);
         mEmptyIcon.setAlpha(alphaInt);
@@ -4923,9 +4955,11 @@ public abstract class RecentsView<
                     + carouselHiddenOffsetSize;
             if (child instanceof TaskView taskView) {
                 taskView.getPrimaryTaskOffsetTranslationProperty().set(taskView, totalTranslationX);
-            } else {
+            } else if (child instanceof ClearAllButton) {
                 getPagedOrientationHandler().getPrimaryViewTranslate().set(child,
                         totalTranslationX);
+            } else {
+                // TODO(b/389209581): Handle the page offsets update of the 'mAddDesktopButton'.
             }
             if (mEnableDrawingLiveTile && i == getRunningTaskIndex()) {
                 runActionOnRemoteHandles(
@@ -6102,6 +6136,13 @@ public abstract class RecentsView<
             float scrollDiff = mClearAllButton.getScrollAdjustment(showAsFullscreen, showAsGrid);
             clearAllScroll = newPageScrolls[clearAllIndex] + Math.round(scrollDiff);
             outPageScrolls[clearAllIndex] = clearAllScroll;
+        }
+
+        int addDesktopButtonIndex = indexOfChild(mAddDesktopButton);
+        if (addDesktopButtonIndex != -1 && addDesktopButtonIndex < outPageScrolls.length) {
+            outPageScrolls[addDesktopButtonIndex] =
+                    newPageScrolls[addDesktopButtonIndex] + Math.round(
+                            mAddDesktopButton.getTranslationX());
         }
 
         int lastTaskScroll = getLastTaskScroll(clearAllScroll, clearAllWidth);

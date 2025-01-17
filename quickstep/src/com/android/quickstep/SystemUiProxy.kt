@@ -838,6 +838,15 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
             splitScreen?.startIntent(intent, userId, fillInIntent, position, options, instanceId)
         }
 
+    /**
+     * Call the desktop mode interface to start a TRANSIT_OPEN transition when launching an intent
+     * from the taskbar so that it can be handled in desktop mode.
+     */
+    fun startLaunchIntentTransition(intent: Intent, options: Bundle, displayId: Int) =
+        executeWithErrorLog({ "Failed call startLaunchIntentTransition" }) {
+            desktopMode?.startLaunchIntentTransition(intent, options, displayId)
+        }
+
     //
     // One handed
     //

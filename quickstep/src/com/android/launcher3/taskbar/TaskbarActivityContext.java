@@ -85,6 +85,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.DeviceProfile;
+import com.android.launcher3.Flags;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherSettings.Favorites;
 import com.android.launcher3.R;
@@ -230,6 +231,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
     private DeviceProfile mPersistentTaskbarDeviceProfile;
 
     private final LauncherPrefs mLauncherPrefs;
+    private final SystemUiProxy mSysUiProxy;
 
     private TaskbarFeatureEvaluator mTaskbarFeatureEvaluator;
 
@@ -239,10 +241,11 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
             @Nullable Context navigationBarPanelContext, DeviceProfile launcherDp,
             TaskbarNavButtonController buttonController,
             ScopedUnfoldTransitionProgressProvider unfoldTransitionProgressProvider,
-            boolean isPrimaryDisplay) {
+            boolean isPrimaryDisplay, SystemUiProxy sysUiProxy) {
         super(windowContext);
         mIsPrimaryDisplay = isPrimaryDisplay;
         mNavigationBarPanelContext = navigationBarPanelContext;
+        mSysUiProxy = sysUiProxy;
         applyDeviceProfile(launcherDp);
         final Resources resources = getResources();
         mTaskbarFeatureEvaluator = TaskbarFeatureEvaluator.getInstance(this);
@@ -1342,7 +1345,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                 mControllers.uiController.onTaskbarIconLaunched(api);
                 mControllers.taskbarStashController.updateAndAnimateTransientTaskbar(true);
             }
-        } else if (tag instanceof TaskItemInfo info) {
+        } else if (tag instanceof TaskItemInfo info && !Flags.enableMultiInstanceMenuTaskbar()) {
             RemoteTransition remoteTransition = canUnminimizeDesktopTask(info.getTaskId())
                     ? createUnminimizeRemoteTransition() : null;
 
@@ -1645,12 +1648,12 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                         intent.getComponent(), info.user, intent.getSourceBounds(), null);
                 return;
             }
+            int displayId = getDisplay() == null ? DEFAULT_DISPLAY : getDisplay().getDisplayId();
             // TODO(b/216683257): Use startActivityForResult for search results that require it.
             if (taskInRecents != null) {
                 // Re launch instance from recents
                 ActivityOptionsWrapper opts = getActivityLaunchOptions(null, info);
-                opts.options.setLaunchDisplayId(
-                        getDisplay() == null ? DEFAULT_DISPLAY : getDisplay().getDisplayId());
+                opts.options.setLaunchDisplayId(displayId);
                 if (ActivityManagerWrapper.getInstance()
                         .startActivityFromRecents(taskInRecents.key, opts.options)) {
                     mControllers.uiController.getRecentsView()
@@ -1658,12 +1661,13 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                     return;
                 }
             }
-            ActivityOptionsWrapper opts = null;
             if (areDesktopTasksVisible()) {
-                opts = getActivityLaunchDesktopOptions(info);
+                ActivityOptionsWrapper opts = getActivityLaunchDesktopOptions(info);
+                Bundle optionsBundle = opts == null ? null : opts.options.toBundle();
+                mSysUiProxy.startLaunchIntentTransition(intent, optionsBundle, displayId);
+            } else {
+                startActivity(intent, null);
             }
-            Bundle optionsBundle = opts == null ? null : opts.options.toBundle();
-            startActivity(intent, optionsBundle);
         } catch (NullPointerException | ActivityNotFoundException | SecurityException e) {
             Toast.makeText(this, R.string.activity_not_found, Toast.LENGTH_SHORT)
                     .show();

@@ -79,6 +79,10 @@ class TasksRepository(
                             }
                         }
                 tasks.value = MapForStateFlow(recentTasks)
+                Log.d(
+                    TAG,
+                    "getAllTaskData: oldTasks ${oldTaskMap.keys}, newTasks: ${recentTasks.keys}",
+                )
             }
         }
         return tasks.map { it.values.toList() }

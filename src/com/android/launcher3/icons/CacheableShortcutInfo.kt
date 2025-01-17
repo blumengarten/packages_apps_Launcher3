@@ -112,7 +112,9 @@ object CacheableShortcutCachingLogic : CachingLogic<CacheableShortcutInfo> {
                 ?.let { d ->
                     li.createBadgedIconBitmap(
                         d,
-                        IconOptions().setExtractedColor(Themes.getColorAccent(context)),
+                        IconOptions()
+                            .setExtractedColor(Themes.getColorAccent(context))
+                            .setSourceHint(getSourceHint(info, cache)),
                     )
                 } ?: BitmapInfo.LOW_RES_INFO
         }

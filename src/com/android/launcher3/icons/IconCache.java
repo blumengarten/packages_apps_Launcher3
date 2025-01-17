@@ -594,7 +594,8 @@ public class IconCache extends BaseIconCache {
 
     @VisibleForTesting
     synchronized boolean isItemInDb(ComponentKey cacheKey) {
-        return getEntryFromDBLocked(cacheKey, new CacheEntry(), DEFAULT_LOOKUP_FLAG);
+        return getEntryFromDBLocked(cacheKey, new CacheEntry(), DEFAULT_LOOKUP_FLAG,
+                LauncherActivityCachingLogic.INSTANCE);
     }
 
     /**

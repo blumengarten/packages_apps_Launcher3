@@ -19,9 +19,11 @@ package com.android.launcher3.taskbar
 import android.animation.AnimatorTestRule
 import android.content.ComponentName
 import android.content.Intent
+import android.platform.test.annotations.DisableFlags
 import android.platform.test.annotations.EnableFlags
 import android.platform.test.flag.junit.SetFlagsRule
 import androidx.test.core.app.ApplicationProvider
+import com.android.launcher3.Flags.FLAG_ENABLE_MULTI_INSTANCE_MENU_TASKBAR
 import com.android.launcher3.Flags.FLAG_TASKBAR_OVERFLOW
 import com.android.launcher3.R
 import com.android.launcher3.taskbar.TaskbarControllerTestUtil.runOnMainSync
@@ -64,6 +66,7 @@ import org.mockito.kotlin.whenever
     FLAG_ENABLE_DESKTOP_WINDOWING_MODE,
     FLAG_ENABLE_BUBBLE_BAR,
 )
+@DisableFlags(FLAG_ENABLE_MULTI_INSTANCE_MENU_TASKBAR)
 class TaskbarOverflowTest {
     @get:Rule(order = 0) val setFlagsRule = SetFlagsRule()
 

@@ -365,6 +365,7 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         if (enableTaskbarPinning()) {
             mTaskbarView.removeOnLayoutChangeListener(mTaskbarViewLayoutChangeListener);
         }
+        mTaskbarView.removeFolderIconListeners();
         LauncherAppState.getInstance(mActivity).getModel().removeCallbacks(mModelCallbacks);
         mActivity.removeOnDeviceProfileChangeListener(mDeviceProfileChangeListener);
     }

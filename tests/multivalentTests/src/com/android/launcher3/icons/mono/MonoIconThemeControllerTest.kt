@@ -16,9 +16,11 @@
 
 package com.android.launcher3.icons.mono
 
+import android.content.ComponentName
 import android.graphics.Color
 import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.ColorDrawable
+import android.os.Process
 import android.platform.test.annotations.DisableFlags
 import android.platform.test.annotations.EnableFlags
 import android.platform.test.flag.junit.SetFlagsRule
@@ -29,6 +31,9 @@ import androidx.test.filters.SmallTest
 import com.android.launcher3.Flags
 import com.android.launcher3.icons.BaseIconFactory
 import com.android.launcher3.icons.BitmapInfo
+import com.android.launcher3.icons.SourceHint
+import com.android.launcher3.icons.cache.LauncherActivityCachingLogic
+import com.android.launcher3.util.ComponentKey
 import com.android.launcher3.util.LauncherMultivalentJUnit.Companion.isRunningInRobolectric
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -44,6 +49,12 @@ class MonoIconThemeControllerTest {
     @get:Rule val mSetFlagsRule = SetFlagsRule()
 
     private val iconFactory = BaseIconFactory(context, DisplayMetrics.DENSITY_MEDIUM, 30)
+
+    private val sourceHint =
+        SourceHint(
+            key = ComponentKey(ComponentName("a", "a"), Process.myUserHandle()),
+            logic = LauncherActivityCachingLogic,
+        )
 
     @Test
     fun `createThemedBitmap when mono drawable is present`() {
@@ -81,7 +92,8 @@ class MonoIconThemeControllerTest {
         val themeBitmap =
             MonoIconThemeController().createThemedBitmap(icon, iconInfo, iconFactory)!!
         assertNotNull(
-            MonoIconThemeController().decode(themeBitmap.serialize(), iconInfo, iconFactory)
+            MonoIconThemeController()
+                .decode(themeBitmap.serialize(), iconInfo, iconFactory, sourceHint)
         )
     }
 
@@ -90,7 +102,10 @@ class MonoIconThemeControllerTest {
         ensureBitmapSerializationSupported()
         val icon = AdaptiveIconDrawable(ColorDrawable(Color.BLACK), null, ColorDrawable(Color.RED))
         val iconInfo = iconFactory.createBadgedIconBitmap(icon)
-        assertNull(MonoIconThemeController().decode(byteArrayOf(1, 1, 1, 1), iconInfo, iconFactory))
+        assertNull(
+            MonoIconThemeController()
+                .decode(byteArrayOf(1, 1, 1, 1), iconInfo, iconFactory, sourceHint)
+        )
     }
 
     @Test

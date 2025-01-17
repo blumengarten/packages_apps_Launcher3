@@ -17,8 +17,11 @@
 package com.android.quickstep.views
 
 import android.content.Context
+import android.graphics.drawable.ShapeDrawable
+import android.graphics.drawable.shapes.RoundRectShape
 import android.util.AttributeSet
 import android.widget.ImageButton
+import com.android.launcher3.R
 
 /**
  * Button for supporting multiple desktop sessions. The button will be next to the first TaskView
@@ -26,5 +29,21 @@ import android.widget.ImageButton
  */
 class AddDesktopButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
     ImageButton(context, attrs) {
-    // TODO(b/382057498): add this button the overview.
+
+    override fun onFinishInflate() {
+        super.onFinishInflate()
+
+        background =
+            ShapeDrawable().apply {
+                shape =
+                    RoundRectShape(
+                        FloatArray(8) { R.dimen.add_desktop_button_size.toFloat() },
+                        null,
+                        null,
+                    )
+                setTint(
+                    resources.getColor(android.R.color.system_surface_bright_light, context.theme)
+                )
+            }
+    }
 }
