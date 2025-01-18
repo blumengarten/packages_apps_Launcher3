@@ -127,11 +127,11 @@ public class TaskbarHoverToolTipControllerTest extends TaskbarBaseTestCase {
         when(mMotionEvent.getAction()).thenReturn(MotionEvent.ACTION_HOVER_ENTER);
         when(mMotionEvent.getActionMasked()).thenReturn(MotionEvent.ACTION_HOVER_ENTER);
 
-        boolean hoverHandled =
+        boolean hoverConsumed =
                 mTaskbarHoverToolTipController.onHover(mHoverBubbleTextView, mMotionEvent);
         waitForIdleSync();
 
-        assertThat(hoverHandled).isTrue();
+        assertThat(hoverConsumed).isFalse();
         verify(taskbarActivityContext).setAutohideSuspendFlag(FLAG_AUTOHIDE_SUSPEND_HOVERING_ICONS,
                 true);
     }
@@ -141,11 +141,11 @@ public class TaskbarHoverToolTipControllerTest extends TaskbarBaseTestCase {
         when(mMotionEvent.getAction()).thenReturn(MotionEvent.ACTION_HOVER_EXIT);
         when(mMotionEvent.getActionMasked()).thenReturn(MotionEvent.ACTION_HOVER_EXIT);
 
-        boolean hoverHandled =
+        boolean hoverConsumed =
                 mTaskbarHoverToolTipController.onHover(mHoverBubbleTextView, mMotionEvent);
         waitForIdleSync();
 
-        assertThat(hoverHandled).isTrue();
+        assertThat(hoverConsumed).isFalse();
         verify(taskbarActivityContext).setAutohideSuspendFlag(FLAG_AUTOHIDE_SUSPEND_HOVERING_ICONS,
                 false);
     }
@@ -155,11 +155,11 @@ public class TaskbarHoverToolTipControllerTest extends TaskbarBaseTestCase {
         when(mMotionEvent.getAction()).thenReturn(MotionEvent.ACTION_HOVER_ENTER);
         when(mMotionEvent.getActionMasked()).thenReturn(MotionEvent.ACTION_HOVER_ENTER);
 
-        boolean hoverHandled =
+        boolean hoverConsumed =
                 mTaskbarHoverToolTipController.onHover(mHoverFolderIcon, mMotionEvent);
         waitForIdleSync();
 
-        assertThat(hoverHandled).isTrue();
+        assertThat(hoverConsumed).isFalse();
         verify(taskbarActivityContext).setAutohideSuspendFlag(FLAG_AUTOHIDE_SUSPEND_HOVERING_ICONS,
                 true);
     }
@@ -169,11 +169,11 @@ public class TaskbarHoverToolTipControllerTest extends TaskbarBaseTestCase {
         when(mMotionEvent.getAction()).thenReturn(MotionEvent.ACTION_HOVER_EXIT);
         when(mMotionEvent.getActionMasked()).thenReturn(MotionEvent.ACTION_HOVER_EXIT);
 
-        boolean hoverHandled =
+        boolean hoverConsumed =
                 mTaskbarHoverToolTipController.onHover(mHoverFolderIcon, mMotionEvent);
         waitForIdleSync();
 
-        assertThat(hoverHandled).isTrue();
+        assertThat(hoverConsumed).isFalse();
         verify(taskbarActivityContext).setAutohideSuspendFlag(FLAG_AUTOHIDE_SUSPEND_HOVERING_ICONS,
                 false);
     }
@@ -184,11 +184,11 @@ public class TaskbarHoverToolTipControllerTest extends TaskbarBaseTestCase {
         when(mMotionEvent.getActionMasked()).thenReturn(MotionEvent.ACTION_HOVER_EXIT);
         doReturn(true).when(mSpyFolderView).isOpen();
 
-        boolean hoverHandled =
+        boolean hoverConsumed =
                 mTaskbarHoverToolTipController.onHover(mHoverFolderIcon, mMotionEvent);
         waitForIdleSync();
 
-        assertThat(hoverHandled).isTrue();
+        assertThat(hoverConsumed).isFalse();
         verify(taskbarActivityContext).setAutohideSuspendFlag(FLAG_AUTOHIDE_SUSPEND_HOVERING_ICONS,
                 false);
     }
@@ -199,10 +199,10 @@ public class TaskbarHoverToolTipControllerTest extends TaskbarBaseTestCase {
         when(mMotionEvent.getActionMasked()).thenReturn(MotionEvent.ACTION_HOVER_ENTER);
         doReturn(true).when(mSpyFolderView).isOpen();
 
-        boolean hoverHandled =
+        boolean hoverConsumed =
                 mTaskbarHoverToolTipController.onHover(mHoverFolderIcon, mMotionEvent);
 
-        assertThat(hoverHandled).isTrue();
+        assertThat(hoverConsumed).isFalse();
     }
 
     @Test
@@ -210,10 +210,10 @@ public class TaskbarHoverToolTipControllerTest extends TaskbarBaseTestCase {
         when(mMotionEvent.getAction()).thenReturn(MotionEvent.ACTION_HOVER_MOVE);
         when(mMotionEvent.getActionMasked()).thenReturn(MotionEvent.ACTION_HOVER_MOVE);
 
-        boolean hoverHandled =
+        boolean hoverConsumed =
                 mTaskbarHoverToolTipController.onHover(mHoverFolderIcon, mMotionEvent);
 
-        assertThat(hoverHandled).isTrue();
+        assertThat(hoverConsumed).isFalse();
     }
 
     @Test
@@ -221,11 +221,11 @@ public class TaskbarHoverToolTipControllerTest extends TaskbarBaseTestCase {
         when(mMotionEvent.getAction()).thenReturn(MotionEvent.ACTION_HOVER_ENTER);
         when(mMotionEvent.getActionMasked()).thenReturn(MotionEvent.ACTION_HOVER_ENTER);
 
-        boolean hoverHandled =
+        boolean hoverConsumed =
                 mTaskbarHoverToolTipController.onHover(mAppPairIcon, mMotionEvent);
         waitForIdleSync();
 
-        assertThat(hoverHandled).isTrue();
+        assertThat(hoverConsumed).isFalse();
         verify(taskbarActivityContext).setAutohideSuspendFlag(FLAG_AUTOHIDE_SUSPEND_HOVERING_ICONS,
                 true);
     }
@@ -235,11 +235,11 @@ public class TaskbarHoverToolTipControllerTest extends TaskbarBaseTestCase {
         when(mMotionEvent.getAction()).thenReturn(MotionEvent.ACTION_HOVER_EXIT);
         when(mMotionEvent.getActionMasked()).thenReturn(MotionEvent.ACTION_HOVER_EXIT);
 
-        boolean hoverHandled =
+        boolean hoverConsumed =
                 mTaskbarHoverToolTipController.onHover(mAppPairIcon, mMotionEvent);
         waitForIdleSync();
 
-        assertThat(hoverHandled).isTrue();
+        assertThat(hoverConsumed).isFalse();
         verify(taskbarActivityContext).setAutohideSuspendFlag(FLAG_AUTOHIDE_SUSPEND_HOVERING_ICONS,
                 false);
     }
@@ -250,11 +250,11 @@ public class TaskbarHoverToolTipControllerTest extends TaskbarBaseTestCase {
         when(mMotionEvent.getActionMasked()).thenReturn(MotionEvent.ACTION_HOVER_ENTER);
         when(taskbarActivityContext.isIconAlignedWithHotseat()).thenReturn(true);
 
-        boolean hoverHandled =
+        boolean hoverConsumed =
                 mTaskbarHoverToolTipController.onHover(mHoverBubbleTextView, mMotionEvent);
         waitForIdleSync();
 
-        assertThat(hoverHandled).isTrue();
+        assertThat(hoverConsumed).isFalse();
         verify(taskbarActivityContext).setAutohideSuspendFlag(FLAG_AUTOHIDE_SUSPEND_HOVERING_ICONS,
                 true);
     }

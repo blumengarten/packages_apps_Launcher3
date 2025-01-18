@@ -17,7 +17,7 @@
 
 package com.android.launcher3.taskbar
 
-import androidx.test.runner.AndroidJUnit4
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.launcher3.statemanager.StateManager
 import com.android.quickstep.RecentsActivity
 import com.android.quickstep.fallback.RecentsState

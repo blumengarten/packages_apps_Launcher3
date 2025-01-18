@@ -42,7 +42,7 @@ import android.os.Process;
 import android.os.UserHandle;
 import android.os.UserManager;
 
-import androidx.test.runner.AndroidJUnit4;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.pm.UserCache;

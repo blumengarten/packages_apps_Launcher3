@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertNull;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -34,6 +34,7 @@ import android.app.TaskInfo;
 import android.content.Context;
 import android.content.res.Resources;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
 
 import com.android.internal.R;
@@ -45,6 +46,7 @@ import com.android.wm.shell.shared.GroupedTaskInfo;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -56,6 +58,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @SmallTest
+@RunWith(AndroidJUnit4.class)
 public class RecentTasksListTest {
 
     @Mock

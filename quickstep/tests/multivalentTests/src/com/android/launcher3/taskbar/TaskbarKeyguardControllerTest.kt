@@ -16,6 +16,7 @@
 package com.android.launcher3.taskbar
 
 import android.app.KeyguardManager
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_BACK_DISABLED
 import com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_BOUNCER_SHOWING
 import com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_DEVICE_DOZING
@@ -23,6 +24,7 @@ import com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_STATUS_B
 import com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_STATUS_BAR_KEYGUARD_SHOWING_OCCLUDED
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -30,6 +32,7 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
+@RunWith(AndroidJUnit4::class)
 class TaskbarKeyguardControllerTest : TaskbarBaseTestCase() {
 
     private val baseDragLayer: TaskbarDragLayer = mock()

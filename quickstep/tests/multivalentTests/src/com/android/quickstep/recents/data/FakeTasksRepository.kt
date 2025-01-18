@@ -58,10 +58,10 @@ class FakeTasksRepository : RecentTasksRepository {
             tasks.value.map {
                 it.apply {
                     thumbnail = thumbnailDataMap[it.key.id]
-                    taskIconDataMap[it.key.id].let { data ->
-                        title = data?.title
-                        titleDescription = data?.titleDescription
-                        icon = data?.icon
+                    taskIconDataMap[it.key.id]?.let { data ->
+                        title = data.title
+                        titleDescription = data.titleDescription
+                        icon = data.icon
                     }
                 }
             }

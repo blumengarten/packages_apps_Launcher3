@@ -32,6 +32,7 @@ import com.android.launcher3.util.TestUtil
 import com.android.launcher3.util.rule.BackAndRestoreRule
 import com.android.launcher3.util.rule.setFlags
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -69,6 +70,7 @@ class BackupAndRestoreDBSelectionTest {
     }
 
     @Test
+    @Ignore("b/385147987")
     fun oldDatabasesNotPresentAfterRestore() {
         val dbController = ModelDbController(getInstrumentation().targetContext)
         if (Flags.gridMigrationRefactor()) {

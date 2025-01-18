@@ -18,11 +18,12 @@ package com.android.quickstep.util
 
 import android.graphics.Rect
 import android.graphics.Region
-import android.testing.AndroidTestingRunner
 import android.view.Display.DEFAULT_DISPLAY
 import android.view.IWindowManager
+import androidx.test.annotation.UiThreadTest
 import androidx.test.filters.SmallTest
 import com.android.launcher3.util.Executors
+import com.android.launcher3.util.LauncherMultivalentJUnit
 import com.android.quickstep.util.GestureExclusionManager.ExclusionListener
 import org.junit.Before
 import org.junit.Test
@@ -31,11 +32,12 @@ import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyZeroInteractions
+import org.mockito.kotlin.verifyNoMoreInteractions
 
 /** Unit test for [GestureExclusionManager]. */
 @SmallTest
-@RunWith(AndroidTestingRunner::class)
+@UiThreadTest
+@RunWith(LauncherMultivalentJUnit::class)
 class GestureExclusionManagerTest {
 
     @Mock private lateinit var windowManager: IWindowManager
@@ -72,7 +74,7 @@ class GestureExclusionManagerTest {
         underTest.addListener(listener2)
 
         awaitTasksCompleted()
-        verifyZeroInteractions(windowManager)
+        verifyNoMoreInteractions(windowManager)
     }
 
     @Test
@@ -98,7 +100,7 @@ class GestureExclusionManagerTest {
         underTest.removeListener(listener1)
 
         awaitTasksCompleted()
-        verifyZeroInteractions(windowManager)
+        verifyNoMoreInteractions(windowManager)
     }
 
     @Test
@@ -119,12 +121,12 @@ class GestureExclusionManagerTest {
         awaitTasksCompleted()
         underTest.addListener(listener1)
         awaitTasksCompleted()
-        verifyZeroInteractions(listener1)
+        verifyNoMoreInteractions(listener1)
 
         underTest.addListener(listener2)
         awaitTasksCompleted()
 
-        verifyZeroInteractions(listener1)
+        verifyNoMoreInteractions(listener1)
         verify(listener2).onGestureExclusionChanged(r1, r2)
     }
 

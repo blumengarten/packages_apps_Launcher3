@@ -3572,7 +3572,7 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         int nScreens = getChildCount();
         int extraScreenId = mScreenOrder.indexOf(EXTRA_EMPTY_SCREEN_ID);
         if (extraScreenId >= 0 && nScreens > 1) {
-            if (page == extraScreenId) {
+            if (page == extraScreenId || (isTwoPanelEnabled() && page == extraScreenId + 1)) {
                 return getContext().getString(R.string.workspace_new_page);
             }
             nScreens--;
@@ -3584,6 +3584,11 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         int panelCount = getPanelCount();
         int currentPage = (page / panelCount) + 1;
         int totalPages = nScreens / panelCount + nScreens % panelCount;
+
+        // When dragging, a blank screen is added. This increases the total page count, but we still
+        // want to describe the original page count where icons are currently pinned
+        if (extraScreenId > 0) totalPages--;
+
         return getContext().getString(R.string.workspace_scroll_format, currentPage, totalPages);
     }
 

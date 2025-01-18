@@ -56,6 +56,7 @@ import com.android.launcher3.util.SplitConfigurationOptions.SplitPositionOption;
 import com.android.launcher3.views.ActivityContext;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.util.LogUtils;
+import com.android.wm.shell.shared.bubbles.BubbleAnythingFlagHelper;
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 
 import java.io.PrintWriter;
@@ -219,7 +220,7 @@ public class TaskbarPopupController implements TaskbarControllers.LoggableTaskba
                 .getAreDesktopTasksVisibleAndNotInOverview()) {
             shortcuts.addAll(mControllers.uiController.getSplitMenuOptions().toList());
         }
-        if (com.android.wm.shell.Flags.enableBubbleAnything()) {
+        if (BubbleAnythingFlagHelper.enableCreateAnyBubble()) {
             shortcuts.add(BUBBLE);
         }
 

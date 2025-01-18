@@ -35,6 +35,7 @@ import android.content.res.Resources;
 import android.platform.test.flag.junit.SetFlagsRule;
 
 import androidx.test.annotation.UiThreadTest;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
 
 import com.android.launcher3.Flags;
@@ -48,6 +49,7 @@ import com.android.systemui.shared.system.TaskStackChangeListeners;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -56,6 +58,7 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 
 @SmallTest
+@RunWith(AndroidJUnit4.class)
 public class RecentsModelTest {
     @Mock
     private Context mContext;

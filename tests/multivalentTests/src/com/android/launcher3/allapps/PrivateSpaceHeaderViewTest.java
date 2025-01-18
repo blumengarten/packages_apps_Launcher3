@@ -52,8 +52,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
-import androidx.test.runner.AndroidJUnit4;
 
 import com.android.launcher3.R;
 import com.android.launcher3.logging.StatsLogManager;
@@ -300,7 +300,7 @@ public class PrivateSpaceHeaderViewTest {
                 && info.user.equals(MAIN_HANDLE));
 
         int rows = (int) (ALL_APPS_HEIGHT - PS_HEADER_HEIGHT - HEADER_PROTECTION_HEIGHT);
-        int position = rows * NUM_APP_COLS - (NUM_APP_COLS-1) + 1;
+        int position = rows * NUM_APP_COLS - (NUM_APP_COLS - 1) + 1;
 
         assertEquals(NUM_PRIVATE_SPACE_APPS + MAIN_USER_APP_COUNT
                         + CONTAINER_HEADER_ELEMENT_COUNT + VIEW_AT_END_OF_APP_LIST,
@@ -335,7 +335,7 @@ public class PrivateSpaceHeaderViewTest {
                 && info.user.equals(MAIN_HANDLE));
 
         int rows = (int) (ALL_APPS_HEIGHT - PS_HEADER_HEIGHT - HEADER_PROTECTION_HEIGHT) - 1;
-        int position = rows * NUM_APP_COLS - (NUM_APP_COLS-1) + 1;
+        int position = rows * NUM_APP_COLS - (NUM_APP_COLS - 1) + 1;
 
         assertEquals(NUM_PRIVATE_SPACE_APPS + MAIN_USER_APP_COUNT
                         + CONTAINER_HEADER_ELEMENT_COUNT + VIEW_AT_END_OF_APP_LIST,
@@ -370,7 +370,7 @@ public class PrivateSpaceHeaderViewTest {
                 && info.user.equals(MAIN_HANDLE));
 
         int rows = (int) (ALL_APPS_HEIGHT - BIGGER_PS_HEADER_HEIGHT - HEADER_PROTECTION_HEIGHT);
-        int position = rows * NUM_APP_COLS - (NUM_APP_COLS-1) + 1;
+        int position = rows * NUM_APP_COLS - (NUM_APP_COLS - 1) + 1;
 
         assertEquals(NUM_PRIVATE_SPACE_APPS + MAIN_USER_APP_COUNT
                         + CONTAINER_HEADER_ELEMENT_COUNT + VIEW_AT_END_OF_APP_LIST,

@@ -76,7 +76,7 @@ class GetThumbnailUseCaseTest {
         assertThat(systemUnderTest.run(TASK_ID)).isEqualTo(thumbnailData.thumbnail)
     }
 
-    companion object {
+    private companion object {
         const val TASK_ID = 0
         const val THUMBNAIL_WIDTH = 100
         const val THUMBNAIL_HEIGHT = 200

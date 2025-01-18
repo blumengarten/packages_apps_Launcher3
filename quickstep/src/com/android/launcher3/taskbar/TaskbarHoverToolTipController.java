@@ -108,7 +108,7 @@ public class TaskbarHoverToolTipController implements View.OnHoverListener {
             revealHoverToolTip();
             mActivity.setAutohideSuspendFlag(FLAG_AUTOHIDE_SUSPEND_HOVERING_ICONS, true);
         }
-        return true;
+        return false;
     }
 
     private void revealHoverToolTip() {

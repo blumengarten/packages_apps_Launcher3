@@ -18,6 +18,7 @@ package com.android.launcher3.taskbar;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ShortcutInfo;
+import android.os.UserHandle;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 
@@ -60,9 +61,9 @@ public abstract class BaseTaskbarContext extends ContextThemeWrapper implements 
     }
 
     @Override
-    public void showAppBubble(Intent intent) {
+    public void showAppBubble(Intent intent, UserHandle user) {
         if (intent == null || intent.getPackage() == null) return;
-        SystemUiProxy.INSTANCE.get(this).showAppBubble(intent);
+        SystemUiProxy.INSTANCE.get(this).showAppBubble(intent, user);
     }
 
     /** Callback invoked when a drag is initiated within this context. */

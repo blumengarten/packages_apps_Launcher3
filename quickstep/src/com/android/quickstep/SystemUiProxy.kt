@@ -19,11 +19,9 @@ import android.app.ActivityManager
 import android.app.ActivityManager.RunningTaskInfo
 import android.app.ActivityOptions
 import android.app.PendingIntent
-import android.app.PictureInPictureParams
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.content.pm.ShortcutInfo
 import android.graphics.Point
 import android.graphics.Rect
@@ -499,20 +497,12 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
 
     /** @return Destination bounds of auto-pip animation, `null` if the animation is not ready. */
     fun startSwipePipToHome(
-        componentName: ComponentName?,
-        activityInfo: ActivityInfo?,
-        pictureInPictureParams: PictureInPictureParams?,
+        taskInfo: RunningTaskInfo,
         launcherRotation: Int,
         hotseatKeepClearArea: Rect?,
     ): Rect? {
         executeWithErrorLog({ "Failed call startSwipePipToHome" }) {
-            return pip?.startSwipePipToHome(
-                componentName,
-                activityInfo,
-                pictureInPictureParams,
-                launcherRotation,
-                hotseatKeepClearArea,
-            )
+            return pip?.startSwipePipToHome(taskInfo, launcherRotation, hotseatKeepClearArea)
         }
         return null
     }
@@ -673,8 +663,10 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
      *
      * @param intent the intent used to create the bubble.
      */
-    fun showAppBubble(intent: Intent?) =
-        executeWithErrorLog({ "Failed call showAppBubble" }) { bubbles?.showAppBubble(intent) }
+    fun showAppBubble(intent: Intent?, user: UserHandle) =
+        executeWithErrorLog({ "Failed call showAppBubble" }) {
+            bubbles?.showAppBubble(intent, user)
+        }
 
     /** Tells SysUI to show the expanded view. */
     fun showExpandedView() =

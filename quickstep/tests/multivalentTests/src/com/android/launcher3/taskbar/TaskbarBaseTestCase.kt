@@ -99,7 +99,7 @@ abstract class TaskbarBaseTestCase {
                 keyboardQuickSwitchController,
                 taskbarPinningController,
                 optionalBubbleControllers,
-                taskbarDesktopModeController
+                taskbarDesktopModeController,
             )
     }
 }

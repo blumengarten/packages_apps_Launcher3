@@ -56,9 +56,9 @@ class TaskbarPinningControllerTest : TaskbarBaseTestCase() {
     private val taskbarSharedState = mock<TaskbarSharedState>()
     private var isInDesktopMode = false
     private val launcherPrefs =
-        mock<LauncherPrefs> {
-            on { get(TASKBAR_PINNING) } doReturn false
-            on { get(TASKBAR_PINNING_IN_DESKTOP_MODE) } doReturn false
+        mock<LauncherPrefs>().apply {
+            doReturn(false).whenever(this).get(TASKBAR_PINNING)
+            doReturn(false).whenever(this).get(TASKBAR_PINNING_IN_DESKTOP_MODE)
         }
     private val statsLogger = mock<StatsLogManager.StatsLogger>()
     private val statsLogManager = mock<StatsLogManager> { on { logger() } doReturn statsLogger }

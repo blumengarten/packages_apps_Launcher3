@@ -24,8 +24,7 @@ import android.content.res.Resources
 import android.os.Process
 import android.os.UserHandle
 import android.platform.test.annotations.EnableFlags
-import android.platform.test.rule.TestWatcher
-import android.testing.AndroidTestingRunner
+import androidx.test.annotation.UiThreadTest
 import com.android.internal.R
 import com.android.launcher3.BubbleTextView.RunningAppState
 import com.android.launcher3.Flags
@@ -35,6 +34,7 @@ import com.android.launcher3.model.data.AppInfo
 import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.model.data.TaskItemInfo
 import com.android.launcher3.model.data.WorkspaceItemInfo
+import com.android.launcher3.util.LauncherMultivalentJUnit
 import com.android.quickstep.RecentsModel
 import com.android.quickstep.RecentsModel.RecentTasksChangedListener
 import com.android.quickstep.TaskIconCache
@@ -46,6 +46,7 @@ import java.util.function.Consumer
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
@@ -58,7 +59,8 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
-@RunWith(AndroidTestingRunner::class)
+@UiThreadTest
+@RunWith(LauncherMultivalentJUnit::class)
 @EnableFlags(Flags.FLAG_ENABLE_MULTI_INSTANCE_MENU_TASKBAR)
 class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
 

@@ -1826,9 +1826,7 @@ public abstract class AbsSwipeUpHandler<
 
         final Rect hotseatKeepClearArea = getKeepClearAreaForHotseat();
         final Rect destinationBounds = SystemUiProxy.INSTANCE.get(mContext)
-                .startSwipePipToHome(taskInfo.topActivity,
-                        taskInfo.topActivityInfo,
-                        runningTaskTarget.taskInfo.pictureInPictureParams,
+                .startSwipePipToHome(taskInfo,
                         homeRotation,
                         hotseatKeepClearArea);
         if (destinationBounds == null) {

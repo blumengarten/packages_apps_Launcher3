@@ -36,6 +36,7 @@ import com.android.launcher3.pm.UserCache;
 import com.android.launcher3.shortcuts.ShortcutKey;
 import com.android.launcher3.util.ApiWrapper;
 import com.android.launcher3.util.ContentWriter;
+import com.android.wm.shell.shared.bubbles.BubbleAnythingFlagHelper;
 
 import java.util.Arrays;
 
@@ -178,7 +179,7 @@ public class WorkspaceItemInfo extends ItemInfoWithIcon {
 
     public void updateFromDeepShortcutInfo(@NonNull final ShortcutInfo shortcutInfo,
             @NonNull final Context context) {
-        if (com.android.wm.shell.Flags.enableBubbleAnything()) {
+        if (BubbleAnythingFlagHelper.enableCreateAnyBubble()) {
             mShortcutInfo = shortcutInfo;
         }
         // {@link ShortcutInfo#getActivity} can change during an update. Recreate the intent
