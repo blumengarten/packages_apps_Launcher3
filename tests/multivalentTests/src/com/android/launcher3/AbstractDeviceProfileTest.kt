@@ -25,16 +25,18 @@ import android.platform.test.rule.DeviceProduct
 import android.platform.test.rule.IgnoreLimit
 import android.platform.test.rule.LimitDevicesRule
 import android.util.DisplayMetrics
+import android.view.Display.DEFAULT_DISPLAY
 import android.view.Surface
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.launcher3.dagger.LauncherAppComponent
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.testing.shared.ResourceUtils
-import com.android.launcher3.util.AllModulesMinusWMProxy
+import com.android.launcher3.util.AllModulesMinusWMProxyAndPerDisplayObjectProvider
 import com.android.launcher3.util.DisplayController
 import com.android.launcher3.util.MainThreadInitializedObject.SandboxContext
 import com.android.launcher3.util.NavigationMode
+import com.android.launcher3.util.PerDisplayObjectProvider
 import com.android.launcher3.util.WindowBounds
 import com.android.launcher3.util.rule.TestStabilityRule
 import com.android.launcher3.util.rule.setFlags
@@ -68,6 +70,7 @@ abstract class AbstractDeviceProfileTest {
     protected val testContext: Context = InstrumentationRegistry.getInstrumentation().context
     protected lateinit var context: SandboxContext
     protected open val runningContext: Context = getApplicationContext()
+    private val displayControllerProvider: PerDisplayObjectProvider = mock()
     private val displayController: DisplayController = mock()
     private val windowManagerProxy: WindowManagerProxy = mock()
     private val launcherPrefs: LauncherPrefs = mock()
@@ -312,7 +315,7 @@ abstract class AbstractDeviceProfileTest {
             DaggerAbsDPTestSandboxComponent.builder()
                 .bindWMProxy(windowManagerProxy)
                 .bindLauncherPrefs(launcherPrefs)
-                .bindDisplayController(displayController)
+                .bindDisplayControllerProvider(displayControllerProvider)
         )
 
         whenever(launcherPrefs.get(LauncherPrefs.TASKBAR_PINNING)).thenReturn(false)
@@ -323,6 +326,8 @@ abstract class AbstractDeviceProfileTest {
         whenever(launcherPrefs.get(LauncherPrefs.WORKSPACE_SIZE)).thenReturn("")
         whenever(launcherPrefs.get(LauncherPrefs.DB_FILE)).thenReturn("")
         whenever(launcherPrefs.get(LauncherPrefs.ENABLE_TWOLINE_ALLAPPS_TOGGLE)).thenReturn(true)
+        whenever(displayControllerProvider.getDisplayController(DEFAULT_DISPLAY))
+            .thenReturn(displayController)
         val info = spy(DisplayController.Info(context, windowManagerProxy, perDisplayBoundsCache))
         whenever(displayController.info).thenReturn(info)
         whenever(info.isTransientTaskbar).thenReturn(isGestureMode)
@@ -365,7 +370,7 @@ abstract class AbstractDeviceProfileTest {
 }
 
 @LauncherAppSingleton
-@Component(modules = [AllModulesMinusWMProxy::class])
+@Component(modules = [AllModulesMinusWMProxyAndPerDisplayObjectProvider::class])
 interface AbsDPTestSandboxComponent : LauncherAppComponent {
 
     @Component.Builder
@@ -374,7 +379,7 @@ interface AbsDPTestSandboxComponent : LauncherAppComponent {
 
         @BindsInstance fun bindLauncherPrefs(prefs: LauncherPrefs): Builder
 
-        @BindsInstance fun bindDisplayController(displayController: DisplayController): Builder
+        @BindsInstance fun bindDisplayControllerProvider(dc: PerDisplayObjectProvider): Builder
 
         override fun build(): AbsDPTestSandboxComponent
     }

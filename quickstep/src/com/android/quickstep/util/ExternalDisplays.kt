@@ -16,6 +16,8 @@
 
 package com.android.quickstep.util
 
+import android.content.Context
+import android.util.Log
 import android.view.Display.DEFAULT_DISPLAY
 import android.view.Display.INVALID_DISPLAY
 import com.android.systemui.shared.recents.model.Task
@@ -24,17 +26,30 @@ import com.android.systemui.shared.recents.model.Task
 val Int.isExternalDisplay
     get() = this != DEFAULT_DISPLAY
 
-/** Returns displayId of this [Task], default to [DEFAULT_DISPLAY] */
-val Task?.displayId
+val Int?.validDisplayId: Int
     get() =
-        this?.key?.displayId.let { displayId ->
-            when (displayId) {
-                null -> DEFAULT_DISPLAY
-                INVALID_DISPLAY -> DEFAULT_DISPLAY
-                else -> displayId
-            }
+        when (this) {
+            null -> DEFAULT_DISPLAY
+            INVALID_DISPLAY -> DEFAULT_DISPLAY
+            else -> this
         }
+
+/** Returns displayId of this [Task], default to [DEFAULT_DISPLAY] */
+val Task?.validDisplayId
+    get() = this?.key?.displayId?.validDisplayId ?: DEFAULT_DISPLAY
 
 /** Returns if this task belongs tto [DEFAULT_DISPLAY] */
 val Task?.isExternalDisplay
-    get() = displayId.isExternalDisplay
+    get(): Boolean = this.validDisplayId.isExternalDisplay ?: false
+
+val Context?.validDisplayId
+    get() =
+        try {
+            this?.display?.displayId?.validDisplayId ?: DEFAULT_DISPLAY
+        } catch (ignored: UnsupportedOperationException) {
+            Log.w(
+                "ExternalDisplays",
+                "Tried to get a Display from a Context not associated with one",
+            )
+            DEFAULT_DISPLAY
+        }

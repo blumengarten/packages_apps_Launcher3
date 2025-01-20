@@ -178,6 +178,8 @@ public abstract class BaseActivity extends Activity implements ActivityContext,
 
     private ActionMode mCurrentActionMode;
 
+    private DisplayController mDisplayController;
+
     @Override
     public ViewCache getViewCache() {
         return mViewCache;
@@ -224,7 +226,8 @@ public abstract class BaseActivity extends Activity implements ActivityContext,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         registerBackDispatcher();
-        DisplayController.INSTANCE.get(this).addChangeListener(this);
+        mDisplayController = DisplayController.get(this);
+        mDisplayController.addChangeListener(this);
     }
 
     @Override
@@ -272,7 +275,9 @@ public abstract class BaseActivity extends Activity implements ActivityContext,
     protected void onDestroy() {
         super.onDestroy();
         mEventCallbacks[EVENT_DESTROYED].executeAllAndClear();
-        DisplayController.INSTANCE.get(this).removeChangeListener(this);
+        if (mDisplayController != null) {
+            mDisplayController.removeChangeListener(this);
+        }
     }
 
     @Override

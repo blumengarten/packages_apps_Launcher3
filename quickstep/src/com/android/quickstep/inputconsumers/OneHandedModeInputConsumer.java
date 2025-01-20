@@ -69,7 +69,7 @@ public class OneHandedModeInputConsumer extends DelegateInputConsumer {
         mDragDistThreshold = context.getResources().getDimensionPixelSize(
                 R.dimen.gestures_onehanded_drag_threshold);
         mSquaredSlop = mDeviceState.getSquaredTouchSlop();
-        mDisplaySize = DisplayController.INSTANCE.get(mContext).getInfo().currentSize;
+        mDisplaySize = DisplayController.get(mContext).getInfo().currentSize;
         mNavBarSize = ResourceUtils.getNavbarSize(NAVBAR_BOTTOM_GESTURE_SIZE,
                 mContext.getResources());
     }

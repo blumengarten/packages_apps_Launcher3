@@ -290,7 +290,7 @@ public abstract class BaseContainerInterface<STATE_TYPE extends BaseState<STATE_
             insets = dp.getInsets();
         } else {
             Rect portraitInsets = dp.getInsets();
-            DisplayController displayController = DisplayController.INSTANCE.get(context);
+            DisplayController displayController = DisplayController.get(context);
             @Nullable List<WindowBounds> windowBounds =
                     displayController.getInfo().getCurrentBounds();
             Rect deviceRotationInsets = windowBounds != null

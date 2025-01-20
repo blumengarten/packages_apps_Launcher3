@@ -23,6 +23,7 @@ import dagger.Module;
         ApiWrapperModule.class,
         PluginManagerWrapperModule.class,
         StaticObjectModule.class,
+        PerDisplayObjectProviderModule.class,
         AppModule.class
 })
 public class LauncherAppModule {

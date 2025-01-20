@@ -230,7 +230,7 @@ public final class TaskViewUtils {
 
                 // RecentsView never updates the display rotation until swipe-up so the value may
                 // be stale. Use the display value instead.
-                int displayRotation = DisplayController.INSTANCE.get(context).getInfo().rotation;
+                int displayRotation = DisplayController.get(context).getInfo().rotation;
                 tvsLocal.getOrientationState().update(displayRotation, displayRotation);
 
                 tvsLocal.fullScreenProgress.value = 0;

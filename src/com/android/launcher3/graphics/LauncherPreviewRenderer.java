@@ -284,7 +284,7 @@ public class LauncherPreviewRenderer extends ContextWrapper
      * Returns the insets of the screen closest to the display given by the context
      */
     private Rect getInsets(Context context) {
-        DisplayController.Info info = DisplayController.INSTANCE.get(context).getInfo();
+        DisplayController.Info info = DisplayController.get(context).getInfo();
         float maxDiff = Float.MAX_VALUE;
         Display display = context.getDisplay();
         Rect insets = new Rect();

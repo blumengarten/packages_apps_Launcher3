@@ -292,7 +292,7 @@ public class SettingsActivity extends FragmentActivity
          * will remove that preference from the list.
          */
         protected boolean initPreference(Preference preference) {
-            DisplayController.Info info = DisplayController.INSTANCE.get(getContext()).getInfo();
+            DisplayController.Info info = DisplayController.get(getContext()).getInfo();
             switch (preference.getKey()) {
                 case NOTIFICATION_DOTS_PREFERENCE_KEY:
                     return BuildConfig.NOTIFICATION_DOTS_ENABLED;

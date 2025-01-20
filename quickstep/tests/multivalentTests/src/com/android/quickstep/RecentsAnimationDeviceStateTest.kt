@@ -60,7 +60,7 @@ class RecentsAnimationDeviceStateTest {
             RecentsAnimationDeviceState(
                 context,
                 exclusionManager,
-                component.displayController,
+                component.perDisplayObjectProvider,
                 component.contextualSearchStateManager,
                 component.rotationTouchHelper,
                 component.settingsCache,

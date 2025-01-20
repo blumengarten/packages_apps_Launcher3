@@ -44,7 +44,7 @@ public class FallbackNavBarTouchController implements TouchController,
                 DisplayController.getNavigationMode(mContainer.asContext());
         if (sysUINavigationMode == NavigationMode.NO_BUTTON) {
             NavBarPosition navBarPosition = new NavBarPosition(sysUINavigationMode,
-                    DisplayController.INSTANCE.get(mContainer.asContext()).getInfo());
+                    DisplayController.get(mContainer.asContext()).getInfo());
             mTriggerSwipeUpTracker = new TriggerSwipeUpTouchTracker(mContainer.asContext(),
                     true /* disableHorizontalSwipe */, navBarPosition, this);
         } else {

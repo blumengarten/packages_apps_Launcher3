@@ -623,7 +623,7 @@ public class BubbleBarView extends FrameLayout {
      * Get bubble bar top coordinate on screen when bar is resting
      */
     public int getRestingTopPositionOnScreen() {
-        int displayHeight = DisplayController.INSTANCE.get(getContext()).getInfo().currentSize.y;
+        int displayHeight = DisplayController.get(getContext()).getInfo().currentSize.y;
         int bubbleBarHeight = getBubbleBarBounds().height();
         return displayHeight - bubbleBarHeight + (int) mController.getBubbleBarTranslationY();
     }
