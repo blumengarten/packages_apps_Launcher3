@@ -93,6 +93,7 @@ import com.android.wm.shell.shared.bubbles.BubbleBarLocation
 import com.android.wm.shell.shared.bubbles.BubbleBarLocation.UpdateSource
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus
 import com.android.wm.shell.shared.desktopmode.DesktopModeTransitionSource
+import com.android.wm.shell.shared.desktopmode.DesktopTaskToFrontReason
 import com.android.wm.shell.shared.split.SplitBounds
 import com.android.wm.shell.shared.split.SplitScreenConstants.PersistentSnapPosition
 import com.android.wm.shell.splitscreen.ISplitScreen
@@ -1077,9 +1078,13 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
         }
 
     /** If task with the given id is on the desktop, bring it to front */
-    fun showDesktopApp(taskId: Int, transition: RemoteTransition?) =
+    fun showDesktopApp(
+        taskId: Int,
+        transition: RemoteTransition?,
+        toFrontReason: DesktopTaskToFrontReason,
+    ) =
         executeWithErrorLog({ "Failed call showDesktopApp" }) {
-            desktopMode?.showDesktopApp(taskId, transition)
+            desktopMode?.showDesktopApp(taskId, transition, toFrontReason)
         }
 
     /** Call shell to get number of visible freeform tasks */

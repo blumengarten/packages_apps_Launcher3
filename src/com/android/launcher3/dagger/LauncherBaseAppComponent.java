@@ -33,6 +33,7 @@ import com.android.launcher3.util.PluginManagerWrapper;
 import com.android.launcher3.util.ScreenOnTracker;
 import com.android.launcher3.util.SettingsCache;
 import com.android.launcher3.util.VibratorWrapper;
+import com.android.launcher3.util.WallpaperColorHints;
 import com.android.launcher3.util.window.RefreshRateTracker;
 import com.android.launcher3.util.window.WindowManagerProxy;
 import com.android.launcher3.widget.custom.CustomWidgetManager;
@@ -66,6 +67,7 @@ public interface LauncherBaseAppComponent {
     LauncherPrefs getLauncherPrefs();
     ThemeManager getThemeManager();
     DisplayController getDisplayController();
+    WallpaperColorHints getWallpaperColorHints();
 
     /** Builder for LauncherBaseAppComponent. */
     interface Builder {

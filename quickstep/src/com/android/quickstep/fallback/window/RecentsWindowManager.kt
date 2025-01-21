@@ -88,8 +88,10 @@ import java.util.function.Predicate
  * To add new protologs, see [RecentsWindowProtoLogProxy]. To enable logging to logcat, see
  * [QuickstepProtoLogGroup.Constants.DEBUG_RECENTS_WINDOW]
  */
-class RecentsWindowManager(context: Context) :
-    RecentsWindowContext(context), RecentsViewContainer, StatefulContainer<RecentsState> {
+class RecentsWindowManager(context: Context, wallpaperColorHints: Int) :
+    RecentsWindowContext(context, wallpaperColorHints),
+    RecentsViewContainer,
+    StatefulContainer<RecentsState> {
 
     companion object {
         private const val HOME_APPEAR_DURATION: Long = 250

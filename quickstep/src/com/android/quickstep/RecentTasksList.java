@@ -21,6 +21,7 @@ import static android.content.Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 import static com.android.quickstep.util.SplitScreenUtils.convertShellSplitBoundsToLauncher;
 import static com.android.wm.shell.shared.GroupedTaskInfo.TYPE_FREEFORM;
+import static com.android.wm.shell.shared.GroupedTaskInfo.TYPE_SPLIT;
 
 import android.app.ActivityManager.RunningTaskInfo;
 import android.app.KeyguardManager;
@@ -39,6 +40,7 @@ import com.android.launcher3.util.SplitConfigurationOptions;
 import com.android.quickstep.util.DesktopTask;
 import com.android.quickstep.util.GroupTask;
 import com.android.systemui.shared.recents.model.Task;
+import com.android.wm.shell.Flags;
 import com.android.wm.shell.recents.IRecentTasksListener;
 import com.android.wm.shell.shared.GroupedTaskInfo;
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
@@ -116,7 +118,8 @@ public class RecentTasksList {
             @Override
             public void onTaskMovedToFront(GroupedTaskInfo taskToFront) {
                 mMainThreadExecutor.execute(() -> {
-                    topTaskTracker.handleTaskMovedToFront(taskToFront.getTaskInfo1());
+                    topTaskTracker.handleTaskMovedToFront(
+                            taskToFront.getBaseGroupedTask().getTaskInfo1());
                 });
             }
 
@@ -340,50 +343,74 @@ public class RecentTasksList {
 
         int numVisibleTasks = 0;
         for (GroupedTaskInfo rawTask : rawTasks) {
-            if (rawTask.getType() == TYPE_FREEFORM) {
+            if (rawTask.isBaseType(TYPE_FREEFORM)) {
                 // TYPE_FREEFORM tasks is only created when desktop mode can be entered,
                 // leftover TYPE_FREEFORM tasks created when flag was on should be ignored.
                 if (DesktopModeStatus.canEnterDesktopMode(mContext)) {
-                    GroupTask desktopTask = createDesktopTask(rawTask);
+                    GroupTask desktopTask = createDesktopTask(rawTask.getBaseGroupedTask());
                     if (desktopTask != null) {
                         allTasks.add(desktopTask);
                     }
                 }
                 continue;
             }
-            TaskInfo taskInfo1 = rawTask.getTaskInfo1();
-            TaskInfo taskInfo2 = rawTask.getTaskInfo2();
-            Task.TaskKey task1Key = new Task.TaskKey(taskInfo1);
-            Task task1 = loadKeysOnly
-                    ? new Task(task1Key)
-                    : Task.from(task1Key, taskInfo1,
-                            tmpLockedUsers.get(task1Key.userId) /* isLocked */);
-            Task task2 = null;
-            if (taskInfo2 != null) {
-                // Is split task
-                Task.TaskKey task2Key = new Task.TaskKey(taskInfo2);
-                task2 = loadKeysOnly
-                        ? new Task(task2Key)
-                        : Task.from(task2Key, taskInfo2,
-                                tmpLockedUsers.get(task2Key.userId) /* isLocked */);
+
+            if (Flags.enableShellTopTaskTracking()) {
+                final TaskInfo taskInfo1 = rawTask.getBaseGroupedTask().getTaskInfo1();
+                final Task.TaskKey task1Key = new Task.TaskKey(taskInfo1);
+                final Task task1 = Task.from(task1Key, taskInfo1,
+                        tmpLockedUsers.get(task1Key.userId) /* isLocked */);
+                final Task task2;
+                final SplitConfigurationOptions.SplitBounds launcherSplitBounds;
+
+                if (rawTask.isBaseType(TYPE_SPLIT)) {
+                    final TaskInfo taskInfo2 = rawTask.getBaseGroupedTask().getTaskInfo2();
+                    final Task.TaskKey task2Key = new Task.TaskKey(taskInfo2);
+                    task2 = Task.from(task2Key, taskInfo2,
+                            tmpLockedUsers.get(task2Key.userId) /* isLocked */);
+                    launcherSplitBounds =
+                            convertShellSplitBoundsToLauncher(
+                                    rawTask.getBaseGroupedTask().getSplitBounds());
+                } else {
+                    task2 = null;
+                    launcherSplitBounds = null;
+                }
+                allTasks.add(new GroupTask(task1, task2, launcherSplitBounds));
             } else {
-                // Is fullscreen task
-                if (numVisibleTasks > 0) {
-                    boolean isExcluded = (taskInfo1.baseIntent.getFlags()
-                            & FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS) != 0;
-                    if (taskInfo1.isTopActivityTransparent && isExcluded) {
-                        // If there are already visible tasks, then ignore the excluded tasks and
-                        // don't add them to the returned list
-                        continue;
+                TaskInfo taskInfo1 = rawTask.getTaskInfo1();
+                TaskInfo taskInfo2 = rawTask.getTaskInfo2();
+                Task.TaskKey task1Key = new Task.TaskKey(taskInfo1);
+                Task task1 = loadKeysOnly
+                        ? new Task(task1Key)
+                        : Task.from(task1Key, taskInfo1,
+                                tmpLockedUsers.get(task1Key.userId) /* isLocked */);
+                Task task2 = null;
+                if (taskInfo2 != null) {
+                    // Is split task
+                    Task.TaskKey task2Key = new Task.TaskKey(taskInfo2);
+                    task2 = loadKeysOnly
+                            ? new Task(task2Key)
+                            : Task.from(task2Key, taskInfo2,
+                                    tmpLockedUsers.get(task2Key.userId) /* isLocked */);
+                } else {
+                    // Is fullscreen task
+                    if (numVisibleTasks > 0) {
+                        boolean isExcluded = (taskInfo1.baseIntent.getFlags()
+                                & FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS) != 0;
+                        if (taskInfo1.isTopActivityTransparent && isExcluded) {
+                            // If there are already visible tasks, then ignore the excluded tasks
+                            // and don't add them to the returned list
+                            continue;
+                        }
                     }
                 }
+                if (taskInfo1.isVisible) {
+                    numVisibleTasks++;
+                }
+                final SplitConfigurationOptions.SplitBounds launcherSplitBounds =
+                        convertShellSplitBoundsToLauncher(rawTask.getSplitBounds());
+                allTasks.add(new GroupTask(task1, task2, launcherSplitBounds));
             }
-            if (taskInfo1.isVisible) {
-                numVisibleTasks++;
-            }
-            final SplitConfigurationOptions.SplitBounds launcherSplitBounds =
-                    convertShellSplitBoundsToLauncher(rawTask.getSplitBounds());
-            allTasks.add(new GroupTask(task1, task2, launcherSplitBounds));
         }
 
         return allTasks;
@@ -409,14 +436,6 @@ public class RecentTasksList {
         return new DesktopTask(tasks);
     }
 
-    private ArrayList<GroupTask> copyOf(ArrayList<GroupTask> tasks) {
-        ArrayList<GroupTask> newTasks = new ArrayList<>();
-        for (int i = 0; i < tasks.size(); i++) {
-            newTasks.add(tasks.get(i).copy());
-        }
-        return newTasks;
-    }
-
     public void dump(String prefix, PrintWriter writer) {
         writer.println(prefix + "RecentTasksList:");
         writer.println(prefix + "  mChangeId=" + mChangeId);
@@ -439,14 +458,7 @@ public class RecentTasksList {
         }
         writer.println(prefix + "  rawTasks=[");
         for (GroupedTaskInfo task : rawTasks) {
-            TaskInfo taskInfo1 = task.getTaskInfo1();
-            TaskInfo taskInfo2 = task.getTaskInfo2();
-            ComponentName cn1 = taskInfo1.topActivity;
-            ComponentName cn2 = taskInfo2 != null ? taskInfo2.topActivity : null;
-            writer.println(prefix + "    t1: (id=" + taskInfo1.taskId
-                    + "; package=" + (cn1 != null ? cn1.getPackageName() + ")" : "no package)")
-                    + " t2: (id=" + (taskInfo2 != null ? taskInfo2.taskId : "-1")
-                    + "; package=" + (cn2 != null ? cn2.getPackageName() + ")" : "no package)"));
+            writer.println(prefix + task);
         }
         writer.println(prefix + "  ]");
     }

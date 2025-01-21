@@ -22,6 +22,7 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Rect
 import android.os.IBinder
+import android.view.Choreographer
 import android.view.SurfaceControl.Transaction
 import android.view.WindowManager.TRANSIT_OPEN
 import android.view.WindowManager.TRANSIT_TO_BACK
@@ -32,6 +33,8 @@ import android.window.TransitionInfo
 import android.window.TransitionInfo.Change
 import androidx.core.animation.addListener
 import com.android.app.animation.Interpolators
+import com.android.internal.jank.Cuj
+import com.android.internal.jank.InteractionJankMonitor
 import com.android.internal.policy.ScreenDecorationsUtils
 import com.android.quickstep.RemoteRunnable
 import com.android.wm.shell.shared.animation.MinimizeAnimator
@@ -49,7 +52,10 @@ class DesktopAppLaunchTransition(
     private val context: Context,
     private val mainExecutor: Executor,
     private val launchType: AppLaunchType,
+    @Cuj.CujType private val cujType: Int,
 ) : RemoteTransitionStub() {
+
+    private val interactionJankMonitor = InteractionJankMonitor.getInstance()
 
     enum class AppLaunchType(
         val boundsAnimationParams: WindowAnimator.BoundsAnimationParams,
@@ -127,7 +133,10 @@ class DesktopAppLaunchTransition(
                 duration = launchType.alphaDurationMs
                 interpolator = Interpolators.LINEAR
                 addUpdateListener { animation ->
-                    transaction.setAlpha(change.leash, animation.animatedValue as Float).apply()
+                    transaction
+                        .setAlpha(change.leash, animation.animatedValue as Float)
+                        .setFrameTimeline(Choreographer.getInstance().vsyncId)
+                        .apply()
                 }
             }
         val clipRect = Rect(change.endAbsBounds).apply { offsetTo(0, 0) }
@@ -137,8 +146,14 @@ class DesktopAppLaunchTransition(
             ScreenDecorationsUtils.getWindowCornerRadius(context),
         )
         return AnimatorSet().apply {
+            interactionJankMonitor.begin(change.leash, context, context.mainThreadHandler, cujType)
             playTogether(boundsAnimator, alphaAnimator)
-            addListener(onEnd = { animation -> onAnimFinish(animation) })
+            addListener(
+                onEnd = { animation ->
+                    onAnimFinish(animation)
+                    interactionJankMonitor.end(cujType)
+                }
+            )
         }
     }
 

@@ -32,11 +32,16 @@ import com.android.quickstep.fallback.RecentsDragLayer
 
 /**
  * Window context for the Overview overlays.
+ *
  * <p>
  * Overlays have their own window and need a window context.
  */
-open class RecentsWindowContext(windowContext: Context) :
-    ContextThemeWrapper(windowContext, Themes.getActivityThemeRes(windowContext)), ActivityContext {
+open class RecentsWindowContext(windowContext: Context, wallpaperColorHints: Int) :
+    ContextThemeWrapper(
+        windowContext,
+        Themes.getActivityThemeRes(windowContext, wallpaperColorHints),
+    ),
+    ActivityContext {
 
     private var deviceProfile: DeviceProfile? = null
     private var dragLayer: RecentsDragLayer<RecentsWindowManager> = RecentsDragLayer(this, null)
@@ -48,7 +53,9 @@ open class RecentsWindowContext(windowContext: Context) :
 
     protected var windowLayoutParams: WindowManager.LayoutParams? =
         createDefaultWindowLayoutParams(
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY, windowTitle)
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            windowTitle,
+        )
 
     override fun getDragLayer(): BaseDragLayer<RecentsWindowManager> {
         return dragLayer
@@ -56,8 +63,7 @@ open class RecentsWindowContext(windowContext: Context) :
 
     override fun getDeviceProfile(): DeviceProfile {
         if (deviceProfile == null) {
-            deviceProfile = InvariantDeviceProfile.INSTANCE[this].getDeviceProfile(this)
-                .copy(this)
+            deviceProfile = InvariantDeviceProfile.INSTANCE[this].getDeviceProfile(this).copy(this)
         }
         return deviceProfile!!
     }

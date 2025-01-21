@@ -28,7 +28,6 @@ import static com.android.quickstep.util.ActiveGestureErrorDetector.GestureEvent
 import static com.android.quickstep.util.ActiveGestureErrorDetector.GestureEvent.SET_END_TARGET_HOME;
 import static com.android.quickstep.util.ActiveGestureErrorDetector.GestureEvent.SET_END_TARGET_NEW_TASK;
 
-import android.app.TaskInfo;
 import android.content.Intent;
 import android.os.SystemClock;
 import android.view.MotionEvent;
@@ -47,7 +46,6 @@ import com.android.quickstep.util.ActiveGestureLog;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.quickstep.views.RecentsViewContainer;
 import com.android.systemui.shared.recents.model.ThumbnailData;
-import com.android.wm.shell.shared.GroupedTaskInfo;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -334,13 +332,7 @@ public class GestureState implements RecentsAnimationCallbacks.RecentsAnimationL
             return new int[]{INVALID_TASK_ID, INVALID_TASK_ID};
         } else {
             if (com.android.wm.shell.Flags.enableShellTopTaskTracking()) {
-                if (mRunningTask.getVisibleTasks().isEmpty()) {
-                    return new int[0];
-                }
-                GroupedTaskInfo topRunningTask = mRunningTask.getVisibleTasks().getFirst();
-                List<TaskInfo> groupedTasks = topRunningTask.getTaskInfoList();
-                return groupedTasks.stream().mapToInt(
-                        groupedTask -> groupedTask.taskId).toArray();
+                return mRunningTask.topGroupedTaskIds();
             } else {
                 int cachedTasksSize = mRunningTask.mAllCachedTasks.size();
                 int count = Math.min(cachedTasksSize, getMultipleTasks ? 2 : 1);

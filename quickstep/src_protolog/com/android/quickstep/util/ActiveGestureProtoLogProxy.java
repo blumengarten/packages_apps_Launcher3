@@ -395,11 +395,11 @@ public class ActiveGestureProtoLogProxy {
 
     public static void logOnRecentsAnimationStart(int appCount) {
         ActiveGestureLog.INSTANCE.addLog(new ActiveGestureLog.CompoundString(
-                "RecentsAnimationCallbacks.onAnimationStart (canceled): %d", appCount),
+                "RecentsAnimationCallbacks.onAnimationStart: %d", appCount),
                 /* gestureEvent= */ ON_START_RECENTS_ANIMATION);
         if (!enableActiveGestureProtoLog() || !isProtoLogInitialized()) return;
         ProtoLog.d(ACTIVE_GESTURE_LOG,
-                "RecentsAnimationCallbacks.onAnimationStart (canceled): %d", appCount);
+                "RecentsAnimationCallbacks.onAnimationStart: %d", appCount);
     }
 
     public static void logStartRecentsAnimationCallback(@NonNull String callback) {

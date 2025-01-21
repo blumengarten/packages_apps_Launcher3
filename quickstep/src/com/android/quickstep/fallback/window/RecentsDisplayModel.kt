@@ -25,6 +25,7 @@ import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.util.DaggerSingletonObject
 import com.android.launcher3.util.DaggerSingletonTracker
 import com.android.launcher3.util.Executors
+import com.android.launcher3.util.WallpaperColorHints
 import com.android.quickstep.DisplayModel
 import com.android.quickstep.FallbackWindowInterface
 import com.android.quickstep.dagger.QuickstepBaseAppComponent
@@ -34,8 +35,11 @@ import javax.inject.Inject
 @LauncherAppSingleton
 class RecentsDisplayModel
 @Inject
-constructor(@ApplicationContext context: Context, tracker: DaggerSingletonTracker) :
-    DisplayModel<RecentsDisplayResource>(context) {
+constructor(
+    @ApplicationContext context: Context,
+    private val wallpaperColorHints: WallpaperColorHints,
+    tracker: DaggerSingletonTracker,
+) : DisplayModel<RecentsDisplayResource>(context) {
 
     companion object {
         private const val TAG = "RecentsDisplayModel"
@@ -81,7 +85,11 @@ constructor(@ApplicationContext context: Context, tracker: DaggerSingletonTracke
 
     private fun storeRecentsDisplayResource(displayId: Int, display: Display) {
         displayResourceArray[displayId] =
-            RecentsDisplayResource(displayId, context.createDisplayContext(display))
+            RecentsDisplayResource(
+                displayId,
+                context.createDisplayContext(display),
+                wallpaperColorHints.hints,
+            )
     }
 
     fun getRecentsWindowManager(displayId: Int): RecentsWindowManager? {
@@ -92,9 +100,12 @@ constructor(@ApplicationContext context: Context, tracker: DaggerSingletonTracke
         return getDisplayResource(displayId)?.fallbackWindowInterface
     }
 
-    data class RecentsDisplayResource(var displayId: Int, var displayContext: Context) :
-        DisplayResource() {
-        val recentsWindowManager = RecentsWindowManager(displayContext)
+    data class RecentsDisplayResource(
+        var displayId: Int,
+        var displayContext: Context,
+        val wallpaperColorHints: Int,
+    ) : DisplayResource() {
+        val recentsWindowManager = RecentsWindowManager(displayContext, wallpaperColorHints)
         val fallbackWindowInterface: FallbackWindowInterface =
             FallbackWindowInterface(recentsWindowManager)
 
