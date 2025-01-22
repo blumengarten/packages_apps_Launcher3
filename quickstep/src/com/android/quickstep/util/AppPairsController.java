@@ -46,7 +46,6 @@ import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.accessibility.LauncherAccessibilityDelegate;
 import com.android.launcher3.allapps.AllAppsStore;
 import com.android.launcher3.apppairs.AppPairIcon;
-import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.icons.IconCache;
 import com.android.launcher3.logging.InstanceId;
 import com.android.launcher3.logging.StatsLogManager;
@@ -127,8 +126,7 @@ public class AppPairsController {
                 .anyMatch(att -> att != null && att.getItemInfo() != null
                         && ((att.getItemInfo().runtimeStatusFlags
                             & ItemInfoWithIcon.FLAG_NOT_PINNABLE) != 0));
-        if (!FeatureFlags.enableAppPairs()
-                || !taskView.containsMultipleTasks()
+        if (!taskView.containsMultipleTasks()
                 || hasUnpinnableApp
                 || !(taskView instanceof GroupedTaskView)) {
             return false;

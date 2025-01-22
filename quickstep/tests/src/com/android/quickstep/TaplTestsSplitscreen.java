@@ -30,7 +30,6 @@ import com.android.launcher3.tapl.Overview;
 import com.android.launcher3.tapl.Taskbar;
 import com.android.launcher3.tapl.TaskbarAppIcon;
 import com.android.quickstep.util.SplitScreenTestUtils;
-import com.android.wm.shell.Flags;
 
 import org.junit.After;
 import org.junit.Before;
@@ -95,9 +94,6 @@ public class TaplTestsSplitscreen extends AbstractQuickStepTest {
 
     @Test
     public void testSaveAppPairMenuItemOrActionExistsOnSplitPair() {
-        assumeTrue("App pairs feature is currently not enabled, no test needed",
-                Flags.enableAppPairs());
-
         Overview overview = SplitScreenTestUtils.createAndLaunchASplitPairInOverview(mLauncher);
 
         if (mLauncher.isGridOnlyOverviewEnabled() || !mLauncher.isTablet()) {
@@ -110,9 +106,6 @@ public class TaplTestsSplitscreen extends AbstractQuickStepTest {
 
     @Test
     public void testSaveAppPairMenuItemDoesNotExistOnSingleTask() throws Exception {
-        assumeTrue("App pairs feature is currently not enabled, no test needed",
-                Flags.enableAppPairs());
-
         startAppFast(CALCULATOR_APP_PACKAGE);
 
         assertFalse("Save app pair menu item is erroneously appearing on single task",

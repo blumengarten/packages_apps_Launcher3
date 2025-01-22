@@ -440,7 +440,7 @@ public class BaseOverview extends LauncherInstrumentation.VisibleContainer {
                     "Not expecting an actions bar: device is tablet and task is not centered");
             return false;
         }
-        if (task.isGrouped() && (!mLauncher.isAppPairsEnabled() || !isTablet)) {
+        if (task.isGrouped() && !isTablet) {
             testLogD(TAG, "Not expecting an actions bar: device is phone and task is split");
             // Overview actions aren't visible for split screen tasks, except for save app pair
             // button on tablets.

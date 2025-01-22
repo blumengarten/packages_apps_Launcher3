@@ -152,4 +152,7 @@
     <string name="bubble_bar_accessibility_announce_expand" msgid="1503192695527477102">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g> දිග හරින්න"</string>
     <string name="bubble_bar_accessibility_announce_collapse" msgid="928284600086798791">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g> හකුළන්න"</string>
     <string name="search_gesture_feature_title" msgid="1294044108313175306">"සෙවීමට කවයසෙවීමට කවය අදින්න"</string>
+    <string name="header_app_icon_description" msgid="2184625881433608027">"යෙදුම් නිරූපකය"</string>
+    <string name="header_default_app_title" msgid="8308052350689531566">"යෙදුම් මාතෘකාව"</string>
+    <string name="header_close_icon_description" msgid="5400033616675911319">"වැසීමේ බොත්තම"</string>
 </resources>

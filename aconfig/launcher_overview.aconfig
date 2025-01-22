@@ -79,3 +79,13 @@ flag {
     description: "Enables expressive motion and animations for dismissing a task in Overview."
     bug: "381239462"
 }
+
+flag {
+    name: "enable_separate_external_display_tasks"
+    namespace: "launcher_overview"
+    description: "Enables separating external display tasks in Overview."
+    bug: "391311008"
+    metadata {
+      purpose: PURPOSE_BUGFIX
+    }
+}

@@ -74,7 +74,6 @@ import static com.android.quickstep.views.OverviewActionsView.HIDDEN_DESKTOP;
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_NON_ZERO_ROTATION;
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_NO_RECENTS;
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_NO_TASKS;
-import static com.android.quickstep.views.OverviewActionsView.HIDDEN_SPLIT_SCREEN;
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_SPLIT_SELECT_ACTIVE;
 
 import android.animation.Animator;
@@ -1255,6 +1254,13 @@ public abstract class RecentsView<
     public void destroy() {
         Log.d(TAG, "destroy");
         if (enableRefactorTaskThumbnail()) {
+            try {
+                mTaskViewPool.killOngoingInitializations();
+                mGroupedTaskViewPool.killOngoingInitializations();
+                mDesktopTaskViewPool.killOngoingInitializations();
+            } catch (InterruptedException e) {
+                Log.e(TAG, "Ongoing initializations could not be killed", e);
+            }
             mHelper.onDestroy();
             RecentsDependencies.destroy();
         }
@@ -4371,9 +4377,6 @@ public abstract class RecentsView<
         boolean isCurrentSplit = taskView instanceof GroupedTaskView;
         GroupedTaskView groupedTaskView = isCurrentSplit ? (GroupedTaskView) taskView : null;
         // Update flags to see if entire actions bar should be hidden.
-        if (!FeatureFlags.enableAppPairs()) {
-            mActionsView.updateHiddenFlags(HIDDEN_SPLIT_SCREEN, isCurrentSplit);
-        }
         mActionsView.updateHiddenFlags(HIDDEN_SPLIT_SELECT_ACTIVE, isSplitSelectionActive());
         // Update flags to see if actions bar should show buttons for a single task or a pair of
         // tasks.

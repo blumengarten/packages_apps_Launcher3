@@ -144,15 +144,6 @@ public final class FeatureFlags {
         return ENABLE_TASKBAR_PINNING.get() || Flags.enableTaskbarPinning();
     }
 
-    // Aconfig migration complete for ENABLE_APP_PAIRS.
-    public static final BooleanFlag ENABLE_APP_PAIRS = getDebugFlag(274189428,
-            "ENABLE_APP_PAIRS", DISABLED,
-            "Enables the ability to create and save app pairs on the Home screen for easy"
-                    + " split screen launching.");
-    public static boolean enableAppPairs() {
-        return ENABLE_APP_PAIRS.get() || com.android.wm.shell.Flags.enableAppPairs();
-    }
-
     // TODO(Block 20): Clean up flags
     // Aconfig migration complete for ENABLE_HOME_TRANSITION_LISTENER.
     public static final BooleanFlag ENABLE_HOME_TRANSITION_LISTENER = getDebugFlag(306053414,

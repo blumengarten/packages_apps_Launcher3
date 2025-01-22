@@ -27,7 +27,6 @@ import com.android.launcher3.Flags.enableOverviewIconMenu
 import com.android.launcher3.Flags.enableRefactorTaskThumbnail
 import com.android.launcher3.R
 import com.android.launcher3.Utilities
-import com.android.launcher3.config.FeatureFlags
 import com.android.launcher3.util.RunnableList
 import com.android.launcher3.util.SplitConfigurationOptions
 import com.android.launcher3.util.SplitConfigurationOptions.STAGE_POSITION_BOTTOM_OR_RIGHT
@@ -338,14 +337,6 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         val localPos = floatArrayOf(position.x, position.y)
         Utilities.mapCoordInSelfToDescendant(this, this@GroupedTaskView, localPos)
         return Utilities.pointInView(this, localPos[0], localPos[1], 0f /* slop */)
-    }
-
-    override fun setOverlayEnabled(overlayEnabled: Boolean) {
-        if (FeatureFlags.enableAppPairs()) {
-            super.setOverlayEnabled(overlayEnabled)
-        } else {
-            // Intentional no-op to prevent setting smart actions overlay on thumbnails
-        }
     }
 
     companion object {

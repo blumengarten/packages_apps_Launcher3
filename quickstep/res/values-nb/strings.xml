@@ -140,7 +140,7 @@
     <string name="move_drop_target_top_or_left" msgid="2988702185049595807">"Flytt til øverst/venstre"</string>
     <string name="move_drop_target_bottom_or_right" msgid="5431393418797620162">"Flytt til nederst/høyre"</string>
     <string name="quick_switch_overflow" msgid="3679780650881041632">"{count,plural, =1{app til}other{apper til}}"</string>
-    <string name="quick_switch_desktop" msgid="8393802056024499749">"Datamaskin"</string>
+    <string name="quick_switch_desktop" msgid="8393802056024499749">"Skrivebord"</string>
     <string name="quick_switch_split_task" msgid="5598194724255333896">"<xliff:g id="APP_NAME_1">%1$s</xliff:g> og <xliff:g id="APP_NAME_2">%2$s</xliff:g>"</string>
     <string name="bubble_bar_bubble_fallback_description" msgid="7811684548953452009">"Boble"</string>
     <string name="bubble_bar_overflow_description" msgid="8617628132733151708">"Overflyt"</string>
@@ -152,4 +152,10 @@
     <string name="bubble_bar_accessibility_announce_expand" msgid="1503192695527477102">"vis <xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g>"</string>
     <string name="bubble_bar_accessibility_announce_collapse" msgid="928284600086798791">"skjul <xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g>"</string>
     <string name="search_gesture_feature_title" msgid="1294044108313175306">"Circle to Search"</string>
+    <!-- no translation found for header_app_icon_description (2184625881433608027) -->
+    <skip />
+    <!-- no translation found for header_default_app_title (8308052350689531566) -->
+    <skip />
+    <!-- no translation found for header_close_icon_description (5400033616675911319) -->
+    <skip />
 </resources>

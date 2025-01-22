@@ -252,6 +252,7 @@ class RecentsDependencies private constructor(private val appContext: Context) {
         fun initialize(view: View): RecentsDependencies = initialize(view.context)
 
         fun initialize(context: Context): RecentsDependencies {
+            Log.d(TAG, "initializing")
             synchronized(this) {
                 activeRecentsCount++
                 instance = RecentsDependencies(context.applicationContext)
@@ -286,10 +287,12 @@ class RecentsDependencies private constructor(private val appContext: Context) {
             activeRecentsCount--
             if (activeRecentsCount == 0) {
                 instance.scopes.clear()
+                Log.d(TAG, "destroyed", Exception("Printing stack trace"))
             } else {
-                instance.log(
+                Log.d(
+                    TAG,
                     "RecentsDependencies was not destroyed. " +
-                        "There is still an active RecentsView instance."
+                        "There is still an active RecentsView instance.",
                 )
             }
         }
