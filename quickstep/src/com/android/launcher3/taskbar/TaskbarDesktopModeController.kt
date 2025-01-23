@@ -50,8 +50,9 @@ class TaskbarDesktopModeController(
 
     fun shouldShowDesktopTasksInTaskbar(): Boolean {
         return desktopVisibilityController.areDesktopTasksVisible() ||
-            DisplayController.showLockedTaskbarOnHome(context) &&
-                taskbarControllers.taskbarStashController.isOnHome
+            DisplayController.showDesktopTaskbarForFreeformDisplay(context) ||
+            (DisplayController.showLockedTaskbarOnHome(context) &&
+                taskbarControllers.taskbarStashController.isOnHome)
     }
 
     fun getTaskbarCornerRoundness(doesAnyTaskRequireTaskbarRounding: Boolean): Float {

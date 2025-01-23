@@ -220,6 +220,14 @@ public class DisplayController implements ComponentCallbacks,
         return INSTANCE.get(context).getInfo().showLockedTaskbarOnHome();
     }
 
+    /**
+     * Returns whether desktop taskbar (pinned taskbar that shows desktop tasks) is to be used
+     * on the display because the display is a freeform display.
+     */
+    public static boolean showDesktopTaskbarForFreeformDisplay(Context context) {
+        return INSTANCE.get(context).getInfo().showDesktopTaskbarForFreeformDisplay();
+    }
+
     @Override
     public void onDesktopVisibilityChanged(boolean visible) {
         notifyConfigChange();
@@ -259,7 +267,9 @@ public class DisplayController implements ComponentCallbacks,
                         new PortraitSize(config.screenHeightDp, config.screenWidthDp))
                 || mWindowContext.getDisplay().getRotation() != mInfo.rotation
                 || mWMProxy.showLockedTaskbarOnHome(mWindowContext)
-                        != mInfo.showLockedTaskbarOnHome()) {
+                        != mInfo.showLockedTaskbarOnHome()
+                || mWMProxy.showDesktopTaskbarForFreeformDisplay(mWindowContext)
+                        != mInfo.showDesktopTaskbarForFreeformDisplay()) {
             notifyConfigChange();
         }
     }
@@ -376,6 +386,8 @@ public class DisplayController implements ComponentCallbacks,
         private final boolean mShowLockedTaskbarOnHome;
         private final boolean mIsHomeVisible;
 
+        private final boolean mShowDesktopTaskbarForFreeformDisplay;
+
         public Info(Context displayInfoContext) {
             /* don't need system overrides for external displays */
             this(displayInfoContext, new WindowManagerProxy(), new ArrayMap<>());
@@ -438,6 +450,8 @@ public class DisplayController implements ComponentCallbacks,
                     TASKBAR_PINNING_IN_DESKTOP_MODE);
             mIsInDesktopMode = wmProxy.isInDesktopMode();
             mShowLockedTaskbarOnHome = wmProxy.showLockedTaskbarOnHome(displayInfoContext);
+            mShowDesktopTaskbarForFreeformDisplay = wmProxy.showDesktopTaskbarForFreeformDisplay(
+                    displayInfoContext);
             mIsHomeVisible = wmProxy.isHomeVisible(displayInfoContext);
         }
 
@@ -455,6 +469,11 @@ public class DisplayController implements ComponentCallbacks,
                 return sTransientTaskbarStatusForTests;
             }
             if (enableTaskbarPinning()) {
+                // If "freeform" display taskbar is enabled, ensure the taskbar is pinned.
+                if (mShowDesktopTaskbarForFreeformDisplay) {
+                    return false;
+                }
+
                 // If Launcher is visible on the freeform display, ensure the taskbar is pinned.
                 if (mShowLockedTaskbarOnHome && mIsHomeVisible) {
                     return false;
@@ -532,6 +551,14 @@ public class DisplayController implements ComponentCallbacks,
          */
         public boolean showLockedTaskbarOnHome() {
             return mShowLockedTaskbarOnHome;
+        }
+
+        /**
+         * Returns whether the taskbar should be pinned, and showing desktop tasks, because the
+         * display is a "freeform" display.
+         */
+        public boolean showDesktopTaskbarForFreeformDisplay() {
+            return mShowDesktopTaskbarForFreeformDisplay;
         }
     }
 
