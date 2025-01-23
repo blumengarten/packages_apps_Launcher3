@@ -70,7 +70,7 @@ class ManageWindowsTaskbarShortcut<T>(
             val packageDesktopTasks =
                 (desktopTask?.tasks ?: emptyList()).filter(isTargetPackageTask)
             val nonDesktopPackageTasks =
-                tasks.filter { isTargetPackageTask(it.task1) }.map { it.task1 }
+                tasks.flatMap { it.tasks }.filter { isTargetPackageTask(it) }
 
             // Add tasks from the fetched tasks, deduplicating by task ID
             val packageTasks =

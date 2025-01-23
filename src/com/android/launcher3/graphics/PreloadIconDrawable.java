@@ -40,7 +40,6 @@ import com.android.launcher3.Utilities;
 import com.android.launcher3.anim.AnimatedFloat;
 import com.android.launcher3.anim.AnimatorListeners;
 import com.android.launcher3.icons.FastBitmapDrawable;
-import com.android.launcher3.icons.GraphicsUtils;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
 import com.android.launcher3.util.Themes;
 
@@ -121,7 +120,8 @@ public class PreloadIconDrawable extends FastBitmapDrawable {
                 IconPalette.getPreloadProgressColor(context, info.bitmap.color),
                 getPreloadColors(context),
                 Utilities.isDarkTheme(context),
-                GraphicsUtils.getShapePath(context, DEFAULT_PATH_SIZE));
+                IconShape.INSTANCE.get(context).getShapeOverridePath(DEFAULT_PATH_SIZE)
+        );
     }
 
     public PreloadIconDrawable(

@@ -91,6 +91,9 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
     private var canShowRunningAndRecentAppsAtInit = true
     private var recentTasksChangedListener: RecentTasksChangedListener? = null
 
+    val recentShownTasks: List<Task>
+        get() = recentAppsController.shownTasks.flatMap { it.tasks }
+
     @Before
     fun setUp() {
         super.setup()
@@ -354,9 +357,8 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
         val hotseatItem1 = newHotseatItems[0] as TaskItemInfo
         assertThat(hotseatItem1.targetPackage).isEqualTo(HOTSEAT_PACKAGE_1)
 
-        // The other task of the same package is not in shownTasks
-        val shownTasks = recentAppsController.shownTasks.map { it.task1 }
-        assertThat(shownTasks).isEmpty()
+        // The other task of the same package is not in recentShownTasks
+        assertThat(recentShownTasks).isEmpty()
     }
 
     @Test
@@ -439,8 +441,7 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
             runningTasks = listOf(task1, task2),
             recentTaskPackages = emptyList(),
         )
-        val shownTasks = recentAppsController.shownTasks.map { it.task1 }
-        assertThat(shownTasks).containsExactlyElementsIn(listOf(task1, task2))
+        assertThat(recentShownTasks).containsExactlyElementsIn(listOf(task1, task2))
     }
 
     @Test
@@ -535,8 +536,7 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
             recentTaskPackages = emptyList(),
         )
 
-        val shownTasks = recentAppsController.shownTasks.map { it.task1 }
-        assertThat(shownTasks).isEqualTo(listOf(task1, task2))
+        assertThat(recentShownTasks).isEqualTo(listOf(task1, task2))
     }
 
     /**
@@ -554,10 +554,9 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
             recentTaskPackages = emptyList(),
         )
 
-        // Assert that shownTasks contains only one instance of the app
-        val shownTasks = recentAppsController.shownTasks.map { it.task1 }
-        assertThat(shownTasks).hasSize(1)
-        assertThat(shownTasks[0].key.packageName).isEqualTo(RUNNING_APP_PACKAGE_1)
+        // Assert that recentShownTasks contains only one instance of the app
+        assertThat(recentShownTasks).hasSize(1)
+        assertThat(recentShownTasks[0].key.packageName).isEqualTo(RUNNING_APP_PACKAGE_1)
     }
 
     @Test
@@ -839,8 +838,7 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
             runningTasks = runningTasks,
             recentTaskPackages = emptyList(),
         )
-        val shownTasks = recentAppsController.shownTasks.map { it.task1 }
-        assertThat(shownTasks).contains(runningTask)
+        assertThat(recentShownTasks).contains(runningTask)
         assertThat(recentAppsController.runningTaskIds).containsExactlyElementsIn(listOf(1))
     }
 

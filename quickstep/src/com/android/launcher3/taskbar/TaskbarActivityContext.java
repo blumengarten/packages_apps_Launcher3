@@ -1682,7 +1682,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
             }
             if (areDesktopTasksVisible()) {
                 ActivityOptionsWrapper opts = getActivityLaunchDesktopOptions(info);
-                Bundle optionsBundle = opts == null ? null : opts.options.toBundle();
+                Bundle optionsBundle = opts == null ? Bundle.EMPTY : opts.options.toBundle();
                 mSysUiProxy.startLaunchIntentTransition(intent, optionsBundle, displayId);
             } else {
                 startActivity(intent, null);

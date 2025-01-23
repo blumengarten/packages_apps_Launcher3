@@ -169,7 +169,7 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
      * different process). It is bare-bones, so it's expected that the component and options will be
      * provided via fill-in intent.
      */
-    private val recentsPendingIntent =
+    private val recentsPendingIntent by lazy {
         PendingIntent.getActivity(
             context,
             0,
@@ -183,6 +183,7 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
                 )
                 .toBundle(),
         )
+    }
 
     val unfoldTransitionProvider: ProxyUnfoldTransitionProvider? =
         if ((Flags.enableUnfoldStateAnimation() && ResourceUnfoldTransitionConfig().isEnabled))

@@ -588,7 +588,7 @@ public class BubbleBarViewController {
 
     /** Returns maximum height of the bubble bar with the flyout view. */
     public int getBubbleBarWithFlyoutMaximumHeight() {
-        if (!isBubbleBarVisible() && !isAnimatingNewBubble()) return 0;
+        if (!hasBubbles() && !isAnimatingNewBubble()) return 0;
         int bubbleBarTopOnHome = (int) (mBubbleStashController.getBubbleBarVerticalCenterForHome()
                 + mBarView.getBubbleBarCollapsedHeight() / 2 + mBarView.getArrowHeight());
         if (isAnimatingNewBubble()) {

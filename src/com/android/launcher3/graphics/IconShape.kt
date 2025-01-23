@@ -34,6 +34,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewOutlineProvider
 import androidx.annotation.VisibleForTesting
+import androidx.core.graphics.PathParser
 import androidx.graphics.shapes.CornerRounding
 import androidx.graphics.shapes.Morph
 import androidx.graphics.shapes.RoundedPolygon
@@ -65,7 +66,7 @@ class IconShape
 constructor(
     @ApplicationContext private val context: Context,
     private val prefs: LauncherPrefs,
-    themeManager: ThemeManager,
+    private val themeManager: ThemeManager,
     lifeCycle: DaggerSingletonTracker,
 ) {
 
@@ -87,6 +88,17 @@ constructor(
         val changeListener = ThemeChangeListener { shape = pickBestShape(themeManager) }
         themeManager.addChangeListener(changeListener)
         lifeCycle.addCloseable { themeManager.removeChangeListener(changeListener) }
+    }
+
+    fun getShapeOverridePath(pathSize: Float = DEFAULT_PATH_SIZE): Path {
+        val path = PathParser.createPathFromPathData(themeManager.iconState.iconMask)
+        if (pathSize != DEFAULT_PATH_SIZE) {
+            val matrix = Matrix()
+            val scale: Float = pathSize / DEFAULT_PATH_SIZE
+            matrix.setScale(scale, scale)
+            path.transform(matrix)
+        }
+        return path
     }
 
     /** Initializes the shape which is closest to the [AdaptiveIconDrawable] */
@@ -281,6 +293,7 @@ constructor(
 
         const val TAG = "IconShape"
         const val KEY_ICON_SHAPE = "icon_shape"
+        const val DEFAULT_PATH_SIZE = 100f
         const val AREA_CALC_SIZE = 1000
         // .1% error margin
         const val AREA_DIFF_THRESHOLD = AREA_CALC_SIZE * AREA_CALC_SIZE / 1000

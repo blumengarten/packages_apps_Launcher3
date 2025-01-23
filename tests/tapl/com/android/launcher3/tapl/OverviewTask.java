@@ -157,6 +157,7 @@ public final class OverviewTask {
             }
 
             boolean taskWasFocused = mLauncher.isTablet()
+                    && !isDesktop()
                     && getVisibleHeight() == mLauncher.getOverviewTaskSize().height();
             List<Integer> originalTasksCenterX =
                     getCurrentTasksCenterXList().stream().sorted().toList();

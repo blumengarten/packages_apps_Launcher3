@@ -266,8 +266,8 @@ class TaskbarRecentAppsController(context: Context, private val recentsModel: Re
     }
 
     private fun updateOrderedRunningTaskIds(): MutableList<Int> {
-        val desktopTaskAsList = getOrderedAndWrappedDesktopTasks()
-        val desktopTaskIds = desktopTaskAsList.map { it.task1.key.id }
+        val desktopTasksAsList = getOrderedAndWrappedDesktopTasks().flatMap { it.tasks }
+        val desktopTaskIds = desktopTasksAsList.map { it.key.id }
         var newOrder =
             orderedRunningTaskIds
                 .filter { it in desktopTaskIds } // Only keep the tasks that are still running
@@ -383,11 +383,13 @@ class TaskbarRecentAppsController(context: Context, private val recentsModel: Re
                 itemInfo
             } else {
                 val foundTask =
-                    groupTasks.find { task ->
-                        task.task1.key.packageName == itemInfo.targetPackage &&
-                            task.task1.key.userId == itemInfo.user.identifier
-                    } ?: return@map itemInfo
-                TaskItemInfo(foundTask.task1.key.id, itemInfo as WorkspaceItemInfo)
+                    groupTasks
+                        .flatMap { it.tasks }
+                        .find { task ->
+                            task.key.packageName == itemInfo.targetPackage &&
+                                task.key.userId == itemInfo.user.identifier
+                        } ?: return@map itemInfo
+                TaskItemInfo(foundTask.key.id, itemInfo as WorkspaceItemInfo)
             }
         }
 

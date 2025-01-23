@@ -122,25 +122,25 @@ class TaplTestsOverviewDesktop : AbstractLauncherUiTest<QuickstepLauncher?>() {
         val desktop = moveTaskToDesktop(TEST_ACTIVITY_EXTRA)
         var overview = desktop.switchToOverview()
 
-        // Open focused task and go back to Overview to validate whether it has adjacent tasks in
-        // its both sides (grid task on left and desktop tasks at its right side)
-        val focusedTaskOpened = overview.getTestActivityTask(TEST_ACTIVITY_2).open()
+        // Open first fullscreen task and go back to Overview to validate whether it has adjacent
+        // tasks in its both sides (grid task on left and desktop tasks at its right side)
+        val firstFullscreenTaskOpened = overview.getTestActivityTask(TEST_ACTIVITY_2).open()
 
-        // Fling to desktop task and dismiss the focused task to check repositioning of
+        // Fling to desktop task and dismiss the first fullscreen task to check repositioning of
         // grid tasks.
-        overview = focusedTaskOpened.switchToOverview().apply { flingBackward() }
+        overview = firstFullscreenTaskOpened.switchToOverview().apply { flingBackward() }
         val desktopTask = overview.currentTask
         assertWithMessage("The current task is not a Desktop.").that(desktopTask.isDesktop).isTrue()
 
-        // Get focused task (previously opened task) then dismiss this task
-        val focusedTaskInOverview = overview.getTestActivityTask(TEST_ACTIVITY_2)
-        assertTaskContentDescription(focusedTaskInOverview, TEST_ACTIVITY_2)
-        focusedTaskInOverview.dismiss()
+        // Get first fullscreen task (previously opened task) then dismiss this task
+        val firstFullscreenTaskInOverview = overview.getTestActivityTask(TEST_ACTIVITY_2)
+        assertTaskContentDescription(firstFullscreenTaskInOverview, TEST_ACTIVITY_2)
+        firstFullscreenTaskInOverview.dismiss()
 
-        // Dismiss DesktopTask to validate whether the new focused task will take its position
+        // Dismiss DesktopTask to validate whether the new task will take its position
         desktopTask.dismiss()
 
-        // Dismiss last focused task
+        // Dismiss last fullscreen task
         val lastFocusedTask = overview.currentTask
         assertTaskContentDescription(lastFocusedTask, TEST_ACTIVITY_1)
         lastFocusedTask.dismiss()
