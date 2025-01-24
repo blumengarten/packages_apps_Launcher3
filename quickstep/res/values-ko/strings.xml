@@ -46,6 +46,8 @@
     <string name="hotsaet_tip_prediction_enabled" msgid="2233554377501347650">"앱 제안이 사용 설정됨"</string>
     <string name="hotsaet_tip_prediction_disabled" msgid="1506426298884658491">"앱 제안이 사용 중지됨"</string>
     <string name="hotseat_prediction_content_description" msgid="4582028296938078419">"예상 앱: <xliff:g id="TITLE">%1$s</xliff:g>"</string>
+    <!-- no translation found for gesture_tutorial_title (2750751261768388354) -->
+    <skip />
     <string name="gesture_tutorial_rotation_prompt_title" msgid="7537946781362766964">"기기를 회전시키세요"</string>
     <string name="gesture_tutorial_rotation_prompt" msgid="1664493449851960691">"동작 탐색 튜토리얼을 완료하려면 기기를 회전시키세요."</string>
     <string name="back_gesture_feedback_swipe_too_far_from_edge" msgid="4175100312909721217">"오른쪽 또는 왼쪽 가장자리 끝에서 스와이프하세요."</string>
@@ -152,10 +154,7 @@
     <string name="bubble_bar_accessibility_announce_expand" msgid="1503192695527477102">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g> 펼치기"</string>
     <string name="bubble_bar_accessibility_announce_collapse" msgid="928284600086798791">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g> 접기"</string>
     <string name="search_gesture_feature_title" msgid="1294044108313175306">"서클 투 서치"</string>
-    <!-- no translation found for header_app_icon_description (2184625881433608027) -->
-    <skip />
-    <!-- no translation found for header_default_app_title (8308052350689531566) -->
-    <skip />
-    <!-- no translation found for header_close_icon_description (5400033616675911319) -->
-    <skip />
+    <string name="header_app_icon_description" msgid="2184625881433608027">"앱 아이콘"</string>
+    <string name="header_default_app_title" msgid="8308052350689531566">"앱 제목"</string>
+    <string name="header_close_icon_description" msgid="5400033616675911319">"닫기 버튼"</string>
 </resources>

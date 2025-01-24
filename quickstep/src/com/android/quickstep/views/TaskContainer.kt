@@ -141,6 +141,11 @@ class TaskContainer(
         }
     }
 
+    // TODO(b/391842220): Cancel scope in onDetach instead of having a specific method for this.
+    fun destroyScopes() {
+        thumbnailView.destroyScopes()
+    }
+
     fun bindThumbnailView() {
         taskThumbnailViewModel.bind(task.key.id)
     }

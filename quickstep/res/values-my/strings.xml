@@ -46,6 +46,8 @@
     <string name="hotsaet_tip_prediction_enabled" msgid="2233554377501347650">"အက်ပ်အကြံပြုချက်များ ဖွင့်ထားသည်"</string>
     <string name="hotsaet_tip_prediction_disabled" msgid="1506426298884658491">"အက်ပ်အကြံပြုချက်များကို ပိတ်ထားသည်"</string>
     <string name="hotseat_prediction_content_description" msgid="4582028296938078419">"ကြိုတင်မှန်းဆထားသော အက်ပ်− <xliff:g id="TITLE">%1$s</xliff:g>"</string>
+    <!-- no translation found for gesture_tutorial_title (2750751261768388354) -->
+    <skip />
     <string name="gesture_tutorial_rotation_prompt_title" msgid="7537946781362766964">"သင့်စက်ကို လှည့်ပါ"</string>
     <string name="gesture_tutorial_rotation_prompt" msgid="1664493449851960691">"လက်ဟန်ဖြင့် လမ်းညွှန်ခြင်း ရှင်းလင်းပို့ချချက်အား အပြီးသတ်ရန် သင့်စက်ကို လှည့်ပါ"</string>
     <string name="back_gesture_feedback_swipe_too_far_from_edge" msgid="4175100312909721217">"ညာ (သို့) ဘယ်ဘက်အစွန်ဆုံးမှ ပွတ်ဆွဲကြောင်း သေချာပါစေ"</string>
@@ -152,10 +154,7 @@
     <string name="bubble_bar_accessibility_announce_expand" msgid="1503192695527477102">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g> ကို ပိုပြပါ"</string>
     <string name="bubble_bar_accessibility_announce_collapse" msgid="928284600086798791">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g> ကို လျှော့ပြပါ"</string>
     <string name="search_gesture_feature_title" msgid="1294044108313175306">"ရှာရန် ကွက်၍ဝိုင်းလိုက်ပါ"</string>
-    <!-- no translation found for header_app_icon_description (2184625881433608027) -->
-    <skip />
-    <!-- no translation found for header_default_app_title (8308052350689531566) -->
-    <skip />
-    <!-- no translation found for header_close_icon_description (5400033616675911319) -->
-    <skip />
+    <string name="header_app_icon_description" msgid="2184625881433608027">"အက်ပ်သင်္ကေတ"</string>
+    <string name="header_default_app_title" msgid="8308052350689531566">"အက်ပ်ခေါင်းစဉ်"</string>
+    <string name="header_close_icon_description" msgid="5400033616675911319">"အပိတ် ခလုတ်"</string>
 </resources>

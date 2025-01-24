@@ -46,6 +46,8 @@
     <string name="hotsaet_tip_prediction_enabled" msgid="2233554377501347650">"ആപ്പ് നിർദ്ദേശങ്ങൾ പ്രവർത്തനക്ഷമമാക്കി"</string>
     <string name="hotsaet_tip_prediction_disabled" msgid="1506426298884658491">"ആപ്പ് നിർദ്ദേശങ്ങൾ പ്രവർത്തനരഹിതമാക്കി"</string>
     <string name="hotseat_prediction_content_description" msgid="4582028296938078419">"പ്രവചിച്ച ആപ്പ്: <xliff:g id="TITLE">%1$s</xliff:g>"</string>
+    <!-- no translation found for gesture_tutorial_title (2750751261768388354) -->
+    <skip />
     <string name="gesture_tutorial_rotation_prompt_title" msgid="7537946781362766964">"നിങ്ങളുടെ ഉപകരണം റൊട്ടേറ്റ് ചെയ്യുക"</string>
     <string name="gesture_tutorial_rotation_prompt" msgid="1664493449851960691">"ജെസ്ച്ചർ നാവിഗേഷൻ ട്യൂട്ടോറിയൽ പൂർത്തിയാക്കാൻ നിങ്ങളുടെ ഉപകരണം റൊട്ടേറ്റ് ചെയ്യുക"</string>
     <string name="back_gesture_feedback_swipe_too_far_from_edge" msgid="4175100312909721217">"വലത്തേയറ്റത്തെയോ ഇടത്തേയറ്റത്തെയോ അരികിൽ നിന്നാണ് സ്വെെപ്പ് ചെയ്യുന്നതെന്ന് ഉറപ്പാക്കുക"</string>
@@ -152,10 +154,7 @@
     <string name="bubble_bar_accessibility_announce_expand" msgid="1503192695527477102">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g> വികസിപ്പിക്കുക"</string>
     <string name="bubble_bar_accessibility_announce_collapse" msgid="928284600086798791">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g> ചുരുക്കുക"</string>
     <string name="search_gesture_feature_title" msgid="1294044108313175306">"തിരയാൻ വട്ടം വരയ്ക്കൽ"</string>
-    <!-- no translation found for header_app_icon_description (2184625881433608027) -->
-    <skip />
-    <!-- no translation found for header_default_app_title (8308052350689531566) -->
-    <skip />
-    <!-- no translation found for header_close_icon_description (5400033616675911319) -->
-    <skip />
+    <string name="header_app_icon_description" msgid="2184625881433608027">"ആപ്പ് ഐക്കൺ"</string>
+    <string name="header_default_app_title" msgid="8308052350689531566">"ആപ്പിന്റെ പേര്"</string>
+    <string name="header_close_icon_description" msgid="5400033616675911319">"അടയ്ക്കുക ബട്ടൺ"</string>
 </resources>

@@ -617,6 +617,11 @@ constructor(
         taskContainers.forEach { it.destroy() }
     }
 
+    fun destroyScopes() {
+        // TODO(b/391842220): Cancel scope in onDetach instead of having a specific method for this.
+        taskContainers.forEach { it.destroyScopes() }
+    }
+
     // TODO: Clip-out the icon region from the thumbnail, since they are overlapping.
     override fun hasOverlappingRendering() = false
 

@@ -46,6 +46,8 @@
     <string name="hotsaet_tip_prediction_enabled" msgid="2233554377501347650">"ایپ کی تجاویز فعال ہیں"</string>
     <string name="hotsaet_tip_prediction_disabled" msgid="1506426298884658491">"ایپ کی تجاویز غیر فعال ہیں"</string>
     <string name="hotseat_prediction_content_description" msgid="4582028296938078419">"پیشن گوئی کردہ ایپ: <xliff:g id="TITLE">%1$s</xliff:g>"</string>
+    <!-- no translation found for gesture_tutorial_title (2750751261768388354) -->
+    <skip />
     <string name="gesture_tutorial_rotation_prompt_title" msgid="7537946781362766964">"اپنا آلہ گھمائیں"</string>
     <string name="gesture_tutorial_rotation_prompt" msgid="1664493449851960691">"براہ کرم اشاروں والی نیویگیشن کا ٹیوٹوریل مکمل کرنے کے لیے اپنا آلہ گھمائیں"</string>
     <string name="back_gesture_feedback_swipe_too_far_from_edge" msgid="4175100312909721217">"یقینی بنائیں کہ آپ دائیں یا بائیں کنارے سے دور سے سوائپ کریں"</string>
@@ -152,10 +154,7 @@
     <string name="bubble_bar_accessibility_announce_expand" msgid="1503192695527477102">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g> کو پھیلائیں"</string>
     <string name="bubble_bar_accessibility_announce_collapse" msgid="928284600086798791">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g> کو سکیڑیں"</string>
     <string name="search_gesture_feature_title" msgid="1294044108313175306">"تلاش کرنے کیلئے دائرہ بنائیں"</string>
-    <!-- no translation found for header_app_icon_description (2184625881433608027) -->
-    <skip />
-    <!-- no translation found for header_default_app_title (8308052350689531566) -->
-    <skip />
-    <!-- no translation found for header_close_icon_description (5400033616675911319) -->
-    <skip />
+    <string name="header_app_icon_description" msgid="2184625881433608027">"ایپ آئیکن"</string>
+    <string name="header_default_app_title" msgid="8308052350689531566">"ایپ کا عنوان"</string>
+    <string name="header_close_icon_description" msgid="5400033616675911319">"\'بند کریں\' بٹن"</string>
 </resources>

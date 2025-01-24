@@ -1,9 +1,8 @@
 package com.android.quickstep
 
-import android.content.Context
 import androidx.test.annotation.UiThreadTest
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.filters.SmallTest
+import com.android.launcher3.dagger.LauncherComponentProvider
 import com.android.launcher3.util.DisplayController.CHANGE_DENSITY
 import com.android.launcher3.util.DisplayController.CHANGE_NAVIGATION_MODE
 import com.android.launcher3.util.DisplayController.CHANGE_ROTATION
@@ -12,6 +11,7 @@ import com.android.launcher3.util.Executors.MAIN_EXECUTOR
 import com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR
 import com.android.launcher3.util.LauncherMultivalentJUnit
 import com.android.launcher3.util.NavigationMode
+import com.android.launcher3.util.SandboxApplication
 import com.android.quickstep.util.GestureExclusionManager
 import com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_ALLOW_GESTURE_IGNORING_BAR_VISIBILITY
 import com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_DEVICE_DREAMING
@@ -27,6 +27,7 @@ import com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_TOUCHPAD
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
@@ -43,21 +44,32 @@ import org.mockito.kotlin.whenever
 @RunWith(LauncherMultivalentJUnit::class)
 class RecentsAnimationDeviceStateTest {
 
+    @get:Rule val context = SandboxApplication()
+
     @Mock private lateinit var exclusionManager: GestureExclusionManager
     @Mock private lateinit var info: Info
 
-    private val context = ApplicationProvider.getApplicationContext() as Context
     private lateinit var underTest: RecentsAnimationDeviceState
 
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        underTest = RecentsAnimationDeviceState(context, exclusionManager)
+
+        val component = LauncherComponentProvider.get(context)
+        underTest =
+            RecentsAnimationDeviceState(
+                context,
+                exclusionManager,
+                component.displayController,
+                component.contextualSearchStateManager,
+                component.rotationTouchHelper,
+                component.settingsCache,
+                component.daggerSingletonTracker,
+            )
     }
 
     @After
     fun tearDown() {
-        underTest.close()
         UI_HELPER_EXECUTOR.submit {}.get()
         MAIN_EXECUTOR.submit {}.get()
     }

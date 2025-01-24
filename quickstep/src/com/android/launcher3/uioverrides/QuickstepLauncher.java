@@ -23,6 +23,7 @@ import static android.window.DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_WALLPAPER
 
 import static com.android.app.animation.Interpolators.EMPHASIZED;
 import static com.android.internal.jank.Cuj.CUJ_LAUNCHER_LAUNCH_APP_PAIR_FROM_WORKSPACE;
+import static com.android.launcher3.Flags.enableExpressiveDismissTaskMotion;
 import static com.android.launcher3.Flags.enableUnfoldStateAnimation;
 import static com.android.launcher3.LauncherConstants.SavedInstanceKeys.PENDING_SPLIT_SELECT_INFO;
 import static com.android.launcher3.LauncherConstants.SavedInstanceKeys.RUNTIME_STATE;
@@ -149,7 +150,9 @@ import com.android.launcher3.uioverrides.touchcontrollers.NoButtonQuickSwitchTou
 import com.android.launcher3.uioverrides.touchcontrollers.PortraitStatesTouchController;
 import com.android.launcher3.uioverrides.touchcontrollers.QuickSwitchTouchController;
 import com.android.launcher3.uioverrides.touchcontrollers.StatusBarTouchController;
+import com.android.launcher3.uioverrides.touchcontrollers.TaskViewRecentsTouchContext;
 import com.android.launcher3.uioverrides.touchcontrollers.TaskViewTouchController;
+import com.android.launcher3.uioverrides.touchcontrollers.TaskViewTouchControllerDeprecated;
 import com.android.launcher3.uioverrides.touchcontrollers.TransposedQuickSwitchTouchController;
 import com.android.launcher3.uioverrides.touchcontrollers.TwoButtonNavbarTouchController;
 import com.android.launcher3.util.ActivityOptionsWrapper;
@@ -264,6 +267,25 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     private boolean mIsOverlayVisible;
 
     private final OverviewChangeListener mOverviewChangeListener = this::onOverviewTargetChanged;
+
+    private final TaskViewRecentsTouchContext mTaskViewRecentsTouchContext =
+            new TaskViewRecentsTouchContext() {
+                @Override
+                public boolean isRecentsInteractive() {
+                    return isInState(OVERVIEW) || isInState(OVERVIEW_MODAL_TASK);
+                }
+
+                @Override
+                public boolean isRecentsModal() {
+                    return isInState(OVERVIEW_MODAL_TASK);
+                }
+
+                @Override
+                public void onUserControlledAnimationCreated(
+                        AnimatorPlaybackController animController) {
+                    getStateManager().setCurrentUserControlledAnimation(animController);
+                }
+            };
 
     public static QuickstepLauncher getLauncher(Context context) {
         return fromContext(context);
@@ -665,7 +687,11 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
             list.add(new StatusBarTouchController(this));
         }
 
-        list.add(new LauncherTaskViewController(this));
+        if (enableExpressiveDismissTaskMotion()) {
+            list.add(new TaskViewTouchController<>(this, mTaskViewRecentsTouchContext));
+        } else {
+            list.add(new TaskViewTouchControllerDeprecated<>(this, mTaskViewRecentsTouchContext));
+        }
         return list.toArray(new TouchController[list.size()]);
     }
 
@@ -1440,29 +1466,6 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     /** Sets the location of the bubble bar */
     public void setBubbleBarLocation(BubbleBarLocation bubbleBarLocation) {
         mBubbleBarLocation = bubbleBarLocation;
-    }
-
-    private static final class LauncherTaskViewController extends
-            TaskViewTouchController<QuickstepLauncher> {
-
-        LauncherTaskViewController(QuickstepLauncher activity) {
-            super(activity);
-        }
-
-        @Override
-        protected boolean isRecentsInteractive() {
-            return mContainer.isInState(OVERVIEW) || mContainer.isInState(OVERVIEW_MODAL_TASK);
-        }
-
-        @Override
-        protected boolean isRecentsModal() {
-            return mContainer.isInState(OVERVIEW_MODAL_TASK);
-        }
-
-        @Override
-        protected void onUserControlledAnimationCreated(AnimatorPlaybackController animController) {
-            mContainer.getStateManager().setCurrentUserControlledAnimation(animController);
-        }
     }
 
     @Override

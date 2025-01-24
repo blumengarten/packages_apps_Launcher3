@@ -16,8 +16,6 @@
 
 package com.android.quickstep;
 
-import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
-
 import static com.android.quickstep.InputConsumerUtils.newBaseConsumer;
 import static com.android.quickstep.InputConsumerUtils.newConsumer;
 
@@ -40,6 +38,9 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.anim.AnimatedFloat;
+import com.android.launcher3.dagger.LauncherAppComponent;
+import com.android.launcher3.dagger.LauncherAppModule;
+import com.android.launcher3.dagger.LauncherAppSingleton;
 import com.android.launcher3.taskbar.TaskbarActivityContext;
 import com.android.launcher3.taskbar.TaskbarManager;
 import com.android.launcher3.taskbar.bubbles.BubbleBarController;
@@ -54,7 +55,7 @@ import com.android.launcher3.taskbar.bubbles.BubblePinController;
 import com.android.launcher3.taskbar.bubbles.BubbleStashedHandleViewController;
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController;
 import com.android.launcher3.util.LockedUserState;
-import com.android.launcher3.util.MainThreadInitializedObject;
+import com.android.launcher3.util.SandboxApplication;
 import com.android.launcher3.views.BaseDragLayer;
 import com.android.quickstep.inputconsumers.AccessibilityInputConsumer;
 import com.android.quickstep.inputconsumers.BubbleBarInputConsumer;
@@ -75,6 +76,9 @@ import com.android.quickstep.views.RecentsViewContainer;
 import com.android.systemui.shared.system.InputChannelCompat;
 import com.android.systemui.shared.system.InputMonitorCompat;
 
+import dagger.BindsInstance;
+import dagger.Component;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -93,8 +97,8 @@ import javax.inject.Provider;
 @RunWith(AndroidJUnit4.class)
 public class InputConsumerUtilsTest {
 
-    @NonNull private final MainThreadInitializedObject.SandboxContext mContext =
-            new MainThreadInitializedObject.SandboxContext(getApplicationContext());
+    @Rule public final SandboxApplication mContext = new SandboxApplication();
+
     @NonNull private final InputMonitorCompat mInputMonitorCompat = new InputMonitorCompat("", 0);
 
     private TaskAnimationManager mTaskAnimationManager;
@@ -125,10 +129,12 @@ public class InputConsumerUtilsTest {
     }
 
     @Before
-    public void setupMainThreadInitializedObjects() {
-        mContext.putObject(LockedUserState.INSTANCE, mLockedUserState);
-        mContext.putObject(RotationTouchHelper.INSTANCE, mock(RotationTouchHelper.class));
-        mContext.putObject(RecentsAnimationDeviceState.INSTANCE, mDeviceState);
+    public void setupDaggerGraphOverrides() {
+        mContext.initDaggerComponent(DaggerInputConsumerUtilsTest_TestComponent
+                .builder()
+                .bindLockedState(mLockedUserState)
+                .bindRotationHelper(mock(RotationTouchHelper.class))
+                .bindRecentsState(mDeviceState));
     }
 
     @Before
@@ -594,5 +600,19 @@ public class InputConsumerUtilsTest {
         when(bubbleBarViewController.isEventOverBubbleBar(any())).thenReturn(true);
 
         return bubbleControllers;
+    }
+
+    @LauncherAppSingleton
+    @Component(modules = {LauncherAppModule.class})
+    interface TestComponent extends LauncherAppComponent {
+        @Component.Builder
+        interface Builder extends LauncherAppComponent.Builder {
+            @BindsInstance Builder bindLockedState(LockedUserState state);
+            @BindsInstance Builder bindRotationHelper(RotationTouchHelper helper);
+            @BindsInstance Builder bindRecentsState(RecentsAnimationDeviceState state);
+
+            @Override
+            TestComponent build();
+        }
     }
 }

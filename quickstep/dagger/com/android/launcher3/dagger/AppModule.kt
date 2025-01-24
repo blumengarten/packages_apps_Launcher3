@@ -18,15 +18,8 @@ package com.android.launcher3.dagger
 
 import dagger.Module
 
-private object Modules {}
-
-@Module abstract class WindowManagerProxyModule {}
-
-@Module abstract class ApiWrapperModule {}
-
-@Module abstract class PluginManagerWrapperModule {}
-
-@Module object StaticObjectModule {}
-
-// Module containing bindings for the final derivative app
+/**
+ * Module containing bindings for the final derivative app, an implementation of this module should
+ * be included in the final app code.
+ */
 @Module abstract class AppModule {}

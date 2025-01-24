@@ -21,10 +21,13 @@ import com.android.launcher3.dagger.LauncherBaseAppComponent;
 import com.android.launcher3.model.WellbeingModel;
 import com.android.launcher3.statehandlers.DesktopVisibilityController;
 import com.android.quickstep.OverviewComponentObserver;
+import com.android.quickstep.RecentsAnimationDeviceState;
+import com.android.quickstep.RotationTouchHelper;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.TopTaskTracker;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
 import com.android.quickstep.util.AsyncClockEventDelegate;
+import com.android.quickstep.util.ContextualSearchStateManager;
 
 /**
  * Launcher Quickstep base component for Dagger injection.
@@ -49,4 +52,10 @@ public interface QuickstepBaseAppComponent extends LauncherBaseAppComponent {
     DesktopVisibilityController getDesktopVisibilityController();
 
     TopTaskTracker getTopTaskTracker();
+
+    RotationTouchHelper getRotationTouchHelper();
+
+    ContextualSearchStateManager getContextualSearchStateManager();
+
+    RecentsAnimationDeviceState getRecentsAnimationDeviceState();
 }

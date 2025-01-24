@@ -39,7 +39,6 @@ import androidx.annotation.VisibleForTesting;
 import androidx.core.graphics.ColorUtils;
 
 import com.android.app.animation.Interpolators;
-import com.android.launcher3.R;
 import com.android.launcher3.Reorderable;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.icons.IconNormalizer;
@@ -243,7 +242,9 @@ public class TaskbarOverflowView extends FrameLayout implements Reorderable {
     private void init() {
         mIsRtlLayout = Utilities.isRtl(getResources());
         mItemBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mItemBackgroundColor = getContext().getColor(R.color.taskbar_background);
+        mItemBackgroundColor = getContext().getColor(Utilities.isDarkTheme(getContext())
+                ? com.android.internal.R.color.materialColorSurface
+                : com.android.internal.R.color.materialColorInverseOnSurface);
         mLeaveBehindColor = Themes.getAttrColor(getContext(), android.R.attr.textColorTertiary);
 
         setWillNotDraw(false);

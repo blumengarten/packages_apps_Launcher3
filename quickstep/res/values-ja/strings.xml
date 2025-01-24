@@ -23,7 +23,7 @@
     <string name="recent_task_option_freeform" msgid="48863056265284071">"フリーフォーム"</string>
     <string name="recent_task_option_desktop" msgid="8280879717125435668">"デスクトップ"</string>
     <string name="recent_task_option_external_display" msgid="4533840664313389484">"外部ディスプレイに移動する"</string>
-    <string name="recent_task_desktop" msgid="8081113562549637334">"パソコン"</string>
+    <string name="recent_task_desktop" msgid="8081113562549637334">"デスクトップ"</string>
     <string name="recents_empty_message" msgid="7040467240571714191">"最近のアイテムはありません"</string>
     <string name="accessibility_app_usage_settings" msgid="6312864233673544149">"アプリの使用状況の設定"</string>
     <string name="recents_clear_all" msgid="5328176793634888831">"すべてクリア"</string>
@@ -46,6 +46,8 @@
     <string name="hotsaet_tip_prediction_enabled" msgid="2233554377501347650">"アプリの候補表示が有効です"</string>
     <string name="hotsaet_tip_prediction_disabled" msgid="1506426298884658491">"アプリの候補は無効です"</string>
     <string name="hotseat_prediction_content_description" msgid="4582028296938078419">"予測されたアプリ: <xliff:g id="TITLE">%1$s</xliff:g>"</string>
+    <!-- no translation found for gesture_tutorial_title (2750751261768388354) -->
+    <skip />
     <string name="gesture_tutorial_rotation_prompt_title" msgid="7537946781362766964">"デバイスを回転してください"</string>
     <string name="gesture_tutorial_rotation_prompt" msgid="1664493449851960691">"ジェスチャー ナビゲーションのチュートリアルを終了するには、デバイスを回転してください"</string>
     <string name="back_gesture_feedback_swipe_too_far_from_edge" msgid="4175100312909721217">"右端または左端からスワイプしてください"</string>
@@ -140,7 +142,7 @@
     <string name="move_drop_target_top_or_left" msgid="2988702185049595807">"上 / 左に移動"</string>
     <string name="move_drop_target_bottom_or_right" msgid="5431393418797620162">"下 / 右に移動"</string>
     <string name="quick_switch_overflow" msgid="3679780650881041632">"{count,plural, =1{個のその他のアプリ}other{個のその他のアプリ}}"</string>
-    <string name="quick_switch_desktop" msgid="8393802056024499749">"パソコン"</string>
+    <string name="quick_switch_desktop" msgid="8393802056024499749">"デスクトップ"</string>
     <string name="quick_switch_split_task" msgid="5598194724255333896">"<xliff:g id="APP_NAME_1">%1$s</xliff:g> と <xliff:g id="APP_NAME_2">%2$s</xliff:g>"</string>
     <string name="bubble_bar_bubble_fallback_description" msgid="7811684548953452009">"ふきだし"</string>
     <string name="bubble_bar_overflow_description" msgid="8617628132733151708">"オーバーフロー"</string>
@@ -152,10 +154,7 @@
     <string name="bubble_bar_accessibility_announce_expand" msgid="1503192695527477102">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g>を開きます"</string>
     <string name="bubble_bar_accessibility_announce_collapse" msgid="928284600086798791">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g>を閉じます"</string>
     <string name="search_gesture_feature_title" msgid="1294044108313175306">"かこって検索"</string>
-    <!-- no translation found for header_app_icon_description (2184625881433608027) -->
-    <skip />
-    <!-- no translation found for header_default_app_title (8308052350689531566) -->
-    <skip />
-    <!-- no translation found for header_close_icon_description (5400033616675911319) -->
-    <skip />
+    <string name="header_app_icon_description" msgid="2184625881433608027">"アプリのアイコン"</string>
+    <string name="header_default_app_title" msgid="8308052350689531566">"アプリのタイトル"</string>
+    <string name="header_close_icon_description" msgid="5400033616675911319">"閉じるボタン"</string>
 </resources>

@@ -269,6 +269,8 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
     private final long mTaskbarBackgroundDuration;
     private boolean mUserIsNotGoingHome = false;
 
+    private final boolean mInAppStateAffectsDesktopTasksVisibilityInTaskbar;
+
     // Evaluate whether the handle should be stashed
     private final LongPredicate mIsStashedPredicate = flags -> {
         boolean inApp = hasAnyFlag(flags, FLAGS_IN_APP);
@@ -293,8 +295,17 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         mSystemUiProxy = SystemUiProxy.INSTANCE.get(activity);
         mAccessibilityManager = mActivity.getSystemService(AccessibilityManager.class);
 
-        mTaskbarBackgroundDuration =
-                activity.getResources().getInteger(R.integer.taskbar_background_duration);
+        // Taskbar, via `TaskbarDesktopModeController`, depends on `TaskbarStashController` state to
+        // determine whether desktop tasks should be shown because taskbar is pinned on the home
+        // screen for freeform windowing displays. In this case, list of items shown in the taskbar
+        // needs to be updated when in-app state changes.
+        // TODO(b/390665752): Feature to "lock" pinned taskbar to home screen will be superseded by
+        //     pinning, in other launcher states, at which point this variable can be removed.
+        mInAppStateAffectsDesktopTasksVisibilityInTaskbar =
+                DisplayController.showLockedTaskbarOnHome(mActivity);
+
+        mTaskbarBackgroundDuration = activity.getResources().getInteger(
+                R.integer.taskbar_background_duration);
         if (mActivity.isPhoneMode()) {
             mUnstashedHeight = mActivity.getResources().getDimensionPixelSize(
                     R.dimen.taskbar_phone_size);
@@ -1237,6 +1248,10 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         if (hasAnyFlag(changedFlags, FLAG_IN_OVERVIEW | FLAG_IN_APP)) {
             mControllers.runAfterInit(() -> mControllers.taskbarInsetsController
                     .onTaskbarOrBubblebarWindowHeightOrInsetsChanged());
+            if (mInAppStateAffectsDesktopTasksVisibilityInTaskbar) {
+                mControllers.runAfterInit(
+                        () -> mControllers.taskbarViewController.commitRunningAppsToUI());
+            }
         }
         mActivity.applyForciblyShownFlagWhileTransientTaskbarUnstashed(!isStashedInApp());
     }

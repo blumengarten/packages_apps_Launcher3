@@ -64,11 +64,16 @@ class DesktopRecentsTransitionController(
     }
 
     /** Launch desktop tasks from recents view */
-    fun moveToDesktop(taskContainer: TaskContainer, transitionSource: DesktopModeTransitionSource) {
+    fun moveToDesktop(
+        taskContainer: TaskContainer,
+        transitionSource: DesktopModeTransitionSource,
+        successCallback: Runnable,
+    ) {
         systemUiProxy.moveToDesktop(
             taskContainer.task.key.id,
             transitionSource,
             /* transition = */ null,
+            successCallback,
         )
     }
 

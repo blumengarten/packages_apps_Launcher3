@@ -46,6 +46,8 @@
     <string name="hotsaet_tip_prediction_enabled" msgid="2233554377501347650">"Прапановы праграм уключаны"</string>
     <string name="hotsaet_tip_prediction_disabled" msgid="1506426298884658491">"Прапановы праграм выключаны"</string>
     <string name="hotseat_prediction_content_description" msgid="4582028296938078419">"Праграма з падказкі: <xliff:g id="TITLE">%1$s</xliff:g>"</string>
+    <!-- no translation found for gesture_tutorial_title (2750751261768388354) -->
+    <skip />
     <string name="gesture_tutorial_rotation_prompt_title" msgid="7537946781362766964">"Павярніце прыладу"</string>
     <string name="gesture_tutorial_rotation_prompt" msgid="1664493449851960691">"Каб пачаць азнаямленне з дапаможнікам па навігацыі жэстамі, павярніце прыладу"</string>
     <string name="back_gesture_feedback_swipe_too_far_from_edge" msgid="4175100312909721217">"Правядзіце пальцам справа налева ці злева направа ад самага краю экрана"</string>
@@ -152,10 +154,7 @@
     <string name="bubble_bar_accessibility_announce_expand" msgid="1503192695527477102">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g>: разгарнуць"</string>
     <string name="bubble_bar_accessibility_announce_collapse" msgid="928284600086798791">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g>: згарнуць"</string>
     <string name="search_gesture_feature_title" msgid="1294044108313175306">"Абвесці для пошуку"</string>
-    <!-- no translation found for header_app_icon_description (2184625881433608027) -->
-    <skip />
-    <!-- no translation found for header_default_app_title (8308052350689531566) -->
-    <skip />
-    <!-- no translation found for header_close_icon_description (5400033616675911319) -->
-    <skip />
+    <string name="header_app_icon_description" msgid="2184625881433608027">"Значок праграмы"</string>
+    <string name="header_default_app_title" msgid="8308052350689531566">"Назва праграмы"</string>
+    <string name="header_close_icon_description" msgid="5400033616675911319">"Кнопка \"Закрыць\""</string>
 </resources>

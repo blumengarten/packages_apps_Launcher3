@@ -792,8 +792,7 @@ public class DeviceProfile {
         int leftRightSplitPortraitResId = Resources.getSystem().getIdentifier(
                 "config_leftRightSplitInPortrait", "bool", "android");
         boolean allowLeftRightSplitInPortrait =
-                com.android.wm.shell.Flags.enableLeftRightSplitInPortrait()
-                    && leftRightSplitPortraitResId > 0
+                    leftRightSplitPortraitResId > 0
                     && res.getBoolean(leftRightSplitPortraitResId);
         if (allowLeftRightSplitInPortrait && isTablet) {
             isLeftRightSplit = !isLandscape;

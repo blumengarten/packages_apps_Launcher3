@@ -46,6 +46,8 @@
     <string name="hotsaet_tip_prediction_enabled" msgid="2233554377501347650">"Włączono sugestie aplikacji"</string>
     <string name="hotsaet_tip_prediction_disabled" msgid="1506426298884658491">"Sugestie aplikacji są wyłączone"</string>
     <string name="hotseat_prediction_content_description" msgid="4582028296938078419">"Przewidywana aplikacja: <xliff:g id="TITLE">%1$s</xliff:g>"</string>
+    <!-- no translation found for gesture_tutorial_title (2750751261768388354) -->
+    <skip />
     <string name="gesture_tutorial_rotation_prompt_title" msgid="7537946781362766964">"Obróć urządzenie"</string>
     <string name="gesture_tutorial_rotation_prompt" msgid="1664493449851960691">"Obróć urządzenie, aby ukończyć samouczek nawigacji przy użyciu gestów"</string>
     <string name="back_gesture_feedback_swipe_too_far_from_edge" msgid="4175100312909721217">"Pamiętaj, aby przesuwać palcem od samej krawędzi (prawej lub lewej)"</string>

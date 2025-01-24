@@ -46,6 +46,8 @@
     <string name="hotsaet_tip_prediction_enabled" msgid="2233554377501347650">"యాప్ సలహాలు ఎనేబుల్ చేయబడ్డాయి"</string>
     <string name="hotsaet_tip_prediction_disabled" msgid="1506426298884658491">"యాప్ సూచ‌న‌లు డిజేబుల్‌ చేయబడ్డాయి"</string>
     <string name="hotseat_prediction_content_description" msgid="4582028296938078419">"సూచించబడిన యాప్: <xliff:g id="TITLE">%1$s</xliff:g>"</string>
+    <!-- no translation found for gesture_tutorial_title (2750751261768388354) -->
+    <skip />
     <string name="gesture_tutorial_rotation_prompt_title" msgid="7537946781362766964">"మీ పరికరాన్ని రొటేట్ చేయండి"</string>
     <string name="gesture_tutorial_rotation_prompt" msgid="1664493449851960691">"సంజ్ఞ నావిగేషన్ ట్యుటోరియల్‌ను పూర్తి చేయడానికి దయచేసి మీ పరికరాన్ని రొటేట్ చేయండి"</string>
     <string name="back_gesture_feedback_swipe_too_far_from_edge" msgid="4175100312909721217">"కుడి వైపు చిట్ట చివరి లేదా ఎడమ వైపు చిట్ట చివరి అంచు నుండి స్వైప్ చేస్తున్నారని నిర్ధారించుకోండి"</string>
@@ -152,10 +154,7 @@
     <string name="bubble_bar_accessibility_announce_expand" msgid="1503192695527477102">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g>ను విస్తరించండి"</string>
     <string name="bubble_bar_accessibility_announce_collapse" msgid="928284600086798791">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g>ను కుదించండి"</string>
     <string name="search_gesture_feature_title" msgid="1294044108313175306">"సెర్చ్ చేయడానికి సర్కిల్ గీయండి"</string>
-    <!-- no translation found for header_app_icon_description (2184625881433608027) -->
-    <skip />
-    <!-- no translation found for header_default_app_title (8308052350689531566) -->
-    <skip />
-    <!-- no translation found for header_close_icon_description (5400033616675911319) -->
-    <skip />
+    <string name="header_app_icon_description" msgid="2184625881433608027">"యాప్ చిహ్నం"</string>
+    <string name="header_default_app_title" msgid="8308052350689531566">"యాప్ టైటిల్"</string>
+    <string name="header_close_icon_description" msgid="5400033616675911319">"\'మూసివేయండి\' బటన్"</string>
 </resources>

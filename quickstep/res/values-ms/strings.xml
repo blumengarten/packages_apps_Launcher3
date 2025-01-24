@@ -46,6 +46,8 @@
     <string name="hotsaet_tip_prediction_enabled" msgid="2233554377501347650">"Cadangan apl didayakan"</string>
     <string name="hotsaet_tip_prediction_disabled" msgid="1506426298884658491">"Cadangan apl dilumpuhkan"</string>
     <string name="hotseat_prediction_content_description" msgid="4582028296938078419">"Apl yang diramalkan: <xliff:g id="TITLE">%1$s</xliff:g>"</string>
+    <!-- no translation found for gesture_tutorial_title (2750751261768388354) -->
+    <skip />
     <string name="gesture_tutorial_rotation_prompt_title" msgid="7537946781362766964">"Putarkan peranti anda"</string>
     <string name="gesture_tutorial_rotation_prompt" msgid="1664493449851960691">"Sila putarkan peranti anda untuk melengkapkan tutorial navigasi gerak isyarat"</string>
     <string name="back_gesture_feedback_swipe_too_far_from_edge" msgid="4175100312909721217">"Pastikan anda meleret dari hujung sebelah kanan atau hujung sebelah kiri"</string>

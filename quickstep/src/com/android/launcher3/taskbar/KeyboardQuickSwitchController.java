@@ -28,6 +28,7 @@ import com.android.launcher3.R;
 import com.android.launcher3.taskbar.overlay.TaskbarOverlayContext;
 import com.android.launcher3.taskbar.overlay.TaskbarOverlayDragLayer;
 import com.android.launcher3.util.TouchController;
+import com.android.quickstep.RecentsFilterState;
 import com.android.quickstep.RecentsModel;
 import com.android.quickstep.util.DesktopTask;
 import com.android.quickstep.util.GroupTask;
@@ -153,6 +154,8 @@ public final class KeyboardQuickSwitchController implements
                 // Skip the task reload if the list is not changed.
                 if (!mModel.isTaskListValid(mTaskListChangeId) || !taskIdsToExclude.equals(
                         mExcludedTaskIds)) {
+                    final boolean shouldShowDesktopTasks = mControllers.taskbarDesktopModeController
+                            .shouldShowDesktopTasksInTaskbar();
                     mExcludedTaskIds = taskIdsToExclude;
                     mTaskListChangeId = mModel.getTasks((tasks) -> {
                         processLoadedTasks(tasks, taskIdsToExclude);
@@ -162,7 +165,8 @@ public final class KeyboardQuickSwitchController implements
                                 currentFocusIndexOverride,
                                 mHasDesktopTask,
                                 mWasDesktopTaskFilteredOut);
-                    });
+                    }, shouldShowDesktopTasks ? RecentsFilterState.EMPTY_FILTER
+                            : RecentsFilterState.getEmptyDesktopTaskFilter());
                 }
 
                 mQuickSwitchViewController.updateLayoutForSurface(wasOpenedFromTaskbar,
@@ -188,8 +192,8 @@ public final class KeyboardQuickSwitchController implements
         mQuickSwitchViewController = new KeyboardQuickSwitchViewController(
                 mControllers, mOverlayContext, keyboardQuickSwitchView, mControllerCallbacks);
 
-        final boolean onDesktop = mControllers.taskbarDesktopModeController
-                .getAreDesktopTasksVisibleAndNotInOverview();
+        final boolean shouldShowDesktopTasks = mControllers.taskbarDesktopModeController
+                .shouldShowDesktopTasksInTaskbar();
 
         if (mModel.isTaskListValid(mTaskListChangeId)
                 && taskIdsToExclude.equals(mExcludedTaskIds)) {
@@ -201,7 +205,7 @@ public final class KeyboardQuickSwitchController implements
                     /* updateTasks= */ false,
                     currentFocusedIndex == -1 && !mControllerCallbacks.isFirstTaskRunning()
                             ? 0 : currentFocusedIndex,
-                    onDesktop,
+                    shouldShowDesktopTasks,
                     mHasDesktopTask,
                     mWasDesktopTaskFilteredOut,
                     wasOpenedFromTaskbar);
@@ -219,11 +223,12 @@ public final class KeyboardQuickSwitchController implements
                     /* updateTasks= */ true,
                     currentFocusedIndex == -1 && !mControllerCallbacks.isFirstTaskRunning()
                             ? 0 : currentFocusedIndex,
-                    onDesktop,
+                    shouldShowDesktopTasks,
                     mHasDesktopTask,
                     mWasDesktopTaskFilteredOut,
                     wasOpenedFromTaskbar);
-        });
+        }, shouldShowDesktopTasks ? RecentsFilterState.EMPTY_FILTER
+                : RecentsFilterState.getEmptyDesktopTaskFilter());
     }
 
     private boolean shouldExcludeTask(GroupTask task, Set<Integer> taskIdsToExclude) {
@@ -233,7 +238,7 @@ public final class KeyboardQuickSwitchController implements
     private void processLoadedTasks(List<GroupTask> tasks, Set<Integer> taskIdsToExclude) {
         mHasDesktopTask = false;
         mWasDesktopTaskFilteredOut = false;
-        if (mControllers.taskbarDesktopModeController.getAreDesktopTasksVisibleAndNotInOverview()) {
+        if (mControllers.taskbarDesktopModeController.shouldShowDesktopTasksInTaskbar()) {
             processLoadedTasksOnDesktop(tasks, taskIdsToExclude);
         } else {
             processLoadedTasksOutsideDesktop(tasks, taskIdsToExclude);

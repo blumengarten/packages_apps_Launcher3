@@ -49,10 +49,13 @@ import com.android.quickstep.views.TaskView;
 
 /**
  * Touch controller for handling task view card swipes
+ *
+ * @deprecated This class will be replaced by the new {@link TaskViewTouchController}.
  */
-public abstract class TaskViewTouchController<CONTAINER extends Context & RecentsViewContainer>
-        extends AnimatorListenerAdapter implements TouchController,
-        SingleAxisSwipeDetector.Listener {
+@Deprecated
+public class TaskViewTouchControllerDeprecated<
+        CONTAINER extends Context & RecentsViewContainer> extends AnimatorListenerAdapter
+        implements TouchController, SingleAxisSwipeDetector.Listener {
 
     private static final float ANIMATION_PROGRESS_FRACTION_MIDPOINT = 0.5f;
     private static final long MIN_TASK_DISMISS_ANIMATION_DURATION = 300;
@@ -65,6 +68,7 @@ public abstract class TaskViewTouchController<CONTAINER extends Context & Recent
             VibrationConstants.EFFECT_TEXTURE_TICK;
 
     protected final CONTAINER mContainer;
+    private final TaskViewRecentsTouchContext mTaskViewRecentsTouchContext;
     private final SingleAxisSwipeDetector mDetector;
     private final RecentsView<?, ?> mRecentsView;
     private final Rect mTempRect = new Rect();
@@ -88,8 +92,10 @@ public abstract class TaskViewTouchController<CONTAINER extends Context & Recent
 
     private boolean mIsDismissHapticRunning = false;
 
-    public TaskViewTouchController(CONTAINER container) {
+    public TaskViewTouchControllerDeprecated(CONTAINER container,
+            TaskViewRecentsTouchContext taskViewRecentsTouchContext) {
         mContainer = container;
+        mTaskViewRecentsTouchContext = taskViewRecentsTouchContext;
         mRecentsView = container.getOverviewPanel();
         mIsRtl = Utilities.isRtl(container.getResources());
         SingleAxisSwipeDetector.Direction dir =
@@ -117,15 +123,7 @@ public abstract class TaskViewTouchController<CONTAINER extends Context & Recent
                 mContainer, TYPE_TOUCH_CONTROLLER_NO_INTERCEPT) != null) {
             return false;
         }
-        return isRecentsInteractive();
-    }
-
-    protected abstract boolean isRecentsInteractive();
-
-    /** Is recents view showing a single task in a modal way. */
-    protected abstract boolean isRecentsModal();
-
-    protected void onUserControlledAnimationCreated(AnimatorPlaybackController animController) {
+        return mTaskViewRecentsTouchContext.isRecentsInteractive();
     }
 
     @Override
@@ -161,7 +159,7 @@ public abstract class TaskViewTouchController<CONTAINER extends Context & Recent
                     if (mRecentsView.isTaskViewVisible(taskView) && mContainer.getDragLayer()
                             .isEventOverView(taskView, ev)) {
                         // Disable swiping up and down if the task overlay is modal.
-                        if (isRecentsModal()) {
+                        if (mTaskViewRecentsTouchContext.isRecentsModal()) {
                             mTaskBeingDragged = null;
                             break;
                         }
@@ -259,7 +257,7 @@ public abstract class TaskViewTouchController<CONTAINER extends Context & Recent
         // Setting this interpolator doesn't affect the visual motion, but is used to determine
         // whether we successfully reached the target state in onDragEnd().
         mCurrentAnimation.getTarget().setInterpolator(currentInterpolator);
-        onUserControlledAnimationCreated(mCurrentAnimation);
+        mTaskViewRecentsTouchContext.onUserControlledAnimationCreated(mCurrentAnimation);
         mCurrentAnimation.getTarget().addListener(this);
         mCurrentAnimation.dispatchOnStart();
         mProgressMultiplier = 1 / mEndDisplacement;

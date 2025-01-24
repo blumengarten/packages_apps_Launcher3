@@ -154,7 +154,7 @@ public class RecentsModel implements RecentTasksDataSource, TaskStackChangeListe
 
     /**
      * Fetches the list of recent tasks. Tasks are ordered by recency, with the latest active tasks
-     * at the end of the list.
+     * at the end of the list. Filters out desktop tasks that contain no non-minimized tasks.
      *
      * @param callback The callback to receive the task plan once its complete or null. This is
      *                always called on the UI thread.
@@ -163,7 +163,7 @@ public class RecentsModel implements RecentTasksDataSource, TaskStackChangeListe
     @Override
     public int getTasks(@Nullable Consumer<List<GroupTask>> callback) {
         return mTaskList.getTasks(false /* loadKeysOnly */, callback,
-                RecentsFilterState.DEFAULT_FILTER);
+                RecentsFilterState.getEmptyDesktopTaskFilter());
     }
 
     /**

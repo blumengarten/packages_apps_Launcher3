@@ -419,10 +419,6 @@ public class RecentTasksList {
     private @Nullable DesktopTask createDesktopTask(GroupedTaskInfo recentTaskInfo) {
         ArrayList<Task> tasks = new ArrayList<>(recentTaskInfo.getTaskInfoList().size());
         int[] minimizedTaskIds = recentTaskInfo.getMinimizedTaskIds();
-        if (minimizedTaskIds.length == recentTaskInfo.getTaskInfoList().size()) {
-            // All Tasks are minimized -> don't create a DesktopTask
-            return null;
-        }
         for (TaskInfo taskInfo : recentTaskInfo.getTaskInfoList()) {
             Task.TaskKey key = new Task.TaskKey(taskInfo);
             Task task = Task.from(key, taskInfo, false);

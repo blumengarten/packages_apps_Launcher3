@@ -46,6 +46,8 @@
     <string name="hotsaet_tip_prediction_enabled" msgid="2233554377501347650">"অ্যাপ সাজেশন চালু করা আছে"</string>
     <string name="hotsaet_tip_prediction_disabled" msgid="1506426298884658491">"অ্যাপ সাজেশন বন্ধ করা আছে"</string>
     <string name="hotseat_prediction_content_description" msgid="4582028296938078419">"আপনার প্রয়োজন হতে পারে এমন অ্যাপ: <xliff:g id="TITLE">%1$s</xliff:g>"</string>
+    <!-- no translation found for gesture_tutorial_title (2750751261768388354) -->
+    <skip />
     <string name="gesture_tutorial_rotation_prompt_title" msgid="7537946781362766964">"আপনার ডিভাইস ঘোরান"</string>
     <string name="gesture_tutorial_rotation_prompt" msgid="1664493449851960691">"জেসচার নেভিগেশন টিউটোরিয়াল সম্পূর্ণ করতে আপনার ডিভাইসটি ঘোরান"</string>
     <string name="back_gesture_feedback_swipe_too_far_from_edge" msgid="4175100312909721217">"স্ক্রিনের একেবারে ডান বা বাঁদিকের প্রান্ত থেকে সোয়াইপ করেছেন কিনা তা দেখে নিন"</string>
@@ -152,10 +154,7 @@
     <string name="bubble_bar_accessibility_announce_expand" msgid="1503192695527477102">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g> বড় করুন"</string>
     <string name="bubble_bar_accessibility_announce_collapse" msgid="928284600086798791">"<xliff:g id="BUBBLE_DESCRIPTION">%1$s</xliff:g> আড়াল করুন"</string>
     <string name="search_gesture_feature_title" msgid="1294044108313175306">"খোঁজার জন্য সার্কেল বানান"</string>
-    <!-- no translation found for header_app_icon_description (2184625881433608027) -->
-    <skip />
-    <!-- no translation found for header_default_app_title (8308052350689531566) -->
-    <skip />
-    <!-- no translation found for header_close_icon_description (5400033616675911319) -->
-    <skip />
+    <string name="header_app_icon_description" msgid="2184625881433608027">"অ্যাপ আইকন"</string>
+    <string name="header_default_app_title" msgid="8308052350689531566">"অ্যাপের শিরোনাম"</string>
+    <string name="header_close_icon_description" msgid="5400033616675911319">"বন্ধ করার বোতাম"</string>
 </resources>

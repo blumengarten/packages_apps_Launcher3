@@ -21,7 +21,9 @@ import dagger.Module;
 @Module(includes = {
         WindowManagerProxyModule.class,
         ApiWrapperModule.class,
-        PluginManagerWrapperModule.class
+        PluginManagerWrapperModule.class,
+        StaticObjectModule.class,
+        AppModule.class
 })
 public class LauncherAppModule {
 }

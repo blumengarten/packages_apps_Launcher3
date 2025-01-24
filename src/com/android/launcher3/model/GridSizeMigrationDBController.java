@@ -140,22 +140,13 @@ public class GridSizeMigrationDBController {
         try (SQLiteTransaction t = new SQLiteTransaction(target.getWritableDatabase())) {
 
             if (shouldMigrateToStrictlyTallerGrid) {
-                // This is a special case where if the grid is the same amount of columns but a
-                // larger amount of rows we simply copy over the source grid to the destination
-                // grid, rather than undergoing the general grid migration. If there are more icons
-                // on the bottom of the first page then we shift the icons down to the bottom of the
-                // grid so that the icons remain bottom-anchored.
+                // We want to add the extra row(s) to the top of the screen, so we shift the grid
+                // down.
                 if (oneGridSpecs()) {
-                    DbReader destReader = new DbReader(
-                            target.getWritableDatabase(), TABLE_NAME, context);
-                    boolean shouldShiftCells =
-                            shouldShiftCells(destReader, srcDeviceState.getRows());
-                    if (shouldShiftCells) {
-                        shiftTableByXCells(
-                                target.getWritableDatabase(),
-                                (destDeviceState.getRows() - srcDeviceState.getRows()),
-                                TABLE_NAME);
-                    }
+                    shiftTableByXCells(
+                            target.getWritableDatabase(),
+                            (destDeviceState.getRows() - srcDeviceState.getRows()),
+                            TABLE_NAME);
                 }
 
                 // Save current configuration, so that the migration does not run again.
@@ -454,22 +445,6 @@ public class GridSizeMigrationDBController {
             }
         }
     }
-
-    private static boolean shouldShiftCells(final DbReader destReader, final int srcGridRowCount) {
-        List<DbEntry> workspaceItems = destReader.loadAllWorkspaceEntries();
-        int firstPageItemsRowPosSum = workspaceItems.stream()
-                .filter(entry -> entry.screenId == 0)
-                .mapToInt(entry -> entry.cellY).sum();
-        int firstPageWorkspaceItemsCount = (int) workspaceItems.stream()
-                .filter(entry -> entry.screenId == 0).count();
-        if (firstPageWorkspaceItemsCount == 0) {
-            return false;
-        }
-        float srcGridMidPoint = srcGridRowCount / 2f;
-        float firstPageItemPosAvg = (float) firstPageItemsRowPosSum / firstPageWorkspaceItemsCount;
-        return (firstPageItemPosAvg >= srcGridMidPoint);
-    }
-
 
     @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
     public static class DbReader {

@@ -59,7 +59,6 @@ import android.content.res.Resources;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.hardware.display.DisplayManager;
-import android.os.Bundle;
 import android.os.IRemoteCallback;
 import android.os.Process;
 import android.os.Trace;
@@ -85,6 +84,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.android.internal.jank.Cuj;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.BubbleTextView;
+import com.android.launcher3.BubbleTextView.RunningAppState;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Flags;
 import com.android.launcher3.LauncherPrefs;
@@ -368,7 +368,8 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                 new KeyboardQuickSwitchController(),
                 new TaskbarPinningController(this),
                 bubbleControllersOptional,
-                new TaskbarDesktopModeController(DesktopVisibilityController.INSTANCE.get(this)));
+                new TaskbarDesktopModeController(this,
+                        DesktopVisibilityController.INSTANCE.get(this)));
 
         mLauncherPrefs = LauncherPrefs.get(this);
     }
@@ -891,36 +892,10 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         return makeDefaultActivityOptions(SPLASH_SCREEN_STYLE_UNDEFINED);
     }
 
-    private ActivityOptionsWrapper getActivityLaunchDesktopOptions(ItemInfo info) {
-        if (!DesktopModeFlags.ENABLE_DESKTOP_APP_LAUNCH_TRANSITIONS.isTrue()
-                && !DesktopModeFlags.ENABLE_DESKTOP_APP_LAUNCH_TRANSITIONS_BUGFIX.isTrue()) {
-            return null;
-        }
-        if (!areDesktopTasksVisible()) {
-            return null;
-        }
-        BubbleTextView.RunningAppState appState =
-                mControllers.taskbarRecentAppsController.getDesktopItemState(info);
-        AppLaunchType launchType = null;
-        switch (appState) {
-            case RUNNING:
-                return null;
-            case MINIMIZED:
-                launchType = AppLaunchType.UNMINIMIZE;
-                break;
-            case NOT_RUNNING:
-                launchType = AppLaunchType.LAUNCH;
-                break;
-        }
+    private ActivityOptionsWrapper getActivityLaunchDesktopOptions() {
         ActivityOptions options = ActivityOptions.makeRemoteTransition(
-                new RemoteTransition(
-                        new DesktopAppLaunchTransition(
-                                /* context= */ this,
-                                getMainExecutor(),
-                                launchType,
-                                Cuj.CUJ_DESKTOP_MODE_APP_LAUNCH_FROM_ICON
-                        ),
-                        "TaskbarDesktopLaunch"));
+                createDesktopAppLaunchRemoteTransition(
+                        AppLaunchType.LAUNCH, Cuj.CUJ_DESKTOP_MODE_APP_LAUNCH_FROM_ICON));
         return new ActivityOptionsWrapper(options, new RunnableList());
     }
 
@@ -1322,8 +1297,9 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         if (tag instanceof GroupTask groupTask) {
             RemoteTransition remoteTransition =
                     (areDesktopTasksVisible() && canUnminimizeDesktopTask(groupTask.task1.key.id))
-                            ? createUnminimizeRemoteTransition(
-                                    Cuj.CUJ_DESKTOP_MODE_APP_LAUNCH_FROM_ICON) : null;
+                            ? createDesktopAppLaunchRemoteTransition(AppLaunchType.UNMINIMIZE,
+                                    Cuj.CUJ_DESKTOP_MODE_APP_LAUNCH_FROM_ICON)
+                            : null;
             if (areDesktopTasksVisible() && mControllers.uiController.isInOverviewUi()) {
                 RunnableList runnableList = recents.launchRunningDesktopTaskView();
                 // Wrapping it in runnable so we post after DW is ready for the app
@@ -1356,7 +1332,8 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
             }
         } else if (tag instanceof TaskItemInfo info && !Flags.enableMultiInstanceMenuTaskbar()) {
             RemoteTransition remoteTransition = canUnminimizeDesktopTask(info.getTaskId())
-                    ? createUnminimizeRemoteTransition(Cuj.CUJ_DESKTOP_MODE_APP_LAUNCH_FROM_ICON)
+                    ? createDesktopAppLaunchRemoteTransition(
+                            AppLaunchType.UNMINIMIZE, Cuj.CUJ_DESKTOP_MODE_APP_LAUNCH_FROM_ICON)
                     : null;
 
             TaskView taskView = null;
@@ -1535,21 +1512,22 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
     public boolean canUnminimizeDesktopTask(int taskId) {
         BubbleTextView.RunningAppState runningAppState =
                 mControllers.taskbarRecentAppsController.getRunningAppState(taskId);
-        return runningAppState == BubbleTextView.RunningAppState.MINIMIZED
+        return runningAppState == RunningAppState.MINIMIZED
                 && (DesktopModeFlags.ENABLE_DESKTOP_APP_LAUNCH_ALTTAB_TRANSITIONS.isTrue()
                     || DesktopModeFlags.ENABLE_DESKTOP_APP_LAUNCH_ALTTAB_TRANSITIONS_BUGFIX.isTrue()
                     );
     }
 
-    private RemoteTransition createUnminimizeRemoteTransition(@Cuj.CujType int cujType) {
+    private RemoteTransition createDesktopAppLaunchRemoteTransition(
+            AppLaunchType appLaunchType, @Cuj.CujType int cujType) {
         return new RemoteTransition(
                 new DesktopAppLaunchTransition(
                         this,
                         getMainExecutor(),
-                        AppLaunchType.UNMINIMIZE,
+                        appLaunchType,
                         cujType
                 ),
-                "TaskbarDesktopUnminimize");
+                "TaskbarDesktopAppLaunch");
     }
 
     /**
@@ -1680,10 +1658,9 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                     return;
                 }
             }
-            if (areDesktopTasksVisible()) {
-                ActivityOptionsWrapper opts = getActivityLaunchDesktopOptions(info);
-                Bundle optionsBundle = opts == null ? Bundle.EMPTY : opts.options.toBundle();
-                mSysUiProxy.startLaunchIntentTransition(intent, optionsBundle, displayId);
+            if (areDesktopTasksVisible()
+                    && DesktopModeFlags.ENABLE_DESKTOP_APP_LAUNCH_TRANSITIONS_BUGFIX.isTrue()) {
+                launchDesktopApp(intent, info, displayId);
             } else {
                 startActivity(intent, null);
             }
@@ -1692,6 +1669,27 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                     .show();
             Log.e(TAG, "Unable to launch. tag=" + info + " intent=" + intent, e);
         }
+    }
+
+    private void launchDesktopApp(Intent intent, ItemInfo info, int displayId) {
+        TaskbarRecentAppsController.TaskState taskState =
+                mControllers.taskbarRecentAppsController.getDesktopItemState(info);
+        RunningAppState appState = taskState.getRunningAppState();
+        if (appState == RunningAppState.RUNNING || appState == RunningAppState.MINIMIZED) {
+            // We only need a custom animation (a RemoteTransition) if the task is minimized - if
+            // it's already visible it will just be brought forward.
+            RemoteTransition remoteTransition = (appState == RunningAppState.MINIMIZED)
+                    ? createDesktopAppLaunchRemoteTransition(
+                            AppLaunchType.UNMINIMIZE, Cuj.CUJ_DESKTOP_MODE_APP_LAUNCH_FROM_ICON)
+                    : null;
+            UI_HELPER_EXECUTOR.execute(() ->
+                    SystemUiProxy.INSTANCE.get(this).showDesktopApp(taskState.getTaskId(),
+                            remoteTransition, DesktopTaskToFrontReason.TASKBAR_TAP));
+            return;
+        }
+        // There is no task associated with this launch - launch a new task through an intent
+        ActivityOptionsWrapper opts = getActivityLaunchDesktopOptions();
+        mSysUiProxy.startLaunchIntentTransition(intent, opts.options.toBundle(), displayId);
     }
 
     /** Expands a folder icon when it is clicked */

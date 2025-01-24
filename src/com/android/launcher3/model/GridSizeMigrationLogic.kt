@@ -77,24 +77,16 @@ class GridSizeMigrationLogic {
         val migrationStartTime = System.currentTimeMillis()
         try {
             SQLiteTransaction(target.writableDatabase).use { t ->
-                // This is a special case where if the grid is the same amount of columns but a
-                // larger amount of rows we simply copy over the source grid to the destination
-                // grid, rather than undergoing the general grid migration. If there are more icons
-                // on the bottom of the first page then we shift the icons down to the bottom of the
-                // grid so that the icons remain bottom-anchored.
+                // We want to add the extra row(s) to the top of the screen, so we shift the grid
+                // down.
                 if (shouldMigrateToStrtictlyTallerGrid) {
                     Log.d(TAG, "Migrating to strictly taller grid")
                     if (oneGridSpecs()) {
-                        val destReader = DbReader(target.writableDatabase, TABLE_NAME, context)
-                        val shouldShiftCells = shouldShiftCells(destReader, srcDeviceState.rows)
-                        if (shouldShiftCells) {
-                            Log.i("TAGTAG", "should shift cells")
-                            shiftTableByXCells(
-                                target.writableDatabase,
-                                (destDeviceState.rows - srcDeviceState.rows),
-                                TABLE_NAME,
-                            )
-                        }
+                        shiftTableByXCells(
+                            target.writableDatabase,
+                            (destDeviceState.rows - srcDeviceState.rows),
+                            TABLE_NAME,
+                        )
                     }
                     // Save current configuration, so that the migration does not run again.
                     destDeviceState.writeToPrefs(context)
@@ -137,19 +129,6 @@ class GridSizeMigrationLogic {
             // Notify if we've migrated successfully
             modelDelegate.gridMigrationComplete(srcDeviceState, destDeviceState)
         }
-    }
-
-    private fun shouldShiftCells(destReader: DbReader, srcGridRowCount: Int): Boolean {
-        val workspaceItems = destReader.loadAllWorkspaceEntries()
-        val firstPageItemsRowPosSum =
-            workspaceItems.sumOf { entry -> if (entry.screenId == 0) entry.cellY else 0 }
-        val firstPageWorkspaceItemsCount = workspaceItems.count { entry -> entry.screenId == 0 }
-        if (firstPageWorkspaceItemsCount == 0) {
-            return false
-        }
-        val srcGridMidPoint = srcGridRowCount / 2f
-        val firstPageItemPosAvg = firstPageItemsRowPosSum / firstPageWorkspaceItemsCount.toFloat()
-        return (firstPageItemPosAvg >= srcGridMidPoint)
     }
 
     /** Handles hotseat migration. */

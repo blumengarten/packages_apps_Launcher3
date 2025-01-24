@@ -81,6 +81,7 @@ import com.android.wm.shell.common.pip.IPip
 import com.android.wm.shell.common.pip.IPipAnimationListener
 import com.android.wm.shell.desktopmode.IDesktopMode
 import com.android.wm.shell.desktopmode.IDesktopTaskListener
+import com.android.wm.shell.desktopmode.IMoveToDesktopCallback
 import com.android.wm.shell.draganddrop.IDragAndDrop
 import com.android.wm.shell.onehanded.IOneHanded
 import com.android.wm.shell.recents.IRecentTasks
@@ -1072,6 +1073,19 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
     //
     // Desktop Mode
     //
+    /** Calls shell to create a new desk (if possible) on the display whose ID is `displayId`. */
+    fun createDesktop(displayId: Int) =
+        executeWithErrorLog({ "Failed call createDesk" }) { desktopMode?.createDesk(displayId) }
+
+    /**
+     * Calls shell to activate the desk whose ID is `deskId` on whatever display it exists on. This
+     * will bring all tasks on this desk to the front.
+     */
+    fun activateDesktop(deskId: Int, transition: RemoteTransition?) =
+        executeWithErrorLog({ "Failed call activateDesk" }) {
+            desktopMode?.activateDesk(deskId, transition)
+        }
+
     /** Call shell to show all apps active on the desktop */
     fun showDesktopApps(displayId: Int, transition: RemoteTransition?) =
         executeWithErrorLog({ "Failed call showDesktopApps" }) {
@@ -1087,14 +1101,6 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
         executeWithErrorLog({ "Failed call showDesktopApp" }) {
             desktopMode?.showDesktopApp(taskId, transition, toFrontReason)
         }
-
-    /** Call shell to get number of visible freeform tasks */
-    fun getVisibleDesktopTaskCount(displayId: Int): Int {
-        executeWithErrorLog({ "Failed call getVisibleDesktopTaskCount" }) {
-            return desktopMode?.getVisibleTaskCount(displayId) ?: 0
-        }
-        return 0
-    }
 
     /** Set a listener on shell to get updates about desktop task state */
     fun setDesktopTaskListener(listener: IDesktopTaskListener?) {
@@ -1115,9 +1121,19 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
         taskId: Int,
         transitionSource: DesktopModeTransitionSource?,
         transition: RemoteTransition?,
+        successCallback: Runnable,
     ) =
         executeWithErrorLog({ "Failed call moveToDesktop" }) {
-            desktopMode?.moveToDesktop(taskId, transitionSource, transition)
+            desktopMode?.moveToDesktop(
+                taskId,
+                transitionSource,
+                transition,
+                object : IMoveToDesktopCallback.Stub() {
+                    override fun onTaskMovedToDesktop() {
+                        successCallback.run()
+                    }
+                },
+            )
         }
 
     /** Call shell to remove the desktop that is on given `displayId` */

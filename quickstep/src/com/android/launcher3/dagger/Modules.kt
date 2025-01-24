@@ -21,9 +21,11 @@ import com.android.launcher3.uioverrides.plugins.PluginManagerWrapperImpl
 import com.android.launcher3.util.ApiWrapper
 import com.android.launcher3.util.PluginManagerWrapper
 import com.android.launcher3.util.window.WindowManagerProxy
+import com.android.quickstep.util.GestureExclusionManager
 import com.android.quickstep.util.SystemWindowManagerProxy
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 
 private object Modules {}
 
@@ -41,4 +43,12 @@ abstract class ApiWrapperModule {
 abstract class PluginManagerWrapperModule {
     @Binds
     abstract fun bindPluginManagerWrapper(impl: PluginManagerWrapperImpl): PluginManagerWrapper
+}
+
+@Module
+object StaticObjectModule {
+
+    @Provides
+    @JvmStatic
+    fun provideGestureExclusionManager(): GestureExclusionManager = GestureExclusionManager.INSTANCE
 }
