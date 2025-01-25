@@ -142,7 +142,9 @@ public class RemoteTargetGluer {
         if (mSplitBounds == null) {
             SplitBounds shellSplitBounds = targets.extras.getParcelable(KEY_EXTRA_SPLIT_BOUNDS,
                     SplitBounds.class);
-            mSplitBounds = convertShellSplitBoundsToLauncher(shellSplitBounds);
+            if (shellSplitBounds != null) {
+                mSplitBounds = convertShellSplitBoundsToLauncher(shellSplitBounds);
+            }
         }
 
         boolean containsSplitTargets = mSplitBounds != null;

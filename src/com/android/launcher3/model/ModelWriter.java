@@ -459,36 +459,13 @@ public class ModelWriter {
                 if (item.container != Favorites.CONTAINER_DESKTOP &&
                         item.container != Favorites.CONTAINER_HOTSEAT) {
                     // Item is in a collection, make sure this collection exists
-                    if (!mBgDataModel.collections.containsKey(item.container)) {
+                    if (!(mBgDataModel.itemsIdMap.get(item.container) instanceof CollectionInfo)) {
                         // An items container is being set to a that of an item which is not in
-                        // the list of Folders.
+                        // the list of collections.
                         String msg = "item: " + item + " container being set to: " +
                                 item.container + ", not in the list of collections";
                         Log.e(TAG, msg);
                     }
-                }
-
-                // Items are added/removed from the corresponding FolderInfo elsewhere, such
-                // as in Workspace.onDrop. Here, we just add/remove them from the list of items
-                // that are on the desktop, as appropriate
-                ItemInfo modelItem = mBgDataModel.itemsIdMap.get(itemId);
-                if (modelItem != null &&
-                        (modelItem.container == Favorites.CONTAINER_DESKTOP ||
-                                modelItem.container == Favorites.CONTAINER_HOTSEAT)) {
-                    switch (modelItem.itemType) {
-                        case Favorites.ITEM_TYPE_APPLICATION:
-                        case Favorites.ITEM_TYPE_DEEP_SHORTCUT:
-                        case Favorites.ITEM_TYPE_FOLDER:
-                        case Favorites.ITEM_TYPE_APP_PAIR:
-                            if (!mBgDataModel.workspaceItems.contains(modelItem)) {
-                                mBgDataModel.workspaceItems.add(modelItem);
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                } else {
-                    mBgDataModel.workspaceItems.remove(modelItem);
                 }
                 mVerifier.verifyModel();
             }

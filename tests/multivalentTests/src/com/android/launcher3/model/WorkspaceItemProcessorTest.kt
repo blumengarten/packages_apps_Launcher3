@@ -494,8 +494,7 @@ class WorkspaceItemProcessorTest {
     @Test
     fun `When processing Folder then create FolderInfo and mark restored`() {
         val actualFolderInfo = FolderInfo()
-        mockBgDataModel =
-            mock<BgDataModel>().apply { whenever(findOrMakeFolder(1)).thenReturn(actualFolderInfo) }
+        mockBgDataModel = mock<BgDataModel>()
         mockCursor =
             mock<LoaderCursor>().apply {
                 user = UserHandle(0)
@@ -509,6 +508,7 @@ class WorkspaceItemProcessorTest {
                 whenever(getColumnIndex(Favorites.TITLE)).thenReturn(4)
                 whenever(getString(4)).thenReturn("title")
                 whenever(options).thenReturn(5)
+                whenever(findOrMakeFolder(eq(1), any())).thenReturn(actualFolderInfo)
             }
         val expectedFolderInfo =
             FolderInfo().apply {
@@ -600,7 +600,8 @@ class WorkspaceItemProcessorTest {
 
         // Then
         val widgetInfoCaptor = ArgumentCaptor.forClass(LauncherAppWidgetInfo::class.java)
-        verify(mockCursor).checkAndAddItem(widgetInfoCaptor.capture(), eq(mockBgDataModel))
+        verify(mockCursor)
+            .checkAndAddItem(widgetInfoCaptor.capture(), eq(mockBgDataModel), anyOrNull())
         val actualWidgetInfo = widgetInfoCaptor.value
         with(actualWidgetInfo) {
             assertThat(providerName).isEqualTo(expectedWidgetInfo.providerName)
@@ -655,7 +656,7 @@ class WorkspaceItemProcessorTest {
         itemProcessorUnderTest.processItem()
 
         // Then
-        verify(mockCursor).checkAndAddItem(any(), any())
+        verify(mockCursor).checkAndAddItem(any(), any(), anyOrNull())
     }
 
     @Test

@@ -28,6 +28,7 @@ import com.android.launcher3.taskbar.TaskbarIconType.HOTSEAT
 import com.android.launcher3.taskbar.TaskbarIconType.OVERFLOW
 import com.android.launcher3.taskbar.TaskbarIconType.RECENT
 import com.android.quickstep.util.GroupTask
+import com.android.quickstep.util.SingleTask
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.Task.TaskKey
 import com.google.common.truth.FailureMetadata
@@ -56,7 +57,7 @@ object TaskbarViewTestUtil {
     /** Creates a list of fake recent tasks. */
     fun createRecents(size: Int): List<GroupTask> {
         return List(size) {
-            GroupTask(
+            SingleTask(
                 Task().apply {
                     key =
                         TaskKey(

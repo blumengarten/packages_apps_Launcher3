@@ -35,6 +35,7 @@ import android.app.KeyguardManager;
 import android.app.TaskInfo;
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Rect;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
@@ -45,6 +46,8 @@ import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.views.TaskViewType;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.wm.shell.shared.GroupedTaskInfo;
+import com.android.wm.shell.shared.split.SplitBounds;
+import com.android.wm.shell.shared.split.SplitScreenConstants;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -99,7 +102,12 @@ public class RecentTasksListTest {
     @Test
     public void loadTasksInBackground_onlyKeys_noValidTaskDescription() throws Exception  {
         GroupedTaskInfo recentTaskInfos = GroupedTaskInfo.forSplitTasks(
-                new RecentTaskInfo(), new RecentTaskInfo(), null);
+                new RecentTaskInfo(), new RecentTaskInfo(), new SplitBounds(
+                        /* leftTopBounds = */ new Rect(),
+                        /* rightBottomBounds = */ new Rect(),
+                        /* leftTopTaskId = */ -1,
+                        /* rightBottomTaskId = */ -1,
+                        /* snapPosition = */ SplitScreenConstants.SNAP_TO_2_50_50));
         when(mSystemUiProxy.getRecentTasks(anyInt(), anyInt()))
                 .thenReturn(new ArrayList<>(Collections.singletonList(recentTaskInfos)));
 
@@ -129,7 +137,13 @@ public class RecentTasksListTest {
         task1.taskDescription = new ActivityManager.TaskDescription(taskDescription);
         RecentTaskInfo task2 = new RecentTaskInfo();
         task2.taskDescription = new ActivityManager.TaskDescription();
-        GroupedTaskInfo recentTaskInfos = GroupedTaskInfo.forSplitTasks(task1, task2, null);
+        GroupedTaskInfo recentTaskInfos = GroupedTaskInfo.forSplitTasks(task1, task2,
+                new SplitBounds(
+                        /* leftTopBounds = */ new Rect(),
+                        /* rightBottomBounds = */ new Rect(),
+                        /* leftTopTaskId = */ -1,
+                        /* rightBottomTaskId = */ -1,
+                        /* snapPosition = */ SplitScreenConstants.SNAP_TO_2_50_50));
         when(mSystemUiProxy.getRecentTasks(anyInt(), anyInt()))
                 .thenReturn(new ArrayList<>(Collections.singletonList(recentTaskInfos)));
 

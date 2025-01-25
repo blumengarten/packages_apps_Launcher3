@@ -33,7 +33,6 @@ import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
 import android.util.ArraySet;
 import android.util.AttributeSet;
 import android.view.DisplayCutout;
@@ -41,7 +40,6 @@ import android.view.InputDevice;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.FrameLayout;
 
 import androidx.annotation.LayoutRes;
@@ -311,16 +309,6 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         mShouldTryStartAlign = mActivityContext.shouldStartAlignTaskbar();
     }
 
-    @Override
-    public boolean performAccessibilityActionInternal(int action, Bundle arguments) {
-        if (action == AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS) {
-            announceTaskbarShown();
-        } else if (action == AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS) {
-            announceTaskbarHidden();
-        }
-        return super.performAccessibilityActionInternal(action, arguments);
-    }
-
     private void announceTaskbarShown() {
         BubbleBarLocation bubbleBarLocation = mControllerCallbacks.getBubbleBarLocationIfVisible();
         if (bubbleBarLocation == null) {
@@ -334,21 +322,12 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         }
     }
 
-    private void announceTaskbarHidden() {
-        BubbleBarLocation bubbleBarLocation = mControllerCallbacks.getBubbleBarLocationIfVisible();
-        if (bubbleBarLocation == null) {
-            announceForAccessibility(mContext.getString(R.string.taskbar_a11y_hidden_title));
-        } else {
-            announceForAccessibility(
-                    mContext.getString(R.string.taskbar_a11y_hidden_with_bubbles_title));
-        }
-    }
-
     protected void announceAccessibilityChanges() {
-        this.performAccessibilityAction(
-                isVisibleToUser() ? AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS
-                        : AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS, null);
-
+        // Only announce taskbar window shown. Window disappearing is generally not announce.
+        // This also aligns with talkback guidelines and unnecessary announcement to users.
+        if (isVisibleToUser()) {
+            announceTaskbarShown();
+        }
         ActivityContext.lookupContext(getContext()).getDragLayer()
                 .sendAccessibilityEvent(TYPE_WINDOW_CONTENT_CHANGED);
     }

@@ -39,6 +39,8 @@ import com.android.launcher3.util.LooperExecutor;
 import com.android.launcher3.util.SplitConfigurationOptions;
 import com.android.quickstep.util.DesktopTask;
 import com.android.quickstep.util.GroupTask;
+import com.android.quickstep.util.SingleTask;
+import com.android.quickstep.util.SplitTask;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.wm.shell.Flags;
 import com.android.wm.shell.recents.IRecentTasksListener;
@@ -50,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -360,22 +363,19 @@ public class RecentTasksList {
                 final Task.TaskKey task1Key = new Task.TaskKey(taskInfo1);
                 final Task task1 = Task.from(task1Key, taskInfo1,
                         tmpLockedUsers.get(task1Key.userId) /* isLocked */);
-                final Task task2;
-                final SplitConfigurationOptions.SplitBounds launcherSplitBounds;
 
                 if (rawTask.isBaseType(TYPE_SPLIT)) {
                     final TaskInfo taskInfo2 = rawTask.getBaseGroupedTask().getTaskInfo2();
                     final Task.TaskKey task2Key = new Task.TaskKey(taskInfo2);
-                    task2 = Task.from(task2Key, taskInfo2,
+                    final Task task2 = Task.from(task2Key, taskInfo2,
                             tmpLockedUsers.get(task2Key.userId) /* isLocked */);
-                    launcherSplitBounds =
+                    final SplitConfigurationOptions.SplitBounds launcherSplitBounds =
                             convertShellSplitBoundsToLauncher(
                                     rawTask.getBaseGroupedTask().getSplitBounds());
+                    allTasks.add(new SplitTask(task1, task2, launcherSplitBounds));
                 } else {
-                    task2 = null;
-                    launcherSplitBounds = null;
+                    allTasks.add(new SingleTask(task1));
                 }
-                allTasks.add(new GroupTask(task1, task2, launcherSplitBounds));
             } else {
                 TaskInfo taskInfo1 = rawTask.getTaskInfo1();
                 TaskInfo taskInfo2 = rawTask.getTaskInfo2();
@@ -407,9 +407,14 @@ public class RecentTasksList {
                 if (taskInfo1.isVisible) {
                     numVisibleTasks++;
                 }
-                final SplitConfigurationOptions.SplitBounds launcherSplitBounds =
-                        convertShellSplitBoundsToLauncher(rawTask.getSplitBounds());
-                allTasks.add(new GroupTask(task1, task2, launcherSplitBounds));
+                if (task2 != null) {
+                    Objects.requireNonNull(rawTask.getSplitBounds());
+                    final SplitConfigurationOptions.SplitBounds launcherSplitBounds =
+                            convertShellSplitBoundsToLauncher(rawTask.getSplitBounds());
+                    allTasks.add(new SplitTask(task1, task2, launcherSplitBounds));
+                } else {
+                    allTasks.add(new SingleTask(task1));
+                }
             }
         }
 

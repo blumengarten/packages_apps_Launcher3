@@ -56,7 +56,7 @@ object LayoutImportExportHelper {
 
         model.enqueueModelUpdateTask { _, dataModel, _ ->
             val builder = LauncherLayoutBuilder()
-            dataModel.workspaceItems.forEach { info ->
+            dataModel.itemsIdMap.forEach { info ->
                 val loc =
                     when (info.container) {
                         CONTAINER_DESKTOP ->
@@ -66,9 +66,6 @@ object LayoutImportExportHelper {
                         else -> return@forEach
                     }
                 loc.addItem(context, info)
-            }
-            dataModel.appWidgets.forEach { info ->
-                builder.atWorkspace(info.cellX, info.cellY, info.screenId).addItem(context, info)
             }
 
             val layoutXml = builder.build()

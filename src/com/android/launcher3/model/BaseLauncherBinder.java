@@ -19,8 +19,10 @@ package com.android.launcher3.model;
 import static com.android.launcher3.BuildConfig.WIDGETS_ENABLED;
 import static com.android.launcher3.Flags.enableSmartspaceRemovalToggle;
 import static com.android.launcher3.Flags.enableWorkspaceInflation;
+import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_DESKTOP;
 import static com.android.launcher3.model.ItemInstallQueue.FLAG_LOADER_RUNNING;
-import static com.android.launcher3.model.ModelUtils.filterCurrentWorkspaceItems;
+import static com.android.launcher3.model.ModelUtils.WIDGET_FILTER;
+import static com.android.launcher3.model.ModelUtils.currentScreenContentFilter;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
 
@@ -44,11 +46,11 @@ import com.android.launcher3.model.BgDataModel.Callbacks;
 import com.android.launcher3.model.BgDataModel.FixedContainerItems;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.model.data.ItemInfo;
-import com.android.launcher3.model.data.LauncherAppWidgetInfo;
 import com.android.launcher3.model.data.PackageItemInfo;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.IntArray;
 import com.android.launcher3.util.IntSet;
+import com.android.launcher3.util.IntSparseArrayMap;
 import com.android.launcher3.util.ItemInflater;
 import com.android.launcher3.util.LooperExecutor;
 import com.android.launcher3.util.LooperIdleLock;
@@ -102,14 +104,12 @@ public class BaseLauncherBinder {
         Trace.beginSection("BaseLauncherBinder#bindWorkspace");
         try {
             // Save a copy of all the bg-thread collections
-            ArrayList<ItemInfo> workspaceItems = new ArrayList<>();
-            ArrayList<LauncherAppWidgetInfo> appWidgets = new ArrayList<>();
+            IntSparseArrayMap<ItemInfo> itemsIdMap;
             final IntArray orderedScreenIds = new IntArray();
             ArrayList<FixedContainerItems> extraItems = new ArrayList<>();
             final int workspaceItemCount;
             synchronized (mBgDataModel) {
-                workspaceItems.addAll(mBgDataModel.workspaceItems);
-                appWidgets.addAll(mBgDataModel.appWidgets);
+                itemsIdMap = mBgDataModel.itemsIdMap.clone();
                 orderedScreenIds.addAll(mBgDataModel.collectWorkspaceScreens());
                 mBgDataModel.extraItems.forEach(extraItems::add);
                 if (incrementBindId) {
@@ -122,7 +122,7 @@ public class BaseLauncherBinder {
 
             for (Callbacks cb : mCallbacksList) {
                 new UnifiedWorkspaceBinder(cb, mUiExecutor, mApp, mBgDataModel, mMyBindingId,
-                        workspaceItems, appWidgets, extraItems, orderedScreenIds)
+                        itemsIdMap, extraItems, orderedScreenIds)
                         .bind(isBindSync, workspaceItemCount);
             }
         } finally {
@@ -258,8 +258,7 @@ public class BaseLauncherBinder {
         private final BgDataModel mBgDataModel;
 
         private final int mMyBindingId;
-        private final ArrayList<ItemInfo> mWorkspaceItems;
-        private final ArrayList<LauncherAppWidgetInfo> mAppWidgets;
+        private final IntSparseArrayMap<ItemInfo> mItemIdMap;
         private final IntArray mOrderedScreenIds;
         private final ArrayList<FixedContainerItems> mExtraItems;
 
@@ -268,8 +267,7 @@ public class BaseLauncherBinder {
                 LauncherAppState app,
                 BgDataModel bgDataModel,
                 int myBindingId,
-                ArrayList<ItemInfo> workspaceItems,
-                ArrayList<LauncherAppWidgetInfo> appWidgets,
+                IntSparseArrayMap<ItemInfo> itemIdMap,
                 ArrayList<FixedContainerItems> extraItems,
                 IntArray orderedScreenIds) {
             mCallbacks = callbacks;
@@ -277,8 +275,7 @@ public class BaseLauncherBinder {
             mApp = app;
             mBgDataModel = bgDataModel;
             mMyBindingId = myBindingId;
-            mWorkspaceItems = workspaceItems;
-            mAppWidgets = appWidgets;
+            mItemIdMap = itemIdMap;
             mExtraItems = extraItems;
             mOrderedScreenIds = orderedScreenIds;
         }
@@ -294,10 +291,15 @@ public class BaseLauncherBinder {
             ArrayList<ItemInfo> currentAppWidgets = new ArrayList<>();
             ArrayList<ItemInfo> otherAppWidgets = new ArrayList<>();
 
-            filterCurrentWorkspaceItems(currentScreenIds, mWorkspaceItems, currentWorkspaceItems,
-                    otherWorkspaceItems);
-            filterCurrentWorkspaceItems(currentScreenIds, mAppWidgets, currentAppWidgets,
-                    otherAppWidgets);
+            Predicate<ItemInfo> currentScreenCheck = currentScreenContentFilter(currentScreenIds);
+            mItemIdMap.forEach(item -> {
+                if (currentScreenCheck.test(item)) {
+                    (WIDGET_FILTER.test(item) ? currentAppWidgets : currentWorkspaceItems)
+                            .add(item);
+                } else if (item.container == CONTAINER_DESKTOP) {
+                    (WIDGET_FILTER.test(item) ? otherAppWidgets : otherWorkspaceItems).add(item);
+                }
+            });
             final InvariantDeviceProfile idp = mApp.getInvariantDeviceProfile();
             sortWorkspaceItemsSpatially(idp, currentWorkspaceItems);
             sortWorkspaceItemsSpatially(idp, otherWorkspaceItems);

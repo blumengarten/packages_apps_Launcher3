@@ -86,7 +86,6 @@ import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.BubbleTextView.RunningAppState;
 import com.android.launcher3.DeviceProfile;
-import com.android.launcher3.Flags;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherSettings.Favorites;
 import com.android.launcher3.R;
@@ -1330,7 +1329,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                 mControllers.uiController.onTaskbarIconLaunched(api);
                 mControllers.taskbarStashController.updateAndAnimateTransientTaskbar(true);
             }
-        } else if (tag instanceof TaskItemInfo info && !Flags.enableMultiInstanceMenuTaskbar()) {
+        } else if (tag instanceof TaskItemInfo info) {
             RemoteTransition remoteTransition = canUnminimizeDesktopTask(info.getTaskId())
                     ? createDesktopAppLaunchRemoteTransition(
                             AppLaunchType.UNMINIMIZE, Cuj.CUJ_DESKTOP_MODE_APP_LAUNCH_FROM_ICON)
@@ -1341,7 +1340,8 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                 taskView = recents.getTaskViewByTaskId(info.getTaskId());
             }
 
-            if (areDesktopTasksVisible() && taskView != null) {
+            if (areDesktopTasksVisible() && taskView != null
+                    && mControllers.uiController.isInOverviewUi()) {
                 RunnableList runnableList = taskView.launchWithAnimation();
                 if (runnableList != null) {
                     runnableList.add(() ->

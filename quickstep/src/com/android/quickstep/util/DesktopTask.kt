@@ -17,7 +17,6 @@ package com.android.quickstep.util
 
 import com.android.quickstep.views.TaskViewType
 import com.android.systemui.shared.recents.model.Task
-import java.util.Objects
 
 /**
  * A [Task] container that can contain N number of tasks that are part of the desktop in recent
@@ -39,9 +38,6 @@ class DesktopTask(override val tasks: List<Task>) :
     override fun equals(o: Any?): Boolean {
         if (this === o) return true
         if (o !is DesktopTask) return false
-        if (!super.equals(o)) return false
-        return tasks == o.tasks
+        return super.equals(o)
     }
-
-    override fun hashCode() = Objects.hash(super.hashCode(), tasks)
 }

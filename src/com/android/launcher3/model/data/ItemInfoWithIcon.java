@@ -16,6 +16,8 @@
 
 package com.android.launcher3.model.data;
 
+import static com.android.launcher3.icons.BitmapInfo.FLAG_THEMED;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Process;
@@ -23,6 +25,7 @@ import android.os.Process;
 import androidx.annotation.Nullable;
 
 import com.android.launcher3.Flags;
+import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.BitmapInfo;
 import com.android.launcher3.icons.BitmapInfo.DrawableCreationFlags;
 import com.android.launcher3.icons.FastBitmapDrawable;
@@ -320,6 +323,9 @@ public abstract class ItemInfoWithIcon extends ItemInfo {
      * Returns a FastBitmapDrawable with the icon and context theme applied
      */
     public FastBitmapDrawable newIcon(Context context, @DrawableCreationFlags int creationFlags) {
+        if (!ThemeManager.INSTANCE.get(context).isMonoThemeEnabled()) {
+            creationFlags &= ~FLAG_THEMED;
+        }
         FastBitmapDrawable drawable = bitmap.newIcon(context, creationFlags);
         drawable.setIsDisabled(isDisabled());
         return drawable;

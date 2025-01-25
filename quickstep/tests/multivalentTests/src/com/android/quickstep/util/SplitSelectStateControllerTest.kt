@@ -660,10 +660,16 @@ class SplitSelectStateControllerTest {
         intent.component = task2ComponentName
         taskInfo.baseIntent = intent
         task2.key = Task.TaskKey(taskInfo)
-        return GroupTask(
+        return SplitTask(
             task1,
             task2,
-            SplitConfigurationOptions.SplitBounds(Rect(), Rect(), -1, -1, SNAP_TO_2_50_50),
+            SplitConfigurationOptions.SplitBounds(
+                /* leftTopBounds = */ Rect(),
+                /* rightBottomBounds = */ Rect(),
+                /* leftTopTaskId = */ -1,
+                /* rightBottomTaskId = */ -1,
+                /* snapPosition = */ SNAP_TO_2_50_50,
+            ),
         )
     }
 
@@ -692,10 +698,16 @@ class SplitSelectStateControllerTest {
         intent.component = task2ComponentName
         taskInfo.baseIntent = intent
         task2.key = Task.TaskKey(taskInfo)
-        return GroupTask(
+        return SplitTask(
             task1,
             task2,
-            SplitConfigurationOptions.SplitBounds(Rect(), Rect(), -1, -1, SNAP_TO_2_50_50),
+            SplitConfigurationOptions.SplitBounds(
+                /* leftTopBounds = */ Rect(),
+                /* rightBottomBounds = */ Rect(),
+                /* leftTopTaskId = */ -1,
+                /* rightBottomTaskId = */ -1,
+                /* snapPosition = */ SNAP_TO_2_50_50,
+            ),
         )
     }
 }

@@ -577,14 +577,11 @@ public class WidgetsFullSheet extends BaseWidgetSheet
     public void exitSearchMode() {
         if (!mIsInSearchMode) return;
         onSearchResults(new ArrayList<>());
-        WidgetsRecyclerView searchRecyclerView = mAdapters.get(
-                AdapterHolder.SEARCH).mWidgetsRecyclerView;
         // Remove all views when exiting the search mode; this prevents animating from stale results
         // to new ones the next time we enter search mode. By the time recycler view is hidden,
         // layout may not have happened to clear up existing results. So, instead of waiting for it
         // to happen, we clear the views here.
-        searchRecyclerView.swapAdapter(
-                searchRecyclerView.getAdapter(), /*removeAndRecycleExistingViews=*/ true);
+        mAdapters.get(AdapterHolder.SEARCH).reset();
         setViewVisibilityBasedOnSearch(/*isInSearchMode=*/ false);
         if (mHasWorkProfile) {
             mViewPager.snapToPage(AdapterHolder.PRIMARY);
@@ -613,13 +610,12 @@ public class WidgetsFullSheet extends BaseWidgetSheet
             mNoWidgetsView.setVisibility(GONE);
         } else {
             mAdapters.get(AdapterHolder.SEARCH).mWidgetsRecyclerView.setVisibility(GONE);
-            mAdapters.get(getCurrentAdapterHolderType()).mWidgetsRecyclerView.setVisibility(
-                    VISIBLE);
-            if (mRecommendedWidgetsCount > 0) {
-                // Display recommendations immediately, if present, so that other parts of sticky
-                // header (e.g. personal / work tabs) don't flash in interim.
-                mWidgetRecommendationsContainer.setVisibility(VISIBLE);
-            }
+            AdapterHolder currentAdapterHolder = mAdapters.get(getCurrentAdapterHolderType());
+            // Remove all views when exiting the search mode; this prevents animating / flashing old
+            // list position / state.
+            currentAdapterHolder.reset();
+            currentAdapterHolder.mWidgetsRecyclerView.setVisibility(VISIBLE);
+            post(this::onRecommendedWidgetsBound);
             // Visibility of recycler views and headers are handled in methods below.
             onWidgetsBound();
         }
@@ -1124,6 +1120,21 @@ public class WidgetsFullSheet extends BaseWidgetSheet
                     break;
             }
             mWidgetsListItemAnimator = new WidgetsListItemAnimator();
+        }
+
+        /**
+         * Swaps the adapter to existing adapter to prevent the recycler view from using stale view
+         * to animate in the new visibility update.
+         *
+         * <p>For instance, when clearing search text and re-entering search with new list shouldn't
+         * use stale results to animate in new results. Alternative is setting list animators to
+         * null, but, we need animations with the default item animator.
+         */
+        private void reset() {
+            mWidgetsRecyclerView.swapAdapter(
+                    mWidgetsListAdapter,
+                    /*removeAndRecycleExistingViews=*/ true
+            );
         }
 
         private int getEmptySpaceHeight() {

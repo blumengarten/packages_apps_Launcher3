@@ -32,6 +32,7 @@ import static org.mockito.Mockito.when;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Rect;
 import android.platform.test.flag.junit.SetFlagsRule;
 
 import androidx.test.annotation.UiThreadTest;
@@ -42,9 +43,12 @@ import com.android.launcher3.Flags;
 import com.android.launcher3.R;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.IconProvider;
+import com.android.launcher3.util.SplitConfigurationOptions;
 import com.android.quickstep.util.GroupTask;
+import com.android.quickstep.util.SplitTask;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.system.TaskStackChangeListeners;
+import com.android.wm.shell.shared.split.SplitScreenConstants;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -173,7 +177,13 @@ public class RecentsModelTest {
         Task.TaskKey taskKey2 = new Task.TaskKey(taskInfo2);
         Task task2 = Task.from(taskKey2, taskInfo2, false);
 
-        allTasks.add(new GroupTask(task1, task2, null));
+        allTasks.add(
+                new SplitTask(task1, task2, new SplitConfigurationOptions.SplitBounds(
+                        /* leftTopBounds = */ new Rect(),
+                        /* rightBottomBounds = */ new Rect(),
+                        /* leftTopTaskId = */ -1,
+                        /* rightBottomTaskId = */ -1,
+                        /* snapPosition = */ SplitScreenConstants.SNAP_TO_2_50_50)));
         return allTasks;
     }
 }

@@ -18,6 +18,7 @@ package com.android.launcher3.model;
 import static com.android.launcher3.Flags.enableCategorizedWidgetSuggestions;
 import static com.android.launcher3.Flags.enableTieredWidgetsByDefaultInPicker;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_WIDGETS_PREDICTION;
+import static com.android.launcher3.model.ModelUtils.WIDGET_FILTER;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
@@ -69,9 +70,11 @@ public final class WidgetsPredictionUpdateTask implements ModelUpdateTask {
             @NonNull AllAppsList apps) {
         Predicate<WidgetItem> predictedWidgetsFilter = enableTieredWidgetsByDefaultInPicker()
                 ? dataModel.widgetsModel.getPredictedWidgetsFilter() : null;
-        Set<ComponentKey> widgetsInWorkspace = dataModel.appWidgets.stream().map(
-                widget -> new ComponentKey(widget.providerName, widget.user)).collect(
-                Collectors.toSet());
+        Set<ComponentKey> widgetsInWorkspace = dataModel.itemsIdMap
+                .stream()
+                .filter(WIDGET_FILTER)
+                .map(item -> new ComponentKey(item.getTargetComponent(), item.user))
+                .collect(Collectors.toSet());
 
         // Widgets (excluding shortcuts & already added widgets) that belong to apps eligible for
         // being in predictions.

@@ -404,18 +404,14 @@ class WorkspaceItemProcessor(
      * stored in the BgDataModel.
      */
     private fun processFolderOrAppPair() {
-        var collection = bgDataModel.findOrMakeFolder(c.id)
+        var collection = c.findOrMakeFolder(c.id, bgDataModel)
         // If we generated a placeholder Folder before this point, it may need to be replaced with
         // an app pair.
         if (c.itemType == Favorites.ITEM_TYPE_APP_PAIR && collection is FolderInfo) {
-            val folderInfo: FolderInfo = collection
             val newAppPair = AppPairInfo()
             // Move the placeholder's contents over to the new app pair.
-            folderInfo.getContents().forEach(newAppPair::add)
+            collection.getContents().forEach(newAppPair::add)
             collection = newAppPair
-            // Remove the placeholder and add the app pair into the data model.
-            bgDataModel.collections.remove(c.id)
-            bgDataModel.collections.put(c.id, collection)
         }
 
         c.applyCommonProperties(collection)
@@ -569,7 +565,7 @@ class WorkspaceItemProcessor(
                 logWidgetInfo(app.invariantDeviceProfile, lapi)
             }
         }
-        c.checkAndAddItem(appWidgetInfo, bgDataModel)
+        c.checkAndAddItem(appWidgetInfo, bgDataModel, memoryLogger)
     }
 
     companion object {

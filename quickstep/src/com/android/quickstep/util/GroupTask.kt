@@ -22,10 +22,10 @@ import com.android.systemui.shared.recents.model.Task
 import java.util.Objects
 
 /**
- * A [Task] container that can contain one or two tasks, depending on if the two tasks are
- * represented as an app-pair in the recents task list.
+ * An abstract class for creating [Task] containers that can be [SingleTask]s, [SplitTask]s, or
+ * [DesktopTask]s in the recent tasks list.
  */
-open class GroupTask
+abstract class GroupTask
 @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
 constructor(
     @Deprecated("Prefer using `getTasks()` instead") @JvmField val task1: Task,
@@ -33,13 +33,16 @@ constructor(
     @JvmField val mSplitBounds: SplitConfigurationOptions.SplitBounds?,
     @JvmField val taskViewType: TaskViewType,
 ) {
-    constructor(task: Task) : this(task, null, null)
-
-    constructor(
-        t1: Task,
-        t2: Task?,
+    protected constructor(
+        task1: Task,
+        task2: Task?,
         splitBounds: SplitConfigurationOptions.SplitBounds?,
-    ) : this(t1, t2, splitBounds, if (t2 != null) TaskViewType.GROUPED else TaskViewType.SINGLE)
+    ) : this(
+        task1,
+        task2,
+        splitBounds,
+        if (task2 != null) TaskViewType.GROUPED else TaskViewType.SINGLE,
+    )
 
     open fun containsTask(taskId: Int) =
         task1.key.id == taskId || (task2 != null && task2.key.id == taskId)
@@ -59,18 +62,50 @@ constructor(
         get() = listOfNotNull(task1, task2)
 
     /** Creates a copy of this instance */
-    open fun copy() = GroupTask(Task(task1), if (task2 != null) Task(task2) else null, mSplitBounds)
+    abstract fun copy(): GroupTask
 
     override fun toString() = "type=$taskViewType task1=$task1 task2=$task2"
 
     override fun equals(o: Any?): Boolean {
         if (this === o) return true
         if (o !is GroupTask) return false
-        return taskViewType == o.taskViewType &&
-            task1 == o.task1 &&
-            task2 == o.task2 &&
-            mSplitBounds == o.mSplitBounds
+        return taskViewType == o.taskViewType && tasks == o.tasks
     }
 
-    override fun hashCode() = Objects.hash(task1, task2, mSplitBounds, taskViewType)
+    override fun hashCode() = Objects.hash(tasks, taskViewType)
+}
+
+/** A [Task] container that must contain exactly one task in the recent tasks list. */
+class SingleTask(task: Task) :
+    GroupTask(task, task2 = null, mSplitBounds = null, TaskViewType.SINGLE) {
+    override fun copy() = SingleTask(task1)
+
+    override fun toString() = "type=$taskViewType task=$task1"
+
+    override fun equals(o: Any?): Boolean {
+        if (this === o) return true
+        if (o !is SingleTask) return false
+        return super.equals(o)
+    }
+}
+
+/**
+ * A [Task] container that must contain exactly two tasks and split bounds to represent an app-pair
+ * in the recent tasks list.
+ */
+class SplitTask(task1: Task, task2: Task, splitBounds: SplitConfigurationOptions.SplitBounds) :
+    GroupTask(task1, task2, splitBounds, TaskViewType.GROUPED) {
+
+    override fun copy() = SplitTask(task1, task2!!, mSplitBounds!!)
+
+    override fun toString() = "type=$taskViewType task1=$task1 task2=$task2"
+
+    override fun equals(o: Any?): Boolean {
+        if (this === o) return true
+        if (o !is SplitTask) return false
+        if (mSplitBounds!! != o.mSplitBounds!!) return false
+        return super.equals(o)
+    }
+
+    override fun hashCode() = Objects.hash(super.hashCode(), mSplitBounds)
 }

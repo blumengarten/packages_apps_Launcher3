@@ -462,7 +462,7 @@ public class QuickstepModelDelegate extends ModelDelegate {
     private Bundle getBundleForWidgetsOnWorkspace(Context context, BgDataModel dataModel) {
         Bundle bundle = new Bundle();
         ArrayList<AppTargetEvent> widgetEvents =
-                dataModel.getAllWorkspaceItems().stream()
+                dataModel.itemsIdMap.stream()
                         .filter(PredictionHelper::isTrackedForWidgetPrediction)
                         .map(item -> {
                             AppTarget target = getAppTargetFromItemInfo(context, item);

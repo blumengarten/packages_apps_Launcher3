@@ -42,7 +42,7 @@ import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_A
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_BACK_DISABLED;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_HOME_DISABLED;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_SHOWING;
-import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_SWITCHER_SHOWING;
+import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_SWITCHER_BUTTON_SHOWING;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_NAV_BAR_HIDDEN;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_NOTIFICATION_PANEL_EXPANDED;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_OVERVIEW_DISABLED;
@@ -129,7 +129,9 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
 
     private final Rect mTempRect = new Rect();
 
-    private static final int FLAG_SWITCHER_SHOWING = 1 << 0;
+    /** Whether the IME Switcher button is visible. */
+    private static final int FLAG_IME_SWITCHER_BUTTON_VISIBLE = 1 << 0;
+    /** Whether the IME is visible. */
     private static final int FLAG_IME_VISIBLE = 1 << 1;
     private static final int FLAG_ROTATION_BUTTON_VISIBLE = 1 << 2;
     private static final int FLAG_A11Y_VISIBLE = 1 << 3;
@@ -301,7 +303,7 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
                     isThreeButtonNav ? mStartContextualContainer : mEndContextualContainer,
                     mControllers.navButtonController, R.id.ime_switcher);
             mPropertyHolders.add(new StatePropertyHolder(mImeSwitcherButton,
-                    flags -> ((flags & FLAG_SWITCHER_SHOWING) != 0)
+                    flags -> ((flags & FLAG_IME_SWITCHER_BUTTON_VISIBLE) != 0)
                             && ((flags & FLAG_ROTATION_BUTTON_VISIBLE) == 0)));
         }
 
@@ -507,8 +509,9 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
 
     private void parseSystemUiFlags(@SystemUiStateFlags long sysUiStateFlags) {
         mSysuiStateFlags = sysUiStateFlags;
+        boolean isImeSwitcherButtonVisible =
+                (sysUiStateFlags & SYSUI_STATE_IME_SWITCHER_BUTTON_SHOWING) != 0;
         boolean isImeVisible = (sysUiStateFlags & SYSUI_STATE_IME_SHOWING) != 0;
-        boolean isImeSwitcherShowing = (sysUiStateFlags & SYSUI_STATE_IME_SWITCHER_SHOWING) != 0;
         boolean a11yVisible = (sysUiStateFlags & SYSUI_STATE_A11Y_BUTTON_CLICKABLE) != 0;
         boolean isHomeDisabled = (sysUiStateFlags & SYSUI_STATE_HOME_DISABLED) != 0;
         boolean isRecentsDisabled = (sysUiStateFlags & SYSUI_STATE_OVERVIEW_DISABLED) != 0;
@@ -522,9 +525,8 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         boolean isKeyboardShortcutHelperShowing =
                 (sysUiStateFlags & SYSUI_STATE_SHORTCUT_HELPER_SHOWING) != 0;
 
-        // TODO(b/202218289) we're getting IME as not visible on lockscreen from system
+        updateStateForFlag(FLAG_IME_SWITCHER_BUTTON_VISIBLE, isImeSwitcherButtonVisible);
         updateStateForFlag(FLAG_IME_VISIBLE, isImeVisible);
-        updateStateForFlag(FLAG_SWITCHER_SHOWING, isImeSwitcherShowing);
         updateStateForFlag(FLAG_A11Y_VISIBLE, a11yVisible);
         updateStateForFlag(FLAG_DISABLE_HOME, isHomeDisabled);
         updateStateForFlag(FLAG_DISABLE_RECENTS, isRecentsDisabled);
@@ -1226,7 +1228,8 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
 
     private static String getStateString(int flags) {
         StringJoiner str = new StringJoiner("|");
-        appendFlag(str, flags, FLAG_SWITCHER_SHOWING, "FLAG_SWITCHER_SHOWING");
+        appendFlag(str, flags, FLAG_IME_SWITCHER_BUTTON_VISIBLE,
+                "FLAG_IME_SWITCHER_BUTTON_VISIBLE");
         appendFlag(str, flags, FLAG_IME_VISIBLE, "FLAG_IME_VISIBLE");
         appendFlag(str, flags, FLAG_ROTATION_BUTTON_VISIBLE, "FLAG_ROTATION_BUTTON_VISIBLE");
         appendFlag(str, flags, FLAG_A11Y_VISIBLE, "FLAG_A11Y_VISIBLE");

@@ -19,13 +19,17 @@ package com.android.quickstep.recents.data
 import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.launcher3.util.SplitConfigurationOptions
 import com.android.launcher3.util.TestDispatcherProvider
 import com.android.quickstep.util.DesktopTask
-import com.android.quickstep.util.GroupTask
+import com.android.quickstep.util.SingleTask
+import com.android.quickstep.util.SplitTask
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.ThumbnailData
+import com.android.wm.shell.shared.split.SplitScreenConstants.SNAP_TO_2_50_50
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -48,8 +52,18 @@ class TasksRepositoryTest {
     private val tasks = (0..5).map(::createTaskWithId)
     private val defaultTaskList =
         listOf(
-            GroupTask(tasks[0]),
-            GroupTask(tasks[1], tasks[2], null),
+            SingleTask(tasks[0]),
+            SplitTask(
+                tasks[1],
+                tasks[2],
+                SplitConfigurationOptions.SplitBounds(
+                    /* leftTopBounds = */ Rect(),
+                    /* rightBottomBounds = */ Rect(),
+                    /* leftTopTaskId = */ -1,
+                    /* rightBottomTaskId = */ -1,
+                    /* snapPosition = */ SNAP_TO_2_50_50,
+                ),
+            ),
             DesktopTask(tasks.subList(3, 6)),
         )
     private val recentsModel = FakeRecentTasksDataSource()

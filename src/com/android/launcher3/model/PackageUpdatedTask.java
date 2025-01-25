@@ -18,7 +18,9 @@ package com.android.launcher3.model;
 import static com.android.launcher3.model.BgDataModel.Callbacks.FLAG_PRIVATE_PROFILE_QUIET_MODE_ENABLED;
 import static com.android.launcher3.model.BgDataModel.Callbacks.FLAG_QUIET_MODE_ENABLED;
 import static com.android.launcher3.model.BgDataModel.Callbacks.FLAG_WORK_PROFILE_QUIET_MODE_ENABLED;
+import static com.android.launcher3.model.ModelUtils.WIDGET_FILTER;
 import static com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_ARCHIVED;
+import static com.android.launcher3.model.data.LauncherAppWidgetInfo.FLAG_PROVIDER_NOT_READY;
 import static com.android.launcher3.model.data.WorkspaceItemInfo.FLAG_AUTOINSTALL_ICON;
 import static com.android.launcher3.model.data.WorkspaceItemInfo.FLAG_RESTORED_ICON;
 
@@ -347,24 +349,25 @@ public class PackageUpdatedTask implements ModelUpdateTask {
                     }
                 });
 
-                for (LauncherAppWidgetInfo widgetInfo : dataModel.appWidgets) {
-                    if (mUser.equals(widgetInfo.user)
-                            && widgetInfo.hasRestoreFlag(
-                            LauncherAppWidgetInfo.FLAG_PROVIDER_NOT_READY)
-                            && packageSet.contains(widgetInfo.providerName.getPackageName())) {
-                        widgetInfo.restoreStatus &=
-                                ~LauncherAppWidgetInfo.FLAG_PROVIDER_NOT_READY
-                                        & ~LauncherAppWidgetInfo.FLAG_RESTORE_STARTED;
+                dataModel.itemsIdMap.stream()
+                        .filter(WIDGET_FILTER)
+                        .filter(item -> mUser.equals(item.user))
+                        .map(item -> (LauncherAppWidgetInfo) item)
+                        .filter(widget -> widget.hasRestoreFlag(FLAG_PROVIDER_NOT_READY)
+                                && packageSet.contains(widget.providerName.getPackageName()))
+                        .forEach(widgetInfo -> {
+                            widgetInfo.restoreStatus &=
+                                    ~FLAG_PROVIDER_NOT_READY
+                                            & ~LauncherAppWidgetInfo.FLAG_RESTORE_STARTED;
 
-                        // adding this flag ensures that launcher shows 'click to setup'
-                        // if the widget has a config activity. In case there is no config
-                        // activity, it will be marked as 'restored' during bind.
-                        widgetInfo.restoreStatus |= LauncherAppWidgetInfo.FLAG_UI_NOT_READY;
+                            // adding this flag ensures that launcher shows 'click to setup'
+                            // if the widget has a config activity. In case there is no config
+                            // activity, it will be marked as 'restored' during bind.
+                            widgetInfo.restoreStatus |= LauncherAppWidgetInfo.FLAG_UI_NOT_READY;
 
-                        widgets.add(widgetInfo);
-                        taskController.getModelWriter().updateItemInDatabase(widgetInfo);
-                    }
-                }
+                            widgets.add(widgetInfo);
+                            taskController.getModelWriter().updateItemInDatabase(widgetInfo);
+                        });
             }
 
             taskController.bindUpdatedWorkspaceItems(updatedWorkspaceItems);

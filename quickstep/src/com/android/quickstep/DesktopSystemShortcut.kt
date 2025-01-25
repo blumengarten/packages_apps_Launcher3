@@ -26,6 +26,7 @@ import com.android.quickstep.views.RecentsView
 import com.android.quickstep.views.RecentsViewContainer
 import com.android.quickstep.views.TaskContainer
 import com.android.systemui.shared.system.InteractionJankMonitorWrapper
+import com.android.wm.shell.shared.desktopmode.DesktopModeCompatPolicy
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus
 import com.android.wm.shell.shared.desktopmode.DesktopModeTransitionSource
 
@@ -70,16 +71,31 @@ class DesktopSystemShortcut(
                     container: RecentsViewContainer,
                     taskContainer: TaskContainer,
                 ): List<DesktopSystemShortcut>? {
-                    return if (!DesktopModeStatus.canEnterDesktopMode(container.asContext())) null
-                    else if (!taskContainer.task.isDockable) null
-                    else
-                        listOf(
-                            DesktopSystemShortcut(
-                                container,
-                                taskContainer,
-                                abstractFloatingViewHelper,
+                    val context = container.asContext()
+                    val taskKey = taskContainer.task.key
+                    val desktopModeCompatPolicy = DesktopModeCompatPolicy(context)
+                    return when {
+                        !DesktopModeStatus.canEnterDesktopMode(context) -> null
+
+                        desktopModeCompatPolicy.isTopActivityExemptFromDesktopWindowing(
+                            taskKey.baseActivity?.packageName,
+                            taskKey.numActivities,
+                            taskKey.isTopActivityNoDisplay,
+                            taskKey.isActivityStackTransparent,
+                        ) -> null
+
+                        !taskContainer.task.isDockable -> null
+
+                        else -> {
+                            listOf(
+                                DesktopSystemShortcut(
+                                    container,
+                                    taskContainer,
+                                    abstractFloatingViewHelper,
+                                )
                             )
-                        )
+                        }
+                    }
                 }
 
                 override fun showForGroupedTask() = true

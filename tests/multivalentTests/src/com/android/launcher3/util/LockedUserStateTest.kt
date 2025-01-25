@@ -22,7 +22,10 @@ import android.os.Process
 import android.os.UserManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
+import com.android.launcher3.util.Executors.MAIN_EXECUTOR
+import com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR
 import com.google.common.truth.Truth.assertThat
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -43,6 +46,12 @@ class LockedUserStateTest {
     @Before
     fun setup() {
         whenever(context.getSystemService(UserManager::class.java)).thenReturn(userManager)
+    }
+
+    @After
+    fun tearDown() {
+        UI_HELPER_EXECUTOR.submit {}.get()
+        MAIN_EXECUTOR.submit {}.get()
     }
 
     @Test

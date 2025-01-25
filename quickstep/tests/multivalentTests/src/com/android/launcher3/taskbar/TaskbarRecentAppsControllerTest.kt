@@ -21,6 +21,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
+import android.graphics.Rect
 import android.os.Process
 import android.os.UserHandle
 import android.platform.test.annotations.EnableFlags
@@ -36,12 +37,16 @@ import com.android.launcher3.model.data.TaskItemInfo
 import com.android.launcher3.model.data.WorkspaceItemInfo
 import com.android.launcher3.taskbar.TaskbarRecentAppsController.TaskState
 import com.android.launcher3.util.LauncherMultivalentJUnit
+import com.android.launcher3.util.SplitConfigurationOptions
 import com.android.quickstep.RecentsModel
 import com.android.quickstep.RecentsModel.RecentTasksChangedListener
 import com.android.quickstep.TaskIconCache
 import com.android.quickstep.util.DesktopTask
 import com.android.quickstep.util.GroupTask
+import com.android.quickstep.util.SingleTask
+import com.android.quickstep.util.SplitTask
 import com.android.systemui.shared.recents.model.Task
+import com.android.wm.shell.shared.split.SplitScreenConstants
 import com.google.common.truth.Truth.assertThat
 import java.util.function.Consumer
 import org.junit.Before
@@ -913,15 +918,21 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
         return packageNames.map { packageName ->
             if (packageName.startsWith("split")) {
                 val splitPackages = packageName.split("_")
-                GroupTask(
+                SplitTask(
                     createTask(100, splitPackages[0]),
                     createTask(101, splitPackages[1]),
-                    /* splitBounds = */ null,
+                    SplitConfigurationOptions.SplitBounds(
+                        /* leftTopBounds = */ Rect(),
+                        /* rightBottomBounds = */ Rect(),
+                        /* leftTopTaskId = */ -1,
+                        /* rightBottomTaskId = */ -1,
+                        /* snapPosition = */ SplitScreenConstants.SNAP_TO_2_50_50,
+                    ),
                 )
             } else {
                 // Use the number at the end of the test packageName as the id.
                 val id = 1000 + packageName[packageName.length - 1].code
-                GroupTask(createTask(id, packageName))
+                SingleTask(createTask(id, packageName))
             }
         }
     }

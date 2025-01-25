@@ -17,28 +17,33 @@
 package com.android.quickstep
 
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.platform.test.annotations.EnableFlags
+import android.view.Display.DEFAULT_DISPLAY
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession
 import com.android.dx.mockito.inline.extended.StaticMockitoSession
+import com.android.internal.R
 import com.android.launcher3.AbstractFloatingView
 import com.android.launcher3.AbstractFloatingViewHelper
 import com.android.launcher3.Flags.enableRefactorTaskThumbnail
 import com.android.launcher3.logging.StatsLogManager
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent
 import com.android.launcher3.model.data.TaskViewItemInfo
-import com.android.launcher3.uioverrides.QuickstepLauncher
 import com.android.launcher3.util.SplitConfigurationOptions
 import com.android.launcher3.util.TransformingTouchDelegate
 import com.android.quickstep.TaskOverlayFactory.TaskOverlay
 import com.android.quickstep.task.thumbnail.TaskThumbnailView
 import com.android.quickstep.views.LauncherRecentsView
+import com.android.quickstep.views.RecentsViewContainer
 import com.android.quickstep.views.TaskContainer
 import com.android.quickstep.views.TaskThumbnailViewDeprecated
 import com.android.quickstep.views.TaskView
 import com.android.quickstep.views.TaskViewIcon
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.Task.TaskKey
+import com.android.window.flags.Flags
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus
 import com.android.wm.shell.shared.desktopmode.DesktopModeTransitionSource
 import com.google.common.truth.Truth.assertThat
@@ -58,7 +63,7 @@ import org.mockito.quality.Strictness
 /** Test for [DesktopSystemShortcut] */
 class DesktopSystemShortcutTest {
 
-    private val launcher: QuickstepLauncher = mock()
+    private val launcher: RecentsViewContainer = mock()
     private val statsLogManager: StatsLogManager = mock()
     private val statsLogger: StatsLogManager.StatsLogger = mock()
     private val recentsView: LauncherRecentsView = mock()
@@ -67,6 +72,7 @@ class DesktopSystemShortcutTest {
     private val overlayFactory: TaskOverlayFactory = mock()
     private val factory: TaskShortcutFactory =
         DesktopSystemShortcut.createFactory(abstractFloatingViewHelper)
+    private val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
 
     private lateinit var mockitoSession: StaticMockitoSession
 
@@ -79,6 +85,7 @@ class DesktopSystemShortcutTest {
                 .startMocking()
         whenever(DesktopModeStatus.canEnterDesktopMode(any())).thenReturn(true)
         whenever(overlayFactory.createOverlay(any())).thenReturn(mock<TaskOverlay<*>>())
+        whenever(launcher.asContext()).thenReturn(context)
     }
 
     @After
@@ -92,6 +99,53 @@ class DesktopSystemShortcutTest {
 
         val taskContainer = createTaskContainer(createTask())
 
+        val shortcuts = factory.getShortcuts(launcher, taskContainer)
+        assertThat(shortcuts).isNull()
+    }
+
+    @Test
+    @EnableFlags(Flags.FLAG_ENABLE_DESKTOP_WINDOWING_MODALS_POLICY)
+    fun createDesktopTaskShortcutFactory_transparentTask() {
+        val baseComponent = ComponentName("", /* class */ "")
+        val taskKey =
+            TaskKey(
+                /* id */ 1,
+                /* windowingMode */ 0,
+                Intent(),
+                baseComponent,
+                /* userId */ 0,
+                /* lastActiveTime */ 2000,
+                DEFAULT_DISPLAY,
+                baseComponent,
+                /* numActivities */ 1,
+                /* isTopActivityNoDisplay */ false,
+                /* isActivityStackTransparent */ true,
+            )
+        val taskContainer = createTaskContainer(Task(taskKey))
+        val shortcuts = factory.getShortcuts(launcher, taskContainer)
+        assertThat(shortcuts).isNull()
+    }
+
+    @Test
+    @EnableFlags(Flags.FLAG_ENABLE_DESKTOP_WINDOWING_MODALS_POLICY)
+    fun createDesktopTaskShortcutFactory_systemUiTask() {
+        val sysUiPackageName: String = context.resources.getString(R.string.config_systemUi)
+        val baseComponent = ComponentName(sysUiPackageName, /* class */ "")
+        val taskKey =
+            TaskKey(
+                /* id */ 1,
+                /* windowingMode */ 0,
+                Intent(),
+                baseComponent,
+                /* userId */ 0,
+                /* lastActiveTime */ 2000,
+                DEFAULT_DISPLAY,
+                baseComponent,
+                /* numActivities */ 1,
+                /* isTopActivityNoDisplay */ false,
+                /* isActivityStackTransparent */ false,
+            )
+        val taskContainer = createTaskContainer(Task(taskKey))
         val shortcuts = factory.getShortcuts(launcher, taskContainer)
         assertThat(shortcuts).isNull()
     }
@@ -114,8 +168,7 @@ class DesktopSystemShortcutTest {
         whenever(launcher.statsLogManager).thenReturn(statsLogManager)
         whenever(statsLogManager.logger()).thenReturn(statsLogger)
         whenever(statsLogger.withItemInfo(any())).thenReturn(statsLogger)
-        whenever(taskView.context)
-            .thenReturn(InstrumentationRegistry.getInstrumentation().targetContext)
+        whenever(taskView.context).thenReturn(context)
         whenever(recentsView.moveTaskToDesktop(any(), any(), any())).thenAnswer {
             val successCallback = it.getArgument<Runnable>(2)
             successCallback.run()
@@ -145,7 +198,22 @@ class DesktopSystemShortcutTest {
     }
 
     private fun createTask() =
-        Task(TaskKey(1, 0, Intent(), ComponentName("", ""), 0, 2000)).apply { isDockable = true }
+        Task(
+                TaskKey(
+                    /* id */ 1,
+                    /* windowingMode */ 0,
+                    Intent(),
+                    ComponentName("", ""),
+                    /* userId */ 0,
+                    /* lastActiveTime */ 2000,
+                    DEFAULT_DISPLAY,
+                    ComponentName("", ""),
+                    /* numActivities */ 1,
+                    /* isTopActivityNoDisplay */ false,
+                    /* isActivityStackTransparent */ false,
+                )
+            )
+            .apply { isDockable = true }
 
     private fun createTaskContainer(task: Task) =
         TaskContainer(

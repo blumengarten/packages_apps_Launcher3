@@ -18,6 +18,8 @@ package com.android.quickstep;
 
 import static com.android.quickstep.AbsSwipeUpHandler.STATE_HANDLER_INVALIDATED;
 import static com.android.wm.shell.shared.ShellSharedConstants.KEY_EXTRA_SHELL_CAN_HAND_OFF_ANIMATION;
+import static com.android.wm.shell.shared.split.SplitBounds.KEY_EXTRA_SPLIT_BOUNDS;
+import static com.android.wm.shell.shared.split.SplitScreenConstants.SNAP_TO_2_50_50;
 
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
@@ -68,6 +70,7 @@ import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
 import com.android.systemui.shared.Flags;
 import com.android.systemui.shared.system.InputConsumerController;
+import com.android.wm.shell.shared.split.SplitBounds;
 
 import com.google.android.msdl.data.model.MSDLToken;
 
@@ -140,6 +143,12 @@ public abstract class AbsSwipeUpHandlerTestCase<
     public void setUpAnimationTargets() {
         Bundle extras = new Bundle();
         extras.putBoolean(KEY_EXTRA_SHELL_CAN_HAND_OFF_ANIMATION, true);
+        extras.putParcelable(KEY_EXTRA_SPLIT_BOUNDS, new SplitBounds(
+                /* leftTopBounds = */ new Rect(),
+                /* rightBottomBounds = */ new Rect(),
+                /* leftTopTaskId = */ -1,
+                /* rightBottomTaskId = */ -1,
+                /* snapPosition = */ SNAP_TO_2_50_50));
         mRecentsAnimationTargets = new RecentsAnimationTargets(
                 new RemoteAnimationTarget[] {mRemoteAnimationTarget},
                 new RemoteAnimationTarget[] {mRemoteAnimationTarget},

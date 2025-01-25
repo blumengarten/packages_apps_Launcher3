@@ -30,6 +30,7 @@ import com.android.quickstep.RecentsFilterState
 import com.android.quickstep.RecentsModel
 import com.android.quickstep.util.DesktopTask
 import com.android.quickstep.util.GroupTask
+import com.android.quickstep.util.SingleTask
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus
 import java.io.PrintWriter
 
@@ -218,7 +219,7 @@ class TaskbarRecentAppsController(context: Context, private val recentsModel: Re
         // Kind of hacky, we wrap each single task in the Desktop as a GroupTask.
         val orderFromId = orderedRunningTaskIds.withIndex().associate { (index, id) -> id to index }
         val sortedTasks = tasks.sortedWith(compareBy(nullsLast()) { orderFromId[it.key.id] })
-        return sortedTasks.map { GroupTask(it) }
+        return sortedTasks.map { SingleTask(it) }
     }
 
     private fun reloadRecentTasksIfNeeded() {

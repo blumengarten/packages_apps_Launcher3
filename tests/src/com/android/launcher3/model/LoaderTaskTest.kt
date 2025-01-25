@@ -19,6 +19,10 @@ import com.android.launcher3.LauncherModel.LoaderTransaction
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherPrefs.Companion.IS_FIRST_LOAD_AFTER_RESTORE
 import com.android.launcher3.LauncherPrefs.Companion.RESTORE_DEVICE
+import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_DESKTOP
+import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT
+import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APP_PAIR
+import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_FOLDER
 import com.android.launcher3.icons.IconCache
 import com.android.launcher3.icons.cache.CachingLogic
 import com.android.launcher3.icons.cache.IconCacheUpdateHandler
@@ -155,9 +159,24 @@ class LoaderTaskTest {
                     widgetsFilterDataProvider,
                 )
                 .runSyncOnBackgroundThread()
-            Truth.assertThat(workspaceItems.size).isAtLeast(25)
-            Truth.assertThat(appWidgets.size).isAtLeast(7)
-            Truth.assertThat(collections.size()).isAtLeast(8)
+            Truth.assertThat(
+                    itemsIdMap
+                        .filter {
+                            it.container == CONTAINER_DESKTOP || it.container == CONTAINER_HOTSEAT
+                        }
+                        .size
+                )
+                .isAtLeast(32)
+            Truth.assertThat(itemsIdMap.filter { ModelUtils.WIDGET_FILTER.test(it) }.size)
+                .isAtLeast(7)
+            Truth.assertThat(
+                    itemsIdMap
+                        .filter {
+                            it.itemType == ITEM_TYPE_FOLDER || it.itemType == ITEM_TYPE_APP_PAIR
+                        }
+                        .size
+                )
+                .isAtLeast(8)
             Truth.assertThat(itemsIdMap.size()).isAtLeast(40)
             Truth.assertThat(widgetsModel.defaultWidgetsFilter).isNotNull()
         }

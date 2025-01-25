@@ -33,6 +33,7 @@ import com.android.quickstep.RecentsModel;
 import com.android.quickstep.util.DesktopTask;
 import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.LayoutUtils;
+import com.android.quickstep.util.SingleTask;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.recents.model.ThumbnailData;
 import com.android.systemui.shared.system.ActivityManagerWrapper;
@@ -275,7 +276,7 @@ public final class KeyboardQuickSwitchController implements
 
         if (desktopTask != null) {
             mTasks = desktopTask.getTasks().stream()
-                    .map(GroupTask::new)
+                    .map(SingleTask::new)
                     .filter(task -> !shouldExcludeTask(task, taskIdsToExclude))
                     .collect(Collectors.toList());
             // All other tasks, apart from the grouped desktop task, are hidden

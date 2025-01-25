@@ -304,10 +304,6 @@
     <string name="taskbar_a11y_shown_with_bubbles_left_title">Taskbar &#38; bubbles left shown</string>
     <!-- Accessibility title for the Taskbar window appearing together with bubble bar on right. [CHAR_LIMIT=30] -->
     <string name="taskbar_a11y_shown_with_bubbles_right_title">Taskbar &#38; bubbles right shown</string>
-    <!-- Accessibility title for the Taskbar window being closed. [CHAR_LIMIT=30] -->
-    <string name="taskbar_a11y_hidden_title">Taskbar hidden</string>
-    <!-- Accessibility title for the Taskbar window being closed together with bubble bar. [CHAR_LIMIT=30] -->
-    <string name="taskbar_a11y_hidden_with_bubbles_title">Taskbar &#38; bubbles hidden</string>
     <!-- Accessibility title for the Taskbar window on phones. [CHAR_LIMIT=NONE] -->
     <string name="taskbar_phone_a11y_title">Navigation bar</string>
     <!-- Text in popup dialog for user to switch between always showing Taskbar or not. [CHAR LIMIT=30] -->

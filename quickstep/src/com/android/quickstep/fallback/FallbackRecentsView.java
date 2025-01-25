@@ -33,7 +33,6 @@ import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.Flags;
 import com.android.launcher3.anim.AnimatorPlaybackController;
 import com.android.launcher3.anim.PendingAnimation;
-import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.desktop.DesktopRecentsTransitionController;
 import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.statehandlers.DesktopVisibilityController;
@@ -47,6 +46,7 @@ import com.android.quickstep.FallbackActivityInterface;
 import com.android.quickstep.GestureState;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
 import com.android.quickstep.util.GroupTask;
+import com.android.quickstep.util.SingleTask;
 import com.android.quickstep.util.SplitSelectStateController;
 import com.android.quickstep.util.TaskViewSimulator;
 import com.android.quickstep.views.OverviewActionsView;
@@ -210,7 +210,7 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
             if (!found) {
                 ArrayList<GroupTask> newList = new ArrayList<>(taskGroups.size() + 1);
                 newList.addAll(taskGroups);
-                newList.add(new GroupTask(mHomeTask, null, null));
+                newList.add(new SingleTask(mHomeTask));
                 taskGroups = newList;
             }
         }

@@ -31,7 +31,8 @@ import static com.android.launcher3.model.BgDataModel.Callbacks.FLAG_PRIVATE_PRO
 import static com.android.launcher3.model.BgDataModel.Callbacks.FLAG_QUIET_MODE_CHANGE_PERMISSION;
 import static com.android.launcher3.model.BgDataModel.Callbacks.FLAG_QUIET_MODE_ENABLED;
 import static com.android.launcher3.model.BgDataModel.Callbacks.FLAG_WORK_PROFILE_QUIET_MODE_ENABLED;
-import static com.android.launcher3.model.ModelUtils.filterCurrentWorkspaceItems;
+import static com.android.launcher3.model.ModelUtils.WIDGET_FILTER;
+import static com.android.launcher3.model.ModelUtils.currentScreenContentFilter;
 import static com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_INSTALL_SESSION_ACTIVE;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
 import static com.android.launcher3.util.PackageManagerHelper.hasShortcutsPermission;
@@ -82,7 +83,6 @@ import com.android.launcher3.icons.cache.LauncherActivityCachingLogic;
 import com.android.launcher3.logging.FileLog;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.model.data.AppPairInfo;
-import com.android.launcher3.model.data.CollectionInfo;
 import com.android.launcher3.model.data.FolderInfo;
 import com.android.launcher3.model.data.IconRequestInfo;
 import com.android.launcher3.model.data.ItemInfo;
@@ -210,10 +210,10 @@ public class LoaderTask implements Runnable {
         final int firstScreen = allScreens.get(0);
         IntSet firstScreens = IntSet.wrap(firstScreen);
 
-        ArrayList<ItemInfo> allItems = mBgDataModel.getAllWorkspaceItems();
-        ArrayList<ItemInfo> firstScreenItems = new ArrayList<>();
-        filterCurrentWorkspaceItems(firstScreens, allItems, firstScreenItems,
-                new ArrayList<>() /* otherScreenItems are ignored */);
+        List<ItemInfo> firstScreenItems =
+                mBgDataModel.itemsIdMap.stream()
+                        .filter(currentScreenContentFilter(firstScreens))
+                        .toList();
         final int disableArchivingLauncherBroadcast = Settings.Secure.getInt(
                 mApp.getContext().getContentResolver(),
                 "disable_launcher_broadcast_installed_apps",
@@ -227,7 +227,7 @@ public class LoaderTask implements Runnable {
                             mPmHelper,
                             firstScreenItems,
                             mInstallingPkgsCached,
-                            mBgDataModel.appWidgets
+                            mBgDataModel.itemsIdMap.stream().filter(WIDGET_FILTER).toList()
                     );
             logASplit("Sending first screen broadcast with additional archiving Extras");
             FirstScreenBroadcastHelper.sendBroadcastsForModels(mApp.getContext(), broadcastModels);
@@ -523,14 +523,13 @@ public class LoaderTask implements Runnable {
      * requests high-res icons for the items that are part of an app pair.
      */
     private void processAppPairItems() {
-        for (CollectionInfo collection : mBgDataModel.collections) {
-            if (!(collection instanceof AppPairInfo appPair)) {
-                continue;
-            }
-
-            appPair.getContents().sort(Folder.ITEM_POS_COMPARATOR);
-            appPair.fetchHiResIconsIfNeeded(mIconCache);
-        }
+        mBgDataModel.itemsIdMap.stream()
+                .filter(item -> item instanceof AppPairInfo)
+                .forEach(item -> {
+                    AppPairInfo appPair = (AppPairInfo) item;
+                    appPair.getContents().sort(Folder.ITEM_POS_COMPARATOR);
+                    appPair.fetchHiResIconsIfNeeded(mIconCache);
+                });
     }
 
     /**
@@ -586,8 +585,8 @@ public class LoaderTask implements Runnable {
         // Sort the folder items, update ranks, and make sure all preview items are high res.
         List<FolderGridOrganizer> verifiers = mApp.getInvariantDeviceProfile().supportedProfiles
                 .stream().map(FolderGridOrganizer::createFolderGridOrganizer).toList();
-        for (CollectionInfo collection : mBgDataModel.collections) {
-            if (!(collection instanceof FolderInfo folder)) {
+        for (ItemInfo itemInfo : mBgDataModel.itemsIdMap) {
+            if (!(itemInfo instanceof FolderInfo folder)) {
                 continue;
             }
 
@@ -657,8 +656,6 @@ public class LoaderTask implements Runnable {
             IntArray deletedFolderIds = mApp.getModel().getModelDbController().deleteEmptyFolders();
             synchronized (mBgDataModel) {
                 for (int folderId : deletedFolderIds) {
-                    mBgDataModel.workspaceItems.remove(mBgDataModel.collections.get(folderId));
-                    mBgDataModel.collections.remove(folderId);
                     mBgDataModel.itemsIdMap.remove(folderId);
                 }
             }
@@ -676,8 +673,6 @@ public class LoaderTask implements Runnable {
 
         synchronized (mBgDataModel) {
             for (int id : deleted) {
-                mBgDataModel.workspaceItems.remove(mBgDataModel.collections.get(id));
-                mBgDataModel.collections.remove(id);
                 mBgDataModel.itemsIdMap.remove(id);
             }
         }
@@ -819,18 +814,19 @@ public class LoaderTask implements Runnable {
 
     private void loadFolderNames() {
         FolderNameProvider provider = FolderNameProvider.newInstance(mApp.getContext(),
-                mBgAllAppsList.data, mBgDataModel.collections);
+                mBgAllAppsList.data, FolderNameProvider.getCollectionForSuggestions(mBgDataModel));
 
         synchronized (mBgDataModel) {
-            for (int i = 0; i < mBgDataModel.collections.size(); i++) {
-                FolderNameInfos suggestionInfos = new FolderNameInfos();
-                CollectionInfo info = mBgDataModel.collections.valueAt(i);
-                if (info instanceof FolderInfo fi && fi.suggestedFolderNames == null) {
-                    provider.getSuggestedFolderName(mApp.getContext(), fi.getAppContents(),
-                            suggestionInfos);
-                    fi.suggestedFolderNames = suggestionInfos;
-                }
-            }
+            mBgDataModel.itemsIdMap.stream()
+                    .filter(item ->
+                            item instanceof FolderInfo fi && fi.suggestedFolderNames == null)
+                    .forEach(info -> {
+                        FolderInfo fi = (FolderInfo) info;
+                        FolderNameInfos suggestionInfos = new FolderNameInfos();
+                        provider.getSuggestedFolderName(mApp.getContext(), fi.getAppContents(),
+                                suggestionInfos);
+                        fi.suggestedFolderNames = suggestionInfos;
+                    });
         }
     }
 

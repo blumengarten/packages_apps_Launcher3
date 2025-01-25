@@ -35,7 +35,7 @@ import static com.android.quickstep.util.SystemUiFlagUtils.isTaskbarHidden;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_BUBBLES_EXPANDED;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_DIALOG_SHOWING;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_SHOWING;
-import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_SWITCHER_SHOWING;
+import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_SWITCHER_BUTTON_SHOWING;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_NOTIFICATION_PANEL_VISIBLE;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_SCREEN_PINNING;
 
@@ -259,8 +259,10 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
 
     private @Nullable AnimatorSet mAnimator;
     private boolean mIsSystemGestureInProgress;
+    /** Whether the IME is visible. */
     private boolean mIsImeShowing;
-    private boolean mIsImeSwitcherShowing;
+    /** Whether the IME Switcher button is visible. */
+    private boolean mIsImeSwitcherButtonShowing;
 
     private final Alarm mTimeoutAlarm = new Alarm();
     private boolean mEnableBlockingTimeoutDuringTests = false;
@@ -1147,7 +1149,8 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
                 SystemUiFlagUtils.isLocked(systemUiStateFlags));
 
         mIsImeShowing = hasAnyFlag(systemUiStateFlags, SYSUI_STATE_IME_SHOWING);
-        mIsImeSwitcherShowing = hasAnyFlag(systemUiStateFlags, SYSUI_STATE_IME_SWITCHER_SHOWING);
+        mIsImeSwitcherButtonShowing =
+                hasAnyFlag(systemUiStateFlags, SYSUI_STATE_IME_SWITCHER_BUTTON_SHOWING);
         if (updateStateForFlag(FLAG_STASHED_IME, shouldStashForIme())) {
             animDuration = TASKBAR_STASH_DURATION_FOR_IME;
             startDelay = getTaskbarStashStartDelayForIme();
@@ -1199,7 +1202,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
             return false;
         }
 
-        return mIsImeShowing || mIsImeSwitcherShowing;
+        return mIsImeShowing || mIsImeSwitcherButtonShowing;
     }
 
     /**
@@ -1375,7 +1378,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         pw.println(prefix + "\tmState=" + getStateString(mState));
         pw.println(prefix + "\tmIsSystemGestureInProgress=" + mIsSystemGestureInProgress);
         pw.println(prefix + "\tmIsImeShowing=" + mIsImeShowing);
-        pw.println(prefix + "\tmIsImeSwitcherShowing=" + mIsImeSwitcherShowing);
+        pw.println(prefix + "\tmIsImeSwitcherButtonShowing=" + mIsImeSwitcherButtonShowing);
     }
 
     private static String getStateString(long flags) {

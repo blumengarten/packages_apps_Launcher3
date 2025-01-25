@@ -58,6 +58,7 @@ import org.mockito.Mockito
 import org.mockito.Mockito.RETURNS_DEEP_STUBS
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
@@ -220,7 +221,8 @@ class WorkspaceItemProcessorExtraTest {
             )
             .commit()
         val widgetInfoCaptor = ArgumentCaptor.forClass(LauncherAppWidgetInfo::class.java)
-        verify(mockCursor).checkAndAddItem(widgetInfoCaptor.capture(), eq(mockBgDataModel))
+        verify(mockCursor)
+            .checkAndAddItem(widgetInfoCaptor.capture(), eq(mockBgDataModel), anyOrNull())
         val actualWidgetInfo = widgetInfoCaptor.value
         with(actualWidgetInfo) {
             assertThat(providerName).isEqualTo(expectedWidgetInfo.providerName)
@@ -271,7 +273,7 @@ class WorkspaceItemProcessorExtraTest {
         itemProcessorUnderTest.processItem()
 
         // Then
-        verify(mockCursor).checkAndAddItem(any(), any())
+        verify(mockCursor).checkAndAddItem(any(), any(), anyOrNull())
     }
 
     private fun createWorkspaceItemProcessorUnderTest(

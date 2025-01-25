@@ -15,6 +15,8 @@
  */
 package com.android.launcher3.model;
 
+import static com.android.launcher3.model.ModelUtils.WIDGET_FILTER;
+
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -85,12 +87,16 @@ public class PackageInstallStateChangedTask implements ModelUpdateTask {
                 }
             });
 
-            for (LauncherAppWidgetInfo widget : dataModel.appWidgets) {
-                if (widget.providerName.getPackageName().equals(mInstallInfo.packageName)) {
-                    widget.installProgress = mInstallInfo.progress;
-                    updates.add(widget);
-                }
-            }
+            dataModel.itemsIdMap.stream()
+                    .filter(WIDGET_FILTER)
+                    .filter(item -> mInstallInfo.user.equals(item.user))
+                    .map(item -> (LauncherAppWidgetInfo) item)
+                    .filter(widget -> widget.providerName.getPackageName()
+                            .equals(mInstallInfo.packageName))
+                    .forEach(widget -> {
+                        widget.installProgress = mInstallInfo.progress;
+                        updates.add(widget);
+                    });
 
             if (!updates.isEmpty()) {
                 taskController.scheduleCallbackTask(
