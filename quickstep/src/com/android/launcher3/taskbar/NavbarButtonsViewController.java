@@ -133,20 +133,19 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
     private static final int FLAG_IME_SWITCHER_BUTTON_VISIBLE = 1 << 0;
     /** Whether the IME is visible. */
     private static final int FLAG_IME_VISIBLE = 1 << 1;
-    private static final int FLAG_ROTATION_BUTTON_VISIBLE = 1 << 2;
-    private static final int FLAG_A11Y_VISIBLE = 1 << 3;
-    private static final int FLAG_ONLY_BACK_FOR_BOUNCER_VISIBLE = 1 << 4;
-    private static final int FLAG_KEYGUARD_VISIBLE = 1 << 5;
-    private static final int FLAG_KEYGUARD_OCCLUDED = 1 << 6;
-    private static final int FLAG_DISABLE_HOME = 1 << 7;
-    private static final int FLAG_DISABLE_RECENTS = 1 << 8;
-    private static final int FLAG_DISABLE_BACK = 1 << 9;
-    private static final int FLAG_NOTIFICATION_SHADE_EXPANDED = 1 << 10;
-    private static final int FLAG_SCREEN_PINNING_ACTIVE = 1 << 11;
-    private static final int FLAG_VOICE_INTERACTION_WINDOW_SHOWING = 1 << 12;
-    private static final int FLAG_SMALL_SCREEN = 1 << 13;
-    private static final int FLAG_SLIDE_IN_VIEW_VISIBLE = 1 << 14;
-    private static final int FLAG_KEYBOARD_SHORTCUT_HELPER_SHOWING = 1 << 15;
+    private static final int FLAG_A11Y_VISIBLE = 1 << 2;
+    private static final int FLAG_ONLY_BACK_FOR_BOUNCER_VISIBLE = 1 << 3;
+    private static final int FLAG_KEYGUARD_VISIBLE = 1 << 4;
+    private static final int FLAG_KEYGUARD_OCCLUDED = 1 << 5;
+    private static final int FLAG_DISABLE_HOME = 1 << 6;
+    private static final int FLAG_DISABLE_RECENTS = 1 << 7;
+    private static final int FLAG_DISABLE_BACK = 1 << 8;
+    private static final int FLAG_NOTIFICATION_SHADE_EXPANDED = 1 << 9;
+    private static final int FLAG_SCREEN_PINNING_ACTIVE = 1 << 10;
+    private static final int FLAG_VOICE_INTERACTION_WINDOW_SHOWING = 1 << 11;
+    private static final int FLAG_SMALL_SCREEN = 1 << 12;
+    private static final int FLAG_SLIDE_IN_VIEW_VISIBLE = 1 << 13;
+    private static final int FLAG_KEYBOARD_SHORTCUT_HELPER_SHOWING = 1 << 14;
 
     /**
      * Flags where a UI could be over Taskbar surfaces, so the color override should be disabled.
@@ -303,8 +302,7 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
                     isThreeButtonNav ? mStartContextualContainer : mEndContextualContainer,
                     mControllers.navButtonController, R.id.ime_switcher);
             mPropertyHolders.add(new StatePropertyHolder(mImeSwitcherButton,
-                    flags -> ((flags & FLAG_IME_SWITCHER_BUTTON_VISIBLE) != 0)
-                            && ((flags & FLAG_ROTATION_BUTTON_VISIBLE) == 0)));
+                    flags -> ((flags & FLAG_IME_SWITCHER_BUTTON_VISIBLE) != 0)));
         }
 
         mPropertyHolders.add(new StatePropertyHolder(
@@ -498,8 +496,7 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
                 endContainer, navButtonController, R.id.accessibility_button,
                 R.layout.taskbar_contextual_button);
         mPropertyHolders.add(new StatePropertyHolder(mA11yButton,
-                flags -> (flags & FLAG_A11Y_VISIBLE) != 0
-                        && (flags & FLAG_ROTATION_BUTTON_VISIBLE) == 0));
+                flags -> (flags & FLAG_A11Y_VISIBLE) != 0));
 
         mSpace = new Space(mNavButtonsView.getContext());
         mSpace.setOnClickListener(view -> navButtonController.onButtonClick(BUTTON_SPACE, view));
@@ -1231,7 +1228,6 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         appendFlag(str, flags, FLAG_IME_SWITCHER_BUTTON_VISIBLE,
                 "FLAG_IME_SWITCHER_BUTTON_VISIBLE");
         appendFlag(str, flags, FLAG_IME_VISIBLE, "FLAG_IME_VISIBLE");
-        appendFlag(str, flags, FLAG_ROTATION_BUTTON_VISIBLE, "FLAG_ROTATION_BUTTON_VISIBLE");
         appendFlag(str, flags, FLAG_A11Y_VISIBLE, "FLAG_A11Y_VISIBLE");
         appendFlag(str, flags, FLAG_ONLY_BACK_FOR_BOUNCER_VISIBLE,
                 "FLAG_ONLY_BACK_FOR_BOUNCER_VISIBLE");

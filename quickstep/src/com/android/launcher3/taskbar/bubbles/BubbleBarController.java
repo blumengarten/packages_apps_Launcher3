@@ -20,7 +20,6 @@ import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_BOUNCER_SHOWING;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_SHOWING;
-import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_SWITCHER_BUTTON_SHOWING;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_NOTIFICATION_PANEL_EXPANDED;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_QUICK_SETTINGS_EXPANDED;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_STATUS_BAR_KEYGUARD_SHOWING;
@@ -94,8 +93,7 @@ public class BubbleBarController extends IBubblesListener.Stub {
             | SYSUI_STATE_STATUS_BAR_KEYGUARD_SHOWING_OCCLUDED
             | SYSUI_STATE_IME_SHOWING
             | SYSUI_STATE_NOTIFICATION_PANEL_EXPANDED
-            | SYSUI_STATE_QUICK_SETTINGS_EXPANDED
-            | SYSUI_STATE_IME_SWITCHER_BUTTON_SHOWING;
+            | SYSUI_STATE_QUICK_SETTINGS_EXPANDED;
 
     private static final long MASK_HIDE_HANDLE_VIEW = SYSUI_STATE_BOUNCER_SHOWING
             | SYSUI_STATE_STATUS_BAR_KEYGUARD_SHOWING
