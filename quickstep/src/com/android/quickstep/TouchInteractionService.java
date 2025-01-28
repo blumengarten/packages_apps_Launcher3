@@ -317,6 +317,17 @@ public class TouchInteractionService extends Service {
 
         @BinderThread
         @Override
+        public void onDisplayRemoveSystemDecorations(int displayId) {
+            // TODO(b/391786915): Replace all
+            // `executeForTouchInteractionService(executeForTaskbarManager())` with just
+            // `executeForTaskbarManager` directly (since `tis` is unused).
+            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(
+                    tis -> executeForTaskbarManager(taskbarManager -> taskbarManager
+                            .onDisplayRemoveSystemDecorations(displayId))));
+        }
+
+        @BinderThread
+        @Override
         public void updateWallpaperVisibility(int displayId, boolean visible) {
             MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(
                     tis -> executeForTaskbarManager(

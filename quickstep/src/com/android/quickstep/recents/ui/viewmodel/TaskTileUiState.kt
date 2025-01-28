@@ -30,28 +30,36 @@ import com.android.systemui.shared.recents.model.ThumbnailData
  * @property isLiveTile Indicates whether this data is intended for a live tile. If `true`, the
  *   running app will be displayed instead of the thumbnail.
  */
-data class TaskTileUiState(val tasks: List<TaskData>, val isLiveTile: Boolean)
+data class TaskTileUiState(
+    val tasks: List<TaskData>,
+    val isLiveTile: Boolean,
+    val hasHeader: Boolean,
+)
 
-sealed interface TaskData {
+sealed class TaskData {
+    abstract val taskId: Int
+
     /** When no data was found for the TaskId provided */
-    data class NoData(val taskId: Int) : TaskData
+    data class NoData(override val taskId: Int) : TaskData()
 
     /**
      * This class provides UI information related to a Task (App) to be displayed within a TaskView.
      *
      * @property taskId Identifier of the task
      * @property title App title
+     * @property titleDescription App content description
      * @property icon App icon
      * @property thumbnailData Information related to the last snapshot retrieved from the app
      * @property backgroundColor The background color of the task.
      * @property isLocked Indicates whether the task is locked or not.
      */
     data class Data(
-        val taskId: Int,
-        val title: String,
+        override val taskId: Int,
+        val title: String?,
+        val titleDescription: String?,
         val icon: Drawable?,
         val thumbnailData: ThumbnailData?,
         val backgroundColor: Int,
         val isLocked: Boolean,
-    ) : TaskData
+    ) : TaskData()
 }

@@ -21,7 +21,9 @@ import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.util.AttributeSet
 import android.widget.ImageButton
+import com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_X
 import com.android.launcher3.R
+import com.android.launcher3.util.MultiPropertyFactory
 
 /**
  * Button for supporting multiple desktop sessions. The button will be next to the first TaskView
@@ -29,6 +31,29 @@ import com.android.launcher3.R
  */
 class AddDesktopButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
     ImageButton(context, attrs) {
+
+    private enum class TranslationX {
+        GRID,
+        OFFSET,
+    }
+
+    private val multiTranslationX =
+        MultiPropertyFactory(this, VIEW_TRANSLATE_X, TranslationX.entries.size) { a: Float, b: Float
+            ->
+            a + b
+        }
+
+    var gridTranslationX
+        get() = multiTranslationX[TranslationX.GRID.ordinal].value
+        set(value) {
+            multiTranslationX[TranslationX.GRID.ordinal].value = value
+        }
+
+    var offsetTranslationX
+        get() = multiTranslationX[TranslationX.OFFSET.ordinal].value
+        set(value) {
+            multiTranslationX[TranslationX.OFFSET.ordinal].value = value
+        }
 
     override fun onFinishInflate() {
         super.onFinishInflate()

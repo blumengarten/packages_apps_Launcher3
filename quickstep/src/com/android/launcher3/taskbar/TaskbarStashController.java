@@ -34,7 +34,7 @@ import static com.android.quickstep.util.SystemActionConstants.SYSTEM_ACTION_ID_
 import static com.android.quickstep.util.SystemUiFlagUtils.isTaskbarHidden;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_BUBBLES_EXPANDED;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_DIALOG_SHOWING;
-import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_SHOWING;
+import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_VISIBLE;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_NOTIFICATION_PANEL_VISIBLE;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_SCREEN_PINNING;
 
@@ -259,7 +259,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
     private @Nullable AnimatorSet mAnimator;
     private boolean mIsSystemGestureInProgress;
     /** Whether the IME is visible. */
-    private boolean mIsImeShowing;
+    private boolean mIsImeVisible;
 
     private final Alarm mTimeoutAlarm = new Alarm();
     private boolean mEnableBlockingTimeoutDuringTests = false;
@@ -1119,7 +1119,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
      */
     @VisibleForTesting
     long getTaskbarStashStartDelayForIme() {
-        if (mIsImeShowing) {
+        if (mIsImeVisible) {
             // Only delay when IME is exiting, not entering.
             return 0;
         }
@@ -1145,7 +1145,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         updateStateForFlag(FLAG_STASHED_DEVICE_LOCKED,
                 SystemUiFlagUtils.isLocked(systemUiStateFlags));
 
-        mIsImeShowing = hasAnyFlag(systemUiStateFlags, SYSUI_STATE_IME_SHOWING);
+        mIsImeVisible = hasAnyFlag(systemUiStateFlags, SYSUI_STATE_IME_VISIBLE);
         if (updateStateForFlag(FLAG_STASHED_IME, shouldStashForIme())) {
             animDuration = TASKBAR_STASH_DURATION_FOR_IME;
             startDelay = getTaskbarStashStartDelayForIme();
@@ -1161,7 +1161,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
     }
 
     /**
-     * We stash when the IME is showing.
+     * We stash when the IME is visible.
      *
      * <p>Do not stash if in small screen, with 3 button nav, and in landscape (or seascape).
      * <p>Do not stash if taskbar is transient.
@@ -1197,7 +1197,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
             return false;
         }
 
-        return mIsImeShowing;
+        return mIsImeVisible;
     }
 
     /**
@@ -1372,7 +1372,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         pw.println(prefix + "\tappliedState=" + getStateString(mStatePropertyHolder.mPrevFlags));
         pw.println(prefix + "\tmState=" + getStateString(mState));
         pw.println(prefix + "\tmIsSystemGestureInProgress=" + mIsSystemGestureInProgress);
-        pw.println(prefix + "\tmIsImeShowing=" + mIsImeShowing);
+        pw.println(prefix + "\tmIsImeVisible=" + mIsImeVisible);
     }
 
     private static String getStateString(long flags) {

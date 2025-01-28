@@ -70,6 +70,7 @@ import com.android.launcher3.util.SplitConfigurationOptions.StagePosition
 import com.android.launcher3.util.TraceHelper
 import com.android.launcher3.util.TransformingTouchDelegate
 import com.android.launcher3.util.ViewPool
+import com.android.launcher3.util.coroutines.DispatcherProvider
 import com.android.launcher3.util.rects.set
 import com.android.quickstep.FullscreenDrawParams
 import com.android.quickstep.RecentsModel
@@ -77,6 +78,11 @@ import com.android.quickstep.RemoteAnimationTargets
 import com.android.quickstep.TaskOverlayFactory
 import com.android.quickstep.TaskViewUtils
 import com.android.quickstep.orientation.RecentsPagedOrientationHandler
+import com.android.quickstep.recents.di.RecentsDependencies
+import com.android.quickstep.recents.di.get
+import com.android.quickstep.recents.di.inject
+import com.android.quickstep.recents.ui.viewmodel.TaskTileUiState
+import com.android.quickstep.recents.ui.viewmodel.TaskViewModel
 import com.android.quickstep.util.ActiveGestureErrorDetector
 import com.android.quickstep.util.ActiveGestureLog
 import com.android.quickstep.util.BorderAnimator
@@ -88,6 +94,12 @@ import com.android.quickstep.views.RecentsView.UNBOUND_TASK_VIEW_ID
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.ThumbnailData
 import com.android.systemui.shared.system.ActivityManagerWrapper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 /** A task in the Recents view. */
 open class TaskView
@@ -448,6 +460,11 @@ constructor(
     private val settledProgressDismiss =
         settledProgressPropertyFactory.get(SETTLED_PROGRESS_INDEX_DISMISS)
 
+    private var viewModel: TaskViewModel? = null
+    private val dispatcherProvider: DispatcherProvider by RecentsDependencies.inject()
+    private val coroutineScope by lazy { CoroutineScope(SupervisorJob() + dispatcherProvider.main) }
+    private val coroutineJobs = mutableListOf<Job>()
+
     /**
      * Returns an animator of [settledProgressDismiss] that transition in with a built-in
      * interpolator.
@@ -601,6 +618,8 @@ constructor(
 
     override fun onRecycle() {
         resetPersistentViewTransforms()
+
+        viewModel = null
         attachAlpha = 1f
         splitAlpha = 1f
         // Clear any references to the thumbnail (it will be re-read either from the cache or the
@@ -715,6 +734,44 @@ constructor(
             ?.inflate()
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (enableRefactorTaskThumbnail()) {
+            // The TaskView lifecycle is starts the ViewModel during onBind, and cleans it in
+            // onRecycle. So it should be initialized at this point. TaskView Lifecycle:
+            // `bind` -> `onBind` ->  onAttachedToWindow() -> onDetachFromWindow -> onRecycle
+            coroutineJobs +=
+                coroutineScope.launch {
+                    viewModel!!.state.collectLatest(::updateTaskContainerState)
+                }
+        }
+    }
+
+    private fun updateTaskContainerState(state: TaskTileUiState) {
+        val mapOfTasks = state.tasks.associateBy { it.taskId }
+        taskContainers.forEach { container ->
+            container.setState(
+                state = mapOfTasks[container.task.key.id],
+                liveTile = state.isLiveTile,
+                hasHeader = type == TaskViewType.DESKTOP,
+            )
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        if (enableRefactorTaskThumbnail()) {
+            // The jobs are being cancelled in the background thread. So we make a copy of the list
+            // to prevent cleaning a new job that might be added to this list during onAttach
+            // or another moment in the lifecycle.
+            val coroutineJobsToCancel = coroutineJobs.toList()
+            coroutineJobs.clear()
+            coroutineScope.launch(dispatcherProvider.background) {
+                coroutineJobsToCancel.forEach { it.cancel("TaskView detaching from window") }
+            }
+        }
+    }
+
     /** Updates this task view to the given {@param task}. */
     open fun bind(
         task: Task,
@@ -738,6 +795,17 @@ constructor(
     }
 
     open fun onBind(orientedState: RecentsOrientedState) {
+        if (enableRefactorTaskThumbnail()) {
+            viewModel =
+                TaskViewModel(
+                        taskViewType = type,
+                        recentsViewData = RecentsDependencies.get(),
+                        getTaskUseCase = RecentsDependencies.get(),
+                        dispatcherProvider = RecentsDependencies.get(),
+                    )
+                    .apply { bind(*taskIds) }
+        }
+
         taskContainers.forEach {
             it.bind()
             if (enableRefactorTaskThumbnail()) {

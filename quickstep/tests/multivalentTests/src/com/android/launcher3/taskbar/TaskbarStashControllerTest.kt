@@ -53,7 +53,7 @@ import com.android.launcher3.taskbar.rules.TaskbarWindowSandboxContext
 import com.android.launcher3.util.LauncherMultivalentJUnit
 import com.android.launcher3.util.LauncherMultivalentJUnit.EmulatedDevices
 import com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_BUBBLES_EXPANDED
-import com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_SHOWING
+import com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_VISIBLE
 import com.android.wm.shell.Flags.FLAG_ENABLE_BUBBLE_BAR
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.TruthJUnit.assume
@@ -542,7 +542,7 @@ class TaskbarStashControllerTest {
         assume().that(activityContext.isHardwareKeyboard).isFalse()
 
         getInstrumentation().runOnMainSync {
-            stashController.updateStateForSysuiFlags(SYSUI_STATE_IME_SHOWING, false)
+            stashController.updateStateForSysuiFlags(SYSUI_STATE_IME_VISIBLE, false)
             animatorTestRule.advanceTimeBy(TASKBAR_STASH_DURATION_FOR_IME)
         }
         assertThat(viewController.areIconsVisible()).isFalse()
@@ -555,7 +555,7 @@ class TaskbarStashControllerTest {
         assume().that(activityContext.isHardwareKeyboard).isFalse()
 
         getInstrumentation().runOnMainSync {
-            stashController.updateStateForSysuiFlags(SYSUI_STATE_IME_SHOWING, true)
+            stashController.updateStateForSysuiFlags(SYSUI_STATE_IME_VISIBLE, true)
             animatorTestRule.advanceTimeBy(0)
         }
 
@@ -574,7 +574,7 @@ class TaskbarStashControllerTest {
 
         // Start with IME shown.
         getInstrumentation().runOnMainSync {
-            stashController.updateStateForSysuiFlags(SYSUI_STATE_IME_SHOWING, true)
+            stashController.updateStateForSysuiFlags(SYSUI_STATE_IME_VISIBLE, true)
             animatorTestRule.advanceTimeBy(0)
         }
 
@@ -600,7 +600,7 @@ class TaskbarStashControllerTest {
         assume().that(activityContext.isHardwareKeyboard).isFalse()
 
         getInstrumentation().runOnMainSync {
-            stashController.updateStateForSysuiFlags(SYSUI_STATE_IME_SHOWING, false)
+            stashController.updateStateForSysuiFlags(SYSUI_STATE_IME_VISIBLE, false)
             animatorTestRule.advanceTimeBy(TASKBAR_STASH_DURATION_FOR_IME)
         }
         assertThat(viewController.areIconsVisible()).isFalse()
@@ -613,7 +613,7 @@ class TaskbarStashControllerTest {
         assume().that(activityContext.isHardwareKeyboard).isFalse()
 
         getInstrumentation().runOnMainSync {
-            stashController.updateStateForSysuiFlags(SYSUI_STATE_IME_SHOWING, false)
+            stashController.updateStateForSysuiFlags(SYSUI_STATE_IME_VISIBLE, false)
             animatorTestRule.advanceTimeBy(TASKBAR_STASH_DURATION_FOR_IME)
         }
 
@@ -633,7 +633,7 @@ class TaskbarStashControllerTest {
         assume().that(activityContext.isHardwareKeyboard).isFalse()
 
         getInstrumentation().runOnMainSync {
-            stashController.updateStateForSysuiFlags(SYSUI_STATE_IME_SHOWING, true)
+            stashController.updateStateForSysuiFlags(SYSUI_STATE_IME_VISIBLE, true)
             animatorTestRule.advanceTimeBy(0)
         }
 
@@ -653,7 +653,7 @@ class TaskbarStashControllerTest {
 
         getInstrumentation().runOnMainSync {
             stashController.updateStateForFlag(FLAG_IN_APP, true)
-            stashController.updateStateForSysuiFlags(SYSUI_STATE_IME_SHOWING, true)
+            stashController.updateStateForSysuiFlags(SYSUI_STATE_IME_VISIBLE, true)
         }
 
         assertThat(stashController.isStashed).isFalse()

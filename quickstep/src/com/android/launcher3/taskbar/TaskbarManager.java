@@ -723,6 +723,11 @@ public class TaskbarManager {
     public void onDisplayRemoved(int displayId) {
     }
 
+    /**
+     * Signal from SysUI indicating that system decorations should be removed from the display.
+     */
+    public void onDisplayRemoveSystemDecorations(int displayId) {}
+
     private void removeActivityCallbacksAndListeners() {
         if (mActivity != null) {
             mActivity.removeOnDeviceProfileChangeListener(mDebugActivityDeviceProfileChanged);

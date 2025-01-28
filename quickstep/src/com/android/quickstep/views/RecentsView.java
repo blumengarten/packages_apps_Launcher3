@@ -3467,7 +3467,7 @@ public abstract class RecentsView<
                 // `mAddDesktopButton`, shift `mAddDesktopButton` to accommodate.
                 translationX += largeTaskWidthAndSpacing;
             }
-            mAddDesktopButton.setTranslationX(translationX);
+            mAddDesktopButton.setGridTranslationX(translationX);
         }
 
         final TaskView runningTask = getRunningTaskView();
@@ -4973,8 +4973,8 @@ public abstract class RecentsView<
             } else if (child instanceof ClearAllButton) {
                 getPagedOrientationHandler().getPrimaryViewTranslate().set(child,
                         totalTranslationX);
-            } else {
-                // TODO(b/389209581): Handle the page offsets update of the 'mAddDesktopButton'.
+            } else if (child instanceof AddDesktopButton addDesktopButton) {
+                addDesktopButton.setOffsetTranslationX(totalTranslationX);
             }
             if (mEnableDrawingLiveTile && i == getRunningTaskIndex()) {
                 runActionOnRemoteHandles(
@@ -6157,7 +6157,7 @@ public abstract class RecentsView<
         if (addDesktopButtonIndex != -1 && addDesktopButtonIndex < outPageScrolls.length) {
             outPageScrolls[addDesktopButtonIndex] =
                     newPageScrolls[addDesktopButtonIndex] + Math.round(
-                            mAddDesktopButton.getTranslationX());
+                            mAddDesktopButton.getGridTranslationX());
         }
 
         int lastTaskScroll = getLastTaskScroll(clearAllScroll, clearAllWidth);

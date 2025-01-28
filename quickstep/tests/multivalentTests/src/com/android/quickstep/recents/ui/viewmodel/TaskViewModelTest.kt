@@ -23,6 +23,7 @@ import com.android.launcher3.util.TestDispatcherProvider
 import com.android.quickstep.recents.domain.model.TaskModel
 import com.android.quickstep.recents.domain.usecase.GetTaskUseCase
 import com.android.quickstep.recents.viewmodel.RecentsViewData
+import com.android.quickstep.views.TaskViewType
 import com.android.systemui.shared.recents.model.ThumbnailData
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -45,15 +46,17 @@ class TaskViewModelTest {
 
     private val recentsViewData = RecentsViewData()
     private val getTaskUseCase = mock<GetTaskUseCase>()
-    private val sut =
-        TaskViewModel(
-            recentsViewData = recentsViewData,
-            getTaskUseCase = getTaskUseCase,
-            dispatcherProvider = TestDispatcherProvider(unconfinedTestDispatcher),
-        )
+    private lateinit var sut: TaskViewModel
 
     @Before
     fun setUp() {
+        sut =
+            TaskViewModel(
+                taskViewType = TaskViewType.SINGLE,
+                recentsViewData = recentsViewData,
+                getTaskUseCase = getTaskUseCase,
+                dispatcherProvider = TestDispatcherProvider(unconfinedTestDispatcher),
+            )
         whenever(getTaskUseCase.invoke(TASK_MODEL_1.id)).thenReturn(flow { emit(TASK_MODEL_1) })
         whenever(getTaskUseCase.invoke(TASK_MODEL_2.id)).thenReturn(flow { emit(TASK_MODEL_2) })
         whenever(getTaskUseCase.invoke(TASK_MODEL_3.id)).thenReturn(flow { emit(TASK_MODEL_3) })
@@ -65,8 +68,36 @@ class TaskViewModelTest {
     fun singleTaskRetrieved_when_validTaskId() =
         testScope.runTest {
             sut.bind(TASK_MODEL_1.id)
-            val expectedResult = TaskTileUiState(listOf(TASK_MODEL_1.toUiState()), false)
+            val expectedResult =
+                TaskTileUiState(
+                    tasks = listOf(TASK_MODEL_1.toUiState()),
+                    isLiveTile = false,
+                    hasHeader = false,
+                )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
+        }
+
+    @Test
+    fun hasHeader_when_taskViewTypeIsDesktop() =
+        testScope.runTest {
+            val expectedResults =
+                mapOf(
+                    TaskViewType.SINGLE to false,
+                    TaskViewType.GROUPED to false,
+                    TaskViewType.DESKTOP to true,
+                )
+
+            expectedResults.forEach { (type, expectedResult) ->
+                sut =
+                    TaskViewModel(
+                        taskViewType = type,
+                        recentsViewData = recentsViewData,
+                        getTaskUseCase = getTaskUseCase,
+                        dispatcherProvider = TestDispatcherProvider(unconfinedTestDispatcher),
+                    )
+                sut.bind(TASK_MODEL_1.id)
+                assertThat(sut.state.first().hasHeader).isEqualTo(expectedResult)
+            }
         }
 
     @Test
@@ -83,6 +114,7 @@ class TaskViewModelTest {
                             TaskData.NoData(INVALID_TASK_ID),
                         ),
                     isLiveTile = false,
+                    hasHeader = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -103,6 +135,7 @@ class TaskViewModelTest {
                             TASK_MODEL_3.toUiState(),
                         ),
                     isLiveTile = true,
+                    hasHeader = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -123,6 +156,7 @@ class TaskViewModelTest {
                             TASK_MODEL_3.toUiState(),
                         ),
                     isLiveTile = false,
+                    hasHeader = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -142,6 +176,7 @@ class TaskViewModelTest {
                             TASK_MODEL_3.toUiState(),
                         ),
                     isLiveTile = false,
+                    hasHeader = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -157,6 +192,7 @@ class TaskViewModelTest {
                 TaskTileUiState(
                     tasks = listOf(TASK_MODEL_1.toUiState(), TASK_MODEL_2.toUiState()),
                     isLiveTile = false,
+                    hasHeader = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -166,7 +202,11 @@ class TaskViewModelTest {
         testScope.runTest {
             sut.bind(INVALID_TASK_ID)
             val expectedResult =
-                TaskTileUiState(listOf(TaskData.NoData(INVALID_TASK_ID)), isLiveTile = false)
+                TaskTileUiState(
+                    listOf(TaskData.NoData(INVALID_TASK_ID)),
+                    isLiveTile = false,
+                    hasHeader = false,
+                )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
 
@@ -174,6 +214,7 @@ class TaskViewModelTest {
         TaskData.Data(
             taskId = id,
             title = title,
+            titleDescription = titleDescription,
             icon = icon!!,
             thumbnailData = thumbnail,
             backgroundColor = backgroundColor,

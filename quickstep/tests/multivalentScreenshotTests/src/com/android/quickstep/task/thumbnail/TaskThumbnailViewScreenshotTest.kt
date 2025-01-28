@@ -60,36 +60,27 @@ class TaskThumbnailViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
         screenshotRule.screenshotTest("taskThumbnailView_uninitialized") { activity ->
             activity.actionBar?.hide()
             val taskThumbnailView = createTaskThumbnailView(activity)
-            taskThumbnailViewModel.uiState.value = BackgroundOnly(Color.YELLOW)
-            taskThumbnailViewModel.uiState.value = Uninitialized
+            taskThumbnailView.setState(Uninitialized)
             taskThumbnailView
         }
     }
 
     @Test
     fun taskThumbnailView_recyclesToUninitialized() {
-        screenshotRule.screenshotTest(
-            "taskThumbnailView_uninitialized",
-            viewProvider = { activity ->
-                activity.actionBar?.hide()
-                val taskThumbnailView = createTaskThumbnailView(activity)
-                taskThumbnailViewModel.uiState.value = BackgroundOnly(Color.YELLOW)
-                taskThumbnailView
-            },
-            checkView = { _, taskThumbnailView ->
-                // Call onRecycle() after View is attached (end of block above)
-                (taskThumbnailView as TaskThumbnailView).onRecycle()
-                false
-            },
-        )
+        screenshotRule.screenshotTest("taskThumbnailView_uninitialized") { activity ->
+            activity.actionBar?.hide()
+            val taskThumbnailView = createTaskThumbnailView(activity)
+            taskThumbnailView.setState(BackgroundOnly(Color.YELLOW))
+            taskThumbnailView.onRecycle()
+            taskThumbnailView
+        }
     }
 
     @Test
     fun taskThumbnailView_backgroundOnly() {
         screenshotRule.screenshotTest("taskThumbnailView_backgroundOnly") { activity ->
             activity.actionBar?.hide()
-            taskThumbnailViewModel.uiState.value = BackgroundOnly(Color.YELLOW)
-            createTaskThumbnailView(activity)
+            createTaskThumbnailView(activity).apply { setState(BackgroundOnly(Color.YELLOW)) }
         }
     }
 

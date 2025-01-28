@@ -43,6 +43,7 @@ import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 import static com.android.quickstep.util.AnimUtils.completeRunnableListCallback;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_NOTIFICATION_PANEL_VISIBLE;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_VOICE_INTERACTION_WINDOW_SHOWING;
+import static com.android.window.flags.Flags.enableStartLaunchTransitionFromTaskbarBugfix;
 import static com.android.wm.shell.Flags.enableTinyTaskbar;
 
 import static java.lang.invoke.MethodHandles.Lookup.PROTECTED;
@@ -1689,7 +1690,11 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         }
         // There is no task associated with this launch - launch a new task through an intent
         ActivityOptionsWrapper opts = getActivityLaunchDesktopOptions();
-        mSysUiProxy.startLaunchIntentTransition(intent, opts.options.toBundle(), displayId);
+        if (enableStartLaunchTransitionFromTaskbarBugfix()) {
+            mSysUiProxy.startLaunchIntentTransition(intent, opts.options.toBundle(), displayId);
+        } else {
+            startActivity(intent, opts.options.toBundle());
+        }
     }
 
     /** Expands a folder icon when it is clicked */

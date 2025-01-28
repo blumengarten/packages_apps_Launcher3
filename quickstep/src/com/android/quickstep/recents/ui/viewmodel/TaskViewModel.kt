@@ -16,12 +16,15 @@
 
 package com.android.quickstep.recents.ui.viewmodel
 
+import android.annotation.ColorInt
 import android.util.Log
+import androidx.core.graphics.ColorUtils
 import com.android.launcher3.util.coroutines.DispatcherProvider
 import com.android.quickstep.recents.domain.model.TaskId
 import com.android.quickstep.recents.domain.model.TaskModel
 import com.android.quickstep.recents.domain.usecase.GetTaskUseCase
 import com.android.quickstep.recents.viewmodel.RecentsViewData
+import com.android.quickstep.views.TaskViewType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +40,7 @@ import kotlinx.coroutines.flow.map
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class TaskViewModel(
+    private val taskViewType: TaskViewType,
     recentsViewData: RecentsViewData,
     private val getTaskUseCase: GetTaskUseCase,
     dispatcherProvider: DispatcherProvider,
@@ -62,7 +66,14 @@ class TaskViewModel(
                     ::mapToUiState,
                 )
             }
-            .combine(isLiveTile) { tasks, isLiveTile -> TaskTileUiState(tasks, isLiveTile) }
+            .combine(isLiveTile) { tasks, isLiveTile ->
+                TaskTileUiState(
+                    tasks = tasks,
+                    isLiveTile = isLiveTile,
+                    hasHeader = taskViewType == TaskViewType.DESKTOP,
+                )
+            }
+            .distinctUntilChanged()
             .flowOn(dispatcherProvider.background)
 
     fun bind(vararg taskId: TaskId) {
@@ -78,12 +89,15 @@ class TaskViewModel(
             TaskData.Data(
                 taskId = taskId,
                 title = result.title,
+                titleDescription = result.titleDescription,
                 icon = result.icon,
                 thumbnailData = result.thumbnail,
-                backgroundColor = result.backgroundColor,
+                backgroundColor = result.backgroundColor.removeAlpha(),
                 isLocked = result.isLocked,
             )
         } ?: TaskData.NoData(taskId)
+
+    @ColorInt private fun Int.removeAlpha(): Int = ColorUtils.setAlphaComponent(this, 0xff)
 
     private companion object {
         const val TAG = "TaskViewModel"

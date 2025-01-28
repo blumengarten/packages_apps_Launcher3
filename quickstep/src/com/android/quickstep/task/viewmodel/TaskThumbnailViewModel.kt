@@ -17,7 +17,6 @@
 package com.android.quickstep.task.viewmodel
 
 import android.graphics.Matrix
-import com.android.quickstep.task.thumbnail.TaskThumbnailUiState
 import kotlinx.coroutines.flow.Flow
 
 /** ViewModel for representing TaskThumbnails */
@@ -27,9 +26,6 @@ interface TaskThumbnailViewModel {
 
     /** Provides the alpha of the splash icon */
     val splashAlpha: Flow<Float>
-
-    /** Provides the UiState by which the task thumbnail can be represented */
-    val uiState: Flow<TaskThumbnailUiState>
 
     /** Attaches this ViewModel to a specific task id for it to provide data from. */
     fun bind(taskId: Int)

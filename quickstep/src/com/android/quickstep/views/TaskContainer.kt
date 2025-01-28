@@ -28,6 +28,8 @@ import com.android.quickstep.recents.di.RecentsDependencies
 import com.android.quickstep.recents.di.get
 import com.android.quickstep.recents.di.getScope
 import com.android.quickstep.recents.di.inject
+import com.android.quickstep.recents.ui.mapper.TaskUiStateMapper
+import com.android.quickstep.recents.ui.viewmodel.TaskData
 import com.android.quickstep.recents.viewmodel.TaskContainerViewModel
 import com.android.quickstep.task.thumbnail.TaskThumbnailView
 import com.android.quickstep.task.viewmodel.TaskContainerData
@@ -162,5 +164,9 @@ class TaskContainer(
         showWindowsView?.let { addAccessibleChildToList(it, outChildren) }
         digitalWellBeingToast?.let { addAccessibleChildToList(it, outChildren) }
         overlay.addChildForAccessibility(outChildren)
+    }
+
+    fun setState(state: TaskData?, liveTile: Boolean, hasHeader: Boolean) {
+        thumbnailView.setState(TaskUiStateMapper.toTaskThumbnailUiState(state, liveTile, hasHeader))
     }
 }

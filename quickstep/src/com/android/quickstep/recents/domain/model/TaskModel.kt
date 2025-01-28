@@ -38,7 +38,7 @@ import com.android.systemui.shared.recents.model.ThumbnailData
  */
 data class TaskModel(
     val id: TaskId,
-    val title: String,
+    val title: String?,
     val titleDescription: String?,
     val icon: Drawable?,
     val thumbnail: ThumbnailData?,

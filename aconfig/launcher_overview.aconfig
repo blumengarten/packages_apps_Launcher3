@@ -89,3 +89,10 @@ flag {
       purpose: PURPOSE_BUGFIX
     }
 }
+
+flag {
+    name: "enable_overview_on_connected_displays"
+    namespace: "launcher_overview"
+    description: "Enable overview on connected displays."
+    bug: "363251602"
+}

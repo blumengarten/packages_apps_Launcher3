@@ -17,7 +17,6 @@
 package com.android.quickstep.recents.data
 
 import android.graphics.drawable.Drawable
-import android.graphics.drawable.ShapeDrawable
 import android.util.Log
 import com.android.launcher3.util.coroutines.DispatcherProvider
 import com.android.quickstep.recents.data.TaskVisualsChangedDelegate.TaskIconChangedCallback
@@ -52,37 +51,29 @@ class TasksRepository(
     override fun getAllTaskData(forceRefresh: Boolean): Flow<List<Task>> {
         if (forceRefresh) {
             recentsModel.getTasks { newTaskList ->
-                val oldTaskMap = tasks.value
                 val recentTasks =
                     newTaskList
                         .flatMap { groupTask -> groupTask.tasks }
                         .associateBy { it.key.id }
                         .also { newTaskMap ->
                             // Clean tasks that are not in the latest group tasks list.
-                            val tasksNoLongerVisible = oldTaskMap.keys.subtract(newTaskMap.keys)
+                            val tasksNoLongerVisible = tasks.value.keys.subtract(newTaskMap.keys)
                             removeTasks(tasksNoLongerVisible)
-
-                            // Use pre-loaded thumbnail data and icon from the previous list.
-                            // This reduces the Thumbnail loading time in the Overview and prevent
-                            // empty thumbnail and icon.
-                            val cache =
-                                taskRequests.keys
-                                    .mapNotNull { key ->
-                                        val task = oldTaskMap[key] ?: return@mapNotNull null
-                                        key to Pair(task.thumbnail, task.icon)
-                                    }
-                                    .toMap()
-
-                            newTaskMap.values.forEach { task ->
-                                task.thumbnail = task.thumbnail ?: cache[task.key.id]?.first
-                                task.icon = task.icon ?: cache[task.key.id]?.second
-                            }
                         }
-                tasks.value = MapForStateFlow(recentTasks)
                 Log.d(
                     TAG,
-                    "getAllTaskData: oldTasks ${oldTaskMap.keys}, newTasks: ${recentTasks.keys}",
+                    "getAllTaskData: oldTasks ${tasks.value.keys}, newTasks: ${recentTasks.keys}",
                 )
+                tasks.value = MapForStateFlow(recentTasks)
+
+                // Request data for completed tasks to prevent stale data.
+                // This will prevent thumbnail and icon from being replaced and
+                // null due to race condition.
+                taskRequests.values.forEach { (taskKey, job) ->
+                    if (job.isCompleted) {
+                        requestTaskData(taskKey.id)
+                    }
+                }
             }
         }
         return tasks.map { it.values.toList() }
@@ -202,13 +193,11 @@ class TasksRepository(
     private suspend fun getIconFromDataSource(task: Task) =
         withContext(dispatcherProvider.background) {
             val iconCacheEntry = taskIconDataSource.getIcon(task)
-            val icon = iconCacheEntry.icon.constantState?.newDrawable()?.mutate() ?: EMPTY_DRAWABLE
-            IconData(icon, iconCacheEntry.contentDescription, iconCacheEntry.title)
+            IconData(iconCacheEntry.icon, iconCacheEntry.contentDescription, iconCacheEntry.title)
         }
 
     companion object {
         private const val TAG = "TasksRepository"
-        private val EMPTY_DRAWABLE = ShapeDrawable()
     }
 
     /** Helper class to support StateFlow emissions when using a Map with a MutableStateFlow. */
