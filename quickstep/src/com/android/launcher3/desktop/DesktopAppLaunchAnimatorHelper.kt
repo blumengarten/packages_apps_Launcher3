@@ -173,10 +173,12 @@ class DesktopAppLaunchAnimatorHelper(
         onAnimFinish: (Animator) -> Unit,
     ): Animator {
         return MinimizeAnimator.create(
-            context.resources.displayMetrics,
+            context,
             change,
             transaction,
             onAnimFinish,
+            interactionJankMonitor,
+            context.mainThreadHandler,
         )
     }
 
