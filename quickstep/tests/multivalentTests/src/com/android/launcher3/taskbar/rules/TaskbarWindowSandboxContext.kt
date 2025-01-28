@@ -47,10 +47,6 @@ import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
-/** Include additional bindings when building a [TaskbarSandboxComponent]. */
-typealias TaskbarComponentBinder =
-    TaskbarWindowSandboxContext.(TaskbarSandboxComponent.Builder) -> Unit
-
 /**
  * [SandboxApplication] for running Taskbar tests.
  *
@@ -61,7 +57,7 @@ class TaskbarWindowSandboxContext
 private constructor(
     private val base: SandboxApplication,
     val virtualDisplay: VirtualDisplay,
-    private val componentBinder: TaskbarComponentBinder?,
+    private val params: SandboxParams,
 ) : ContextWrapper(base), ObjectSandbox by base, TestRule {
 
     val settingsCacheSandbox = SettingsCacheSandbox()
@@ -76,10 +72,9 @@ private constructor(
             override fun before() {
                 val context = this@TaskbarWindowSandboxContext
                 val builder =
-                    DaggerTaskbarSandboxComponent.builder()
-                        .bindSystemUiProxy(SystemUiProxy(context))
+                    params.builderBase
+                        .bindSystemUiProxy(params.systemUiProxyProvider.invoke(context))
                         .bindSettingsCache(settingsCacheSandbox.cache)
-                componentBinder?.invoke(context, builder)
                 base.initDaggerComponent(builder)
             }
         }
@@ -95,10 +90,9 @@ private constructor(
         private const val VIRTUAL_DISPLAY_NAME = "TaskbarSandboxDisplay"
 
         /** Creates a [SandboxApplication] for Taskbar tests. */
-        fun create(componentBinder: TaskbarComponentBinder? = null): TaskbarWindowSandboxContext {
+        fun create(params: SandboxParams = SandboxParams()): TaskbarWindowSandboxContext {
             val base = ApplicationProvider.getApplicationContext<Context>()
             val displayManager = checkNotNull(base.getSystemService(DisplayManager::class.java))
-
             // Create virtual display to avoid clashing with Taskbar on default display.
             val virtualDisplay =
                 base.resources.displayMetrics.let {
@@ -115,7 +109,7 @@ private constructor(
             return TaskbarWindowSandboxContext(
                 SandboxApplication(base.createDisplayContext(virtualDisplay.display)),
                 virtualDisplay,
-                componentBinder,
+                params,
             )
         }
     }
@@ -157,3 +151,9 @@ interface TaskbarSandboxComponent : LauncherAppComponent {
         override fun build(): TaskbarSandboxComponent
     }
 }
+
+/** Include additional bindings when building a [TaskbarSandboxComponent]. */
+data class SandboxParams(
+    val systemUiProxyProvider: (Context) -> SystemUiProxy = { SystemUiProxy(it) },
+    val builderBase: TaskbarSandboxComponent.Builder = DaggerTaskbarSandboxComponent.builder(),
+)

@@ -26,21 +26,29 @@ import androidx.test.core.app.ApplicationProvider
 import com.android.launcher3.Flags.FLAG_ENABLE_MULTI_INSTANCE_MENU_TASKBAR
 import com.android.launcher3.Flags.FLAG_TASKBAR_OVERFLOW
 import com.android.launcher3.R
+import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.taskbar.TaskbarControllerTestUtil.runOnMainSync
 import com.android.launcher3.taskbar.TaskbarViewTestUtil.createHotseatItems
 import com.android.launcher3.taskbar.bubbles.BubbleBarViewController
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController
+import com.android.launcher3.taskbar.rules.DisplayControllerModule
+import com.android.launcher3.taskbar.rules.MockedRecentsModelHelper
 import com.android.launcher3.taskbar.rules.MockedRecentsModelTestRule
+import com.android.launcher3.taskbar.rules.SandboxParams
 import com.android.launcher3.taskbar.rules.TaskbarModeRule
 import com.android.launcher3.taskbar.rules.TaskbarModeRule.Mode.PINNED
 import com.android.launcher3.taskbar.rules.TaskbarModeRule.Mode.TRANSIENT
 import com.android.launcher3.taskbar.rules.TaskbarModeRule.TaskbarMode
+import com.android.launcher3.taskbar.rules.TaskbarSandboxComponent
 import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule
 import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule.InjectController
 import com.android.launcher3.taskbar.rules.TaskbarWindowSandboxContext
+import com.android.launcher3.util.AllModulesForTest
+import com.android.launcher3.util.FakePrefsModule
 import com.android.launcher3.util.LauncherMultivalentJUnit
 import com.android.launcher3.util.LauncherMultivalentJUnit.EmulatedDevices
 import com.android.launcher3.util.TestUtil.getOnUiThread
+import com.android.quickstep.RecentsModel
 import com.android.quickstep.SystemUiProxy
 import com.android.quickstep.util.DesktopTask
 import com.android.systemui.shared.recents.model.Task
@@ -49,6 +57,8 @@ import com.android.window.flags.Flags.FLAG_ENABLE_DESKTOP_WINDOWING_TASKBAR_RUNN
 import com.android.wm.shell.Flags.FLAG_ENABLE_BUBBLE_BAR
 import com.android.wm.shell.desktopmode.IDesktopTaskListener
 import com.google.common.truth.Truth.assertThat
+import dagger.BindsInstance
+import dagger.Component
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -70,19 +80,25 @@ import org.mockito.kotlin.whenever
 class TaskbarOverflowTest {
     @get:Rule(order = 0) val setFlagsRule = SetFlagsRule()
 
+    val mockRecentsModelHelper: MockedRecentsModelHelper = MockedRecentsModelHelper()
+
     @get:Rule(order = 1)
     val context =
-        TaskbarWindowSandboxContext.create { builder ->
-            builder.bindSystemUiProxy(
-                spy(SystemUiProxy(ApplicationProvider.getApplicationContext())) { proxy ->
-                    doAnswer { desktopTaskListener = it.getArgument(0) }
-                        .whenever(proxy)
-                        .setDesktopTaskListener(anyOrNull())
-                }
+        TaskbarWindowSandboxContext.create(
+            SandboxParams(
+                {
+                    spy(SystemUiProxy(ApplicationProvider.getApplicationContext())) { proxy ->
+                        doAnswer { desktopTaskListener = it.getArgument(0) }
+                            .whenever(proxy)
+                            .setDesktopTaskListener(anyOrNull())
+                    }
+                },
+                DaggerTaskbarOverflowComponent.builder()
+                    .bindRecentsModel(mockRecentsModelHelper.mockRecentsModel),
             )
-        }
+        )
 
-    @get:Rule(order = 2) val recentsModel = MockedRecentsModelTestRule(context)
+    @get:Rule(order = 2) val recentsModel = MockedRecentsModelTestRule(mockRecentsModelHelper)
 
     @get:Rule(order = 3) val taskbarModeRule = TaskbarModeRule(context)
 
@@ -402,5 +418,20 @@ class TaskbarOverflowTest {
             assertThat(overflowItems).containsExactlyElementsIn(0..targetOverflowSize)
         }
         return maxNumIconViews
+    }
+}
+
+/** TaskbarOverflowComponent used to bind the RecentsModel. */
+@LauncherAppSingleton
+@Component(
+    modules = [AllModulesForTest::class, FakePrefsModule::class, DisplayControllerModule::class]
+)
+interface TaskbarOverflowComponent : TaskbarSandboxComponent {
+
+    @Component.Builder
+    interface Builder : TaskbarSandboxComponent.Builder {
+        @BindsInstance fun bindRecentsModel(model: RecentsModel): Builder
+
+        override fun build(): TaskbarOverflowComponent
     }
 }

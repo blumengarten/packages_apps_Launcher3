@@ -52,6 +52,7 @@ class TaskIconCache(
     private val context: Context,
     private val bgExecutor: Executor,
     private val iconProvider: IconProvider,
+    displayController: DisplayController,
 ) : TaskIconDataSource, DisplayInfoChangeListener {
     private val iconCache =
         TaskKeyLruCache<TaskCacheEntry>(
@@ -70,7 +71,7 @@ class TaskIconCache(
     var taskVisualsChangeListener: TaskVisualsChangeListener? = null
 
     init {
-        DisplayController.INSTANCE.get(context).addChangeListener(this)
+        displayController.addChangeListener(this)
     }
 
     override fun onDisplayInfoChanged(context: Context, info: DisplayController.Info, flags: Int) {

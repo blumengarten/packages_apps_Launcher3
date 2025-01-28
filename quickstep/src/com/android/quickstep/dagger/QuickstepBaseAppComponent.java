@@ -22,6 +22,7 @@ import com.android.launcher3.model.WellbeingModel;
 import com.android.launcher3.statehandlers.DesktopVisibilityController;
 import com.android.quickstep.OverviewComponentObserver;
 import com.android.quickstep.RecentsAnimationDeviceState;
+import com.android.quickstep.RecentsModel;
 import com.android.quickstep.RotationTouchHelper;
 import com.android.quickstep.SimpleOrientationTouchTransformer;
 import com.android.quickstep.SystemUiProxy;
@@ -60,6 +61,8 @@ public interface QuickstepBaseAppComponent extends LauncherBaseAppComponent {
     ContextualSearchStateManager getContextualSearchStateManager();
 
     RecentsAnimationDeviceState getRecentsAnimationDeviceState();
+
+    RecentsModel getRecentsModel();
 
     SettingsChangeLogger getSettingsChangeLogger();
 
