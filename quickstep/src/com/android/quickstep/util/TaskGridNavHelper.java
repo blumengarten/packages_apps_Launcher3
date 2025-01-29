@@ -103,23 +103,28 @@ public class TaskGridNavHelper {
             }
             case DIRECTION_RIGHT: {
                 int boundedIndex =
-                        cycle ? (nextIndex < 0 ? maxSize - 1 : nextIndex) : Math.max(
-                                nextIndex, 0);
+                        cycle ? (nextIndex < 0 ? maxSize - 1 : nextIndex)
+                                : Math.max(nextIndex, 0);
                 boolean inOriginalTop = mOriginalTopRowIds.contains(currentPageTaskViewId);
                 return inOriginalTop ? mTopRowIds.get(boundedIndex)
                         : mBottomRowIds.get(boundedIndex);
             }
             case DIRECTION_TAB: {
                 int boundedIndex =
-                        cycle ? nextIndex < 0 ? maxSize - 1 : nextIndex % maxSize : Math.min(
-                                nextIndex, maxSize - 1);
+                        cycle ? (nextIndex < 0 ? maxSize - 1 : nextIndex % maxSize)
+                                : Math.min(nextIndex, maxSize - 1);
                 if (delta >= 0) {
                     return inTop && mTopRowIds.get(index) != mBottomRowIds.get(index)
                             ? mBottomRowIds.get(index)
                             : mTopRowIds.get(boundedIndex);
                 } else {
                     if (mTopRowIds.contains(currentPageTaskViewId)) {
-                        return mBottomRowIds.get(boundedIndex);
+                        if (boundedIndex < 0) {
+                            // If no cycling, always return the first task.
+                            return mTopRowIds.get(0);
+                        } else {
+                            return mBottomRowIds.get(boundedIndex);
+                        }
                     } else {
                         // Go up to top if there is task above
                         return mTopRowIds.get(index) != mBottomRowIds.get(index)

@@ -88,6 +88,9 @@
     <dimen name="task_thumbnail_header_icon_size">18dp</dimen>
     <dimen name="task_thumbnail_header_round_corner_radius">16dp</dimen>
 
+    <!--  How much a task being dragged for dismissal can undershoot the origin when dragged back to its start position.  -->
+    <dimen name="task_dismiss_max_undershoot">25dp</dimen>
+
     <dimen name="task_icon_cache_default_icon_size">72dp</dimen>
     <item name="overview_modal_max_scale" format="float" type="dimen">1.1</item>
 

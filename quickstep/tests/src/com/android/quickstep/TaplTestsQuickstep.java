@@ -539,6 +539,24 @@ public class TaplTestsQuickstep extends AbstractQuickStepTest {
         }
     }
 
+    @Test
+    @PortraitLandscape
+    public void testDismissCancel() throws Exception {
+        startTestAppsWithCheck();
+        Overview overview = mLauncher.goHome().switchToOverview();
+        assertIsInState("Launcher internal state didn't switch to Overview",
+                ExpectedState.OVERVIEW);
+        final Integer numTasks = getFromRecentsView(RecentsView::getTaskViewCount);
+        OverviewTask task = overview.getCurrentTask();
+        assertNotNull("overview.getCurrentTask() returned null (2)", task);
+
+        task.dismissCancel();
+
+        runOnRecentsView(recentsView -> assertEquals(
+                "Canceling dismissing a task removed a task from Overview",
+                numTasks == null ? 0 : numTasks, recentsView.getTaskViewCount()));
+    }
+
     private void startTestAppsWithCheck() throws Exception {
         startTestApps();
         expectLaunchedAppState();
