@@ -30,7 +30,9 @@ import android.widget.FrameLayout
 import androidx.annotation.ColorInt
 import androidx.core.view.isInvisible
 import com.android.launcher3.Flags.enableDesktopExplodedView
+import com.android.launcher3.LauncherAnimUtils.VIEW_ALPHA
 import com.android.launcher3.R
+import com.android.launcher3.util.MultiPropertyFactory
 import com.android.launcher3.util.ViewPool
 import com.android.launcher3.util.coroutines.DispatcherProvider
 import com.android.quickstep.recents.di.RecentsDependencies
@@ -71,11 +73,13 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
     private val thumbnailView: FixedSizeImageView by lazy { findViewById(R.id.task_thumbnail) }
     private val splashBackground: View by lazy { findViewById(R.id.splash_background) }
     private val splashIcon: FixedSizeImageView by lazy { findViewById(R.id.splash_icon) }
+    private val dimAlpha: MultiPropertyFactory<View> by lazy {
+        MultiPropertyFactory(scrimView, VIEW_ALPHA, ScrimViewAlpha.entries.size, ::maxOf)
+    }
 
     private var taskThumbnailViewHeader: TaskThumbnailViewHeader? = null
 
     private var uiState: TaskThumbnailUiState = Uninitialized
-
     private val bounds = Rect()
 
     var cornerRadius: Float = 0f
@@ -109,11 +113,6 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
         viewData = RecentsDependencies.get(this)
         updateViewDataValues()
         viewModel = RecentsDependencies.get(this)
-        viewModel.dimProgress
-            .dropWhile { it == 0f }
-            .flowOn(dispatcherProvider.background)
-            .onEach { dimProgress -> scrimView.alpha = dimProgress }
-            .launchIn(viewAttachedScope)
         viewModel.splashAlpha
             .dropWhile { it == 0f }
             .flowOn(dispatcherProvider.background)
@@ -163,6 +162,14 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
             is SnapshotSplash -> drawSnapshotSplash(state)
             is BackgroundOnly -> drawBackground(state.backgroundColor)
         }
+    }
+
+    fun updateTintAmount(tintAmount: Float) {
+        dimAlpha[ScrimViewAlpha.TintAmount.ordinal].value = tintAmount
+    }
+
+    fun updateMenuOpenProgress(progress: Float) {
+        dimAlpha[ScrimViewAlpha.MenuProgress.ordinal].value = progress * MAX_SCRIM_ALPHA
     }
 
     private fun updateViewDataValues() {
@@ -250,5 +257,11 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
 
     private companion object {
         const val TAG = "TaskThumbnailView"
+        private const val MAX_SCRIM_ALPHA = 0.4f
+
+        enum class ScrimViewAlpha {
+            MenuProgress,
+            TintAmount,
+        }
     }
 }

@@ -21,9 +21,6 @@ import kotlinx.coroutines.flow.Flow
 
 /** ViewModel for representing TaskThumbnails */
 interface TaskThumbnailViewModel {
-    /** Provides the level of dimming that the View should have */
-    val dimProgress: Flow<Float>
-
     /** Provides the alpha of the splash icon */
     val splashAlpha: Flow<Float>
 

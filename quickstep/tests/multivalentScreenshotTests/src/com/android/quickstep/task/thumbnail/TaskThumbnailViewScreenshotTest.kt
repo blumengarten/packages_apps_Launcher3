@@ -84,6 +84,40 @@ class TaskThumbnailViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
         }
     }
 
+    @Test
+    fun taskThumbnailView_dimmed_tintAmount() {
+        screenshotRule.screenshotTest("taskThumbnailView_dimmed_40") { activity ->
+            activity.actionBar?.hide()
+            createTaskThumbnailView(activity).apply {
+                setState(BackgroundOnly(Color.YELLOW))
+                updateTintAmount(.4f)
+            }
+        }
+    }
+
+    @Test
+    fun taskThumbnailView_dimmed_menuOpen() {
+        screenshotRule.screenshotTest("taskThumbnailView_dimmed_40") { activity ->
+            activity.actionBar?.hide()
+            createTaskThumbnailView(activity).apply {
+                setState(BackgroundOnly(Color.YELLOW))
+                updateMenuOpenProgress(1f)
+            }
+        }
+    }
+
+    @Test
+    fun taskThumbnailView_dimmed_tintAmountAndMenuOpen() {
+        screenshotRule.screenshotTest("taskThumbnailView_dimmed_80") { activity ->
+            activity.actionBar?.hide()
+            createTaskThumbnailView(activity).apply {
+                setState(BackgroundOnly(Color.YELLOW))
+                updateTintAmount(.8f)
+                updateMenuOpenProgress(1f)
+            }
+        }
+    }
+
     private fun createTaskThumbnailView(context: Context): TaskThumbnailView {
         val di = RecentsDependencies.initialize(context)
         val taskThumbnailView =

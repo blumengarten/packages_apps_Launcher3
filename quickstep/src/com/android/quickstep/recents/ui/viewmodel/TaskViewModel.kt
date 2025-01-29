@@ -57,6 +57,8 @@ class TaskViewModel(
             }
             .distinctUntilChanged()
 
+    val tintAmount: Flow<Float> = recentsViewData.tintAmount
+
     val state: Flow<TaskTileUiState> =
         taskIds
             .flatMapLatest { ids ->

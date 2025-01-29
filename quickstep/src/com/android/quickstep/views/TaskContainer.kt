@@ -148,7 +148,7 @@ class TaskContainer(
         thumbnailView.destroyScopes()
     }
 
-    fun bindThumbnailView() {
+    private fun bindThumbnailView() {
         taskThumbnailViewModel.bind(task.key.id)
     }
 
@@ -168,5 +168,13 @@ class TaskContainer(
 
     fun setState(state: TaskData?, liveTile: Boolean, hasHeader: Boolean) {
         thumbnailView.setState(TaskUiStateMapper.toTaskThumbnailUiState(state, liveTile, hasHeader))
+    }
+
+    fun updateTintAmount(tintAmount: Float) {
+        thumbnailView.updateTintAmount(tintAmount)
+    }
+
+    fun updateMenuOpenProgress(progress: Float) {
+        thumbnailView.updateMenuOpenProgress(progress)
     }
 }

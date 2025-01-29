@@ -22,35 +22,21 @@ import android.util.Log
 import com.android.launcher3.util.coroutines.DispatcherProvider
 import com.android.quickstep.recents.usecase.GetThumbnailPositionUseCase
 import com.android.quickstep.recents.usecase.ThumbnailPositionState
-import com.android.quickstep.recents.viewmodel.RecentsViewData
 import com.android.quickstep.task.thumbnail.SplashAlphaUseCase
-import kotlin.math.max
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TaskThumbnailViewModelImpl(
-    recentsViewData: RecentsViewData,
-    taskContainerData: TaskContainerData,
     dispatcherProvider: DispatcherProvider,
     private val getThumbnailPositionUseCase: GetThumbnailPositionUseCase,
     private val splashAlphaUseCase: SplashAlphaUseCase,
 ) : TaskThumbnailViewModel {
     private val splashProgress = MutableStateFlow(flowOf(0f))
     private var taskId: Int = INVALID_TASK_ID
-
-    override val dimProgress: Flow<Float> =
-        combine(taskContainerData.taskMenuOpenProgress, recentsViewData.tintAmount) {
-                taskMenuOpenProgress,
-                tintAmount ->
-                max(taskMenuOpenProgress * MAX_SCRIM_ALPHA, tintAmount)
-            }
-            .flowOn(dispatcherProvider.background)
 
     override val splashAlpha =
         splashProgress.flatMapLatest { it }.flowOn(dispatcherProvider.background)
@@ -71,7 +57,6 @@ class TaskThumbnailViewModelImpl(
         }
 
     private companion object {
-        const val MAX_SCRIM_ALPHA = 0.4f
         const val TAG = "TaskThumbnailViewModel"
     }
 }

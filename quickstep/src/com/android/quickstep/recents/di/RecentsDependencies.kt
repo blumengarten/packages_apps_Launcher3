@@ -178,8 +178,6 @@ class RecentsDependencies private constructor(private val appContext: Context) {
                 TaskThumbnailViewData::class.java -> TaskThumbnailViewData()
                 TaskThumbnailViewModel::class.java ->
                     TaskThumbnailViewModelImpl(
-                        recentsViewData = inject(),
-                        taskContainerData = inject(scopeId),
                         dispatcherProvider = inject(),
                         getThumbnailPositionUseCase = inject(),
                         splashAlphaUseCase = inject(scopeId),

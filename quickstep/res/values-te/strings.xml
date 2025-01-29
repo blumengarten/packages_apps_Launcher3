@@ -46,8 +46,7 @@
     <string name="hotsaet_tip_prediction_enabled" msgid="2233554377501347650">"యాప్ సలహాలు ఎనేబుల్ చేయబడ్డాయి"</string>
     <string name="hotsaet_tip_prediction_disabled" msgid="1506426298884658491">"యాప్ సూచ‌న‌లు డిజేబుల్‌ చేయబడ్డాయి"</string>
     <string name="hotseat_prediction_content_description" msgid="4582028296938078419">"సూచించబడిన యాప్: <xliff:g id="TITLE">%1$s</xliff:g>"</string>
-    <!-- no translation found for gesture_tutorial_title (2750751261768388354) -->
-    <skip />
+    <string name="gesture_tutorial_title" msgid="2750751261768388354">"సంజ్ఞ నావిగేషన్ ట్యుటోరియల్"</string>
     <string name="gesture_tutorial_rotation_prompt_title" msgid="7537946781362766964">"మీ పరికరాన్ని రొటేట్ చేయండి"</string>
     <string name="gesture_tutorial_rotation_prompt" msgid="1664493449851960691">"సంజ్ఞ నావిగేషన్ ట్యుటోరియల్‌ను పూర్తి చేయడానికి దయచేసి మీ పరికరాన్ని రొటేట్ చేయండి"</string>
     <string name="back_gesture_feedback_swipe_too_far_from_edge" msgid="4175100312909721217">"కుడి వైపు చిట్ట చివరి లేదా ఎడమ వైపు చిట్ట చివరి అంచు నుండి స్వైప్ చేస్తున్నారని నిర్ధారించుకోండి"</string>
@@ -132,8 +131,6 @@
     <string name="taskbar_a11y_shown_title" msgid="6842833581088937713">"టాస్క్‌బార్ చూపబడింది"</string>
     <string name="taskbar_a11y_shown_with_bubbles_left_title" msgid="4242431789851790046">"టాస్క్‌బార్, బబుల్స్ ఎడమవైపున చూపబడ్డాయి"</string>
     <string name="taskbar_a11y_shown_with_bubbles_right_title" msgid="8219065376188180113">"టాస్క్‌బార్, బబుల్స్ కుడివైపున చూపబడ్డాయి"</string>
-    <string name="taskbar_a11y_hidden_title" msgid="9154903639589659284">"టాస్క్‌బార్ దాచబడింది"</string>
-    <string name="taskbar_a11y_hidden_with_bubbles_title" msgid="7397395993149508087">"టాస్క్‌బార్, బబుల్స్ దాచబడినవి"</string>
     <string name="taskbar_phone_a11y_title" msgid="4933360237131229395">"నావిగేషన్ బార్"</string>
     <string name="always_show_taskbar" msgid="3608801276107751229">"టాస్క్‌బార్‌ను నిరంతరం చూపండి"</string>
     <string name="change_navigation_mode" msgid="9088393078736808968">"నావిగేషన్ మోడ్‌ను మార్చండి"</string>

@@ -1514,9 +1514,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         BubbleTextView.RunningAppState runningAppState =
                 mControllers.taskbarRecentAppsController.getRunningAppState(taskId);
         return runningAppState == RunningAppState.MINIMIZED
-                && (DesktopModeFlags.ENABLE_DESKTOP_APP_LAUNCH_ALTTAB_TRANSITIONS.isTrue()
-                    || DesktopModeFlags.ENABLE_DESKTOP_APP_LAUNCH_ALTTAB_TRANSITIONS_BUGFIX.isTrue()
-                    );
+                && DesktopModeFlags.ENABLE_DESKTOP_APP_LAUNCH_ALTTAB_TRANSITIONS_BUGFIX.isTrue();
     }
 
     private RemoteTransition createDesktopAppLaunchRemoteTransition(

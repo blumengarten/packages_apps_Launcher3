@@ -126,7 +126,7 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
     private val systemUiProxyDeathRecipient =
         IBinder.DeathRecipient { Executors.MAIN_EXECUTOR.execute { clearProxy() } }
 
-    // Save the listeners passed into the proxy since OverviewProxyService may not have been bound
+    // Save the listeners passed into the proxy since LauncherProxyService may not have been bound
     // yet, and we'll need to set/register these listeners with SysUI when they do.  Note that it is
     // up to the caller to clear the listeners to prevent leaks as these can be held indefinitely
     // in case SysUI needs to rebind.

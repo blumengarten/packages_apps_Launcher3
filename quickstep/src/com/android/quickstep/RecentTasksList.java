@@ -18,6 +18,7 @@ package com.android.quickstep;
 
 import static android.content.Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS;
 
+import static com.android.launcher3.Flags.enableSeparateExternalDisplayTasks;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 import static com.android.quickstep.util.SplitScreenUtils.convertShellSplitBoundsToLauncher;
 import static com.android.wm.shell.shared.GroupedTaskInfo.TYPE_FREEFORM;
@@ -47,12 +48,18 @@ import com.android.wm.shell.recents.IRecentTasksListener;
 import com.android.wm.shell.shared.GroupedTaskInfo;
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 
+import kotlin.collections.ArraysKt;
+import kotlin.collections.CollectionsKt;
+import kotlin.collections.MapsKt;
+
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -350,10 +357,9 @@ public class RecentTasksList {
                 // TYPE_FREEFORM tasks is only created when desktop mode can be entered,
                 // leftover TYPE_FREEFORM tasks created when flag was on should be ignored.
                 if (DesktopModeStatus.canEnterDesktopMode(mContext)) {
-                    GroupTask desktopTask = createDesktopTask(rawTask.getBaseGroupedTask());
-                    if (desktopTask != null) {
-                        allTasks.add(desktopTask);
-                    }
+                    List<DesktopTask> desktopTasks = createDesktopTasks(
+                            rawTask.getBaseGroupedTask());
+                    allTasks.addAll(desktopTasks);
                 }
                 continue;
             }
@@ -421,20 +427,35 @@ public class RecentTasksList {
         return allTasks;
     }
 
-    private @Nullable DesktopTask createDesktopTask(GroupedTaskInfo recentTaskInfo) {
-        ArrayList<Task> tasks = new ArrayList<>(recentTaskInfo.getTaskInfoList().size());
-        int[] minimizedTaskIds = recentTaskInfo.getMinimizedTaskIds();
-        for (TaskInfo taskInfo : recentTaskInfo.getTaskInfoList()) {
-            Task.TaskKey key = new Task.TaskKey(taskInfo);
-            Task task = Task.from(key, taskInfo, false);
-            task.positionInParent = taskInfo.positionInParent;
-            task.appBounds = taskInfo.configuration.windowConfiguration.getAppBounds();
-            task.isVisible = taskInfo.isVisible;
-            task.isMinimized =
-                    Arrays.stream(minimizedTaskIds).anyMatch(taskId -> taskId == taskInfo.taskId);
-            tasks.add(task);
+    private Task createTask(TaskInfo taskInfo, Set<Integer> minimizedTaskIds) {
+        Task.TaskKey key = new Task.TaskKey(taskInfo);
+        Task task = Task.from(key, taskInfo, false);
+        task.positionInParent = taskInfo.positionInParent;
+        task.appBounds = taskInfo.configuration.windowConfiguration.getAppBounds();
+        task.isVisible = taskInfo.isVisible;
+        task.isMinimized = minimizedTaskIds.contains(taskInfo.taskId);
+        return task;
+    }
+
+    private List<DesktopTask> createDesktopTasks(GroupedTaskInfo recentTaskInfo) {
+        int[] minimizedTaskIdArray = recentTaskInfo.getMinimizedTaskIds();
+        Set<Integer> minimizedTaskIds = minimizedTaskIdArray != null
+                ? CollectionsKt.toSet(ArraysKt.asIterable(minimizedTaskIdArray))
+                : Collections.emptySet();
+        if (enableSeparateExternalDisplayTasks()) {
+            Map<Integer, List<Task>> perDisplayTasks = new HashMap<>();
+            for (TaskInfo taskInfo : recentTaskInfo.getTaskInfoList()) {
+                Task task = createTask(taskInfo, minimizedTaskIds);
+                List<Task> tasks = perDisplayTasks.computeIfAbsent(taskInfo.displayId,
+                        k -> new ArrayList<>());
+                tasks.add(task);
+            }
+            return MapsKt.map(perDisplayTasks, it -> new DesktopTask(it.getValue()));
+        } else {
+            List<Task> tasks = CollectionsKt.map(recentTaskInfo.getTaskInfoList(),
+                    it -> createTask(it, minimizedTaskIds));
+            return List.of(new DesktopTask(tasks));
         }
-        return new DesktopTask(tasks);
     }
 
     public void dump(String prefix, PrintWriter writer) {

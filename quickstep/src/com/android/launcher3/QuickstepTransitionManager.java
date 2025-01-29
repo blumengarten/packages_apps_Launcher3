@@ -1567,8 +1567,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
     private boolean isFreeformAnimation(RemoteAnimationTarget[] appTargets) {
         return DesktopModeStatus.canEnterDesktopMode(mLauncher.getApplicationContext())
-                && (DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_EXIT_TRANSITIONS.isTrue()
-                    || DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_EXIT_TRANSITIONS_BUGFIX.isTrue())
+                && DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_EXIT_TRANSITIONS_BUGFIX.isTrue()
                 && Arrays.stream(appTargets)
                         .anyMatch(app -> app.taskInfo != null && app.taskInfo.isFreeform());
     }
@@ -1746,6 +1745,10 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             if (rectFSpringAnim != null && anim.getChildAnimations().isEmpty()) {
                 addCujInstrumentation(rectFSpringAnim, Cuj.CUJ_LAUNCHER_APP_CLOSE_TO_HOME);
             } else {
+                if (isFreeformAnimation(appTargets)) {
+                    addCujInstrumentation(anim,
+                            Cuj.CUJ_DESKTOP_MODE_EXIT_MODE_ON_LAST_WINDOW_CLOSE);
+                }
                 addCujInstrumentation(anim, playFallBackAnimation
                         ? Cuj.CUJ_LAUNCHER_APP_CLOSE_TO_HOME_FALLBACK
                         : Cuj.CUJ_LAUNCHER_APP_CLOSE_TO_HOME);

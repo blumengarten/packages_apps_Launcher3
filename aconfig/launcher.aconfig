@@ -584,3 +584,10 @@ flag {
     purpose: PURPOSE_BUGFIX
   }
 }
+
+flag {
+  name: "enable_mouse_interaction_changes"
+  namespace: "launcher"
+  description: "Changes mouse interaction behavior"
+  bug: "388897603"
+}

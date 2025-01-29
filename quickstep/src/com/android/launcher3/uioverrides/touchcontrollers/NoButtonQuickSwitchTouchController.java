@@ -86,6 +86,8 @@ import com.android.quickstep.util.MotionPauseDetector;
 import com.android.quickstep.util.WorkspaceRevealAnim;
 import com.android.quickstep.views.RecentsView;
 import com.android.systemui.shared.system.InteractionJankMonitorWrapper;
+import com.android.window.flags.Flags;
+import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 
 /**
  * Handles quick switching to a recent task from the home screen. To give as much flexibility to
@@ -183,6 +185,12 @@ public class NoButtonQuickSwitchTouchController implements TouchController,
         if (isTrackpadMultiFingerSwipe(ev)) {
             mIsTrackpadSwipe = isTrackpadFourFingerSwipe(ev);
             return mIsTrackpadSwipe;
+        }
+        if (DesktopModeStatus.canEnterDesktopMode(mLauncher.getContext())
+                //TODO(b/345296916): replace with dev option once in teamfood
+                && Flags.enableQuickswitchDesktopSplitBugfix()
+                && mRecentsView.getNonDesktopTaskViewCount() < 1) {
+            return false;
         }
         return true;
     }

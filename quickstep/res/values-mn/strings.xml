@@ -46,8 +46,7 @@
     <string name="hotsaet_tip_prediction_enabled" msgid="2233554377501347650">"Санал болгож буй аппуудыг идэвхжүүлсэн"</string>
     <string name="hotsaet_tip_prediction_disabled" msgid="1506426298884658491">"Санал болгож буй аппуудыг идэвхгүй болгосон"</string>
     <string name="hotseat_prediction_content_description" msgid="4582028296938078419">"Таамаглаж буй апп: <xliff:g id="TITLE">%1$s</xliff:g>"</string>
-    <!-- no translation found for gesture_tutorial_title (2750751261768388354) -->
-    <skip />
+    <string name="gesture_tutorial_title" msgid="2750751261768388354">"Зангааны навигацын заавар"</string>
     <string name="gesture_tutorial_rotation_prompt_title" msgid="7537946781362766964">"Төхөөрөмжөө эргүүлэх"</string>
     <string name="gesture_tutorial_rotation_prompt" msgid="1664493449851960691">"Зангааны навигацын практик хичээлийг дуусгахын тулд төхөөрөмжөө эргүүлнэ үү"</string>
     <string name="back_gesture_feedback_swipe_too_far_from_edge" msgid="4175100312909721217">"Та баруун зах эсвэл зүүн захын ирмэгээс шударна уу"</string>
@@ -132,8 +131,6 @@
     <string name="taskbar_a11y_shown_title" msgid="6842833581088937713">"Ажлын хэсгийг харуулсан"</string>
     <string name="taskbar_a11y_shown_with_bubbles_left_title" msgid="4242431789851790046">"Ажлын хэсэг, бөмбөлгийг зүүн талд харуулсан"</string>
     <string name="taskbar_a11y_shown_with_bubbles_right_title" msgid="8219065376188180113">"Ажлын хэсэг, бөмбөлгийг баруун талд харуулсан"</string>
-    <string name="taskbar_a11y_hidden_title" msgid="9154903639589659284">"Ажлын хэсгийг нуусан"</string>
-    <string name="taskbar_a11y_hidden_with_bubbles_title" msgid="7397395993149508087">"Ажлын хэсэг, бөмбөлгийг нуусан"</string>
     <string name="taskbar_phone_a11y_title" msgid="4933360237131229395">"Навигацын самбар"</string>
     <string name="always_show_taskbar" msgid="3608801276107751229">"Ажлын хэсгийг үргэлж харуулах"</string>
     <string name="change_navigation_mode" msgid="9088393078736808968">"Навигацын горимыг өөрчлөх"</string>

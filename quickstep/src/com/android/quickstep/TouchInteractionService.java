@@ -100,7 +100,7 @@ import com.android.quickstep.util.ActivityPreloadUtil;
 import com.android.quickstep.util.ContextualSearchInvoker;
 import com.android.quickstep.util.ContextualSearchStateManager;
 import com.android.quickstep.views.RecentsViewContainer;
-import com.android.systemui.shared.recents.IOverviewProxy;
+import com.android.systemui.shared.recents.ILauncherProxy;
 import com.android.systemui.shared.recents.ISystemUiProxy;
 import com.android.systemui.shared.statusbar.phone.BarTransitions;
 import com.android.systemui.shared.system.InputChannelCompat.InputEventReceiver;
@@ -141,9 +141,9 @@ public class TouchInteractionService extends Service {
     private final TISBinder mTISBinder = new TISBinder(this);
 
     /**
-     * Local IOverviewProxy implementation with some methods for local components
+     * Local ILauncherProxy implementation with some methods for local components
      */
-    public static class TISBinder extends IOverviewProxy.Stub {
+    public static class TISBinder extends ILauncherProxy.Stub {
 
         private final WeakReference<TouchInteractionService> mTis;
 
@@ -423,7 +423,7 @@ public class TouchInteractionService extends Service {
                 try {
                     reply.sendResult(null);
                 } catch (RemoteException e) {
-                    Log.w(TAG, "onUnbind: Failed to reply to OverviewProxyService", e);
+                    Log.w(TAG, "onUnbind: Failed to reply to LauncherProxyService", e);
                 }
             });
         }

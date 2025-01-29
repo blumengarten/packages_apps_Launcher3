@@ -368,8 +368,7 @@ public class TaskMenuView extends AbstractFloatingView {
             mRevealAnimator.addUpdateListener(animation -> {
                 float animatedFraction = animation.getAnimatedFraction();
                 float openProgress = closing ? (1 - animatedFraction) : animatedFraction;
-                mTaskContainer.getTaskContainerData()
-                        .getTaskMenuOpenProgress().setValue(openProgress);
+                mTaskContainer.updateMenuOpenProgress(openProgress);
             });
         } else {
             openCloseAnimatorBuilder.with(ObjectAnimator.ofFloat(

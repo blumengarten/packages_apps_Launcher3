@@ -60,7 +60,7 @@ class DesktopRecentsTransitionController(
                 callback,
             )
         val transition = RemoteTransition(animRunner, appThread, "RecentsToDesktop")
-        systemUiProxy.showDesktopApps(desktopTaskView.display.displayId, transition)
+        systemUiProxy.showDesktopApps(desktopTaskView.displayId, transition)
     }
 
     /** Launch desktop tasks from recents view */

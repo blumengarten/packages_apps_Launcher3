@@ -45,11 +45,11 @@ class IconView : View, TaskViewIcon {
     private var msdlPlayerWrapper: MSDLPlayerWrapper? = null
 
     constructor(context: Context) : super(context) {
-        msdlPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(context)
+        setUpHaptics()
     }
 
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
-        msdlPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(context)
+        setUpHaptics()
     }
 
     constructor(
@@ -57,11 +57,15 @@ class IconView : View, TaskViewIcon {
         attrs: AttributeSet?,
         defStyleAttr: Int,
     ) : super(context, attrs, defStyleAttr) {
-        msdlPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(context)
+        setUpHaptics()
     }
 
     init {
         multiValueAlpha.setUpdateVisibility(true)
+    }
+
+    private fun setUpHaptics() {
+        msdlPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(context)
         // Haptics are handled by the MSDLPlayerWrapper
         isHapticFeedbackEnabled = !Flags.msdlFeedback() || msdlPlayerWrapper == null
     }
