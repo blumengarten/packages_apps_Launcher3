@@ -873,7 +873,7 @@ public class DeviceProfile {
         if (renderer == null) {
             renderer = new DotRenderer(
                     size,
-                    IconShape.INSTANCE.get(context).getShapeOverridePath(DEFAULT_DOT_SIZE),
+                    IconShape.INSTANCE.get(context).getShape().getPath(DEFAULT_DOT_SIZE),
                     DEFAULT_DOT_SIZE);
             cache.put(size, renderer);
         }

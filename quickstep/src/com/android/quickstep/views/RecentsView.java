@@ -5709,7 +5709,7 @@ public abstract class RecentsView<
         updateGridProperties();
         updateScrollSynchronously();
 
-        int targetSysUiFlags = taskView.getTaskContainers().getFirst().getSysUiStatusNavFlags();
+        int targetSysUiFlags = taskView.getSysUiStatusNavFlags();
         final boolean[] passedOverviewThreshold = new boolean[]{false};
         AnimatorSet anim = createAdjacentPageAnimForTaskLaunch(taskView);
         anim.play(new AnimatedFloat(v -> {

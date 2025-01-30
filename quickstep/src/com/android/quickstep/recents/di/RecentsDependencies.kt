@@ -26,10 +26,10 @@ import com.android.quickstep.recents.data.RecentTasksRepository
 import com.android.quickstep.recents.data.TaskVisualsChangedDelegate
 import com.android.quickstep.recents.data.TaskVisualsChangedDelegateImpl
 import com.android.quickstep.recents.data.TasksRepository
+import com.android.quickstep.recents.domain.usecase.GetSysUiStatusNavFlagsUseCase
 import com.android.quickstep.recents.domain.usecase.GetTaskUseCase
 import com.android.quickstep.recents.usecase.GetThumbnailPositionUseCase
 import com.android.quickstep.recents.usecase.GetThumbnailUseCase
-import com.android.quickstep.recents.usecase.SysUiStatusNavFlagsUseCase
 import com.android.quickstep.recents.viewmodel.RecentsViewData
 import com.android.quickstep.task.thumbnail.SplashAlphaUseCase
 import com.android.quickstep.task.thumbnail.TaskThumbnailViewData
@@ -194,8 +194,7 @@ class RecentsDependencies private constructor(private val appContext: Context) {
                 }
                 GetTaskUseCase::class.java -> GetTaskUseCase(repository = inject())
                 GetThumbnailUseCase::class.java -> GetThumbnailUseCase(taskRepository = inject())
-                SysUiStatusNavFlagsUseCase::class.java ->
-                    SysUiStatusNavFlagsUseCase(taskRepository = inject())
+                GetSysUiStatusNavFlagsUseCase::class.java -> GetSysUiStatusNavFlagsUseCase()
                 GetThumbnailPositionUseCase::class.java ->
                     GetThumbnailPositionUseCase(
                         deviceProfileRepository = inject(),

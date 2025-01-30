@@ -159,8 +159,8 @@ public class GridSizeMigrationDBController {
             DbReader destReader = new DbReader(t.getDb(), TABLE_NAME, context);
 
             Point targetSize = new Point(destDeviceState.getColumns(), destDeviceState.getRows());
-            migrate(target, srcReader, destReader, destDeviceState.getNumHotseat(),
-                    targetSize, srcDeviceState, destDeviceState);
+            migrate(target, srcReader, destReader, srcDeviceState.getNumHotseat(),
+                    destDeviceState.getNumHotseat(), targetSize, srcDeviceState, destDeviceState);
             dropTable(t.getDb(), TMP_TABLE);
             t.commit();
             return true;
@@ -181,19 +181,26 @@ public class GridSizeMigrationDBController {
     public static boolean migrate(
             @NonNull DatabaseHelper helper,
             @NonNull final DbReader srcReader, @NonNull final DbReader destReader,
-            final int destHotseatSize, @NonNull final Point targetSize,
+            final int srcHotseatSize, final int destHotseatSize, @NonNull final Point targetSize,
             @NonNull final DeviceGridState srcDeviceState,
             @NonNull final DeviceGridState destDeviceState) {
 
         final List<DbEntry> srcHotseatItems = srcReader.loadHotseatEntries();
         final List<DbEntry> srcWorkspaceItems = srcReader.loadAllWorkspaceEntries();
         final List<DbEntry> dstHotseatItems = destReader.loadHotseatEntries();
+        // We want to filter out the hotseat items that are placed beyond the size of the source
+        // grid as we always want to keep those extra items from the destination grid.
+        List<DbEntry> filteredDstHotseatItems = dstHotseatItems;
+        if (srcHotseatSize < destHotseatSize) {
+            filteredDstHotseatItems = filteredDstHotseatItems.stream()
+                    .filter(entry -> entry.screenId < srcHotseatSize).toList();
+        }
         final List<DbEntry> dstWorkspaceItems = destReader.loadAllWorkspaceEntries();
         final List<DbEntry> hotseatToBeAdded = new ArrayList<>(1);
         final List<DbEntry> workspaceToBeAdded = new ArrayList<>(1);
         final IntArray toBeRemoved = new IntArray();
 
-        calcDiff(srcHotseatItems, dstHotseatItems, hotseatToBeAdded, toBeRemoved);
+        calcDiff(srcHotseatItems, filteredDstHotseatItems, hotseatToBeAdded, toBeRemoved);
         calcDiff(srcWorkspaceItems, dstWorkspaceItems, workspaceToBeAdded, toBeRemoved);
 
         final int trgX = targetSize.x;
@@ -421,12 +428,13 @@ public class GridSizeMigrationDBController {
     }
 
     private static void solveHotseatPlacement(
-            @NonNull final DatabaseHelper helper, final int hotseatSize,
+            @NonNull final DatabaseHelper helper,
+            final int dstHotseatSize,
             @NonNull final DbReader srcReader, @NonNull final DbReader destReader,
             @NonNull final List<DbEntry> placedHotseatItems,
             @NonNull final List<DbEntry> itemsToPlace, List<Integer> idsInUse) {
 
-        final boolean[] occupied = new boolean[hotseatSize];
+        final boolean[] occupied = new boolean[dstHotseatSize];
         for (DbEntry entry : placedHotseatItems) {
             occupied[entry.screenId] = true;
         }

@@ -192,4 +192,6 @@ open class SystemApiWrapper @Inject constructor(@ApplicationContext context: Con
 
     override fun getApplicationInfoHash(appInfo: ApplicationInfo): String =
         (appInfo.sourceDir?.hashCode() ?: 0).toString() + " " + appInfo.longVersionCode
+
+    override fun getRoundIconRes(appInfo: ApplicationInfo) = appInfo.roundIconRes
 }

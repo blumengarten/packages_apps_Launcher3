@@ -22,6 +22,7 @@ import static android.view.WindowManager.LayoutParams.TYPE_DOCK_DIVIDER;
 
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 
+import android.annotation.Nullable;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.ArraySet;
@@ -103,7 +104,7 @@ public class RecentsAnimationCallbacks implements
             RemoteAnimationTarget[] appTargets,
             RemoteAnimationTarget[] wallpaperTargets,
             Rect homeContentInsets, Rect minimizedHomeBounds, Bundle extras,
-            TransitionInfo transitionInfo) {
+            @Nullable TransitionInfo transitionInfo) {
         long appCount = Arrays.stream(appTargets)
                 .filter(app -> app.mode == MODE_CLOSING)
                 .count();
@@ -207,7 +208,7 @@ public class RecentsAnimationCallbacks implements
      */
     public interface RecentsAnimationListener {
         default void onRecentsAnimationStart(RecentsAnimationController controller,
-                RecentsAnimationTargets targets, TransitionInfo transitionInfo) {}
+                RecentsAnimationTargets targets, @Nullable TransitionInfo transitionInfo) {}
 
         /**
          * Callback from the system when the recents animation is canceled. {@param thumbnailData}

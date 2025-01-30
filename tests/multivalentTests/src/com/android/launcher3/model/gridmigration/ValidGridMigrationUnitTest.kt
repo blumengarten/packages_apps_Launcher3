@@ -138,6 +138,7 @@ class ValidGridMigrationUnitTest {
                 val gridSizeMigrationLogic = GridSizeMigrationLogic()
                 val idsInUse = mutableListOf<Int>()
                 gridSizeMigrationLogic.migrateHotseat(
+                    srcGrid.size.x,
                     dstGrid.size.x,
                     GridSizeMigrationDBController.DbReader(it.db, srcGrid.tableName, context),
                     GridSizeMigrationDBController.DbReader(it.db, dstGrid.tableName, context),
@@ -156,6 +157,7 @@ class ValidGridMigrationUnitTest {
                     dbHelper,
                     GridSizeMigrationDBController.DbReader(it.db, srcGrid.tableName, context),
                     GridSizeMigrationDBController.DbReader(it.db, dstGrid.tableName, context),
+                    srcGrid.size.x,
                     dstGrid.size.x,
                     dstGrid.size,
                     srcGrid.toGridState(),

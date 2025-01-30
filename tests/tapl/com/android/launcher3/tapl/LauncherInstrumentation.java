@@ -211,6 +211,8 @@ public final class LauncherInstrumentation {
     private TrackpadGestureType mTrackpadGestureType = TrackpadGestureType.NONE;
     private int mPointerCount = 0;
 
+    private boolean mWaitingForMotionUpEvent;
+
     private static Pattern getKeyEventPattern(String action, String keyCode) {
         return Pattern.compile("Key event: KeyEvent.*action=" + action + ".*keyCode=" + keyCode);
     }
@@ -752,7 +754,29 @@ public final class LauncherInstrumentation {
         }
     }
 
+    private void cleanUpInputStream() {
+        if (!mWaitingForMotionUpEvent) {
+            return;
+        }
+        long downTime = SystemClock.uptimeMillis();
+        MotionEvent cleanUpEvent = getMotionEvent(
+                downTime,
+                downTime,
+                MotionEvent.ACTION_UP,
+                0,
+                0,
+                InputDevice.SOURCE_TOUCHSCREEN,
+                Configurator.getInstance().getToolType());
+        log("Test failed while a ACTION_UP event was still pending. "
+                + "Cleaning up the input stream by sending an ACTION_UP event forcefully: "
+                + "event= " + cleanUpEvent);
+
+        injectEventUnchecked(cleanUpEvent);
+        mWaitingForMotionUpEvent = false;
+    }
+
     void fail(String message) {
+        cleanUpInputStream();
         checkForAnomaly();
         if (mOnFailure != null) mOnFailure.run();
         Assert.fail(formatSystemHealthMessage(formatErrorWithEvents(
@@ -2022,8 +2046,38 @@ public final class LauncherInstrumentation {
     }
 
     private void injectEvent(InputEvent event) {
-        assertTrue("injectInputEvent failed: event=" + event,
-                mInstrumentation.getUiAutomation().injectInputEvent(event, true, false));
+        if (event instanceof MotionEvent motionEvent) {
+            switch (motionEvent.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    assertTrue("Attempting to inject a second ACTION_DOWN event before a "
+                                    + "ACTION_UP event: " + event,
+                            !mWaitingForMotionUpEvent);
+                    mWaitingForMotionUpEvent = true;
+                    break;
+                case MotionEvent.ACTION_CANCEL:
+                case MotionEvent.ACTION_UP:
+                    assertTrue("Attempting to inject an unexpected ACTION_UP event: " + event,
+                            mWaitingForMotionUpEvent);
+                    mWaitingForMotionUpEvent = false;
+
+                    break;
+                default:
+                    // Nothing to do
+                    break;
+            }
+        }
+        assertTrue("injectInputEvent failed: event=" + event, injectEventUnchecked(event));
+    }
+
+    private boolean injectEventUnchecked(InputEvent event) {
+        boolean result = mInstrumentation.getUiAutomation().injectInputEvent(event, true, false);
+
+        // Only MotionEvents need to be recycled.
+        if (event instanceof MotionEvent motionEvent) {
+            motionEvent.recycle();
+        }
+
+        return result;
     }
 
     public void sendPointer(long downTime, long currentTime, int action, Point point,

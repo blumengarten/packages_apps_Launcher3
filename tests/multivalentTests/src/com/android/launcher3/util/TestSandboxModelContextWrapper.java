@@ -64,7 +64,7 @@ public class TestSandboxModelContextWrapper extends ActivityContextWrapper imple
 
     public TestSandboxModelContextWrapper(SandboxContext base) {
         super(base);
-        mUserCache = base.getObject(UserCache.INSTANCE);
+        mUserCache = UserCache.getInstance(base);
         InstrumentationRegistry.getInstrumentation().runOnMainSync(() ->
                 mAppsView = new ActivityAllAppsContainerView<>(this));
         mAppsList = mAppsView.getPersonalAppList();

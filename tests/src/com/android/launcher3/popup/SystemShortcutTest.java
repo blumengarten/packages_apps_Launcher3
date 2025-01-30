@@ -62,12 +62,15 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.R;
 import com.android.launcher3.allapps.PrivateProfileManager;
+import com.android.launcher3.dagger.LauncherAppComponent;
+import com.android.launcher3.dagger.LauncherAppSingleton;
 import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.logging.StatsLogManager.StatsLogger;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
 import com.android.launcher3.pm.UserCache;
+import com.android.launcher3.util.AllModulesForTest;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.LauncherModelHelper.SandboxModelContext;
 import com.android.launcher3.util.LauncherMultivalentJUnit;
@@ -87,6 +90,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import dagger.BindsInstance;
+import dagger.Component;
 
 @SmallTest
 @RunWith(LauncherMultivalentJUnit.class)
@@ -113,7 +119,9 @@ public class SystemShortcutTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        mSandboxContext.putObject(UserCache.INSTANCE, mUserCache);
+        mSandboxContext.initDaggerComponent(
+                DaggerSystemShortcutTest_TestComponent.builder().bindUserCache(mUserCache)
+        );
         mTestContext = new TestSandboxModelContextWrapper(mSandboxContext) {
             @Override
             public StatsLogManager getStatsLogManager() {
@@ -401,5 +409,16 @@ public class SystemShortcutTest {
 
         systemShortcut.onClick(mView);
         verify(mSandboxContext).startActivity(any());
+    }
+
+    @LauncherAppSingleton
+    @Component(modules = { AllModulesForTest.class })
+    interface TestComponent extends LauncherAppComponent {
+        @Component.Builder
+        interface Builder extends LauncherAppComponent.Builder {
+            @BindsInstance
+            SystemShortcutTest.TestComponent.Builder bindUserCache(UserCache userCache);
+            @Override LauncherAppComponent build();
+        }
     }
 }

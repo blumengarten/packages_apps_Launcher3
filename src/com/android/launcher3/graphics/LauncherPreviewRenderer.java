@@ -67,7 +67,9 @@ import com.android.launcher3.Hotseat;
 import com.android.launcher3.InsettableFrameLayout;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherSettings.Favorites;
+import com.android.launcher3.ProxyPrefs;
 import com.android.launcher3.R;
 import com.android.launcher3.Workspace;
 import com.android.launcher3.WorkspaceLayoutManager;
@@ -75,6 +77,9 @@ import com.android.launcher3.apppairs.AppPairIcon;
 import com.android.launcher3.celllayout.CellLayoutLayoutParams;
 import com.android.launcher3.celllayout.CellPosMapper;
 import com.android.launcher3.config.FeatureFlags;
+import com.android.launcher3.dagger.LauncherAppComponent;
+import com.android.launcher3.dagger.LauncherAppModule;
+import com.android.launcher3.dagger.LauncherAppSingleton;
 import com.android.launcher3.folder.FolderIcon;
 import com.android.launcher3.model.BgDataModel;
 import com.android.launcher3.model.BgDataModel.FixedContainerItems;
@@ -100,12 +105,16 @@ import com.android.launcher3.widget.LocalColorExtractor;
 import com.android.launcher3.widget.util.WidgetSizes;
 import com.android.systemui.shared.Flags;
 
+import dagger.BindsInstance;
+import dagger.Component;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -126,11 +135,24 @@ public class LauncherPreviewRenderer extends ContextWrapper
      */
     public static class PreviewContext extends SandboxContext {
 
+        private final String mPrefName;
+
         public PreviewContext(Context base, InvariantDeviceProfile idp) {
             super(base);
+            mPrefName = "preview-" + UUID.randomUUID().toString();
+            initDaggerComponent(DaggerLauncherPreviewRenderer_PreviewAppComponent.builder()
+                    .bindPrefs(new ProxyPrefs(
+                            this, getSharedPreferences(mPrefName, MODE_PRIVATE))));
+
             putObject(InvariantDeviceProfile.INSTANCE, idp);
             putObject(LauncherAppState.INSTANCE,
                     new LauncherAppState(this, null /* iconCacheFileName */));
+        }
+
+        @Override
+        protected void cleanUpObjects() {
+            super.cleanUpObjects();
+            deleteSharedPreferences(mPrefName);
         }
     }
 
@@ -576,6 +598,18 @@ public class LauncherPreviewRenderer extends ContextWrapper
         @Override
         public boolean onInterceptTouchEvent(MotionEvent ev) {
             return true;
+        }
+    }
+
+    @LauncherAppSingleton
+    @Component(modules = LauncherAppModule.class)
+    public interface PreviewAppComponent extends LauncherAppComponent {
+
+        /** Builder for NexusLauncherAppComponent. */
+        @Component.Builder
+        interface Builder extends LauncherAppComponent.Builder {
+            @BindsInstance Builder bindPrefs(LauncherPrefs prefs);
+            PreviewAppComponent build();
         }
     }
 }

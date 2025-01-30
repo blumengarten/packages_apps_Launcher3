@@ -439,8 +439,7 @@ public class ItemInfo {
         LauncherAtom.ItemInfo.Builder itemBuilder = LauncherAtom.ItemInfo.newBuilder();
         itemBuilder.setIsKidsMode(
                 SettingsCache.INSTANCE.get(context).getValue(NAV_BAR_KIDS_MODE, 0));
-        UserCache.INSTANCE.executeIfCreated(cache ->
-                itemBuilder.setUserType(getUserType(cache.getUserInfo(user))));
+        itemBuilder.setUserType(getUserType(UserCache.INSTANCE.get(context).getUserInfo(user)));
         itemBuilder.setRank(rank);
         itemBuilder.addAllItemAttributes(mAttributeList);
         return itemBuilder;

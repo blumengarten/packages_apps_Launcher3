@@ -18,9 +18,15 @@ package com.android.quickstep.recents.ui.viewmodel
 
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
+import android.view.WindowInsetsController.APPEARANCE_LIGHT_CAPTION_BARS
+import android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+import android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.launcher3.util.SystemUiController.FLAG_LIGHT_NAV
+import com.android.launcher3.util.SystemUiController.FLAG_LIGHT_STATUS
 import com.android.launcher3.util.TestDispatcherProvider
 import com.android.quickstep.recents.domain.model.TaskModel
+import com.android.quickstep.recents.domain.usecase.GetSysUiStatusNavFlagsUseCase
 import com.android.quickstep.recents.domain.usecase.GetTaskUseCase
 import com.android.quickstep.recents.viewmodel.RecentsViewData
 import com.android.quickstep.views.TaskViewType
@@ -55,6 +61,7 @@ class TaskViewModelTest {
                 taskViewType = TaskViewType.SINGLE,
                 recentsViewData = recentsViewData,
                 getTaskUseCase = getTaskUseCase,
+                getSysUiStatusNavFlagsUseCase = GetSysUiStatusNavFlagsUseCase(),
                 dispatcherProvider = TestDispatcherProvider(unconfinedTestDispatcher),
             )
         whenever(getTaskUseCase.invoke(TASK_MODEL_1.id)).thenReturn(flow { emit(TASK_MODEL_1) })
@@ -73,6 +80,7 @@ class TaskViewModelTest {
                     tasks = listOf(TASK_MODEL_1.toUiState()),
                     isLiveTile = false,
                     hasHeader = false,
+                    sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -93,6 +101,7 @@ class TaskViewModelTest {
                         taskViewType = type,
                         recentsViewData = recentsViewData,
                         getTaskUseCase = getTaskUseCase,
+                        getSysUiStatusNavFlagsUseCase = GetSysUiStatusNavFlagsUseCase(),
                         dispatcherProvider = TestDispatcherProvider(unconfinedTestDispatcher),
                     )
                 sut.bind(TASK_MODEL_1.id)
@@ -115,6 +124,7 @@ class TaskViewModelTest {
                         ),
                     isLiveTile = false,
                     hasHeader = false,
+                    sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -136,6 +146,7 @@ class TaskViewModelTest {
                         ),
                     isLiveTile = true,
                     hasHeader = false,
+                    sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -157,6 +168,7 @@ class TaskViewModelTest {
                         ),
                     isLiveTile = false,
                     hasHeader = false,
+                    sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -177,6 +189,7 @@ class TaskViewModelTest {
                         ),
                     isLiveTile = false,
                     hasHeader = false,
+                    sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -193,6 +206,7 @@ class TaskViewModelTest {
                     tasks = listOf(TASK_MODEL_1.toUiState(), TASK_MODEL_2.toUiState()),
                     isLiveTile = false,
                     hasHeader = false,
+                    sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -206,6 +220,7 @@ class TaskViewModelTest {
                     listOf(TaskData.NoData(INVALID_TASK_ID)),
                     isLiveTile = false,
                     hasHeader = false,
+                    sysUiStatusNavFlags = FLAGS_APPEARANCE_DEFAULT,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -221,15 +236,22 @@ class TaskViewModelTest {
             isLocked = isLocked,
         )
 
-    companion object {
+    private companion object {
         const val INVALID_TASK_ID = -1
+        const val FLAGS_APPEARANCE_LIGHT_THEME = FLAG_LIGHT_STATUS or FLAG_LIGHT_NAV
+        const val FLAGS_APPEARANCE_DEFAULT = 0
+        const val APPEARANCE_LIGHT_THEME =
+            APPEARANCE_LIGHT_CAPTION_BARS or
+                APPEARANCE_LIGHT_STATUS_BARS or
+                APPEARANCE_LIGHT_NAVIGATION_BARS
+
         val TASK_MODEL_1 =
             TaskModel(
                 1,
                 "Title 1",
                 "Content Description 1",
                 ShapeDrawable(),
-                ThumbnailData(),
+                ThumbnailData(appearance = APPEARANCE_LIGHT_THEME),
                 Color.BLACK,
                 false,
             )
@@ -239,7 +261,7 @@ class TaskViewModelTest {
                 "Title 2",
                 "Content Description 2",
                 ShapeDrawable(),
-                ThumbnailData(),
+                ThumbnailData(appearance = APPEARANCE_LIGHT_THEME),
                 Color.RED,
                 true,
             )
@@ -249,7 +271,7 @@ class TaskViewModelTest {
                 "Title 3",
                 "Content Description 3",
                 ShapeDrawable(),
-                ThumbnailData(),
+                ThumbnailData(appearance = APPEARANCE_LIGHT_THEME),
                 Color.BLUE,
                 false,
             )

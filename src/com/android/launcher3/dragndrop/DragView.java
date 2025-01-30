@@ -273,7 +273,11 @@ public abstract class DragView<T extends Context & ActivityContext> extends Fram
                 Rect shrunkBounds = new Rect(bounds);
                 Utilities.scaleRectAboutCenter(shrunkBounds, 0.98f);
                 adaptiveIcon.setBounds(shrunkBounds);
-                final Path mask = IconShape.INSTANCE.get(getContext()).getShapeOverridePath(w);
+
+                IconShape iconShape = IconShape.INSTANCE.get(getContext());
+                final Path mask = (adaptiveIcon instanceof FolderAdaptiveIcon
+                        ? iconShape.getFolderShape() : iconShape.getShape())
+                        .getPath(shrunkBounds);
 
                 mTranslateX = new SpringFloatValue(DragView.this,
                         w * AdaptiveIconDrawable.getExtraInsetFraction());

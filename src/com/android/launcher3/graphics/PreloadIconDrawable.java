@@ -120,7 +120,7 @@ public class PreloadIconDrawable extends FastBitmapDrawable {
                 IconPalette.getPreloadProgressColor(context, info.bitmap.color),
                 getPreloadColors(context),
                 Utilities.isDarkTheme(context),
-                IconShape.INSTANCE.get(context).getShapeOverridePath(DEFAULT_PATH_SIZE)
+                IconShape.INSTANCE.get(context).getShape().getPath(DEFAULT_PATH_SIZE)
         );
     }
 

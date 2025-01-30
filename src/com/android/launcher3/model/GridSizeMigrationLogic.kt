@@ -107,7 +107,14 @@ class GridSizeMigrationLogic {
                 val idsInUse = mutableListOf<Int>()
 
                 // Migrate hotseat.
-                migrateHotseat(destDeviceState.numHotseat, srcReader, destReader, target, idsInUse)
+                migrateHotseat(
+                    srcDeviceState.numHotseat,
+                    destDeviceState.numHotseat,
+                    srcReader,
+                    destReader,
+                    target,
+                    idsInUse,
+                )
                 // Migrate workspace.
                 migrateWorkspace(srcReader, destReader, target, targetSize, idsInUse)
 
@@ -134,6 +141,7 @@ class GridSizeMigrationLogic {
     /** Handles hotseat migration. */
     @VisibleForTesting
     fun migrateHotseat(
+        srcHotseatSize: Int,
         destHotseatSize: Int,
         srcReader: DbReader,
         destReader: DbReader,
@@ -143,17 +151,24 @@ class GridSizeMigrationLogic {
         val srcHotseatItems = srcReader.loadHotseatEntries()
         val dstHotseatItems = destReader.loadHotseatEntries()
 
-        val hotseatToBeAdded = getItemsToBeAdded(srcHotseatItems, dstHotseatItems)
-        val toBeRemoved = IntArray()
-        toBeRemoved.addAll(getItemsToBeRemoved(srcHotseatItems, dstHotseatItems))
+        // We want to filter out the hotseat items that are placed beyond the size of the source
+        // grid as we always want to keep those extra items from the destination grid.
+        var filteredDstHotseatItems = dstHotseatItems
+        if (srcHotseatSize < destHotseatSize) {
+            filteredDstHotseatItems =
+                filteredDstHotseatItems.filter { entry -> entry.screenId < srcHotseatSize }
+        }
+
+        val itemsToBeAdded = getItemsToBeAdded(srcHotseatItems, filteredDstHotseatItems)
+        val itemsToBeRemoved = getItemsToBeRemoved(srcHotseatItems, filteredDstHotseatItems)
 
         if (DEBUG) {
             Log.d(
                 TAG,
                 """Start hotseat migration:
-            |Removing Hotseat Items: [${dstHotseatItems.filter { toBeRemoved.contains(it.id) }
+            |Removing Hotseat Items: [${filteredDstHotseatItems.filter { itemsToBeRemoved.contains(it.id) }
                 .joinToString(",\n") { it.toString() }}]
-            |Adding Hotseat Items: [${hotseatToBeAdded
+            |Adding Hotseat Items: [${itemsToBeAdded
                 .joinToString(",\n") { it.toString() }}]
             |"""
                     .trimMargin(),
@@ -161,16 +176,16 @@ class GridSizeMigrationLogic {
         }
 
         // Removes the items that we need to remove from the destination DB.
-        if (!toBeRemoved.isEmpty) {
+        if (!itemsToBeRemoved.isEmpty) {
             GridSizeMigrationDBController.removeEntryFromDb(
                 destReader.mDb,
                 destReader.mTableName,
-                toBeRemoved,
+                itemsToBeRemoved,
             )
         }
 
         placeHotseatItems(
-            hotseatToBeAdded,
+            itemsToBeAdded,
             dstHotseatItems,
             destHotseatSize,
             helper,

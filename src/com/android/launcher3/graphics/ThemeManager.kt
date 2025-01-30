@@ -25,10 +25,9 @@ import com.android.launcher3.LauncherPrefs.Companion.backedUpItem
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppComponent
 import com.android.launcher3.dagger.LauncherAppSingleton
-import com.android.launcher3.graphics.IconShape.Companion.KEY_ICON_SHAPE
-import com.android.launcher3.graphics.IconShape.Companion.PREF_ICON_SHAPE
 import com.android.launcher3.icons.IconThemeController
 import com.android.launcher3.icons.mono.MonoIconThemeController
+import com.android.launcher3.shapes.IconShapesProvider
 import com.android.launcher3.util.DaggerSingletonObject
 import com.android.launcher3.util.DaggerSingletonTracker
 import com.android.launcher3.util.Executors.MAIN_EXECUTOR
@@ -93,20 +92,26 @@ constructor(
     fun removeChangeListener(listener: ThemeChangeListener) = listeners.remove(listener)
 
     private fun parseIconState(): IconState {
-        val shapeOverride = prefs.get(PREF_ICON_SHAPE)
+        val shapeModel =
+            prefs.get(PREF_ICON_SHAPE).let { shapeOverride ->
+                IconShapesProvider.shapes.values.firstOrNull { it.key == shapeOverride }
+            }
+        val iconMask =
+            when {
+                shapeModel != null -> shapeModel.pathString
+                CONFIG_ICON_MASK_RES_ID == Resources.ID_NULL -> ""
+                else -> context.resources.getString(CONFIG_ICON_MASK_RES_ID)
+            }
         return IconState(
-            iconMask =
-                when {
-                    shapeOverride.isNotEmpty() -> shapeOverride
-                    CONFIG_ICON_MASK_RES_ID == Resources.ID_NULL -> ""
-                    else -> context.resources.getString(CONFIG_ICON_MASK_RES_ID)
-                },
+            iconMask = iconMask,
+            folderShapeMask = shapeModel?.folderPathString ?: iconMask,
             isMonoTheme = isMonoThemeEnabled,
         )
     }
 
     data class IconState(
         val iconMask: String,
+        val folderShapeMask: String,
         val isMonoTheme: Boolean,
         val themeCode: String = if (isMonoTheme) "with-theme" else "no-theme",
     ) {
@@ -121,9 +126,11 @@ constructor(
     companion object {
 
         @JvmField val INSTANCE = DaggerSingletonObject(LauncherAppComponent::getThemeManager)
+        const val KEY_ICON_SHAPE = "icon_shape_model"
 
         const val KEY_THEMED_ICONS = "themed_icons"
         @JvmField val THEMED_ICONS = backedUpItem(KEY_THEMED_ICONS, false, EncryptionType.ENCRYPTED)
+        @JvmField val PREF_ICON_SHAPE = backedUpItem(KEY_ICON_SHAPE, "", EncryptionType.ENCRYPTED)
 
         private const val ACTION_OVERLAY_CHANGED = "android.intent.action.OVERLAY_CHANGED"
         private val CONFIG_ICON_MASK_RES_ID: Int =

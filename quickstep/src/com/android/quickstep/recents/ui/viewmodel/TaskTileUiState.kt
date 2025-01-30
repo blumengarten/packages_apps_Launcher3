@@ -29,11 +29,13 @@ import com.android.systemui.shared.recents.model.ThumbnailData
  * @property tasks The list of [TaskTileUiState] objects representing the individual tasks.
  * @property isLiveTile Indicates whether this data is intended for a live tile. If `true`, the
  *   running app will be displayed instead of the thumbnail.
+ * @property sysUiStatusNavFlags Flags for status bar and navigation bar
  */
 data class TaskTileUiState(
     val tasks: List<TaskData>,
     val isLiveTile: Boolean,
     val hasHeader: Boolean,
+    val sysUiStatusNavFlags: Int,
 )
 
 sealed class TaskData {

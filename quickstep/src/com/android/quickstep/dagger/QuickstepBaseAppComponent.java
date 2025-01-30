@@ -26,6 +26,7 @@ import com.android.quickstep.RotationTouchHelper;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.TopTaskTracker;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
+import com.android.quickstep.logging.SettingsChangeLogger;
 import com.android.quickstep.util.AsyncClockEventDelegate;
 import com.android.quickstep.util.ContextualSearchStateManager;
 
@@ -58,4 +59,6 @@ public interface QuickstepBaseAppComponent extends LauncherBaseAppComponent {
     ContextualSearchStateManager getContextualSearchStateManager();
 
     RecentsAnimationDeviceState getRecentsAnimationDeviceState();
+
+    SettingsChangeLogger getSettingsChangeLogger();
 }

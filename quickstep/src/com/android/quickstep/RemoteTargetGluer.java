@@ -217,7 +217,7 @@ public class RemoteTargetGluer {
      * transform params per app in {@code targets.apps} list.
      */
     public RemoteTargetHandle[] assignTargetsForDesktop(
-            RemoteAnimationTargets targets, TransitionInfo transitionInfo) {
+            RemoteAnimationTargets targets, @Nullable TransitionInfo transitionInfo) {
         resizeRemoteTargetHandles(targets);
 
         for (int i = 0; i < mRemoteTargetHandles.length; i++) {

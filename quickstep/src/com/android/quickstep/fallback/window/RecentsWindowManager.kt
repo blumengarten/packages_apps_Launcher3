@@ -41,9 +41,11 @@ import com.android.launcher3.statemanager.StateManager
 import com.android.launcher3.statemanager.StateManager.AtomicAnimationFactory
 import com.android.launcher3.statemanager.StatefulContainer
 import com.android.launcher3.taskbar.TaskbarUIController
+import com.android.launcher3.testing.TestLogging
 import com.android.launcher3.testing.shared.TestProtocol.NORMAL_STATE_ORDINAL
 import com.android.launcher3.testing.shared.TestProtocol.OVERVIEW_SPLIT_SELECT_ORDINAL
 import com.android.launcher3.testing.shared.TestProtocol.OVERVIEW_STATE_ORDINAL
+import com.android.launcher3.testing.shared.TestProtocol.SEQUENCE_MAIN
 import com.android.launcher3.util.ContextTracker
 import com.android.launcher3.util.DisplayController
 import com.android.launcher3.util.RunnableList
@@ -237,6 +239,7 @@ class RecentsWindowManager(context: Context, wallpaperColorHints: Int) :
     private val onBackInvokedCallback: () -> Unit = {
         // If we are in live tile mode, launch the live task, otherwise return home
         recentsView?.runningTaskView?.launchWithAnimation() ?: startHome()
+        TestLogging.recordEvent(SEQUENCE_MAIN, "onBackInvoked")
     }
 
     private fun cleanupRecentsWindow() {

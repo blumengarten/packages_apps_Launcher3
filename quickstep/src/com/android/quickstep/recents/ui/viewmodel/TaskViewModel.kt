@@ -22,6 +22,7 @@ import androidx.core.graphics.ColorUtils
 import com.android.launcher3.util.coroutines.DispatcherProvider
 import com.android.quickstep.recents.domain.model.TaskId
 import com.android.quickstep.recents.domain.model.TaskModel
+import com.android.quickstep.recents.domain.usecase.GetSysUiStatusNavFlagsUseCase
 import com.android.quickstep.recents.domain.usecase.GetTaskUseCase
 import com.android.quickstep.recents.viewmodel.RecentsViewData
 import com.android.quickstep.views.TaskViewType
@@ -43,6 +44,7 @@ class TaskViewModel(
     private val taskViewType: TaskViewType,
     recentsViewData: RecentsViewData,
     private val getTaskUseCase: GetTaskUseCase,
+    private val getSysUiStatusNavFlagsUseCase: GetSysUiStatusNavFlagsUseCase,
     dispatcherProvider: DispatcherProvider,
 ) {
     private var taskIds = MutableStateFlow(emptySet<Int>())
@@ -57,24 +59,19 @@ class TaskViewModel(
             }
             .distinctUntilChanged()
 
+    private val taskData =
+        taskIds.flatMapLatest { ids ->
+            // Combine Tasks requests
+            combine(
+                ids.map { id -> getTaskUseCase(id).map { taskModel -> id to taskModel } },
+                ::mapToTaskData,
+            )
+        }
+
     val tintAmount: Flow<Float> = recentsViewData.tintAmount
 
     val state: Flow<TaskTileUiState> =
-        taskIds
-            .flatMapLatest { ids ->
-                // Combine Tasks requests
-                combine(
-                    ids.map { id -> getTaskUseCase(id).map { taskModel -> id to taskModel } },
-                    ::mapToUiState,
-                )
-            }
-            .combine(isLiveTile) { tasks, isLiveTile ->
-                TaskTileUiState(
-                    tasks = tasks,
-                    isLiveTile = isLiveTile,
-                    hasHeader = taskViewType == TaskViewType.DESKTOP,
-                )
-            }
+        combine(taskData, isLiveTile) { tasks, isLiveTile -> mapToTaskTile(tasks, isLiveTile) }
             .distinctUntilChanged()
             .flowOn(dispatcherProvider.background)
 
@@ -83,10 +80,20 @@ class TaskViewModel(
         taskIds.value = taskId.toSet()
     }
 
-    private fun mapToUiState(result: Array<Pair<TaskId, TaskModel?>>): List<TaskData> =
-        result.map { mapToUiState(it.first, it.second) }
+    private fun mapToTaskTile(tasks: List<TaskData>, isLiveTile: Boolean): TaskTileUiState {
+        val firstThumbnailData = (tasks.firstOrNull() as? TaskData.Data)?.thumbnailData
+        return TaskTileUiState(
+            tasks = tasks,
+            isLiveTile = isLiveTile,
+            hasHeader = taskViewType == TaskViewType.DESKTOP,
+            sysUiStatusNavFlags = getSysUiStatusNavFlagsUseCase(firstThumbnailData),
+        )
+    }
 
-    private fun mapToUiState(taskId: TaskId, result: TaskModel?): TaskData =
+    private fun mapToTaskData(result: Array<Pair<TaskId, TaskModel?>>): List<TaskData> =
+        result.map { mapToTaskData(it.first, it.second) }
+
+    private fun mapToTaskData(taskId: TaskId, result: TaskModel?): TaskData =
         result?.let {
             TaskData.Data(
                 taskId = taskId,

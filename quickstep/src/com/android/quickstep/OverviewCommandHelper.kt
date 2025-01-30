@@ -375,7 +375,7 @@ constructor(
                 override fun onRecentsAnimationStart(
                     controller: RecentsAnimationController,
                     targets: RecentsAnimationTargets,
-                    transitionInfo: TransitionInfo,
+                    transitionInfo: TransitionInfo?,
                 ) {
                     Log.d(TAG, "recents animation started: $command")
                     if (recentsInWindowFlagSet) {

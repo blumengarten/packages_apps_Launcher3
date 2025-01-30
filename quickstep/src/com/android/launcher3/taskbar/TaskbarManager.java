@@ -91,6 +91,7 @@ public class TaskbarManager {
     private static final boolean DEBUG = false;
     // TODO(b/382378283) remove all logs with this tag
     public static final String NULL_TASKBAR_ROOT_LAYOUT_TAG = "b/382378283";
+    public static final String ILLEGAL_ARGUMENT_WM_ADD_VIEW = "b/391653300";
 
     /**
      * All the configurations which do not initiate taskbar recreation.
@@ -306,6 +307,7 @@ public class TaskbarManager {
                 int configDiff = mOldConfig.diff(newConfig) & ~SKIP_RECREATE_CONFIG_CHANGES;
 
                 if ((configDiff & ActivityInfo.CONFIG_UI_MODE) != 0) {
+                    Log.d(ILLEGAL_ARGUMENT_WM_ADD_VIEW, "onConfigurationChanged: theme changed");
                     // Only recreate for theme changes, not other UI mode changes such as docking.
                     int oldUiNightMode = (mOldConfig.uiMode & Configuration.UI_MODE_NIGHT_MASK);
                     int newUiNightMode = (newConfig.uiMode & Configuration.UI_MODE_NIGHT_MASK);
@@ -360,6 +362,7 @@ public class TaskbarManager {
     }
 
     private void destroyTaskbarForDisplay(int displayId) {
+        Log.d(ILLEGAL_ARGUMENT_WM_ADD_VIEW, "destroyTaskbarForDisplay: " + displayId);
         TaskbarActivityContext taskbar = getTaskbarForDisplay(displayId);
         debugWhyTaskbarNotDestroyed("destroyTaskbarForDisplay: " + taskbar, displayId);
         if (taskbar != null) {
@@ -522,6 +525,7 @@ public class TaskbarManager {
     private void recreateTaskbarForDisplay(int displayId) {
         Trace.beginSection("recreateTaskbar");
         try {
+            Log.d(ILLEGAL_ARGUMENT_WM_ADD_VIEW, "recreateTaskbarForDisplay: " + displayId);
             // TODO: make this code display specific
             DeviceProfile dp = mUserUnlocked ?
                     LauncherAppState.getIDP(mWindowContext).getDeviceProfile(mWindowContext) : null;
@@ -794,9 +798,15 @@ public class TaskbarManager {
         }
 
         if (!isTaskbarRootLayoutAddedForDisplay(displayId)) {
-            mWindowManager.addView(getTaskbarRootLayoutForDisplay(displayId),
-                    taskbar.getWindowLayoutParams());
-            mAddedRootLayouts.put(displayId, true);
+            FrameLayout rootLayout = getTaskbarRootLayoutForDisplay(displayId);
+            if (rootLayout != null) {
+                mWindowManager.addView(getTaskbarRootLayoutForDisplay(displayId),
+                        taskbar.getWindowLayoutParams());
+                mAddedRootLayouts.put(displayId, true);
+            } else {
+                Log.d(ILLEGAL_ARGUMENT_WM_ADD_VIEW,
+                        "addTaskbarRootViewToWindow - root layout null | displayId=" + displayId);
+            }
         } else {
             Log.d(NULL_TASKBAR_ROOT_LAYOUT_TAG,
                     "addTaskbarRootViewToWindow - root layout already added | displayId="
@@ -805,6 +815,7 @@ public class TaskbarManager {
     }
 
     private void removeTaskbarRootViewFromWindow(int displayId) {
+        Log.d(ILLEGAL_ARGUMENT_WM_ADD_VIEW, "removeTaskbarRootViewFromWindow: " + displayId);
         FrameLayout rootLayout = getTaskbarRootLayoutForDisplay(displayId);
         if (!enableTaskbarNoRecreate() || rootLayout == null) {
             return;
@@ -880,6 +891,7 @@ public class TaskbarManager {
      * @param displayId The ID of the display for which to create the taskbar root layout.
      */
     private void createTaskbarRootLayout(int displayId) {
+        Log.d(ILLEGAL_ARGUMENT_WM_ADD_VIEW, "createTaskbarRootLayout: " + displayId);
         FrameLayout newTaskbarRootLayout = new FrameLayout(mWindowContext) {
             @Override
             public boolean dispatchTouchEvent(MotionEvent ev) {
@@ -907,6 +919,7 @@ public class TaskbarManager {
      * @return The taskbar root layout {@link FrameLayout} for a given display or {@code null}.
      */
     private FrameLayout getTaskbarRootLayoutForDisplay(int displayId) {
+        Log.d(ILLEGAL_ARGUMENT_WM_ADD_VIEW, "getTaskbarRootLayoutForDisplay: " + displayId);
         FrameLayout frameLayout = mRootLayouts.get(displayId);
         if (frameLayout != null) {
             return frameLayout;

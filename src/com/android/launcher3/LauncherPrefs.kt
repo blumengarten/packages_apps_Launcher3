@@ -58,11 +58,11 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
             else encryptedContext.getSharedPreferences(sharedPrefFile, MODE_PRIVATE)
 
     /** Returns the value with type [T] for [item]. */
-    fun <T> get(item: ContextualItem<T>): T =
+    open fun <T> get(item: ContextualItem<T>): T =
         getInner(item, item.defaultValueFromContext(encryptedContext))
 
     /** Returns the value with type [T] for [item]. */
-    fun <T> get(item: ConstantItem<T>): T = getInner(item, item.defaultValue)
+    open fun <T> get(item: ConstantItem<T>): T = getInner(item, item.defaultValue)
 
     /**
      * Retrieves the value for an [Item] from [SharedPreferences]. It handles method typing via the
@@ -405,4 +405,21 @@ data class ContextualItem<T>(
 enum class EncryptionType {
     ENCRYPTED,
     DEVICE_PROTECTED,
+}
+
+/**
+ * LauncherPrefs which delegates all lookup to [prefs] but uses the real prefs for initial values
+ */
+class ProxyPrefs(context: Context, private val prefs: SharedPreferences) : LauncherPrefs(context) {
+
+    private val realPrefs = LauncherPrefs(context)
+
+    override val Item.sharedPrefs: SharedPreferences
+        get() = prefs
+
+    override fun <T> get(item: ConstantItem<T>) =
+        super.get(backedUpItem(item.sharedPrefKey, realPrefs.get(item)))
+
+    override fun <T> get(item: ContextualItem<T>) =
+        super.get(backedUpItem(item.sharedPrefKey, realPrefs.get(item)))
 }

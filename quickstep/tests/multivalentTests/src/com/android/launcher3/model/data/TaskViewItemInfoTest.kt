@@ -21,15 +21,19 @@ import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.launcher3.Flags.enableRefactorTaskThumbnail
+import com.android.launcher3.dagger.LauncherAppComponent
+import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_NOT_PINNABLE
 import com.android.launcher3.model.data.TaskViewItemInfo.Companion.createTaskViewAtom
 import com.android.launcher3.pm.UserCache
+import com.android.launcher3.util.AllModulesForTest
 import com.android.launcher3.util.MainThreadInitializedObject.SandboxContext
 import com.android.launcher3.util.SplitConfigurationOptions
 import com.android.launcher3.util.TransformingTouchDelegate
 import com.android.launcher3.util.UserIconInfo
 import com.android.quickstep.TaskOverlayFactory
 import com.android.quickstep.TaskOverlayFactory.TaskOverlay
+import com.android.quickstep.TestComponent
 import com.android.quickstep.recents.di.RecentsDependencies
 import com.android.quickstep.task.thumbnail.TaskThumbnailView
 import com.android.quickstep.views.RecentsView
@@ -41,6 +45,8 @@ import com.android.quickstep.views.TaskViewType
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.Task.TaskKey
 import com.google.common.truth.Truth.assertThat
+import dagger.BindsInstance
+import dagger.Component
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -66,7 +72,9 @@ class TaskViewItemInfoTest {
         whenever(recentsView.indexOfChild(taskView)).thenReturn(TASK_VIEW_INDEX)
         whenever(userInfo.isPrivate).thenReturn(false)
         whenever(userCache.getUserInfo(any())).thenReturn(userInfo)
-        context.putObject(UserCache.INSTANCE, userCache)
+        context.initDaggerComponent(
+            DaggerTaskViewItemInfoTest_TestComponent.builder().bindUserCache(userCache)
+        )
         RecentsDependencies.initialize(context)
     }
 
@@ -174,6 +182,17 @@ class TaskViewItemInfoTest {
             showWindowsView = null,
             overlayFactory,
         )
+    }
+
+    @LauncherAppSingleton
+    @Component(modules = [AllModulesForTest::class])
+    interface TestComponent : LauncherAppComponent {
+        @Component.Builder
+        interface Builder : LauncherAppComponent.Builder {
+            @BindsInstance fun bindUserCache(userCache: UserCache): Builder
+
+            override fun build(): TestComponent
+        }
     }
 
     companion object {

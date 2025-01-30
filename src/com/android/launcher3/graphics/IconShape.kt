@@ -18,7 +18,6 @@ package com.android.launcher3.graphics
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
-import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
@@ -41,19 +40,12 @@ import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.SvgPathParser
 import androidx.graphics.shapes.toPath
 import androidx.graphics.shapes.transformed
-import com.android.launcher3.EncryptionType
-import com.android.launcher3.LauncherPrefs
-import com.android.launcher3.LauncherPrefs.Companion.backedUpItem
 import com.android.launcher3.anim.RoundedRectRevealOutlineProvider
-import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppComponent
 import com.android.launcher3.dagger.LauncherAppSingleton
-import com.android.launcher3.graphics.LauncherPreviewRenderer.PreviewContext
 import com.android.launcher3.graphics.ThemeManager.ThemeChangeListener
 import com.android.launcher3.icons.GraphicsUtils
-import com.android.launcher3.icons.IconNormalizer
-import com.android.launcher3.shapes.IconShapeModel
-import com.android.launcher3.shapes.IconShapesProvider
+import com.android.launcher3.icons.IconNormalizer.normalizeAdaptiveIcon
 import com.android.launcher3.util.DaggerSingletonObject
 import com.android.launcher3.util.DaggerSingletonTracker
 import com.android.launcher3.views.ClipPathView
@@ -63,56 +55,52 @@ import javax.inject.Inject
 @LauncherAppSingleton
 class IconShape
 @Inject
-constructor(
-    @ApplicationContext private val context: Context,
-    private val prefs: LauncherPrefs,
-    private val themeManager: ThemeManager,
-    lifeCycle: DaggerSingletonTracker,
-) {
+constructor(private val themeManager: ThemeManager, lifeCycle: DaggerSingletonTracker) {
 
-    var shapeOverride: IconShapeModel? = getShapeFromPathString(prefs.get(PREF_ICON_SHAPE))
-        set(value) {
-            field = value
-            if (context !is PreviewContext) {
-                value?.let { prefs.put(PREF_ICON_SHAPE, value.pathString) }
-            }
-        }
+    val normalizationScale =
+        normalizeAdaptiveIcon(
+            AdaptiveIconDrawable(null, ColorDrawable(Color.BLACK)),
+            AREA_CALC_SIZE,
+        )
 
-    var normalizationScale: Float = IconNormalizer.ICON_VISIBLE_AREA_FACTOR
+    var shape: ShapeDelegate = pickBestShape(themeManager.iconState.iconMask)
         private set
 
-    var shape: ShapeDelegate = pickBestShape(themeManager)
+    var folderShape: ShapeDelegate =
+        themeManager.iconState.run {
+            if (folderShapeMask == iconMask || folderShapeMask.isEmpty()) shape
+            else pickBestShape(folderShapeMask)
+        }
         private set
 
     init {
-        val changeListener = ThemeChangeListener { shape = pickBestShape(themeManager) }
+        val changeListener = ThemeChangeListener {
+            shape = pickBestShape(themeManager.iconState.iconMask)
+            folderShape =
+                themeManager.iconState.run {
+                    if (folderShapeMask == iconMask || folderShapeMask.isEmpty()) shape
+                    else pickBestShape(folderShapeMask)
+                }
+        }
         themeManager.addChangeListener(changeListener)
         lifeCycle.addCloseable { themeManager.removeChangeListener(changeListener) }
     }
 
-    fun getShapeOverridePath(pathSize: Float = DEFAULT_PATH_SIZE): Path {
-        val path = PathParser.createPathFromPathData(themeManager.iconState.iconMask)
-        if (pathSize != DEFAULT_PATH_SIZE) {
-            val matrix = Matrix()
-            val scale: Float = pathSize / DEFAULT_PATH_SIZE
-            matrix.setScale(scale, scale)
-            path.transform(matrix)
-        }
-        return path
-    }
+    interface ShapeDelegate {
+        fun getPath(pathSize: Float = DEFAULT_PATH_SIZE) =
+            Path().apply { addToPath(this, 0f, 0f, pathSize / 2) }
 
-    /** Initializes the shape which is closest to the [AdaptiveIconDrawable] */
-    private fun pickBestShape(themeManager: ThemeManager): ShapeDelegate {
-        val drawable =
-            AdaptiveIconDrawable(null, ColorDrawable(Color.BLACK)).apply {
-                setBounds(0, 0, AREA_CALC_SIZE, AREA_CALC_SIZE)
+        fun getPath(bounds: Rect) =
+            Path().apply {
+                addToPath(
+                    this,
+                    bounds.left.toFloat(),
+                    bounds.top.toFloat(),
+                    // Radius is half of the average size of the icon
+                    (bounds.width() + bounds.height()) / 4f,
+                )
             }
 
-        normalizationScale = IconNormalizer.normalizeAdaptiveIcon(drawable, AREA_CALC_SIZE)
-        return pickBestShape(drawable.iconMask, themeManager.iconState.iconMask)
-    }
-
-    interface ShapeDelegate {
         fun drawShape(canvas: Canvas, offsetX: Float, offsetY: Float, radius: Float, paint: Paint)
 
         fun addToPath(path: Path, offsetX: Float, offsetY: Float, radius: Float)
@@ -126,7 +114,6 @@ constructor(
         ): ValueAnimator where T : View, T : ClipPathView
     }
 
-    @VisibleForTesting
     class Circle : RoundedSquare(1f) {
 
         override fun drawShape(
@@ -217,14 +204,24 @@ constructor(
             paint: Paint,
         ) {
             tmpPath.reset()
-            addToPath(tmpPath, offsetX, offsetY, radius)
+            addToPath(tmpPath, offsetX, offsetY, radius, tmpMatrix)
             canvas.drawPath(tmpPath, paint)
         }
 
         override fun addToPath(path: Path, offsetX: Float, offsetY: Float, radius: Float) {
-            tmpMatrix.setScale(radius / 50, radius / 50)
-            tmpMatrix.postTranslate(offsetX, offsetY)
-            basePath.transform(tmpMatrix, path)
+            addToPath(path, offsetX, offsetY, radius, Matrix())
+        }
+
+        private fun addToPath(
+            path: Path,
+            offsetX: Float,
+            offsetY: Float,
+            radius: Float,
+            matrix: Matrix,
+        ) {
+            matrix.setScale(radius / 50, radius / 50)
+            matrix.postTranslate(offsetX, offsetY)
+            basePath.transform(matrix, path)
         }
 
         override fun <T> createRevealAnimator(
@@ -292,19 +289,10 @@ constructor(
         @JvmField var INSTANCE = DaggerSingletonObject(LauncherAppComponent::getIconShape)
 
         const val TAG = "IconShape"
-        const val KEY_ICON_SHAPE = "icon_shape"
         const val DEFAULT_PATH_SIZE = 100f
         const val AREA_CALC_SIZE = 1000
         // .1% error margin
         const val AREA_DIFF_THRESHOLD = AREA_CALC_SIZE * AREA_CALC_SIZE / 1000
-
-        @JvmField val PREF_ICON_SHAPE = backedUpItem(KEY_ICON_SHAPE, "", EncryptionType.ENCRYPTED)
-
-        private fun getShapeFromPathString(pathString: String): IconShapeModel? {
-            return IconShapesProvider.shapes.values.firstOrNull { shape: IconShapeModel ->
-                shape.pathString == pathString
-            }
-        }
 
         /** Returns a function to calculate area diff from [base] */
         @VisibleForTesting
@@ -321,6 +309,26 @@ constructor(
                 shapeRegion.op(iconRegion, Region.Op.XOR)
                 return GraphicsUtils.getArea(shapeRegion)
             }
+        }
+
+        @VisibleForTesting
+        fun pickBestShape(shapeStr: String): ShapeDelegate {
+            val baseShape =
+                if (shapeStr.isNotEmpty()) {
+                    PathParser.createPathFromPathData(shapeStr).apply {
+                        transform(
+                            Matrix().apply {
+                                setScale(AREA_CALC_SIZE / 100f, AREA_CALC_SIZE / 100f)
+                            }
+                        )
+                    }
+                } else {
+                    AdaptiveIconDrawable(null, ColorDrawable(Color.BLACK)).let {
+                        it.setBounds(0, 0, AREA_CALC_SIZE, AREA_CALC_SIZE)
+                        it.iconMask
+                    }
+                }
+            return pickBestShape(baseShape, shapeStr)
         }
 
         @VisibleForTesting

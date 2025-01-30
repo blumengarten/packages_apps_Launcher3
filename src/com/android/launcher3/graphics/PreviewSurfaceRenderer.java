@@ -21,6 +21,7 @@ import static android.content.res.Configuration.UI_MODE_NIGHT_YES;
 import static android.view.Display.DEFAULT_DISPLAY;
 
 import static com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME;
+import static com.android.launcher3.graphics.ThemeManager.PREF_ICON_SHAPE;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
 
@@ -52,6 +53,7 @@ import androidx.annotation.WorkerThread;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.Workspace;
 import com.android.launcher3.graphics.LauncherPreviewRenderer.PreviewContext;
@@ -62,7 +64,6 @@ import com.android.launcher3.model.GridSizeMigrationDBController;
 import com.android.launcher3.model.LoaderTask;
 import com.android.launcher3.model.ModelDbController;
 import com.android.launcher3.provider.LauncherDbUtils;
-import com.android.launcher3.shapes.IconShapeModel;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.Themes;
@@ -71,6 +72,7 @@ import com.android.systemui.shared.Flags;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /** Render preview using surface view. */
@@ -91,7 +93,8 @@ public class PreviewSurfaceRenderer {
     private Context mContext;
     private SparseIntArray mPreviewColorOverride;
     private String mGridName;
-    private IconShapeModel mShape;
+    private String mShapeKey;
+
     @Nullable private Boolean mDarkMode;
     private boolean mDestroyed = false;
     private LauncherPreviewRenderer mRenderer;
@@ -220,14 +223,14 @@ public class PreviewSurfaceRenderer {
     /**
      * Update the shapes of the launcher preview
      *
-     * @param shape path for shapes
+     * @param shapeKey key for the IconShape model
      */
-    public void updateShape(@NonNull IconShapeModel shape) {
-        if (shape.equals(mShape)) {
-            Log.w(TAG, "Preview shape already set, skipping. shape=" + shape);
+    public void updateShape(@Nullable String shapeKey) {
+        if (Objects.equals(mShapeKey, shapeKey)) {
+            Log.w(TAG, "Preview shape already set, skipping. shape=" + mShapeKey);
             return;
         }
-        mShape = shape;
+        mShapeKey = shapeKey;
         loadAsync();
     }
 
@@ -317,11 +320,11 @@ public class PreviewSurfaceRenderer {
         final Context inflationContext = getPreviewContext();
         final InvariantDeviceProfile idp = new InvariantDeviceProfile(inflationContext, mGridName);
         if (GridSizeMigrationDBController.needsToMigrate(inflationContext, idp)
-                || mShape != null) {
+                || mShapeKey != null) {
             // Start the migration
             PreviewContext previewContext = new PreviewContext(inflationContext, idp);
-            if (mShape != null) {
-                IconShape.INSTANCE.get(previewContext).setShapeOverride(mShape);
+            if (mShapeKey != null) {
+                LauncherPrefs.INSTANCE.get(previewContext).put(PREF_ICON_SHAPE, mShapeKey);
             }
             // Copy existing data to preview DB
             LauncherDbUtils.copyTable(LauncherAppState.getInstance(mContext)

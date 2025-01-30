@@ -171,6 +171,13 @@ public class ApiWrapper {
         return appInfo.sourceDir;
     }
 
+    /**
+     * Returns the round icon resource Id if defined by the app
+     */
+    public int getRoundIconRes(@NonNull ApplicationInfo appInfo) {
+        return 0;
+    }
+
     private static class NoopDrawable extends ColorDrawable {
         @Override
         public int getIntrinsicHeight() {

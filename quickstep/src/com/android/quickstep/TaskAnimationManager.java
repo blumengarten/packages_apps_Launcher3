@@ -156,7 +156,7 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
         mCallbacks.addListener(new RecentsAnimationCallbacks.RecentsAnimationListener() {
             @Override
             public void onRecentsAnimationStart(RecentsAnimationController controller,
-                    RecentsAnimationTargets targets, TransitionInfo transitionInfo) {
+                    RecentsAnimationTargets targets, @Nullable TransitionInfo transitionInfo) {
                 if (enableHandleDelayedGestureCallbacks() && mRecentsAnimationStartPending) {
                     ActiveGestureProtoLogProxy.logStartRecentsAnimationCallback(
                             "onRecentsAnimationStart");

@@ -255,6 +255,11 @@ constructor(
 
     var taskViewId = UNBOUND_TASK_VIEW_ID
     var isEndQuickSwitchCuj = false
+    var sysUiStatusNavFlags: Int = 0
+        get() =
+            if (enableRefactorTaskThumbnail()) field
+            else taskContainers.first().thumbnailViewDeprecated.sysUiStatusNavFlags
+        private set
 
     // Various animation progress variables.
     // progress: 0 = show icon and no insets; 1 = don't show icon and show full insets.
@@ -756,9 +761,7 @@ constructor(
                 viewModel!!.tintAmount.onEach(::updateTintAmount).launchIn(coroutineScope)
 
             coroutineJobs +=
-                coroutineScope.launch {
-                    viewModel!!.state.collectLatest(::updateTaskContainerState)
-                }
+                coroutineScope.launch { viewModel!!.state.collectLatest(::updateTaskViewState) }
         }
     }
 
@@ -766,7 +769,10 @@ constructor(
         taskContainers.forEach { it.updateTintAmount(amount) }
     }
 
-    private fun updateTaskContainerState(state: TaskTileUiState) {
+    private fun updateTaskViewState(state: TaskTileUiState) {
+        sysUiStatusNavFlags = state.sysUiStatusNavFlags
+
+        // Updating containers
         val mapOfTasks = state.tasks.associateBy { it.taskId }
         taskContainers.forEach { container ->
             container.setState(
@@ -820,6 +826,7 @@ constructor(
                         taskViewType = type,
                         recentsViewData = RecentsDependencies.get(),
                         getTaskUseCase = RecentsDependencies.get(),
+                        getSysUiStatusNavFlagsUseCase = RecentsDependencies.get(),
                         dispatcherProvider = RecentsDependencies.get(),
                     )
                     .apply { bind(*taskIds) }

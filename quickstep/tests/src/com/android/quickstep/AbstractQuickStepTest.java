@@ -20,7 +20,6 @@ import static org.junit.Assert.assertTrue;
 
 import android.os.SystemProperties;
 
-import androidx.annotation.NonNull;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.Until;
 
@@ -33,7 +32,6 @@ import com.android.launcher3.util.Wait;
 import com.android.quickstep.fallback.RecentsState;
 import com.android.quickstep.fallback.window.RecentsWindowManager;
 import com.android.quickstep.views.RecentsView;
-import com.android.quickstep.views.RecentsViewContainer;
 
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
@@ -78,23 +76,12 @@ public abstract class AbstractQuickStepTest extends AbstractLauncherUiTest<Quick
         waitForRecentsWindowCondition(message, condition, TestUtil.DEFAULT_UI_TIMEOUT);
     }
 
-    protected <T> T getFromRecentsWindowManager(Function<RecentsWindowManager, T> f) {
+    protected <T> T getFromRecentsWindow(Function<RecentsWindowManager, T> f) {
         if (!TestHelpers.isInLauncherProcess()) return null;
-        return getOnUiThread(
-                () -> f.apply(RecentsWindowManager.getRecentsWindowTracker().getCreatedContext()));
-    }
-
-    protected void executeOnRecentsWindow(Consumer<RecentsWindowManager> f) {
-        getFromRecentsWindowManager(recentsWindow -> {
-            f.accept(recentsWindow);
-            return null;
-        });
-    }
-
-    protected void executeOnRecentsViewContainerInTearDown(
-            @NonNull Consumer<RecentsViewContainer> f) {
-        executeOnRecentsWindow(container -> {
-            if (container != null) f.accept(container);
+        return getOnUiThread(() -> {
+            RecentsWindowManager recentsWindowManager =
+                    RecentsWindowManager.getRecentsWindowTracker().getCreatedContext();
+            return recentsWindowManager != null ? f.apply(recentsWindowManager) : null;
         });
     }
 
@@ -104,12 +91,12 @@ public abstract class AbstractQuickStepTest extends AbstractLauncherUiTest<Quick
             String message, Function<RecentsWindowManager, Boolean> condition, long timeout) {
         verifyKeyguardInvisible();
         if (!TestHelpers.isInLauncherProcess()) return;
-        Wait.atMost(message, () -> getFromRecentsWindowManager(condition), mLauncher, timeout);
+        Wait.atMost(message, () -> getFromRecentsWindow(condition), mLauncher, timeout);
     }
 
     protected boolean isInRecentsWindowState(Supplier<RecentsState> state) {
         if (!TestHelpers.isInLauncherProcess()) return true;
-        return getFromRecentsWindowManager(
+        return getFromRecentsWindow(
                 recentsWindow -> recentsWindow.getStateManager().getState() == state.get());
     }
 

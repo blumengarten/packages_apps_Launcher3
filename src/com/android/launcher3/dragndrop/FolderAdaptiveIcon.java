@@ -165,7 +165,7 @@ public class FolderAdaptiveIcon extends AdaptiveIconDrawable {
         Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         backgroundPaint.setColor(bg.getBgColor());
         bg.drawShadow(backgroundCanvas);
-        backgroundCanvas.drawCircle(size / 2f, size / 2f, bg.getRadius(), backgroundPaint);
+        backgroundCanvas.drawPaint(backgroundPaint);
         bg.drawBackgroundStroke(backgroundCanvas);
     }
 

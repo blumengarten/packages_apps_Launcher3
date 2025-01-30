@@ -23,20 +23,23 @@ import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_DESKTOP
 import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT
 import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APP_PAIR
 import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_FOLDER
+import com.android.launcher3.dagger.LauncherAppComponent
+import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.icons.IconCache
 import com.android.launcher3.icons.cache.CachingLogic
 import com.android.launcher3.icons.cache.IconCacheUpdateHandler
 import com.android.launcher3.pm.UserCache
 import com.android.launcher3.provider.RestoreDbTask
 import com.android.launcher3.ui.TestViewHelpers
+import com.android.launcher3.util.AllModulesForTest
 import com.android.launcher3.util.Executors.MODEL_EXECUTOR
 import com.android.launcher3.util.LauncherModelHelper.SandboxModelContext
 import com.android.launcher3.util.LooperIdleLock
 import com.android.launcher3.util.TestUtil
 import com.android.launcher3.util.UserIconInfo
 import com.google.common.truth.Truth
-import java.util.concurrent.CountDownLatch
-import java.util.function.Predicate
+import dagger.BindsInstance
+import dagger.Component
 import junit.framework.Assert.assertEquals
 import org.junit.After
 import org.junit.Before
@@ -59,6 +62,8 @@ import org.mockito.kotlin.spy
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
+import java.util.concurrent.CountDownLatch
+import java.util.function.Predicate
 
 private const val INSERTION_STATEMENT_FILE = "databases/workspace_items.sql"
 
@@ -130,8 +135,9 @@ class LoaderTaskTest {
         `when`(idleLock.awaitLocked(1000)).thenReturn(false)
         `when`(iconCache.getUpdateHandler()).thenReturn(iconCacheUpdateHandler)
         `when`(widgetsFilterDataProvider.getDefaultWidgetsFilter()).thenReturn(Predicate { true })
-        context.putObject(UserCache.INSTANCE, userCache)
-
+        context.initDaggerComponent(
+            DaggerLoaderTaskTest_TestComponent.builder().bindUserCache(userCache)
+        )
         TestUtil.grantWriteSecurePermission()
     }
 
@@ -472,6 +478,17 @@ class LoaderTaskTest {
 
         // Then
         verify(spyContext, times(0)).sendBroadcast(any())
+    }
+
+    @LauncherAppSingleton
+    @Component(modules = [AllModulesForTest::class])
+    interface TestComponent : LauncherAppComponent {
+        @Component.Builder
+        interface Builder : LauncherAppComponent.Builder {
+            @BindsInstance fun bindUserCache(userCache: UserCache): Builder
+
+            override fun build(): TestComponent
+        }
     }
 }
 
