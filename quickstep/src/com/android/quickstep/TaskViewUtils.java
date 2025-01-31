@@ -39,6 +39,7 @@ import static com.android.launcher3.QuickstepTransitionManager.SPLIT_LAUNCH_DURA
 import static com.android.launcher3.Utilities.getDescendantCoordRelativeToAncestor;
 import static com.android.launcher3.util.MultiPropertyFactory.MULTI_PROPERTY_VALUE;
 import static com.android.quickstep.util.AnimUtils.clampToDuration;
+import static com.android.wm.shell.shared.TransitionUtil.TYPE_SPLIT_SCREEN_DIM_LAYER;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -732,7 +733,9 @@ public final class TaskViewUtils {
         List<SurfaceControl> auxiliarySurfaces = new ArrayList<>();
         for (RemoteAnimationTarget target : nonApps) {
             final SurfaceControl leash = target.leash;
-            if (target.windowType == TYPE_DOCK_DIVIDER && leash != null && leash.isValid()) {
+            if ((target.windowType == TYPE_DOCK_DIVIDER
+                    || target.windowType == TYPE_SPLIT_SCREEN_DIM_LAYER)
+                    && leash != null && leash.isValid()) {
                 auxiliarySurfaces.add(leash);
             }
         }
