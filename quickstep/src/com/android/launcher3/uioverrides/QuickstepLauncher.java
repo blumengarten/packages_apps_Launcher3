@@ -172,10 +172,12 @@ import com.android.launcher3.widget.LauncherWidgetHolder;
 import com.android.quickstep.OverviewCommandHelper;
 import com.android.quickstep.OverviewComponentObserver;
 import com.android.quickstep.OverviewComponentObserver.OverviewChangeListener;
+import com.android.quickstep.RecentsAnimationDeviceState;
+import com.android.quickstep.RecentsAnimationDeviceState.AssistantVisibilityChangeListener;
 import com.android.quickstep.RecentsModel;
 import com.android.quickstep.SystemUiProxy;
+import com.android.quickstep.TISBinder;
 import com.android.quickstep.TaskUtils;
-import com.android.quickstep.TouchInteractionService.TISBinder;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.quickstep.util.AsyncClockEventDelegate;
 import com.android.quickstep.util.LauncherUnfoldAnimationController;
@@ -222,7 +224,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
-        SystemShortcut.BubbleActivityStarter {
+        SystemShortcut.BubbleActivityStarter, AssistantVisibilityChangeListener {
     private static final boolean TRACE_LAYOUTS =
             SystemProperties.getBoolean("persist.debug.trace_layouts", false);
     private static final String TRACE_RELAYOUT_CLASS =
@@ -593,6 +595,8 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         mHotseatPredictionController.destroy();
         if (mViewCapture != null) mViewCapture.close();
         removeBackAnimationCallback(mSplitSelectStateController.getSplitBackHandler());
+        RecentsAnimationDeviceState.INSTANCE.get(this)
+                .removeAssistantVisibilityChangeListener(this);
     }
 
     @Override
@@ -726,6 +730,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         View.setTracedRequestLayoutClassClass(TRACE_RELAYOUT_CLASS);
         OverviewComponentObserver.INSTANCE.get(this)
                 .addOverviewChangeListener(mOverviewChangeListener);
+        RecentsAnimationDeviceState.INSTANCE.get(this).addAssistantVisibilityChangeListener(this);
     }
 
     @Override
@@ -1085,7 +1090,6 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         if (taskbarManager != null) {
             taskbarManager.setActivity(this);
         }
-        mTISBindHelper.setPredictiveBackToHomeInProgress(mIsPredictiveBackToHomeInProgress);
     }
 
     @Override
@@ -1359,7 +1363,8 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
      */
     public void setPredictiveBackToHomeInProgress(boolean isInProgress) {
         mIsPredictiveBackToHomeInProgress = isInProgress;
-        mTISBindHelper.setPredictiveBackToHomeInProgress(isInProgress);
+        RecentsAnimationDeviceState.INSTANCE.get(this)
+                .setPredictiveBackToHomeInProgress(isInProgress);
     }
 
     public boolean getPredictiveBackToHomeInProgress() {
@@ -1499,6 +1504,11 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     @Override
     public boolean isRecentsViewVisible() {
         return getStateManager().getState().isRecentsViewVisible;
+    }
+
+    @Override
+    public void onAssistantVisibilityChanged(float visibility) {
+        mHotseat.getQsb().setAlpha(1f - visibility);
     }
 
     public boolean isCanShowAllAppsEducationView() {

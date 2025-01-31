@@ -64,6 +64,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.android.launcher3.anim.AnimatedFloat;
 import com.android.launcher3.dagger.ApplicationContext;
 import com.android.launcher3.dagger.LauncherAppComponent;
 import com.android.launcher3.dagger.LauncherAppSingleton;
@@ -88,6 +89,10 @@ import com.android.systemui.shared.system.TaskStackChangeListener;
 import com.android.systemui.shared.system.TaskStackChangeListeners;
 
 import java.io.PrintWriter;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Function;
+import java.util.function.LongConsumer;
 
 import javax.inject.Inject;
 
@@ -118,12 +123,16 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
     private final boolean mCanImeRenderGesturalNavButtons =
             InputMethodService.canImeRenderGesturalNavButtons();
 
+    private final List<LongConsumer> mFlagChangeCallbacks = new CopyOnWriteArrayList<>();
     private @SystemUiStateFlags long mSystemUiStateFlags = QuickStepContract.SYSUI_STATE_AWAKE;
     private NavigationMode mMode = THREE_BUTTONS;
     private NavBarPosition mNavBarPosition;
 
     private final Region mDeferredGestureRegion = new Region();
     private boolean mAssistantAvailable;
+
+    private final List<AssistantVisibilityChangeListener> mAssistantVisibilityChangeListeners =
+            new CopyOnWriteArrayList<>();
     private float mAssistantVisibility;
     private boolean mIsUserSetupComplete;
     private boolean mIsOneHandedModeEnabled;
@@ -135,6 +144,8 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
     private int mGestureBlockingTaskId = -1;
     private @NonNull Region mExclusionRegion = GestureExclusionManager.EMPTY_REGION;
     private boolean mExclusionListenerRegistered;
+
+    private Function<GestureState, AnimatedFloat> mSwipeUpProxyProvider = null;
 
     @VisibleForTesting
     @Inject
@@ -355,8 +366,9 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
     /**
      * Updates the system ui state flags from SystemUI.
      */
-    public void setSystemUiFlags(@SystemUiStateFlags long stateFlags) {
+    public void setSystemUiStateFlags(@SystemUiStateFlags long stateFlags) {
         mSystemUiStateFlags = stateFlags;
+        mFlagChangeCallbacks.forEach(c -> c.accept(stateFlags));
     }
 
     /**
@@ -366,6 +378,20 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
     @SystemUiStateFlags
     public long getSystemUiStateFlags() {
         return mSystemUiStateFlags;
+    }
+
+    /**
+     * Adds a callback to receiver sysui flag changes
+     */
+    public void addSysUiFlagChangeCallback(LongConsumer callback) {
+        mFlagChangeCallbacks.add(callback);
+    }
+
+    /**
+     * Removes a previously added sysui flag change callback
+     */
+    public void removeSysUiFlagChangeCallback(LongConsumer callback) {
+        mFlagChangeCallbacks.remove(callback);
     }
 
     /**
@@ -380,6 +406,22 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
      */
     public boolean isPredictiveBackToHomeInProgress() {
         return mIsPredictiveBackToHomeInProgress;
+    }
+
+    /**
+     * Sets or clears a function to proxy swipe up transition behavior
+     */
+    public void setSwipeUpProxyProvider(
+            @Nullable Function<GestureState, AnimatedFloat> swipeUpProxyProvider) {
+        mSwipeUpProxyProvider = swipeUpProxyProvider;
+    }
+
+    /**
+     * Returns a proxy animation for swipe up transition if a proxy function was previously set
+     */
+    public AnimatedFloat getSwipeUpProxy(GestureState state) {
+        Function<GestureState, AnimatedFloat> provider = mSwipeUpProxyProvider;
+        return provider != null ? provider.apply(state) : null;
     }
 
     /**
@@ -535,6 +577,8 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
      */
     public void setAssistantVisibility(float visibility) {
         mAssistantVisibility = visibility;
+        mAssistantVisibilityChangeListeners.forEach(
+                l -> l.onAssistantVisibilityChanged(visibility));
     }
 
     /**
@@ -542,6 +586,16 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
      */
     public float getAssistantVisibility() {
         return mAssistantVisibility;
+    }
+
+    /** Add a listener for assistant visibility changes */
+    public void addAssistantVisibilityChangeListener(AssistantVisibilityChangeListener l) {
+        mAssistantVisibilityChangeListeners.add(l);
+    }
+
+    /** Removes a previously added visibility change listener */
+    public void removeAssistantVisibilityChangeListener(AssistantVisibilityChangeListener l) {
+        mAssistantVisibilityChangeListeners.remove(l);
     }
 
     /**
@@ -631,6 +685,13 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
 
     public String getSystemUiStateString() {
         return  QuickStepContract.getSystemUiStateString(mSystemUiStateFlags);
+    }
+
+    /** Interface for listening assistant visibility change */
+    @FunctionalInterface
+    public interface AssistantVisibilityChangeListener {
+        /** Called when assistant visibility changes */
+        void onAssistantVisibilityChanged(float visibility);
     }
 
     public void dump(PrintWriter pw) {

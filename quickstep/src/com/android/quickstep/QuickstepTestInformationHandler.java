@@ -172,7 +172,7 @@ public class QuickstepTestInformationHandler extends TestInformationHandler {
                 return response;
 
             case TestProtocol.REQUEST_REFRESH_OVERVIEW_TARGET:
-                runOnTISBinder(TouchInteractionService.TISBinder::refreshOverviewTarget);
+                runOnTISBinder(TISBinder::refreshOverviewTarget);
                 return response;
 
             case TestProtocol.REQUEST_RECREATE_TASKBAR:
@@ -220,7 +220,7 @@ public class QuickstepTestInformationHandler extends TestInformationHandler {
     }
 
     private void enableBlockingTimeout(
-            TouchInteractionService.TISBinder tisBinder, boolean enable) {
+            TISBinder tisBinder, boolean enable) {
         TaskbarActivityContext context = tisBinder.getTaskbarManager().getCurrentActivityContext();
         if (context == null) {
             return;
@@ -236,7 +236,7 @@ public class QuickstepTestInformationHandler extends TestInformationHandler {
      * Runs the given command on the UI thread, after ensuring we are connected to
      * TouchInteractionService.
      */
-    protected void runOnTISBinder(Consumer<TouchInteractionService.TISBinder> connectionCallback) {
+    protected void runOnTISBinder(Consumer<TISBinder> connectionCallback) {
         try {
             CountDownLatch countDownLatch = new CountDownLatch(1);
             TISBindHelper helper = MAIN_EXECUTOR.submit(() ->
@@ -252,7 +252,7 @@ public class QuickstepTestInformationHandler extends TestInformationHandler {
     }
 
     private <T> Bundle getTISBinderUIProperty(
-            BundleSetter<T> bundleSetter, Function<TouchInteractionService.TISBinder, T> provider) {
+            BundleSetter<T> bundleSetter, Function<TISBinder, T> provider) {
         Bundle response = new Bundle();
 
         runOnTISBinder(tisBinder -> bundleSetter.set(

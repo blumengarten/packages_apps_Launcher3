@@ -21,7 +21,6 @@ import android.app.contextualsearch.ContextualSearchManager.ENTRYPOINT_LONG_PRES
 import android.app.contextualsearch.ContextualSearchManager.FEATURE_CONTEXTUAL_SEARCH
 import android.content.Context
 import android.util.Log
-import androidx.annotation.VisibleForTesting
 import com.android.internal.app.AssistUtils
 import com.android.launcher3.logging.StatsLogManager
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_LAUNCH_ASSISTANT_FAILED_SERVICE_ERROR
@@ -34,7 +33,7 @@ import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_LAUN
 import com.android.quickstep.BaseContainerInterface
 import com.android.quickstep.DeviceConfigWrapper
 import com.android.quickstep.OverviewComponentObserver
-import com.android.quickstep.SystemUiProxy
+import com.android.quickstep.RecentsAnimationDeviceState
 import com.android.quickstep.TopTaskTracker
 import com.android.quickstep.views.RecentsView
 import com.android.systemui.shared.system.QuickStepContract
@@ -45,9 +44,10 @@ internal constructor(
     private val context: Context,
     private val contextualSearchStateManager: ContextualSearchStateManager,
     private val topTaskTracker: TopTaskTracker,
-    private val systemUiProxy: SystemUiProxy,
+    private val deviceState: RecentsAnimationDeviceState,
     private val statsLogManager: StatsLogManager,
     private val contextualSearchHapticManager: ContextualSearchHapticManager,
+    private val overviewComponentObserver: OverviewComponentObserver,
     private val contextualSearchManager: ContextualSearchManager?,
 ) {
     constructor(
@@ -56,9 +56,10 @@ internal constructor(
         context,
         ContextualSearchStateManager.INSTANCE[context],
         TopTaskTracker.INSTANCE[context],
-        SystemUiProxy.INSTANCE[context],
+        RecentsAnimationDeviceState.INSTANCE[context],
         StatsLogManager.newInstance(context),
         ContextualSearchHapticManager.INSTANCE[context],
+        OverviewComponentObserver.INSTANCE[context],
         context.getSystemService(ContextualSearchManager::class.java),
     )
 
@@ -189,7 +190,7 @@ internal constructor(
         if (contextualSearchManager == null) {
             return false
         }
-        val recentsContainerInterface = getRecentsContainerInterface()
+        val recentsContainerInterface = overviewComponentObserver.containerInterface
         if (recentsContainerInterface?.isInLiveTileMode() == true) {
             Log.i(TAG, "Contextual Search invocation attempted: live tile")
             endLiveTileMode(recentsContainerInterface) {
@@ -202,27 +203,20 @@ internal constructor(
     }
 
     private fun isFakeLandscape(): Boolean =
-        getRecentsContainerInterface()
-            ?.getCreatedContainer()
+        overviewComponentObserver.containerInterface
+            ?.createdContainer
             ?.getOverviewPanel<RecentsView<*, *>>()
-            ?.getPagedOrientationHandler()
+            ?.pagedOrientationHandler
             ?.isLayoutNaturalToLauncher == false
 
-    private fun isInSplitscreen(): Boolean {
-        return topTaskTracker.getRunningSplitTaskIds().isNotEmpty()
-    }
+    private fun isInSplitscreen(): Boolean = topTaskTracker.runningSplitTaskIds.isNotEmpty()
 
     private fun isNotificationShadeShowing(): Boolean {
-        return systemUiProxy.lastSystemUiStateFlags and SHADE_EXPANDED_SYSUI_FLAGS != 0L
+        return deviceState.systemUiStateFlags and SHADE_EXPANDED_SYSUI_FLAGS != 0L
     }
 
     private fun isKeyguardShowing(): Boolean {
-        return systemUiProxy.lastSystemUiStateFlags and KEYGUARD_SHOWING_SYSUI_FLAGS != 0L
-    }
-
-    @VisibleForTesting
-    fun getRecentsContainerInterface(): BaseContainerInterface<*, *>? {
-        return OverviewComponentObserver.INSTANCE.get(context).containerInterface
+        return deviceState.systemUiStateFlags and KEYGUARD_SHOWING_SYSUI_FLAGS != 0L
     }
 
     /**

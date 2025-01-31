@@ -150,7 +150,7 @@ class RecentsAnimationDeviceStateTest {
 
         allSysUiStates().forEach { state ->
             val canStartGesture = !disablingStates.contains(state)
-            underTest.setSystemUiFlags(state)
+            underTest.systemUiStateFlags = state
             assertThat(underTest.canStartTrackpadGesture()).isEqualTo(canStartGesture)
         }
     }
@@ -166,7 +166,7 @@ class RecentsAnimationDeviceStateTest {
             )
 
         stateToExpectedResult.forEach { (state, allowed) ->
-            underTest.setSystemUiFlags(state)
+            underTest.systemUiStateFlags = state
             assertThat(underTest.canStartTrackpadGesture()).isEqualTo(allowed)
         }
     }
@@ -177,7 +177,7 @@ class RecentsAnimationDeviceStateTest {
 
         allSysUiStates().forEach { state ->
             val canStartGesture = !disablingStates.contains(state)
-            underTest.setSystemUiFlags(state)
+            underTest.systemUiStateFlags = state
             assertThat(underTest.canStartSystemGesture()).isEqualTo(canStartGesture)
         }
     }
@@ -197,7 +197,7 @@ class RecentsAnimationDeviceStateTest {
             )
 
         stateToExpectedResult.forEach { (state, gestureAllowed) ->
-            underTest.setSystemUiFlags(state)
+            underTest.systemUiStateFlags = state
             assertThat(underTest.canStartSystemGesture()).isEqualTo(gestureAllowed)
         }
     }

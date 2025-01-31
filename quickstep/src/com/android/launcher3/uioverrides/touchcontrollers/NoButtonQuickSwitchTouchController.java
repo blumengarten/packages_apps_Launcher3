@@ -55,7 +55,6 @@ import static com.android.quickstep.views.RecentsView.FULLSCREEN_PROGRESS;
 import static com.android.quickstep.views.RecentsView.RECENTS_SCALE_PROPERTY;
 import static com.android.quickstep.views.RecentsView.TASK_SECONDARY_TRANSLATION;
 import static com.android.quickstep.views.RecentsView.TASK_THUMBNAIL_SPLASH_ALPHA;
-import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_OVERVIEW_DISABLED;
 
 import android.animation.Animator;
 import android.animation.Animator.AnimatorListener;
@@ -79,7 +78,7 @@ import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.TouchController;
 import com.android.launcher3.util.VibratorWrapper;
-import com.android.quickstep.SystemUiProxy;
+import com.android.quickstep.RecentsAnimationDeviceState;
 import com.android.quickstep.util.AnimatorControllerWithResistance;
 import com.android.quickstep.util.LayoutUtils;
 import com.android.quickstep.util.MotionPauseDetector;
@@ -178,8 +177,7 @@ public class NoButtonQuickSwitchTouchController implements TouchController,
         if ((ev.getEdgeFlags() & Utilities.EDGE_NAV_BAR) == 0) {
             return false;
         }
-        long stateFlags = SystemUiProxy.INSTANCE.get(mLauncher).getLastSystemUiStateFlags();
-        if ((stateFlags & SYSUI_STATE_OVERVIEW_DISABLED) != 0) {
+        if (RecentsAnimationDeviceState.INSTANCE.get(mLauncher).isOverviewDisabled()) {
             return false;
         }
         if (isTrackpadMultiFingerSwipe(ev)) {

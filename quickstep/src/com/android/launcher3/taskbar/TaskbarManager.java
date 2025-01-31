@@ -71,6 +71,7 @@ import com.android.launcher3.util.SettingsCache;
 import com.android.launcher3.util.SimpleBroadcastReceiver;
 import com.android.quickstep.AllAppsActionManager;
 import com.android.quickstep.RecentsActivity;
+import com.android.quickstep.RecentsAnimationDeviceState;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
 import com.android.quickstep.fallback.window.RecentsWindowManager;
@@ -84,6 +85,7 @@ import com.android.systemui.unfold.util.ScopedUnfoldTransitionProgressProvider;
 
 import java.io.PrintWriter;
 import java.util.StringJoiner;
+import java.util.function.LongConsumer;
 
 /**
  * Class to manage taskbar lifecycle
@@ -244,6 +246,8 @@ public class TaskbarManager {
                 }
             };
 
+    private final LongConsumer mSysUiFlagChangeReceiver = this::onSystemUiFlagsChanged;
+
     @SuppressLint("WrongConstant")
     public TaskbarManager(
             Context context,
@@ -277,6 +281,10 @@ public class TaskbarManager {
             mTaskbarBroadcastReceiver.register(
                     mPrimaryWindowContext, RECEIVER_NOT_EXPORTED, ACTION_SHOW_TASKBAR);
         });
+
+        RecentsAnimationDeviceState deviceState = RecentsAnimationDeviceState.INSTANCE.get(context);
+        onSystemUiFlagsChanged(deviceState.getSystemUiStateFlags());
+        deviceState.addSysUiFlagChangeCallback(mSysUiFlagChangeReceiver);
 
         debugWhyTaskbarNotDestroyed("TaskbarManager created");
         recreateTaskbar();
@@ -606,7 +614,7 @@ public class TaskbarManager {
         }
     }
 
-    public void onSystemUiFlagsChanged(@SystemUiStateFlags long systemUiStateFlags) {
+    private void onSystemUiFlagsChanged(@SystemUiStateFlags long systemUiStateFlags) {
         if (DEBUG) {
             Log.d(TAG, "SysUI flags changed: " + formatFlagChange(systemUiStateFlags,
                     mSharedState.sysuiStateFlags, QuickStepContract::getSystemUiStateString));
@@ -804,6 +812,8 @@ public class TaskbarManager {
                 .unregister(USER_SETUP_COMPLETE_URI, mOnSettingsChangeListener);
         SettingsCache.INSTANCE.get(mPrimaryWindowContext)
                 .unregister(NAV_BAR_KIDS_MODE, mOnSettingsChangeListener);
+        RecentsAnimationDeviceState.INSTANCE.get(getPrimaryWindowContext())
+                .removeSysUiFlagChangeCallback(mSysUiFlagChangeReceiver);
         Log.d(TASKBAR_NOT_DESTROYED_TAG, "unregistering component callbacks from destroy().");
         mPrimaryWindowContext.unregisterComponentCallbacks(mDefaultComponentCallbacks);
         mShutdownReceiver.unregisterReceiverSafely(mPrimaryWindowContext);

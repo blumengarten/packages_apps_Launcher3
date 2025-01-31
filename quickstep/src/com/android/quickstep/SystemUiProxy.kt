@@ -65,7 +65,6 @@ import com.android.systemui.contextualeducation.GestureType
 import com.android.systemui.shared.recents.ISystemUiProxy
 import com.android.systemui.shared.recents.model.ThumbnailData.Companion.wrap
 import com.android.systemui.shared.system.QuickStepContract
-import com.android.systemui.shared.system.QuickStepContract.SystemUiStateFlags
 import com.android.systemui.shared.system.RecentsAnimationControllerCompat
 import com.android.systemui.shared.system.RecentsAnimationListener
 import com.android.systemui.shared.system.smartspace.ILauncherUnlockAnimationController
@@ -162,9 +161,6 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
     private val asyncHandler =
         Handler(Executors.UI_HELPER_EXECUTOR.looper) { handleMessageAsync(it) }
 
-    // TODO(141886704): Find a way to remove this
-    @SystemUiStateFlags var lastSystemUiStateFlags: Long = 0
-
     /**
      * This is a singleton pending intent that is used to start recents via Shell (which is a
      * different process). It is bare-bones, so it's expected that the component and options will be
@@ -194,7 +190,7 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
     private inline fun executeWithErrorLog(
         errorMsg: () -> String,
         tag: String = TAG,
-        callback: () -> Any?,
+        callback: () -> Unit,
     ) {
         try {
             callback.invoke()
@@ -232,36 +228,30 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
      * Sets proxy state, including death linkage, various listeners, and other configuration objects
      */
     @MainThread
-    fun setProxy(
-        proxy: ISystemUiProxy?,
-        pip: IPip?,
-        bubbles: IBubbles?,
-        splitScreen: ISplitScreen?,
-        oneHanded: IOneHanded?,
-        shellTransitions: IShellTransitions?,
-        startingWindow: IStartingWindow?,
-        recentTasks: IRecentTasks?,
-        sysuiUnlockAnimationController: ISysuiUnlockAnimationController?,
-        backAnimation: IBackAnimation?,
-        desktopMode: IDesktopMode?,
-        unfoldAnimation: IUnfoldAnimation?,
-        dragAndDrop: IDragAndDrop?,
-    ) {
+    fun setProxy(bundle: Bundle) {
         Preconditions.assertUIThread()
         unlinkToDeath()
-        systemUiProxy = proxy
-        this.pip = pip
-        this.bubbles = bubbles
-        this.splitScreen = splitScreen
-        this.oneHanded = oneHanded
-        this.shellTransitions = shellTransitions
-        this.startingWindow = startingWindow
-        this.sysuiUnlockAnimationController = sysuiUnlockAnimationController
-        this.recentTasks = recentTasks
-        this.backAnimation = backAnimation
-        this.desktopMode = desktopMode
-        this.unfoldAnimation = if (Flags.enableUnfoldStateAnimation()) null else unfoldAnimation
-        this.dragAndDrop = dragAndDrop
+        systemUiProxy = ISystemUiProxy.Stub.asInterface(bundle.getBinder(ISystemUiProxy.DESCRIPTOR))
+        pip = IPip.Stub.asInterface(bundle.getBinder(IPip.DESCRIPTOR))
+        bubbles = IBubbles.Stub.asInterface(bundle.getBinder(IBubbles.DESCRIPTOR))
+        splitScreen = ISplitScreen.Stub.asInterface(bundle.getBinder(ISplitScreen.DESCRIPTOR))
+        oneHanded = IOneHanded.Stub.asInterface(bundle.getBinder(IOneHanded.DESCRIPTOR))
+        shellTransitions =
+            IShellTransitions.Stub.asInterface(bundle.getBinder(IShellTransitions.DESCRIPTOR))
+        startingWindow =
+            IStartingWindow.Stub.asInterface(bundle.getBinder(IStartingWindow.DESCRIPTOR))
+        sysuiUnlockAnimationController =
+            ISysuiUnlockAnimationController.Stub.asInterface(
+                bundle.getBinder(ISysuiUnlockAnimationController.DESCRIPTOR)
+            )
+        recentTasks = IRecentTasks.Stub.asInterface(bundle.getBinder(IRecentTasks.DESCRIPTOR))
+        backAnimation = IBackAnimation.Stub.asInterface(bundle.getBinder(IBackAnimation.DESCRIPTOR))
+        desktopMode = IDesktopMode.Stub.asInterface(bundle.getBinder(IDesktopMode.DESCRIPTOR))
+        unfoldAnimation =
+            if (Flags.enableUnfoldStateAnimation()) null
+            else IUnfoldAnimation.Stub.asInterface(bundle.getBinder(IUnfoldAnimation.DESCRIPTOR))
+        dragAndDrop = IDragAndDrop.Stub.asInterface(bundle.getBinder(IDragAndDrop.DESCRIPTOR))
+
         linkToDeath()
         // re-attach the listeners once missing due to setProxy has not been initialized yet.
         setPipAnimationListener(pipAnimationListener)
@@ -289,15 +279,12 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
         stateChangeCallbacks.forEach { it.run() }
 
         if (unfoldTransitionProvider != null) {
-            if (unfoldAnimation != null) {
-                try {
-                    unfoldAnimation.setListener(unfoldTransitionProvider)
+            unfoldTransitionProvider.isActive = false
+            executeWithErrorLog({ "Failed to set unfold anim listener" }) {
+                unfoldAnimation?.apply {
+                    setListener(unfoldTransitionProvider)
                     unfoldTransitionProvider.isActive = true
-                } catch (e: RemoteException) {
-                    // Ignore
                 }
-            } else {
-                unfoldTransitionProvider.isActive = false
             }
         }
     }
@@ -305,9 +292,7 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
     /**
      * Clear the proxy to release held resources and turn the majority of its operations into no-ops
      */
-    @MainThread
-    fun clearProxy() =
-        setProxy(null, null, null, null, null, null, null, null, null, null, null, null, null)
+    @MainThread fun clearProxy() = setProxy(Bundle.EMPTY)
 
     /** Adds a callback to be notified whenever the active state changes */
     fun addOnStateChangeListener(callback: Runnable) = stateChangeCallbacks.add(callback)

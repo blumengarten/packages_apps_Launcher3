@@ -54,22 +54,25 @@ import com.android.quickstep.util.SystemUiFlagUtils;
 import com.android.quickstep.views.RecentsView;
 import com.android.systemui.shared.recents.model.ThumbnailData;
 import com.android.systemui.shared.system.QuickStepContract;
+import com.android.systemui.shared.system.QuickStepContract.SystemUiStateFlags;
 import com.android.systemui.shared.system.TaskStackChangeListener;
 import com.android.systemui.shared.system.TaskStackChangeListeners;
 
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.function.LongConsumer;
 
 public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAnimationListener {
     public static final boolean SHELL_TRANSITIONS_ROTATION =
             SystemProperties.getBoolean("persist.wm.debug.shell_transit_rotate", false);
 
     private final Context mCtx;
+    private final RecentsAnimationDeviceState mDeviceState;
+    private final SystemUiProxy mSystemUiProxy;
     private RecentsAnimationController mController;
     private RecentsAnimationCallbacks mCallbacks;
     private RecentsAnimationTargets mTargets;
     private TransitionInfo mTransitionInfo;
-    private RecentsAnimationDeviceState mDeviceState;
 
     // Temporary until we can hook into gesture state events
     private GestureState mLastGestureState;
@@ -102,12 +105,22 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
         }
     };
 
+
+    private @SystemUiStateFlags long mLastSysuiFlags;
+    private final LongConsumer mSysUiFlagChangeCallback = this::onSystemUiFlagsChanged;
+
     TaskAnimationManager(Context ctx, RecentsAnimationDeviceState deviceState) {
+        this(ctx, deviceState, SystemUiProxy.INSTANCE.get(ctx));
+    }
+
+    TaskAnimationManager(Context ctx, RecentsAnimationDeviceState deviceState,
+            SystemUiProxy systemUiProxy) {
         mCtx = ctx;
         mDeviceState = deviceState;
-    }
-    SystemUiProxy getSystemUiProxy() {
-        return SystemUiProxy.INSTANCE.get(mCtx);
+        mSystemUiProxy = systemUiProxy;
+        mLastSysuiFlags = QuickStepContract.SYSUI_STATE_AWAKE;
+        mDeviceState.addSysUiFlagChangeCallback(mSysUiFlagChangeCallback);
+        onSystemUiFlagsChanged(mDeviceState.getSystemUiStateFlags());
     }
 
     boolean shouldIgnoreMotionEvents() {
@@ -151,7 +164,7 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
 
         final BaseContainerInterface containerInterface = gestureState.getContainerInterface();
         mLastGestureState = gestureState;
-        RecentsAnimationCallbacks newCallbacks = new RecentsAnimationCallbacks(getSystemUiProxy());
+        RecentsAnimationCallbacks newCallbacks = new RecentsAnimationCallbacks(mSystemUiProxy);
         mCallbacks = newCallbacks;
         mCallbacks.addListener(new RecentsAnimationCallbacks.RecentsAnimationListener() {
             @Override
@@ -289,7 +302,7 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
         if(containerInterface.getCreatedContainer() instanceof RecentsWindowManager
                 && (Flags.enableFallbackOverviewInWindow()
                         || Flags.enableLauncherOverviewInWindow())) {
-            mRecentsAnimationStartPending = getSystemUiProxy().startRecentsActivity(intent, options,
+            mRecentsAnimationStartPending = mSystemUiProxy.startRecentsActivity(intent, options,
                     mCallbacks, gestureState.useSyntheticRecentsTransition());
             RecentsDisplayModel.getINSTANCE().get(mCtx)
                     .getRecentsWindowManager(mDeviceState.getDisplayId())
@@ -321,7 +334,7 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
                 });
             }
 
-            mRecentsAnimationStartPending = getSystemUiProxy().startRecentsActivity(intent,
+            mRecentsAnimationStartPending = mSystemUiProxy.startRecentsActivity(intent,
                     options, mCallbacks, false /* useSyntheticRecentsTransition */);
         }
 
@@ -347,8 +360,13 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
         return mCallbacks;
     }
 
-    public void onSystemUiFlagsChanged(@QuickStepContract.SystemUiStateFlags long lastSysUIFlags,
-            @QuickStepContract.SystemUiStateFlags long newSysUIFlags) {
+    private void onSystemUiFlagsChanged(@SystemUiStateFlags long newSysUIFlags) {
+        onSystemUiFlagsChanged(mLastSysuiFlags, newSysUIFlags);
+        mLastSysuiFlags = newSysUIFlags;
+    }
+
+    private void onSystemUiFlagsChanged(@SystemUiStateFlags long lastSysUIFlags,
+            @SystemUiStateFlags long newSysUIFlags) {
         long isShadeExpandedFlagMask =
                 SYSUI_STATE_NOTIFICATION_PANEL_EXPANDED | SYSUI_STATE_QUICK_SETTINGS_EXPANDED;
         boolean wasExpanded = hasAnyFlag(lastSysUIFlags, isShadeExpandedFlagMask);
@@ -508,5 +526,9 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
         if (mLastGestureState != null) {
             mLastGestureState.dump(prefix + '\t', pw);
         }
+    }
+
+    public void onDestroy() {
+        mDeviceState.removeSysUiFlagChangeCallback(mSysUiFlagChangeCallback);
     }
 }
