@@ -715,9 +715,9 @@ public class TaskbarManager {
 
     /**
      * Signal from SysUI indicating that a non-mirroring display was just connected to the
-     * primary device.
+     * primary device or a previously mirroring display is switched to extended mode.
      */
-    public void onDisplayReady(int displayId) {
+    public void onDisplayAddSystemDecorations(int displayId) {
     }
 
     /**

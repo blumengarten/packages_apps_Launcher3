@@ -97,7 +97,6 @@ public class PreviewSurfaceRenderer {
 
     @Nullable private Boolean mDarkMode;
     private boolean mDestroyed = false;
-    private LauncherPreviewRenderer mRenderer;
     private boolean mHideQsb;
     @Nullable private FrameLayout mViewRoot = null;
 
@@ -240,9 +239,8 @@ public class PreviewSurfaceRenderer {
      * @param hide True to hide and false to show.
      */
     public void hideBottomRow(boolean hide) {
-        if (mRenderer != null) {
-            mRenderer.hideBottomRow(hide);
-        }
+        mHideQsb = hide;
+        loadAsync();
     }
 
     /**
@@ -388,15 +386,16 @@ public class PreviewSurfaceRenderer {
         if (mDestroyed) {
             return;
         }
+        LauncherPreviewRenderer renderer;
         if (Flags.newCustomizationPickerUi()) {
-            mRenderer = new LauncherPreviewRenderer(inflationContext, idp, mPreviewColorOverride,
+            renderer = new LauncherPreviewRenderer(inflationContext, idp, mPreviewColorOverride,
                     mWallpaperColors, launcherWidgetSpanInfo);
         } else {
-            mRenderer = new LauncherPreviewRenderer(inflationContext, idp,
+            renderer = new LauncherPreviewRenderer(inflationContext, idp,
                     mWallpaperColors, launcherWidgetSpanInfo);
         }
-        mRenderer.hideBottomRow(mHideQsb);
-        View view = mRenderer.getRenderedView(dataModel, widgetProviderInfoMap);
+        renderer.hideBottomRow(mHideQsb);
+        View view = renderer.getRenderedView(dataModel, widgetProviderInfoMap);
         // This aspect scales the view to fit in the surface and centers it
         final float scale = Math.min(mWidth / (float) view.getMeasuredWidth(),
                 mHeight / (float) view.getMeasuredHeight());

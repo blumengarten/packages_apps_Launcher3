@@ -69,6 +69,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.inject.Inject;
 
@@ -114,7 +115,8 @@ public class DisplayController implements ComponentCallbacks,
 
     // The callback in this listener updates DeviceProfile, which other listeners might depend on
     private DisplayInfoChangeListener mPriorityListener;
-    private final ArrayList<DisplayInfoChangeListener> mListeners = new ArrayList<>();
+    private final CopyOnWriteArrayList<DisplayInfoChangeListener> mListeners =
+            new CopyOnWriteArrayList<>();
 
     // We will register broadcast receiver on main thread to ensure not missing changes on
     // TARGET_OVERLAY_PACKAGE and ACTION_OVERLAY_CHANGED.

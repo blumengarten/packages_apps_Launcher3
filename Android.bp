@@ -452,6 +452,7 @@ android_app {
         "AndroidManifest-common.xml",
     ],
     lint: {
+        extra_check_modules: ["Launcher3LintChecker"],
         baseline_filename: "lint-baseline.xml",
     },
 }

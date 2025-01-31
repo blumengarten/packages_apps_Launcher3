@@ -28,6 +28,7 @@ import android.os.UserManager
 import android.text.TextUtils
 import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherSettings
+import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_DESKTOP
 import com.android.launcher3.Utilities
 import com.android.launcher3.icons.IconCache
 import com.android.launcher3.model.LoaderCursor
@@ -132,8 +133,10 @@ object LauncherDbUtils {
     }
 
     @JvmStatic
-    fun shiftTableByXCells(db: SQLiteDatabase, x: Int, toTable: String) {
-        db.run { execSQL("UPDATE $toTable SET cellY = cellY + $x") }
+    fun shiftWorkspaceByXCells(db: SQLiteDatabase, x: Int, toTable: String) {
+        db.run {
+            execSQL("UPDATE $toTable SET cellY = cellY + $x WHERE container = $CONTAINER_DESKTOP")
+        }
     }
 
     /**

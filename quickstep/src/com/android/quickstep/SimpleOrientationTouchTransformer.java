@@ -22,35 +22,35 @@ import static com.android.launcher3.util.DisplayController.CHANGE_ROTATION;
 import android.content.Context;
 import android.view.MotionEvent;
 
+import com.android.launcher3.dagger.ApplicationContext;
+import com.android.launcher3.dagger.LauncherAppSingleton;
+import com.android.launcher3.util.DaggerSingletonObject;
+import com.android.launcher3.util.DaggerSingletonTracker;
 import com.android.launcher3.util.DisplayController;
-import com.android.launcher3.util.MainThreadInitializedObject;
-import com.android.launcher3.util.SafeCloseable;
+import com.android.quickstep.dagger.QuickstepBaseAppComponent;
 
+import javax.inject.Inject;
+
+@LauncherAppSingleton
 public class SimpleOrientationTouchTransformer implements
-        DisplayController.DisplayInfoChangeListener, SafeCloseable {
+        DisplayController.DisplayInfoChangeListener {
 
-    public static final MainThreadInitializedObject<SimpleOrientationTouchTransformer> INSTANCE =
-            new MainThreadInitializedObject<>(SimpleOrientationTouchTransformer::new);
+    public static final DaggerSingletonObject<SimpleOrientationTouchTransformer> INSTANCE =
+            new DaggerSingletonObject<>(
+                    QuickstepBaseAppComponent::getSimpleOrientationTouchTransformer);
 
-    private final Context mContext;
     private OrientationRectF mOrientationRectF;
     private OrientationRectF mTouchingOrientationRectF;
     private int mViewRotation;
 
-    public SimpleOrientationTouchTransformer(Context context) {
-        this(context, DisplayController.INSTANCE.get(context));
-    }
-
-    @androidx.annotation.VisibleForTesting
-    public SimpleOrientationTouchTransformer(Context context, DisplayController displayController) {
-        mContext = context;
+    @Inject
+    public SimpleOrientationTouchTransformer(@ApplicationContext Context context,
+            DisplayController displayController,
+            DaggerSingletonTracker tracker) {
         displayController.addChangeListener(this);
-        onDisplayInfoChanged(context, displayController.getInfo(), CHANGE_ALL);
-    }
+        tracker.addCloseable(() -> displayController.removeChangeListener(this));
 
-    @Override
-    public void close() {
-        DisplayController.INSTANCE.get(mContext).removeChangeListener(this);
+        onDisplayInfoChanged(context, displayController.getInfo(), CHANGE_ALL);
     }
 
     @Override

@@ -53,9 +53,10 @@ import com.android.launcher3.util.Preconditions;
 import com.android.launcher3.util.RunnableList;
 import com.android.systemui.shared.Flags;
 
+import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.Set;
-import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -121,7 +122,7 @@ public class GridCustomizationsProvider extends ContentProvider {
 
     // Set of all active previews used to track duplicate memory allocations
     private final Set<PreviewLifecycleObserver> mActivePreviews =
-            Collections.newSetFromMap(new WeakHashMap<>());
+            Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     @Override
     public boolean onCreate() {
@@ -313,8 +314,15 @@ public class GridCustomizationsProvider extends ContentProvider {
             Bundle result = new Bundle();
             result.putParcelable(KEY_SURFACE_PACKAGE, renderer.getSurfacePackage());
 
-            Messenger messenger =
-                    new Messenger(new Handler(UI_HELPER_EXECUTOR.getLooper(), observer));
+            mActivePreviews.add(observer);
+            lifeCycleTracker.add(() -> mActivePreviews.remove(observer));
+
+            // Wrap the callback in a weak reference. This ensures that the callback is not kept
+            // alive due to the Messenger's IBinder
+            Messenger messenger = new Messenger(new Handler(
+                    UI_HELPER_EXECUTOR.getLooper(),
+                    new WeakCallbackWrapper(observer)));
+
             Message msg = Message.obtain();
             msg.replyTo = messenger;
             result.putParcelable(KEY_CALLBACK, msg);
@@ -390,6 +398,36 @@ public class GridCustomizationsProvider extends ContentProvider {
             return plo != null
                     && plo.renderer.getHostToken().equals(renderer.getHostToken())
                     && plo.renderer.getDisplayId() == renderer.getDisplayId();
+        }
+    }
+
+    /**
+     * A WeakReference wrapper around Handler.Callback to avoid passing hard-reference over IPC
+     * when using a Messenger
+     */
+    private static class WeakCallbackWrapper implements Handler.Callback {
+
+        private final WeakReference<Handler.Callback> mActual;
+        private final Message mCleanupMessage;
+
+        WeakCallbackWrapper(Handler.Callback actual) {
+            mActual = new WeakReference<>(actual);
+            mCleanupMessage = new Message();
+        }
+
+        @Override
+        public boolean handleMessage(Message message) {
+            Handler.Callback actual = mActual.get();
+            return actual != null && actual.handleMessage(message);
+        }
+
+        @Override
+        protected void finalize() throws Throwable {
+            super.finalize();
+            Handler.Callback actual = mActual.get();
+            if (actual != null) {
+                actual.handleMessage(mCleanupMessage);
+            }
         }
     }
 }

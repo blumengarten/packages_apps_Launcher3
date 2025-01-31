@@ -19,6 +19,7 @@ package com.android.quickstep
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.platform.test.annotations.EnableFlags
 import android.platform.test.flag.junit.SetFlagsRule
 import android.view.Display.DEFAULT_DISPLAY
@@ -75,7 +76,7 @@ class ExternalDisplaySystemShortcutTest {
     private val overlayFactory: TaskOverlayFactory = mock()
     private val factory: TaskShortcutFactory =
         ExternalDisplaySystemShortcut.createFactory(abstractFloatingViewHelper)
-    private val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
+    private val context: Context = spy(InstrumentationRegistry.getInstrumentation().targetContext)
 
     private lateinit var mockitoSession: StaticMockitoSession
 
@@ -156,6 +157,35 @@ class ExternalDisplaySystemShortcutTest {
                 /* isActivityStackTransparent */ false,
             )
         val taskContainer = createTaskContainer(Task(taskKey))
+        val shortcuts = factory.getShortcuts(launcher, taskContainer)
+        assertThat(shortcuts).isNull()
+    }
+
+    @Test
+    @EnableFlags(
+        Flags.FLAG_MOVE_TO_EXTERNAL_DISPLAY_SHORTCUT,
+        Flags.FLAG_ENABLE_DESKTOP_WINDOWING_MODALS_POLICY,
+    )
+    fun createExternalDisplayTaskShortcut_defaultHomeTask() {
+        val packageManager: PackageManager = mock()
+        val homeActivities = ComponentName("defaultHomePackage", /* class */ "")
+        whenever(context.packageManager).thenReturn(packageManager)
+        whenever(packageManager.getHomeActivities(any())).thenReturn(homeActivities)
+        val taskKey =
+            TaskKey(
+                /* id */ 1,
+                /* windowingMode */ 0,
+                Intent(),
+                homeActivities,
+                /* userId */ 0,
+                /* lastActiveTime */ 2000,
+                DEFAULT_DISPLAY,
+                homeActivities,
+                /* numActivities */ 1,
+                /* isTopActivityNoDisplay */ false,
+                /* isActivityStackTransparent */ false,
+            )
+        val taskContainer = createTaskContainer(Task(taskKey).apply { isDockable = true })
         val shortcuts = factory.getShortcuts(launcher, taskContainer)
         assertThat(shortcuts).isNull()
     }

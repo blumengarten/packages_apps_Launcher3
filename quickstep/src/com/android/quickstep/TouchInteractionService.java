@@ -301,10 +301,10 @@ public class TouchInteractionService extends Service {
 
         @BinderThread
         @Override
-        public void onDisplayReady(int displayId) {
+        public void onDisplayAddSystemDecorations(int displayId) {
             MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(
-                    tis -> executeForTaskbarManager(
-                            taskbarManager -> taskbarManager.onDisplayReady(displayId))));
+                    tis -> executeForTaskbarManager(taskbarManager ->
+                            taskbarManager.onDisplayAddSystemDecorations(displayId))));
         }
 
         @BinderThread

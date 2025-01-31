@@ -24,7 +24,7 @@ import static com.android.launcher3.Utilities.SHOULD_SHOW_FIRST_PAGE_WIDGET;
 import static com.android.launcher3.model.LoaderTask.SMARTSPACE_ON_HOME_SCREEN;
 import static com.android.launcher3.provider.LauncherDbUtils.copyTable;
 import static com.android.launcher3.provider.LauncherDbUtils.dropTable;
-import static com.android.launcher3.provider.LauncherDbUtils.shiftTableByXCells;
+import static com.android.launcher3.provider.LauncherDbUtils.shiftWorkspaceByXCells;
 
 import android.content.ComponentName;
 import android.content.ContentValues;
@@ -143,7 +143,7 @@ public class GridSizeMigrationDBController {
                 // We want to add the extra row(s) to the top of the screen, so we shift the grid
                 // down.
                 if (oneGridSpecs()) {
-                    shiftTableByXCells(
+                    shiftWorkspaceByXCells(
                             target.getWritableDatabase(),
                             (destDeviceState.getRows() - srcDeviceState.getRows()),
                             TABLE_NAME);

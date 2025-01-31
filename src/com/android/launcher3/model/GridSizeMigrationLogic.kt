@@ -35,7 +35,7 @@ import com.android.launcher3.model.GridSizeMigrationDBController.DbReader
 import com.android.launcher3.provider.LauncherDbUtils.SQLiteTransaction
 import com.android.launcher3.provider.LauncherDbUtils.copyTable
 import com.android.launcher3.provider.LauncherDbUtils.dropTable
-import com.android.launcher3.provider.LauncherDbUtils.shiftTableByXCells
+import com.android.launcher3.provider.LauncherDbUtils.shiftWorkspaceByXCells
 import com.android.launcher3.util.CellAndSpan
 import com.android.launcher3.util.GridOccupancy
 import com.android.launcher3.util.IntArray
@@ -82,7 +82,7 @@ class GridSizeMigrationLogic {
                 if (shouldMigrateToStrtictlyTallerGrid) {
                     Log.d(TAG, "Migrating to strictly taller grid")
                     if (oneGridSpecs()) {
-                        shiftTableByXCells(
+                        shiftWorkspaceByXCells(
                             target.writableDatabase,
                             (destDeviceState.rows - srcDeviceState.rows),
                             TABLE_NAME,
