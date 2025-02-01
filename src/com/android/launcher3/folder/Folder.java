@@ -1708,7 +1708,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
 
     @Override
     public boolean canInterceptEventsInSystemGestureRegion() {
-        return true;
+        return !mIsEditingName;
     }
 
     /**

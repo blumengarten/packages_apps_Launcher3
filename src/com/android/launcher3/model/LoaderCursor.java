@@ -42,6 +42,7 @@ import android.util.LongSparseArray;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherSettings.Favorites;
@@ -201,7 +202,7 @@ public class LoaderCursor extends CursorWrapper {
         info.itemType = itemType;
         info.title = getTitle();
         // the fallback icon
-        if (!loadIcon(info)) {
+        if (!loadIconFromDb(info)) {
             info.bitmap = mIconCache.getDefaultIcon(info.user);
         }
 
@@ -213,15 +214,15 @@ public class LoaderCursor extends CursorWrapper {
     /**
      * Loads the icon from the cursor and updates the {@param info} if the icon is an app resource.
      */
-    protected boolean loadIcon(WorkspaceItemInfo info) {
-        return createIconRequestInfo(info, false).loadWorkspaceIcon(mContext);
+    protected boolean loadIconFromDb(WorkspaceItemInfo info) {
+        return createIconRequestInfo(info, false).loadIconFromDbBlob(mContext);
     }
 
     public IconRequestInfo<WorkspaceItemInfo> createIconRequestInfo(
             WorkspaceItemInfo wai, boolean useLowResIcon) {
         byte[] iconBlob = itemType == Favorites.ITEM_TYPE_DEEP_SHORTCUT || restoreFlag != 0
+                || (wai.isInactiveArchive() && Flags.restoreArchivedAppIconsFromDb())
                 ? getIconBlob() : null;
-
         return new IconRequestInfo<>(wai, mActivityInfo, iconBlob, useLowResIcon);
     }
 
@@ -312,7 +313,7 @@ public class LoaderCursor extends CursorWrapper {
         info.intent = intent;
 
         // the fallback icon
-        if (!loadIcon(info)) {
+        if (!loadIconFromDb(info)) {
             mIconCache.getTitleAndIcon(info, DEFAULT_LOOKUP_FLAG);
         }
 
@@ -375,20 +376,11 @@ public class LoaderCursor extends CursorWrapper {
         info.intent = newIntent;
         UserCache userCache = UserCache.getInstance(mContext);
         UserIconInfo userIconInfo = userCache.getUserInfo(user);
-
-        if (loadIcon) {
-            mIconCache.getTitleAndIcon(info, mActivityInfo,
-                    DEFAULT_LOOKUP_FLAG.withUseLowRes(useLowResIcon));
-            if (mIconCache.isDefaultIcon(info.bitmap, user)) {
-                loadIcon(info);
-            }
-        }
-
         if (mActivityInfo != null) {
             AppInfo.updateRuntimeFlagsForActivityTarget(info, mActivityInfo, userIconInfo,
                     ApiWrapper.INSTANCE.get(mContext), mPmHelper);
         }
-
+        loadWorkspaceTitleAndIcon(useLowResIcon, loadIcon, info);
         // from the db
         if (TextUtils.isEmpty(info.title)) {
             if (loadIcon) {
@@ -405,6 +397,32 @@ public class LoaderCursor extends CursorWrapper {
 
         info.contentDescription = mIconCache.getUserBadgedLabel(info.title, info.user);
         return info;
+    }
+
+    @VisibleForTesting
+    void loadWorkspaceTitleAndIcon(
+            boolean useLowResIcon,
+            boolean loadIconFromCache,
+            WorkspaceItemInfo info
+    ) {
+        boolean isPreArchived = Flags.enableSupportForArchiving()
+                && Flags.restoreArchivedAppIconsFromDb()
+                && info.isInactiveArchive();
+        boolean preArchivedIconNotFound = isPreArchived && !loadIconFromDb(info);
+        if (preArchivedIconNotFound) {
+            Log.d(TAG, "loadIconFromDb failed for pre-archived icon, loading from cache."
+                    + " Component=" + info.getTargetComponent());
+            mIconCache.getTitleAndIcon(info, mActivityInfo,
+                    DEFAULT_LOOKUP_FLAG.withUseLowRes(useLowResIcon));
+        } else if (loadIconFromCache && !info.isInactiveArchive()) {
+            mIconCache.getTitleAndIcon(info, mActivityInfo,
+                    DEFAULT_LOOKUP_FLAG.withUseLowRes(useLowResIcon));
+            if (mIconCache.isDefaultIcon(info.bitmap, user)) {
+                Log.d(TAG, "Default Icon found in cache, trying DB instead. "
+                        + " Component=" + info.getTargetComponent());
+                loadIconFromDb(info);
+            }
+        }
     }
 
     /**

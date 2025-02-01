@@ -26,6 +26,7 @@ import static com.android.launcher3.LauncherPrefs.SHOULD_SHOW_SMARTSPACE;
 import static com.android.launcher3.LauncherSettings.Favorites.DESKTOP_ICON_FLAG;
 import static com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME;
 import static com.android.launcher3.icons.CacheableShortcutInfo.convertShortcutsToCacheableShortcuts;
+import static com.android.launcher3.icons.cache.CacheLookupFlag.DEFAULT_LOOKUP_FLAG;
 import static com.android.launcher3.model.BgDataModel.Callbacks.FLAG_HAS_SHORTCUT_PERMISSION;
 import static com.android.launcher3.model.BgDataModel.Callbacks.FLAG_PRIVATE_PROFILE_QUIET_MODE_ENABLED;
 import static com.android.launcher3.model.BgDataModel.Callbacks.FLAG_QUIET_MODE_CHANGE_PERMISSION;
@@ -106,11 +107,13 @@ import com.android.launcher3.util.TraceHelper;
 import com.android.launcher3.widget.WidgetInflater;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 
@@ -153,6 +156,8 @@ public class LoaderTask implements Runnable {
     protected final Map<ComponentKey, AppWidgetProviderInfo> mWidgetProvidersMap = new ArrayMap<>();
     private Map<ShortcutKey, ShortcutInfo> mShortcutKeyToPinnedShortcuts;
     private HashMap<PackageUserKey, SessionInfo> mInstallingPkgsCached;
+
+    private List<IconRequestInfo<WorkspaceItemInfo>> mWorkspaceIconRequestInfos = new ArrayList<>();
 
     private boolean mStopped;
 
@@ -410,7 +415,7 @@ public class LoaderTask implements Runnable {
     protected void loadWorkspace(
             List<CacheableShortcutInfo> allDeepShortcuts,
             String selection,
-            LoaderMemoryLogger memoryLogger,
+            @Nullable LoaderMemoryLogger memoryLogger,
             @Nullable LauncherRestoreEventLogger restoreEventLogger
     ) {
         Trace.beginSection("LoadWorkspace");
@@ -474,13 +479,12 @@ public class LoaderTask implements Runnable {
                 final LongSparseArray<Boolean> unlockedUsers = new LongSparseArray<>();
                 queryPinnedShortcutsForUnlockedUsers(context, unlockedUsers);
 
-                List<IconRequestInfo<WorkspaceItemInfo>> iconRequestInfos = new ArrayList<>();
-
+                mWorkspaceIconRequestInfos = new ArrayList<>();
                 WorkspaceItemProcessor itemProcessor = new WorkspaceItemProcessor(c, memoryLogger,
                         mUserCache, mUserManagerState, mLauncherApps, mPendingPackages,
                         mShortcutKeyToPinnedShortcuts, mApp, mBgDataModel,
                         mWidgetProvidersMap, installingPkgs, isSdCardReady,
-                        widgetInflater, mPmHelper, iconRequestInfos, unlockedUsers,
+                        widgetInflater, mPmHelper, mWorkspaceIconRequestInfos, unlockedUsers,
                         allDeepShortcuts);
 
                 if (mStopped) {
@@ -490,7 +494,7 @@ public class LoaderTask implements Runnable {
                         itemProcessor.processItem();
                     }
                 }
-                tryLoadWorkspaceIconsInBulk(iconRequestInfos);
+                tryLoadWorkspaceIconsInBulk(mWorkspaceIconRequestInfos);
             } finally {
                 IOUtils.closeSilently(c);
             }
@@ -621,7 +625,9 @@ public class LoaderTask implements Runnable {
             for (IconRequestInfo<WorkspaceItemInfo> iconRequestInfo : iconRequestInfos) {
                 WorkspaceItemInfo wai = iconRequestInfo.itemInfo;
                 if (mIconCache.isDefaultIcon(wai.bitmap, wai.user)) {
-                    iconRequestInfo.loadWorkspaceIcon(mApp.getContext());
+                    logASplit("tryLoadWorkspaceIconsInBulk: default icon found for "
+                            + wai.getTargetComponent() + ", will attempt to load from iconBlob");
+                    iconRequestInfo.loadIconFromDbBlob(mApp.getContext());
                 }
             }
         } finally {
@@ -702,7 +708,7 @@ public class LoaderTask implements Runnable {
         // Clear the list of apps
         mBgAllAppsList.clear();
 
-        List<IconRequestInfo<AppInfo>> iconRequestInfos = new ArrayList<>();
+        List<IconRequestInfo<AppInfo>> allAppsItemRequestInfos = new ArrayList<>();
         boolean isWorkProfileQuiet = false;
         boolean isPrivateProfileQuiet = false;
         for (UserHandle user : profiles) {
@@ -742,14 +748,13 @@ public class LoaderTask implements Runnable {
                     }
                 }
 
-                iconRequestInfos.add(new IconRequestInfo<>(
-                        appInfo, app, /* useLowResIcon= */ false));
-                mBgAllAppsList.add(
-                        appInfo, app, false);
+                IconRequestInfo<AppInfo> iconRequestInfo = getAppInfoIconRequestInfo(
+                        appInfo, app, mWorkspaceIconRequestInfos);
+                allAppsItemRequestInfos.add(iconRequestInfo);
+                mBgAllAppsList.add(appInfo, app, false);
             }
             allActivityList.addAll(apps);
         }
-
 
         if (FeatureFlags.PROMISE_APPS_IN_ALL_APPS.get()) {
             // get all active sessions and add them to the all apps list
@@ -761,7 +766,7 @@ public class LoaderTask implements Runnable {
                         false);
 
                 if (promiseAppInfo != null) {
-                    iconRequestInfos.add(new IconRequestInfo<>(
+                    allAppsItemRequestInfos.add(new IconRequestInfo<>(
                             promiseAppInfo,
                             /* launcherActivityInfo= */ null,
                             promiseAppInfo.getMatchingLookupFlag().useLowRes()));
@@ -770,9 +775,22 @@ public class LoaderTask implements Runnable {
         }
 
         Trace.beginSection("LoadAllAppsIconsInBulk");
+
         try {
-            mIconCache.getTitlesAndIconsInBulk(iconRequestInfos);
-            iconRequestInfos.forEach(iconRequestInfo ->
+            mIconCache.getTitlesAndIconsInBulk(allAppsItemRequestInfos);
+            if (Flags.restoreArchivedAppIconsFromDb()) {
+                for (IconRequestInfo<AppInfo> iconRequestInfo : allAppsItemRequestInfos) {
+                    AppInfo appInfo = iconRequestInfo.itemInfo;
+                    if (mIconCache.isDefaultIcon(appInfo.bitmap, appInfo.user)) {
+                        logASplit("LoadAllAppsIconsInBulk: default icon found for "
+                                + appInfo.getTargetComponent()
+                                + ", will attempt to load from iconBlob: "
+                                + Arrays.toString(iconRequestInfo.iconBlob));
+                        iconRequestInfo.loadIconFromDbBlob(mApp.getContext());
+                    }
+                }
+            }
+            allAppsItemRequestInfos.forEach(iconRequestInfo ->
                     mBgAllAppsList.updateSectionName(iconRequestInfo.itemInfo));
         } finally {
             Trace.endSection();
@@ -793,6 +811,51 @@ public class LoaderTask implements Runnable {
 
         mBgAllAppsList.getAndResetChangeFlag();
         return allActivityList;
+    }
+
+    @NonNull
+    @VisibleForTesting
+    IconRequestInfo<AppInfo> getAppInfoIconRequestInfo(
+            AppInfo appInfo,
+            LauncherActivityInfo activityInfo,
+            List<IconRequestInfo<WorkspaceItemInfo>> workspaceRequestInfos
+    ) {
+        if (Flags.restoreArchivedAppIconsFromDb()) {
+            Optional<IconRequestInfo<WorkspaceItemInfo>> workspaceIconRequest =
+                    workspaceRequestInfos.stream()
+                            .filter(request -> appInfo.getTargetComponent().equals(
+                                    request.itemInfo.getTargetComponent()))
+                            .findFirst();
+
+            if (workspaceIconRequest.isPresent() && activityInfo.getApplicationInfo().isArchived) {
+                logASplit("getAppInfoIconRequestInfo:"
+                            + " matching archived info found, loading icon blob into icon request."
+                            + " Component=" + appInfo.getTargetComponent());
+                IconRequestInfo<AppInfo> iconRequestInfo = new IconRequestInfo<>(
+                        appInfo,
+                        activityInfo,
+                        workspaceIconRequest.get().iconBlob,
+                        false /* useLowResIcon= */
+                );
+                if (!iconRequestInfo.loadIconFromDbBlob(mApp.getContext())) {
+                    Log.d(TAG, "AppInfo Icon failed to load from blob, using cache.");
+                    mIconCache.getTitleAndIcon(
+                            appInfo,
+                            iconRequestInfo.launcherActivityInfo,
+                            DEFAULT_LOOKUP_FLAG
+                    );
+                }
+                return iconRequestInfo;
+            } else {
+                Log.d(TAG, "App not archived or workspace info not found"
+                        + ", creating IconRequestInfo without icon blob."
+                        + " Component:" + appInfo.getTargetComponent()
+                        + ", isArchived: " + activityInfo.getApplicationInfo().isArchived);
+            }
+        }
+        logASplit("Loading IconRequestInfo without iconBlob for AppInfo: "
+                + appInfo.getTargetComponent());
+        return new IconRequestInfo<>(appInfo, activityInfo, false /* useLowResIcon= */);
     }
 
     private List<ShortcutInfo> loadDeepShortcuts() {

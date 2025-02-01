@@ -286,7 +286,7 @@ class WorkspaceItemProcessor(
                     // If the pinned deep shortcut is no longer published,
                     // use the last saved icon instead of the default.
                     val csi = CacheableShortcutInfo(pinnedShortcut, appInfoWrapper)
-                    iconCache.getShortcutIcon(info, csi, c::loadIcon)
+                    iconCache.getShortcutIcon(info, csi, c::loadIconFromDb)
                     if (appInfoWrapper.isSuspended()) {
                         info.runtimeStatusFlags =
                             info.runtimeStatusFlags or ItemInfoWithIcon.FLAG_DISABLED_SUSPENDED

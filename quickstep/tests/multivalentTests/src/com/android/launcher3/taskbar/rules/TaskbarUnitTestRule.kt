@@ -125,7 +125,8 @@ class TaskbarUnitTestRule(
                     // Needs to be set on window context instead of sandbox context, because it does
                     // does not propagate between them. However, this change will impact created
                     // TaskbarActivityContext instances, since they wrap the window context.
-                    taskbarManager.windowContext.resources.configuration.setLayoutDirection(
+                    // TODO: iterate through all window contexts and do this.
+                    taskbarManager.primaryWindowContext.resources.configuration.setLayoutDirection(
                         RTL_LOCALE
                     )
                 }

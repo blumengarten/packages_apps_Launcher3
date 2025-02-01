@@ -1,7 +1,10 @@
 package com.android.launcher3.model
 
 import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.ApplicationInfo
+import android.content.pm.LauncherActivityInfo
 import android.os.Process
 import android.os.UserHandle
 import android.platform.test.annotations.DisableFlags
@@ -28,6 +31,9 @@ import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.icons.IconCache
 import com.android.launcher3.icons.cache.CachingLogic
 import com.android.launcher3.icons.cache.IconCacheUpdateHandler
+import com.android.launcher3.model.data.AppInfo
+import com.android.launcher3.model.data.IconRequestInfo
+import com.android.launcher3.model.data.WorkspaceItemInfo
 import com.android.launcher3.pm.UserCache
 import com.android.launcher3.provider.RestoreDbTask
 import com.android.launcher3.ui.TestViewHelpers
@@ -38,8 +44,11 @@ import com.android.launcher3.util.LooperIdleLock
 import com.android.launcher3.util.TestUtil
 import com.android.launcher3.util.UserIconInfo
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import dagger.BindsInstance
 import dagger.Component
+import java.util.concurrent.CountDownLatch
+import java.util.function.Predicate
 import junit.framework.Assert.assertEquals
 import org.junit.After
 import org.junit.Before
@@ -58,12 +67,11 @@ import org.mockito.Spy
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.spy
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
-import java.util.concurrent.CountDownLatch
-import java.util.function.Predicate
 
 private const val INSERTION_STATEMENT_FILE = "databases/workspace_items.sql"
 
@@ -478,6 +486,157 @@ class LoaderTaskTest {
 
         // Then
         verify(spyContext, times(0)).sendBroadcast(any())
+    }
+
+    @Test
+    @EnableFlags(Flags.FLAG_RESTORE_ARCHIVED_APP_ICONS_FROM_DB)
+    fun `When flag on then archived AllApps icons found on Workspace loaded from db`() {
+        // Given
+        // Given
+        val activityInfo: LauncherActivityInfo = mock()
+        val applicationInfo: ApplicationInfo = mock<ApplicationInfo>().apply { isArchived = true }
+        whenever(activityInfo.applicationInfo).thenReturn(applicationInfo)
+        val expectedIconBlob = byteArrayOf(0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08)
+        val expectedComponent = ComponentName("package", "class")
+        val workspaceIconRequests =
+            listOf(
+                IconRequestInfo<WorkspaceItemInfo>(
+                    WorkspaceItemInfo().apply {
+                        intent = Intent().apply { component = expectedComponent }
+                    },
+                    activityInfo,
+                    expectedIconBlob,
+                    false, /* useLowResIcon */
+                )
+            )
+        val expectedAppInfo = AppInfo().apply { componentName = expectedComponent }
+        // When
+        val loader =
+            LoaderTask(
+                app,
+                bgAllAppsList,
+                BgDataModel(),
+                modelDelegate,
+                launcherBinder,
+                widgetsFilterDataProvider,
+            )
+        val actualIconRequest =
+            loader.getAppInfoIconRequestInfo(expectedAppInfo, activityInfo, workspaceIconRequests)
+        // Then
+        assertThat(actualIconRequest.iconBlob).isEqualTo(expectedIconBlob)
+        assertThat(actualIconRequest.itemInfo).isEqualTo(expectedAppInfo)
+    }
+
+    @Test
+    @EnableFlags(Flags.FLAG_RESTORE_ARCHIVED_APP_ICONS_FROM_DB)
+    fun `When flag on then unarchived AllApps icons not loaded from db`() {
+        // Given
+        val activityInfo: LauncherActivityInfo = mock()
+        val applicationInfo: ApplicationInfo = mock<ApplicationInfo>().apply { isArchived = false }
+        whenever(activityInfo.applicationInfo).thenReturn(applicationInfo)
+        val expectedIconBlob = byteArrayOf(0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08)
+        val expectedComponent = ComponentName("package", "class")
+        val workspaceIconRequests =
+            listOf(
+                IconRequestInfo<WorkspaceItemInfo>(
+                    WorkspaceItemInfo().apply {
+                        intent = Intent().apply { component = expectedComponent }
+                    },
+                    activityInfo,
+                    expectedIconBlob,
+                    false, /* useLowResIcon */
+                )
+            )
+        val expectedAppInfo = AppInfo().apply { componentName = expectedComponent }
+        // When
+        val loader =
+            LoaderTask(
+                app,
+                bgAllAppsList,
+                BgDataModel(),
+                modelDelegate,
+                launcherBinder,
+                widgetsFilterDataProvider,
+            )
+        val actualIconRequest =
+            loader.getAppInfoIconRequestInfo(expectedAppInfo, activityInfo, workspaceIconRequests)
+        // Then
+        assertThat(actualIconRequest.iconBlob).isNull()
+        assertThat(actualIconRequest.itemInfo).isEqualTo(expectedAppInfo)
+    }
+
+    @Test
+    @EnableFlags(Flags.FLAG_RESTORE_ARCHIVED_APP_ICONS_FROM_DB)
+    fun `When flag on then archived AllApps icon not found on Workspace not loaded from db`() {
+        // Given
+        val activityInfo: LauncherActivityInfo = mock()
+        val applicationInfo: ApplicationInfo = mock<ApplicationInfo>().apply { isArchived = true }
+        whenever(activityInfo.applicationInfo).thenReturn(applicationInfo)
+        val expectedIconBlob = byteArrayOf(0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08)
+        val expectedComponent = ComponentName("package", "class")
+        val workspaceIconRequests =
+            listOf(
+                IconRequestInfo<WorkspaceItemInfo>(
+                    WorkspaceItemInfo().apply {
+                        intent = Intent().apply { component = expectedComponent }
+                    },
+                    activityInfo,
+                    expectedIconBlob,
+                    false, /* useLowResIcon */
+                )
+            )
+        val expectedAppInfo =
+            AppInfo().apply { componentName = ComponentName("differentPkg", "differentClass") }
+        // When
+        val loader =
+            LoaderTask(
+                app,
+                bgAllAppsList,
+                BgDataModel(),
+                modelDelegate,
+                launcherBinder,
+                widgetsFilterDataProvider,
+            )
+        val actualIconRequest =
+            loader.getAppInfoIconRequestInfo(expectedAppInfo, activityInfo, workspaceIconRequests)
+        // Then
+        assertThat(actualIconRequest.iconBlob).isNull()
+        assertThat(actualIconRequest.itemInfo).isEqualTo(expectedAppInfo)
+    }
+
+    @Test
+    @DisableFlags(Flags.FLAG_RESTORE_ARCHIVED_APP_ICONS_FROM_DB)
+    fun `When flag off then archived AllApps icons not loaded from db`() {
+        // Given
+        val activityInfo: LauncherActivityInfo = mock()
+        val applicationInfo: ApplicationInfo = mock<ApplicationInfo>().apply { isArchived = true }
+        whenever(activityInfo.applicationInfo).thenReturn(applicationInfo)
+        val expectedIconBlob = byteArrayOf(0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08)
+        val workspaceIconRequests =
+            listOf(
+                IconRequestInfo<WorkspaceItemInfo>(
+                    WorkspaceItemInfo(),
+                    activityInfo,
+                    expectedIconBlob,
+                    false, /* useLowResIcon */
+                )
+            )
+        val expectedAppInfo = AppInfo()
+        // When
+        val loader =
+            LoaderTask(
+                app,
+                bgAllAppsList,
+                BgDataModel(),
+                modelDelegate,
+                launcherBinder,
+                widgetsFilterDataProvider,
+            )
+        val actualIconRequest =
+            loader.getAppInfoIconRequestInfo(expectedAppInfo, activityInfo, workspaceIconRequests)
+        // Then
+        assertThat(actualIconRequest.iconBlob).isNull()
+        assertThat(actualIconRequest.itemInfo).isEqualTo(expectedAppInfo)
     }
 
     @LauncherAppSingleton
