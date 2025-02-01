@@ -31,7 +31,7 @@ import androidx.annotation.Nullable;
 
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.statemanager.StateManager;
-import com.android.launcher3.taskbar.FallbackTaskbarUIController;
+import com.android.launcher3.taskbar.TaskbarUIController;
 import com.android.launcher3.util.DisplayController;
 import com.android.quickstep.GestureState.GestureEndTarget;
 import com.android.quickstep.fallback.RecentsState;
@@ -104,14 +104,9 @@ public final class FallbackWindowInterface extends BaseWindowInterface{
     }
 
     @Override
-    public FallbackTaskbarUIController getTaskbarController() {
+    public TaskbarUIController getTaskbarController() {
         RecentsWindowManager manager = getCreatedContainer();
-        if (manager == null) {
-            return null;
-        }
-        return null;
-        // todo b/365775636: pass a taskbar implementation
-        // return manager.getTaskbarUIController();
+        return manager == null ? null : manager.getTaskbarUIController();
     }
 
     @Override
@@ -213,16 +208,16 @@ public final class FallbackWindowInterface extends BaseWindowInterface{
     }
 
     @Override
-    public @Nullable Animator getParallelAnimationToLauncher(GestureEndTarget endTarget,
+    public @Nullable Animator getParallelAnimationToGestureEndTarget(GestureEndTarget endTarget,
             long duration, RecentsAnimationCallbacks callbacks) {
-        FallbackTaskbarUIController uiController = getTaskbarController();
-        Animator superAnimator = super.getParallelAnimationToLauncher(
+        TaskbarUIController uiController = getTaskbarController();
+        Animator superAnimator = super.getParallelAnimationToGestureEndTarget(
                 endTarget, duration, callbacks);
         if (uiController == null) {
             return superAnimator;
         }
-        RecentsState toState = stateFromGestureEndTarget(endTarget);
-        Animator taskbarAnimator = uiController.createAnimToRecentsState(toState, duration);
+        Animator taskbarAnimator = uiController.getParallelAnimationToGestureEndTarget(
+                endTarget, duration, callbacks);
         if (taskbarAnimator == null) {
             return superAnimator;
         }

@@ -21,6 +21,7 @@ import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT_PREDICTION;
 import static com.android.launcher3.taskbar.TaskbarStashController.FLAG_IN_APP;
 
+import android.animation.Animator;
 import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
 import android.view.MotionEvent;
@@ -38,6 +39,8 @@ import com.android.launcher3.model.data.ItemInfoWithIcon;
 import com.android.launcher3.popup.SystemShortcut;
 import com.android.launcher3.taskbar.bubbles.BubbleBarController;
 import com.android.launcher3.util.SplitConfigurationOptions;
+import com.android.quickstep.GestureState;
+import com.android.quickstep.RecentsAnimationCallbacks;
 import com.android.quickstep.util.SplitTask;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.TaskContainer;
@@ -454,5 +457,19 @@ public class TaskbarUIController implements BubbleBarController.BubbleBarLocatio
      * Called when we want to unstash taskbar when user performs swipes up gesture.
      */
     public void onSwipeToUnstashTaskbar() {
+    }
+
+    /**
+     * Called at the end of a gesture (see {@link GestureState.GestureEndTarget}).
+     * @param endTarget Where the gesture animation is going to.
+     * @param callbacks callbacks to track the recents animation lifecycle. The state change is
+     *                 automatically reset once the recents animation finishes
+     * @return An optional Animator to play in parallel with the default gesture end animation.
+     */
+    public @Nullable Animator getParallelAnimationToGestureEndTarget(
+            GestureState.GestureEndTarget endTarget,
+            long duration,
+            RecentsAnimationCallbacks callbacks) {
+        return null;
     }
 }

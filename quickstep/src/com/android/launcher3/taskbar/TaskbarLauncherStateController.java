@@ -33,6 +33,7 @@ import static com.android.launcher3.taskbar.bubbles.BubbleBarView.FADE_IN_ANIM_A
 import static com.android.launcher3.taskbar.bubbles.BubbleBarView.FADE_OUT_ANIM_POSITION_DURATION_MS;
 import static com.android.launcher3.util.FlagDebugUtils.appendFlag;
 import static com.android.launcher3.util.FlagDebugUtils.formatFlagChange;
+import static com.android.quickstep.fallback.RecentsStateUtilsKt.toLauncherState;
 import static com.android.quickstep.util.SystemUiFlagUtils.isTaskbarHidden;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_AWAKE;
 
@@ -63,6 +64,10 @@ import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
 import com.android.quickstep.RecentsAnimationCallbacks;
 import com.android.quickstep.RecentsAnimationController;
+import com.android.quickstep.fallback.RecentsState;
+import com.android.quickstep.fallback.window.RecentsDisplayModel;
+import com.android.quickstep.fallback.window.RecentsWindowFlags;
+import com.android.quickstep.fallback.window.RecentsWindowManager;
 import com.android.quickstep.util.ScalingWorkspaceRevealAnim;
 import com.android.quickstep.util.SystemUiFlagUtils;
 import com.android.quickstep.views.RecentsView;
@@ -74,6 +79,7 @@ import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.StringJoiner;
+import java.util.function.Consumer;
 
 /**
  * Track LauncherState, RecentsAnimation, resumed state for task bar in one place here and animate
@@ -209,7 +215,7 @@ public class TaskbarLauncherStateController {
             };
 
     private final StateManager.StateListener<LauncherState> mStateListener =
-            new StateManager.StateListener<LauncherState>() {
+            new StateManager.StateListener<>() {
 
                 @Override
                 public void onStateTransitionStart(LauncherState toState) {
@@ -240,6 +246,20 @@ public class TaskbarLauncherStateController {
                     updateStateForFlag(FLAG_LAUNCHER_IN_STATE_TRANSITION, false);
                     applyState();
                     updateOverviewDragState(finalState);
+                }
+            };
+
+    private final StateManager.StateListener<RecentsState> mRecentsStateListener =
+            new StateManager.StateListener<>() {
+
+                @Override
+                public void onStateTransitionStart(RecentsState toState) {
+                    mStateListener.onStateTransitionStart(toLauncherState(toState));
+                }
+
+                @Override
+                public void onStateTransitionComplete(RecentsState finalState) {
+                    mStateListener.onStateTransitionComplete(toLauncherState(finalState));
                 }
             };
 
@@ -278,6 +298,8 @@ public class TaskbarLauncherStateController {
 
         if (!mControllers.taskbarActivityContext.isPhoneMode()) {
             mLauncher.getStateManager().addStateListener(mStateListener);
+            runForRecentsWindowManager(recentsWindowManager ->
+                    recentsWindowManager.getStateManager().addStateListener(mRecentsStateListener));
         }
         mLauncherState = launcher.getStateManager().getState();
         updateStateForSysuiFlags(sysuiStateFlags, /*applyState*/ false);
@@ -302,6 +324,8 @@ public class TaskbarLauncherStateController {
 
         mLauncher.getHotseat().setIconsAlpha(1f, ALPHA_CHANNEL_TASKBAR_ALIGNMENT);
         mLauncher.getStateManager().removeStateListener(mStateListener);
+        runForRecentsWindowManager(recentsWindowManager ->
+                recentsWindowManager.getStateManager().removeStateListener(mRecentsStateListener));
 
         mCanSyncViews = !mControllers.taskbarActivityContext.isPhoneMode();
         mLauncher.removeOnDeviceProfileChangeListener(mOnDeviceProfileChangeListener);
@@ -340,12 +364,15 @@ public class TaskbarLauncherStateController {
         }
         mTaskBarRecentsAnimationListener = new TaskBarRecentsAnimationListener(callbacks);
         callbacks.addListener(mTaskBarRecentsAnimationListener);
-        ((RecentsView) mLauncher.getOverviewPanel()).setTaskLaunchListener(() ->
-                mTaskBarRecentsAnimationListener.endGestureStateOverride(true, false /*canceled*/));
+        RecentsView recentsView = mControllers.uiController.getRecentsView();
+        if (recentsView != null) {
+            recentsView.setTaskLaunchListener(() -> mTaskBarRecentsAnimationListener
+                    .endGestureStateOverride(true, false /*canceled*/));
+            recentsView.setTaskLaunchCancelledRunnable(() -> {
+                updateStateForUserFinishedToApp(false /* finishedToApp */);
+            });
+        }
 
-        ((RecentsView) mLauncher.getOverviewPanel()).setTaskLaunchCancelledRunnable(() -> {
-            updateStateForUserFinishedToApp(false /* finishedToApp */);
-        });
         return animatorSet;
     }
 
@@ -823,6 +850,15 @@ public class TaskbarLauncherStateController {
         return mLauncherState.isRecentsViewVisible;
     }
 
+    /**
+     * Returns the current mLauncherState. Note that this could represent RecentsState as well, as
+     * we convert those to equivalent LauncherStates even if Launcher Activity is not actually in
+     * those states (for the case where the state is represented in a separate Window instead).
+     */
+    public LauncherState getLauncherState() {
+        return mLauncherState;
+    }
+
     private void playStateTransitionAnim(AnimatorSet animatorSet, long duration,
             boolean committed) {
         boolean isInStashedState = mLauncherState.isTaskbarStashed(mLauncher);
@@ -1060,7 +1096,10 @@ public class TaskbarLauncherStateController {
                 boolean canceled) {
             mCallbacks.removeListener(this);
             mTaskBarRecentsAnimationListener = null;
-            ((RecentsView) mLauncher.getOverviewPanel()).setTaskLaunchListener(null);
+            RecentsView recentsView = mControllers.uiController.getRecentsView();
+            if (recentsView != null) {
+                recentsView.setTaskLaunchListener(null);
+            }
 
             if (mSkipNextRecentsAnimEnd && !canceled) {
                 mSkipNextRecentsAnimEnd = false;
@@ -1097,6 +1136,20 @@ public class TaskbarLauncherStateController {
         }
         controller.updateStateForFlag(FLAG_IN_APP, finishedToApp && !launcherIsVisible);
         controller.applyState();
+    }
+
+    /**
+     * Helper function to run a callback on the RecentsWindowManager (if it exists).
+     */
+    private void runForRecentsWindowManager(Consumer<RecentsWindowManager> callback) {
+        if (RecentsWindowFlags.getEnableOverviewInWindow()) {
+            final TaskbarActivityContext taskbarContext = mControllers.taskbarActivityContext;
+            RecentsWindowManager recentsWindowManager = RecentsDisplayModel.getINSTANCE()
+                    .get(taskbarContext).getRecentsWindowManager(taskbarContext.getDisplayId());
+            if (recentsWindowManager != null) {
+                callback.accept(recentsWindowManager);
+            }
+        }
     }
 
     private static String getStateString(int flags) {

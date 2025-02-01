@@ -203,16 +203,16 @@ public final class FallbackActivityInterface extends
     }
 
     @Override
-    public @Nullable Animator getParallelAnimationToLauncher(GestureEndTarget endTarget,
+    public @Nullable Animator getParallelAnimationToGestureEndTarget(GestureEndTarget endTarget,
             long duration, RecentsAnimationCallbacks callbacks) {
         FallbackTaskbarUIController uiController = getTaskbarController();
-        Animator superAnimator = super.getParallelAnimationToLauncher(
+        Animator superAnimator = super.getParallelAnimationToGestureEndTarget(
                 endTarget, duration, callbacks);
         if (uiController == null) {
             return superAnimator;
         }
-        RecentsState toState = stateFromGestureEndTarget(endTarget);
-        Animator taskbarAnimator = uiController.createAnimToRecentsState(toState, duration);
+        Animator taskbarAnimator = uiController.getParallelAnimationToGestureEndTarget(
+                endTarget, duration, callbacks);
         if (taskbarAnimator == null) {
             return superAnimator;
         }
