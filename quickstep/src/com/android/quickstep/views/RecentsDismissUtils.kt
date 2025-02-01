@@ -76,7 +76,7 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
                 }
                 .addEndListener { _, _, _, _ ->
                     if (isDismissing) {
-                        recentsView.dismissTask(
+                        recentsView.dismissTaskView(
                             draggedTaskView,
                             /* animateTaskView = */ false,
                             /* removeTask = */ true,

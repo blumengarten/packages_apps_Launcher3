@@ -16,6 +16,7 @@
 
 package com.android.quickstep.recents.ui.mapper
 
+import android.view.View.OnClickListener
 import com.android.quickstep.recents.ui.viewmodel.TaskData
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.BackgroundOnly
@@ -36,29 +37,38 @@ object TaskUiStateMapper {
      * @param taskData The [TaskData] to convert. Can be null or a specific subclass.
      * @param isLiveTile A flag indicating whether the task data represents live tile.
      * @param hasHeader A flag indicating whether the UI should display a header.
+     * @param clickCloseListener A callback when the close button in the UI is clicked.
      * @return A [TaskThumbnailUiState] representing the UI state for the given task data.
      */
     fun toTaskThumbnailUiState(
         taskData: TaskData?,
         isLiveTile: Boolean,
         hasHeader: Boolean,
+        clickCloseListener: OnClickListener?,
     ): TaskThumbnailUiState =
         when {
             taskData !is TaskData.Data -> Uninitialized
-            isLiveTile -> createLiveTileState(taskData, hasHeader)
+            isLiveTile -> createLiveTileState(taskData, hasHeader, clickCloseListener)
             isBackgroundOnly(taskData) -> BackgroundOnly(taskData.backgroundColor)
             isSnapshotSplash(taskData) ->
-                SnapshotSplash(createSnapshotState(taskData, hasHeader), taskData.icon)
+                SnapshotSplash(
+                    createSnapshotState(taskData, hasHeader, clickCloseListener),
+                    taskData.icon,
+                )
             else -> Uninitialized
         }
 
-    private fun createSnapshotState(taskData: TaskData.Data, hasHeader: Boolean): Snapshot =
-        if (canHeaderBeCreated(taskData, hasHeader)) {
+    private fun createSnapshotState(
+        taskData: TaskData.Data,
+        hasHeader: Boolean,
+        clickCloseListener: OnClickListener?,
+    ): Snapshot =
+        if (canHeaderBeCreated(taskData, hasHeader, clickCloseListener)) {
             Snapshot.WithHeader(
                 taskData.thumbnailData?.thumbnail!!,
                 taskData.thumbnailData.rotation,
                 taskData.backgroundColor,
-                ThumbnailHeader(taskData.icon!!, taskData.titleDescription!!),
+                ThumbnailHeader(taskData.icon!!, taskData.titleDescription!!, clickCloseListener!!),
             )
         } else {
             Snapshot.WithoutHeader(
@@ -74,13 +84,26 @@ object TaskUiStateMapper {
     private fun isSnapshotSplash(taskData: TaskData.Data) =
         taskData.thumbnailData?.thumbnail != null && !taskData.isLocked
 
-    private fun canHeaderBeCreated(taskData: TaskData.Data, hasHeader: Boolean) =
-        hasHeader && taskData.icon != null && taskData.titleDescription != null
+    private fun canHeaderBeCreated(
+        taskData: TaskData.Data,
+        hasHeader: Boolean,
+        clickCloseListener: OnClickListener?,
+    ) =
+        hasHeader &&
+            taskData.icon != null &&
+            taskData.titleDescription != null &&
+            clickCloseListener != null
 
-    private fun createLiveTileState(taskData: TaskData.Data, hasHeader: Boolean) =
-        if (canHeaderBeCreated(taskData, hasHeader)) {
+    private fun createLiveTileState(
+        taskData: TaskData.Data,
+        hasHeader: Boolean,
+        clickCloseListener: OnClickListener?,
+    ) =
+        if (canHeaderBeCreated(taskData, hasHeader, clickCloseListener)) {
             // TODO(http://b/353965691): figure out what to do when `icon` or `titleDescription` is
             //  null.
-            LiveTile.WithHeader(ThumbnailHeader(taskData.icon!!, taskData.titleDescription!!))
+            LiveTile.WithHeader(
+                ThumbnailHeader(taskData.icon!!, taskData.titleDescription!!, clickCloseListener!!)
+            )
         } else LiveTile.WithoutHeader
 }
