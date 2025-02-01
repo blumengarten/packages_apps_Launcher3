@@ -30,7 +30,7 @@ class ActiveTrackpadList(ctx: Context, private val updateCallback: Runnable) :
 
     init {
         inputManager.registerInputDeviceListener(this, Executors.UI_HELPER_EXECUTOR.handler)
-        inputManager.inputDeviceIds.forEach { deviceId -> onInputDeviceAdded(deviceId) }
+        inputManager.inputDeviceIds.filter(this::isTrackpadDevice).forEach(this::add)
     }
 
     override fun onInputDeviceAdded(deviceId: Int) {

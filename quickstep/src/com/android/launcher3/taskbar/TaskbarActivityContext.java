@@ -156,6 +156,8 @@ import com.android.quickstep.RecentsModel;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.util.DesktopTask;
 import com.android.quickstep.util.GroupTask;
+import com.android.quickstep.util.SingleTask;
+import com.android.quickstep.util.SplitTask;
 import com.android.quickstep.views.DesktopTaskView;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.TaskView;
@@ -1294,11 +1296,13 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
 
         mControllers.keyboardQuickSwitchController.closeQuickSwitchView(false);
 
-        if (tag instanceof GroupTask groupTask) {
+        // TODO: b/316004172, b/343289567: Handle `DesktopTask` and `SplitTask`.
+        if (tag instanceof SingleTask singleTask) {
             RemoteTransition remoteTransition =
-                    (areDesktopTasksVisible() && canUnminimizeDesktopTask(groupTask.task1.key.id))
+                    (areDesktopTasksVisible() && canUnminimizeDesktopTask(
+                            singleTask.getTask().key.id))
                             ? createDesktopAppLaunchRemoteTransition(AppLaunchType.UNMINIMIZE,
-                                    Cuj.CUJ_DESKTOP_MODE_APP_LAUNCH_FROM_ICON)
+                            Cuj.CUJ_DESKTOP_MODE_APP_LAUNCH_FROM_ICON)
                             : null;
             if (areDesktopTasksVisible() && mControllers.uiController.isInOverviewUi()) {
                 RunnableList runnableList = recents.launchRunningDesktopTaskView();
@@ -1306,12 +1310,12 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                 // launch.
                 if (runnableList != null) {
                     runnableList.add(() -> UI_HELPER_EXECUTOR.execute(
-                            () -> handleGroupTaskLaunch(groupTask, remoteTransition,
+                            () -> handleGroupTaskLaunch(singleTask, remoteTransition,
                                     areDesktopTasksVisible(),
                                     DesktopTaskToFrontReason.TASKBAR_TAP)));
                 }
             } else {
-                handleGroupTaskLaunch(groupTask, remoteTransition, areDesktopTasksVisible(),
+                handleGroupTaskLaunch(singleTask, remoteTransition, areDesktopTasksVisible(),
                         DesktopTaskToFrontReason.TASKBAR_TAP);
             }
             mControllers.taskbarStashController.updateAndAnimateTransientTaskbar(true);
@@ -1481,13 +1485,13 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                             remoteTransition));
             return;
         }
-        if (onDesktop) {
-            boolean useRemoteTransition = canUnminimizeDesktopTask(task.task1.key.id);
+        if (onDesktop && task instanceof SingleTask singleTask) {
+            boolean useRemoteTransition = canUnminimizeDesktopTask(singleTask.getTask().key.id);
             UI_HELPER_EXECUTOR.execute(() -> {
                 if (onStartCallback != null) {
                     onStartCallback.run();
                 }
-                SystemUiProxy.INSTANCE.get(this).showDesktopApp(task.task1.key.id,
+                SystemUiProxy.INSTANCE.get(this).showDesktopApp(singleTask.getTask().key.id,
                         useRemoteTransition ? remoteTransition : null, toFrontReason);
                 if (onFinishCallback != null) {
                     onFinishCallback.run();
@@ -1495,18 +1499,19 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
             });
             return;
         }
-        if (task.task2 == null) {
+        if (task instanceof SingleTask singleTask) {
             UI_HELPER_EXECUTOR.execute(() -> {
                 ActivityOptions activityOptions =
                         makeDefaultActivityOptions(SPLASH_SCREEN_STYLE_UNDEFINED).options;
                 activityOptions.setRemoteTransition(remoteTransition);
 
                 ActivityManagerWrapper.getInstance().startActivityFromRecents(
-                        task.task1.key, activityOptions);
+                        singleTask.getTask().key, activityOptions);
             });
             return;
         }
-        mControllers.uiController.launchSplitTasks(task, remoteTransition);
+        assert task instanceof SplitTask;
+        mControllers.uiController.launchSplitTasks((SplitTask) task, remoteTransition);
     }
 
     /** Returns whether the given task is minimized and can be unminimized. */

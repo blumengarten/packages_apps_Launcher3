@@ -29,6 +29,7 @@ import static com.android.launcher3.icons.BitmapInfo.FLAG_THEMED;
 import static com.android.launcher3.icons.GraphicsUtils.setColorAlphaBound;
 import static com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_INCREMENTAL_DOWNLOAD_ACTIVE;
 import static com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_INSTALL_SESSION_ACTIVE;
+import static com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_SHOW_DOWNLOAD_PROGRESS_MASK;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -63,6 +64,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.TextView;
 
 import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.annotation.VisibleForTesting;
@@ -366,11 +368,6 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         mDotScaleAnim.start();
     }
 
-    @UiThread
-    public void applyFromWorkspaceItem(WorkspaceItemInfo info) {
-        applyFromWorkspaceItem(info, null);
-    }
-
     @Override
     public void setAccessibilityDelegate(AccessibilityDelegate delegate) {
         if (delegate instanceof BaseAccessibilityDelegate) {
@@ -384,10 +381,10 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     }
 
     @UiThread
-    public void applyFromWorkspaceItem(WorkspaceItemInfo info, PreloadIconDrawable icon) {
+    public void applyFromWorkspaceItem(WorkspaceItemInfo info) {
         applyIconAndLabel(info);
         setItemInfo(info);
-        applyLoadingState(icon);
+
         applyDotState(info, false /* animate */);
         setDownloadStateContentDescription(info, info.getProgressLevel());
     }
@@ -395,17 +392,11 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     @UiThread
     public void applyFromApplicationInfo(AppInfo info) {
         applyIconAndLabel(info);
-
-        // We don't need to check the info since it's not a WorkspaceItemInfo
         setItemInfo(info);
-
 
         // Verify high res immediately
         verifyHighRes();
 
-        if ((info.runtimeStatusFlags & ItemInfoWithIcon.FLAG_SHOW_DOWNLOAD_PROGRESS_MASK) != 0) {
-            applyProgressLevel();
-        }
         applyDotState(info, false /* animate */);
         setDownloadStateContentDescription(info, info.getProgressLevel());
     }
@@ -449,6 +440,50 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     @VisibleForTesting
     @UiThread
     public void applyIconAndLabel(ItemInfoWithIcon info) {
+        FastBitmapDrawable oldIcon = mIcon;
+        if (!canReuseIcon(info)) {
+            setNonPendingIcon(info);
+        }
+        applyLabel(info);
+        maybeApplyProgressLevel(info, oldIcon);
+    }
+
+    /**
+     * Check if we can reuse icon so that any animation is preserved
+     */
+    private boolean canReuseIcon(ItemInfoWithIcon info) {
+        return mIcon instanceof PreloadIconDrawable p
+                && p.hasNotCompleted() && p.isSameInfo(info.bitmap);
+    }
+
+    /**
+     * Apply progress level to the icon if necessary
+     */
+    private void maybeApplyProgressLevel(ItemInfoWithIcon info, FastBitmapDrawable oldIcon) {
+        if (!shouldApplyProgressLevel(info, oldIcon)) {
+            return;
+        }
+        PreloadIconDrawable pendingIcon = applyProgressLevel(info);
+        boolean isNoLongerPending = info instanceof WorkspaceItemInfo wii
+                ? !wii.hasPromiseIconUi() : !info.isArchived();
+        if (isNoLongerPending && info.getProgressLevel() == 100 && pendingIcon != null) {
+            pendingIcon.maybePerformFinishedAnimation(
+                    (oldIcon instanceof PreloadIconDrawable p) ? p : pendingIcon,
+                    () -> setNonPendingIcon(
+                            (getTag() instanceof ItemInfoWithIcon iiwi) ? iiwi : info));
+        }
+    }
+
+    /**
+     * Check if progress level should be applied to the icon
+     */
+    private boolean shouldApplyProgressLevel(ItemInfoWithIcon info, FastBitmapDrawable oldIcon) {
+        return (info.runtimeStatusFlags & FLAG_SHOW_DOWNLOAD_PROGRESS_MASK) != 0
+                || (info instanceof WorkspaceItemInfo wii && wii.hasPromiseIconUi())
+                || (oldIcon instanceof PreloadIconDrawable p && p.hasNotCompleted());
+    }
+
+    private void setNonPendingIcon(ItemInfoWithIcon info) {
         ThemeManager themeManager = ThemeManager.INSTANCE.get(getContext());
         int flags = (shouldUseTheme()
                 && themeManager.isMonoThemeEnabled()) ? FLAG_THEMED : 0;
@@ -463,7 +498,6 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         mDotParams.appColor = iconDrawable.getIconColor();
         mDotParams.dotColor = Themes.getAttrColor(getContext(), R.attr.notificationDotColor);
         setIcon(iconDrawable);
-        applyLabel(info);
     }
 
     protected boolean shouldUseTheme() {
@@ -1070,38 +1104,10 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         mLongPressHelper.cancelLongPress();
     }
 
-    /**
-     * Applies the loading progress value to the progress bar.
-     *
-     * If this app is installing, the progress bar will be updated with the installation progress.
-     * If this app is installed and downloading incrementally, the progress bar will be updated
-     * with the total download progress.
-     */
-    public void applyLoadingState(PreloadIconDrawable icon) {
-        if (getTag() instanceof ItemInfoWithIcon) {
-            WorkspaceItemInfo info = (WorkspaceItemInfo) getTag();
-            if ((info.runtimeStatusFlags & FLAG_INCREMENTAL_DOWNLOAD_ACTIVE) != 0
-                    || info.hasPromiseIconUi()
-                    || (info.runtimeStatusFlags & FLAG_INSTALL_SESSION_ACTIVE) != 0
-                    || (icon != null)) {
-                updateProgressBarUi(info.getProgressLevel() == 100 ? icon : null);
-            }
-        }
-    }
-
-    private void updateProgressBarUi(PreloadIconDrawable oldIcon) {
-        FastBitmapDrawable originalIcon = mIcon;
-        PreloadIconDrawable preloadDrawable = applyProgressLevel();
-        if (preloadDrawable != null && oldIcon != null) {
-            preloadDrawable.maybePerformFinishedAnimation(oldIcon, () -> setIcon(originalIcon));
-        }
-    }
-
     /** Applies the given progress level to the this icon's progress bar. */
     @Nullable
-    public PreloadIconDrawable applyProgressLevel() {
-        if (!(getTag() instanceof ItemInfoWithIcon info)
-                || ((ItemInfoWithIcon) getTag()).isInactiveArchive()) {
+    private PreloadIconDrawable applyProgressLevel(ItemInfoWithIcon info) {
+        if (info.isInactiveArchive()) {
             return null;
         }
 
@@ -1115,23 +1121,16 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
             setContentDescription(getContext()
                     .getString(R.string.app_waiting_download_title, info.title));
         }
-        if (mIcon != null) {
-            PreloadIconDrawable preloadIconDrawable;
-            if (mIcon instanceof PreloadIconDrawable) {
-                preloadIconDrawable = (PreloadIconDrawable) mIcon;
-                preloadIconDrawable.setLevel(progressLevel);
-                preloadIconDrawable.setIsDisabled(isIconDisabled(info));
-            } else {
-                preloadIconDrawable = makePreloadIcon();
-                setIcon(preloadIconDrawable);
-                if (info.isArchived() && Flags.useNewIconForArchivedApps()) {
-                    // reapply text without cloud icon as soon as unarchiving is triggered
-                    applyLabel(info);
-                }
-            }
-            return preloadIconDrawable;
+        PreloadIconDrawable pid;
+        if (mIcon instanceof PreloadIconDrawable p) {
+            pid = p;
+            pid.setLevel(progressLevel);
+            pid.setIsDisabled(isIconDisabled(info));
+        } else {
+            pid = makePreloadIcon(info);
+            setIcon(pid);
         }
-        return null;
+        return pid;
     }
 
     /**
@@ -1140,11 +1139,11 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
      */
     @Nullable
     public PreloadIconDrawable makePreloadIcon() {
-        if (!(getTag() instanceof ItemInfoWithIcon)) {
-            return null;
-        }
+        return getTag() instanceof ItemInfoWithIcon info ? makePreloadIcon(info) : null;
+    }
 
-        ItemInfoWithIcon info = (ItemInfoWithIcon) getTag();
+    @NonNull
+    private PreloadIconDrawable makePreloadIcon(ItemInfoWithIcon info) {
         int progressLevel = info.getProgressLevel();
         final PreloadIconDrawable preloadDrawable = newPendingIcon(getContext(), info);
 
@@ -1163,7 +1162,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
 
     public void applyDotState(ItemInfo itemInfo, boolean animate) {
-        if (mIcon instanceof FastBitmapDrawable) {
+        if (mIcon != null) {
             boolean wasDotted = mDotInfo != null;
             mDotInfo = mActivity.getDotInfoForItem(itemInfo);
             boolean isDotted = mDotInfo != null;
@@ -1212,7 +1211,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
                 setContentDescription(getContext().getString(
                         R.string.app_archived_title, info.title));
             }
-        } else if ((info.runtimeStatusFlags & ItemInfoWithIcon.FLAG_SHOW_DOWNLOAD_PROGRESS_MASK)
+        } else if ((info.runtimeStatusFlags & FLAG_SHOW_DOWNLOAD_PROGRESS_MASK)
                 != 0) {
             String percentageString = NumberFormat.getPercentInstance()
                     .format(progressLevel * 0.01);

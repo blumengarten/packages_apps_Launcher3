@@ -214,8 +214,7 @@ public class PackageUpdatedTask implements ModelUpdateTask {
 
         // Update shortcut infos
         if (mOp == OP_ADD || flagOp != FlagOp.NO_OP) {
-            final ArrayList<WorkspaceItemInfo> updatedWorkspaceItems = new ArrayList<>();
-            final ArrayList<LauncherAppWidgetInfo> widgets = new ArrayList<>();
+            final ArrayList<ItemInfo> updatedWorkspaceItems = new ArrayList<>();
 
             // For system apps, package manager send OP_UPDATE when an app is enabled.
             final boolean isNewApkAvailable = mOp == OP_ADD || mOp == OP_UPDATE;
@@ -364,8 +363,8 @@ public class PackageUpdatedTask implements ModelUpdateTask {
                             // if the widget has a config activity. In case there is no config
                             // activity, it will be marked as 'restored' during bind.
                             widgetInfo.restoreStatus |= LauncherAppWidgetInfo.FLAG_UI_NOT_READY;
-
-                            widgets.add(widgetInfo);
+                            widgetInfo.installProgress = 100;
+                            updatedWorkspaceItems.add(widgetInfo);
                             taskController.getModelWriter().updateItemInDatabase(widgetInfo);
                         });
             }
@@ -376,10 +375,6 @@ public class PackageUpdatedTask implements ModelUpdateTask {
                         ItemInfoMatcher.ofItemIds(removedShortcuts),
                         "removing shortcuts with invalid target components."
                                 + " ids=" + removedShortcuts);
-            }
-
-            if (!widgets.isEmpty()) {
-                taskController.scheduleCallbackTask(c -> c.bindWidgetsRestored(widgets));
             }
         }
 

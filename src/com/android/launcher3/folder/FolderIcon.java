@@ -17,7 +17,6 @@
 package com.android.launcher3.folder;
 
 import static com.android.launcher3.Flags.enableCursorHoverStates;
-import static com.android.launcher3.folder.ClippedFolderIconLayoutRule.ICON_OVERLAP_FACTOR;
 import static com.android.launcher3.folder.ClippedFolderIconLayoutRule.MAX_NUM_ITEMS_IN_PREVIEW;
 import static com.android.launcher3.folder.FolderGridOrganizer.createFolderGridOrganizer;
 import static com.android.launcher3.folder.PreviewItemManager.INITIAL_ITEM_ANIMATION_DURATION;
@@ -248,7 +247,8 @@ public class FolderIcon extends FrameLayout implements FolderListener, FloatingI
         mPreviewItemManager.recomputePreviewDrawingParams();
         mBackground.getBounds(outBounds);
         // The preview items go outside of the bounds of the background.
-        Utilities.scaleRectAboutCenter(outBounds, ICON_OVERLAP_FACTOR);
+        Utilities.scaleRectAboutCenter(outBounds,
+                ClippedFolderIconLayoutRule.getIconOverlapFactor());
     }
 
     public float getBackgroundStrokeWidth() {

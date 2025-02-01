@@ -65,7 +65,6 @@ import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 import static com.android.quickstep.util.AnimUtils.completeRunnableListCallback;
 import static com.android.quickstep.util.SplitAnimationTimings.TABLET_HOME_TO_SPLIT;
 import static com.android.systemui.shared.system.ActivityManagerWrapper.CLOSE_SYSTEM_WINDOWS_REASON_HOME_KEY;
-import static com.android.wm.shell.shared.split.SplitScreenConstants.SNAP_TO_2_50_50;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -178,10 +177,10 @@ import com.android.quickstep.TaskUtils;
 import com.android.quickstep.TouchInteractionService.TISBinder;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.quickstep.util.AsyncClockEventDelegate;
-import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.LauncherUnfoldAnimationController;
 import com.android.quickstep.util.QuickstepOnboardingPrefs;
 import com.android.quickstep.util.SplitSelectStateController;
+import com.android.quickstep.util.SplitTask;
 import com.android.quickstep.util.SplitToWorkspaceController;
 import com.android.quickstep.util.SplitWithKeyboardShortcutController;
 import com.android.quickstep.util.TISBindHelper;
@@ -1386,31 +1385,18 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     }
 
     /**
-     * Launches the given {@link GroupTask} in splitscreen.
+     * Launches the given {@link SplitTask} in splitscreen.
      */
     public void launchSplitTasks(
-            @NonNull GroupTask groupTask, @Nullable RemoteTransition remoteTransition) {
-        // SplitBounds can be null if coming from Taskbar launch.
-        final boolean firstTaskIsLeftTopTask = isFirstTaskLeftTopTask(groupTask);
-        // task2 should never be null when calling this method. Allow a crash to catch invalid calls
-        Task task1 = firstTaskIsLeftTopTask ? groupTask.task1 : groupTask.task2;
-        Task task2 = firstTaskIsLeftTopTask ? groupTask.task2 : groupTask.task1;
-        mSplitSelectStateController.launchExistingSplitPair(
-                null /* launchingTaskView */,
-                task1.key.id,
-                task2.key.id,
+            @NonNull SplitTask splitTask, @Nullable RemoteTransition remoteTransition) {
+        mSplitSelectStateController.launchExistingSplitPair(null /* launchingTaskView */,
+                splitTask.getTopLeftTask().key.id,
+                splitTask.getBottomRightTask().key.id,
                 SplitConfigurationOptions.STAGE_POSITION_TOP_OR_LEFT,
                 /* callback= */ success -> mSplitSelectStateController.resetState(),
                 /* freezeTaskList= */ false,
-                groupTask.mSplitBounds == null
-                        ? SNAP_TO_2_50_50
-                        : groupTask.mSplitBounds.snapPosition,
+                splitTask.getSplitBounds().snapPosition,
                 remoteTransition);
-    }
-
-    private static boolean isFirstTaskLeftTopTask(@NonNull GroupTask groupTask) {
-        return groupTask.mSplitBounds == null
-                || groupTask.mSplitBounds.leftTopTaskId == groupTask.task1.key.id;
     }
 
     /**

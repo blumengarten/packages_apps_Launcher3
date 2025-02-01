@@ -21,7 +21,6 @@ import android.graphics.Point
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.android.launcher3.Flags
-import com.android.launcher3.Flags.oneGridSpecs
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherPrefs.Companion.get
 import com.android.launcher3.LauncherPrefs.Companion.getPrefs
@@ -81,7 +80,7 @@ class GridSizeMigrationLogic {
                 // down.
                 if (shouldMigrateToStrtictlyTallerGrid) {
                     Log.d(TAG, "Migrating to strictly taller grid")
-                    if (oneGridSpecs()) {
+                    if (Flags.oneGridSpecs()) {
                         shiftWorkspaceByXCells(
                             target.writableDatabase,
                             (destDeviceState.rows - srcDeviceState.rows),
@@ -374,7 +373,7 @@ class GridSizeMigrationLogic {
         srcDeviceState: DeviceGridState,
         destDeviceState: DeviceGridState,
     ): Boolean {
-        return isDestNewDb &&
+        return (Flags.oneGridSpecs() || isDestNewDb) &&
             srcDeviceState.columns == destDeviceState.columns &&
             srcDeviceState.rows < destDeviceState.rows
     }

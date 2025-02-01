@@ -47,7 +47,7 @@ import com.android.launcher3.LauncherModel;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.model.BgDataModel;
 import com.android.launcher3.shapes.IconShapeModel;
-import com.android.launcher3.shapes.IconShapesProvider;
+import com.android.launcher3.shapes.ShapesProvider;
 import com.android.launcher3.util.Executors;
 import com.android.launcher3.util.Preconditions;
 import com.android.launcher3.util.RunnableList;
@@ -86,10 +86,13 @@ public class GridCustomizationsProvider extends ContentProvider {
 
     private static final String TAG = "GridCustomizationsProvider";
 
+    // KEY_NAME is the name of the grid used internally while the KEY_GRID_TITLE is the translated
+    // string title of the grid.
     private static final String KEY_NAME = "name";
     private static final String KEY_GRID_TITLE = "grid_title";
     private static final String KEY_ROWS = "rows";
     private static final String KEY_COLS = "cols";
+    private static final String KEY_GRID_ICON_ID = "grid_icon_id";
     private static final String KEY_PREVIEW_COUNT = "preview_count";
     // is_default means if a certain option is currently set to the system
     private static final String KEY_IS_DEFAULT = "is_default";
@@ -145,7 +148,7 @@ public class GridCustomizationsProvider extends ContentProvider {
                             KEY_SHAPE_KEY, KEY_SHAPE_TITLE, KEY_PATH, KEY_IS_DEFAULT});
                     String currentShapePath =
                             ThemeManager.INSTANCE.get(context).getIconState().getIconMask();
-                    for (IconShapeModel shape : IconShapesProvider.INSTANCE.getShapes().values()) {
+                    for (IconShapeModel shape : ShapesProvider.INSTANCE.getIconShapes().values()) {
                         cursor.newRow()
                                 .add(KEY_SHAPE_KEY, shape.getKey())
                                 .add(KEY_SHAPE_TITLE, shape.getTitle())
@@ -161,17 +164,18 @@ public class GridCustomizationsProvider extends ContentProvider {
             case KEY_LIST_OPTIONS: {
                 MatrixCursor cursor = new MatrixCursor(new String[]{
                         KEY_NAME, KEY_GRID_TITLE, KEY_ROWS, KEY_COLS, KEY_PREVIEW_COUNT,
-                        KEY_IS_DEFAULT});
+                        KEY_IS_DEFAULT, KEY_GRID_ICON_ID});
                 InvariantDeviceProfile idp = InvariantDeviceProfile.INSTANCE.get(getContext());
                 for (GridOption gridOption : idp.parseAllGridOptions(getContext())) {
                     cursor.newRow()
                             .add(KEY_NAME, gridOption.name)
-                            .add(KEY_GRID_TITLE, gridOption.title)
+                            .add(KEY_GRID_TITLE, gridOption.gridTitle)
                             .add(KEY_ROWS, gridOption.numRows)
                             .add(KEY_COLS, gridOption.numColumns)
                             .add(KEY_PREVIEW_COUNT, 1)
                             .add(KEY_IS_DEFAULT, idp.numColumns == gridOption.numColumns
-                                    && idp.numRows == gridOption.numRows);
+                                    && idp.numRows == gridOption.numRows)
+                            .add(KEY_GRID_ICON_ID, gridOption.gridIconId);
                 }
                 return cursor;
             }

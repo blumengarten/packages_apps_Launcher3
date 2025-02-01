@@ -25,7 +25,6 @@ import com.android.launcher3.model.BgDataModel;
 import com.android.launcher3.model.BgDataModel.FixedContainerItems;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.model.data.ItemInfo;
-import com.android.launcher3.model.data.WorkspaceItemInfo;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.IntArray;
 import com.android.launcher3.util.IntSet;
@@ -39,9 +38,9 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -114,15 +113,9 @@ public class TaskbarModelCallbacks implements
         return modified;
     }
 
-
     @Override
-    public void bindWorkspaceItemsChanged(List<WorkspaceItemInfo> updated) {
-        updateWorkspaceItems(updated, mContext);
-    }
-
-    @Override
-    public void bindRestoreItemsChange(HashSet<ItemInfo> updates) {
-        updateRestoreItems(updates, mContext);
+    public void bindItemsUpdated(Set<ItemInfo> updates) {
+        updateContainerItems(updates, mContext);
     }
 
     @Override

@@ -120,6 +120,7 @@ import com.android.launcher3.compat.AccessibilityManagerCompat;
 import com.android.launcher3.dragndrop.DragView;
 import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.logging.StatsLogManager.StatsLogger;
+import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.statemanager.BaseState;
 import com.android.launcher3.statemanager.StatefulContainer;
 import com.android.launcher3.taskbar.TaskbarThresholdUtils;
@@ -1527,8 +1528,9 @@ public abstract class AbsSwipeUpHandler<
                 .withInputType(mGestureState.isTrackpadGesture()
                         ? SysUiStatsLog.LAUNCHER_UICHANGED__INPUT_TYPE__TRACKPAD
                         : SysUiStatsLog.LAUNCHER_UICHANGED__INPUT_TYPE__TOUCH);
-        if (targetTask != null) {
-            logger.withItemInfo(targetTask.getFirstItemInfo());
+        ItemInfo itemInfo;
+        if (targetTask != null && (itemInfo = targetTask.getFirstItemInfo()) != null) {
+            logger.withItemInfo(itemInfo);
         }
 
         int pageIndex = endTarget == LAST_TASK || mRecentsView == null
@@ -2369,9 +2371,6 @@ public abstract class AbsSwipeUpHandler<
                 ActiveGestureLog.CompoundString nextTaskLog =
                         ActiveGestureLog.CompoundString.newEmptyString();
                 for (TaskContainer container : nextTask.getTaskContainers()) {
-                    if (container == null) {
-                        continue;
-                    }
                     nextTaskLog.append("[id: %d, pkg: %s] | ",
                             container.getTask().key.id,
                             container.getTask().key.getPackageName());

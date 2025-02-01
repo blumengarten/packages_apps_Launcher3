@@ -123,8 +123,9 @@ public final class TaskViewUtils {
             int userId = itemInfo.user.getIdentifier();
             if (componentName != null) {
                 for (TaskView taskView : recentsView.getTaskViews()) {
-                    if (recentsView.isTaskViewVisible(taskView)) {
-                        Task.TaskKey key = taskView.getFirstTask().key;
+                    Task firstTask = taskView.getFirstTask();
+                    if (firstTask != null && recentsView.isTaskViewVisible(taskView)) {
+                        Task.TaskKey key = firstTask.key;
                         if (componentName.equals(key.getComponent()) && userId == key.userId) {
                             return taskView;
                         }

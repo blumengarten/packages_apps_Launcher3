@@ -28,6 +28,7 @@ import static com.android.launcher3.Flags.FLAG_ENABLE_SUPPORT_FOR_ARCHIVING;
 import static com.android.launcher3.Flags.FLAG_USE_NEW_ICON_FOR_ARCHIVED_APPS;
 import static com.android.launcher3.LauncherPrefs.ENABLE_TWOLINE_ALLAPPS_TOGGLE;
 import static com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_ARCHIVED;
+import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -39,6 +40,8 @@ import static org.mockito.Mockito.verify;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.UserHandle;
@@ -57,13 +60,17 @@ import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.Flags;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.Utilities;
+import com.android.launcher3.graphics.PreloadIconDrawable;
+import com.android.launcher3.icons.BitmapInfo;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
+import com.android.launcher3.pm.PackageInstallInfo;
 import com.android.launcher3.search.StringMatcherUtility;
 import com.android.launcher3.util.ActivityContextWrapper;
 import com.android.launcher3.util.FlagOp;
 import com.android.launcher3.util.IntArray;
 import com.android.launcher3.util.LauncherModelHelper.SandboxModelContext;
+import com.android.launcher3.util.TestUtil;
 import com.android.launcher3.views.BaseDragLayer;
 
 import org.junit.After;
@@ -485,4 +492,38 @@ public class BubbleTextViewTest {
 
         assertThat(mBubbleTextView.getIcon().hasBadge()).isEqualTo(true);
     }
+
+    @Test
+    public void applyingPendingIcon_preserves_last_icon() throws Exception {
+        mItemInfoWithIcon.bitmap =
+                BitmapInfo.fromBitmap(Bitmap.createBitmap(100, 100, Config.ARGB_8888));
+        mItemInfoWithIcon.setProgressLevel(30, PackageInstallInfo.STATUS_INSTALLING);
+
+        TestUtil.runOnExecutorSync(MAIN_EXECUTOR,
+                () -> mBubbleTextView.applyIconAndLabel(mItemInfoWithIcon));
+        assertThat(mBubbleTextView.getIcon()).isInstanceOf(PreloadIconDrawable.class);
+        assertThat(mBubbleTextView.getIcon().getLevel()).isEqualTo(30);
+        PreloadIconDrawable oldIcon = (PreloadIconDrawable) mBubbleTextView.getIcon();
+
+        // Same icon is used when progress changes
+        mItemInfoWithIcon.setProgressLevel(50, PackageInstallInfo.STATUS_INSTALLING);
+        TestUtil.runOnExecutorSync(MAIN_EXECUTOR,
+                () -> mBubbleTextView.applyIconAndLabel(mItemInfoWithIcon));
+        assertThat(mBubbleTextView.getIcon()).isSameInstanceAs(oldIcon);
+        assertThat(mBubbleTextView.getIcon().getLevel()).isEqualTo(50);
+
+        // Icon is replaced with a non pending icon when download finishes
+        mItemInfoWithIcon.setProgressLevel(100, PackageInstallInfo.STATUS_INSTALLED);
+
+        TestUtil.runOnExecutorSync(MAIN_EXECUTOR, () -> {
+            mBubbleTextView.applyIconAndLabel(mItemInfoWithIcon);
+            assertThat(mBubbleTextView.getIcon()).isSameInstanceAs(oldIcon);
+            assertThat(oldIcon.getActiveAnimation()).isNotNull();
+            oldIcon.getActiveAnimation().end();
+        });
+
+        // Assert that the icon is replaced with a non-pending icon
+        assertThat(mBubbleTextView.getIcon()).isNotInstanceOf(PreloadIconDrawable.class);
+    }
+
 }

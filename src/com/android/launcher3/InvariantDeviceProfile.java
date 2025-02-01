@@ -993,7 +993,8 @@ public class InvariantDeviceProfile implements SafeCloseable {
         private static final int DONT_INLINE_QSB = 0;
 
         public final String name;
-        public final String title;
+        public final String gridTitle;
+        public final int gridIconId;
         public final int numRows;
         public final int numColumns;
         public final int numSearchContainerColumns;
@@ -1042,7 +1043,9 @@ public class InvariantDeviceProfile implements SafeCloseable {
             TypedArray a = context.obtainStyledAttributes(
                     attrs, R.styleable.GridDisplayOption);
             name = a.getString(R.styleable.GridDisplayOption_name);
-            title = a.getString(R.styleable.GridDisplayOption_title);
+            gridTitle = a.getString(R.styleable.GridDisplayOption_gridTitle);
+            gridIconId = a.getResourceId(
+                    R.styleable.GridDisplayOption_gridIconId, INVALID_RESOURCE_HANDLE);
             deviceCategory = a.getInt(R.styleable.GridDisplayOption_deviceCategory,
                     DEVICE_CATEGORY_ALL);
             mGridSizeSpecsId = a.getResourceId(

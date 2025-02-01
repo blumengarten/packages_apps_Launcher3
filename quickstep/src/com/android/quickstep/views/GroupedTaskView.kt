@@ -55,6 +55,12 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     private val MINIMUM_RATIO_TO_SHOW_ICON = 0.2f
 
+    val leftTopTaskContainer: TaskContainer
+        get() = taskContainers[0]
+
+    val rightBottomTaskContainer: TaskContainer
+        get() = taskContainers[1]
+
     // TODO(b/336612373): Support new TTV for GroupedTaskView
     var splitBoundsConfig: SplitConfigurationOptions.SplitBounds? = null
         private set
@@ -72,8 +78,8 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         val splitBoundsConfig = splitBoundsConfig ?: return
         val inSplitSelection = getThisTaskCurrentlyInSplitSelection() != INVALID_TASK_ID
         pagedOrientationHandler.measureGroupedTaskViewThumbnailBounds(
-            taskContainers[0].snapshotView,
-            taskContainers[1].snapshotView,
+            leftTopTaskContainer.snapshotView,
+            rightBottomTaskContainer.snapshotView,
             widthSize,
             heightSize,
             splitBoundsConfig,
@@ -165,10 +171,10 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
                 val iconMargins = (iconViewMarginStart + iconViewBackgroundMarginStart) * 2
                 // setMaxWidth() needs to be called before mIconView.setIconOrientation which is
                 // called in the super below.
-                (taskContainers[0].iconView as IconAppChipView).setMaxWidth(
+                (leftTopTaskContainer.iconView as IconAppChipView).setMaxWidth(
                     groupedTaskViewSizes.first.x - iconMargins
                 )
-                (taskContainers[1].iconView as IconAppChipView).setMaxWidth(
+                (rightBottomTaskContainer.iconView as IconAppChipView).setMaxWidth(
                     groupedTaskViewSizes.second.x - iconMargins
                 )
             }
@@ -189,16 +195,12 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
                 if (deviceProfile.isLeftRightSplit) splitBoundsConfig.leftTaskPercent
                 else splitBoundsConfig.topTaskPercent
             val bottomRightTaskPercent = 1 - topLeftTaskPercent
-            taskContainers[0]
-                .iconView
-                .setFlexSplitAlpha(
-                    if (topLeftTaskPercent < MINIMUM_RATIO_TO_SHOW_ICON) 0f else 1f
-                )
-            taskContainers[1]
-                .iconView
-                .setFlexSplitAlpha(
-                    if (bottomRightTaskPercent < MINIMUM_RATIO_TO_SHOW_ICON) 0f else 1f
-                )
+            leftTopTaskContainer.iconView.setFlexSplitAlpha(
+                if (topLeftTaskPercent < MINIMUM_RATIO_TO_SHOW_ICON) 0f else 1f
+            )
+            rightBottomTaskContainer.iconView.setFlexSplitAlpha(
+                if (bottomRightTaskPercent < MINIMUM_RATIO_TO_SHOW_ICON) 0f else 1f
+            )
         }
 
         if (enableOverviewIconMenu()) {
@@ -210,8 +212,8 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
                     layoutParams.height,
                 )
             pagedOrientationHandler.setSplitIconParams(
-                taskContainers[0].iconView.asView(),
-                taskContainers[1].iconView.asView(),
+                leftTopTaskContainer.iconView.asView(),
+                rightBottomTaskContainer.iconView.asView(),
                 taskIconHeight,
                 groupedTaskViewSizes.first.x,
                 groupedTaskViewSizes.first.y,
@@ -224,11 +226,11 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
             )
         } else {
             pagedOrientationHandler.setSplitIconParams(
-                taskContainers[0].iconView.asView(),
-                taskContainers[1].iconView.asView(),
+                leftTopTaskContainer.iconView.asView(),
+                rightBottomTaskContainer.iconView.asView(),
                 taskIconHeight,
-                taskContainers[0].snapshotView.measuredWidth,
-                taskContainers[0].snapshotView.measuredHeight,
+                leftTopTaskContainer.snapshotView.measuredWidth,
+                leftTopTaskContainer.snapshotView.measuredHeight,
                 measuredHeight,
                 measuredWidth,
                 isRtl,
@@ -288,8 +290,8 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         recentsView?.let {
             it.splitSelectController.launchExistingSplitPair(
                 if (launchingExistingTaskView) this else null,
-                taskContainers[0].task.key.id,
-                taskContainers[1].task.key.id,
+                leftTopTaskContainer.task.key.id,
+                rightBottomTaskContainer.task.key.id,
                 STAGE_POSITION_TOP_OR_LEFT,
                 callback,
                 isQuickSwitch,
@@ -319,14 +321,14 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
             // checks below aren't reliable since both of those views may be gone/transformed
             val initSplitTaskId = getThisTaskCurrentlyInSplitSelection()
             if (initSplitTaskId != INVALID_TASK_ID) {
-                return if (initSplitTaskId == taskContainers[0].task.key.id) 1 else 0
+                return if (initSplitTaskId == leftTopTaskContainer.task.key.id) 1 else 0
             }
         }
 
         // Check which of the two apps was selected
         if (
-            taskContainers[1].iconView.asView().containsPoint(lastTouchDownPosition) ||
-                taskContainers[1].snapshotView.containsPoint(lastTouchDownPosition)
+            rightBottomTaskContainer.iconView.asView().containsPoint(lastTouchDownPosition) ||
+                rightBottomTaskContainer.snapshotView.containsPoint(lastTouchDownPosition)
         ) {
             return 1
         }

@@ -277,11 +277,11 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -2598,25 +2598,12 @@ public class Launcher extends StatefulActivity<LauncherState>
         mModelCallbacks.bindIncrementalDownloadProgressUpdated(app);
     }
 
-    @Override
-    public void bindWidgetsRestored(ArrayList<LauncherAppWidgetInfo> widgets) {
-        mModelCallbacks.bindWidgetsRestored(widgets);
-    }
-
     /**
      * See {@code LauncherBindingDelegate}
      */
     @Override
-    public void bindWorkspaceItemsChanged(List<WorkspaceItemInfo> updated) {
-        mModelCallbacks.bindWorkspaceItemsChanged(updated);
-    }
-
-    /**
-     * See {@code LauncherBindingDelegate}
-     */
-    @Override
-    public void bindRestoreItemsChange(HashSet<ItemInfo> updates) {
-        mModelCallbacks.bindRestoreItemsChange(updates);
+    public void bindItemsUpdated(Set<ItemInfo> updates) {
+        mModelCallbacks.bindItemsUpdated(updates);
     }
 
     /**

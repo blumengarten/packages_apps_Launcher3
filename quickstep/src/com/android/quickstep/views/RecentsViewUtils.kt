@@ -224,6 +224,9 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
     /** Returns true if there are at least one TaskView has been added to the RecentsView. */
     fun hasTaskViews() = taskViews.any()
 
+    fun getTaskContainerById(taskId: Int) =
+        taskViews.firstNotNullOfOrNull { it.getTaskContainerById(taskId) }
+
     private fun getRowRect(firstView: View?, lastView: View?, outRowRect: Rect) {
         outRowRect.setEmpty()
         firstView?.let {

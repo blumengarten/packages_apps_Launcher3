@@ -28,6 +28,7 @@ import android.content.pm.LauncherActivityInfo;
 import android.content.pm.ShortcutInfo;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.Process;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.util.ArrayMap;
@@ -120,6 +121,21 @@ public class ApiWrapper {
      * Activity).
      */
     public Intent getAppMarketActivityIntent(String packageName, UserHandle user) {
+        return createMarketIntent(packageName);
+    }
+
+    /**
+     * Returns an intent which can be used to start a search for a package on app market
+     */
+    public Intent getMarketSearchIntent(String packageName, UserHandle user) {
+        // If we are search for the current user, just launch the market directly as the
+        // system won't have the installer details either
+        return  (Process.myUserHandle().equals(user))
+                ? createMarketIntent(packageName)
+                : getAppMarketActivityIntent(packageName, user);
+    }
+
+    private static Intent createMarketIntent(String packageName) {
         return new Intent(Intent.ACTION_VIEW)
                 .setData(new Uri.Builder()
                         .scheme("market")

@@ -214,7 +214,7 @@ public class PredictedAppIcon extends DoubleShadowBubbleTextView {
         boolean animate = shouldAnimateIconChange(info);
         Drawable oldIcon = getIcon();
         int oldPlateColor = mPlateColor.currentColor;
-        applyFromWorkspaceItem(info, null);
+        applyFromWorkspaceItem(info);
 
         setContentDescription(
                 mIsPinned ? info.contentDescription :

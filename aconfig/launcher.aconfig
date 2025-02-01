@@ -65,13 +65,6 @@ flag {
 }
 
 flag {
-    name: "enable_taskbar_connected_displays"
-    namespace: "launcher"
-    description: "Enables connected displays in taskbar."
-    bug: "362720616"
-}
-
-flag {
     name: "enable_taskbar_customization"
     namespace: "launcher"
     description: "Enables taskbar customization framework."

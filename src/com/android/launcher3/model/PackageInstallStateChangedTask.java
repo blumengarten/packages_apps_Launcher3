@@ -99,8 +99,7 @@ public class PackageInstallStateChangedTask implements ModelUpdateTask {
                     });
 
             if (!updates.isEmpty()) {
-                taskController.scheduleCallbackTask(
-                        callbacks -> callbacks.bindRestoreItemsChange(updates));
+                taskController.bindUpdatedWorkspaceItems(updates);
             }
         }
     }

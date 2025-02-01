@@ -39,7 +39,7 @@ import com.android.launcher3.popup.SystemShortcut;
 import com.android.launcher3.taskbar.bubbles.BubbleBarController;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.SplitConfigurationOptions;
-import com.android.quickstep.util.GroupTask;
+import com.android.quickstep.util.SplitTask;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.TaskContainer;
 import com.android.quickstep.views.TaskView;
@@ -332,7 +332,7 @@ public class TaskbarUIController implements BubbleBarController.BubbleBarLocatio
      * Launches the given task in split-screen.
      */
     public void launchSplitTasks(
-            @NonNull GroupTask groupTask, @Nullable RemoteTransition remoteTransition) { }
+            @NonNull SplitTask splitTask, @Nullable RemoteTransition remoteTransition) { }
 
     /**
      * Returns the matching view (if any) in the taskbar.

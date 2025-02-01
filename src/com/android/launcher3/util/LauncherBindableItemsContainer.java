@@ -15,24 +15,20 @@
  */
 package com.android.launcher3.util;
 
-import android.graphics.drawable.Drawable;
 import android.view.View;
 
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.apppairs.AppPairIcon;
 import com.android.launcher3.folder.Folder;
 import com.android.launcher3.folder.FolderIcon;
-import com.android.launcher3.graphics.PreloadIconDrawable;
 import com.android.launcher3.model.data.AppPairInfo;
 import com.android.launcher3.model.data.FolderInfo;
 import com.android.launcher3.model.data.ItemInfo;
-import com.android.launcher3.model.data.LauncherAppWidgetInfo;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
 import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.widget.PendingAppWidgetHostView;
 
-import java.util.HashSet;
-import java.util.List;
+import java.util.Set;
 
 /**
  * Interface representing a container which can bind Launcher items with some utility methods
@@ -41,27 +37,22 @@ public interface LauncherBindableItemsContainer {
 
     /**
      * Called to update workspace items as a result of
-     * {@link com.android.launcher3.model.BgDataModel.Callbacks#bindWorkspaceItemsChanged(List)}
+     * {@link com.android.launcher3.model.BgDataModel.Callbacks#bindItemsUpdated(Set)}
      */
-    default void updateWorkspaceItems(List<WorkspaceItemInfo> shortcuts, ActivityContext context) {
-        final HashSet<WorkspaceItemInfo> updates = new HashSet<>(shortcuts);
+    default void updateContainerItems(Set<ItemInfo> updates, ActivityContext context) {
         ItemOperator op = (info, v) -> {
-            if (v instanceof BubbleTextView && updates.contains(info)) {
-                WorkspaceItemInfo si = (WorkspaceItemInfo) info;
-                BubbleTextView shortcut = (BubbleTextView) v;
-                Drawable oldIcon = shortcut.getIcon();
-                boolean oldPromiseState = (oldIcon instanceof PreloadIconDrawable)
-                        && ((PreloadIconDrawable) oldIcon).hasNotCompleted();
-                shortcut.applyFromWorkspaceItem(
-                        si,
-                        si.isPromise() != oldPromiseState
-                                && oldIcon instanceof PreloadIconDrawable
-                                ? (PreloadIconDrawable) oldIcon
-                                : null);
-            } else if (info instanceof FolderInfo && v instanceof FolderIcon) {
-                ((FolderIcon) v).updatePreviewItems(updates::contains);
+            if (v instanceof BubbleTextView shortcut
+                    && info instanceof WorkspaceItemInfo wii
+                    && updates.contains(info)) {
+                shortcut.applyFromWorkspaceItem(wii);
+            } else if (info instanceof FolderInfo && v instanceof FolderIcon folderIcon) {
+                folderIcon.updatePreviewItems(updates::contains);
             } else if (info instanceof AppPairInfo && v instanceof AppPairIcon appPairIcon) {
                 appPairIcon.maybeRedrawForWorkspaceUpdate(updates::contains);
+            } else if (v instanceof PendingAppWidgetHostView pendingView
+                    && updates.contains(info)) {
+                pendingView.applyState();
+                pendingView.postProviderAvailabilityCheck();
             }
 
             // Iterate all items
@@ -72,35 +63,6 @@ public interface LauncherBindableItemsContainer {
         Folder openFolder = Folder.getOpen(context);
         if (openFolder != null) {
             openFolder.iterateOverItems(op);
-        }
-    }
-
-    /**
-     * Called to update restored items as a result of
-     * {@link com.android.launcher3.model.BgDataModel.Callbacks#bindRestoreItemsChange(HashSet)}}
-     */
-    default void updateRestoreItems(final HashSet<ItemInfo> updates, ActivityContext context) {
-        ItemOperator op = (info, v) -> {
-            if (info instanceof WorkspaceItemInfo && v instanceof BubbleTextView
-                    && updates.contains(info)) {
-                ((BubbleTextView) v).applyLoadingState(null);
-            } else if (v instanceof PendingAppWidgetHostView
-                    && info instanceof LauncherAppWidgetInfo
-                    && updates.contains(info)) {
-                ((PendingAppWidgetHostView) v).applyState();
-            } else if (v instanceof FolderIcon && info instanceof FolderInfo) {
-                ((FolderIcon) v).updatePreviewItems(updates::contains);
-            } else if (info instanceof AppPairInfo && v instanceof AppPairIcon appPairIcon) {
-                appPairIcon.maybeRedrawForWorkspaceUpdate(updates::contains);
-            }
-            // process all the shortcuts
-            return false;
-        };
-
-        mapOverItems(op);
-        Folder folder = Folder.getOpen(context);
-        if (folder != null) {
-            folder.iterateOverItems(op);
         }
     }
 

@@ -233,7 +233,8 @@ public final class KeyboardQuickSwitchController implements
     }
 
     private boolean shouldExcludeTask(GroupTask task, Set<Integer> taskIdsToExclude) {
-        return Flags.taskbarOverflow() && taskIdsToExclude.contains(task.task1.key.id);
+        return Flags.taskbarOverflow() && task.getTasks().stream().anyMatch(
+                t -> taskIdsToExclude.contains(t.key.id));
     }
 
     private void processLoadedTasks(List<GroupTask> tasks, Set<Integer> taskIdsToExclude) {

@@ -92,6 +92,7 @@ import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
 import com.android.launcher3.util.MultiTranslateDelegate;
 import com.android.launcher3.util.MultiValueAlpha;
 import com.android.quickstep.util.GroupTask;
+import com.android.quickstep.util.SingleTask;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
 
@@ -739,9 +740,9 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
             return mControllers.taskbarRecentAppsController.getRunningAppState(
                     itemInfo.getTaskId());
         }
-        if (tag instanceof GroupTask groupTask && !groupTask.hasMultipleTasks()) {
+        if (tag instanceof SingleTask singleTask) {
             return mControllers.taskbarRecentAppsController.getRunningAppState(
-                    groupTask.task1.key.id);
+                    singleTask.getTask().key.id);
         }
         return BubbleTextView.RunningAppState.NOT_RUNNING;
     }

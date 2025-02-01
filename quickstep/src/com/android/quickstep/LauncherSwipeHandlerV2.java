@@ -56,6 +56,7 @@ import com.android.quickstep.views.FloatingWidgetView;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.TaskView;
 import com.android.systemui.animation.TransitionAnimator;
+import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.system.InputConsumerController;
 
 import java.util.Collections;
@@ -300,7 +301,9 @@ public class LauncherSwipeHandlerV2 extends AbsSwipeUpHandler<
             // Disable if swiping to PIP
             return null;
         }
-        if (sourceTaskView == null || sourceTaskView.getFirstTask().key.getComponent() == null) {
+        Task firstTask;
+        if (sourceTaskView == null || ((firstTask = sourceTaskView.getFirstTask()) == null)
+                || firstTask.key.getComponent() == null) {
             // Disable if it's an invalid task
             return null;
         }

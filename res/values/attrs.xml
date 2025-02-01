@@ -174,7 +174,8 @@
 
     <declare-styleable name="GridDisplayOption">
         <attr name="name" format="string" />
-        <attr name="title" />
+        <attr name="gridTitle" format="string" />
+        <attr name="gridIconId" format="reference"/>
 
         <attr name="numRows" format="integer" />
         <attr name="numColumns" format="integer" />

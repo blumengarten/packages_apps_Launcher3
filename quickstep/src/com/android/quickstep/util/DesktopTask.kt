@@ -20,16 +20,9 @@ import com.android.systemui.shared.recents.model.Task
 
 /**
  * A [Task] container that can contain N number of tasks that are part of the desktop in recent
- * tasks list.
+ * tasks list. Note that desktops can be empty with no tasks in them.
  */
-class DesktopTask(override val tasks: List<Task>) :
-    GroupTask(tasks[0], null, null, TaskViewType.DESKTOP) {
-
-    override fun containsTask(taskId: Int) = tasks.any { it.key.id == taskId }
-
-    override fun hasMultipleTasks() = tasks.size > 1
-
-    override fun supportsMultipleTasks() = true
+class DesktopTask(tasks: List<Task>) : GroupTask(tasks, TaskViewType.DESKTOP) {
 
     override fun copy() = DesktopTask(tasks)
 

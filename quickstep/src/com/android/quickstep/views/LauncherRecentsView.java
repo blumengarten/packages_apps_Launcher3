@@ -36,7 +36,6 @@ import androidx.annotation.Nullable;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherState;
-import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.desktop.DesktopRecentsTransitionController;
 import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.statehandlers.DepthController;
@@ -127,9 +126,11 @@ public class LauncherRecentsView extends RecentsView<QuickstepLauncher, Launcher
         // If Launcher needs to return to split select state, do it now, after the icon has updated.
         if (mContainer.hasPendingSplitSelectInfo()) {
             PendingSplitSelectInfo recoveryData = mContainer.getPendingSplitSelectInfo();
-            if (recoveryData.getStagedTaskId() == taskId) {
+            TaskContainer taskContainer;
+            if (recoveryData != null && recoveryData.getStagedTaskId() == taskId && (taskContainer =
+                    mUtils.getTaskContainerById(taskId)) != null) {
                 initiateSplitSelect(
-                        getTaskViewByTaskId(recoveryData.getStagedTaskId()),
+                        taskContainer,
                         recoveryData.getStagePosition(), recoveryData.getSource()
                 );
                 mContainer.finishSplitSelectRecovery();
@@ -240,10 +241,10 @@ public class LauncherRecentsView extends RecentsView<QuickstepLauncher, Launcher
     }
 
     @Override
-    public void initiateSplitSelect(TaskView taskView,
+    public void initiateSplitSelect(TaskContainer taskContainer,
             @SplitConfigurationOptions.StagePosition int stagePosition,
             StatsLogManager.EventEnum splitEvent) {
-        super.initiateSplitSelect(taskView, stagePosition, splitEvent);
+        super.initiateSplitSelect(taskContainer, stagePosition, splitEvent);
         getStateManager().goToState(LauncherState.OVERVIEW_SPLIT_SELECT);
     }
 

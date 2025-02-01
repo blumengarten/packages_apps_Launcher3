@@ -26,8 +26,6 @@ import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_FOLDER;
 import static com.android.launcher3.config.FeatureFlags.enableTaskbarPinning;
 import static com.android.launcher3.icons.IconNormalizer.ICON_VISIBLE_AREA_FACTOR;
 
-import static java.util.function.Predicate.not;
-
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
@@ -68,6 +66,7 @@ import com.android.launcher3.util.LauncherBindableItemsContainer;
 import com.android.launcher3.util.Themes;
 import com.android.launcher3.views.ActivityContext;
 import com.android.quickstep.util.GroupTask;
+import com.android.quickstep.util.SingleTask;
 import com.android.quickstep.views.TaskViewType;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
@@ -398,7 +397,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
                 .filter(Objects::nonNull)
                 .toArray(ItemInfo[]::new);
         // TODO(b/343289567 and b/316004172): support app pairs and desktop mode.
-        recentTasks = recentTasks.stream().filter(not(GroupTask::supportsMultipleTasks)).toList();
+        recentTasks = recentTasks.stream().filter(it -> it instanceof SingleTask).toList();
 
         if (taskbarRecentsLayoutTransition()) {
             updateItemsWithLayoutTransition(hotseatItemInfos, recentTasks);
@@ -636,9 +635,10 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         final Set<GroupTask> recentTasksSet = new ArraySet<>(recentTasks);
         for (GroupTask task : recentTasks) {
             if (mTaskbarOverflowView != null && overflownTasks != null
-                    && overflownTasks.size() < itemsToAddToOverflow) {
+                    && overflownTasks.size() < itemsToAddToOverflow
+                    && task instanceof SingleTask singleTask) {
                 // TODO(b/343289567 and b/316004172): support app pairs and desktop mode.
-                overflownTasks.add(task.task1);
+                overflownTasks.add(singleTask.getTask());
                 if (overflownTasks.size() == itemsToAddToOverflow) {
                     mTaskbarOverflowView.setItems(overflownTasks);
                 }
@@ -648,7 +648,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
             // Replace any Recent views with the appropriate type if it's not already that type.
             final int expectedLayoutResId;
             boolean isCollection = false;
-            if (task.supportsMultipleTasks()) {
+            if (!(task instanceof SingleTask)) {
                 if (task.taskViewType == TaskViewType.DESKTOP) {
                     // TODO(b/316004172): use Desktop tile layout.
                     expectedLayoutResId = -1;
@@ -712,18 +712,22 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
                 && tagClass.isInstance(getChildAt(mNextViewIndex).getTag());
     }
 
-    /** Binds the GroupTask to the BubbleTextView to be ready to present to the user. */
+    /** Binds the SingleTask to the BubbleTextView to be ready to present to the user. */
     public void applyGroupTaskToBubbleTextView(BubbleTextView btv, GroupTask groupTask) {
-        // TODO(b/343289567): support app pairs.
-        Task task1 = groupTask.task1;
+        if (!(groupTask instanceof SingleTask singleTask)) {
+            // TODO(b/343289567 and b/316004172): support app pairs and desktop mode.
+            return;
+        }
+
+        Task task = singleTask.getTask();
         // TODO(b/344038728): use FastBitmapDrawable instead of Drawable, to get disabled state
         //  while dragging.
-        Drawable taskIcon = groupTask.task1.icon;
+        Drawable taskIcon = task.icon;
         if (taskIcon != null) {
             taskIcon = taskIcon.getConstantState().newDrawable().mutate();
         }
-        btv.applyIconAndLabel(taskIcon, task1.titleDescription);
-        btv.setTag(groupTask);
+        btv.applyIconAndLabel(taskIcon, task.titleDescription);
+        btv.setTag(singleTask);
     }
 
     /**

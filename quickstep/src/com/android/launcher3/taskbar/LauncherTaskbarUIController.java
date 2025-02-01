@@ -49,7 +49,7 @@ import com.android.launcher3.util.OnboardingPrefs;
 import com.android.quickstep.HomeVisibilityState;
 import com.android.quickstep.RecentsAnimationCallbacks;
 import com.android.quickstep.SystemUiProxy;
-import com.android.quickstep.util.GroupTask;
+import com.android.quickstep.util.SplitTask;
 import com.android.quickstep.views.RecentsView;
 import com.android.systemui.shared.system.QuickStepContract.SystemUiStateFlags;
 import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
@@ -480,8 +480,8 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
 
     @Override
     public void launchSplitTasks(
-            @NonNull GroupTask groupTask, @Nullable RemoteTransition remoteTransition) {
-        mLauncher.launchSplitTasks(groupTask, remoteTransition);
+            @NonNull SplitTask splitTask, @Nullable RemoteTransition remoteTransition) {
+        mLauncher.launchSplitTasks(splitTask, remoteTransition);
     }
 
     @Override

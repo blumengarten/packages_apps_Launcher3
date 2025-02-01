@@ -30,14 +30,14 @@ import org.junit.runner.RunWith
 
 @SmallTest
 @RunWith(AndroidJUnit4::class)
-class IconShapesProviderTest {
+class ShapesProviderTest {
 
     @get:Rule val setFlagsRule: SetFlagsRule = SetFlagsRule()
 
     @Test
     @EnableFlags(FLAG_ENABLE_LAUNCHER_ICON_SHAPES, FLAG_NEW_CUSTOMIZATION_PICKER_UI)
     fun `verify valid path arch`() {
-        IconShapesProvider.shapes["arch"]?.apply {
+        ShapesProvider.iconShapes["arch"]?.apply {
             GenericPathShape(pathString)
             PathParser.createPathFromPathData(pathString)
         }
@@ -46,7 +46,7 @@ class IconShapesProviderTest {
     @Test
     @EnableFlags(FLAG_ENABLE_LAUNCHER_ICON_SHAPES, FLAG_NEW_CUSTOMIZATION_PICKER_UI)
     fun `verify valid path 4_sided_cookie`() {
-        IconShapesProvider.shapes["4_sided_cookie"]?.apply {
+        ShapesProvider.iconShapes["4_sided_cookie"]?.apply {
             GenericPathShape(pathString)
             PathParser.createPathFromPathData(pathString)
         }
@@ -55,7 +55,7 @@ class IconShapesProviderTest {
     @Test
     @EnableFlags(FLAG_ENABLE_LAUNCHER_ICON_SHAPES, FLAG_NEW_CUSTOMIZATION_PICKER_UI)
     fun `verify valid path seven_sided_cookie`() {
-        IconShapesProvider.shapes["seven_sided_cookie"]?.apply {
+        ShapesProvider.iconShapes["seven_sided_cookie"]?.apply {
             GenericPathShape(pathString)
             PathParser.createPathFromPathData(pathString)
         }
@@ -64,7 +64,7 @@ class IconShapesProviderTest {
     @Test
     @EnableFlags(FLAG_ENABLE_LAUNCHER_ICON_SHAPES, FLAG_NEW_CUSTOMIZATION_PICKER_UI)
     fun `verify valid path sunny`() {
-        IconShapesProvider.shapes["sunny"]?.apply {
+        ShapesProvider.iconShapes["sunny"]?.apply {
             GenericPathShape(pathString)
             PathParser.createPathFromPathData(pathString)
         }
@@ -73,7 +73,7 @@ class IconShapesProviderTest {
     @Test
     @EnableFlags(FLAG_ENABLE_LAUNCHER_ICON_SHAPES, FLAG_NEW_CUSTOMIZATION_PICKER_UI)
     fun `verify valid path circle`() {
-        IconShapesProvider.shapes["circle"]?.apply {
+        ShapesProvider.iconShapes["circle"]?.apply {
             GenericPathShape(pathString)
             PathParser.createPathFromPathData(pathString)
         }
@@ -82,7 +82,43 @@ class IconShapesProviderTest {
     @Test
     @EnableFlags(FLAG_ENABLE_LAUNCHER_ICON_SHAPES, FLAG_NEW_CUSTOMIZATION_PICKER_UI)
     fun `verify valid path square`() {
-        IconShapesProvider.shapes["square"]?.apply {
+        ShapesProvider.iconShapes["square"]?.apply {
+            GenericPathShape(pathString)
+            PathParser.createPathFromPathData(pathString)
+        }
+    }
+
+    @Test
+    @EnableFlags(FLAG_ENABLE_LAUNCHER_ICON_SHAPES, FLAG_NEW_CUSTOMIZATION_PICKER_UI)
+    fun `verify valid folder path clover`() {
+        ShapesProvider.folderShapes["clover"]?.let { pathString ->
+            GenericPathShape(pathString)
+            PathParser.createPathFromPathData(pathString)
+        }
+    }
+
+    @Test
+    @EnableFlags(FLAG_ENABLE_LAUNCHER_ICON_SHAPES, FLAG_NEW_CUSTOMIZATION_PICKER_UI)
+    fun `verify valid folder path complexClover`() {
+        ShapesProvider.folderShapes["complexClover"]?.let { pathString ->
+            GenericPathShape(pathString)
+            PathParser.createPathFromPathData(pathString)
+        }
+    }
+
+    @Test
+    @EnableFlags(FLAG_ENABLE_LAUNCHER_ICON_SHAPES, FLAG_NEW_CUSTOMIZATION_PICKER_UI)
+    fun `verify valid folder path arch`() {
+        ShapesProvider.folderShapes["arch"]?.let { pathString ->
+            GenericPathShape(pathString)
+            PathParser.createPathFromPathData(pathString)
+        }
+    }
+
+    @Test
+    @EnableFlags(FLAG_ENABLE_LAUNCHER_ICON_SHAPES, FLAG_NEW_CUSTOMIZATION_PICKER_UI)
+    fun `verify valid folder path square`() {
+        ShapesProvider.folderShapes["square"]?.let { pathString ->
             GenericPathShape(pathString)
             PathParser.createPathFromPathData(pathString)
         }

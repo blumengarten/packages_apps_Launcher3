@@ -80,9 +80,9 @@ import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.IntSet;
 import com.android.launcher3.util.ItemInfoMatcher;
 import com.android.launcher3.views.BubbleTextHolder;
-import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.LogUtils;
 import com.android.quickstep.util.MultiValueUpdateListener;
+import com.android.quickstep.util.SingleTask;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.wm.shell.shared.draganddrop.DragAndDropConstants;
 
@@ -433,8 +433,8 @@ public class TaskbarDragController extends DragController<BaseTaskbarContext> im
                                 null, item.user));
             }
             intent.putExtra(Intent.EXTRA_USER, item.user);
-        } else if (tag instanceof GroupTask groupTask && !groupTask.hasMultipleTasks()) {
-            Task task = groupTask.task1;
+        } else if (tag instanceof SingleTask singleTask) {
+            Task task = singleTask.getTask();
             clipDescription = new ClipDescription(task.titleDescription,
                     new String[] {
                             ClipDescription.MIMETYPE_APPLICATION_TASK

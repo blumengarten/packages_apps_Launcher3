@@ -27,7 +27,7 @@ import com.android.launcher3.dagger.LauncherAppComponent
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.icons.IconThemeController
 import com.android.launcher3.icons.mono.MonoIconThemeController
-import com.android.launcher3.shapes.IconShapesProvider
+import com.android.launcher3.shapes.ShapesProvider
 import com.android.launcher3.util.DaggerSingletonObject
 import com.android.launcher3.util.DaggerSingletonTracker
 import com.android.launcher3.util.Executors.MAIN_EXECUTOR
@@ -94,7 +94,7 @@ constructor(
     private fun parseIconState(): IconState {
         val shapeModel =
             prefs.get(PREF_ICON_SHAPE).let { shapeOverride ->
-                IconShapesProvider.shapes.values.firstOrNull { it.key == shapeOverride }
+                ShapesProvider.iconShapes.values.firstOrNull { it.key == shapeOverride }
             }
         val iconMask =
             when {

@@ -17,7 +17,6 @@ package com.android.launcher3.allapps;
 
 import static com.android.launcher3.model.data.AppInfo.COMPONENT_KEY_COMPARATOR;
 import static com.android.launcher3.model.data.AppInfo.EMPTY_ARRAY;
-import static com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_SHOW_DOWNLOAD_PROGRESS_MASK;
 
 import android.content.Context;
 import android.os.UserHandle;
@@ -229,11 +228,7 @@ public class AllAppsStore<T extends Context & ActivityContext> {
     public void updateProgressBar(AppInfo app) {
         updateAllIcons((child) -> {
             if (child.getTag() == app) {
-                if ((app.runtimeStatusFlags & FLAG_SHOW_DOWNLOAD_PROGRESS_MASK) == 0) {
-                    child.applyFromApplicationInfo(app);
-                } else {
-                    child.applyProgressLevel();
-                }
+                child.applyFromApplicationInfo(app);
             }
         });
     }

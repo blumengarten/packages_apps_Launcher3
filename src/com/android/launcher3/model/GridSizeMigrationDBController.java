@@ -17,7 +17,6 @@
 package com.android.launcher3.model;
 
 import static com.android.launcher3.Flags.enableSmartspaceRemovalToggle;
-import static com.android.launcher3.Flags.oneGridSpecs;
 import static com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME;
 import static com.android.launcher3.LauncherSettings.Favorites.TMP_TABLE;
 import static com.android.launcher3.Utilities.SHOULD_SHOW_FIRST_PAGE_WIDGET;
@@ -39,6 +38,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
+import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherSettings;
@@ -127,7 +127,7 @@ public class GridSizeMigrationDBController {
             return true;
         }
 
-        boolean shouldMigrateToStrictlyTallerGrid = isDestNewDb
+        boolean shouldMigrateToStrictlyTallerGrid = (Flags.oneGridSpecs() || isDestNewDb)
                 && srcDeviceState.getColumns().equals(destDeviceState.getColumns())
                 && srcDeviceState.getRows() < destDeviceState.getRows();
         if (shouldMigrateToStrictlyTallerGrid) {
@@ -142,7 +142,7 @@ public class GridSizeMigrationDBController {
             if (shouldMigrateToStrictlyTallerGrid) {
                 // We want to add the extra row(s) to the top of the screen, so we shift the grid
                 // down.
-                if (oneGridSpecs()) {
+                if (Flags.oneGridSpecs()) {
                     shiftWorkspaceByXCells(
                             target.getWritableDatabase(),
                             (destDeviceState.getRows() - srcDeviceState.getRows()),

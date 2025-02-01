@@ -17,8 +17,6 @@ import com.android.launcher3.model.BgDataModel
 import com.android.launcher3.model.StringCache
 import com.android.launcher3.model.data.AppInfo
 import com.android.launcher3.model.data.ItemInfo
-import com.android.launcher3.model.data.LauncherAppWidgetInfo
-import com.android.launcher3.model.data.WorkspaceItemInfo
 import com.android.launcher3.popup.PopupContainerWithArrow
 import com.android.launcher3.util.ComponentKey
 import com.android.launcher3.util.IntArray as LIntArray
@@ -215,29 +213,13 @@ class ModelCallbacks(private var launcher: Launcher) : BgDataModel.Callbacks {
         launcher.appsView.appsStore.updateProgressBar(app)
     }
 
-    override fun bindWidgetsRestored(widgets: ArrayList<LauncherAppWidgetInfo?>?) {
-        launcher.workspace.widgetsRestored(widgets)
-    }
-
-    /**
-     * Some shortcuts were updated in the background. Implementation of the method from
-     * LauncherModel.Callbacks.
-     *
-     * @param updated list of shortcuts which have changed.
-     */
-    override fun bindWorkspaceItemsChanged(updated: List<WorkspaceItemInfo?>) {
-        if (updated.isNotEmpty()) {
-            launcher.workspace.updateWorkspaceItems(updated, launcher)
-            PopupContainerWithArrow.dismissInvalidPopup(launcher)
-        }
-    }
-
     /**
      * Update the state of a package, typically related to install state. Implementation of the
      * method from LauncherModel.Callbacks.
      */
-    override fun bindRestoreItemsChange(updates: HashSet<ItemInfo?>?) {
-        launcher.workspace.updateRestoreItems(updates, launcher)
+    override fun bindItemsUpdated(updates: Set<ItemInfo>) {
+        launcher.workspace.updateContainerItems(updates, launcher)
+        PopupContainerWithArrow.dismissInvalidPopup(launcher)
     }
 
     /**

@@ -52,6 +52,7 @@ import com.android.quickstep.util.TaskViewSimulator;
 import com.android.quickstep.views.OverviewActionsView;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
+import com.android.quickstep.views.TaskContainer;
 import com.android.quickstep.views.TaskView;
 import com.android.systemui.shared.recents.model.Task;
 
@@ -239,10 +240,10 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
     }
 
     @Override
-    public void initiateSplitSelect(TaskView taskView,
+    public void initiateSplitSelect(TaskContainer taskContainer,
             @SplitConfigurationOptions.StagePosition int stagePosition,
             StatsLogManager.EventEnum splitEvent) {
-        super.initiateSplitSelect(taskView, stagePosition, splitEvent);
+        super.initiateSplitSelect(taskContainer, stagePosition, splitEvent);
         mContainer.getStateManager().goToState(OVERVIEW_SPLIT_SELECT);
     }
 

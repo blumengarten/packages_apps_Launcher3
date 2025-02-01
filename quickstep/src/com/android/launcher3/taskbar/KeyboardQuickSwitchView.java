@@ -51,6 +51,9 @@ import com.android.launcher3.anim.AnimatedFloat;
 import com.android.launcher3.testing.TestLogging;
 import com.android.launcher3.testing.shared.TestProtocol;
 import com.android.quickstep.util.GroupTask;
+import com.android.quickstep.util.SingleTask;
+import com.android.quickstep.util.SplitTask;
+import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.system.InteractionJankMonitorWrapper;
 
 import java.util.HashMap;
@@ -255,17 +258,24 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
                     layoutInflater,
                     previousTaskView);
 
-            final boolean firstTaskIsLeftTopTask =
-                    groupTask.mSplitBounds == null
-                            || groupTask.mSplitBounds.leftTopTaskId == groupTask.task1.key.id
-                            || groupTask.task2 == null;
+            Task task1;
+            Task task2;
+            if (groupTask instanceof SplitTask splitTask) {
+                task1 = splitTask.getTopLeftTask();
+                task2 = splitTask.getBottomRightTask();
+            } else if (groupTask instanceof SingleTask singleTask) {
+                task1 = singleTask.getTask();
+                task2 = null;
+            } else {
+                continue;
+            }
 
             currentTaskView.setThumbnailsForSplitTasks(
-                    firstTaskIsLeftTopTask ? groupTask.task1 : groupTask.task2,
-                    firstTaskIsLeftTopTask ? groupTask.task2 : groupTask.task1,
+                    task1,
+                    task2,
                     updateTasks ? mViewCallbacks::updateThumbnailInBackground : null,
                     updateTasks ? mViewCallbacks::updateIconInBackground : null,
-                    groupTask.mSplitBounds);
+                    groupTask instanceof SplitTask splitTask ? splitTask.getSplitBounds() : null);
 
             previousTaskView = currentTaskView;
         }

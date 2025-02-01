@@ -128,26 +128,25 @@ public class AppPairsController {
                             & ItemInfoWithIcon.FLAG_NOT_PINNABLE) != 0));
         if (!taskView.containsMultipleTasks()
                 || hasUnpinnableApp
-                || !(taskView instanceof GroupedTaskView)) {
+                || !(taskView instanceof GroupedTaskView groupedTaskView)) {
             return false;
         }
 
-        GroupedTaskView gtv = (GroupedTaskView) taskView;
-        List<TaskContainer> containers = gtv.getTaskContainers();
-        ComponentKey taskKey1 = TaskUtils.getLaunchComponentKeyForTask(
-                containers.get(0).getTask().key);
-        ComponentKey taskKey2 = TaskUtils.getLaunchComponentKeyForTask(
-                containers.get(1).getTask().key);
-        AppInfo app1 = resolveAppInfoByComponent(taskKey1);
-        AppInfo app2 = resolveAppInfoByComponent(taskKey2);
+        ComponentKey leftTopComponentKey = TaskUtils.getLaunchComponentKeyForTask(
+                groupedTaskView.getLeftTopTaskContainer().getTask().key);
+        ComponentKey rightBottomComponentKey = TaskUtils.getLaunchComponentKeyForTask(
+                groupedTaskView.getRightBottomTaskContainer().getTask().key);
+        AppInfo leftTopAppInfo = resolveAppInfoByComponent(leftTopComponentKey);
+        AppInfo rightBottomAppInfo = resolveAppInfoByComponent(rightBottomComponentKey);
 
-        if (app1 == null || app2 == null) {
+        if (leftTopAppInfo == null || rightBottomAppInfo == null) {
             // Disallow saving app pairs for apps that don't have a front-door in Launcher
             return false;
         }
 
-        if (PackageManagerHelper.isSameAppForMultiInstance(app1, app2)) {
-            if (!app1.supportsMultiInstance() || !app2.supportsMultiInstance()) {
+        if (PackageManagerHelper.isSameAppForMultiInstance(leftTopAppInfo, rightBottomAppInfo)) {
+            if (!leftTopAppInfo.supportsMultiInstance()
+                    || !rightBottomAppInfo.supportsMultiInstance()) {
                 return false;
             }
         }
@@ -183,9 +182,8 @@ public class AppPairsController {
             return;
         }
 
-        List<TaskContainer> containers = gtv.getTaskContainers();
         List<TaskViewItemInfo> recentsInfos =
-                containers.stream().map(TaskContainer::getItemInfo).toList();
+                gtv.getTaskContainers().stream().map(TaskContainer::getItemInfo).toList();
         List<WorkspaceItemInfo> apps =
                 recentsInfos.stream().map(this::resolveAppPairWorkspaceInfo).toList();
 
