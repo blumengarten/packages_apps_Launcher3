@@ -77,7 +77,6 @@ import com.android.launcher3.dragndrop.DraggableView;
 import com.android.launcher3.folder.FolderIcon;
 import com.android.launcher3.graphics.IconShape;
 import com.android.launcher3.graphics.PreloadIconDrawable;
-import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.DotRenderer;
 import com.android.launcher3.icons.FastBitmapDrawable;
 import com.android.launcher3.icons.IconCache.ItemInfoUpdateReceiver;
@@ -484,9 +483,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     }
 
     private void setNonPendingIcon(ItemInfoWithIcon info) {
-        ThemeManager themeManager = ThemeManager.INSTANCE.get(getContext());
-        int flags = (shouldUseTheme()
-                && themeManager.isMonoThemeEnabled()) ? FLAG_THEMED : 0;
+        int flags = shouldUseTheme() ? FLAG_THEMED : 0;
         // Remove badge on icons smaller than 48dp.
         if (mHideBadge || mDisplay == DISPLAY_SEARCH_RESULT_SMALL) {
             flags |= FLAG_NO_BADGE;

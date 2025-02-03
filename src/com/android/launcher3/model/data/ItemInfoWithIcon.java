@@ -323,7 +323,7 @@ public abstract class ItemInfoWithIcon extends ItemInfo {
      * Returns a FastBitmapDrawable with the icon and context theme applied
      */
     public FastBitmapDrawable newIcon(Context context, @DrawableCreationFlags int creationFlags) {
-        if (!ThemeManager.INSTANCE.get(context).isMonoThemeEnabled()) {
+        if (!ThemeManager.INSTANCE.get(context).isIconThemeEnabled()) {
             creationFlags &= ~FLAG_THEMED;
         }
         FastBitmapDrawable drawable = bitmap.newIcon(context, creationFlags);

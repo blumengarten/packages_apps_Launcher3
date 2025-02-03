@@ -21,11 +21,13 @@ import androidx.test.filters.SmallTest
 import com.android.launcher3.FakeLauncherPrefs
 import com.android.launcher3.dagger.LauncherAppComponent
 import com.android.launcher3.dagger.LauncherAppSingleton
+import com.android.launcher3.icons.mono.MonoIconThemeController
 import com.android.launcher3.util.AllModulesForTest
 import com.android.launcher3.util.Executors.MAIN_EXECUTOR
 import com.android.launcher3.util.FakePrefsModule
 import com.android.launcher3.util.SandboxApplication
 import com.android.launcher3.util.TestUtil
+import com.google.common.truth.Truth.assertThat
 import dagger.Component
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -55,12 +57,13 @@ class ThemeManagerTest {
         themeManager.isMonoThemeEnabled = true
         TestUtil.runOnExecutorSync(MAIN_EXECUTOR) {}
         assertTrue(themeManager.isMonoThemeEnabled)
-        assertTrue(themeManager.iconState.isMonoTheme)
+        assertThat(themeManager.iconState.themeController)
+            .isInstanceOf(MonoIconThemeController::class.java)
 
         themeManager.isMonoThemeEnabled = false
         TestUtil.runOnExecutorSync(MAIN_EXECUTOR) {}
         assertFalse(themeManager.isMonoThemeEnabled)
-        assertFalse(themeManager.iconState.isMonoTheme)
+        assertThat(themeManager.iconState.themeController).isNull()
     }
 
     @Test
