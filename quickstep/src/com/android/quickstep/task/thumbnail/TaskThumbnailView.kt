@@ -50,10 +50,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.dropWhile
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
@@ -62,8 +58,6 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
 
     // This is initialised here and set in onAttachedToWindow because onLayout can be called before
     // onAttachedToWindow so this property needs to be initialised as it is used below.
-    private var viewData: TaskThumbnailViewData = RecentsDependencies.get(this)
-
     private lateinit var viewModel: TaskThumbnailViewModel
 
     private lateinit var viewAttachedScope: CoroutineScope
@@ -110,18 +104,7 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
             CoroutineScope(
                 SupervisorJob() + Dispatchers.Main.immediate + CoroutineName("TaskThumbnailView")
             )
-        viewData = RecentsDependencies.get(this)
-        updateViewDataValues()
         viewModel = RecentsDependencies.get(this)
-        viewModel.splashAlpha
-            .dropWhile { it == 0f }
-            .flowOn(dispatcherProvider.background)
-            .onEach { splashAlpha ->
-                splashBackground.alpha = splashAlpha
-                splashIcon.alpha = splashAlpha
-            }
-            .launchIn(viewAttachedScope)
-
         clipToOutline = true
         outlineProvider =
             object : ViewOutlineProvider() {
@@ -144,16 +127,9 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
         resetViews()
     }
 
-    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        super.onLayout(changed, left, top, right, bottom)
-        if (changed) {
-            updateViewDataValues()
-        }
-    }
-
     fun setState(state: TaskThumbnailUiState, taskId: Int? = null) {
-        logDebug("taskId: $taskId - uiState changed from: $uiState to: $state")
         if (uiState == state) return
+        logDebug("taskId: $taskId - uiState changed from: $uiState to: $state")
         uiState = state
         resetViews()
         when (state) {
@@ -164,6 +140,12 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
         }
     }
 
+    /**
+     * Updates the alpha of the dim layer on top of this view. If dimAlpha is 0, no dimming is
+     * applied; if dimAlpha is 1, the thumbnail will be the extracted background color.
+     *
+     * @param tintAmount The amount of alpha that will be applied to the dim layer.
+     */
     fun updateTintAmount(tintAmount: Float) {
         dimAlpha[ScrimViewAlpha.TintAmount.ordinal].value = tintAmount
     }
@@ -172,9 +154,9 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
         dimAlpha[ScrimViewAlpha.MenuProgress.ordinal].value = progress * MAX_SCRIM_ALPHA
     }
 
-    private fun updateViewDataValues() {
-        viewData.width.value = width
-        viewData.height.value = height
+    fun updateSplashAlpha(value: Float) {
+        splashBackground.alpha = value
+        splashIcon.alpha = value
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {

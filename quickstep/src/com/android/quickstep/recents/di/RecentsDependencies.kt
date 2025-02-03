@@ -28,13 +28,11 @@ import com.android.quickstep.recents.data.TaskVisualsChangedDelegateImpl
 import com.android.quickstep.recents.data.TasksRepository
 import com.android.quickstep.recents.domain.usecase.GetSysUiStatusNavFlagsUseCase
 import com.android.quickstep.recents.domain.usecase.GetTaskUseCase
+import com.android.quickstep.recents.domain.usecase.IsThumbnailValidUseCase
 import com.android.quickstep.recents.domain.usecase.OrganizeDesktopTasksUseCase
 import com.android.quickstep.recents.usecase.GetThumbnailPositionUseCase
 import com.android.quickstep.recents.usecase.GetThumbnailUseCase
 import com.android.quickstep.recents.viewmodel.RecentsViewData
-import com.android.quickstep.task.thumbnail.SplashAlphaUseCase
-import com.android.quickstep.task.thumbnail.TaskThumbnailViewData
-import com.android.quickstep.task.viewmodel.TaskContainerData
 import com.android.quickstep.task.viewmodel.TaskOverlayViewModel
 import com.android.quickstep.task.viewmodel.TaskThumbnailViewModel
 import com.android.quickstep.task.viewmodel.TaskThumbnailViewModelImpl
@@ -175,14 +173,8 @@ class RecentsDependencies private constructor(private val appContext: Context) {
         val instance: Any =
             when (modelClass) {
                 RecentsViewData::class.java -> RecentsViewData()
-                TaskContainerData::class.java -> TaskContainerData()
-                TaskThumbnailViewData::class.java -> TaskThumbnailViewData()
                 TaskThumbnailViewModel::class.java ->
-                    TaskThumbnailViewModelImpl(
-                        dispatcherProvider = inject(),
-                        getThumbnailPositionUseCase = inject(),
-                        splashAlphaUseCase = inject(scopeId),
-                    )
+                    TaskThumbnailViewModelImpl(getThumbnailPositionUseCase = inject())
                 TaskOverlayViewModel::class.java -> {
                     val task = extras["Task"] as Task
                     TaskOverlayViewModel(
@@ -193,6 +185,8 @@ class RecentsDependencies private constructor(private val appContext: Context) {
                         dispatcherProvider = inject(),
                     )
                 }
+                IsThumbnailValidUseCase::class.java ->
+                    IsThumbnailValidUseCase(rotationStateRepository = inject())
                 GetTaskUseCase::class.java -> GetTaskUseCase(repository = inject())
                 GetThumbnailUseCase::class.java -> GetThumbnailUseCase(taskRepository = inject())
                 GetSysUiStatusNavFlagsUseCase::class.java -> GetSysUiStatusNavFlagsUseCase()
@@ -203,14 +197,6 @@ class RecentsDependencies private constructor(private val appContext: Context) {
                         tasksRepository = inject(),
                     )
                 OrganizeDesktopTasksUseCase::class.java -> OrganizeDesktopTasksUseCase()
-                SplashAlphaUseCase::class.java ->
-                    SplashAlphaUseCase(
-                        recentsViewData = inject(),
-                        taskContainerData = inject(scopeId),
-                        taskThumbnailViewData = inject(scopeId),
-                        tasksRepository = inject(),
-                        rotationStateRepository = inject(),
-                    )
                 else -> {
                     log("Factory for ${modelClass.simpleName} not defined!", Log.ERROR)
                     error("Factory for ${modelClass.simpleName} not defined!")

@@ -125,7 +125,6 @@ class TaskThumbnailViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
                 as TaskThumbnailView
         taskThumbnailView.cornerRadius = CORNER_RADIUS
         val ttvDiScopeId = di.getScope(taskThumbnailView).scopeId
-        di.provide(TaskThumbnailViewData::class.java, ttvDiScopeId) { TaskThumbnailViewData() }
         di.provide(TaskThumbnailViewModel::class.java, ttvDiScopeId) { taskThumbnailViewModel }
 
         return taskThumbnailView

@@ -18,11 +18,8 @@ package com.android.quickstep.task.thumbnail
 
 import android.graphics.Matrix
 import com.android.quickstep.task.viewmodel.TaskThumbnailViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 
 class FakeTaskThumbnailViewModel : TaskThumbnailViewModel {
-    override val splashAlpha = MutableStateFlow(0f)
-
     override fun bind(taskId: Int) {
         // no-op
     }

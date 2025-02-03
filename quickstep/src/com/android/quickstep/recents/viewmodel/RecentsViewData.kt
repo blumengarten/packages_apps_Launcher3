@@ -27,8 +27,6 @@ class RecentsViewData {
     // The settled set of visible taskIds that is updated after RecentsView scroll settles.
     val settledFullyVisibleTaskIds = MutableStateFlow(emptySet<Int>())
 
-    val thumbnailSplashProgress = MutableStateFlow(0f)
-
     // A list of taskIds that are associated with a RecentsAnimationController. */
     val runningTaskIds = MutableStateFlow(emptySet<Int>())
 
