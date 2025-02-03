@@ -87,6 +87,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -650,7 +651,7 @@ public class WidgetsFullSheet extends BaseWidgetSheet
                 mRecommendedWidgets = mActivityContext.getWidgetPickerDataProvider().get()
                         .getRecommendations()
                         .values().stream()
-                        .flatMap(Collection::stream).toList();
+                        .flatMap(Collection::stream).collect(Collectors.toList());
                 mRecommendedWidgetsCount = mWidgetRecommendationsView.setRecommendations(
                         mRecommendedWidgets,
                         mDeviceProfile,

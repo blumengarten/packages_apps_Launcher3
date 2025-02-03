@@ -399,8 +399,9 @@ public class InvariantDeviceProfile implements SafeCloseable {
 
     private List<DisplayOption> filterByColumnCount(
             List<DisplayOption> allOptions, int numColumns) {
-        return allOptions.stream().filter(
-                option -> option.grid.numColumns == numColumns).toList();
+        return allOptions.stream()
+                .filter(option -> option.grid.numColumns == numColumns)
+                .collect(Collectors.toList());
     }
 
     /**
