@@ -151,8 +151,8 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
         }
     }
 
-    fun setState(state: TaskThumbnailUiState) {
-        Log.d(TAG, "viewModelUiState changed from: $uiState to: $state")
+    fun setState(state: TaskThumbnailUiState, taskId: Int? = null) {
+        logDebug("taskId: $taskId - uiState changed from: $uiState to: $state")
         if (uiState == state) return
         uiState = state
         resetViews()
@@ -243,6 +243,10 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
 
     private fun setImageMatrix() {
         thumbnailView.imageMatrix = viewModel.getThumbnailPositionState(width, height, isLayoutRtl)
+    }
+
+    private fun logDebug(message: String) {
+        Log.d(TAG, "[TaskThumbnailView@${Integer.toHexString(hashCode())}] $message")
     }
 
     private fun maybeCreateHeader() {

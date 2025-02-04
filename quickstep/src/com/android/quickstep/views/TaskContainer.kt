@@ -153,7 +153,10 @@ class TaskContainer(
     }
 
     fun setState(state: TaskData?, liveTile: Boolean, hasHeader: Boolean) {
-        thumbnailView.setState(TaskUiStateMapper.toTaskThumbnailUiState(state, liveTile, hasHeader))
+        thumbnailView.setState(
+            TaskUiStateMapper.toTaskThumbnailUiState(state, liveTile, hasHeader),
+            state?.taskId,
+        )
         splitAnimationThumbnail =
             if (state is TaskData.Data) state.thumbnailData?.thumbnail else null
     }

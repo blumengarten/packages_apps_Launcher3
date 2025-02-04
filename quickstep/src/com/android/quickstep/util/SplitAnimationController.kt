@@ -749,8 +749,8 @@ class SplitAnimationController(val splitSelectStateController: SplitSelectStateC
         // launcher side animation)
         val leftTopApp =
             leafRoots.single { change ->
-                (isLeftRightSplit && change.endAbsBounds.left == 0) ||
-                    (!isLeftRightSplit && change.endAbsBounds.top == 0)
+                (isLeftRightSplit && change.endAbsBounds.left <= 0) ||
+                    (!isLeftRightSplit && change.endAbsBounds.top <= 0)
             }
         val dividerPos =
             if (isLeftRightSplit) leftTopApp.endAbsBounds.right

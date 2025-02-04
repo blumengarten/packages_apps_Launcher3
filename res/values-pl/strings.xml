@@ -46,7 +46,7 @@
     <string name="widget_accessible_dims_format" msgid="3640149169885301790">"Szerokość %1$d, wysokość %2$d"</string>
     <string name="widget_preview_context_description" msgid="9045841361655787574">"Widżet <xliff:g id="WIDGET_NAME">%1$s</xliff:g>"</string>
     <string name="widget_preview_name_and_dims_content_description" msgid="8489038126122831595">"Widżet <xliff:g id="WIDGET_NAME">%1$s</xliff:g>, %2$d (szerokość), %3$d (wysokość)"</string>
-    <string name="add_item_request_drag_hint" msgid="8730547755622776606">"Aby poruszać widżetem po ekranie głównym, kliknij go i przytrzymaj"</string>
+    <string name="add_item_request_drag_hint" msgid="8730547755622776606">"Aby przesunąć widżet na ekranie głównym, kliknij go i przytrzymaj"</string>
     <string name="add_to_home_screen" msgid="9168649446635919791">"Dodaj do ekranu głównego"</string>
     <string name="added_to_home_screen_accessibility_text" msgid="4451545765448884415">"Widżet <xliff:g id="WIDGET_NAME">%1$s</xliff:g> został dodany do ekranu głównego"</string>
     <string name="suggested_widgets_header_title" msgid="1844314680798145222">"Sugestie"</string>

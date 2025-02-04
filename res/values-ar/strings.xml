@@ -38,13 +38,13 @@
     <string name="app_pair_unlaunchable_at_screen_size" msgid="3446551575502685376">"لا يمكن استخدام هذين التطبيقَين في الوقت نفسه على هذا الجهاز"</string>
     <string name="app_pair_needs_unfold" msgid="4588897528143807002">"افتح الجهاز لاستخدام هذين التطبيقَين في الوقت نفسه"</string>
     <string name="app_pair_not_available" msgid="3556767440808032031">"ميزة \"استخدام تطبيقين في الوقت نفسه\" غير متوفّرة"</string>
-    <string name="long_press_widget_to_add" msgid="3587712543577675817">"انقر مع الاستمرار لنقل أداة."</string>
-    <string name="long_accessible_way_to_add" msgid="2733588281439571974">"انقر مرتين مع تثبيت إصبعك لنقل أداة أو استخدام الإجراءات المخصّصة."</string>
+    <string name="long_press_widget_to_add" msgid="3587712543577675817">"انقر مع الاستمرار لنقل تطبيق مصغَّر."</string>
+    <string name="long_accessible_way_to_add" msgid="2733588281439571974">"انقر مرتين مع تثبيت إصبعك لنقل تطبيق مصغَّر أو استخدام الإجراءات المخصّصة."</string>
     <string name="widget_picker_widget_options_button_description" msgid="4770099264476852363">"خيارات إضافية"</string>
     <string name="widget_picker_show_all_widgets_menu_item_title" msgid="9023638224586908119">"عرض كل التطبيقات المصغّرة"</string>
     <string name="widget_dims_format" msgid="2370757736025621599">"%1$d × %2$d"</string>
     <string name="widget_accessible_dims_format" msgid="3640149169885301790">"‏العرض %1$d الطول %2$d"</string>
-    <string name="widget_preview_context_description" msgid="9045841361655787574">"أداة <xliff:g id="WIDGET_NAME">%1$s</xliff:g>"</string>
+    <string name="widget_preview_context_description" msgid="9045841361655787574">"التطبيق المصغَّر <xliff:g id="WIDGET_NAME">%1$s</xliff:g>"</string>
     <string name="widget_preview_name_and_dims_content_description" msgid="8489038126122831595">"‏التطبيق المصغّرة \"<xliff:g id="WIDGET_NAME">%1$s</xliff:g>\"، بعرض ‎%2$d وارتفاع ‎%3$d"</string>
     <string name="add_item_request_drag_hint" msgid="8730547755622776606">"يُرجى النقر مع الاستمرار على التطبيق المصغّر لنقله إلى الشاشة الرئيسية"</string>
     <string name="add_to_home_screen" msgid="9168649446635919791">"إضافة إلى الشاشة الرئيسية"</string>
@@ -75,8 +75,8 @@
     <string name="widgets_list_expand_button_label" msgid="7912016136574932622">"عرض الكل"</string>
     <string name="widgets_list_expand_button_content_description" msgid="4600513860973450888">"عرض كل التطبيقات المصغّرة"</string>
     <string name="widgets_list_expanded" msgid="7374857868788557730">"جارٍ عرض كل التطبيقات المصغّرة"</string>
-    <string name="reconfigurable_widget_education_tip" msgid="6336962690888067057">"انقر لتغيير إعدادات الأداة"</string>
-    <string name="widget_reconfigure_button_content_description" msgid="8811472721881205250">"تغيير إعدادات الأداة"</string>
+    <string name="reconfigurable_widget_education_tip" msgid="6336962690888067057">"انقر لتغيير إعدادات التطبيق المصغَّر"</string>
+    <string name="widget_reconfigure_button_content_description" msgid="8811472721881205250">"تغيير إعدادات التطبيق المصغَّر"</string>
     <string name="all_apps_search_bar_hint" msgid="1390553134053255246">"بحث في التطبيقات"</string>
     <string name="all_apps_loading_message" msgid="5813968043155271636">"جارٍ تحميل التطبيقات…"</string>
     <string name="all_apps_no_search_results" msgid="3200346862396363786">"لم يتم العثور على أي تطبيقات تتطابق مع \"<xliff:g id="QUERY">%1$s</xliff:g>\""</string>
@@ -108,7 +108,7 @@
     <string name="permdesc_read_settings" msgid="4208061150510996676">"يسمح هذا الإذن للتطبيق بالاطلاع على الإعدادات والاختصارات على الشاشة الرئيسية."</string>
     <string name="permlab_write_settings" msgid="4820028712156303762">"تعديل الإعدادات والاختصارات على الشاشة الرئيسية"</string>
     <string name="permdesc_write_settings" msgid="726859348127868466">"يسمح هذا الإذن للتطبيق بتغيير الإعدادات والاختصارات على الشاشة الرئيسية."</string>
-    <string name="gadget_error_text" msgid="740356548025791839">"يتعذّر تحميل الأداة."</string>
+    <string name="gadget_error_text" msgid="740356548025791839">"يتعذّر تحميل التطبيق المصغَّر."</string>
     <string name="gadget_setup_text" msgid="8348374825537681407">"إعدادات التطبيق المصغّر"</string>
     <string name="gadget_complete_setup_text" msgid="309040266978007925">"انقر لإكمال الإعداد."</string>
     <string name="uninstall_system_app_text" msgid="4172046090762920660">"هذا تطبيق نظام وتتعذر إزالته."</string>
@@ -181,7 +181,7 @@
     <string name="action_increase_height" msgid="459390020612501122">"زيادة الارتفاع"</string>
     <string name="action_decrease_width" msgid="1374549771083094654">"تقليل العرض"</string>
     <string name="action_decrease_height" msgid="282377193880900022">"تقليل الارتفاع"</string>
-    <string name="widget_resized" msgid="9130327887929620">"تم تغيير حجم الأداة إلى العرض <xliff:g id="NUMBER_0">%1$s</xliff:g> والارتفاع <xliff:g id="NUMBER_1">%2$s</xliff:g>"</string>
+    <string name="widget_resized" msgid="9130327887929620">"تم تغيير حجم التطبيق المصغَّر إلى العرض <xliff:g id="NUMBER_0">%1$s</xliff:g> والارتفاع <xliff:g id="NUMBER_1">%2$s</xliff:g>"</string>
     <string name="action_deep_shortcut" msgid="4766835855579976045">"قائمة الاختصارات"</string>
     <string name="action_dismiss_notification" msgid="5909461085055959187">"تجاهل"</string>
     <string name="accessibility_close" msgid="2277148124685870734">"إغلاق"</string>

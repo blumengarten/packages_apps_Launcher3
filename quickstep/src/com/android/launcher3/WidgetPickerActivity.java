@@ -23,6 +23,8 @@ import static android.view.WindowInsets.Type.statusBars;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
 
 import android.appwidget.AppWidgetManager;
@@ -53,6 +55,7 @@ import com.android.launcher3.model.data.PackageItemInfo;
 import com.android.launcher3.widget.WidgetCell;
 import com.android.launcher3.widget.model.WidgetsListBaseEntriesBuilder;
 import com.android.launcher3.widget.model.WidgetsListBaseEntry;
+import com.android.launcher3.widget.picker.WidgetCategoryFilter;
 import com.android.launcher3.widget.picker.WidgetsFullSheet;
 import com.android.launcher3.widget.picker.model.WidgetPickerDataProvider;
 import com.android.systemui.animation.back.FlingOnBackAnimationCallback;
@@ -81,6 +84,10 @@ public class WidgetPickerActivity extends BaseActivity {
     // the intent, then widgets will not be filtered for size.
     private static final String EXTRA_DESIRED_WIDGET_WIDTH = "desired_widget_width";
     private static final String EXTRA_DESIRED_WIDGET_HEIGHT = "desired_widget_height";
+    // Unlike the AppWidgetManager.EXTRA_CATEGORY_FILTER, this filter removes certain categories.
+    // Filter is ignore if it is not a negative value.
+    // Example usage: WIDGET_CATEGORY_HOME_SCREEN.inv() and WIDGET_CATEGORY_NOT_KEYGUARD.inv()
+    private static final String EXTRA_CATEGORY_EXCLUSION_FILTER = "category_exclusion_filter";
     /**
      * Widgets currently added by the user in the UI surface.
      * <p>This allows widget picker to exclude existing widgets from suggestions.</p>
@@ -120,7 +127,8 @@ public class WidgetPickerActivity extends BaseActivity {
 
     private int mDesiredWidgetWidth;
     private int mDesiredWidgetHeight;
-    private int mWidgetCategoryFilter;
+    private WidgetCategoryFilter mWidgetCategoryInclusionFilter;
+    private WidgetCategoryFilter mWidgetCategoryExclusionFilter;
     @Nullable
     private String mUiSurface;
     // Widgets existing on the host surface.
@@ -194,8 +202,19 @@ public class WidgetPickerActivity extends BaseActivity {
                 getIntent().getIntExtra(EXTRA_DESIRED_WIDGET_HEIGHT, 0);
 
         // Defaults to '0' to indicate that there isn't a category filter.
-        mWidgetCategoryFilter =
-                getIntent().getIntExtra(AppWidgetManager.EXTRA_CATEGORY_FILTER, 0);
+        // Negative value indicates it's an exclusion filter (e.g. NOT_KEYGUARD_CATEGORY.inv())
+        // Positive value indicates it's inclusion filter (e.g. HOME_SCREEN or KEYGUARD)
+        // Note: A filter can either be inclusion or exclusion filter; not both.
+        int inclusionFilter = getIntent().getIntExtra(AppWidgetManager.EXTRA_CATEGORY_FILTER, 0);
+        if (inclusionFilter < 0) {
+            Log.w(TAG, "Invalid EXTRA_CATEGORY_FILTER: " + inclusionFilter);
+        }
+        mWidgetCategoryInclusionFilter = new WidgetCategoryFilter(max(0, inclusionFilter));
+        int exclusionFilter = getIntent().getIntExtra(EXTRA_CATEGORY_EXCLUSION_FILTER, 0);
+        if (exclusionFilter > 0) {
+            Log.w(TAG, "Invalid EXTRA_CATEGORY_EXCLUSION_FILTER: " + exclusionFilter);
+        }
+        mWidgetCategoryExclusionFilter = new WidgetCategoryFilter(min(0 , exclusionFilter));
 
         String uiSurfaceParam = getIntent().getStringExtra(EXTRA_UI_SURFACE);
         if (uiSurfaceParam != null && UI_SURFACE_PATTERN.matcher(uiSurfaceParam).matches()) {
@@ -436,11 +455,13 @@ public class WidgetPickerActivity extends BaseActivity {
                     widget.user.getIdentifier());
         }
 
-        if (mWidgetCategoryFilter > 0 && (info.widgetCategory & mWidgetCategoryFilter) == 0) {
+        if (!mWidgetCategoryInclusionFilter.matches(info.widgetCategory)
+                || !mWidgetCategoryExclusionFilter.matches(info.widgetCategory)) {
             return rejectWidget(
                     widget,
-                    "doesn't match category filter [filter=%d, widget=%d]",
-                    mWidgetCategoryFilter,
+                    "doesn't match category filter [inclusion=%d, exclusion=%d, widget=%d]",
+                    mWidgetCategoryInclusionFilter.getCategoryMask(),
+                    mWidgetCategoryExclusionFilter.getCategoryMask(),
                     info.widgetCategory);
         }
 
@@ -463,7 +484,7 @@ public class WidgetPickerActivity extends BaseActivity {
                             mDesiredWidgetWidth);
                 }
 
-                final int minWidth = Math.min(info.minResizeWidth, info.minWidth);
+                final int minWidth = min(info.minResizeWidth, info.minWidth);
                 if (minWidth > mDesiredWidgetWidth) {
                     return rejectWidget(
                             widget,
@@ -487,7 +508,7 @@ public class WidgetPickerActivity extends BaseActivity {
                             mDesiredWidgetHeight);
                 }
 
-                final int minHeight = Math.min(info.minResizeHeight, info.minHeight);
+                final int minHeight = min(info.minResizeHeight, info.minHeight);
                 if (minHeight > mDesiredWidgetHeight) {
                     return rejectWidget(
                             widget,

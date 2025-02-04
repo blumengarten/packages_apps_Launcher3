@@ -153,17 +153,19 @@ public class WidgetCell extends LinearLayout {
         mWidgetAddButton = findViewById(R.id.widget_add_button);
 
         if (enableWidgetTapToAdd()) {
-
             setAccessibilityDelegate(new AccessibilityDelegate() {
                 @Override
                 public void onInitializeAccessibilityNodeInfo(View host,
                         AccessibilityNodeInfo info) {
                     super.onInitializeAccessibilityNodeInfo(host, info);
-                    String accessibilityLabel = getResources().getString(mWidgetAddButton.isShown()
-                            ? R.string.widget_cell_tap_to_hide_add_button_label
-                            : R.string.widget_cell_tap_to_show_add_button_label);
-                    info.addAction(new AccessibilityNodeInfo.AccessibilityAction(ACTION_CLICK,
-                            accessibilityLabel));
+                    if (hasOnClickListeners()) {
+                        String accessibilityLabel = getResources().getString(
+                                mWidgetAddButton.isShown()
+                                        ? R.string.widget_cell_tap_to_hide_add_button_label
+                                        : R.string.widget_cell_tap_to_show_add_button_label);
+                        info.addAction(new AccessibilityNodeInfo.AccessibilityAction(ACTION_CLICK,
+                                accessibilityLabel));
+                    }
                 }
             });
             mWidgetAddButton.setVisibility(INVISIBLE);

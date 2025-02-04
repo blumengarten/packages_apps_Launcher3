@@ -17,6 +17,7 @@
 package com.android.quickstep.util
 
 import android.view.Display.DEFAULT_DISPLAY
+import android.view.Display.INVALID_DISPLAY
 import com.android.systemui.shared.recents.model.Task
 
 /** Whether this displayId belongs to an external display */
@@ -25,7 +26,14 @@ val Int.isExternalDisplay
 
 /** Returns displayId of this [Task], default to [DEFAULT_DISPLAY] */
 val Task?.displayId
-    get() = this?.key?.displayId ?: DEFAULT_DISPLAY
+    get() =
+        this?.key?.displayId.let { displayId ->
+            when (displayId) {
+                null -> DEFAULT_DISPLAY
+                INVALID_DISPLAY -> DEFAULT_DISPLAY
+                else -> displayId
+            }
+        }
 
 /** Returns if this task belongs tto [DEFAULT_DISPLAY] */
 val Task?.isExternalDisplay

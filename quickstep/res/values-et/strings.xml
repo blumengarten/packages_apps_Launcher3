@@ -89,7 +89,7 @@
     <string name="allset_title" msgid="5021126669778966707">"Valmis!"</string>
     <string name="allset_hint" msgid="459504134589971527">"Avalehele liikumiseks pühkige üles"</string>
     <string name="allset_button_hint" msgid="2395219947744706291">"Avakuvale liikumiseks puudutage avakuva nuppu"</string>
-    <string name="allset_description_generic" msgid="5385500062202019855">"<xliff:g id="DEVICE">%1$s</xliff:g> on nüüd kasutamiseks valmis"</string>
+    <string name="allset_description_generic" msgid="5385500062202019855">"Teie <xliff:g id="DEVICE">%1$s</xliff:g> on nüüd kasutamiseks valmis."</string>
     <string name="default_device_name" msgid="6660656727127422487">"seade"</string>
     <string name="allset_navigation_settings" msgid="4713404605961476027"><annotation id="link">"Süsteemi navigeerimisseaded"</annotation></string>
     <string name="action_share" msgid="2648470652637092375">"Jaga"</string>
