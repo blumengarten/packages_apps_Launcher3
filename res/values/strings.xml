@@ -42,6 +42,7 @@
     <!-- Options for recent tasks -->
     <!-- Title for an option to enter split screen mode for a given app -->
     <string name="recent_task_option_split_screen">Split screen</string>
+    <string name="recent_task_option_aspect_ratio">Change aspect ratio</string>
     <string name="split_app_info_accessibility">App info for %1$s</string>
     <string name="split_app_usage_settings">Usage settings for %1$s</string>
 
