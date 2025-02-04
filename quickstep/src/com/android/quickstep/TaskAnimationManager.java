@@ -231,7 +231,8 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
             }
 
             @Override
-            public void onTasksAppeared(RemoteAnimationTarget[] appearedTaskTargets) {
+            public void onTasksAppeared(RemoteAnimationTarget[] appearedTaskTargets,
+                    @Nullable TransitionInfo transitionInfo) {
                 RemoteAnimationTarget appearedTaskTarget = appearedTaskTargets[0];
                 BaseContainerInterface containerInterface =
                         mLastGestureState.getContainerInterface();
@@ -264,7 +265,8 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
                         recentsView.launchSideTaskInLiveTileMode(appearedTaskTarget.taskId,
                                 appearedTaskTargets,
                                 new RemoteAnimationTarget[0] /* wallpaper */,
-                                nonAppTargets /* nonApps */);
+                                nonAppTargets /* nonApps */,
+                                transitionInfo);
                         return;
                     } else {
                         ActiveGestureProtoLogProxy.logLaunchingSideTaskFailed();
