@@ -88,6 +88,7 @@ import com.android.launcher3.util.ScreenOnTracker;
 import com.android.launcher3.util.TraceHelper;
 import com.android.quickstep.OverviewCommandHelper.CommandType;
 import com.android.quickstep.OverviewComponentObserver.OverviewChangeListener;
+import com.android.quickstep.fallback.window.RecentsDisplayModel;
 import com.android.quickstep.fallback.window.RecentsWindowSwipeHandler;
 import com.android.quickstep.inputconsumers.BubbleBarInputConsumer;
 import com.android.quickstep.inputconsumers.OneHandedModeInputConsumer;
@@ -582,7 +583,8 @@ public class TouchInteractionService extends Service {
             initInputMonitor("onTrackpadConnected()");
         });
 
-        mTaskbarManager = new TaskbarManager(this, mAllAppsActionManager, mNavCallbacks);
+        mTaskbarManager = new TaskbarManager(this, mAllAppsActionManager, mNavCallbacks,
+                RecentsDisplayModel.getINSTANCE().get(this));
         mDesktopAppLaunchTransitionManager =
                 new DesktopAppLaunchTransitionManager(this, SystemUiProxy.INSTANCE.get(this));
         mDesktopAppLaunchTransitionManager.registerTransitions();
@@ -638,7 +640,9 @@ public class TouchInteractionService extends Service {
         mTaskAnimationManager = new TaskAnimationManager(this, mDeviceState);
         mOverviewComponentObserver = OverviewComponentObserver.INSTANCE.get(this);
         mOverviewCommandHelper = new OverviewCommandHelper(this,
-                mOverviewComponentObserver, mTaskAnimationManager);
+                mOverviewComponentObserver, mTaskAnimationManager,
+                RecentsDisplayModel.getINSTANCE().get(this),
+                SystemUiProxy.INSTANCE.get(this).getFocusState(), mTaskbarManager);
         mResetGestureInputConsumer = new ResetGestureInputConsumer(
                 mTaskAnimationManager, mTaskbarManager::getCurrentActivityContext);
         mInputConsumer.registerInputConsumer();
