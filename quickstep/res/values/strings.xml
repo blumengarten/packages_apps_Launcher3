@@ -366,4 +366,9 @@
     <string name="header_default_app_title">App title</string>
     <!-- Content description for the header close button. [CHAR LIMIT=NONE] -->
     <string name="header_close_icon_description">Close button</string>
+
+    <!-- Label for pinning an item to the taskbar. [CHAR_LIMIT=20] -->
+    <string name="pin_to_taskbar">Pin to taskbar</string>
+    <!-- Label for unpinning an item from the taskbar. [CHAR_LIMIT=20] -->
+    <string name="unpin_from_taskbar">Unpin from taskbar</string>
 </resources>
