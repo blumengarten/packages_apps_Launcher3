@@ -22,9 +22,13 @@ import android.view.RemoteAnimationTarget;
 import android.view.SurfaceControl;
 import android.window.TransitionInfo;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.android.quickstep.RemoteAnimationTargets;
 import com.android.quickstep.util.SurfaceTransaction.SurfaceProperties;
 import com.android.window.flags.Flags;
+
+import java.util.function.Supplier;
 
 public class TransformParams {
 
@@ -60,15 +64,23 @@ public class TransformParams {
     private float mCornerRadius;
     private RemoteAnimationTargets mTargetSet;
     private TransitionInfo mTransitionInfo;
+    private boolean mCornerRadiusIsOverridden;
     private SurfaceTransactionApplier mSyncTransactionApplier;
+    private Supplier<SurfaceTransaction> mSurfaceTransactionSupplier;
 
     private BuilderProxy mHomeBuilderProxy = BuilderProxy.ALWAYS_VISIBLE;
     private BuilderProxy mBaseBuilderProxy = BuilderProxy.ALWAYS_VISIBLE;
 
     public TransformParams() {
+        this(SurfaceTransaction::new);
+    }
+
+    @VisibleForTesting
+    public TransformParams(Supplier<SurfaceTransaction> surfaceTransactionSupplier) {
         mProgress = 0;
         mTargetAlpha = 1;
         mCornerRadius = -1;
+        mSurfaceTransactionSupplier = surfaceTransactionSupplier;
     }
 
     /**
@@ -115,6 +127,7 @@ public class TransformParams {
      */
     public TransformParams setTransitionInfo(TransitionInfo transitionInfo) {
         mTransitionInfo = transitionInfo;
+        mCornerRadiusIsOverridden = false;
         return this;
     }
 
@@ -148,7 +161,7 @@ public class TransformParams {
     /** Builds the SurfaceTransaction from the given BuilderProxy params. */
     public SurfaceTransaction createSurfaceParams(BuilderProxy proxy) {
         RemoteAnimationTargets targets = mTargetSet;
-        SurfaceTransaction transaction = new SurfaceTransaction();
+        SurfaceTransaction transaction = mSurfaceTransactionSupplier.get();
         if (targets == null) {
             return transaction;
         }
@@ -166,8 +179,13 @@ public class TransformParams {
             targetProxy.onBuildTargetParams(builder, app, this);
             // Override the corner radius for {@code app} with the leash used by Shell, so that it
             // doesn't interfere with the window clip and corner radius applied here.
-            overrideChangeLeashCornerRadiusToZero(app, transaction.getTransaction());
+            // Only override the corner radius once - so that we don't accidentally override at the
+            // end of transition after WM Shell has reset the corner radius of the task.
+            if (!mCornerRadiusIsOverridden) {
+                overrideFreeformChangeLeashCornerRadiusToZero(app, transaction.getTransaction());
+            }
         }
+        mCornerRadiusIsOverridden = true;
 
         // always put wallpaper layer to bottom.
         final int wallpaperLength = targets.wallpapers != null ? targets.wallpapers.length : 0;
@@ -178,11 +196,15 @@ public class TransformParams {
         return transaction;
     }
 
-    private void overrideChangeLeashCornerRadiusToZero(
+    private void overrideFreeformChangeLeashCornerRadiusToZero(
             RemoteAnimationTarget app, SurfaceControl.Transaction transaction) {
         if (!Flags.enableDesktopRecentsTransitionsCornersBugfix()) {
             return;
         }
+        if (app.taskInfo == null || !app.taskInfo.isFreeform()) {
+            return;
+        }
+
         SurfaceControl changeLeash = getChangeLeashForApp(app);
         if (changeLeash != null) {
             transaction.setCornerRadius(changeLeash, 0);
