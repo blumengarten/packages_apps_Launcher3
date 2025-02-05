@@ -15,6 +15,8 @@
  */
 package com.android.launcher3.taskbar;
 
+import static com.android.launcher3.Flags.enableAltTabKqsOnConnectedDisplays;
+
 import android.content.ComponentName;
 import android.content.pm.ActivityInfo;
 import android.view.MotionEvent;
@@ -272,11 +274,26 @@ public final class KeyboardQuickSwitchController implements
     }
 
     private void processLoadedTasksOnDesktop(List<GroupTask> tasks, Set<Integer> taskIdsToExclude) {
-        // Find the single desktop task that contains a grouping of desktop tasks
-        DesktopTask desktopTask = findDesktopTask(tasks);
+        // Find all desktop tasks.
+        List<DesktopTask> desktopTasks = tasks.stream()
+                .filter(t -> t instanceof DesktopTask)
+                .map(t -> (DesktopTask) t)
+                .toList();
 
-        if (desktopTask != null) {
-            mTasks = desktopTask.getTasks().stream()
+        // Apps on the connected displays seem to be in different Desktop tasks even with the
+        // multiple desktops flag disabled. So, until multiple desktops is implemented the following
+        // should help with team-fooding Alt+tab on connected displays. Post multiple desktop,
+        // further changes maybe required to support launching selected desktops.
+        if (enableAltTabKqsOnConnectedDisplays()) {
+            mTasks = desktopTasks.stream()
+                    .flatMap(t -> t.getTasks().stream())
+                    .map(SingleTask::new)
+                    .filter(task -> !shouldExcludeTask(task, taskIdsToExclude))
+                    .collect(Collectors.toList());
+
+            mNumHiddenTasks = Math.max(0, tasks.size() - desktopTasks.size());
+        } else if (!desktopTasks.isEmpty()) {
+            mTasks = desktopTasks.get(0).getTasks().stream()
                     .map(SingleTask::new)
                     .filter(task -> !shouldExcludeTask(task, taskIdsToExclude))
                     .collect(Collectors.toList());
@@ -287,14 +304,6 @@ public final class KeyboardQuickSwitchController implements
             mTasks = Collections.emptyList();
             mNumHiddenTasks = tasks.size();
         }
-    }
-
-    @Nullable
-    private DesktopTask findDesktopTask(List<GroupTask> tasks) {
-        return (DesktopTask) tasks.stream()
-                .filter(t -> t instanceof DesktopTask)
-                .findFirst()
-                .orElse(null);
     }
 
     void closeQuickSwitchView() {
