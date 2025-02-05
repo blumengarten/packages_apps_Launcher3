@@ -137,4 +137,12 @@ public class TaskGridNavHelper {
                 return currentPageTaskViewId;
         }
     }
+
+    /**
+     * Returns the column of a task's id in the grid.
+     */
+    public int getColumn(int taskViewId) {
+        return mTopRowIds.contains(taskViewId) ? mTopRowIds.indexOf(taskViewId)
+                : mBottomRowIds.indexOf(taskViewId);
+    }
 }
