@@ -1286,7 +1286,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
 
     boolean areDesktopTasksVisible() {
         return mControllers != null
-                && mControllers.taskbarDesktopModeController.getAreDesktopTasksVisible();
+                && mControllers.taskbarDesktopModeController.isInDesktopMode(getDisplayId());
     }
 
     protected void onTaskbarIconClicked(View view) {

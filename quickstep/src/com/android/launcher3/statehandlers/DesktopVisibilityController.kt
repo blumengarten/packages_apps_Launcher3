@@ -62,14 +62,14 @@ constructor(
      * @property canCreateDesks true if it's possible to create new desks on the display represented
      *   by this object.
      * @property activeDeskId The ID of the active desk on the associated display (if any). It has a
-     *   value of `-1` if there are no active desks. Note that there can only be at most one active
-     *   desk on each display.
+     *   value of `INACTIVE_DESK_ID` (-1) if there are no active desks. Note that there can only be
+     *   at most one active desk on each display.
      * @property deskIds a set containing the IDs of the desks on the associated display.
      */
     private data class DisplayDeskConfig(
         val displayId: Int,
         var canCreateDesks: Boolean,
-        var activeDeskId: Int = -1,
+        var activeDeskId: Int = INACTIVE_DESK_ID,
         val deskIds: MutableSet<Int>,
     )
 
@@ -79,6 +79,8 @@ constructor(
     private val desktopVisibilityListeners: MutableSet<DesktopVisibilityListener> = HashSet()
     private val taskbarDesktopModeListeners: MutableSet<TaskbarDesktopModeListener> = HashSet()
 
+    // TODO: b/394387739 - Deprecate this and replace it with something that tracks the count per
+    //  desk.
     /** Number of visible desktop windows in desktop mode. */
     var visibleDesktopTasksCount: Int = 0
         /**
@@ -142,8 +144,36 @@ constructor(
         }
     }
 
+    /** Returns whether a desk is currently active on the display with the given [displayId]. */
+    fun isInDesktopMode(displayId: Int): Boolean {
+        if (!DesktopModeStatus.enableMultipleDesktops(context)) {
+            return areDesktopTasksVisible()
+        }
+
+        val isInDesktopMode = displaysDesksConfigsMap[displayId].activeDeskId != INACTIVE_DESK_ID
+        if (DEBUG) {
+            Log.d(TAG, "isInDesktopMode: $isInDesktopMode")
+        }
+        return isInDesktopMode
+    }
+
+    /**
+     * Returns whether a desk is currently active on the display with the given [displayId] and
+     * Overview is not active.
+     */
+    fun isInDesktopModeAndNotInOverview(displayId: Int): Boolean {
+        if (!DesktopModeStatus.enableMultipleDesktops(context)) {
+            return areDesktopTasksVisibleAndNotInOverview()
+        }
+
+        if (DEBUG) {
+            Log.d(TAG, "isInDesktopModeAndNotInOverview: overview=$inOverviewState")
+        }
+        return isInDesktopMode(displayId) && !inOverviewState
+    }
+
     /** Whether desktop tasks are visible in desktop mode. */
-    fun areDesktopTasksVisible(): Boolean {
+    private fun areDesktopTasksVisible(): Boolean {
         val desktopTasksVisible: Boolean = visibleDesktopTasksCount > 0
         if (DEBUG) {
             Log.d(TAG, "areDesktopTasksVisible: desktopVisible=$desktopTasksVisible")
@@ -152,7 +182,7 @@ constructor(
     }
 
     /** Whether desktop tasks are visible in desktop mode. */
-    fun areDesktopTasksVisibleAndNotInOverview(): Boolean {
+    private fun areDesktopTasksVisibleAndNotInOverview(): Boolean {
         val desktopTasksVisible: Boolean = visibleDesktopTasksCount > 0
         if (DEBUG) {
             Log.d(
@@ -250,6 +280,13 @@ constructor(
     }
 
     private fun notifyDesktopVisibilityListeners(areDesktopTasksVisible: Boolean) {
+        if (DesktopModeStatus.enableMultipleDesktops(context)) {
+            // This is triggered using the legacy way of determining the visibility of the desktop
+            // mode and should not be used when the multi-desks feature is enabled.
+            // (See b/394685645 for details).
+            return
+        }
+
         if (DEBUG) {
             Log.d(TAG, "notifyDesktopVisibilityListeners: visible=$areDesktopTasksVisible")
         }
@@ -391,7 +428,7 @@ constructor(
                 "Removing non-existing desk Id: $deskId on display: $displayId"
             }
             if (it.activeDeskId == deskId) {
-                it.activeDeskId = -1
+                it.activeDeskId = INACTIVE_DESK_ID
             }
         }
     }
@@ -542,5 +579,7 @@ constructor(
 
         private const val TAG = "DesktopVisController"
         private const val DEBUG = false
+
+        private const val INACTIVE_DESK_ID = -1
     }
 }

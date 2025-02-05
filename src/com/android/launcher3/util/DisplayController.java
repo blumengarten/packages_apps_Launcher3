@@ -448,7 +448,7 @@ public class DisplayController implements ComponentCallbacks,
             mIsTaskbarPinned = LauncherPrefs.get(displayInfoContext).get(TASKBAR_PINNING);
             mIsTaskbarPinnedInDesktopMode = LauncherPrefs.get(displayInfoContext).get(
                     TASKBAR_PINNING_IN_DESKTOP_MODE);
-            mIsInDesktopMode = wmProxy.isInDesktopMode();
+            mIsInDesktopMode = wmProxy.isInDesktopMode(DEFAULT_DISPLAY);
             mShowLockedTaskbarOnHome = wmProxy.showLockedTaskbarOnHome(displayInfoContext);
             mShowDesktopTaskbarForFreeformDisplay = wmProxy.showDesktopTaskbarForFreeformDisplay(
                     displayInfoContext);
