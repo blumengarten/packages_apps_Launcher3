@@ -612,6 +612,7 @@ public class TaskbarManager {
      */
     public void setSetupUIVisible(boolean isVisible) {
         mSharedState.setupUIVisible = isVisible;
+        mAllAppsActionManager.setSetupUiVisible(isVisible);
         TaskbarActivityContext taskbar = getTaskbarForDisplay(getDefaultDisplayId());
         if (taskbar != null) {
             taskbar.setSetupUIVisible(isVisible);
