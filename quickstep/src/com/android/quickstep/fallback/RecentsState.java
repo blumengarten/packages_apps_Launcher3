@@ -27,6 +27,7 @@ import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.R;
 import com.android.launcher3.statemanager.BaseState;
 import com.android.launcher3.util.Themes;
+import com.android.launcher3.views.ActivityContext;
 import com.android.quickstep.views.RecentsViewContainer;
 
 /**
@@ -92,7 +93,7 @@ public class RecentsState implements BaseState<RecentsState> {
     }
 
     @Override
-    public int getTransitionDuration(Context context, boolean isToState) {
+    public int getTransitionDuration(ActivityContext context, boolean isToState) {
         return 250;
     }
 

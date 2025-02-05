@@ -15,6 +15,11 @@
  */
 package com.android.launcher3.allapps;
 
+import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_WORK_UTILITY_VIEW_EXPAND_ANIMATION_BEGIN;
+import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_WORK_UTILITY_VIEW_EXPAND_ANIMATION_END;
+import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_WORK_UTILITY_VIEW_SHRINK_ANIMATION_BEGIN;
+import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_WORK_UTILITY_VIEW_SHRINK_ANIMATION_END;
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
@@ -46,6 +51,7 @@ import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.anim.AnimatedPropertySetter;
 import com.android.launcher3.anim.KeyboardInsetAnimationCallback;
+import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.model.StringCache;
 import com.android.launcher3.views.ActivityContext;
 
@@ -88,6 +94,8 @@ public class WorkUtilityView extends LinearLayout implements Insettable,
     private TextView mPauseText;
     private ImageView mWorkIcon;
     private ImageButton mSchedulerButton;
+    private final StatsLogManager mStatsLogManager;
+    private LinearLayout mWorkUtilityView;
 
     public WorkUtilityView(@NonNull Context context) {
         this(context, null, 0);
@@ -111,6 +119,7 @@ public class WorkUtilityView extends LinearLayout implements Insettable,
                 R.dimen.work_fab_icon_start_margin_expanded);
         mWorkSchedulerIntentAction = mContext.getResources().getString(
                 R.string.work_profile_scheduler_intent);
+        mStatsLogManager = mActivityContext.getStatsLogManager();
     }
 
     @Override
@@ -121,6 +130,7 @@ public class WorkUtilityView extends LinearLayout implements Insettable,
         mWorkIcon = findViewById(R.id.work_icon);
         mWorkFAB = findViewById(R.id.work_mode_toggle);
         mSchedulerButton = findViewById(R.id.work_scheduler);
+        mWorkUtilityView = findViewById(R.id.work_utility_view);
         setSelected(true);
         KeyboardInsetAnimationCallback keyboardInsetAnimationCallback =
                 new KeyboardInsetAnimationCallback(this);
@@ -319,6 +329,23 @@ public class WorkUtilityView extends LinearLayout implements Insettable,
             animatorList.add(animateSchedulerScale(isExpanding));
             animatorList.add(animateSchedulerAlpha(isExpanding));
         }
+        animatorSet.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                mStatsLogManager.logger().sendToInteractionJankMonitor(
+                        isExpanding ? LAUNCHER_WORK_UTILITY_VIEW_EXPAND_ANIMATION_BEGIN
+                                : LAUNCHER_WORK_UTILITY_VIEW_SHRINK_ANIMATION_BEGIN,
+                        mWorkUtilityView);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mStatsLogManager.logger().sendToInteractionJankMonitor(
+                        isExpanding ? LAUNCHER_WORK_UTILITY_VIEW_EXPAND_ANIMATION_END
+                                : LAUNCHER_WORK_UTILITY_VIEW_SHRINK_ANIMATION_END,
+                        mWorkUtilityView);
+            }
+        });
         animatorSet.playTogether(animatorList);
         animatorSet.start();
     }

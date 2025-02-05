@@ -390,10 +390,6 @@ class RecentsWindowManager(context: Context, wallpaperColorHints: Int) :
         return systemUiController
     }
 
-    override fun getContext(): Context {
-        return this
-    }
-
     override fun getScrimView(): ScrimView? {
         return scrimView
     }

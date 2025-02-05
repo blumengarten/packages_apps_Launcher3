@@ -118,7 +118,7 @@ public abstract class LauncherState implements BaseState<LauncherState> {
             LAUNCHER_STATE_HOME,
             FLAG_DISABLE_RESTORE | FLAG_WORKSPACE_ICONS_CAN_BE_DRAGGED | FLAG_HAS_SYS_UI_SCRIM) {
         @Override
-        public int getTransitionDuration(Context context, boolean isToState) {
+        public int getTransitionDuration(ActivityContext context, boolean isToState) {
             // Arbitrary duration, when going to NORMAL we use the state we're coming from instead.
             return 0;
         }
@@ -345,7 +345,7 @@ public abstract class LauncherState implements BaseState<LauncherState> {
     public final  <DEVICE_PROFILE_CONTEXT extends Context & ActivityContext>
             float getDepth(DEVICE_PROFILE_CONTEXT context) {
         return getDepth(context,
-                BaseDraggingActivity.fromContext(context).getDeviceProfile().isMultiWindowMode);
+                ActivityContext.lookupContext(context).getDeviceProfile().isMultiWindowMode);
     }
 
     /**

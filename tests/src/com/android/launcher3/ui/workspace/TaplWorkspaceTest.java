@@ -116,7 +116,13 @@ public class TaplWorkspaceTest extends AbstractLauncherUiTest<Launcher> {
      */
     @ScreenRecord // b/381918059
     @Test
-    public void testAddAndDeletePageAndFling() {
+    public void testAddAndDeletePageAndFling() throws Exception {
+        // Set workspace  that includes the chrome Activity app icon on the hotseat.
+        LauncherLayoutBuilder builder = new LauncherLayoutBuilder()
+                .atHotseat(0).putApp("com.android.chrome", "com.google.android.apps.chrome.Main");
+        mLauncherLayout = TestUtil.setLauncherDefaultLayout(mTargetContext, builder);
+        reinitializeLauncherData();
+
         Workspace workspace = mLauncher.getWorkspace();
         // Get the first app from the hotseat
         HomeAppIcon hotSeatIcon = workspace.getHotseatAppIcon(0);

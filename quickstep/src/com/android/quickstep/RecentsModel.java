@@ -22,6 +22,7 @@ import static com.android.launcher3.Flags.enableRefactorTaskThumbnail;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.quickstep.TaskUtils.checkCurrentOrManagedUserId;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.app.KeyguardManager;
@@ -41,6 +42,7 @@ import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.graphics.ThemeManager.ThemeChangeListener;
 import com.android.launcher3.icons.IconProvider;
 import com.android.launcher3.util.Executors.SimpleThreadFactory;
+import com.android.launcher3.util.LockedUserState;
 import com.android.launcher3.util.MainThreadInitializedObject;
 import com.android.launcher3.util.SafeCloseable;
 import com.android.quickstep.recents.data.RecentTasksDataSource;
@@ -62,6 +64,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+
+import javax.inject.Provider;
 
 /**
  * Singleton class to load and manage recents model.
@@ -86,15 +90,19 @@ public class RecentsModel implements RecentTasksDataSource, TaskStackChangeListe
     private final TaskIconCache mIconCache;
     private final TaskThumbnailCache mThumbnailCache;
     private final ComponentCallbacks mCallbacks;
-    private final ThemeManager mThemeManager;
 
     private final TaskStackChangeListeners mTaskStackChangeListeners;
     private final SafeCloseable mIconChangeCloseable;
+
+    private final LockedUserState mLockedUserState;
+    private final Provider<ThemeManager> mThemeManagerProvider;
+    private final Runnable mUnlockCallback;
 
     private RecentsModel(Context context) {
         this(context, new IconProvider(context));
     }
 
+    @SuppressLint("VisibleForTests")
     private RecentsModel(Context context, IconProvider iconProvider) {
         this(context,
                 new RecentTasksList(
@@ -107,14 +115,16 @@ public class RecentsModel implements RecentTasksDataSource, TaskStackChangeListe
                 new TaskThumbnailCache(context, RECENTS_MODEL_EXECUTOR),
                 iconProvider,
                 TaskStackChangeListeners.getInstance(),
-                ThemeManager.INSTANCE.get(context));
+                LockedUserState.get(context),
+                () -> ThemeManager.INSTANCE.get(context));
     }
 
     @VisibleForTesting
     RecentsModel(Context context, RecentTasksList taskList, TaskIconCache iconCache,
             TaskThumbnailCache thumbnailCache, IconProvider iconProvider,
             TaskStackChangeListeners taskStackChangeListeners,
-            ThemeManager themeManager) {
+            LockedUserState lockedUserState,
+            Provider<ThemeManager> themeManagerProvider) {
         mContext = context;
         mTaskList = taskList;
         mIconCache = iconCache;
@@ -140,8 +150,11 @@ public class RecentsModel implements RecentTasksDataSource, TaskStackChangeListe
         mTaskStackChangeListeners.registerTaskStackListener(this);
         mIconChangeCloseable = iconProvider.registerIconChangeListener(
                 this::onAppIconChanged, MAIN_EXECUTOR.getHandler());
-        mThemeManager = themeManager;
-        themeManager.addChangeListener(this);
+
+        mLockedUserState = lockedUserState;
+        mThemeManagerProvider = themeManagerProvider;
+        mUnlockCallback = () -> mThemeManagerProvider.get().addChangeListener(this);
+        lockedUserState.runOnUserUnlocked(mUnlockCallback);
     }
 
     public TaskIconCache getIconCache() {
@@ -402,7 +415,12 @@ public class RecentsModel implements RecentTasksDataSource, TaskStackChangeListe
         mIconCache.removeTaskVisualsChangeListener();
         mTaskStackChangeListeners.unregisterTaskStackListener(this);
         mIconChangeCloseable.close();
-        mThemeManager.removeChangeListener(this);
+
+        if (mLockedUserState.isUserUnlocked()) {
+            mThemeManagerProvider.get().removeChangeListener(this);
+        } else {
+            mLockedUserState.removeOnUserUnlockedRunnable(mUnlockCallback);
+        }
     }
 
     private boolean isCachePreloadingEnabled() {

@@ -26,6 +26,7 @@ import static com.android.launcher3.QuickstepTransitionManager.STATUS_BAR_TRANSI
 import static com.android.launcher3.QuickstepTransitionManager.STATUS_BAR_TRANSITION_PRE_DELAY;
 import static com.android.launcher3.testing.shared.TestProtocol.LAUNCHER_ACTIVITY_STOPPED_MESSAGE;
 import static com.android.launcher3.testing.shared.TestProtocol.OVERVIEW_STATE_ORDINAL;
+import static com.android.launcher3.util.WallpaperThemeManager.setWallpaperDependentTheme;
 import static com.android.quickstep.OverviewComponentObserver.startHomeIntentSafely;
 import static com.android.quickstep.TaskUtils.taskIsATargetWithMode;
 import static com.android.quickstep.TaskViewUtils.createRecentsWindowAnimator;
@@ -247,7 +248,6 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
 
     @Override
     public void returnToHomescreen() {
-        super.returnToHomescreen();
         // TODO(b/137318995) This should go home, but doing so removes freeform windows
     }
 
@@ -261,6 +261,7 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
         }
     }
 
+    @NonNull
     @Override
     public ActivityOptionsWrapper getActivityLaunchOptions(final View v, @Nullable ItemInfo item) {
         if (!(v instanceof TaskView)) {
@@ -371,6 +372,7 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setWallpaperDependentTheme(this);
 
         mStateManager = new StateManager<>(this, RecentsState.BG_LAUNCHER);
 
@@ -431,7 +433,6 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
      */
     private void initDeviceProfile() {
         mDeviceProfile = createDeviceProfile();
-        onDeviceProfileInitiated();
     }
 
     @Override

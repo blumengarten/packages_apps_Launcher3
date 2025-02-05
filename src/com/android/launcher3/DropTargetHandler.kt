@@ -2,7 +2,7 @@ package com.android.launcher3
 
 import android.content.ComponentName
 import android.view.View
-import com.android.launcher3.BaseDraggingActivity.EVENT_RESUMED
+import com.android.launcher3.BaseActivity.EVENT_RESUMED
 import com.android.launcher3.DropTarget.DragObject
 import com.android.launcher3.LauncherConstants.ActivityCodes
 import com.android.launcher3.SecondaryDropTarget.DeferredOnComplete

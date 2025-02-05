@@ -149,8 +149,9 @@ import com.android.launcher3.uioverrides.touchcontrollers.NoButtonQuickSwitchTou
 import com.android.launcher3.uioverrides.touchcontrollers.PortraitStatesTouchController;
 import com.android.launcher3.uioverrides.touchcontrollers.QuickSwitchTouchController;
 import com.android.launcher3.uioverrides.touchcontrollers.StatusBarTouchController;
+import com.android.launcher3.uioverrides.touchcontrollers.TaskViewDismissTouchController;
+import com.android.launcher3.uioverrides.touchcontrollers.TaskViewLaunchTouchController;
 import com.android.launcher3.uioverrides.touchcontrollers.TaskViewRecentsTouchContext;
-import com.android.launcher3.uioverrides.touchcontrollers.TaskViewTouchController;
 import com.android.launcher3.uioverrides.touchcontrollers.TaskViewTouchControllerDeprecated;
 import com.android.launcher3.uioverrides.touchcontrollers.TransposedQuickSwitchTouchController;
 import com.android.launcher3.uioverrides.touchcontrollers.TwoButtonNavbarTouchController;
@@ -459,7 +460,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
     protected void onItemClicked(View view) {
         if (!mSplitToWorkspaceController.handleSecondAppSelectionForSplit(view)) {
-            QuickstepLauncher.super.getItemOnClickListener().onClick(view);
+            super.getItemOnClickListener().onClick(view);
         }
     }
 
@@ -687,7 +688,8 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         }
 
         if (enableExpressiveDismissTaskMotion()) {
-            list.add(new TaskViewTouchController<>(this, mTaskViewRecentsTouchContext));
+            list.add(new TaskViewLaunchTouchController<>(this, mTaskViewRecentsTouchContext));
+            list.add(new TaskViewDismissTouchController<>(this, mTaskViewRecentsTouchContext));
         } else {
             list.add(new TaskViewTouchControllerDeprecated<>(this, mTaskViewRecentsTouchContext));
         }
@@ -731,6 +733,9 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         final boolean ret = super.initDeviceProfile(idp);
         mDeviceProfile.isPredictiveBackSwipe =
                 getApplicationInfo().isOnBackInvokedCallbackEnabled();
+        if (ret) {
+            SystemUiProxy.INSTANCE.get(this).setLauncherAppIconSize(mDeviceProfile.iconSizePx);
+        }
         return ret;
     }
 
@@ -1160,9 +1165,9 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
                     .getHotseatTranslationXForNavBar(this, isBubblesOnLeft);
         }
         if (isBubbleBarEnabled()
-                && mDeviceProfile.shouldAdjustHotseatForBubbleBar(getContext(), hasBubbles())) {
+                && mDeviceProfile.shouldAdjustHotseatForBubbleBar(asContext(), hasBubbles())) {
             translationX += (int) mDeviceProfile
-                    .getHotseatAdjustedTranslation(getContext(), itemInfo.cellX);
+                    .getHotseatAdjustedTranslation(asContext(), itemInfo.cellX);
         }
         return translationX;
     }
@@ -1237,6 +1242,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         }
     }
 
+    @NonNull
     @Override
     public ActivityOptionsWrapper getActivityLaunchOptions(View v, @Nullable ItemInfo item) {
         ActivityOptionsWrapper activityOptions = mAppTransitionManager.getActivityLaunchOptions(
@@ -1364,12 +1370,6 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     public boolean areDesktopTasksVisible() {
         return DesktopVisibilityController.INSTANCE.get(this)
                 .areDesktopTasksVisibleAndNotInOverview();
-    }
-
-    @Override
-    protected void onDeviceProfileInitiated() {
-        super.onDeviceProfileInitiated();
-        SystemUiProxy.INSTANCE.get(this).setLauncherAppIconSize(mDeviceProfile.iconSizePx);
     }
 
     @Override
@@ -1507,5 +1507,10 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
     public void setCanShowAllAppsEducationView(boolean canShowAllAppsEducationView) {
         mCanShowAllAppsEducationView = canShowAllAppsEducationView;
+    }
+
+    @Override
+    public void returnToHomescreen() {
+        getStateManager().goToState(LauncherState.NORMAL);
     }
 }

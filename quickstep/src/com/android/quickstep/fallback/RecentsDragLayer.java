@@ -21,8 +21,9 @@ import android.content.Context;
 import android.util.AttributeSet;
 
 import com.android.launcher3.statemanager.StatefulContainer;
+import com.android.launcher3.uioverrides.touchcontrollers.TaskViewDismissTouchController;
+import com.android.launcher3.uioverrides.touchcontrollers.TaskViewLaunchTouchController;
 import com.android.launcher3.uioverrides.touchcontrollers.TaskViewRecentsTouchContext;
-import com.android.launcher3.uioverrides.touchcontrollers.TaskViewTouchController;
 import com.android.launcher3.uioverrides.touchcontrollers.TaskViewTouchControllerDeprecated;
 import com.android.launcher3.util.TouchController;
 import com.android.launcher3.views.BaseDragLayer;
@@ -54,10 +55,18 @@ public class RecentsDragLayer<T extends Context & RecentsViewContainer
 
     @Override
     public void recreateControllers() {
-        mControllers = new TouchController[]{
-                enableExpressiveDismissTaskMotion() ? new TaskViewTouchController<>(mContainer,
-                        mTaskViewRecentsTouchContext) : new TaskViewTouchControllerDeprecated<>(
-                        mContainer, mTaskViewRecentsTouchContext),
-                new FallbackNavBarTouchController(mContainer)};
+        mControllers = enableExpressiveDismissTaskMotion()
+                ? new TouchController[]{
+                        new TaskViewLaunchTouchController<>(mContainer,
+                                mTaskViewRecentsTouchContext),
+                        new TaskViewDismissTouchController<>(mContainer,
+                                mTaskViewRecentsTouchContext),
+                        new FallbackNavBarTouchController(mContainer)
+                }
+                : new TouchController[]{
+                        new TaskViewTouchControllerDeprecated<>(mContainer,
+                                mTaskViewRecentsTouchContext),
+                        new FallbackNavBarTouchController(mContainer)
+                };
     }
 }

@@ -40,7 +40,6 @@ import android.widget.ImageView;
 import androidx.annotation.LayoutRes;
 
 import com.android.launcher3.AbstractFloatingView;
-import com.android.launcher3.BaseDraggingActivity;
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.DragSource;
 import com.android.launcher3.DropTarget;
@@ -579,7 +578,7 @@ public class PopupContainerWithArrow<T extends Context & ActivityContext>
     /**
      * Dismisses the popup if it is no longer valid
      */
-    public static void dismissInvalidPopup(BaseDraggingActivity activity) {
+    public static <T extends Context & ActivityContext> void dismissInvalidPopup(T activity) {
         PopupContainerWithArrow popup = getOpen(activity);
         if (popup != null && (!popup.mOriginalIcon.isAttachedToWindow()
                 || !ShortcutUtil.supportsShortcuts((ItemInfo) popup.mOriginalIcon.getTag()))) {

@@ -17,12 +17,12 @@ package com.android.launcher3.uioverrides.states;
 
 import static com.android.launcher3.logging.StatsLogManager.LAUNCHER_STATE_OVERVIEW;
 
-import android.content.Context;
 import android.graphics.Rect;
 
 import com.android.launcher3.Flags;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherState;
+import com.android.launcher3.views.ActivityContext;
 import com.android.quickstep.views.RecentsView;
 
 /**
@@ -39,7 +39,7 @@ public class OverviewModalTaskState extends OverviewState {
     }
 
     @Override
-    public int getTransitionDuration(Context launcher, boolean isToState) {
+    public int getTransitionDuration(ActivityContext launcher, boolean isToState) {
         return 300;
     }
 

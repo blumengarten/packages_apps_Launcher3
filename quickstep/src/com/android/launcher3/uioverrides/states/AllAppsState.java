@@ -48,8 +48,7 @@ public class AllAppsState extends LauncherState {
     }
 
     @Override
-    public <DEVICE_PROFILE_CONTEXT extends Context & ActivityContext>
-    int getTransitionDuration(DEVICE_PROFILE_CONTEXT context, boolean isToState) {
+    public int getTransitionDuration(ActivityContext context, boolean isToState) {
         return isToState
                 ? context.getDeviceProfile().allAppsOpenDuration
                 : context.getDeviceProfile().allAppsCloseDuration;

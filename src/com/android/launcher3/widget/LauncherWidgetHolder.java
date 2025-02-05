@@ -41,7 +41,6 @@ import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
 import com.android.launcher3.BaseActivity;
-import com.android.launcher3.BaseDraggingActivity;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.model.data.ItemInfo;
@@ -50,6 +49,7 @@ import com.android.launcher3.testing.shared.TestProtocol;
 import com.android.launcher3.util.LooperExecutor;
 import com.android.launcher3.util.ResourceBasedOverride;
 import com.android.launcher3.util.SafeCloseable;
+import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.widget.custom.CustomWidgetManager;
 
 import java.util.ArrayList;
@@ -218,8 +218,7 @@ public class LauncherWidgetHolder {
      * @param widgetId The ID of the widget
      * @param requestCode The request code
      */
-    public void startConfigActivity(@NonNull BaseDraggingActivity activity, int widgetId,
-            int requestCode) {
+    public void startConfigActivity(@NonNull BaseActivity activity, int widgetId, int requestCode) {
         if (!WIDGETS_ENABLED) {
             sendActionCancelled(activity, requestCode);
             return;
@@ -245,7 +244,7 @@ public class LauncherWidgetHolder {
      * the configuration of the {@code widgetId} app widget, or null of options cannot be produced.
      */
     @Nullable
-    protected Bundle getConfigurationActivityOptions(@NonNull BaseDraggingActivity activity,
+    protected Bundle getConfigurationActivityOptions(@NonNull ActivityContext activity,
             int widgetId) {
         LauncherAppWidgetHostView view = mViews.get(widgetId);
         if (view == null) {

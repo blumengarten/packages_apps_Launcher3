@@ -18,6 +18,7 @@ package com.android.quickstep
 
 import android.os.RemoteException
 import android.util.Log
+import com.android.launcher3.Utilities
 import com.android.launcher3.config.FeatureFlags
 import com.android.launcher3.util.Executors
 import com.android.wm.shell.shared.IHomeTransitionListener.Stub
@@ -41,10 +42,13 @@ class HomeVisibilityState {
             transitions?.setHomeTransitionListener(
                 object : Stub() {
                     override fun onHomeVisibilityChanged(isVisible: Boolean) {
-                        Executors.MAIN_EXECUTOR.execute {
-                            isHomeVisible = isVisible
-                            listeners.forEach { it.onHomeVisibilityChanged(isVisible) }
-                        }
+                        Utilities.postAsyncCallback(
+                            Executors.MAIN_EXECUTOR.handler,
+                            {
+                                isHomeVisible = isVisible
+                                listeners.forEach { it.onHomeVisibilityChanged(isVisible) }
+                            },
+                        )
                     }
                 }
             )

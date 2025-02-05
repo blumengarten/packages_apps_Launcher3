@@ -19,14 +19,21 @@ package com.android.quickstep.views
 import android.graphics.Rect
 import android.view.View
 import androidx.core.view.children
+import androidx.dynamicanimation.animation.FloatPropertyCompat
+import androidx.dynamicanimation.animation.SpringAnimation
+import androidx.dynamicanimation.animation.SpringForce
 import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
 import com.android.launcher3.Flags.enableSeparateExternalDisplayTasks
+import com.android.launcher3.R
+import com.android.launcher3.touch.SingleAxisSwipeDetector
+import com.android.launcher3.util.DynamicResource
 import com.android.launcher3.util.IntArray
 import com.android.quickstep.util.GroupTask
 import com.android.quickstep.util.isExternalDisplay
 import com.android.quickstep.views.RecentsView.RUNNING_TASK_ATTACH_ALPHA
 import com.android.systemui.shared.recents.model.ThumbnailData
 import java.util.function.BiConsumer
+import kotlin.math.abs
 
 /**
  * Helper class for [RecentsView]. This util class contains refactored and extracted functions from
@@ -292,6 +299,58 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
                 outBottomRowRect.top = outTopRowRect.bottom
             }
         }
+    }
+
+    /**
+     * Creates the spring animations which run when a dragged task view in overview is released.
+     *
+     * <p>When a task dismiss is cancelled, the task will return to its original position via a
+     * spring animation.
+     */
+    fun createTaskDismissSettlingSpringAnimation(
+        draggedTaskView: TaskView?,
+        velocity: Float,
+        isDismissing: Boolean,
+        detector: SingleAxisSwipeDetector,
+        dismissLength: Int,
+        onEndRunnable: () -> Unit,
+    ): SpringAnimation? {
+        draggedTaskView ?: return null
+        val taskDismissFloatProperty =
+            FloatPropertyCompat.createFloatPropertyCompat(
+                draggedTaskView.secondaryDismissTranslationProperty
+            )
+        val rp = DynamicResource.provider(recentsView.mContainer)
+        return SpringAnimation(draggedTaskView, taskDismissFloatProperty)
+            .setSpring(
+                SpringForce()
+                    .setDampingRatio(rp.getFloat(R.dimen.dismiss_task_trans_y_damping_ratio))
+                    .setStiffness(rp.getFloat(R.dimen.dismiss_task_trans_y_stiffness))
+            )
+            .setStartVelocity(if (detector.isFling(velocity)) velocity else 0f)
+            .addUpdateListener { animation, value, _ ->
+                if (isDismissing && abs(value) >= abs(dismissLength)) {
+                    // TODO(b/393553524): Remove 0 alpha, instead animate task fully off screen.
+                    draggedTaskView.alpha = 0f
+                    animation.cancel()
+                } else if (draggedTaskView.isRunningTask && recentsView.enableDrawingLiveTile) {
+                    recentsView.runActionOnRemoteHandles { remoteTargetHandle ->
+                        remoteTargetHandle.taskViewSimulator.taskSecondaryTranslation.value =
+                            taskDismissFloatProperty.getValue(draggedTaskView)
+                    }
+                    recentsView.redrawLiveTile()
+                }
+            }
+            .addEndListener { _, _, _, _ ->
+                if (isDismissing) {
+                    recentsView.dismissTask(
+                        draggedTaskView,
+                        /* animateTaskView = */ false,
+                        /* removeTask = */ true,
+                    )
+                }
+                onEndRunnable()
+            }
     }
 
     companion object {

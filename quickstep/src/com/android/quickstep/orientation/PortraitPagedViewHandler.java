@@ -310,6 +310,12 @@ public class PortraitPagedViewHandler extends DefaultPagedViewHandler implements
     }
 
     @Override
+    public int getDownDirection(boolean isRtl) {
+        // Ignore rtl since it only affects X value displacement, Y displacement doesn't change
+        return SingleAxisSwipeDetector.DIRECTION_NEGATIVE;
+    }
+
+    @Override
     public boolean isGoingUp(float displacement, boolean isRtl) {
         // Ignore rtl since it only affects X value displacement, Y displacement doesn't change
         return displacement < 0;

@@ -332,6 +332,9 @@ interface RecentsPagedOrientationHandler : PagedOrientationHandler {
     /** @return Given [.getUpDownSwipeDirection], whether POSITIVE or NEGATIVE is up. */
     fun getUpDirection(isRtl: Boolean): Int
 
+    /** @return Given [.getUpDownSwipeDirection], whether POSITIVE or NEGATIVE is down. */
+    fun getDownDirection(isRtl: Boolean): Int
+
     /** @return Whether the displacement is going towards the top of the screen. */
     fun isGoingUp(displacement: Float, isRtl: Boolean): Boolean
 

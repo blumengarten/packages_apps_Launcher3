@@ -859,6 +859,18 @@ public class StatsLogManager implements ResourceBasedOverride {
 
         @UiEvent(doc = "User sets the device in Fixed Landscape")
         FIXED_LANDSCAPE_TOGGLE_DISABLED(2020),
+
+        @UiEvent(doc = "Work utility view expand animation started")
+        LAUNCHER_WORK_UTILITY_VIEW_EXPAND_ANIMATION_BEGIN(2075),
+
+        @UiEvent(doc = "Work utility view expand animation ended")
+        LAUNCHER_WORK_UTILITY_VIEW_EXPAND_ANIMATION_END(2076),
+
+        @UiEvent(doc = "Work utility view shrink animation started")
+        LAUNCHER_WORK_UTILITY_VIEW_SHRINK_ANIMATION_BEGIN(2077),
+
+        @UiEvent(doc = "Work utility view shrink animation ended")
+        LAUNCHER_WORK_UTILITY_VIEW_SHRINK_ANIMATION_END(2078),
         // ADD MORE
         ;
 

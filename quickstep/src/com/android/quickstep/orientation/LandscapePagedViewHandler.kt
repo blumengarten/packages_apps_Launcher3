@@ -306,6 +306,10 @@ open class LandscapePagedViewHandler : RecentsPagedOrientationHandler {
         if (isRtl) SingleAxisSwipeDetector.DIRECTION_NEGATIVE
         else SingleAxisSwipeDetector.DIRECTION_POSITIVE
 
+    override fun getDownDirection(isRtl: Boolean): Int =
+        if (isRtl) SingleAxisSwipeDetector.DIRECTION_POSITIVE
+        else SingleAxisSwipeDetector.DIRECTION_NEGATIVE
+
     override fun isGoingUp(displacement: Float, isRtl: Boolean): Boolean =
         if (isRtl) displacement < 0 else displacement > 0
 

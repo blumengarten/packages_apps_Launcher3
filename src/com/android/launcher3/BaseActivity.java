@@ -16,6 +16,7 @@
 
 package com.android.launcher3;
 
+import static com.android.launcher3.util.DisplayController.CHANGE_ROTATION;
 import static com.android.launcher3.util.FlagDebugUtils.appendFlag;
 import static com.android.launcher3.util.FlagDebugUtils.formatFlagChange;
 import static com.android.launcher3.util.SystemUiController.UI_STATE_FULLSCREEN_TASK;
@@ -29,17 +30,27 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ActionMode;
+import android.view.View;
 import android.window.OnBackInvokedDispatcher;
 
 import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.android.launcher3.DeviceProfile.OnDeviceProfileChangeListener;
 import com.android.launcher3.logging.StatsLogManager;
+import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.testing.TestLogging;
 import com.android.launcher3.testing.shared.TestProtocol;
+import com.android.launcher3.util.ActivityOptionsWrapper;
+import com.android.launcher3.util.DisplayController;
+import com.android.launcher3.util.DisplayController.DisplayInfoChangeListener;
+import com.android.launcher3.util.DisplayController.Info;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.SystemUiController;
 import com.android.launcher3.util.ViewCache;
+import com.android.launcher3.util.WindowBounds;
 import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.views.ScrimView;
 
@@ -52,7 +63,8 @@ import java.util.StringJoiner;
 /**
  * Launcher BaseActivity
  */
-public abstract class BaseActivity extends Activity implements ActivityContext {
+public abstract class BaseActivity extends Activity implements ActivityContext,
+        DisplayInfoChangeListener {
 
     private static final String TAG = "BaseActivity";
     static final boolean DEBUG = false;
@@ -126,6 +138,10 @@ public abstract class BaseActivity extends Activity implements ActivityContext {
     public @interface ActivityFlags {
     }
 
+    // When starting an action mode, setting this tag will cause the action mode to be cancelled
+    // automatically when user interacts with the launcher.
+    public static final Object AUTO_CANCEL_ACTION_MODE = new Object();
+
     /** Returns a human-readable string for the specified {@link ActivityFlags}. */
     public static String getActivityStateString(@ActivityFlags int flags) {
         StringJoiner result = new StringJoiner("|");
@@ -159,6 +175,8 @@ public abstract class BaseActivity extends Activity implements ActivityContext {
     // Callback array that corresponds to events defined in @ActivityEvent
     private final RunnableList[] mEventCallbacks =
             {new RunnableList(), new RunnableList(), new RunnableList(), new RunnableList()};
+
+    private ActionMode mCurrentActionMode;
 
     @Override
     public ViewCache getViewCache() {
@@ -206,6 +224,7 @@ public abstract class BaseActivity extends Activity implements ActivityContext {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         registerBackDispatcher();
+        DisplayController.INSTANCE.get(this).addChangeListener(this);
     }
 
     @Override
@@ -253,6 +272,7 @@ public abstract class BaseActivity extends Activity implements ActivityContext {
     protected void onDestroy() {
         super.onDestroy();
         mEventCallbacks[EVENT_DESTROYED].executeAllAndClear();
+        DisplayController.INSTANCE.get(this).removeChangeListener(this);
     }
 
     @Override
@@ -402,6 +422,61 @@ public abstract class BaseActivity extends Activity implements ActivityContext {
         writer.println(prefix + "mActivityFlags: " + getActivityStateString(mActivityFlags));
         writer.println(prefix + "mForceInvisible: " + mForceInvisible);
     }
+
+
+    @Override
+    public void onActionModeStarted(ActionMode mode) {
+        super.onActionModeStarted(mode);
+        mCurrentActionMode = mode;
+    }
+
+    @Override
+    public void onActionModeFinished(ActionMode mode) {
+        super.onActionModeFinished(mode);
+        mCurrentActionMode = null;
+    }
+
+    protected boolean isInAutoCancelActionMode() {
+        return mCurrentActionMode != null && AUTO_CANCEL_ACTION_MODE == mCurrentActionMode.getTag();
+    }
+
+    @Override
+    public boolean finishAutoCancelActionMode() {
+        if (isInAutoCancelActionMode()) {
+            mCurrentActionMode.finish();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    @NonNull
+    public ActivityOptionsWrapper getActivityLaunchOptions(View v, @Nullable ItemInfo item) {
+        ActivityOptionsWrapper wrapper = ActivityContext.super.getActivityLaunchOptions(v, item);
+        addEventCallback(EVENT_RESUMED, wrapper.onEndCallback::executeAllAndDestroy);
+        return wrapper;
+    }
+
+    @Override
+    public ActivityOptionsWrapper makeDefaultActivityOptions(int splashScreenStyle) {
+        ActivityOptionsWrapper wrapper =
+                ActivityContext.super.makeDefaultActivityOptions(splashScreenStyle);
+        addEventCallback(EVENT_RESUMED, wrapper.onEndCallback::executeAllAndDestroy);
+        return wrapper;
+    }
+
+    protected WindowBounds getMultiWindowDisplaySize() {
+        return WindowBounds.fromWindowMetrics(getWindowManager().getCurrentWindowMetrics());
+    }
+
+    @Override
+    public void onDisplayInfoChanged(Context context, Info info, int flags) {
+        if ((flags & CHANGE_ROTATION) != 0 && mDeviceProfile.isVerticalBarLayout()) {
+            reapplyUi();
+        }
+    }
+
+    protected void reapplyUi() {}
 
     public static <T extends BaseActivity> T fromContext(Context context) {
         if (context instanceof BaseActivity) {

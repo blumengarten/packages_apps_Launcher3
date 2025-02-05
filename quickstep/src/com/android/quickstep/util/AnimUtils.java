@@ -78,8 +78,7 @@ public class AnimUtils {
             @NonNull SplitAnimationController animationController) {
         StateAnimationConfig config = new StateAnimationConfig();
         BaseState startState = stateManager.getState();
-        long duration = startState.getTransitionDuration(container.asContext(),
-                false /*isToState*/);
+        long duration = startState.getTransitionDuration(container, false /*isToState*/);
         if (duration == 0) {
             // Case where we're in contextual on workspace (NORMAL), which by default has 0
             // transition duration

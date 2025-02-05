@@ -15,6 +15,8 @@
  */
 package com.android.launcher3.secondarydisplay;
 
+import static com.android.launcher3.util.WallpaperThemeManager.setWallpaperDependentTheme;
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Intent;
@@ -29,7 +31,7 @@ import android.view.inputmethod.InputMethodManager;
 import androidx.annotation.UiThread;
 
 import com.android.launcher3.AbstractFloatingView;
-import com.android.launcher3.BaseDraggingActivity;
+import com.android.launcher3.BaseActivity;
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.DragSource;
 import com.android.launcher3.DropTarget;
@@ -59,7 +61,6 @@ import com.android.launcher3.util.PackageUserKey;
 import com.android.launcher3.util.Preconditions;
 import com.android.launcher3.util.Themes;
 import com.android.launcher3.views.BaseDragLayer;
-import com.android.launcher3.widget.picker.model.WidgetPickerDataProvider;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -67,7 +68,7 @@ import java.util.Map;
 /**
  * Launcher activity for secondary displays
  */
-public class SecondaryDisplayLauncher extends BaseDraggingActivity
+public class SecondaryDisplayLauncher extends BaseActivity
         implements BgDataModel.Callbacks, DragController.DragListener {
 
     private LauncherModel mModel;
@@ -77,7 +78,6 @@ public class SecondaryDisplayLauncher extends BaseDraggingActivity
     private View mAppsButton;
 
     private PopupDataProvider mPopupDataProvider;
-    private WidgetPickerDataProvider mWidgetPickerDataProvider;
 
     private boolean mAppDrawerShown = false;
 
@@ -90,6 +90,7 @@ public class SecondaryDisplayLauncher extends BaseDraggingActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setWallpaperDependentTheme(this);
         mModel = LauncherAppState.getInstance(this).getModel();
         mDragController = new SecondaryDragController(this);
         mSecondaryDisplayPredictions = SecondaryDisplayPredictions.newInstance(this);
@@ -202,14 +203,6 @@ public class SecondaryDisplayLauncher extends BaseDraggingActivity
     }
 
     @Override
-    public View getRootView() {
-        return mDragLayer;
-    }
-
-    @Override
-    protected void reapplyUi() { }
-
-    @Override
     public BaseDragLayer getDragLayer() {
         return mDragLayer;
     }
@@ -314,11 +307,6 @@ public class SecondaryDisplayLauncher extends BaseDraggingActivity
 
     public PopupDataProvider getPopupDataProvider() {
         return mPopupDataProvider;
-    }
-
-    @Override
-    public WidgetPickerDataProvider getWidgetPickerDataProvider() {
-        return mWidgetPickerDataProvider;
     }
 
     @Override

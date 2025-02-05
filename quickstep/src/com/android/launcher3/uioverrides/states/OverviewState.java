@@ -29,6 +29,7 @@ import com.android.launcher3.LauncherState;
 import com.android.launcher3.R;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.Themes;
+import com.android.launcher3.views.ActivityContext;
 import com.android.quickstep.util.BaseDepthController;
 import com.android.quickstep.util.LayoutUtils;
 import com.android.quickstep.views.RecentsView;
@@ -62,10 +63,10 @@ public class OverviewState extends LauncherState {
     }
 
     @Override
-    public int getTransitionDuration(Context context, boolean isToState) {
+    public int getTransitionDuration(ActivityContext context, boolean isToState) {
         if (isToState) {
             // In gesture modes, overview comes in all the way from the side, so give it more time.
-            return DisplayController.getNavigationMode(context).hasGestures
+            return DisplayController.getNavigationMode(context.asContext()).hasGestures
                     ? OVERVIEW_SLIDE_IN_DURATION
                     : OVERVIEW_POP_IN_DURATION;
         } else {

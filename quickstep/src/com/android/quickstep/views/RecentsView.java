@@ -136,6 +136,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.core.graphics.ColorUtils;
+import androidx.dynamicanimation.animation.SpringAnimation;
 
 import com.android.internal.jank.Cuj;
 import com.android.launcher3.AbstractFloatingView;
@@ -165,6 +166,7 @@ import com.android.launcher3.statemanager.StatefulContainer;
 import com.android.launcher3.testing.TestLogging;
 import com.android.launcher3.testing.shared.TestProtocol;
 import com.android.launcher3.touch.OverScroll;
+import com.android.launcher3.touch.SingleAxisSwipeDetector;
 import com.android.launcher3.util.CancellableTask;
 import com.android.launcher3.util.DynamicResource;
 import com.android.launcher3.util.IntArray;
@@ -240,6 +242,7 @@ import com.android.wm.shell.shared.desktopmode.DesktopModeTransitionSource;
 import kotlin.Unit;
 import kotlin.collections.CollectionsKt;
 
+import kotlin.jvm.functions.Function0;
 import kotlinx.coroutines.CoroutineScope;
 
 import java.util.ArrayList;
@@ -5703,6 +5706,13 @@ public abstract class RecentsView<
                 mTempRect, mContainer.getDeviceProfile(), mTempPointF);
     }
 
+    /**
+     * Clears the existing PendingAnimation.
+     */
+    public void clearPendingAnimation() {
+        mPendingAnimation = null;
+    }
+
     public PendingAnimation createTaskLaunchAnimation(
             TaskView taskView, long duration, Interpolator interpolator) {
         if (FeatureFlags.IS_STUDIO_BUILD && mPendingAnimation != null) {
@@ -5862,6 +5872,10 @@ public abstract class RecentsView<
 
     public void setEnableDrawingLiveTile(boolean enableDrawingLiveTile) {
         mEnableDrawingLiveTile = enableDrawingLiveTile;
+    }
+
+    public boolean getEnableDrawingLiveTile() {
+        return mEnableDrawingLiveTile;
     }
 
     public void redrawLiveTile() {
@@ -6895,6 +6909,19 @@ public abstract class RecentsView<
             return Typeface.Builder.NORMAL_WEIGHT + fontWeightAdjustment;
         }
         return Typeface.Builder.NORMAL_WEIGHT;
+    }
+
+    /**
+     * Creates the spring animations which run as a task settles back into its place in overview.
+     *
+     * <p>When a task dismiss is cancelled, the task will return to its original position via a
+     * spring animation.
+     */
+    public SpringAnimation createTaskDismissSettlingSpringAnimation(TaskView draggedTaskView,
+            float velocity, boolean isDismissing, SingleAxisSwipeDetector detector,
+            int dismissLength, Function0<Unit> onEndRunnable) {
+        return mUtils.createTaskDismissSettlingSpringAnimation(draggedTaskView, velocity,
+                isDismissing, detector, dismissLength, onEndRunnable);
     }
 
     public interface TaskLaunchListener {

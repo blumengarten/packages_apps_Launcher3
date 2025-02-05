@@ -43,6 +43,7 @@ import com.android.launcher3.Flags;
 import com.android.launcher3.R;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.IconProvider;
+import com.android.launcher3.util.LockedUserState;
 import com.android.launcher3.util.SplitConfigurationOptions;
 import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.SplitTask;
@@ -76,6 +77,12 @@ public class RecentsModelTest {
     @Mock
     private HighResLoadingState mHighResLoadingState;
 
+    @Mock
+    private LockedUserState mLockedUserState;
+
+    @Mock
+    private ThemeManager mThemeManager;
+
     private RecentsModel mRecentsModel;
 
     private RecentTasksList.TaskLoadResult mTaskResult;
@@ -102,7 +109,7 @@ public class RecentsModelTest {
 
         mRecentsModel = new RecentsModel(mContext, mTasksList, mock(TaskIconCache.class),
                 mThumbnailCache, mock(IconProvider.class), mock(TaskStackChangeListeners.class),
-                mock(ThemeManager.class));
+                mLockedUserState, () -> mThemeManager);
 
         mResource = mock(Resources.class);
         when(mResource.getInteger((R.integer.recentsThumbnailCacheSize))).thenReturn(3);
@@ -165,6 +172,17 @@ public class RecentsModelTest {
         // Assert update cache is never called
         verify(mRecentsModel.getThumbnailCache(), never())
                 .updateThumbnailInCache(any(), anyBoolean());
+    }
+
+    @Test
+    public void themeCallbackAttachedOnUnlock() {
+        verify(mThemeManager, never()).addChangeListener(any());
+
+        ArgumentCaptor<Runnable> callbackCaptor = ArgumentCaptor.forClass(Runnable.class);
+        verify(mLockedUserState).runOnUserUnlocked(callbackCaptor.capture());
+
+        callbackCaptor.getAllValues().forEach(Runnable::run);
+        verify(mThemeManager, times(1)).addChangeListener(any());
     }
 
     private RecentTasksList.TaskLoadResult getTaskResult() {

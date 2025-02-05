@@ -62,6 +62,7 @@ import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.DeviceProfile.OnDeviceProfileChangeListener;
 import com.android.launcher3.DropTargetHandler;
+import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
@@ -164,6 +165,11 @@ public interface ActivityContext {
     default boolean handleIncorrectSplitTargetSelection() {
         // Overridden
         return false;
+    }
+
+    /** Returns the RootView */
+    default View getRootView() {
+        return getDragLayer();
     }
 
     /**
@@ -410,7 +416,8 @@ public interface ActivityContext {
             View v, Intent intent, @Nullable ItemInfo item) {
         Preconditions.assertUIThread();
         Context context = (Context) this;
-        if (isAppBlockedForSafeMode() && !new ApplicationInfoWrapper(context, intent).isSystem()) {
+        if (LauncherAppState.getInstance(context).isSafeModeEnabled()
+                && !new ApplicationInfoWrapper(context, intent).isSystem()) {
             Toast.makeText(context, R.string.safemode_shortcut_error, Toast.LENGTH_SHORT).show();
             return null;
         }
@@ -456,11 +463,6 @@ public interface ActivityContext {
         return null;
     }
 
-    /** Returns {@code true} if an app launch is blocked due to safe mode. */
-    default boolean isAppBlockedForSafeMode() {
-        return false;
-    }
-
     /**
      * Creates and logs a new app launch event.
      */
@@ -476,6 +478,7 @@ public interface ActivityContext {
      * @param v View initiating a launch.
      * @param item Item associated with the view.
      */
+    @NonNull
     default ActivityOptionsWrapper getActivityLaunchOptions(View v, @Nullable ItemInfo item) {
         int left = 0, top = 0;
         int width = v.getMeasuredWidth(), height = v.getMeasuredHeight();
@@ -523,6 +526,11 @@ public interface ActivityContext {
     /** Whether the bubble bar has bubbles. */
     default boolean hasBubbles() {
         return false;
+    }
+
+    /** Returns the current ActivityContext as context */
+    default Context asContext() {
+        return (Context) this;
     }
 
     /**
