@@ -601,3 +601,10 @@ flag {
     purpose: PURPOSE_BUGFIX
   }
 }
+
+flag {
+  name: "enable_strict_mode"
+  namespace: "launcher"
+  description: "Enable Strict Mode for the Launcher app"
+  bug: "394651876"
+}
