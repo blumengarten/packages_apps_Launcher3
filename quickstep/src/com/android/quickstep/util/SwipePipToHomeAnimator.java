@@ -169,9 +169,6 @@ public class SwipePipToHomeAnimator extends RectFSpringAnim {
 
         if (sourceRectHint.isEmpty()) {
             mSourceRectHint.set(getEnterPipWithOverlaySrcRectHint(appBounds, aspectRatio));
-            // Create a new overlay layer. We do not call detach on this instance, it's propagated
-            // to other classes like PipTaskOrganizer / RecentsAnimationController to complete
-            // the cleanup.
             mPipContentOverlay = new PipContentOverlay.PipAppIconOverlay(view.getContext(),
                     mAppBounds, mDestinationBounds,
                     new IconProvider(context).getIcon(mActivityInfo), appIconSizePx);
