@@ -83,7 +83,7 @@
     <string name="label_application" msgid="8531721983832654978">"एप"</string>
     <string name="all_apps_label" msgid="5015784846527570951">"सबै एप"</string>
     <string name="all_apps_list_label" msgid="5106226764073070906">"एपहरूको सूची"</string>
-    <string name="notifications_header" msgid="1404149926117359025">"सूचनाहरू"</string>
+    <string name="notifications_header" msgid="1404149926117359025">"नोटिफिकेसनहरू"</string>
     <string name="long_press_shortcut_to_add" msgid="5405328730817637737">"कुनै सर्टकट सार्न डबल ट्याप गरेर छोइराख्नुहोस्।"</string>
     <string name="long_accessible_way_to_add_shortcut" msgid="2199537273817090740">"कुनै सर्टकट सार्न वा आफ्नो रोजाइका कारबाही प्रयोग गर्न डबल ट्याप गरेर छोइराख्नुहोस्।"</string>
     <string name="out_of_space" msgid="6455557115204099579">"यो होम स्क्रिनमा ठाउँ छैन"</string>

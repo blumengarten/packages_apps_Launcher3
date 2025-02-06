@@ -23,6 +23,7 @@
     <string name="recent_task_option_freeform" msgid="48863056265284071">"Formato libre"</string>
     <string name="recent_task_option_desktop" msgid="8280879717125435668">"Escritorio"</string>
     <string name="recent_task_option_external_display" msgid="4533840664313389484">"Mover a pantalla externa"</string>
+    <string name="recent_task_option_close" msgid="942942499021777264">"Cerrar"</string>
     <string name="recent_task_desktop" msgid="8081113562549637334">"Computadoras"</string>
     <string name="recents_empty_message" msgid="7040467240571714191">"No hay elementos recientes"</string>
     <string name="accessibility_app_usage_settings" msgid="6312864233673544149">"Configuración de uso de la app"</string>
@@ -89,7 +90,7 @@
     <string name="allset_title" msgid="5021126669778966707">"Todo listo"</string>
     <string name="allset_hint" msgid="459504134589971527">"Desliza el dedo hacia arriba para ir a la página principal"</string>
     <string name="allset_button_hint" msgid="2395219947744706291">"Presiona el botón de inicio para ir a la pantalla principal"</string>
-    <string name="allset_description_generic" msgid="5385500062202019855">"Ya puedes comenzar a usar tu <xliff:g id="DEVICE">%1$s</xliff:g>."</string>
+    <string name="allset_description_generic" msgid="5385500062202019855">"Ya puedes comenzar a usar tu <xliff:g id="DEVICE">%1$s</xliff:g>"</string>
     <string name="default_device_name" msgid="6660656727127422487">"dispositivo"</string>
     <string name="allset_navigation_settings" msgid="4713404605961476027"><annotation id="link">"Configuración de navegación del sistema"</annotation></string>
     <string name="action_share" msgid="2648470652637092375">"Compartir"</string>

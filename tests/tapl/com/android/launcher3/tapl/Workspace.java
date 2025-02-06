@@ -58,7 +58,7 @@ import java.util.stream.Collectors;
  */
 public final class Workspace extends Home {
     private static final int FLING_STEPS = 10;
-    private static final int DEFAULT_DRAG_STEPS = 10;
+    private static final int DEFAULT_DRAG_STEPS = 15;
     private static final String DROP_BAR_RES_ID = "drop_target_bar";
     private static final String DELETE_TARGET_TEXT_ID = "delete_target_text";
     private static final String UNINSTALL_TARGET_TEXT_ID = "uninstall_target_text";
@@ -682,7 +682,7 @@ public final class Workspace extends Home {
 
             launcher.movePointer(dragStart, targetDest,
                     DEFAULT_DRAG_STEPS, isDecelerating, downTime, SystemClock.uptimeMillis(),
-                    false, LauncherInstrumentation.GestureScope.DONT_EXPECT_PILFER);
+                    true, LauncherInstrumentation.GestureScope.DONT_EXPECT_PILFER);
 
             dropDraggedIcon(launcher, targetDest, downTime, expectDropEvents, startsActivity);
         }

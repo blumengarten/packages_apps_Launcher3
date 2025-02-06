@@ -584,3 +584,10 @@ flag {
   description: "Changes mouse interaction behavior"
   bug: "388897603"
 }
+
+flag {
+  name: "enable_alt_tab_kqs_on_connected_displays"
+  namespace: "lse_desktop_experience"
+  description: "Enable Alt + Tab KQS support on connected displays"
+  bug: "394007677"
+}

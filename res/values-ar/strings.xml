@@ -24,7 +24,7 @@
     <string name="activity_not_found" msgid="8071924732094499514">"لم يتم تثبيت التطبيق."</string>
     <string name="activity_not_available" msgid="7456344436509528827">"التطبيق ليس متاحًا"</string>
     <string name="safemode_shortcut_error" msgid="9160126848219158407">"تم إيقاف التطبيق الذي تم تنزيله في الوضع الآمن"</string>
-    <string name="safemode_widget_error" msgid="4863470563535682004">"الأدوات غير مفعّلة في الوضع الآمن"</string>
+    <string name="safemode_widget_error" msgid="4863470563535682004">"التطبيقات المصغَّرة غير مفعّلة في الوضع الآمن"</string>
     <string name="shortcut_not_available" msgid="2536503539825726397">"الاختصار غير متاح"</string>
     <string name="home_screen" msgid="5629429142036709174">"الشاشة الرئيسية"</string>
     <string name="set_default_home_app" msgid="5808906607627586381">"يمكن ضبط \"<xliff:g id="LAUNCHER_NAME">%1$s</xliff:g>\" كتطبيق الشاشة الرئيسية التلقائي من خلال \"الإعدادات\""</string>
@@ -62,7 +62,7 @@
     <string name="widget_button_text" msgid="2880537293434387943">"التطبيقات المصغّرة"</string>
     <string name="widgets_full_sheet_search_bar_hint" msgid="8484659090860596457">"بحث"</string>
     <string name="widgets_full_sheet_cancel_button_description" msgid="5766167035728653605">"محو النص من مربّع البحث"</string>
-    <string name="no_widgets_available" msgid="4337693382501046170">"الأدوات والاختصارات غير متاحة."</string>
+    <string name="no_widgets_available" msgid="4337693382501046170">"التطبيقات المصغَّرة والاختصارات غير متاحة."</string>
     <string name="no_search_results" msgid="3787956167293097509">"لم يتم العثور على تطبيقات مصغّرة أو اختصارات."</string>
     <string name="widgets_full_sheet_personal_tab" msgid="2743540105607120182">"التطبيقات الشخصية"</string>
     <string name="widgets_full_sheet_work_tab" msgid="3767150027110633765">"تطبيقات العمل"</string>
@@ -159,8 +159,8 @@
     <string name="dialog_update_message" msgid="4176784553982226114">"لم يتمّ تحديث التطبيق الخاص بهذا الرمز. يمكنك تحديث التطبيق يدويًا لإعادة تفعيل هذا الاختصار أو إزالة الرمز."</string>
     <string name="dialog_update" msgid="2178028071796141234">"تحديث"</string>
     <string name="dialog_remove" msgid="6510806469849709407">"إزالة"</string>
-    <string name="widgets_list" msgid="796804551140113767">"قائمة الأدوات"</string>
-    <string name="widgets_list_closed" msgid="6141506579418771922">"تم إغلاق قائمة الأدوات."</string>
+    <string name="widgets_list" msgid="796804551140113767">"قائمة التطبيقات المصغَّرة"</string>
+    <string name="widgets_list_closed" msgid="6141506579418771922">"تم إغلاق قائمة التطبيقات المصغَّرة."</string>
     <string name="action_add_to_workspace" msgid="215894119683164916">"إضافة تطبيق للشاشة الرئيسية"</string>
     <string name="action_move_here" msgid="2170188780612570250">"نقل العنصر إلى هنا"</string>
     <string name="item_removed" msgid="851119963877842327">"تمّت إزالة العنصر."</string>

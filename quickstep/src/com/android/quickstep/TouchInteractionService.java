@@ -302,80 +302,65 @@ public class TouchInteractionService extends Service {
         @BinderThread
         @Override
         public void onDisplayAddSystemDecorations(int displayId) {
-            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(
-                    tis -> executeForTaskbarManager(taskbarManager ->
-                            taskbarManager.onDisplayAddSystemDecorations(displayId))));
+            executeForTaskbarManager(taskbarManager ->
+                            taskbarManager.onDisplayAddSystemDecorations(displayId));
         }
 
         @BinderThread
         @Override
         public void onDisplayRemoved(int displayId) {
-            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(
-                    tis -> executeForTaskbarManager(
-                            taskbarManager -> taskbarManager.onDisplayRemoved(displayId))));
+            executeForTaskbarManager(taskbarManager ->
+                    taskbarManager.onDisplayRemoved(displayId));
         }
 
         @BinderThread
         @Override
         public void onDisplayRemoveSystemDecorations(int displayId) {
-            // TODO(b/391786915): Replace all
-            // `executeForTouchInteractionService(executeForTaskbarManager())` with just
-            // `executeForTaskbarManager` directly (since `tis` is unused).
-            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(
-                    tis -> executeForTaskbarManager(taskbarManager -> taskbarManager
-                            .onDisplayRemoveSystemDecorations(displayId))));
+            executeForTaskbarManager(taskbarManager ->
+                    taskbarManager.onDisplayRemoveSystemDecorations(displayId));
         }
 
         @BinderThread
         @Override
         public void updateWallpaperVisibility(int displayId, boolean visible) {
-            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(
-                    tis -> executeForTaskbarManager(
-                            taskbarManager -> taskbarManager.setWallpaperVisible(displayId,
-                                    visible))));
+            executeForTaskbarManager(taskbarManager ->
+                    taskbarManager.setWallpaperVisible(displayId, visible));
         }
 
         @BinderThread
         @Override
         public void checkNavBarModes(int displayId) {
-            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(tis ->
-                    executeForTaskbarManager(
-                            taskbarManager -> taskbarManager.checkNavBarModes(displayId))));
+            executeForTaskbarManager(taskbarManager ->
+                    taskbarManager.checkNavBarModes(displayId));
         }
 
         @BinderThread
         @Override
         public void finishBarAnimations(int displayId) {
-            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(
-                    tis -> executeForTaskbarManager(
-                            taskbarManager -> taskbarManager.finishBarAnimations(displayId))));
+            executeForTaskbarManager(taskbarManager ->
+                    taskbarManager.finishBarAnimations(displayId));
         }
 
         @BinderThread
         @Override
         public void touchAutoDim(int displayId, boolean reset) {
-            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(
-                    tis -> executeForTaskbarManager(
-                            taskbarManager -> taskbarManager.touchAutoDim(displayId, reset))));
+            executeForTaskbarManager(taskbarManager ->
+                    taskbarManager.touchAutoDim(displayId, reset));
         }
 
         @BinderThread
         @Override
         public void transitionTo(int displayId, @BarTransitions.TransitionMode int barMode,
                 boolean animate) {
-            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(
-                    tis -> executeForTaskbarManager(
-                            taskbarManager -> taskbarManager.transitionTo(displayId, barMode,
-                                    animate))));
+            executeForTaskbarManager(taskbarManager ->
+                    taskbarManager.transitionTo(displayId, barMode, animate));
         }
 
         @BinderThread
         @Override
         public void appTransitionPending(boolean pending) {
-            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(tis ->
-                    executeForTaskbarManager(
-                            taskbarManager -> taskbarManager.appTransitionPending(pending))
-            ));
+            executeForTaskbarManager(taskbarManager ->
+                    taskbarManager.appTransitionPending(pending));
         }
 
         @Override

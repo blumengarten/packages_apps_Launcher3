@@ -23,6 +23,8 @@
     <string name="recent_task_option_freeform" msgid="48863056265284071">"အလွတ်ပုံစံ"</string>
     <string name="recent_task_option_desktop" msgid="8280879717125435668">"ဒက်စ်တော့"</string>
     <string name="recent_task_option_external_display" msgid="4533840664313389484">"ပြင်ပဖန်သားပြင်သို့ ရွှေ့ရန်"</string>
+    <!-- no translation found for recent_task_option_close (942942499021777264) -->
+    <skip />
     <string name="recent_task_desktop" msgid="8081113562549637334">"ဒက်စ်တော့"</string>
     <string name="recents_empty_message" msgid="7040467240571714191">"မကြာမီကဖွင့်ထားသည်များ မရှိပါ"</string>
     <string name="accessibility_app_usage_settings" msgid="6312864233673544149">"အက်ပ်အသုံးပြုမှု ဆက်တင်များ"</string>
@@ -89,7 +91,7 @@
     <string name="allset_title" msgid="5021126669778966707">"အားလုံး အဆင်သင့်ပါ။"</string>
     <string name="allset_hint" msgid="459504134589971527">"ပင်မစာမျက်နှာသို့သွားရန် အပေါ်သို့ ပွတ်ဆွဲပါ"</string>
     <string name="allset_button_hint" msgid="2395219947744706291">"ပင်မစာမျက်နှာသို့ သွားရန် ပင်မခလုတ်ကို တို့ပါ"</string>
-    <string name="allset_description_generic" msgid="5385500062202019855">"<xliff:g id="DEVICE">%1$s</xliff:g> ကို စသုံးရန် အသင့်ဖြစ်ပါပြီ"</string>
+    <string name="allset_description_generic" msgid="5385500062202019855">"<xliff:g id="DEVICE">%1$s</xliff:g> စသုံးရန် အသင့်ဖြစ်ပါပြီ"</string>
     <string name="default_device_name" msgid="6660656727127422487">"စက်"</string>
     <string name="allset_navigation_settings" msgid="4713404605961476027"><annotation id="link">"စနစ် လမ်းညွှန် ဆက်တင်များ"</annotation></string>
     <string name="action_share" msgid="2648470652637092375">"မျှဝေရန်"</string>

@@ -23,6 +23,7 @@
     <string name="recent_task_option_freeform" msgid="48863056265284071">"ਫ੍ਰੀਫਾਰਮ"</string>
     <string name="recent_task_option_desktop" msgid="8280879717125435668">"ਡੈਸਕਟਾਪ"</string>
     <string name="recent_task_option_external_display" msgid="4533840664313389484">"ਬਾਹਰੀ ਡਿਸਪਲੇ \'ਤੇ ਜਾਓ"</string>
+    <string name="recent_task_option_close" msgid="942942499021777264">"ਬੰਦ ਕਰੋ"</string>
     <string name="recent_task_desktop" msgid="8081113562549637334">"ਡੈਸਕਟਾਪ"</string>
     <string name="recents_empty_message" msgid="7040467240571714191">"ਕੋਈ ਹਾਲੀਆ ਆਈਟਮ ਨਹੀਂ"</string>
     <string name="accessibility_app_usage_settings" msgid="6312864233673544149">"ਐਪ ਵਰਤੋਂ ਦੀਆਂ ਸੈਟਿੰਗਾਂ"</string>
@@ -89,7 +90,7 @@
     <string name="allset_title" msgid="5021126669778966707">"ਪੂਰੀ ਤਰ੍ਹਾਂ ਤਿਆਰ!"</string>
     <string name="allset_hint" msgid="459504134589971527">"ਹੋਮ \'ਤੇ ਜਾਣ ਲਈ ਉੱਪਰ ਵੱਲ ਸਵਾਈਪ ਕਰੋ"</string>
     <string name="allset_button_hint" msgid="2395219947744706291">"ਆਪਣੀ ਹੋਮ ਸਕ੍ਰੀਨ \'ਤੇ ਜਾਣ ਲਈ ਹੋਮ ਬਟਨ \'ਤੇ ਟੈਪ ਕਰੋ"</string>
-    <string name="allset_description_generic" msgid="5385500062202019855">"ਤੁਸੀਂ ਆਪਣਾ <xliff:g id="DEVICE">%1$s</xliff:g> ਵਰਤਣ ਲਈ ਤਿਆਰ ਹੋ"</string>
+    <string name="allset_description_generic" msgid="5385500062202019855">"ਹੁਣ ਤੁਹਾਡਾ <xliff:g id="DEVICE">%1$s</xliff:g> ਵਰਤੋਂ ਲਈ ਤਿਆਰ ਹੈ"</string>
     <string name="default_device_name" msgid="6660656727127422487">"ਡੀਵਾਈਸ"</string>
     <string name="allset_navigation_settings" msgid="4713404605961476027"><annotation id="link">"ਸਿਸਟਮ ਨੈਵੀਗੇਸ਼ਨ ਸੈਟਿੰਗਾਂ"</annotation></string>
     <string name="action_share" msgid="2648470652637092375">"ਸਾਂਝਾ ਕਰੋ"</string>

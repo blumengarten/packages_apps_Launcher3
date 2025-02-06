@@ -469,6 +469,7 @@ public class Launcher extends StatefulActivity<LauncherState>
             StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
                     .detectLeakedSqlLiteObjects()
                     .detectLeakedClosableObjects()
+                    .detectActivityLeaks()
                     .penaltyLog()
                     .penaltyDeath()
                     .build());

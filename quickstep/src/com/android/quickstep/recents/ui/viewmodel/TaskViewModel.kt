@@ -68,8 +68,6 @@ class TaskViewModel(
             )
         }
 
-    val tintAmount: Flow<Float> = recentsViewData.tintAmount
-
     val state: Flow<TaskTileUiState> =
         combine(taskData, isLiveTile) { tasks, isLiveTile -> mapToTaskTile(tasks, isLiveTile) }
             .distinctUntilChanged()

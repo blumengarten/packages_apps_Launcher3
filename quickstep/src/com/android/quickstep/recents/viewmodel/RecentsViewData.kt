@@ -20,17 +20,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 // This is far from complete but serves the purpose of enabling refactoring in other areas
 class RecentsViewData {
-    val fullscreenProgress = MutableStateFlow(1f)
-
     // Whether the current RecentsView state supports task overlays.
     // TODO(b/331753115): Derive from RecentsView state flow once migrated to MVVM.
     val overlayEnabled = MutableStateFlow(false)
 
     // The settled set of visible taskIds that is updated after RecentsView scroll settles.
     val settledFullyVisibleTaskIds = MutableStateFlow(emptySet<Int>())
-
-    // Color tint on foreground scrim
-    val tintAmount = MutableStateFlow(0f)
 
     val thumbnailSplashProgress = MutableStateFlow(0f)
 

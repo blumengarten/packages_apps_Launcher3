@@ -38,6 +38,7 @@ import androidx.graphics.shapes.CornerRounding
 import androidx.graphics.shapes.Morph
 import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.SvgPathParser
+import androidx.graphics.shapes.rectangle
 import androidx.graphics.shapes.toPath
 import androidx.graphics.shapes.transformed
 import com.android.launcher3.anim.RoundedRectRevealOutlineProvider
@@ -362,8 +363,8 @@ constructor(private val themeManager: ThemeManager, lifeCycle: DaggerSingletonTr
         }
 
         /**
-         * Creates a rounded rect with the start point at the center of the top edge. This ensures a
-         * better animation since our shape paths also start at top-center of the bounding box.
+         * Create RoundedRect using RoundedPolygon API. Ensures smoother animation morphing between
+         * generic polygon by using [RoundedPolygon.Companion.rectangle] directly.
          */
         fun createRoundedRect(
             left: Float,
@@ -372,27 +373,11 @@ constructor(private val themeManager: ThemeManager, lifeCycle: DaggerSingletonTr
             bottom: Float,
             cornerR: Float,
         ) =
-            RoundedPolygon(
-                vertices =
-                    floatArrayOf(
-                        // x1, y1
-                        (left + right) / 2,
-                        top,
-                        // x2, y2
-                        right,
-                        top,
-                        // x3, y3
-                        right,
-                        bottom,
-                        // x4, y4
-                        left,
-                        bottom,
-                        // x5, y5
-                        left,
-                        top,
-                    ),
-                centerX = (left + right) / 2,
-                centerY = (top + bottom) / 2,
+            RoundedPolygon.rectangle(
+                width = right - left,
+                height = bottom - top,
+                centerX = (right - left) / 2,
+                centerY = (bottom - top) / 2,
                 rounding = CornerRounding(cornerR),
             )
     }

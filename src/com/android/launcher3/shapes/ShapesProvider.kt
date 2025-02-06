@@ -202,9 +202,9 @@ object ShapesProvider {
             )
         } else {
             mapOf(
-                "default" to
+                "circle" to
                     IconShapeModel(
-                        key = "default",
+                        key = "circle",
                         title = "circle",
                         pathString = "M50 0A50 50,0,1,1,50 100A50 50,0,1,1,50 0",
                     )

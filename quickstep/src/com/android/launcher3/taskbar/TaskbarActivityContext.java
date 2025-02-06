@@ -29,6 +29,7 @@ import static com.android.launcher3.AbstractFloatingView.TYPE_ON_BOARD_POPUP;
 import static com.android.launcher3.AbstractFloatingView.TYPE_REBIND_SAFE;
 import static com.android.launcher3.AbstractFloatingView.TYPE_TASKBAR_OVERLAY_PROXY;
 import static com.android.launcher3.Flags.enableCursorHoverStates;
+import static com.android.launcher3.Flags.removeExcludeFromScreenMagnificationFlagUsage;
 import static com.android.launcher3.Utilities.calculateTextHeight;
 import static com.android.launcher3.Utilities.isRunningInTestHarness;
 import static com.android.launcher3.config.FeatureFlags.ENABLE_TASKBAR_NAVBAR_UNIFICATION;
@@ -1903,6 +1904,10 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
      */
     public void excludeFromMagnificationRegion(boolean exclude) {
         if (mIsExcludeFromMagnificationRegion == exclude || isPhoneMode()) {
+            return;
+        }
+
+        if (removeExcludeFromScreenMagnificationFlagUsage()) {
             return;
         }
 

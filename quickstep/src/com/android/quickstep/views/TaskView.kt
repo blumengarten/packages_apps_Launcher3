@@ -33,6 +33,7 @@ import android.util.Log
 import android.view.Display
 import android.view.MotionEvent
 import android.view.View
+import android.view.View.OnClickListener
 import android.view.ViewGroup
 import android.view.ViewStub
 import android.view.accessibility.AccessibilityNodeInfo
@@ -98,8 +99,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 /** A task in the Recents view. */
@@ -743,15 +742,8 @@ constructor(
             // onRecycle. So it should be initialized at this point. TaskView Lifecycle:
             // `bind` -> `onBind` ->  onAttachedToWindow() -> onDetachFromWindow -> onRecycle
             coroutineJobs +=
-                viewModel!!.tintAmount.onEach(::updateTintAmount).launchIn(coroutineScope)
-
-            coroutineJobs +=
                 coroutineScope.launch { viewModel!!.state.collectLatest(::updateTaskViewState) }
         }
-    }
-
-    private fun updateTintAmount(amount: Float) {
-        taskContainers.forEach { it.updateTintAmount(amount) }
     }
 
     private fun updateTaskViewState(state: TaskTileUiState) {
@@ -1531,7 +1523,9 @@ constructor(
     /** Set a color tint on the snapshot and supporting views. */
     open fun setColorTint(amount: Float, tintColor: Int) {
         taskContainers.forEach {
-            if (!enableRefactorTaskThumbnail()) {
+            if (enableRefactorTaskThumbnail()) {
+                it.updateTintAmount(amount)
+            } else {
                 it.thumbnailViewDeprecated.dimAlpha = amount
             }
             it.iconView.setIconColorTint(tintColor, amount)

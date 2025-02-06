@@ -23,6 +23,8 @@
     <string name="recent_task_option_freeform" msgid="48863056265284071">"Fritt format"</string>
     <string name="recent_task_option_desktop" msgid="8280879717125435668">"Skrivebord"</string>
     <string name="recent_task_option_external_display" msgid="4533840664313389484">"Flytt til ekstern skjerm"</string>
+    <!-- no translation found for recent_task_option_close (942942499021777264) -->
+    <skip />
     <string name="recent_task_desktop" msgid="8081113562549637334">"Skrivebord"</string>
     <string name="recents_empty_message" msgid="7040467240571714191">"Ingen nylige elementer"</string>
     <string name="accessibility_app_usage_settings" msgid="6312864233673544149">"Innstillinger for appbruk"</string>

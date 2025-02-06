@@ -23,6 +23,8 @@
     <string name="recent_task_option_freeform" msgid="48863056265284071">"फ्रीफॉर्म"</string>
     <string name="recent_task_option_desktop" msgid="8280879717125435668">"डेस्कटॉप"</string>
     <string name="recent_task_option_external_display" msgid="4533840664313389484">"बाह्य डिस्प्लेवर हलवा"</string>
+    <!-- no translation found for recent_task_option_close (942942499021777264) -->
+    <skip />
     <string name="recent_task_desktop" msgid="8081113562549637334">"डेस्कटॉप"</string>
     <string name="recents_empty_message" msgid="7040467240571714191">"कोणतेही अलीकडील आयटम नाहीत"</string>
     <string name="accessibility_app_usage_settings" msgid="6312864233673544149">"अ‍ॅप वापर सेटिंग्ज"</string>
