@@ -108,6 +108,7 @@
 
     <!-- Recents add desktop button -->
     <dimen name="add_desktop_button_size">56dp</dimen>
+    <dimen name="add_desktop_button_outline_padding">2dp</dimen>
 
     <!-- The speed in dp/s at which the user needs to be scrolling in recents such that we start
              loading full resolution screenshots. -->

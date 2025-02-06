@@ -1632,6 +1632,9 @@ public abstract class RecentsView<
             taskView.setBorderEnabled(enabled);
         }
         mClearAllButton.setBorderEnabled(enabled);
+        if (mAddDesktopButton != null) {
+            mAddDesktopButton.setBorderEnabled(enabled);
+        }
     }
 
     /**
@@ -4540,24 +4543,32 @@ public abstract class RecentsView<
 
         // Init task grid nav helper with top/bottom id arrays.
         TaskGridNavHelper taskGridNavHelper = new TaskGridNavHelper(getTopRowIdArray(),
-                getBottomRowIdArray(), mUtils.getLargeTaskViewIds());
+                getBottomRowIdArray(), mUtils.getLargeTaskViewIds(), mAddDesktopButton != null);
 
         // Get current page's task view ID.
         TaskView currentPageTaskView = getCurrentPageTaskView();
         int currentPageTaskViewId;
+        final int clearAllButtonIndex = indexOfChild(mClearAllButton);
+        final int addDesktopButtonIndex = indexOfChild(mAddDesktopButton);
         if (currentPageTaskView != null) {
             currentPageTaskViewId = currentPageTaskView.getTaskViewId();
-        } else if (mCurrentPage == indexOfChild(mClearAllButton)) {
+        } else if (mCurrentPage == clearAllButtonIndex) {
             currentPageTaskViewId = TaskGridNavHelper.CLEAR_ALL_PLACEHOLDER_ID;
+        } else if (mCurrentPage == addDesktopButtonIndex) {
+            currentPageTaskViewId = TaskGridNavHelper.ADD_DESK_PLACEHOLDER_ID;
         } else {
             return INVALID_PAGE;
         }
 
-        int nextGridPage =
+        final int nextGridPage =
                 taskGridNavHelper.getNextGridPage(currentPageTaskViewId, delta, direction, cycle);
-        return nextGridPage == TaskGridNavHelper.CLEAR_ALL_PLACEHOLDER_ID
-                ? indexOfChild(mClearAllButton)
-                : indexOfChild(getTaskViewFromTaskViewId(nextGridPage));
+        if (nextGridPage == TaskGridNavHelper.CLEAR_ALL_PLACEHOLDER_ID) {
+            return clearAllButtonIndex;
+        }
+        if (nextGridPage == TaskGridNavHelper.ADD_DESK_PLACEHOLDER_ID) {
+            return addDesktopButtonIndex;
+        }
+        return indexOfChild(getTaskViewFromTaskViewId(nextGridPage));
     }
 
     private void runDismissAnimation(PendingAnimation pendingAnim) {
@@ -6095,8 +6106,10 @@ public abstract class RecentsView<
     }
 
     private int getFirstViewIndex() {
-        final TaskView firstView;
-        if (mShowAsGridLastOnLayout) {
+        final View firstView;
+        if (mAddDesktopButton != null) {
+            firstView = mAddDesktopButton;
+        } else if (mShowAsGridLastOnLayout) {
             // For grid Overview, it always start if a large tile (focused task or desktop task) if
             // they exist, otherwise it start with the first task.
             TaskView firstLargeTaskView = mUtils.getFirstLargeTaskView();

@@ -16,6 +16,7 @@
 package com.android.quickstep.util
 
 import com.android.launcher3.util.IntArray
+import com.android.quickstep.util.TaskGridNavHelper.ADD_DESK_PLACEHOLDER_ID
 import com.android.quickstep.util.TaskGridNavHelper.CLEAR_ALL_PLACEHOLDER_ID
 import com.android.quickstep.util.TaskGridNavHelper.DIRECTION_DOWN
 import com.android.quickstep.util.TaskGridNavHelper.DIRECTION_LEFT
@@ -619,6 +620,161 @@ class TaskGridNavHelperTest {
             .isEqualTo(CLEAR_ALL_PLACEHOLDER_ID)
     }
 
+    /*
+                        5   3   1→----|
+                                      ↓
+         CLEAR_ALL                   ADD_DESKTOP
+                        6   4   2
+    */
+    @Test
+    fun withAddDesktopButton_pressRightFromTop_goesToAddDesktopButton() {
+        assertThat(
+                getNextGridPage(
+                    currentPageTaskViewId = 1,
+                    DIRECTION_RIGHT,
+                    delta = -1,
+                    hasAddDesktopButton = true,
+                )
+            )
+            .isEqualTo(ADD_DESK_PLACEHOLDER_ID)
+    }
+
+    /*
+                    5   3   1
+       CLEAR_ALL                 ADD_DESKTOP
+                                  ↑
+                    6   4   2→----↑
+    */
+    @Test
+    fun withAddDesktopButton_pressRightFromBottom_goesToAddDesktopButton() {
+        assertThat(
+                getNextGridPage(
+                    currentPageTaskViewId = 2,
+                    DIRECTION_RIGHT,
+                    delta = -1,
+                    hasAddDesktopButton = true,
+                )
+            )
+            .isEqualTo(ADD_DESK_PLACEHOLDER_ID)
+    }
+
+    /*
+         ↓-------------------------------←|
+         |                                ↑
+         ↓      5   3   1                 |
+    CLEAR_ALL               ADD_DESKTOP--→
+                6   4   2
+    */
+    @Test
+    fun withAddDesktopButton_pressRightFromAddDesktopButton_goesToClearAllButton() {
+        assertThat(
+                getNextGridPage(
+                    currentPageTaskViewId = ADD_DESK_PLACEHOLDER_ID,
+                    DIRECTION_RIGHT,
+                    delta = -1,
+                    hasAddDesktopButton = true,
+                )
+            )
+            .isEqualTo(CLEAR_ALL_PLACEHOLDER_ID)
+    }
+
+    /*
+           |→--------------------------------|
+           |                                 |
+           ↑                5   3   1        ↓
+           ←------CLEAR_ALL             ADD_DESKTOP
+
+                            6   4   2
+    */
+    @Test
+    fun withAddDesktopButton_pressLeftFromClearAllButton_goesToAddDesktopButton() {
+        assertThat(
+                getNextGridPage(
+                    currentPageTaskViewId = CLEAR_ALL_PLACEHOLDER_ID,
+                    DIRECTION_LEFT,
+                    delta = 1,
+                    hasAddDesktopButton = true,
+                )
+            )
+            .isEqualTo(ADD_DESK_PLACEHOLDER_ID)
+    }
+
+    /*
+                        5   3   1
+                                   ←--↑
+        CLEAR_ALL                  ↓-→ADD_DESKTOP
+                        6   4   2
+    */
+    @Test
+    fun withAddDesktopButton_pressUpOnAddDesktop_stayOnAddDesktopButton() {
+        assertThat(
+                getNextGridPage(
+                    currentPageTaskViewId = ADD_DESK_PLACEHOLDER_ID,
+                    DIRECTION_UP,
+                    delta = 1,
+                    hasAddDesktopButton = true,
+                )
+            )
+            .isEqualTo(ADD_DESK_PLACEHOLDER_ID)
+    }
+
+    /*
+                        5   3   1
+        CLEAR_ALL                  ↑--→ADD_DESKTOP
+                                   ↑←--↓
+                        6   4   2
+    */
+    @Test
+    fun withAddDesktopButton_pressDownOnAddDesktop_stayOnAddDesktopButton() {
+        assertThat(
+                getNextGridPage(
+                    currentPageTaskViewId = ADD_DESK_PLACEHOLDER_ID,
+                    DIRECTION_DOWN,
+                    delta = 1,
+                    hasAddDesktopButton = true,
+                )
+            )
+            .isEqualTo(ADD_DESK_PLACEHOLDER_ID)
+    }
+
+    /*
+                        5   3   1
+           CLEAR_ALL                DESKTOP--→ADD_DESKTOP
+                        6   4   2
+    */
+    @Test
+    fun withAddDesktopButton_pressRightFromDesktopTask_goesToAddDesktopButton() {
+        assertThat(
+                getNextGridPage(
+                    currentPageTaskViewId = ADD_DESK_PLACEHOLDER_ID,
+                    DIRECTION_LEFT,
+                    delta = 1,
+                    largeTileIds = listOf(DESKTOP_TASK_ID),
+                    hasAddDesktopButton = true,
+                )
+            )
+            .isEqualTo(DESKTOP_TASK_ID)
+    }
+
+    /*
+                        5   3   1
+           CLEAR_ALL                DESKTOP←--ADD_DESKTOP
+                        6   4   2
+    */
+    @Test
+    fun withAddDesktopButton_pressLeftFromAddDesktopButton_goesToDesktopTask() {
+        assertThat(
+                getNextGridPage(
+                    currentPageTaskViewId = DESKTOP_TASK_ID,
+                    DIRECTION_RIGHT,
+                    delta = -1,
+                    largeTileIds = listOf(DESKTOP_TASK_ID),
+                    hasAddDesktopButton = true,
+                )
+            )
+            .isEqualTo(ADD_DESK_PLACEHOLDER_ID)
+    }
+
     private fun getNextGridPage(
         currentPageTaskViewId: Int,
         direction: Int,
@@ -626,8 +782,10 @@ class TaskGridNavHelperTest {
         topIds: IntArray = IntArray.wrap(1, 3, 5),
         bottomIds: IntArray = IntArray.wrap(2, 4, 6),
         largeTileIds: List<Int> = emptyList(),
+        hasAddDesktopButton: Boolean = false,
     ): Int {
-        val taskGridNavHelper = TaskGridNavHelper(topIds, bottomIds, largeTileIds)
+        val taskGridNavHelper =
+            TaskGridNavHelper(topIds, bottomIds, largeTileIds, hasAddDesktopButton)
         return taskGridNavHelper.getNextGridPage(currentPageTaskViewId, delta, direction, true)
     }
 
