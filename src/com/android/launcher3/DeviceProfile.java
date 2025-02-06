@@ -31,6 +31,7 @@ import static com.android.launcher3.testing.shared.ResourceUtils.pxFromDp;
 import static com.android.launcher3.testing.shared.ResourceUtils.roundPxValueFromFloat;
 import static com.android.wm.shell.Flags.enableBubbleBar;
 import static com.android.wm.shell.Flags.enableTinyTaskbar;
+import static com.android.wm.shell.Flags.enableBubbleBarOnPhones;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -420,7 +421,9 @@ public class DeviceProfile {
         isTablet = info.isTablet(windowBounds);
         isPhone = !isTablet;
         isTwoPanels = isTablet && isMultiDisplay;
-        isTaskbarPresent = (isTablet || (enableTinyTaskbar() && isGestureMode))
+        boolean taskbarOrBubbleBarOnPhones = enableTinyTaskbar()
+                || (enableBubbleBar() && enableBubbleBarOnPhones());
+        isTaskbarPresent = (isTablet || (taskbarOrBubbleBarOnPhones && isGestureMode))
                 && wmProxy.isTaskbarDrawnInProcess();
 
         // Some more constants.
