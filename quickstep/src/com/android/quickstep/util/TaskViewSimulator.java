@@ -120,6 +120,9 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
     private int mTaskRectTranslationY;
     private int mDesktopTaskIndex = 0;
 
+    @Nullable
+    private Matrix mTaskRectTransform = null;
+
     public TaskViewSimulator(Context context, BaseContainerInterface sizeStrategy,
             boolean isDesktop, int desktopTaskIndex) {
         mContext = context;
@@ -364,6 +367,15 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
     }
 
     /**
+     * Sets a matrix used to transform the position of tasks. If set, this matrix is applied to
+     * the task rect after the task has been scaled and positioned inside the fulltask, but
+     * before scaling and translation of the whole recents view is performed.
+     */
+    public void setTaskRectTransform(@Nullable Matrix taskRectTransform) {
+        mTaskRectTransform = taskRectTransform;
+    }
+
+    /**
      * Applies the rotation on the matrix to so that it maps from launcher coordinate space to
      * window coordinate space.
      */
@@ -424,8 +436,11 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
 
         mMatrix.set(mPositionHelper.getMatrix());
 
-        // Apply TaskView matrix: taskRect, translate
+        // Apply TaskView matrix: taskRect, optional transform, translate
         mMatrix.postTranslate(mTaskRect.left, mTaskRect.top);
+        if (mTaskRectTransform != null) {
+            mMatrix.postConcat(mTaskRectTransform);
+        }
         mOrientationState.getOrientationHandler().setPrimary(mMatrix, MATRIX_POST_TRANSLATE,
                 taskPrimaryTranslation.value);
         mOrientationState.getOrientationHandler().setSecondary(mMatrix, MATRIX_POST_TRANSLATE,

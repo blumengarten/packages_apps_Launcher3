@@ -44,11 +44,11 @@ import com.android.launcher3.util.SplitConfigurationOptions.SplitSelectSource;
 import com.android.quickstep.BaseContainerInterface;
 import com.android.quickstep.FallbackActivityInterface;
 import com.android.quickstep.GestureState;
+import com.android.quickstep.RemoteTargetGluer.RemoteTargetHandle;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
 import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.SingleTask;
 import com.android.quickstep.util.SplitSelectStateController;
-import com.android.quickstep.util.TaskViewSimulator;
 import com.android.quickstep.views.OverviewActionsView;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
@@ -129,8 +129,8 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
     @Override
     public void onPrepareGestureEndAnimation(
             @Nullable AnimatorSet animatorSet, GestureState.GestureEndTarget endTarget,
-            TaskViewSimulator[] taskViewSimulators) {
-        super.onPrepareGestureEndAnimation(animatorSet, endTarget, taskViewSimulators);
+            RemoteTargetHandle[] remoteTargetHandles) {
+        super.onPrepareGestureEndAnimation(animatorSet, endTarget, remoteTargetHandles);
         if (mHomeTask != null && endTarget == RECENTS && animatorSet != null) {
             TaskView tv = getTaskViewByTaskId(mHomeTask.key.id);
             if (tv != null) {
