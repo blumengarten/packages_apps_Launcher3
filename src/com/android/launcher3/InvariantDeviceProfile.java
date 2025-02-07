@@ -983,6 +983,9 @@ public class InvariantDeviceProfile implements SafeCloseable {
         private static final int DEVICE_CATEGORY_PHONE = 1 << 0;
         private static final int DEVICE_CATEGORY_TABLET = 1 << 1;
         private static final int DEVICE_CATEGORY_MULTI_DISPLAY = 1 << 2;
+        private static final int GRID_TYPE_ONE_GRID = 1 << 0;
+        private static final int GRID_TYPE_NON_ONE_GRID = 1 << 1;
+        private static final int GRID_TYPE_ALL = 1 << 2;
         private static final int DEVICE_CATEGORY_ALL =
                 DEVICE_CATEGORY_PHONE | DEVICE_CATEGORY_TABLET | DEVICE_CATEGORY_MULTI_DISPLAY;
 
@@ -999,6 +1002,7 @@ public class InvariantDeviceProfile implements SafeCloseable {
         public final int numColumns;
         public final int numSearchContainerColumns;
         public final int deviceCategory;
+        public final int gridType;
 
         private final int[] numFolderRows = new int[COUNT_SIZES];
         private final int[] numFolderColumns = new int[COUNT_SIZES];
@@ -1037,7 +1041,6 @@ public class InvariantDeviceProfile implements SafeCloseable {
         private final int mAllAppsCellSpecsTwoPanelId;
         private final int mGridSizeSpecsId;
         private final boolean mIsFixedLandscape;
-        private final boolean mIsOldGrid;
 
         public GridOption(Context context, AttributeSet attrs, Info displayInfo) {
             TypedArray a = context.obtainStyledAttributes(
@@ -1185,7 +1188,7 @@ public class InvariantDeviceProfile implements SafeCloseable {
             }
 
             mIsFixedLandscape = a.getBoolean(R.styleable.GridDisplayOption_isFixedLandscape, false);
-            mIsOldGrid = a.getBoolean(R.styleable.GridDisplayOption_isOldGrid, false);
+            gridType = a.getInt(R.styleable.GridDisplayOption_gridType, GRID_TYPE_ALL);
 
             int inlineForRotation = a.getInt(R.styleable.GridDisplayOption_inlineQsb,
                     DONT_INLINE_QSB);
@@ -1230,13 +1233,11 @@ public class InvariantDeviceProfile implements SafeCloseable {
                 return mIsFixedLandscape && isFixedLandscape && Flags.oneGridSpecs();
             }
 
-            // Here we return true if we want to show the new grids.
-            if (mGridSizeSpecsId != INVALID_RESOURCE_HANDLE) {
+            // If the grid type is one grid we return true when the flag is on, if the grid type
+            // is non-one grid we return true when the flag is off. Otherwise, we return true.
+            if (gridType == GRID_TYPE_ONE_GRID) {
                 return Flags.oneGridSpecs();
-            }
-
-            // Here we return true if we want to show the old grids.
-            if (mIsOldGrid) {
+            } else if (gridType == GRID_TYPE_NON_ONE_GRID) {
                 return !Flags.oneGridSpecs();
             }
 
