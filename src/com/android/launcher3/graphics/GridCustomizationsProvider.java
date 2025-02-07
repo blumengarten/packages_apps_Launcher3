@@ -55,6 +55,8 @@ import com.android.systemui.shared.Flags;
 
 import java.lang.ref.WeakReference;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -177,7 +179,13 @@ public class GridCustomizationsProvider extends ContentProvider {
                         KEY_NAME, KEY_GRID_TITLE, KEY_ROWS, KEY_COLS, KEY_PREVIEW_COUNT,
                         KEY_IS_DEFAULT, KEY_GRID_ICON_ID});
                 InvariantDeviceProfile idp = InvariantDeviceProfile.INSTANCE.get(getContext());
-                for (GridOption gridOption : idp.parseAllGridOptions(getContext())) {
+                List<GridOption> gridOptionList = idp.parseAllGridOptions(getContext());
+                if (com.android.launcher3.Flags.oneGridSpecs()) {
+                    gridOptionList.sort(Comparator
+                            .comparingInt((GridOption option) -> option.numColumns)
+                            .reversed());
+                }
+                for (GridOption gridOption : gridOptionList) {
                     cursor.newRow()
                             .add(KEY_NAME, gridOption.name)
                             .add(KEY_GRID_TITLE, gridOption.gridTitle)
