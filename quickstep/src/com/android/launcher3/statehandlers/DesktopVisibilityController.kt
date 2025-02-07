@@ -33,6 +33,7 @@ import com.android.launcher3.util.window.WindowManagerProxy.DesktopVisibilityLis
 import com.android.quickstep.GestureState.GestureEndTarget
 import com.android.quickstep.SystemUiProxy
 import com.android.quickstep.fallback.RecentsState
+import com.android.wm.shell.desktopmode.DisplayDeskState
 import com.android.wm.shell.desktopmode.IDesktopTaskListener.Stub
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus
 import java.io.PrintWriter
@@ -365,6 +366,11 @@ constructor(
     ) : Stub() {
         private val controller = WeakReference(controller)
 
+        // TODO: b/392986431 - Implement the new desks APIs.
+        override fun onListenerConnected(
+            displayDeskStates: Array<DisplayDeskState>,
+        ) {}
+
         override fun onTasksVisibilityChanged(displayId: Int, visibleTasksCount: Int) {
             if (displayId != this.displayId) return
             Executors.MAIN_EXECUTOR.execute {
@@ -398,6 +404,15 @@ constructor(
         override fun onEnterDesktopModeTransitionStarted(transitionDuration: Int) {}
 
         override fun onExitDesktopModeTransitionStarted(transitionDuration: Int) {}
+
+        // TODO: b/392986431 - Implement all the below new desks APIs.
+        override fun onCanCreateDesksChanged(displayId: Int, canCreateDesks: Boolean) {}
+
+        override fun onDeskAdded(displayId: Int, deskId: Int) {}
+
+        override fun onDeskRemoved(displayId: Int, deskId: Int) {}
+
+        override fun onActiveDeskChanged(displayId: Int, newActiveDesk: Int, oldActiveDesk: Int) {}
     }
 
     /** A listener for Taskbar in Desktop Mode. */

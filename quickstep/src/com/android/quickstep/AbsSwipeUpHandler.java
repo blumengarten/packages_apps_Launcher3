@@ -120,7 +120,6 @@ import com.android.launcher3.compat.AccessibilityManagerCompat;
 import com.android.launcher3.dragndrop.DragView;
 import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.logging.StatsLogManager.StatsLogger;
-import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.statemanager.BaseState;
 import com.android.launcher3.statemanager.StatefulContainer;
 import com.android.launcher3.taskbar.TaskbarThresholdUtils;
@@ -1491,7 +1490,7 @@ public abstract class AbsSwipeUpHandler<
                 startShift, endShift, duration, interpolator, endTarget, velocityPxPerMs);
     }
 
-    private void doLogGesture(GestureEndTarget endTarget, @Nullable TaskView targetTask) {
+    private void doLogGesture(GestureEndTarget endTarget, @Nullable TaskView targetTaskView) {
         if (mDp == null || !mDp.isGestureMode) {
             // We probably never received an animation controller, skip logging.
             return;
@@ -1509,9 +1508,9 @@ public abstract class AbsSwipeUpHandler<
             case NEW_TASK:
                 events.add(mLogDirectionUpOrLeft ? LAUNCHER_QUICKSWITCH_LEFT
                         : LAUNCHER_QUICKSWITCH_RIGHT);
-                if (targetTask != null && DesktopModeStatus.canEnterDesktopMode(mContext)
+                if (targetTaskView != null && DesktopModeStatus.canEnterDesktopMode(mContext)
                         && DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_QUICK_SWITCH.isTrue()) {
-                    if (targetTask.getType() == TaskViewType.DESKTOP) {
+                    if (targetTaskView.getType() == TaskViewType.DESKTOP) {
                         events.add(LAUNCHER_QUICKSWITCH_ENTER_DESKTOP_MODE);
                     } else if (mPreviousTaskViewType == TaskViewType.DESKTOP) {
                         events.add(LAUNCHER_QUICKSWITCH_EXIT_DESKTOP_MODE);
@@ -1528,9 +1527,8 @@ public abstract class AbsSwipeUpHandler<
                 .withInputType(mGestureState.isTrackpadGesture()
                         ? SysUiStatsLog.LAUNCHER_UICHANGED__INPUT_TYPE__TRACKPAD
                         : SysUiStatsLog.LAUNCHER_UICHANGED__INPUT_TYPE__TOUCH);
-        ItemInfo itemInfo;
-        if (targetTask != null && (itemInfo = targetTask.getFirstItemInfo()) != null) {
-            logger.withItemInfo(itemInfo);
+        if (targetTaskView != null) {
+            logger.withItemInfo(targetTaskView.getItemInfo());
         }
 
         int pageIndex = endTarget == LAST_TASK || mRecentsView == null

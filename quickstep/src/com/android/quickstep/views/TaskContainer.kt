@@ -106,7 +106,7 @@ class TaskContainer(
 
     /** Builds proto for logging */
     val itemInfo: TaskViewItemInfo
-        get() = TaskViewItemInfo(this)
+        get() = TaskViewItemInfo(taskView, this)
 
     fun bind() {
         digitalWellBeingToast?.bind(task, taskView, snapshotView, stagePosition)

@@ -4089,9 +4089,8 @@ public abstract class RecentsView<
                         } else {
                             removeTaskInternal(dismissedTaskView);
                         }
-                        // TODO(b/391918297): Logging when the TaskView does not have tasks as well.
                         mContainer.getStatsLogManager().logger()
-                                .withItemInfo(dismissedTaskView.getFirstItemInfo())
+                                .withItemInfo(dismissedTaskView.getItemInfo())
                                 .log(LAUNCHER_TASK_DISMISS_SWIPE_UP);
                     }
 
@@ -5783,12 +5782,8 @@ public abstract class RecentsView<
                 } else {
                     taskView.launchWithoutAnimation(this::onTaskLaunchAnimationEnd);
                 }
-                // TODO(b/391918297): Logging when there is no associated task.
-                ItemInfo firstItemInfo = taskView.getFirstItemInfo();
-                if (firstItemInfo != null) {
-                    mContainer.getStatsLogManager().logger().withItemInfo(firstItemInfo)
-                            .log(LAUNCHER_TASK_LAUNCH_SWIPE_DOWN);
-                }
+                mContainer.getStatsLogManager().logger().withItemInfo(taskView.getItemInfo())
+                        .log(LAUNCHER_TASK_LAUNCH_SWIPE_DOWN);
             } else {
                 onTaskLaunchAnimationEnd(false);
             }

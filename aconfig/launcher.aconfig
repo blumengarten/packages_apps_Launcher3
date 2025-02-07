@@ -591,3 +591,13 @@ flag {
   description: "Enable Alt + Tab KQS support on connected displays"
   bug: "394007677"
 }
+
+flag {
+  name: "expressive_theme_in_taskbar_and_navigation"
+  namespace: "launcher"
+  description: "Enables the expressive theme and GSF font styles for Taskbar and Gesture Navigation"
+  bug: "394613212"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+}

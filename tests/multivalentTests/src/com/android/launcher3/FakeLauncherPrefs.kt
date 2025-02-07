@@ -35,6 +35,5 @@ class FakeLauncherPrefs @Inject constructor(@ApplicationContext context: Context
             MODE_PRIVATE,
         )
 
-    override val Item.sharedPrefs: SharedPreferences
-        get() = backingPrefs
+    override fun getSharedPrefs(item: Item): SharedPreferences = backingPrefs
 }

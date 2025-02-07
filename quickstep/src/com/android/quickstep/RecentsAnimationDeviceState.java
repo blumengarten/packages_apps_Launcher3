@@ -114,7 +114,6 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
 
     private final RotationTouchHelper mRotationTouchHelper;
     private final TaskStackChangeListener mPipListener;
-    private final DaggerSingletonTracker mLifeCycle;
     // Cache for better performance since it doesn't change at runtime.
     private final boolean mCanImeRenderGesturalNavButtons =
             InputMethodService.canImeRenderGesturalNavButtons();
@@ -152,16 +151,15 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
         mExclusionManager = exclusionManager;
         mContextualSearchStateManager = contextualSearchStateManager;
         mRotationTouchHelper = rotationTouchHelper;
-        mLifeCycle = lifeCycle;
         mIsOneHandedModeSupported = SystemProperties.getBoolean(SUPPORT_ONE_HANDED_MODE, false);
 
         // Register for exclusion updates
-        mLifeCycle.addCloseable(this::unregisterExclusionListener);
+        lifeCycle.addCloseable(this::unregisterExclusionListener);
 
         // Register for display changes changes
         mDisplayController.addChangeListener(this);
         onDisplayInfoChanged(context, mDisplayController.getInfo(), CHANGE_ALL);
-        mLifeCycle.addCloseable(() -> mDisplayController.removeChangeListener(this));
+        lifeCycle.addCloseable(() -> mDisplayController.removeChangeListener(this));
 
         if (mIsOneHandedModeSupported) {
             Uri oneHandedUri = Settings.Secure.getUriFor(ONE_HANDED_ENABLED);
@@ -169,7 +167,7 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
                     enabled -> mIsOneHandedModeEnabled = enabled;
             settingsCache.register(oneHandedUri, onChangeListener);
             mIsOneHandedModeEnabled = settingsCache.getValue(oneHandedUri);
-            mLifeCycle.addCloseable(() -> settingsCache.unregister(oneHandedUri, onChangeListener));
+            lifeCycle.addCloseable(() -> settingsCache.unregister(oneHandedUri, onChangeListener));
         } else {
             mIsOneHandedModeEnabled = false;
         }
@@ -180,7 +178,7 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
                 enabled -> mIsSwipeToNotificationEnabled = enabled;
         settingsCache.register(swipeBottomNotificationUri, onChangeListener);
         mIsSwipeToNotificationEnabled = settingsCache.getValue(swipeBottomNotificationUri);
-        mLifeCycle.addCloseable(
+        lifeCycle.addCloseable(
                 () -> settingsCache.unregister(swipeBottomNotificationUri, onChangeListener));
 
         Uri setupCompleteUri = Settings.Secure.getUriFor(Settings.Secure.USER_SETUP_COMPLETE);
@@ -188,7 +186,7 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
         if (!mIsUserSetupComplete) {
             SettingsCache.OnChangeListener userSetupChangeListener = e -> mIsUserSetupComplete = e;
             settingsCache.register(setupCompleteUri, userSetupChangeListener);
-            mLifeCycle.addCloseable(
+            lifeCycle.addCloseable(
                     () -> settingsCache.unregister(setupCompleteUri, userSetupChangeListener));
         }
 
@@ -210,15 +208,19 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
             }
         };
         TaskStackChangeListeners.getInstance().registerTaskStackListener(mPipListener);
-        mLifeCycle.addCloseable(() ->
+        lifeCycle.addCloseable(() ->
                 TaskStackChangeListeners.getInstance().unregisterTaskStackListener(mPipListener));
     }
 
     /**
      * Adds a listener for the nav mode change, guaranteed to be called after the device state's
      * mode has changed.
+     *
+     * @return Added {@link DisplayInfoChangeListener} so that caller is
+     * responsible for removing the listener from {@link DisplayController} to avoid memory leak.
      */
-    public void addNavigationModeChangedCallback(Runnable callback) {
+    public DisplayController.DisplayInfoChangeListener addNavigationModeChangedCallback(
+            Runnable callback) {
         DisplayController.DisplayInfoChangeListener listener = (context, info, flags) -> {
             if ((flags & CHANGE_NAVIGATION_MODE) != 0) {
                 callback.run();
@@ -226,7 +228,16 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
         };
         mDisplayController.addChangeListener(listener);
         callback.run();
-        mLifeCycle.addCloseable(() -> mDisplayController.removeChangeListener(listener));
+        return listener;
+    }
+
+    /**
+     * Remove the {DisplayController.DisplayInfoChangeListener} added from
+     * {@link #addNavigationModeChangedCallback} when {@link TouchInteractionService} is destroyed.
+     */
+    public void removeDisplayInfoChangeListener(
+            DisplayController.DisplayInfoChangeListener listener) {
+        mDisplayController.removeChangeListener(listener);
     }
 
     @Override

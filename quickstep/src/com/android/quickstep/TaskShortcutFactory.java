@@ -136,7 +136,7 @@ public interface TaskShortcutFactory {
         public SplitSelectSystemShortcut(RecentsViewContainer container,
                 TaskContainer taskContainer, TaskView taskView,
                 SplitPositionOption option) {
-            super(option.iconResId, option.textResId, container, taskView.getFirstItemInfo(),
+            super(option.iconResId, option.textResId, container, taskContainer.getItemInfo(),
                     taskView);
             mTaskContainer = taskContainer;
             mSplitPositionOption = option;
@@ -164,8 +164,7 @@ public interface TaskShortcutFactory {
 
         public SaveAppPairSystemShortcut(RecentsViewContainer container, GroupedTaskView taskView,
             int iconResId) {
-            super(iconResId, R.string.save_app_pair, container, taskView.getFirstItemInfo(),
-                    taskView);
+            super(iconResId, R.string.save_app_pair, container, taskView.getItemInfo(), taskView);
             mTaskView = taskView;
         }
 

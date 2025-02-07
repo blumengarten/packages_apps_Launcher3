@@ -18,6 +18,7 @@ package com.android.launcher3.model.data
 
 import android.content.ComponentName
 import android.content.Intent
+import android.os.Process
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.launcher3.Flags.enableRefactorTaskThumbnail
@@ -33,7 +34,6 @@ import com.android.launcher3.util.TransformingTouchDelegate
 import com.android.launcher3.util.UserIconInfo
 import com.android.quickstep.TaskOverlayFactory
 import com.android.quickstep.TaskOverlayFactory.TaskOverlay
-import com.android.quickstep.TestComponent
 import com.android.quickstep.recents.di.RecentsDependencies
 import com.android.quickstep.task.thumbnail.TaskThumbnailView
 import com.android.quickstep.views.RecentsView
@@ -84,7 +84,7 @@ class TaskViewItemInfoTest {
         whenever(taskView.type).thenReturn(TaskViewType.SINGLE)
         whenever(taskView.taskContainers).thenReturn(taskContainers)
 
-        val taskViewItemInfo = TaskViewItemInfo(taskContainers[0])
+        val taskViewItemInfo = TaskViewItemInfo(taskContainers[0].taskView, taskContainers[0])
 
         assertThat(taskViewItemInfo.taskViewAtom)
             .isEqualTo(
@@ -105,7 +105,7 @@ class TaskViewItemInfoTest {
         whenever(taskView.type).thenReturn(TaskViewType.GROUPED)
         whenever(taskView.taskContainers).thenReturn(taskContainers)
 
-        val taskViewItemInfo = TaskViewItemInfo(taskContainers[0])
+        val taskViewItemInfo = TaskViewItemInfo(taskContainers[0].taskView, taskContainers[0])
 
         assertThat(taskViewItemInfo.taskViewAtom)
             .isEqualTo(
@@ -130,7 +130,7 @@ class TaskViewItemInfoTest {
         whenever(taskView.type).thenReturn(TaskViewType.DESKTOP)
         whenever(taskView.taskContainers).thenReturn(taskContainers)
 
-        val taskViewItemInfo = TaskViewItemInfo(taskContainers[0])
+        val taskViewItemInfo = TaskViewItemInfo(taskContainers[0].taskView, taskContainers[0])
 
         assertThat(taskViewItemInfo.taskViewAtom)
             .isEqualTo(
@@ -151,7 +151,7 @@ class TaskViewItemInfoTest {
         whenever(taskView.taskContainers).thenReturn(taskContainers)
         whenever(userInfo.isPrivate).thenReturn(true)
 
-        val taskViewItemInfo = TaskViewItemInfo(taskContainers[0])
+        val taskViewItemInfo = TaskViewItemInfo(taskContainers[0].taskView, taskContainers[0])
 
         assertThat(taskViewItemInfo.taskViewAtom)
             .isEqualTo(
@@ -164,6 +164,25 @@ class TaskViewItemInfoTest {
             )
         assertThat(taskViewItemInfo.runtimeStatusFlags and FLAG_NOT_PINNABLE)
             .isEqualTo(FLAG_NOT_PINNABLE)
+    }
+
+    @Test
+    fun emptyDesktopTask() {
+        whenever(taskView.type).thenReturn(TaskViewType.DESKTOP)
+
+        val taskViewItemInfo = TaskViewItemInfo(taskView = taskView, taskContainer = null)
+
+        assertThat(taskViewItemInfo.taskViewAtom)
+            .isEqualTo(
+                createTaskViewAtom(
+                    type = 2,
+                    index = TASK_VIEW_INDEX,
+                    componentName = "",
+                    cardinality = 0,
+                )
+            )
+        assertThat(taskViewItemInfo.user).isEqualTo(Process.myUserHandle())
+        assertThat(taskViewItemInfo.intent).isNotNull()
     }
 
     private fun createTask(id: Int) =

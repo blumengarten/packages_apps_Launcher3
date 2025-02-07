@@ -116,7 +116,6 @@ public class TaskbarManager {
             Settings.Secure.NAV_BAR_KIDS_MODE);
 
     private final Context mParentContext;
-    private final @Nullable Context mNavigationBarPanelContext;
     private final TaskbarNavButtonController mDefaultNavButtonController;
     private final ComponentCallbacks mDefaultComponentCallbacks;
 
@@ -247,11 +246,6 @@ public class TaskbarManager {
         mParentContext = context;
         createWindowContext(context.getDisplayId());
         mAllAppsActionManager = allAppsActionManager;
-        Display display = context.getSystemService(DisplayManager.class).getDisplay(
-                getDefaultDisplayId());
-        mNavigationBarPanelContext = ENABLE_TASKBAR_NAVBAR_UNIFICATION
-                ? context.createWindowContext(display, TYPE_NAVIGATION_BAR_PANEL, null)
-                : null;
         if (enableTaskbarNoRecreate()) {
             createTaskbarRootLayout(getDefaultDisplayId());
         }
@@ -861,8 +855,14 @@ public class TaskbarManager {
      * Creates a {@link TaskbarActivityContext} for the given display and adds it to the map.
      */
     private TaskbarActivityContext createTaskbarActivityContext(DeviceProfile dp, int displayId) {
+        Display display = mParentContext.getSystemService(DisplayManager.class).getDisplay(
+                displayId);
+        Context navigationBarPanelContext = ENABLE_TASKBAR_NAVBAR_UNIFICATION
+                ? mParentContext.createWindowContext(display, TYPE_NAVIGATION_BAR_PANEL, null)
+                : null;
+
         TaskbarActivityContext newTaskbar = new TaskbarActivityContext(getWindowContext(displayId),
-                mNavigationBarPanelContext, dp, mDefaultNavButtonController,
+                navigationBarPanelContext, dp, mDefaultNavButtonController,
                 mUnfoldProgressProvider, isDefaultDisplay(displayId),
                 SystemUiProxy.INSTANCE.get(getPrimaryWindowContext()));
 

@@ -561,6 +561,8 @@ public class TouchInteractionService extends Service {
 
     private DesktopAppLaunchTransitionManager mDesktopAppLaunchTransitionManager;
 
+    private DisplayController.DisplayInfoChangeListener mDisplayInfoChangeListener;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -590,7 +592,8 @@ public class TouchInteractionService extends Service {
 
         // Call runOnUserUnlocked() before any other callbacks to ensure everything is initialized.
         LockedUserState.get(this).runOnUserUnlocked(mUserUnlockedRunnable);
-        mDeviceState.addNavigationModeChangedCallback(this::onNavigationModeChanged);
+        mDisplayInfoChangeListener =
+                mDeviceState.addNavigationModeChangedCallback(this::onNavigationModeChanged);
         ScreenOnTracker.INSTANCE.get(this).addListener(mScreenOnListener);
     }
 
@@ -742,7 +745,7 @@ public class TouchInteractionService extends Service {
             mDesktopAppLaunchTransitionManager.unregisterTransitions();
         }
         mDesktopAppLaunchTransitionManager = null;
-
+        mDeviceState.removeDisplayInfoChangeListener(mDisplayInfoChangeListener);
         LockedUserState.get(this).removeOnUserUnlockedRunnable(mUserUnlockedRunnable);
         ScreenOnTracker.INSTANCE.get(this).removeListener(mScreenOnListener);
         super.onDestroy();

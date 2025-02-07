@@ -55,6 +55,7 @@ import com.android.launcher3.Utilities
 import com.android.launcher3.anim.AnimatedFloat
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent
 import com.android.launcher3.model.data.ItemInfo
+import com.android.launcher3.model.data.TaskViewItemInfo
 import com.android.launcher3.testing.TestLogging
 import com.android.launcher3.testing.shared.TestProtocol
 import com.android.launcher3.util.CancellableTask
@@ -167,6 +168,15 @@ constructor(
 
     val firstItemInfo: ItemInfo?
         get() = firstTaskContainer?.itemInfo
+
+    /**
+     * A [TaskViewItemInfo] of this TaskView. The [firstTaskContainer] will be used to get some
+     * specific information like user, title etc of the Task. However, these task specific
+     * information will be skipped if the TaskView has no [taskContainers]. Note, please use
+     * [TaskContainer.itemInfo] for [TaskViewItemInfo] on a specific [TaskContainer].
+     */
+    val itemInfo: TaskViewItemInfo
+        get() = TaskViewItemInfo(this, firstTaskContainer)
 
     protected val container: RecentsViewContainer =
         RecentsViewContainer.containerFromContext(context)
@@ -1083,13 +1093,10 @@ constructor(
                 }
             }
         Log.d("b/310064698", "${taskIds.contentToString()} - onClick - callbackList: $callbackList")
-        // TODO(b/391918297): Logging when there is no associated task.
-        firstItemInfo?.let {
-            container.statsLogManager
-                .logger()
-                .withItemInfo(it)
-                .log(LauncherEvent.LAUNCHER_TASK_LAUNCH_TAP)
-        }
+        container.statsLogManager
+            .logger()
+            .withItemInfo(itemInfo)
+            .log(LauncherEvent.LAUNCHER_TASK_LAUNCH_TAP)
     }
 
     /** Launch of the current task (both live and inactive tasks) with an animation. */

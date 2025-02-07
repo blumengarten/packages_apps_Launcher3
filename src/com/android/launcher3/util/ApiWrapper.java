@@ -59,10 +59,13 @@ public class ApiWrapper {
             LauncherAppComponent::getApiWrapper);
 
     protected final Context mContext;
+    private final String[] mLegacyMultiInstanceSupportedApps;
 
     @Inject
     public ApiWrapper(@ApplicationContext Context context) {
         mContext = context;
+        mLegacyMultiInstanceSupportedApps = context.getResources().getStringArray(
+                com.android.launcher3.R.array.config_appsSupportMultiInstancesSplit);
     }
 
     /**
@@ -157,11 +160,30 @@ public class ApiWrapper {
     /**
      * Checks if an activity is flagged as non-resizeable.
      */
-    public boolean isNonResizeableActivity(LauncherActivityInfo lai) {
-        // Overridden in quickstep
+    public boolean isNonResizeableActivity(@NonNull LauncherActivityInfo lai) {
+        // Overridden in Quickstep
         return false;
     }
 
+    /**
+     * Checks if an activity supports multi-instance.
+     */
+    public boolean supportsMultiInstance(@NonNull LauncherActivityInfo lai) {
+        // Check app multi-instance properties after V
+        if (!Utilities.ATLEAST_V) {
+            return false;
+        }
+
+        // Check the legacy hardcoded allowlist first
+        for (String pkg : mLegacyMultiInstanceSupportedApps) {
+            if (pkg.equals(lai.getComponentName().getPackageName())) {
+                return true;
+            }
+        }
+
+        // Overridden in Quickstep
+        return false;
+    }
     /**
      * Starts an Activity which can be used to set this Launcher as the HOME app, via a consent
      * screen. In case the consent screen cannot be shown, or the user does not set current Launcher

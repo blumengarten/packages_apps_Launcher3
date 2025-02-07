@@ -853,8 +853,6 @@ public class LoaderTask implements Runnable {
                         + ", isArchived: " + activityInfo.getApplicationInfo().isArchived);
             }
         }
-        logASplit("Loading IconRequestInfo without iconBlob for AppInfo: "
-                + appInfo.getTargetComponent());
         return new IconRequestInfo<>(appInfo, activityInfo, false /* useLowResIcon= */);
     }
 
