@@ -16,6 +16,7 @@
 
 package com.android.quickstep.recents.ui.viewmodel
 
+import android.graphics.Rect
 import android.util.Size
 import com.android.quickstep.recents.domain.model.DesktopTaskBoundsData
 import com.android.quickstep.recents.domain.usecase.OrganizeDesktopTasksUseCase
@@ -36,6 +37,9 @@ class DesktopTaskViewModel(private val organizeDesktopTasksUseCase: OrganizeDesk
      */
     fun organizeDesktopTasks(desktopSize: Size, defaultPositions: List<DesktopTaskBoundsData>) {
         organizedDesktopTaskPositions =
-            organizeDesktopTasksUseCase.run(desktopSize, defaultPositions)
+            organizeDesktopTasksUseCase.run(
+                desktopBounds = Rect(0, 0, desktopSize.width, desktopSize.height),
+                taskBounds = defaultPositions,
+            )
     }
 }
