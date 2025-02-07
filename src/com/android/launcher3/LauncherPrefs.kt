@@ -21,6 +21,7 @@ import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
 import com.android.launcher3.BuildConfig.WIDGET_ON_FIRST_SCREEN
 import com.android.launcher3.InvariantDeviceProfile.GRID_NAME_PREFS_KEY
+import com.android.launcher3.InvariantDeviceProfile.NON_FIXED_LANDSCAPE_GRID_NAME_PREFS_KEY
 import com.android.launcher3.LauncherFiles.DEVICE_PREFERENCES_KEY
 import com.android.launcher3.LauncherFiles.SHARED_PREFERENCES_KEY
 import com.android.launcher3.dagger.ApplicationContext
@@ -303,6 +304,16 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
 
         @JvmField
         val FIXED_LANDSCAPE_MODE = backedUpItem(SettingsActivity.FIXED_LANDSCAPE_MODE, false)
+
+        @JvmField
+        val NON_FIXED_LANDSCAPE_GRID_NAME =
+            ConstantItem(
+                NON_FIXED_LANDSCAPE_GRID_NAME_PREFS_KEY,
+                isBackedUp = true,
+                defaultValue = null,
+                encryptionType = EncryptionType.ENCRYPTED,
+                type = String::class.java,
+            )
 
         // Preferences for widget configurations
         @JvmField
