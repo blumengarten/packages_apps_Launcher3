@@ -248,8 +248,43 @@ constructor(
             )
 
     private val tempCoordinates = FloatArray(2)
-    private val focusBorderAnimator: BorderAnimator?
-    private val hoverBorderAnimator: BorderAnimator?
+    private val focusBorderAnimator: BorderAnimator? =
+        focusBorderAnimator
+            ?: createSimpleBorderAnimator(
+                TaskCornerRadius.get(context).toInt(),
+                context.resources.getDimensionPixelSize(R.dimen.keyboard_quick_switch_border_width),
+                this::getThumbnailBounds,
+                this,
+                context
+                    .obtainStyledAttributes(attrs, R.styleable.TaskView, defStyleAttr, defStyleRes)
+                    .getColor(
+                        R.styleable.TaskView_focusBorderColor,
+                        BorderAnimator.DEFAULT_BORDER_COLOR,
+                    ),
+            )
+
+    private val hoverBorderAnimator: BorderAnimator? =
+        hoverBorderAnimator
+            ?: if (enableCursorHoverStates())
+                createSimpleBorderAnimator(
+                    TaskCornerRadius.get(context).toInt(),
+                    context.resources.getDimensionPixelSize(R.dimen.task_hover_border_width),
+                    this::getThumbnailBounds,
+                    this,
+                    context
+                        .obtainStyledAttributes(
+                            attrs,
+                            R.styleable.TaskView,
+                            defStyleAttr,
+                            defStyleRes,
+                        )
+                        .getColor(
+                            R.styleable.TaskView_hoverBorderColor,
+                            BorderAnimator.DEFAULT_BORDER_COLOR,
+                        ),
+                )
+            else null
+
     private val rootViewDisplayId: Int
         get() = rootView.display?.displayId ?: Display.DEFAULT_DISPLAY
 
@@ -519,40 +554,7 @@ constructor(
     init {
         setOnClickListener { _ -> onClick() }
 
-        val cursorHoverStatesEnabled = enableCursorHoverStates()
-        setWillNotDraw(!cursorHoverStatesEnabled)
-        context.obtainStyledAttributes(attrs, R.styleable.TaskView, defStyleAttr, defStyleRes).use {
-            this.focusBorderAnimator =
-                focusBorderAnimator
-                    ?: createSimpleBorderAnimator(
-                        TaskCornerRadius.get(context).toInt(),
-                        context.resources.getDimensionPixelSize(
-                            R.dimen.keyboard_quick_switch_border_width
-                        ),
-                        { bounds: Rect -> getThumbnailBounds(bounds) },
-                        this,
-                        it.getColor(
-                            R.styleable.TaskView_focusBorderColor,
-                            BorderAnimator.DEFAULT_BORDER_COLOR,
-                        ),
-                    )
-            this.hoverBorderAnimator =
-                hoverBorderAnimator
-                    ?: if (cursorHoverStatesEnabled)
-                        createSimpleBorderAnimator(
-                            TaskCornerRadius.get(context).toInt(),
-                            context.resources.getDimensionPixelSize(
-                                R.dimen.task_hover_border_width
-                            ),
-                            { bounds: Rect -> getThumbnailBounds(bounds) },
-                            this,
-                            it.getColor(
-                                R.styleable.TaskView_hoverBorderColor,
-                                BorderAnimator.DEFAULT_BORDER_COLOR,
-                            ),
-                        )
-                    else null
-        }
+        setWillNotDraw(!enableCursorHoverStates())
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
