@@ -273,12 +273,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         mFastScroller = findViewById(R.id.fast_scroller);
         mFastScroller.setPopupView(findViewById(R.id.fast_scroller_popup));
         mFastScrollLetterLayout = findViewById(R.id.scroll_letter_layout);
-        if (Flags.letterFastScroller()) {
-            // Set clip children to false otherwise the scroller letters will be clipped.
-            setClipChildren(false);
-        } else {
-            setClipChildren(true);
-        }
+        setClipChildren(false);
 
         mSearchContainer = inflateSearchBar();
         if (!isSearchBarFloating()) {
