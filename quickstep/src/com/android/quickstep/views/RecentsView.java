@@ -3238,6 +3238,7 @@ public abstract class RecentsView<
 
         int topRowWidth = 0;
         int bottomRowWidth = 0;
+        int largeTileRowWidth = 0;
         float topAccumulatedTranslationX = 0;
         float bottomAccumulatedTranslationX = 0;
 
@@ -3248,9 +3249,12 @@ public abstract class RecentsView<
         int focusedTaskViewShift = 0;
         int largeTaskWidthAndSpacing = 0;
         int snappedTaskRowWidth = 0;
+        int expectedCurrentTaskRowWidth = 0;
         int snappedPage = isKeyboardTaskFocusPending() ? mKeyboardTaskFocusIndex : getNextPage();
         TaskView snappedTaskView = getTaskViewAt(snappedPage);
         TaskView homeTaskView = getHomeTaskView();
+        TaskView expectedCurrentTaskView = mUtils.getExpectedCurrentTask(getFocusedTaskView(),
+                getRunningTaskView());
         TaskView nextFocusedTaskView = null;
 
         // Don't clear the top row, if the user has dismissed a task, to maintain the task order.
@@ -3289,6 +3293,7 @@ public abstract class RecentsView<
                 if (!(taskView instanceof DesktopTaskView && isSplitSelectionActive())) {
                     topRowWidth += taskWidthAndSpacing;
                     bottomRowWidth += taskWidthAndSpacing;
+                    largeTileRowWidth += taskWidthAndSpacing;
                 }
                 gridTranslation += focusedTaskViewShift;
                 gridTranslation += mIsRtl ? taskWidthAndSpacing : -taskWidthAndSpacing;
@@ -3300,8 +3305,10 @@ public abstract class RecentsView<
                 largeTaskWidthAndSpacing = taskWidthAndSpacing;
 
                 if (taskView == snappedTaskView) {
-                    // If focused task is snapped, the row width is just task width and spacing.
-                    snappedTaskRowWidth = taskWidthAndSpacing;
+                    snappedTaskRowWidth = largeTileRowWidth;
+                }
+                if (taskView == expectedCurrentTaskView) {
+                    expectedCurrentTaskRowWidth = largeTileRowWidth;
                 }
             } else {
                 if (encounteredLastLargeTaskView) {
@@ -3370,8 +3377,12 @@ public abstract class RecentsView<
                     lastBottomTaskViews.add(taskView);
                     lastTopTaskViews.clear();
                 }
+                int taskViewRowWidth = isTopRow ? topRowWidth : bottomRowWidth;
                 if (taskView == snappedTaskView) {
-                    snappedTaskRowWidth = isTopRow ? topRowWidth : bottomRowWidth;
+                    snappedTaskRowWidth = taskViewRowWidth;
+                }
+                if (taskView == expectedCurrentTaskView) {
+                    expectedCurrentTaskRowWidth = taskViewRowWidth;
                 }
             }
             gridTranslations.put(taskView, gridTranslation);
@@ -3412,17 +3423,16 @@ public abstract class RecentsView<
         float clearAllShortTotalWidthTranslation = 0;
         int longRowWidth = Math.max(topRowWidth, bottomRowWidth);
 
-        // If Recents contains only large task sizes, it should only consider 1 large size
-        // for ClearAllButton translation. The space at the left side of the large task will be
-        // empty and it should be move ClearAllButton further away as well.
-        // TODO(b/359573248): Validate the translation for ClearAllButton for grid only.
-        if (enableLargeDesktopWindowingTile() && largeTasksCount == getTaskViewCount()) {
-            longRowWidth = largeTaskWidthAndSpacing;
-        }
-
         // If first task is not in the expected position (mLastComputedTaskSize) and being too close
         // to ClearAllButton, then apply extra translation to ClearAllButton.
-        int firstTaskStart = mLastComputedGridSize.left + longRowWidth;
+        int rowWidthAfterExpectedCurrentTask = longRowWidth - expectedCurrentTaskRowWidth;
+        int expectedCurrentTaskWidthAndSpacing =
+                (expectedCurrentTaskView != null
+                        ? expectedCurrentTaskView.getLayoutParams().width
+                        : 0
+                ) + mPageSpacing;
+        int firstTaskStart = mLastComputedGridSize.left + rowWidthAfterExpectedCurrentTask
+                + expectedCurrentTaskWidthAndSpacing;
         int expectedFirstTaskStart = mLastComputedTaskSize.right;
         if (firstTaskStart < expectedFirstTaskStart) {
             mClearAllShortTotalWidthTranslation = expectedFirstTaskStart - firstTaskStart;
