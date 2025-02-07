@@ -18,6 +18,7 @@ package com.android.launcher3.statehandlers
 import android.content.Context
 import android.os.Debug
 import android.util.Log
+import android.util.SparseArray
 import android.window.DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY
 import com.android.launcher3.LauncherState
 import com.android.launcher3.dagger.ApplicationContext
@@ -52,6 +53,29 @@ constructor(
     systemUiProxy: SystemUiProxy,
     lifecycleTracker: DaggerSingletonTracker,
 ) {
+    /**
+     * Tracks the desks configurations on each display.
+     *
+     * (Used only when multiple desks are enabled).
+     *
+     * @property displayId The ID of the display this object represents.
+     * @property canCreateDesks true if it's possible to create new desks on the display represented
+     *   by this object.
+     * @property activeDeskId The ID of the active desk on the associated display (if any). It has a
+     *   value of `-1` if there are no active desks. Note that there can only be at most one active
+     *   desk on each display.
+     * @property deskIds a set containing the IDs of the desks on the associated display.
+     */
+    private data class DisplayDeskConfig(
+        val displayId: Int,
+        var canCreateDesks: Boolean,
+        var activeDeskId: Int = -1,
+        val deskIds: MutableSet<Int>,
+    )
+
+    /** Maps each display by its ID to its desks configuration. */
+    private val displaysDesksConfigsMap = SparseArray<DisplayDeskConfig>()
+
     private val desktopVisibilityListeners: MutableSet<DesktopVisibilityListener> = HashSet()
     private val taskbarDesktopModeListeners: MutableSet<TaskbarDesktopModeListener> = HashSet()
 
@@ -313,6 +337,81 @@ constructor(
         }
     }
 
+    private fun onListenerConnected(displayDeskStates: Array<DisplayDeskState>) {
+        if (!DesktopModeStatus.enableMultipleDesktops(context)) {
+            return
+        }
+
+        displaysDesksConfigsMap.clear()
+
+        displayDeskStates.forEach { displayDeskState ->
+            displaysDesksConfigsMap[displayDeskState.displayId] =
+                DisplayDeskConfig(
+                    displayId = displayDeskState.displayId,
+                    canCreateDesks = displayDeskState.canCreateDesk,
+                    activeDeskId = displayDeskState.activeDeskId,
+                    deskIds = displayDeskState.deskIds.toMutableSet(),
+                )
+        }
+    }
+
+    private fun getDisplayDeskConfig(displayId: Int): DisplayDeskConfig {
+        return checkNotNull(displaysDesksConfigsMap[displayId]) {
+            "Expected non-null desk config for display: $displayId"
+        }
+    }
+
+    private fun onCanCreateDesksChanged(displayId: Int, canCreateDesks: Boolean) {
+        if (!DesktopModeStatus.enableMultipleDesktops(context)) {
+            return
+        }
+
+        getDisplayDeskConfig(displayId).canCreateDesks = canCreateDesks
+    }
+
+    private fun onDeskAdded(displayId: Int, deskId: Int) {
+        if (!DesktopModeStatus.enableMultipleDesktops(context)) {
+            return
+        }
+
+        getDisplayDeskConfig(displayId).also {
+            check(it.deskIds.add(deskId)) {
+                "Found a duplicate desk Id: $deskId on display: $displayId"
+            }
+        }
+    }
+
+    private fun onDeskRemoved(displayId: Int, deskId: Int) {
+        if (!DesktopModeStatus.enableMultipleDesktops(context)) {
+            return
+        }
+
+        getDisplayDeskConfig(displayId).also {
+            check(it.deskIds.remove(deskId)) {
+                "Removing non-existing desk Id: $deskId on display: $displayId"
+            }
+            if (it.activeDeskId == deskId) {
+                it.activeDeskId = -1
+            }
+        }
+    }
+
+    private fun onActiveDeskChanged(displayId: Int, newActiveDesk: Int, oldActiveDesk: Int) {
+        if (!DesktopModeStatus.enableMultipleDesktops(context)) {
+            return
+        }
+
+        getDisplayDeskConfig(displayId).also {
+            check(oldActiveDesk == it.activeDeskId) {
+                "Mismatch between the Shell's oldActiveDesk: $oldActiveDesk, and Launcher's: ${it.activeDeskId}"
+            }
+            check(it.deskIds.contains(newActiveDesk)) {
+                "newActiveDesk: $newActiveDesk was never added to display: $displayId"
+            }
+            it.activeDeskId = newActiveDesk
+        }
+    }
+
     /** TODO: b/333533253 - Remove after flag rollout */
     private fun markLauncherPaused() {
         if (ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY.isTrue) {
@@ -366,10 +465,11 @@ constructor(
     ) : Stub() {
         private val controller = WeakReference(controller)
 
-        // TODO: b/392986431 - Implement the new desks APIs.
-        override fun onListenerConnected(
-            displayDeskStates: Array<DisplayDeskState>,
-        ) {}
+        override fun onListenerConnected(displayDeskStates: Array<DisplayDeskState>) {
+            Executors.MAIN_EXECUTOR.execute {
+                controller.get()?.onListenerConnected(displayDeskStates)
+            }
+        }
 
         override fun onTasksVisibilityChanged(displayId: Int, visibleTasksCount: Int) {
             if (displayId != this.displayId) return
@@ -405,14 +505,25 @@ constructor(
 
         override fun onExitDesktopModeTransitionStarted(transitionDuration: Int) {}
 
-        // TODO: b/392986431 - Implement all the below new desks APIs.
-        override fun onCanCreateDesksChanged(displayId: Int, canCreateDesks: Boolean) {}
+        override fun onCanCreateDesksChanged(displayId: Int, canCreateDesks: Boolean) {
+            Executors.MAIN_EXECUTOR.execute {
+                controller.get()?.onCanCreateDesksChanged(displayId, canCreateDesks)
+            }
+        }
 
-        override fun onDeskAdded(displayId: Int, deskId: Int) {}
+        override fun onDeskAdded(displayId: Int, deskId: Int) {
+            Executors.MAIN_EXECUTOR.execute { controller.get()?.onDeskAdded(displayId, deskId) }
+        }
 
-        override fun onDeskRemoved(displayId: Int, deskId: Int) {}
+        override fun onDeskRemoved(displayId: Int, deskId: Int) {
+            Executors.MAIN_EXECUTOR.execute { controller.get()?.onDeskRemoved(displayId, deskId) }
+        }
 
-        override fun onActiveDeskChanged(displayId: Int, newActiveDesk: Int, oldActiveDesk: Int) {}
+        override fun onActiveDeskChanged(displayId: Int, newActiveDesk: Int, oldActiveDesk: Int) {
+            Executors.MAIN_EXECUTOR.execute {
+                controller.get()?.onActiveDeskChanged(displayId, newActiveDesk, oldActiveDesk)
+            }
+        }
     }
 
     /** A listener for Taskbar in Desktop Mode. */
