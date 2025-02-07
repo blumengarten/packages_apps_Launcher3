@@ -124,6 +124,8 @@ public class GridCustomizationsProvider extends ContentProvider {
     private static final int MESSAGE_ID_UPDATE_GRID = 7414;
     private static final int MESSAGE_ID_UPDATE_COLOR = 856;
 
+    private static final String DEFAULT_SHAPE_KEY = "circle";
+
     // Set of all active previews used to track duplicate memory allocations
     private final Set<PreviewLifecycleObserver> mActivePreviews =
             Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -157,7 +159,7 @@ public class GridCustomizationsProvider extends ContentProvider {
                     // Handle default for when current shape doesn't match new shapes.
                     if (selectedShape.isEmpty()) {
                         selectedShape = Optional.ofNullable(ShapesProvider.INSTANCE.getIconShapes()
-                                .get("circle"));
+                                .get(DEFAULT_SHAPE_KEY));
                     }
 
                     for (IconShapeModel shape : ShapesProvider.INSTANCE.getIconShapes().values()) {
