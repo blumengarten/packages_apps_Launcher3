@@ -22,9 +22,18 @@ import com.android.quickstep.recents.domain.usecase.OrganizeDesktopTasksUseCase
 
 /** ViewModel used for [com.android.quickstep.views.DesktopTaskView]. */
 class DesktopTaskViewModel(private val organizeDesktopTasksUseCase: OrganizeDesktopTasksUseCase) {
+    /** Positions for desktop tasks as calculated by [organizeDesktopTasksUseCase] */
     var organizedDesktopTaskPositions = emptyList<DesktopTaskBoundsData>()
         private set
 
+    /**
+     * Computes new task positions using [organizeDesktopTasksUseCase]. The result is stored in
+     * [organizedDesktopTaskPositions]. This is used for the exploded desktop view where the usecase
+     * will scale and translate tasks so that they don't overlap.
+     *
+     * @param desktopSize the size available for organizing the tasks.
+     * @param defaultPositions the tasks and their bounds as they appear on a desktop.
+     */
     fun organizeDesktopTasks(desktopSize: Size, defaultPositions: List<DesktopTaskBoundsData>) {
         organizedDesktopTaskPositions =
             organizeDesktopTasksUseCase.run(desktopSize, defaultPositions)
