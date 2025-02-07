@@ -301,7 +301,8 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         // TODO(b/390665752): Feature to "lock" pinned taskbar to home screen will be superseded by
         //     pinning, in other launcher states, at which point this variable can be removed.
         mInAppStateAffectsDesktopTasksVisibilityInTaskbar =
-                DisplayController.showLockedTaskbarOnHome(mActivity);
+                !DisplayController.showDesktopTaskbarForFreeformDisplay(mActivity)
+                        && DisplayController.showLockedTaskbarOnHome(mActivity);
 
         mTaskbarBackgroundDuration = activity.getResources().getInteger(
                 R.integer.taskbar_background_duration);

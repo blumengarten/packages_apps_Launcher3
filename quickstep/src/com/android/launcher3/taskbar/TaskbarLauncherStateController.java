@@ -58,7 +58,6 @@ import com.android.launcher3.QuickstepTransitionManager;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.anim.AnimatedFloat;
 import com.android.launcher3.anim.AnimatorListeners;
-import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.statemanager.StateManager;
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController.BubbleLauncherState;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
@@ -714,6 +713,10 @@ public class TaskbarLauncherStateController {
 
     private static boolean shouldShowTaskbar(Context context, boolean isInLauncher,
             boolean isInOverview) {
+        if (DisplayController.showDesktopTaskbarForFreeformDisplay(context)) {
+            return true;
+        }
+
         if (DisplayController.showLockedTaskbarOnHome(context) && isInLauncher) {
             return true;
         }
@@ -769,9 +772,14 @@ public class TaskbarLauncherStateController {
      * This refers to the intended state - a transition to this state might be in progress.
      */
     public boolean isTaskbarAlignedWithHotseat() {
+        if (DisplayController.showDesktopTaskbarForFreeformDisplay(mLauncher)) {
+            return false;
+        }
+
         if (DisplayController.showLockedTaskbarOnHome(mLauncher) && isInLauncher()) {
             return false;
         }
+
         return mLauncherState.isTaskbarAlignedWithHotseat(mLauncher);
     }
 

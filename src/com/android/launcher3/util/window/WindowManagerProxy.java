@@ -121,6 +121,14 @@ public class WindowManagerProxy {
     }
 
     /**
+     * Returns whether the display is a freeform display for which taskbar should be pinned
+     * and showing desktop tasks.
+     */
+    public boolean showDesktopTaskbarForFreeformDisplay(Context displayInfoContext) {
+        return false;
+    }
+
+    /**
      * Returns if the home is visible.
      */
     public boolean isHomeVisible(Context context) {
