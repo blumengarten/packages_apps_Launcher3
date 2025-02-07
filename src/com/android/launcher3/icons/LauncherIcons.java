@@ -16,7 +16,12 @@
 
 package com.android.launcher3.icons;
 
+import static android.graphics.Color.BLACK;
+
+import static com.android.launcher3.graphics.ThemeManager.PREF_ICON_SHAPE;
+
 import android.content.Context;
+import android.graphics.Canvas;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.drawable.AdaptiveIconDrawable;
@@ -26,6 +31,7 @@ import androidx.annotation.NonNull;
 
 import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.graphics.IconShape;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.pm.UserCache;
@@ -40,6 +46,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * that are threadsafe.
  */
 public class LauncherIcons extends BaseIconFactory implements AutoCloseable {
+
+    private static final float SEVEN_SIDED_COOKIE_SCALE = 72f / 80f;
+    private static final float FOUR_SIDED_COOKIE_SCALE = 72f / 83.4f;
+    private static final float VERY_SUNNY_SCALE = 72f / 92f;
+    private static final float DEFAULT_ICON_SCALE = 1f;
+
 
     private static final MainThreadInitializedObject<Pool> POOL =
             new MainThreadInitializedObject<>(Pool::new);
@@ -84,6 +96,36 @@ public class LauncherIcons extends BaseIconFactory implements AutoCloseable {
     public Path getShapePath(AdaptiveIconDrawable drawable, Rect iconBounds) {
         if (!Flags.enableLauncherIconShapes()) return drawable.getIconMask();
         return IconShape.INSTANCE.get(mContext).getShape().getPath(iconBounds);
+    }
+
+    @Override
+    protected void drawAdaptiveIcon(
+            @NonNull Canvas canvas,
+            @NonNull AdaptiveIconDrawable drawable,
+            @NonNull Path overridePath
+    ) {
+        if (!Flags.enableLauncherIconShapes()) {
+            super.drawAdaptiveIcon(canvas, drawable, overridePath);
+            return;
+        }
+        String shapeKey = LauncherPrefs.get(mContext).get(PREF_ICON_SHAPE);
+        float iconScale = switch (shapeKey) {
+            case "seven_sided_cookie" -> SEVEN_SIDED_COOKIE_SCALE;
+            case "four_sided_cookie" -> FOUR_SIDED_COOKIE_SCALE;
+            case "sunny" -> VERY_SUNNY_SCALE;
+            default -> DEFAULT_ICON_SCALE;
+        };
+        canvas.clipPath(overridePath);
+        canvas.drawColor(BLACK);
+        canvas.save();
+        canvas.scale(iconScale, iconScale, canvas.getWidth() / 2f, canvas.getHeight() / 2f);
+        if (drawable.getBackground() != null) {
+            drawable.getBackground().draw(canvas);
+        }
+        if (drawable.getForeground() != null) {
+            drawable.getForeground().draw(canvas);
+        }
+        canvas.restore();
     }
 
     @Override
