@@ -3541,11 +3541,6 @@ public abstract class RecentsView<
     }
 
     private void setTaskThumbnailSplashAlpha(float taskThumbnailSplashAlpha) {
-        if (enableRefactorTaskThumbnail()) {
-            mRecentsViewModel.updateThumbnailSplashProgress(taskThumbnailSplashAlpha);
-            return;
-        }
-
         mTaskThumbnailSplashAlpha = taskThumbnailSplashAlpha;
         for (TaskView taskView : getTaskViews()) {
             taskView.setTaskThumbnailSplashAlpha(taskThumbnailSplashAlpha);

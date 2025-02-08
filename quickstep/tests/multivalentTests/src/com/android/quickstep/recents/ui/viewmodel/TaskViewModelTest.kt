@@ -25,9 +25,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.launcher3.util.SystemUiController.FLAG_LIGHT_NAV
 import com.android.launcher3.util.SystemUiController.FLAG_LIGHT_STATUS
 import com.android.launcher3.util.TestDispatcherProvider
+import com.android.quickstep.recents.data.FakeRecentsRotationStateRepository
 import com.android.quickstep.recents.domain.model.TaskModel
 import com.android.quickstep.recents.domain.usecase.GetSysUiStatusNavFlagsUseCase
 import com.android.quickstep.recents.domain.usecase.GetTaskUseCase
+import com.android.quickstep.recents.domain.usecase.IsThumbnailValidUseCase
 import com.android.quickstep.recents.viewmodel.RecentsViewData
 import com.android.quickstep.views.TaskViewType
 import com.android.systemui.shared.recents.model.ThumbnailData
@@ -41,6 +43,10 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.anyInt
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
@@ -52,6 +58,8 @@ class TaskViewModelTest {
 
     private val recentsViewData = RecentsViewData()
     private val getTaskUseCase = mock<GetTaskUseCase>()
+    private val isThumbnailValidUseCase =
+        spy(IsThumbnailValidUseCase(FakeRecentsRotationStateRepository()))
     private lateinit var sut: TaskViewModel
 
     @Before
@@ -62,6 +70,7 @@ class TaskViewModelTest {
                 recentsViewData = recentsViewData,
                 getTaskUseCase = getTaskUseCase,
                 getSysUiStatusNavFlagsUseCase = GetSysUiStatusNavFlagsUseCase(),
+                isThumbnailValidUseCase = isThumbnailValidUseCase,
                 dispatcherProvider = TestDispatcherProvider(unconfinedTestDispatcher),
             )
         whenever(getTaskUseCase.invoke(TASK_MODEL_1.id)).thenReturn(flow { emit(TASK_MODEL_1) })
@@ -102,6 +111,7 @@ class TaskViewModelTest {
                         recentsViewData = recentsViewData,
                         getTaskUseCase = getTaskUseCase,
                         getSysUiStatusNavFlagsUseCase = GetSysUiStatusNavFlagsUseCase(),
+                        isThumbnailValidUseCase = isThumbnailValidUseCase,
                         dispatcherProvider = TestDispatcherProvider(unconfinedTestDispatcher),
                     )
                 sut.bind(TASK_MODEL_1.id)
@@ -224,6 +234,12 @@ class TaskViewModelTest {
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
+
+    @Test
+    fun shouldShowSplash_calls_useCase() {
+        sut.isThumbnailValid(null, 0, 0)
+        verify(isThumbnailValidUseCase).invoke(anyOrNull(), anyInt(), anyInt())
+    }
 
     private fun TaskModel.toUiState() =
         TaskData.Data(

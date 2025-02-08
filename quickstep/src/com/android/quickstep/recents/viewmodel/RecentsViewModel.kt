@@ -42,10 +42,6 @@ class RecentsViewModel(
         recentsViewData.overlayEnabled.value = isOverlayEnabled
     }
 
-    fun updateThumbnailSplashProgress(taskThumbnailSplashAlpha: Float) {
-        recentsViewData.thumbnailSplashProgress.value = taskThumbnailSplashAlpha
-    }
-
     suspend fun waitForThumbnailsToUpdate(updatedThumbnails: Map<Int, ThumbnailData>?) {
         if (updatedThumbnails.isNullOrEmpty()) return
         combine(
