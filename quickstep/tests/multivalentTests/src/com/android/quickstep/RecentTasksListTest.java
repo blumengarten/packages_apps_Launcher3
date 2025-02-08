@@ -97,6 +97,8 @@ public class RecentTasksListTest {
         // Set desktop mode supported
         when(mContext.getResources()).thenReturn(mResources);
         when(mResources.getBoolean(R.bool.config_isDesktopModeSupported)).thenReturn(true);
+        when(mResources.getBoolean(R.bool.config_canInternalDisplayHostDesktops))
+                .thenReturn(true);
 
         mRecentTasksList = new RecentTasksList(mContext, mockMainThreadExecutor,
                 mockKeyguardManager, mSystemUiProxy, mTopTaskTracker);
