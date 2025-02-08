@@ -34,6 +34,7 @@ import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.Intent;
 import android.content.pm.LauncherApps;
+import android.content.pm.ShortcutInfo;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Point;
@@ -84,6 +85,7 @@ import com.android.quickstep.util.LogUtils;
 import com.android.quickstep.util.MultiValueUpdateListener;
 import com.android.quickstep.util.SingleTask;
 import com.android.systemui.shared.recents.model.Task;
+import com.android.wm.shell.shared.bubbles.BubbleAnythingFlagHelper;
 import com.android.wm.shell.shared.draganddrop.DragAndDropConstants;
 
 import java.io.PrintWriter;
@@ -416,6 +418,10 @@ public class TaskbarDragController extends DragController<BaseTaskbarContext> im
                                 item.user));
                 intent.putExtra(Intent.EXTRA_PACKAGE_NAME, item.getIntent().getPackage());
                 intent.putExtra(Intent.EXTRA_SHORTCUT_ID, deepShortcutId);
+                ShortcutInfo shortcutInfo = ((WorkspaceItemInfo) item).getDeepShortcutInfo();
+                if (BubbleAnythingFlagHelper.enableCreateAnyBubble() && shortcutInfo != null) {
+                    intent.putExtra(DragAndDropConstants.EXTRA_SHORTCUT_INFO, shortcutInfo);
+                }
             } else if (item.itemType == ITEM_TYPE_SEARCH_ACTION) {
                 // TODO(b/289261756): Buggy behavior when split opposite to an existing search pane.
                 intent.putExtra(

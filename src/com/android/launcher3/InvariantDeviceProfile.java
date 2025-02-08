@@ -20,6 +20,7 @@ import static com.android.launcher3.LauncherPrefs.DB_FILE;
 import static com.android.launcher3.LauncherPrefs.ENABLE_TWOLINE_ALLAPPS_TOGGLE;
 import static com.android.launcher3.LauncherPrefs.FIXED_LANDSCAPE_MODE;
 import static com.android.launcher3.LauncherPrefs.GRID_NAME;
+import static com.android.launcher3.LauncherPrefs.NON_FIXED_LANDSCAPE_GRID_NAME;
 import static com.android.launcher3.Utilities.dpiFromPx;
 import static com.android.launcher3.testing.shared.ResourceUtils.INVALID_RESOURCE_HANDLE;
 import static com.android.launcher3.util.DisplayController.CHANGE_DENSITY;
@@ -93,6 +94,8 @@ public class InvariantDeviceProfile implements SafeCloseable {
             new MainThreadInitializedObject<>(InvariantDeviceProfile::new);
 
     public static final String GRID_NAME_PREFS_KEY = "idp_grid_name";
+    public static final String NON_FIXED_LANDSCAPE_GRID_NAME_PREFS_KEY =
+            "idp_non_fixed_landscape_grid_name";
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({TYPE_PHONE, TYPE_MULTI_DISPLAY, TYPE_TABLET})
@@ -268,7 +271,14 @@ public class InvariantDeviceProfile implements SafeCloseable {
             if (FIXED_LANDSCAPE_MODE.getSharedPrefKey().equals(key)
                     && isFixedLandscape != FIXED_LANDSCAPE_MODE.get(context)) {
                 Trace.beginSection("InvariantDeviceProfile#setFixedLandscape");
-                onConfigChanged(context);
+                if (isFixedLandscape) {
+                    setCurrentGrid(
+                            context, LauncherPrefs.get(context).get(NON_FIXED_LANDSCAPE_GRID_NAME));
+                } else {
+                    LauncherPrefs.get(context)
+                            .put(NON_FIXED_LANDSCAPE_GRID_NAME, getCurrentGridName(context));
+                    onConfigChanged(context);
+                }
                 Trace.endSection();
             } else if (ENABLE_TWOLINE_ALLAPPS_TOGGLE.getSharedPrefKey().equals(key)
                     && enableTwoLinesInAllApps != ENABLE_TWOLINE_ALLAPPS_TOGGLE.get(context)) {

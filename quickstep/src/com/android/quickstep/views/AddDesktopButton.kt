@@ -17,13 +17,15 @@
 package com.android.quickstep.views
 
 import android.content.Context
-import android.graphics.drawable.ShapeDrawable
-import android.graphics.drawable.shapes.RoundRectShape
+import android.graphics.Canvas
+import android.graphics.Rect
 import android.util.AttributeSet
 import android.widget.ImageButton
 import com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_X
 import com.android.launcher3.R
 import com.android.launcher3.util.MultiPropertyFactory
+import com.android.quickstep.util.BorderAnimator
+import com.android.quickstep.util.BorderAnimator.Companion.createSimpleBorderAnimator
 
 /**
  * Button for supporting multiple desktop sessions. The button will be next to the first TaskView
@@ -55,20 +57,49 @@ class AddDesktopButton @JvmOverloads constructor(context: Context, attrs: Attrib
             multiTranslationX[TranslationX.OFFSET.ordinal].value = value
         }
 
-    override fun onFinishInflate() {
-        super.onFinishInflate()
+    private val focusBorderAnimator: BorderAnimator =
+        createSimpleBorderAnimator(
+            context.resources.getDimensionPixelSize(R.dimen.add_desktop_button_size),
+            context.resources.getDimensionPixelSize(R.dimen.keyboard_quick_switch_border_width),
+            this::getBorderBounds,
+            this,
+            context
+                .obtainStyledAttributes(attrs, R.styleable.AddDesktopButton)
+                .getColor(
+                    R.styleable.AddDesktopButton_focusBorderColor,
+                    BorderAnimator.DEFAULT_BORDER_COLOR,
+                ),
+        )
 
-        background =
-            ShapeDrawable().apply {
-                shape =
-                    RoundRectShape(
-                        FloatArray(8) { R.dimen.add_desktop_button_size.toFloat() },
-                        null,
-                        null,
-                    )
-                setTint(
-                    resources.getColor(android.R.color.system_surface_bright_light, context.theme)
-                )
+    var borderEnabled = false
+        set(value) {
+            if (field == value) {
+                return
             }
+            field = value
+            focusBorderAnimator.setBorderVisibility(visible = field && isFocused, animated = true)
+        }
+
+    public override fun onFocusChanged(
+        gainFocus: Boolean,
+        direction: Int,
+        previouslyFocusedRect: Rect?,
+    ) {
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect)
+        if (borderEnabled) {
+            focusBorderAnimator.setBorderVisibility(gainFocus, /* animated= */ true)
+        }
+    }
+
+    private fun getBorderBounds(bounds: Rect) {
+        bounds.set(0, 0, width, height)
+        val outlinePadding =
+            context.resources.getDimensionPixelSize(R.dimen.add_desktop_button_outline_padding)
+        bounds.inset(-outlinePadding, -outlinePadding)
+    }
+
+    override fun draw(canvas: Canvas) {
+        focusBorderAnimator.drawBorder(canvas)
+        super.draw(canvas)
     }
 }

@@ -17,6 +17,7 @@
 package com.android.launcher3.taskbar.navbutton
 
 import android.content.res.Resources
+import android.os.SystemProperties
 import android.view.Gravity
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
@@ -39,7 +40,7 @@ class SetupNavLayoutter(
     startContextualContainer: ViewGroup,
     imeSwitcher: ImageView?,
     a11yButton: ImageView?,
-    space: Space?
+    space: Space?,
 ) :
     AbstractNavButtonLayoutter(
         resources,
@@ -48,11 +49,15 @@ class SetupNavLayoutter(
         startContextualContainer,
         imeSwitcher,
         a11yButton,
-        space
+        space,
     ) {
     private val mNavButtonsView = navButtonsView
 
     override fun layoutButtons(context: TaskbarActivityContext, isA11yButtonPersistent: Boolean) {
+        val SUWTheme = SystemProperties.get("setupwizard.theme", "")
+        if (SUWTheme == "glif_expressive" || SUWTheme == "glif_expressive_light") {
+            return
+        }
         // Since setup wizard only has back button enabled, it looks strange to be
         // end-aligned, so start-align instead.
         val navButtonsLayoutParams = navButtonContainer.layoutParams as FrameLayout.LayoutParams
@@ -80,7 +85,7 @@ class SetupNavLayoutter(
             adjustForSetupInPhoneMode(
                 navButtonsLayoutParams,
                 navButtonsViewLayoutParams,
-                deviceProfile
+                deviceProfile,
             )
         }
         mNavButtonsView.layoutParams = navButtonsViewLayoutParams
@@ -97,7 +102,7 @@ class SetupNavLayoutter(
             WRAP_CONTENT,
             contextualMargin,
             contextualMargin,
-            Gravity.START
+            Gravity.START,
         )
 
         if (imeSwitcher != null) {

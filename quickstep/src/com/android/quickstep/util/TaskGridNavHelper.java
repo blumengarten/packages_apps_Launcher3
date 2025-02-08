@@ -29,6 +29,7 @@ import java.util.List;
  */
 public class TaskGridNavHelper {
     public static final int CLEAR_ALL_PLACEHOLDER_ID = -1;
+    public static final int ADD_DESK_PLACEHOLDER_ID = -2;
 
     public static final int DIRECTION_UP = 0;
     public static final int DIRECTION_DOWN = 1;
@@ -41,44 +42,42 @@ public class TaskGridNavHelper {
     public @interface TASK_NAV_DIRECTION {}
 
     private final IntArray mOriginalTopRowIds;
-    private IntArray mTopRowIds;
-    private IntArray mBottomRowIds;
+    private final IntArray mTopRowIds = new IntArray();
+    private final IntArray mBottomRowIds = new IntArray();
 
     public TaskGridNavHelper(IntArray topIds, IntArray bottomIds,
-            List<Integer> largeTileIds) {
+            List<Integer> largeTileIds, boolean hasAddDesktopButton) {
         mOriginalTopRowIds = topIds.clone();
-        generateTaskViewIdGrid(topIds, bottomIds, largeTileIds);
+        generateTaskViewIdGrid(topIds, bottomIds, largeTileIds, hasAddDesktopButton);
     }
 
     private void generateTaskViewIdGrid(IntArray topRowIdArray, IntArray bottomRowIdArray,
-            List<Integer> largeTileIds) {
-
-        int maxSize = Math.max(topRowIdArray.size(), bottomRowIdArray.size())
-                + largeTileIds.size();
-        int minSize = Math.min(topRowIdArray.size(), bottomRowIdArray.size())
-                + largeTileIds.size();
-
-        // Add Large tile task views first at the beginning
-        for (int i = 0; i < largeTileIds.size(); i++) {
-            topRowIdArray.add(i, largeTileIds.get(i));
-            bottomRowIdArray.add(i, largeTileIds.get(i));
+            List<Integer> largeTileIds, boolean hasAddDesktopButton) {
+        // Add AddDesktopButton and lage tiles to both rows.
+        if (hasAddDesktopButton) {
+            mTopRowIds.add(ADD_DESK_PLACEHOLDER_ID);
+            mBottomRowIds.add(ADD_DESK_PLACEHOLDER_ID);
         }
+        for (Integer tileId : largeTileIds) {
+            mTopRowIds.add(tileId);
+            mBottomRowIds.add(tileId);
+        }
+
+        // Add row ids to their respective rows.
+        mTopRowIds.addAll(topRowIdArray);
+        mBottomRowIds.addAll(bottomRowIdArray);
 
         // Fill in the shorter array with the ids from the longer one.
-        for (int i = minSize; i < maxSize; i++) {
-            if (i >= topRowIdArray.size()) {
-                topRowIdArray.add(bottomRowIdArray.get(i));
-            } else {
-                bottomRowIdArray.add(topRowIdArray.get(i));
-            }
+        while (mTopRowIds.size() > mBottomRowIds.size()) {
+            mBottomRowIds.add(mTopRowIds.get(mBottomRowIds.size()));
+        }
+        while (mBottomRowIds.size() > mTopRowIds.size()) {
+            mTopRowIds.add(mBottomRowIds.get(mTopRowIds.size()));
         }
 
-        // Add the clear all button to the end of both arrays
-        topRowIdArray.add(CLEAR_ALL_PLACEHOLDER_ID);
-        bottomRowIdArray.add(CLEAR_ALL_PLACEHOLDER_ID);
-
-        mTopRowIds = topRowIdArray;
-        mBottomRowIds = bottomRowIdArray;
+        // Add the clear all button to the end of both arrays.
+        mTopRowIds.add(CLEAR_ALL_PLACEHOLDER_ID);
+        mBottomRowIds.add(CLEAR_ALL_PLACEHOLDER_ID);
     }
 
     /**

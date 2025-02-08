@@ -40,6 +40,7 @@ import com.android.launcher3.util.Executors
 import com.android.launcher3.util.FlagOp
 import com.android.launcher3.util.Preconditions
 import com.android.quickstep.task.thumbnail.data.TaskIconDataSource
+import com.android.quickstep.util.IconLabelUtil.getBadgedContentDescription
 import com.android.quickstep.util.TaskKeyLruCache
 import com.android.quickstep.util.TaskVisualsChangeListener
 import com.android.systemui.shared.recents.model.Task
@@ -206,6 +207,7 @@ class TaskIconCache(
                 TaskCacheEntry(
                     entryIcon,
                     getBadgedContentDescription(
+                        context,
                         activityInfo,
                         task.key.userId,
                         task.taskDescription,
@@ -215,7 +217,12 @@ class TaskIconCache(
             else ->
                 TaskCacheEntry(
                     entryIcon,
-                    getBadgedContentDescription(activityInfo, task.key.userId, task.taskDescription),
+                    getBadgedContentDescription(
+                        context,
+                        activityInfo,
+                        task.key.userId,
+                        task.taskDescription,
+                    ),
                 )
         }.also { iconCache.put(task.key, it) }
     }
@@ -223,28 +230,6 @@ class TaskIconCache(
     private fun getIcon(desc: ActivityManager.TaskDescription, userId: Int): Bitmap? =
         desc.inMemoryIcon
             ?: ActivityManager.TaskDescription.loadTaskDescriptionIcon(desc.iconFilename, userId)
-
-    private fun getBadgedContentDescription(
-        info: ActivityInfo,
-        userId: Int,
-        taskDescription: ActivityManager.TaskDescription?,
-    ): String {
-        val packageManager = context.packageManager
-        var taskLabel = taskDescription?.let { Utilities.trim(it.label) }
-        if (taskLabel.isNullOrEmpty()) {
-            taskLabel = Utilities.trim(info.loadLabel(packageManager))
-        }
-
-        val applicationLabel = Utilities.trim(info.applicationInfo.loadLabel(packageManager))
-        val badgedApplicationLabel =
-            if (userId != UserHandle.myUserId())
-                packageManager
-                    .getUserBadgedLabel(applicationLabel, UserHandle.of(userId))
-                    .toString()
-            else applicationLabel
-        return if (applicationLabel == taskLabel) badgedApplicationLabel
-        else "$badgedApplicationLabel $taskLabel"
-    }
 
     @WorkerThread
     private fun getDefaultIcon(userId: Int): Drawable {

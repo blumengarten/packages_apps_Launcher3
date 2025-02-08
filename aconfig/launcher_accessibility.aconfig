@@ -1,5 +1,5 @@
 package: "com.android.launcher3"
-container: "system"
+container: "system_ext"
 
 flag {
     name: "remove_exclude_from_screen_magnification_flag_usage"

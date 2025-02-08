@@ -28,6 +28,7 @@ import com.android.quickstep.recents.data.TaskVisualsChangedDelegateImpl
 import com.android.quickstep.recents.data.TasksRepository
 import com.android.quickstep.recents.domain.usecase.GetSysUiStatusNavFlagsUseCase
 import com.android.quickstep.recents.domain.usecase.GetTaskUseCase
+import com.android.quickstep.recents.domain.usecase.OrganizeDesktopTasksUseCase
 import com.android.quickstep.recents.usecase.GetThumbnailPositionUseCase
 import com.android.quickstep.recents.usecase.GetThumbnailUseCase
 import com.android.quickstep.recents.viewmodel.RecentsViewData
@@ -201,6 +202,7 @@ class RecentsDependencies private constructor(private val appContext: Context) {
                         rotationStateRepository = inject(),
                         tasksRepository = inject(),
                     )
+                OrganizeDesktopTasksUseCase::class.java -> OrganizeDesktopTasksUseCase()
                 SplashAlphaUseCase::class.java ->
                     SplashAlphaUseCase(
                         recentsViewData = inject(),

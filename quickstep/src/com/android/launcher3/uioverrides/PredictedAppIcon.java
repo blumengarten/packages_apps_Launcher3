@@ -44,6 +44,7 @@ import android.view.ViewGroup;
 import androidx.core.graphics.ColorUtils;
 
 import com.android.launcher3.DeviceProfile;
+import com.android.launcher3.Flags;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.R;
 import com.android.launcher3.anim.AnimatedFloat;
@@ -68,8 +69,7 @@ public class PredictedAppIcon extends DoubleShadowBubbleTextView {
 
     private static final float RING_SCALE_START_VALUE = 0.75f;
     private static final int RING_SHADOW_COLOR = 0x99000000;
-    private static final float RING_EFFECT_RATIO = 0.095f;
-
+    private static final float RING_EFFECT_RATIO = Flags.enableLauncherIconShapes() ? 0.1f : 0.095f;
     private static final long ICON_CHANGE_ANIM_DURATION = 360;
     private static final long ICON_CHANGE_ANIM_STAGGER = 50;
 
@@ -150,12 +150,12 @@ public class PredictedAppIcon extends DoubleShadowBubbleTextView {
         int count = canvas.save();
         boolean isSlotMachineAnimRunning = mSlotMachineIcon != null;
         if (!mIsPinned) {
-            drawEffect(canvas);
+            drawRingEffect(canvas);
             if (isSlotMachineAnimRunning) {
                 // Clip to to outside of the ring during the slot machine animation.
                 canvas.clipPath(mRingPath);
             }
-            canvas.scale(1 - 2 * RING_EFFECT_RATIO, 1 - 2 * RING_EFFECT_RATIO,
+            canvas.scale(1 - 2f * RING_EFFECT_RATIO, 1 - 2f * RING_EFFECT_RATIO,
                     getWidth() * .5f, getHeight() * .5f);
             if (isSlotMachineAnimRunning) {
                 canvas.translate(0, mSlotMachineIconTranslationY);
@@ -388,7 +388,7 @@ public class PredictedAppIcon extends DoubleShadowBubbleTextView {
         mRingScaleAnim.start();
     }
 
-    private void drawEffect(Canvas canvas) {
+    private void drawRingEffect(Canvas canvas) {
         // Don't draw ring effect if item is about to be dragged or if the icon is not visible.
         if (mDrawForDrag || !mIsIconVisible || mForceHideRing) {
             return;
@@ -396,12 +396,28 @@ public class PredictedAppIcon extends DoubleShadowBubbleTextView {
         mIconRingPaint.setColor(RING_SHADOW_COLOR);
         mIconRingPaint.setMaskFilter(mShadowFilter);
         int count = canvas.save();
-        if (Float.compare(1, mRingScale) != 0) {
+        if (Flags.enableLauncherIconShapes()) {
+            // Scale canvas properly to for ring to be inner stroke and not exceed bounds.
+            // Since STROKE draws half on either side of Path, scale canvas down by 1x stroke ratio.
+            canvas.scale(
+                    mRingScale * (1f - RING_EFFECT_RATIO),
+                    mRingScale * (1f - RING_EFFECT_RATIO),
+                    canvas.getWidth() / 2f,
+                    canvas.getHeight() / 2f);
+        } else if (Float.compare(1, mRingScale) != 0) {
             canvas.scale(mRingScale, mRingScale, canvas.getWidth() / 2f, canvas.getHeight() / 2f);
         }
+        // Draw ring shadow around canvas.
         canvas.drawPath(mRingPath, mIconRingPaint);
         mIconRingPaint.setColor(mPlateColor.currentColor);
+        if (Flags.enableLauncherIconShapes()) {
+            mIconRingPaint.setStrokeWidth(canvas.getWidth() * RING_EFFECT_RATIO);
+            // Using FILL_AND_STROKE as there is still some gap to fill,
+            // between inner curve of ring / outer curve of icon.
+            mIconRingPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        }
         mIconRingPaint.setMaskFilter(null);
+        // Draw ring around canvas.
         canvas.drawPath(mRingPath, mIconRingPaint);
         canvas.restoreToCount(count);
     }

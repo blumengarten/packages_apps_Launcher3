@@ -1709,7 +1709,7 @@ public abstract class AbsSwipeUpHandler<
 
             if (mRecentsView != null) {
                 mRecentsView.onPrepareGestureEndAnimation(null, mGestureState.getEndTarget(),
-                        getRemoteTaskViewSimulators());
+                        mRemoteTargetHandles);
             }
         } else {
             AnimatorSet animatorSet = new AnimatorSet();
@@ -1753,7 +1753,7 @@ public abstract class AbsSwipeUpHandler<
                 mRecentsView.onPrepareGestureEndAnimation(
                         mGestureState.isHandlingAtomicEvent() ? null : animatorSet,
                         mGestureState.getEndTarget(),
-                        getRemoteTaskViewSimulators());
+                        mRemoteTargetHandles);
             }
             animatorSet.setDuration(duration).setInterpolator(interpolator);
             animatorSet.start();

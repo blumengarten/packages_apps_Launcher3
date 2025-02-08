@@ -74,6 +74,7 @@ import android.graphics.drawable.PaintDrawable;
 import android.graphics.drawable.RotateDrawable;
 import android.inputmethodservice.InputMethodService;
 import android.os.Handler;
+import android.os.SystemProperties;
 import android.util.Property;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
@@ -191,6 +192,7 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
     private final int mDarkIconColorOnWorkspace;
     /** Color to use for navbar buttons, if they are on on a Taskbar surface background. */
     private final int mOnBackgroundIconColor;
+    private final boolean mIsExpressiveThemeEnabled;
 
     private @Nullable Animator mNavBarLocationAnimator;
     private @Nullable BubbleBarLocation mBubbleBarTargetLocation;
@@ -272,6 +274,9 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         if (mContext.isPhoneMode()) {
             mTaskbarTransitions = new TaskbarTransitions(mContext, mNavButtonsView);
         }
+        String SUWTheme = SystemProperties.get("setupwizard.theme", "");
+        mIsExpressiveThemeEnabled = SUWTheme.equals("glif_expressive")
+                || SUWTheme.equals("glif_expressive_light");
     }
 
     /**
@@ -336,10 +341,10 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         // Start at 1 because relevant flags are unset at init.
         mOnBackgroundNavButtonColorOverrideMultiplier.value = 1;
 
-        // Force nav buttons (specifically back button) to be visible during setup wizard.
-        boolean isInSetup = !mContext.isUserSetupComplete();
+        // Potentially force the back button to be visible during setup wizard.
+        boolean shouldShowInSetup = !mContext.isUserSetupComplete() && !mIsExpressiveThemeEnabled;
         boolean isInKidsMode = mContext.isNavBarKidsModeActive();
-        boolean alwaysShowButtons = isThreeButtonNav || isInSetup;
+        boolean alwaysShowButtons = isThreeButtonNav || shouldShowInSetup;
 
         // Make sure to remove nav bar buttons translation when any of the following occur:
         // - Notification shade is expanded
@@ -930,6 +935,10 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
     }
 
     private void handleSetupUi() {
+        // Setup wizard handles the UI when the expressive theme is enabled.
+        if (mIsExpressiveThemeEnabled) {
+            return;
+        }
         // Since setup wizard only has back button enabled, it looks strange to be
         // end-aligned, so start-align instead.
         FrameLayout.LayoutParams navButtonsLayoutParams = (FrameLayout.LayoutParams)

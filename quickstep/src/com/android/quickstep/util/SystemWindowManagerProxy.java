@@ -33,6 +33,7 @@ import com.android.launcher3.util.WindowBounds;
 import com.android.launcher3.util.window.CachedDisplayInfo;
 import com.android.launcher3.util.window.WindowManagerProxy;
 import com.android.quickstep.SystemUiProxy;
+import com.android.window.flags.Flags;
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 
 import java.util.List;
@@ -84,6 +85,25 @@ public class SystemWindowManagerProxy extends WindowManagerProxy {
         if (!DesktopModeStatus.enterDesktopByDefaultOnFreeformDisplay(displayInfoContext)) {
             return false;
         }
+        final boolean isFreeformDisplay = displayInfoContext.getResources().getConfiguration()
+                .windowConfiguration.getWindowingMode() == WINDOWING_MODE_FREEFORM;
+        return isFreeformDisplay;
+    }
+
+    @Override
+    public boolean showDesktopTaskbarForFreeformDisplay(Context displayInfoContext) {
+        if (!DesktopModeStatus.canEnterDesktopMode(displayInfoContext)) {
+            return false;
+        }
+
+        if (!DesktopModeStatus.enterDesktopByDefaultOnFreeformDisplay(displayInfoContext)) {
+            return false;
+        }
+
+        if (!Flags.enableDesktopTaskbarOnFreeformDisplays()) {
+            return false;
+        }
+
         final boolean isFreeformDisplay = displayInfoContext.getResources().getConfiguration()
                 .windowConfiguration.getWindowingMode() == WINDOWING_MODE_FREEFORM;
         return isFreeformDisplay;
