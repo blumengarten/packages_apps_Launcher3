@@ -1272,8 +1272,6 @@ public final class LauncherInstrumentation {
         if (getNavigationModel() == NavigationModel.ZERO_BUTTON
                 || isThreeFingerTrackpadGesture) {
             final Point displaySize = getRealDisplaySize();
-            // TODO(b/225505986): change startY and endY back to displaySize.y / 2 once the
-            //  issue is solved.
             int startX = isThreeFingerTrackpadGesture ? displaySize.x / 4 : 0;
             int endX = isThreeFingerTrackpadGesture ? displaySize.x * 3 / 4 : displaySize.x / 2;
             linearGesture(startX, displaySize.y / 4, endX, displaySize.y / 4,
