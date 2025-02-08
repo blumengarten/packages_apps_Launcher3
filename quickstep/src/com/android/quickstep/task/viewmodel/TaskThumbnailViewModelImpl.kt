@@ -19,32 +19,17 @@ package com.android.quickstep.task.viewmodel
 import android.app.ActivityTaskManager.INVALID_TASK_ID
 import android.graphics.Matrix
 import android.util.Log
-import com.android.launcher3.util.coroutines.DispatcherProvider
 import com.android.quickstep.recents.usecase.GetThumbnailPositionUseCase
 import com.android.quickstep.recents.usecase.ThumbnailPositionState
-import com.android.quickstep.task.thumbnail.SplashAlphaUseCase
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.flowOn
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class TaskThumbnailViewModelImpl(
-    dispatcherProvider: DispatcherProvider,
-    private val getThumbnailPositionUseCase: GetThumbnailPositionUseCase,
-    private val splashAlphaUseCase: SplashAlphaUseCase,
+    private val getThumbnailPositionUseCase: GetThumbnailPositionUseCase
 ) : TaskThumbnailViewModel {
-    private val splashProgress = MutableStateFlow(flowOf(0f))
     private var taskId: Int = INVALID_TASK_ID
-
-    override val splashAlpha =
-        splashProgress.flatMapLatest { it }.flowOn(dispatcherProvider.background)
 
     override fun bind(taskId: Int) {
         Log.d(TAG, "bind taskId: $taskId")
         this.taskId = taskId
-        splashProgress.value = splashAlphaUseCase.execute(taskId)
     }
 
     override fun getThumbnailPositionState(width: Int, height: Int, isRtl: Boolean): Matrix =

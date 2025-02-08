@@ -19,7 +19,6 @@ package com.android.quickstep.task.thumbnail
 import android.graphics.Matrix
 import android.platform.test.flag.junit.SetFlagsRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.android.launcher3.util.TestDispatcherProvider
 import com.android.quickstep.recents.usecase.GetThumbnailPositionUseCase
 import com.android.quickstep.recents.usecase.ThumbnailPositionState.MatrixScaling
 import com.android.quickstep.recents.usecase.ThumbnailPositionState.MissingThumbnail
@@ -42,17 +41,9 @@ class TaskThumbnailViewModelImplTest {
     private val dispatcher = StandardTestDispatcher()
     private val testScope = TestScope(dispatcher)
 
-    private val dispatcherProvider = TestDispatcherProvider(dispatcher)
     private val mGetThumbnailPositionUseCase = mock<GetThumbnailPositionUseCase>()
-    private val splashAlphaUseCase: SplashAlphaUseCase = mock()
 
-    private val systemUnderTest by lazy {
-        TaskThumbnailViewModelImpl(
-            dispatcherProvider,
-            mGetThumbnailPositionUseCase,
-            splashAlphaUseCase,
-        )
-    }
+    private val systemUnderTest by lazy { TaskThumbnailViewModelImpl(mGetThumbnailPositionUseCase) }
 
     @Test
     fun getSnapshotMatrix_MissingThumbnail() =

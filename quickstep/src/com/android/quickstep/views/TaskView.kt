@@ -41,6 +41,7 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.annotation.IntDef
 import androidx.annotation.VisibleForTesting
+import androidx.core.view.doOnLayout
 import androidx.core.view.updateLayoutParams
 import com.android.app.animation.Interpolators
 import com.android.launcher3.Flags.enableCursorHoverStates
@@ -328,6 +329,12 @@ constructor(
             }
             field = value
             onModalnessUpdated(field)
+        }
+
+    var splitSplashAlpha = 0f
+        set(value) {
+            field = value
+            applyThumbnailSplashAlpha()
         }
 
     protected var taskThumbnailSplashAlpha = 0f
@@ -647,6 +654,8 @@ constructor(
         viewModel = null
         attachAlpha = 1f
         splitAlpha = 1f
+        splitSplashAlpha = 0f
+        taskThumbnailSplashAlpha = 0f
         // Clear any references to the thumbnail (it will be re-read either from the cache or the
         // system on next bind)
         if (!enableRefactorTaskThumbnail()) {
@@ -769,7 +778,18 @@ constructor(
                 liveTile = state.isLiveTile,
                 hasHeader = type == TaskViewType.DESKTOP,
             )
+            updateThumbnailValidity(container)
         }
+    }
+
+    private fun updateThumbnailValidity(container: TaskContainer) {
+        container.isThumbnailValid =
+            viewModel!!.isThumbnailValid(
+                thumbnail = container.thumbnailData,
+                width = container.thumbnailView.width,
+                height = container.thumbnailView.height,
+            )
+        applyThumbnailSplashAlpha()
     }
 
     override fun onDetachedFromWindow() {
@@ -808,7 +828,7 @@ constructor(
         onBind(orientedState)
     }
 
-    open fun onBind(orientedState: RecentsOrientedState) {
+    protected open fun onBind(orientedState: RecentsOrientedState) {
         if (enableRefactorTaskThumbnail()) {
             viewModel =
                 TaskViewModel(
@@ -816,19 +836,36 @@ constructor(
                         recentsViewData = RecentsDependencies.get(),
                         getTaskUseCase = RecentsDependencies.get(),
                         getSysUiStatusNavFlagsUseCase = RecentsDependencies.get(),
+                        isThumbnailValidUseCase = RecentsDependencies.get(),
                         dispatcherProvider = RecentsDependencies.get(),
                     )
                     .apply { bind(*taskIds) }
         }
 
-        taskContainers.forEach {
-            it.bind()
+        taskContainers.forEach { container ->
+            container.bind()
             if (enableRefactorTaskThumbnail()) {
-                it.thumbnailView.cornerRadius = thumbnailFullscreenParams.currentCornerRadius
+                container.thumbnailView.cornerRadius = thumbnailFullscreenParams.currentCornerRadius
+                container.thumbnailView.doOnLayout { updateThumbnailValidity(container) }
             }
         }
         setOrientationState(orientedState)
     }
+
+    private fun applyThumbnailSplashAlpha() {
+        val alpha = getSplashAlphaProgress()
+        taskContainers.forEach { it.updateThumbnailSplashProgress(alpha) }
+    }
+
+    private fun getSplashAlphaProgress(): Float =
+        when {
+            !enableRefactorTaskThumbnail() -> taskThumbnailSplashAlpha
+            splitSplashAlpha > 0f -> splitSplashAlpha
+            shouldShowSplash() -> taskThumbnailSplashAlpha
+            else -> 0f
+        }
+
+    internal fun shouldShowSplash(): Boolean = taskContainers.any { !it.isThumbnailValid }
 
     protected fun createTaskContainer(
         task: Task,
@@ -1295,6 +1332,7 @@ constructor(
                     if (isQuickSwitch) {
                         setFreezeRecentTasksReordering()
                     }
+                    // TODO(b/331754864): Update this to use TV.shouldShowSplash
                     disableStartingWindow = firstTaskContainer.shouldShowSplashView
                 }
         Executors.UI_HELPER_EXECUTOR.execute {
@@ -1583,14 +1621,6 @@ constructor(
         scaleX = scale
         scaleY = scale
         updateFullscreenParams()
-    }
-
-    protected open fun applyThumbnailSplashAlpha() {
-        if (!enableRefactorTaskThumbnail()) {
-            taskContainers.forEach {
-                it.thumbnailViewDeprecated.setSplashAlpha(taskThumbnailSplashAlpha)
-            }
-        }
     }
 
     private fun applyTranslationX() {

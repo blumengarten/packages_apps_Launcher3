@@ -25,16 +25,14 @@ import com.android.launcher3.util.TransformingTouchDelegate
 import com.android.quickstep.TaskOverlayFactory
 import com.android.quickstep.ViewUtils.addAccessibleChildToList
 import com.android.quickstep.recents.di.RecentsDependencies
-import com.android.quickstep.recents.di.get
 import com.android.quickstep.recents.di.getScope
 import com.android.quickstep.recents.di.inject
 import com.android.quickstep.recents.ui.mapper.TaskUiStateMapper
 import com.android.quickstep.recents.ui.viewmodel.TaskData
-import com.android.quickstep.recents.viewmodel.TaskContainerViewModel
 import com.android.quickstep.task.thumbnail.TaskThumbnailView
-import com.android.quickstep.task.viewmodel.TaskContainerData
 import com.android.quickstep.task.viewmodel.TaskThumbnailViewModel
 import com.android.systemui.shared.recents.model.Task
+import com.android.systemui.shared.recents.model.ThumbnailData
 
 /** Holder for all Task dependent information. */
 class TaskContainer(
@@ -56,20 +54,14 @@ class TaskContainer(
     taskOverlayFactory: TaskOverlayFactory,
 ) {
     val overlay: TaskOverlayFactory.TaskOverlay<*> = taskOverlayFactory.createOverlay(this)
-    lateinit var taskContainerData: TaskContainerData
 
+    // TODO(b/390581380): Remove this after this bug is fixed
     private val taskThumbnailViewModel: TaskThumbnailViewModel by
         RecentsDependencies.inject(snapshotView)
-
-    // TODO(b/335649589): Ideally create and obtain this from DI.
-    private val taskContainerViewModel: TaskContainerViewModel by lazy {
-        TaskContainerViewModel(splashAlphaUseCase = RecentsDependencies.get())
-    }
 
     init {
         if (enableRefactorTaskThumbnail()) {
             require(snapshotView is TaskThumbnailView)
-            taskContainerData = RecentsDependencies.get(this)
             RecentsDependencies.getScope(snapshotView).apply {
                 val taskViewScope = RecentsDependencies.getScope(taskView)
                 linkTo(taskViewScope)
@@ -82,9 +74,11 @@ class TaskContainer(
         }
     }
 
-    var splitAnimationThumbnail: Bitmap? = null
-        get() = if (enableRefactorTaskThumbnail()) field else thumbnailViewDeprecated.thumbnail
-        private set
+    internal var thumbnailData: ThumbnailData? = null
+    val splitAnimationThumbnail: Bitmap?
+        get() =
+            if (enableRefactorTaskThumbnail()) thumbnailData?.thumbnail
+            else thumbnailViewDeprecated.thumbnail
 
     val thumbnailView: TaskThumbnailView
         get() {
@@ -98,10 +92,12 @@ class TaskContainer(
             return snapshotView as TaskThumbnailViewDeprecated
         }
 
+    var isThumbnailValid: Boolean = false
+        internal set
+
     val shouldShowSplashView: Boolean
         get() =
-            if (enableRefactorTaskThumbnail())
-                taskContainerViewModel.shouldShowThumbnailSplash(task.key.id)
+            if (enableRefactorTaskThumbnail()) taskView.shouldShowSplash()
             else thumbnailViewDeprecated.shouldShowSplashView()
 
     /** Builds proto for logging */
@@ -111,7 +107,7 @@ class TaskContainer(
     fun bind() {
         digitalWellBeingToast?.bind(task, taskView, snapshotView, stagePosition)
         if (enableRefactorTaskThumbnail()) {
-            bindThumbnailView()
+            taskThumbnailViewModel.bind(task.key.id)
         } else {
             thumbnailViewDeprecated.bind(task, overlay, taskView)
         }
@@ -126,16 +122,15 @@ class TaskContainer(
         if (enableRefactorTaskThumbnail()) {
             RecentsDependencies.getInstance().removeScope(snapshotView)
             RecentsDependencies.getInstance().removeScope(this)
+            isThumbnailValid = false
+        } else {
+            thumbnailViewDeprecated.setShowSplashForSplitSelection(false)
         }
     }
 
     // TODO(b/391842220): Cancel scope in onDetach instead of having a specific method for this.
     fun destroyScopes() {
         thumbnailView.destroyScopes()
-    }
-
-    private fun bindThumbnailView() {
-        taskThumbnailViewModel.bind(task.key.id)
     }
 
     fun setOverlayEnabled(enabled: Boolean) {
@@ -157,15 +152,41 @@ class TaskContainer(
             TaskUiStateMapper.toTaskThumbnailUiState(state, liveTile, hasHeader),
             state?.taskId,
         )
-        splitAnimationThumbnail =
-            if (state is TaskData.Data) state.thumbnailData?.thumbnail else null
+        thumbnailData = if (state is TaskData.Data) state.thumbnailData else null
     }
 
     fun updateTintAmount(tintAmount: Float) {
         thumbnailView.updateTintAmount(tintAmount)
     }
 
+    /**
+     * Updates the progress of the menu opening animation.
+     *
+     * This function propagates the given `progress` value to the `thumbnailView` allowing the
+     * thumbnail view to animate its visual state in sync with the menu's opening/closing
+     * transition.
+     *
+     * @param progress The progress of the menu opening animation (from closed=0 to fully open=1)
+     */
     fun updateMenuOpenProgress(progress: Float) {
         thumbnailView.updateMenuOpenProgress(progress)
+    }
+
+    /**
+     * Updates the thumbnail splash progress for a given task.
+     *
+     * This function manages the visual feedback of a "splash" effect that can be displayed over a
+     * thumbnail image, typically during loading or updating. It calculates the alpha (transparency)
+     * of the splash based on the provided progress and then applies this alpha to the thumbnail
+     * view if it should be displayed.
+     *
+     * @param progress The progress of the operation, ranging from 0.0 to 1.0
+     */
+    fun updateThumbnailSplashProgress(progress: Float) {
+        if (enableRefactorTaskThumbnail()) {
+            thumbnailView.updateSplashAlpha(progress)
+        } else {
+            thumbnailViewDeprecated.setSplashAlpha(progress)
+        }
     }
 }
