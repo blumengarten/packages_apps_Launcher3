@@ -66,14 +66,10 @@ class TasksRepository(
                 )
                 tasks.value = MapForStateFlow(recentTasks)
 
-                // Request data for completed tasks to prevent stale data.
-                // This will prevent thumbnail and icon from being replaced and
-                // null due to race condition.
-                taskRequests.values.forEach { (taskKey, job) ->
-                    if (job.isCompleted) {
-                        requestTaskData(taskKey.id)
-                    }
-                }
+                // Request data for tasks to prevent stale data.
+                // This will prevent thumbnail and icon from being replaced and null due to
+                // race condition. The new request will hit the cache and return immediately.
+                taskRequests.keys.forEach(::requestTaskData)
             }
         }
         return tasks.map { it.values.toList() }
