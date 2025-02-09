@@ -149,7 +149,7 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
     private var backToLauncherRunner: IRemoteAnimationRunner? = null
     private var dragAndDrop: IDragAndDrop? = null
     val homeVisibilityState = HomeVisibilityState()
-    private val focusState = FocusState()
+    val focusState = FocusState()
 
     // Used to dedupe calls to SystemUI
     private var lastShelfHeight = 0
