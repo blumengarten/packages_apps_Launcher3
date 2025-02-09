@@ -81,6 +81,7 @@ import com.android.quickstep.orientation.RecentsPagedOrientationHandler
 import com.android.quickstep.recents.di.RecentsDependencies
 import com.android.quickstep.recents.di.get
 import com.android.quickstep.recents.di.inject
+import com.android.quickstep.recents.ui.viewmodel.TaskData
 import com.android.quickstep.recents.ui.viewmodel.TaskTileUiState
 import com.android.quickstep.recents.ui.viewmodel.TaskViewModel
 import com.android.quickstep.util.ActiveGestureErrorDetector
@@ -773,12 +774,17 @@ constructor(
         // Updating containers
         val mapOfTasks = state.tasks.associateBy { it.taskId }
         taskContainers.forEach { container ->
+            val containerState = mapOfTasks[container.task.key.id]
             container.setState(
-                state = mapOfTasks[container.task.key.id],
+                state = containerState,
                 liveTile = state.isLiveTile,
                 hasHeader = type == TaskViewType.DESKTOP,
             )
             updateThumbnailValidity(container)
+
+            if (enableOverviewIconMenu()) {
+                setIconState(container, containerState)
+            }
         }
     }
 
@@ -1028,7 +1034,7 @@ constructor(
                 }
             }
         }
-        if (needsUpdate(changes, FLAG_UPDATE_ICON)) {
+        if (needsUpdate(changes, FLAG_UPDATE_ICON) && !enableOverviewIconMenu()) {
             taskContainers.forEach {
                 if (visible) {
                     recentsModel.iconCache
@@ -1059,10 +1065,23 @@ constructor(
         pendingIconLoadRequests.clear()
     }
 
+    protected open fun setIconState(container: TaskContainer, state: TaskData?) {
+        if (enableOverviewIconMenu()) {
+            if (state is TaskData.Data) {
+                setIcon(container.iconView, state.icon)
+                container.iconView.setText(state.title)
+                container.digitalWellBeingToast?.initialize()
+            } else {
+                setIcon(container.iconView, null)
+                container.iconView.setText(null)
+            }
+        }
+    }
+
     protected open fun onIconLoaded(taskContainer: TaskContainer) {
         setIcon(taskContainer.iconView, taskContainer.task.icon)
         if (enableOverviewIconMenu()) {
-            setText(taskContainer.iconView, taskContainer.task.title)
+            taskContainer.iconView.setText(taskContainer.task.title)
         }
         taskContainer.digitalWellBeingToast?.initialize()
     }
@@ -1070,7 +1089,7 @@ constructor(
     protected open fun onIconUnloaded(taskContainer: TaskContainer) {
         setIcon(taskContainer.iconView, null)
         if (enableOverviewIconMenu()) {
-            setText(taskContainer.iconView, null)
+            taskContainer.iconView.setText(null)
         }
     }
 
@@ -1093,10 +1112,6 @@ constructor(
                 setOnLongClickListener(null)
             }
         }
-    }
-
-    protected fun setText(iconView: TaskViewIcon, text: CharSequence?) {
-        iconView.setText(text)
     }
 
     @JvmOverloads

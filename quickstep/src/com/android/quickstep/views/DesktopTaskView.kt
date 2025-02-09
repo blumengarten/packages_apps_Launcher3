@@ -53,6 +53,7 @@ import com.android.quickstep.recents.di.RecentsDependencies
 import com.android.quickstep.recents.di.get
 import com.android.quickstep.recents.domain.model.DesktopTaskBoundsData
 import com.android.quickstep.recents.ui.viewmodel.DesktopTaskViewModel
+import com.android.quickstep.recents.ui.viewmodel.TaskData
 import com.android.quickstep.task.thumbnail.TaskThumbnailView
 import com.android.quickstep.util.RecentsOrientedState
 import com.android.systemui.shared.recents.model.Task
@@ -362,6 +363,10 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
     override fun onIconLoaded(taskContainer: TaskContainer) {
         // Update contentDescription of snapshotView only, individual task icon is unused.
         taskContainer.snapshotView.contentDescription = taskContainer.task.titleDescription
+    }
+
+    override fun setIconState(container: TaskContainer, state: TaskData?) {
+        container.snapshotView.contentDescription = (state as? TaskData.Data)?.titleDescription
     }
 
     // Ignoring [onIconUnloaded] as all tasks shares the same Desktop icon
