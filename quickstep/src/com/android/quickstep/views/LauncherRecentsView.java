@@ -184,10 +184,8 @@ public class LauncherRecentsView extends RecentsView<QuickstepLauncher, Launcher
         if (finalState.isRecentsViewVisible && finalState != OVERVIEW_MODAL_TASK) {
             setTaskBorderEnabled(true);
         }
-
         if (isOverlayEnabled) {
-            runActionOnRemoteHandles(remoteTargetHandle ->
-                    remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(true));
+            mBlurUtils.setDrawLiveTileBelowRecents(true);
         }
     }
 
@@ -276,7 +274,7 @@ public class LauncherRecentsView extends RecentsView<QuickstepLauncher, Launcher
         GestureState.GestureEndTarget endTarget = mCurrentGestureEndTarget;
         if (endTarget == GestureState.GestureEndTarget.LAST_TASK
                 && desktopVisibilityController.isInDesktopModeAndNotInOverview(
-                        mContainer.getDisplayId())) {
+                mContainer.getDisplayId())) {
             // Recents gesture was cancelled and we are returning to the previous task.
             // After super class has handled clean up, show desktop apps on top again
             showDesktopApps = true;

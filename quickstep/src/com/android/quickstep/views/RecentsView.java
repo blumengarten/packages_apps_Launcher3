@@ -42,6 +42,7 @@ import static com.android.launcher3.Flags.enableDesktopExplodedView;
 import static com.android.launcher3.Flags.enableDesktopTaskAlphaAnimation;
 import static com.android.launcher3.Flags.enableGridOnlyOverview;
 import static com.android.launcher3.Flags.enableLargeDesktopWindowingTile;
+import static com.android.launcher3.Flags.enableOverviewBackgroundWallpaperBlur;
 import static com.android.launcher3.Flags.enableRefactorTaskThumbnail;
 import static com.android.launcher3.Flags.enableSeparateExternalDisplayTasks;
 import static com.android.launcher3.LauncherAnimUtils.SUCCESS_TRANSITION_PROGRESS;
@@ -142,7 +143,6 @@ import androidx.annotation.UiThread;
 import androidx.core.graphics.ColorUtils;
 import androidx.dynamicanimation.animation.SpringAnimation;
 
-import com.android.app.tracing.TraceUtilsKt;
 import com.android.internal.jank.Cuj;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.BaseActivity.MultiWindowModeChangedListener;
@@ -868,6 +868,9 @@ public abstract class RecentsView<
     private final Matrix mTmpMatrix = new Matrix();
 
     private int mTaskViewCount = 0;
+
+    protected final BlurUtils mBlurUtils = new BlurUtils(this);
+
     @Nullable
     public TaskView getFirstTaskView() {
         return mUtils.getFirstTaskView();
@@ -2747,9 +2750,7 @@ public abstract class RecentsView<
             }
             setEnableDrawingLiveTile(false);
         }
-        runActionOnRemoteHandles(remoteTargetHandle ->
-                remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(false));
-
+        mBlurUtils.setDrawLiveTileBelowRecents(false);
         // These are relatively expensive and don't need to be done this frame (RecentsView isn't
         // visible anyway), so defer by a frame to get off the critical path, e.g. app to home.
         post(this::onReset);
@@ -5819,12 +5820,10 @@ public abstract class RecentsView<
                     // above RecentsView to avoid wallpaper blur from being applied to it.
                     if (!taskView.isRunningTask()) {
                         runActionOnRemoteHandles(
-                                remoteTargetHandle -> {
-                                    remoteTargetHandle.getTaskViewSimulator().setPivotOverride(
-                                            mTempPointF);
-                                    remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(
-                                            false);
-                                });
+                                remoteTargetHandle ->
+                                        remoteTargetHandle.getTaskViewSimulator()
+                                                .setPivotOverride(mTempPointF));
+                        mBlurUtils.setDrawLiveTileBelowRecents(false);
                     }
                 }
 
@@ -5959,8 +5958,7 @@ public abstract class RecentsView<
         mPendingAnimation.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
-                runActionOnRemoteHandles(remoteTargetHandle ->
-                        remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(false));
+                mBlurUtils.setDrawLiveTileBelowRecents(false);
             }
         });
         mPendingAnimation.addEndListener(isSuccess -> {
@@ -5998,8 +5996,7 @@ public abstract class RecentsView<
             // If launch animation didn't complete i.e. user dragged live tile down and then
             // back up and returned to Overview, then we need to ensure we reset the
             // view to draw below recents so that it can't be interacted with.
-            runActionOnRemoteHandles(remoteTargetHandle ->
-                    remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(true));
+            mBlurUtils.setDrawLiveTileBelowRecents(true);
             redrawLiveTile();
         }
         return Unit.INSTANCE;
@@ -6078,6 +6075,7 @@ public abstract class RecentsView<
         });
     }
 
+    @Nullable
     public RemoteTargetHandle[] getRemoteTargetHandles() {
         return mRemoteTargetHandles;
     }
@@ -6231,6 +6229,9 @@ public abstract class RecentsView<
         mRecentsAnimationController = null;
         mSplitSelectStateController.setRecentsAnimationRunning(false);
         executeSideTaskLaunchCallback();
+        if (enableOverviewBackgroundWallpaperBlur()) {
+            mBlurUtils.setDrawLiveTileBelowRecents(false);
+        }
     }
 
     public void setDisallowScrollToClearAll(boolean disallowScrollToClearAll) {
@@ -7185,5 +7186,16 @@ public abstract class RecentsView<
 
     public interface TaskLaunchListener {
         void onTaskLaunched();
+    }
+
+    /**
+     * Sets whether the remote animation targets should draw below the recents view.
+     *
+     * @param drawBelowRecents  whether the surface should draw below Recents.
+     * @param remoteTargetHandles collection of remoteTargetHandles in Recents.
+     */
+    public void setDrawBelowRecents(boolean drawBelowRecents,
+            RemoteTargetHandle[] remoteTargetHandles) {
+        mBlurUtils.setDrawBelowRecents(drawBelowRecents, remoteTargetHandles);
     }
 }
