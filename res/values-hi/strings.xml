@@ -50,7 +50,7 @@
     <string name="add_to_home_screen" msgid="9168649446635919791">"होम स्क्रीन पर जोड़ें"</string>
     <string name="added_to_home_screen_accessibility_text" msgid="4451545765448884415">"<xliff:g id="WIDGET_NAME">%1$s</xliff:g> विजेट को होम स्क्रीन पर जोड़ा गया"</string>
     <string name="suggested_widgets_header_title" msgid="1844314680798145222">"सुझाव"</string>
-    <string name="productivity_widget_recommendation_category_label" msgid="3811812719618323750">"ज़रूरी ऐप्लिकेशन"</string>
+    <string name="productivity_widget_recommendation_category_label" msgid="3811812719618323750">"अहम जानकारी"</string>
     <string name="news_widget_recommendation_category_label" msgid="6756167867113741310">"खबरों और पत्रिकाओं वाले ऐप्लिकेशन"</string>
     <string name="entertainment_widget_recommendation_category_label" msgid="3973107268630717874">"मनोरंजन से जुड़े ऐप्लिकेशन"</string>
     <string name="social_widget_recommendation_category_label" msgid="689147679536384717">"सोशल मीडिया ऐप्लिकेशन"</string>
