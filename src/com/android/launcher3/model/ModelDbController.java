@@ -90,6 +90,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Utility class which maintains an instance of Launcher database and provides utility methods
@@ -377,7 +378,7 @@ public class ModelDbController {
         // to run in grid migration based on if that grid already existed before migration or not.
         List<String> existingDBs = LauncherFiles.GRID_DB_FILES.stream()
                 .filter(dbName -> mContext.getDatabasePath(dbName).exists())
-                .toList();
+                .collect(Collectors.toList());
 
         mOpenHelper = (mContext instanceof SandboxContext) ? oldHelper
                 : createDatabaseHelper(true, new DeviceGridState(idp).getDbFile());
@@ -460,7 +461,7 @@ public class ModelDbController {
         // to run in grid migration based on if that grid already existed before migration or not.
         List<String> existingDBs = LauncherFiles.GRID_DB_FILES.stream()
                 .filter(dbName -> mContext.getDatabasePath(dbName).exists())
-                .toList();
+                .collect(Collectors.toList());
         mOpenHelper = (mContext instanceof SandboxContext) ? oldHelper
                 : createDatabaseHelper(true /* forMigration */, targetDbName);
         try {
