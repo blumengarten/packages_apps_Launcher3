@@ -24,8 +24,12 @@ import android.content.pm.LauncherApps
 import android.content.pm.ShortcutInfo
 import android.os.Process.myUserHandle
 import android.os.UserHandle
+import android.platform.test.annotations.DisableFlags
+import android.platform.test.annotations.EnableFlags
+import android.platform.test.flag.junit.SetFlagsRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
+import com.android.launcher3.Flags
 import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT
 import com.android.launcher3.icons.BitmapInfo
@@ -42,6 +46,7 @@ import com.google.common.truth.Truth.assertThat
 import java.util.function.Predicate
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.any
@@ -55,6 +60,8 @@ import org.mockito.kotlin.whenever
 @SmallTest
 @RunWith(AndroidJUnit4::class)
 class ShortcutsChangedTaskTest {
+    @get:Rule val setFlagsRule: SetFlagsRule = SetFlagsRule()
+
     private lateinit var shortcutsChangedTask: ShortcutsChangedTask
     private lateinit var modelHelper: LauncherModelHelper
     private lateinit var context: SandboxModelContext
@@ -131,7 +138,8 @@ class ShortcutsChangedTaskTest {
     }
 
     @Test
-    fun `When installed unpinned shortcut is found then remove from workspace`() {
+    @DisableFlags(Flags.FLAG_RESTORE_ARCHIVED_SHORTCUTS)
+    fun `When installed unpinned shortcut is found with Flag off then remove from workspace`() {
         // Given
         shortcuts =
             listOf(
@@ -160,6 +168,37 @@ class ShortcutsChangedTaskTest {
                 any<Predicate<ItemInfo?>>(),
                 eq("removed because the shortcut is no longer available in shortcut service"),
             )
+    }
+
+    @Test
+    @EnableFlags(Flags.FLAG_RESTORE_ARCHIVED_SHORTCUTS)
+    fun `When installed unpinned shortcut is found with Flag on then keep in workspace`() {
+        // Given
+        shortcuts =
+            listOf(
+                mock<ShortcutInfo>().apply {
+                    whenever(isPinned).thenReturn(false)
+                    whenever(id).thenReturn(expectedShortcutId)
+                }
+            )
+        val items: IntSparseArrayMap<ItemInfo> = modelHelper.bgDataModel.itemsIdMap
+        items.put(expectedWai.id, expectedWai)
+        doReturn(
+                ApplicationInfo().apply {
+                    enabled = true
+                    flags = flags or FLAG_INSTALLED
+                    isArchived = false
+                }
+            )
+            .whenever(launcherApps)
+            .getApplicationInfo(eq(expectedPackage), any(), eq(user))
+        doReturn(shortcuts).whenever(launcherApps).getShortcuts(any(), eq(user))
+        // When
+        shortcutsChangedTask.execute(mockTaskController, modelHelper.bgDataModel, mockAllApps)
+        // Then
+        verify(mockAppState.iconCache)
+            .getShortcutIcon(eq(expectedWai), any<CacheableShortcutInfo>())
+        verify(mockTaskController).bindUpdatedWorkspaceItems(listOf(expectedWai))
     }
 
     @Test
@@ -192,7 +231,8 @@ class ShortcutsChangedTaskTest {
     }
 
     @Test
-    fun `When archived pinned shortcut is found then keep in workspace`() {
+    @DisableFlags(Flags.FLAG_RESTORE_ARCHIVED_SHORTCUTS)
+    fun `When archived pinned shortcut is found with flag off then keep in workspace`() {
         // Given
         shortcuts =
             listOf(
@@ -222,7 +262,8 @@ class ShortcutsChangedTaskTest {
     }
 
     @Test
-    fun `When archived unpinned shortcut is found then keep in workspace`() {
+    @DisableFlags(Flags.FLAG_RESTORE_ARCHIVED_SHORTCUTS)
+    fun `When archived unpinned shortcut is found with flag off then keep in workspace`() {
         // Given
         shortcuts =
             listOf(
@@ -309,5 +350,35 @@ class ShortcutsChangedTaskTest {
         // Then
         assertThat(modelHelper.bgDataModel.deepShortcutMap).doesNotContainKey(expectedKey)
         verify(mockTaskController, times(0)).bindDeepShortcuts(eq(modelHelper.bgDataModel))
+    }
+
+    @Test
+    @EnableFlags(Flags.FLAG_RESTORE_ARCHIVED_SHORTCUTS)
+    fun `When restoring archived shortcut with flag on then skip handling`() {
+        // Given
+        shortcuts =
+            listOf(
+                mock<ShortcutInfo>().apply {
+                    whenever(isPinned).thenReturn(true)
+                    whenever(id).thenReturn(expectedShortcutId)
+                }
+            )
+        val items: IntSparseArrayMap<ItemInfo> = modelHelper.bgDataModel.itemsIdMap
+        items.put(expectedWai.id, expectedWai)
+        doReturn(
+                ApplicationInfo().apply {
+                    enabled = true
+                    flags = flags or FLAG_INSTALLED
+                    isArchived = true
+                }
+            )
+            .whenever(launcherApps)
+            .getApplicationInfo(eq(expectedPackage), any(), eq(user))
+        doReturn(shortcuts).whenever(launcherApps).getShortcuts(any(), eq(user))
+        // When
+        shortcutsChangedTask.execute(mockTaskController, modelHelper.bgDataModel, mockAllApps)
+        // Then
+        verify(mockTaskController, times(0)).deleteAndBindComponentsRemoved(any(), any())
+        verify(mockTaskController, times(0)).bindUpdatedWorkspaceItems(any())
     }
 }
