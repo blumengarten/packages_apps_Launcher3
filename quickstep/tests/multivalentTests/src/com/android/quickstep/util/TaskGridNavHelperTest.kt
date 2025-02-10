@@ -447,6 +447,37 @@ class TaskGridNavHelperTest {
     }
 
     /*
+                   5   3  [1]
+        CLEAR_ALL
+                   6   4   2
+    */
+    @Test
+    fun equalLengthRows_noFocused_onTop_pressTabWithShift_noCycle_staysOnTop() {
+        assertThat(
+                getNextGridPage(currentPageTaskViewId = 1, DIRECTION_TAB, delta = -1, cycle = false)
+            )
+            .isEqualTo(1)
+    }
+
+    /*
+                   5   3   1
+       [CLEAR_ALL]
+                   6   4   2
+    */
+    @Test
+    fun equalLengthRows_noFocused_onClearAll_pressTab_noCycle_staysOnClearAll() {
+        assertThat(
+                getNextGridPage(
+                    currentPageTaskViewId = CLEAR_ALL_PLACEHOLDER_ID,
+                    DIRECTION_TAB,
+                    delta = 1,
+                    cycle = false,
+                )
+            )
+            .isEqualTo(CLEAR_ALL_PLACEHOLDER_ID)
+    }
+
+    /*
                         5   3   1
            CLEAR_ALL                FOCUSED_TASK←--DESKTOP
                         6   4   2
@@ -783,10 +814,11 @@ class TaskGridNavHelperTest {
         bottomIds: IntArray = IntArray.wrap(2, 4, 6),
         largeTileIds: List<Int> = emptyList(),
         hasAddDesktopButton: Boolean = false,
+        cycle: Boolean = true,
     ): Int {
         val taskGridNavHelper =
             TaskGridNavHelper(topIds, bottomIds, largeTileIds, hasAddDesktopButton)
-        return taskGridNavHelper.getNextGridPage(currentPageTaskViewId, delta, direction, true)
+        return taskGridNavHelper.getNextGridPage(currentPageTaskViewId, delta, direction, cycle)
     }
 
     private companion object {

@@ -20,6 +20,7 @@ import android.graphics.Rect
 import android.view.View
 import androidx.core.view.children
 import androidx.dynamicanimation.animation.FloatPropertyCompat
+import androidx.dynamicanimation.animation.FloatValueHolder
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
 import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
@@ -29,6 +30,7 @@ import com.android.launcher3.touch.SingleAxisSwipeDetector
 import com.android.launcher3.util.DynamicResource
 import com.android.launcher3.util.IntArray
 import com.android.quickstep.util.GroupTask
+import com.android.quickstep.util.TaskGridNavHelper
 import com.android.quickstep.util.isExternalDisplay
 import com.android.quickstep.views.RecentsView.RUNNING_TASK_ATTACH_ALPHA
 import com.android.systemui.shared.recents.model.ThumbnailData
@@ -305,7 +307,8 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
      * Creates the spring animations which run when a dragged task view in overview is released.
      *
      * <p>When a task dismiss is cancelled, the task will return to its original position via a
-     * spring animation.
+     * spring animation. As it passes the threshold of its settling state, its neighbors will spring
+     * in response to the perceived impact of the settling task.
      */
     fun createTaskDismissSettlingSpringAnimation(
         draggedTaskView: TaskView?,
@@ -320,37 +323,181 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
             FloatPropertyCompat.createFloatPropertyCompat(
                 draggedTaskView.secondaryDismissTranslationProperty
             )
-        val rp = DynamicResource.provider(recentsView.mContainer)
-        return SpringAnimation(draggedTaskView, taskDismissFloatProperty)
-            .setSpring(
-                SpringForce()
-                    .setDampingRatio(rp.getFloat(R.dimen.dismiss_task_trans_y_damping_ratio))
-                    .setStiffness(rp.getFloat(R.dimen.dismiss_task_trans_y_stiffness))
-            )
-            .setStartVelocity(if (detector.isFling(velocity)) velocity else 0f)
-            .addUpdateListener { animation, value, _ ->
-                if (isDismissing && abs(value) >= abs(dismissLength)) {
-                    // TODO(b/393553524): Remove 0 alpha, instead animate task fully off screen.
-                    draggedTaskView.alpha = 0f
-                    animation.cancel()
-                } else if (draggedTaskView.isRunningTask && recentsView.enableDrawingLiveTile) {
-                    recentsView.runActionOnRemoteHandles { remoteTargetHandle ->
-                        remoteTargetHandle.taskViewSimulator.taskSecondaryTranslation.value =
-                            taskDismissFloatProperty.getValue(draggedTaskView)
+        // Animate dragged task towards dismissal or rest state.
+        val draggedTaskViewSpringAnimation =
+            SpringAnimation(draggedTaskView, taskDismissFloatProperty)
+                .setSpring(createExpressiveDismissSpringForce())
+                .setStartVelocity(if (detector.isFling(velocity)) velocity else 0f)
+                .addUpdateListener { animation, value, _ ->
+                    if (isDismissing && abs(value) >= abs(dismissLength)) {
+                        // TODO(b/393553524): Remove 0 alpha, instead animate task fully off screen.
+                        draggedTaskView.alpha = 0f
+                        animation.cancel()
+                    } else if (draggedTaskView.isRunningTask && recentsView.enableDrawingLiveTile) {
+                        recentsView.runActionOnRemoteHandles { remoteTargetHandle ->
+                            remoteTargetHandle.taskViewSimulator.taskSecondaryTranslation.value =
+                                taskDismissFloatProperty.getValue(draggedTaskView)
+                        }
+                        recentsView.redrawLiveTile()
                     }
-                    recentsView.redrawLiveTile()
                 }
+                .addEndListener { _, _, _, _ ->
+                    if (isDismissing) {
+                        recentsView.dismissTask(
+                            draggedTaskView,
+                            /* animateTaskView = */ false,
+                            /* removeTask = */ true,
+                        )
+                    } else {
+                        recentsView.onDismissAnimationEnds()
+                    }
+                    onEndRunnable()
+                }
+        if (!isDismissing) {
+            addNeighboringSpringAnimationsForDismissCancel(
+                draggedTaskView,
+                draggedTaskViewSpringAnimation,
+                recentsView.pageCount,
+            )
+        }
+        return draggedTaskViewSpringAnimation
+    }
+
+    private fun addNeighboringSpringAnimationsForDismissCancel(
+        draggedTaskView: TaskView,
+        draggedTaskViewSpringAnimation: SpringAnimation,
+        taskCount: Int,
+    ) {
+        // Empty spring animation exists for conditional start, and to drive neighboring springs.
+        val neighborsToSettle =
+            SpringAnimation(FloatValueHolder()).setSpring(createExpressiveDismissSpringForce())
+        var lastPosition = 0f
+        var startSettling = false
+        draggedTaskViewSpringAnimation.addUpdateListener { _, value, velocity ->
+            // Start the settling animation the first time the dragged task passes the origin (from
+            // negative displacement to positive displacement). We do not check for an exact value
+            // to compare to, as the update listener does not necessarily hit every value (e.g. a
+            // value of zero). Do not check again once it has started settling, as a spring can
+            // bounce past the origin multiple times depending on the stifness and damping ratio.
+            if (startSettling) return@addUpdateListener
+            if (lastPosition < 0 && value >= 0) {
+                startSettling = true
             }
-            .addEndListener { _, _, _, _ ->
-                if (isDismissing) {
-                    recentsView.dismissTask(
-                        draggedTaskView,
-                        /* animateTaskView = */ false,
-                        /* removeTask = */ true,
+            lastPosition = value
+            if (startSettling) {
+                neighborsToSettle.setStartVelocity(velocity).animateToFinalPosition(0f)
+            }
+        }
+
+        // Add tasks before dragged index, fanning out from the dragged task.
+        // The order they are added matters, as each spring drives the next.
+        var previousNeighbor = neighborsToSettle
+        getTasksAdjacentToDraggedTask(draggedTaskView, towardsStart = true).forEach {
+            previousNeighbor = createNeighboringTaskViewSpringAnimation(it, previousNeighbor)
+        }
+        // Add tasks after dragged index, fanning out from the dragged task.
+        // The order they are added matters, as each spring drives the next.
+        previousNeighbor = neighborsToSettle
+        getTasksAdjacentToDraggedTask(draggedTaskView, towardsStart = false).forEach {
+            previousNeighbor = createNeighboringTaskViewSpringAnimation(it, previousNeighbor)
+        }
+    }
+
+    /** Gets adjacent tasks either before or after the dragged task in visual order. */
+    private fun getTasksAdjacentToDraggedTask(
+        draggedTaskView: TaskView,
+        towardsStart: Boolean,
+    ): Sequence<TaskView> {
+        if (recentsView.showAsGrid()) {
+            return gridTaskViewInTabOrderSequence(draggedTaskView, towardsStart)
+        } else {
+            val taskViewList = taskViews.toList()
+            val draggedTaskViewIndex = taskViewList.indexOf(draggedTaskView)
+
+            return if (towardsStart) {
+                taskViewList.take(draggedTaskViewIndex).reversed().asSequence()
+            } else {
+                taskViewList.takeLast(taskViewList.size - draggedTaskViewIndex - 1).asSequence()
+            }
+        }
+    }
+
+    /**
+     * Returns a sequence of TaskViews in the grid, ordered according to tab navigation, starting
+     * from the dragged TaskView, in the direction of the provided delta.
+     *
+     * <p>A positive delta moves forward in the tab order towards the end of the grid, while a
+     * negative value moves backward towards the beginning.
+     */
+    private fun gridTaskViewInTabOrderSequence(
+        draggedTaskView: TaskView,
+        towardsStart: Boolean,
+    ): Sequence<TaskView> = sequence {
+        val taskGridNavHelper =
+            TaskGridNavHelper(
+                recentsView.topRowIdArray,
+                recentsView.bottomRowIdArray,
+                getLargeTaskViewIds(),
+                /* hasAddDesktopButton= */ false,
+            )
+        var nextTaskView: TaskView? = draggedTaskView
+        var previousTaskView: TaskView? = null
+        while (nextTaskView != previousTaskView && nextTaskView != null) {
+            previousTaskView = nextTaskView
+            nextTaskView =
+                recentsView.getTaskViewFromTaskViewId(
+                    taskGridNavHelper.getNextGridPage(
+                        nextTaskView.taskViewId,
+                        if (towardsStart) -1 else 1,
+                        TaskGridNavHelper.DIRECTION_TAB,
+                        /* cycle = */ false,
                     )
-                }
-                onEndRunnable()
+                )
+            if (nextTaskView != null && nextTaskView != previousTaskView) {
+                yield(nextTaskView)
             }
+        }
+    }
+
+    /** Creates a neighboring task view spring, driven by the spring of its neighbor. */
+    private fun createNeighboringTaskViewSpringAnimation(
+        taskView: TaskView,
+        previousNeighborSpringAnimation: SpringAnimation,
+    ): SpringAnimation {
+        val neighboringTaskViewSpringAnimation =
+            SpringAnimation(
+                    taskView,
+                    FloatPropertyCompat.createFloatPropertyCompat(
+                        taskView.secondaryDismissTranslationProperty
+                    ),
+                )
+                .setSpring(createExpressiveDismissSpringForce())
+        // Update live tile on spring animation.
+        if (taskView.isRunningTask && recentsView.enableDrawingLiveTile) {
+            neighboringTaskViewSpringAnimation.addUpdateListener { _, _, _ ->
+                recentsView.runActionOnRemoteHandles { remoteTargetHandle ->
+                    remoteTargetHandle.taskViewSimulator.taskSecondaryTranslation.value =
+                        taskView.secondaryDismissTranslationProperty.get(taskView)
+                }
+                recentsView.redrawLiveTile()
+            }
+        }
+        // Drive current neighbor's spring with the previous neighbor's.
+        previousNeighborSpringAnimation.addUpdateListener { _, value, _ ->
+            neighboringTaskViewSpringAnimation.animateToFinalPosition(value)
+        }
+        return neighboringTaskViewSpringAnimation
+    }
+
+    private fun createExpressiveDismissSpringForce(): SpringForce {
+        val resourceProvider = DynamicResource.provider(recentsView.mContainer)
+        return SpringForce()
+            .setDampingRatio(
+                resourceProvider.getFloat(R.dimen.expressive_dismiss_task_trans_y_damping_ratio)
+            )
+            .setStiffness(
+                resourceProvider.getFloat(R.dimen.expressive_dismiss_task_trans_y_stiffness)
+            )
     }
 
     companion object {

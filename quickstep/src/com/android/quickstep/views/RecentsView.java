@@ -6379,7 +6379,7 @@ public abstract class RecentsView<
     }
 
     /**
-     * @return true if the task in on the top of the grid
+     * @return true if the task in on the bottom of the grid
      */
     public boolean isOnGridBottomRow(TaskView taskView) {
         return showAsGrid()
@@ -6942,7 +6942,8 @@ public abstract class RecentsView<
      * Creates the spring animations which run as a task settles back into its place in overview.
      *
      * <p>When a task dismiss is cancelled, the task will return to its original position via a
-     * spring animation.
+     * spring animation. As it passes the threshold of its settling state, its neighbors will
+     * spring in response to the perceived impact of the settling task.
      */
     public SpringAnimation createTaskDismissSettlingSpringAnimation(TaskView draggedTaskView,
             float velocity, boolean isDismissing, SingleAxisSwipeDetector detector,
