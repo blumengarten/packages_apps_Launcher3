@@ -293,10 +293,6 @@ constructor(
         val recentsView: RecentsView<*, *>? = recentsViewContainer?.getOverviewPanel()
         val deviceProfile = recentsViewContainer?.getDeviceProfile()
         val uiController = containerInterface.getTaskbarController()
-        val allowQuickSwitch =
-            uiController != null &&
-                deviceProfile != null &&
-                (deviceProfile.isTablet || deviceProfile.isTwoPanels)
 
         val focusedDisplayId = focusState.focusedDisplayId
         val focusedDisplayUIController: TaskbarUIController? =
@@ -322,26 +318,26 @@ constructor(
 
         when (command.type) {
             HIDE -> {
-                if (!allowQuickSwitch) return true
+                if (uiController == null || deviceProfile?.isTablet == false) return true
                 keyboardTaskFocusIndex =
                     if (
                         enableAltTabKqsOnConnectedDisplays() && focusedDisplayUIController != null
                     ) {
                         focusedDisplayUIController.launchFocusedTask()
                     } else {
-                        uiController!!.launchFocusedTask()
+                        uiController.launchFocusedTask()
                     }
 
                 if (keyboardTaskFocusIndex == -1) return true
             }
             KEYBOARD_INPUT ->
-                if (allowQuickSwitch) {
+                if (uiController != null && deviceProfile?.isTablet == true) {
                     if (
                         enableAltTabKqsOnConnectedDisplays() && focusedDisplayUIController != null
                     ) {
                         focusedDisplayUIController.openQuickSwitchView()
                     } else {
-                        uiController!!.openQuickSwitchView()
+                        uiController.openQuickSwitchView()
                     }
                     return true
                 } else {
@@ -365,7 +361,11 @@ constructor(
             TOGGLE -> {}
         }
 
-        recentsView?.setKeyboardTaskFocusIndex(keyboardTaskFocusIndex)
+        recentsView?.setKeyboardTaskFocusIndex(
+            recentsView.indexOfChild(recentsView.taskViews.elementAtOrNull(keyboardTaskFocusIndex))
+                ?: -1
+        )
+
         // Handle recents view focus when launching from home
         val animatorListener: Animator.AnimatorListener =
             object : AnimatorListenerAdapter() {
@@ -526,7 +526,7 @@ constructor(
         // Stops requesting focused after first view gets focused.
         recentsView.getTaskViewAt(keyboardTaskFocusIndex).requestFocus() ||
             recentsView.nextTaskView.requestFocus() ||
-            recentsView.getFirstTaskView().requestFocus() ||
+            recentsView.firstTaskView.requestFocus() ||
             recentsView.requestFocus()
     }
 

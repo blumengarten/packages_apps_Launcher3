@@ -2013,7 +2013,7 @@ public abstract class RecentsView<
             }
             // If the list changed, maybe the focused task doesn't exist anymore.
             if (newFocusedTaskView == null) {
-                newFocusedTaskView = mUtils.getExpectedFocusedTask();
+                newFocusedTaskView = mUtils.getFirstNonDesktopTaskView();
             }
         }
         setFocusedTaskViewId(
@@ -2117,15 +2117,6 @@ public abstract class RecentsView<
 
     public int getTaskViewCount() {
         return mTaskViewCount;
-    }
-
-    /**
-     * Transverse RecentsView children to calculate the amount of DesktopTaskViews.
-     *
-     * @return Number of children that are instances of DesktopTaskView
-     */
-    private int getDesktopTaskViewCount() {
-        return mUtils.getDesktopTaskViewCount();
     }
 
     /** Counts {@link TaskView}s that are not {@link DesktopTaskView} instances. */
@@ -3067,7 +3058,7 @@ public abstract class RecentsView<
             focusedTaskViewId = INVALID_TASK_ID;
         } else if (enableLargeDesktopWindowingTile()
                 && getRunningTaskView() instanceof DesktopTaskView) {
-            TaskView focusedTaskView = getTaskViewAt(getDesktopTaskViewCount());
+            TaskView focusedTaskView = mUtils.getFirstNonDesktopTaskView();
             focusedTaskViewId =
                     focusedTaskView != null ? focusedTaskView.getTaskViewId() : INVALID_TASK_ID;
         } else {
@@ -3936,9 +3927,9 @@ public abstract class RecentsView<
         int distanceFromDismissedTask = 1;
         int slidingTranslation = 0;
         if (isSlidingTasks) {
-            int nextSnappedPage = isStagingFocusedTask
-                    ? indexOfChild(mUtils.getFirstSmallTaskView())
-                    : mUtils.getDesktopTaskViewCount();
+            int nextSnappedPage = indexOfChild(isStagingFocusedTask
+                    ? mUtils.getFirstSmallTaskView()
+                    : mUtils.getFirstNonDesktopTaskView());
             slidingTranslation = getPagedOrientationHandler().getPrimaryScroll(this)
                     - getScrollForPage(nextSnappedPage);
             slidingTranslation += mIsRtl ? newClearAllShortTotalWidthTranslation
@@ -3964,7 +3955,7 @@ public abstract class RecentsView<
                             Math.abs(i - dismissedIndex),
                             scrollDiff,
                             anim,
-                            splitTimings, i);
+                            splitTimings);
                     needsCurveUpdates = true;
                 }
             } else if (child instanceof TaskView taskView) {
@@ -4340,8 +4331,7 @@ public abstract class RecentsView<
             int indexDiff,
             int scrollDiffPerPage,
             PendingAnimation pendingAnimation,
-            SplitAnimationTimings splitTimings,
-            int index) {
+            SplitAnimationTimings splitTimings) {
         // No need to translate the AddDesktopButton on dismissing a TaskView, which should be
         // always at the right most position, even when dismissing the last TaskView.
         if (view instanceof AddDesktopButton) {
@@ -6249,12 +6239,12 @@ public abstract class RecentsView<
     }
 
     @Override
-    protected int getChildVisibleSize(int index) {
-        final TaskView taskView = getTaskViewAt(index);
+    protected int getChildVisibleSize(int childIndex) {
+        final TaskView taskView = getTaskViewAt(childIndex);
         if (taskView == null) {
-            return super.getChildVisibleSize(index);
+            return super.getChildVisibleSize(childIndex);
         }
-        return (int) (super.getChildVisibleSize(index) * taskView.getSizeAdjustment(
+        return (int) (super.getChildVisibleSize(childIndex) * taskView.getSizeAdjustment(
                 showAsFullscreen()));
     }
 
@@ -6313,7 +6303,7 @@ public abstract class RecentsView<
      * Returns how many pixels the page is offset on the currently laid out dominant axis.
      */
     private int getUnclampedScrollOffset(int pageIndex) {
-        if (pageIndex == -1) {
+        if (pageIndex == INVALID_PAGE) {
             return 0;
         }
         // Don't dampen the scroll (due to overscroll) if the adjacent tasks are offscreen, so that

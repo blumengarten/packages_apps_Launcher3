@@ -73,7 +73,7 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
     }
 
     /** Counts [TaskView]s that are [DesktopTaskView] instances. */
-    fun getDesktopTaskViewCount(): Int = taskViews.count { it is DesktopTaskView }
+    private fun getDesktopTaskViewCount(): Int = taskViews.count { it is DesktopTaskView }
 
     /** Counts [TaskView]s that are not [DesktopTaskView] instances. */
     fun getNonDesktopTaskViewCount(): Int = taskViews.count { it !is DesktopTaskView }
@@ -91,7 +91,7 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
         }
 
     /** Returns the expected focus task. */
-    fun getExpectedFocusedTask(): TaskView? =
+    fun getFirstNonDesktopTaskView(): TaskView? =
         if (enableLargeDesktopWindowingTile()) taskViews.firstOrNull { it !is DesktopTaskView }
         else taskViews.firstOrNull()
 
