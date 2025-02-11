@@ -28,6 +28,8 @@ import static com.android.launcher3.Utilities.EDGE_NAV_BAR;
 import static com.android.launcher3.anim.AnimatorListeners.forSuccessCallback;
 import static com.android.launcher3.util.NavigationMode.THREE_BUTTONS;
 import static com.android.launcher3.util.VibratorWrapper.OVERVIEW_HAPTIC;
+import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_ONE_HANDED_ACTIVE;
+import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_OVERVIEW_DISABLED;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
@@ -45,7 +47,7 @@ import com.android.launcher3.taskbar.LauncherTaskbarUIController;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.VibratorWrapper;
-import com.android.quickstep.RecentsAnimationDeviceState;
+import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.util.AnimatorControllerWithResistance;
 import com.android.quickstep.util.MotionPauseDetector;
 import com.android.quickstep.util.OverviewToHomeAnim;
@@ -111,8 +113,8 @@ public class NoButtonNavbarToOverviewTouchController extends PortraitStatesTouch
             return false;
         }
         mDidTouchStartInNavBar = (ev.getEdgeFlags() & EDGE_NAV_BAR) != 0;
-        boolean isOneHandedModeActive =
-                RecentsAnimationDeviceState.INSTANCE.get(mLauncher).isOneHandedModeActive();
+        boolean isOneHandedModeActive = (SystemUiProxy.INSTANCE.get(mLauncher)
+                .getLastSystemUiStateFlags() & SYSUI_STATE_ONE_HANDED_ACTIVE) != 0;
         // Reset touch slop multiplier to default 1.0f if one-handed-mode is not active
         mDetector.setTouchSlopMultiplier(
                 isOneHandedModeActive ? ONE_HANDED_ACTIVATED_SLOP_MULTIPLIER : 1f /* default */);
@@ -248,8 +250,9 @@ public class NoButtonNavbarToOverviewTouchController extends PortraitStatesTouch
     }
 
     private boolean handlingOverviewAnim() {
+        long stateFlags = SystemUiProxy.INSTANCE.get(mLauncher).getLastSystemUiStateFlags();
         return mDidTouchStartInNavBar && mStartState == NORMAL
-                && !RecentsAnimationDeviceState.INSTANCE.get(mLauncher).isOverviewDisabled();
+                && (stateFlags & SYSUI_STATE_OVERVIEW_DISABLED) == 0;
     }
 
     @Override

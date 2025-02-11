@@ -50,8 +50,7 @@ import androidx.test.filters.SmallTest;
 import com.android.launcher3.logging.StatsLogManager;
 import com.android.quickstep.BaseContainerInterface;
 import com.android.quickstep.DeviceConfigWrapper;
-import com.android.quickstep.OverviewComponentObserver;
-import com.android.quickstep.RecentsAnimationDeviceState;
+import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.TopTaskTracker;
 import com.android.quickstep.orientation.RecentsPagedOrientationHandler;
 import com.android.quickstep.views.RecentsView;
@@ -76,7 +75,7 @@ public class ContextualSearchInvokerTest {
     private @Mock PackageManager mMockPackageManager;
     private @Mock ContextualSearchStateManager mMockStateManager;
     private @Mock TopTaskTracker mMockTopTaskTracker;
-    private @Mock RecentsAnimationDeviceState mMockDeviceState;
+    private @Mock SystemUiProxy mMockSystemUiProxy;
     private @Mock StatsLogManager mMockStatsLogManager;
     private @Mock StatsLogManager.StatsLogger mMockStatsLogger;
     private @Mock ContextualSearchHapticManager mMockContextualSearchHapticManager;
@@ -85,7 +84,6 @@ public class ContextualSearchInvokerTest {
     private @Mock RecentsViewContainer mMockRecentsViewContainer;
     private @Mock RecentsView mMockRecentsView;
     private @Mock RecentsPagedOrientationHandler mMockOrientationHandler;
-    private @Mock OverviewComponentObserver mMockOverviewComponentObserver;
     private ContextualSearchInvoker mContextualSearchInvoker;
 
     @Before
@@ -94,21 +92,20 @@ public class ContextualSearchInvokerTest {
         when(mMockPackageManager.hasSystemFeature(FEATURE_CONTEXTUAL_SEARCH)).thenReturn(true);
         Context context = spy(getApplicationContext());
         doReturn(mMockPackageManager).when(context).getPackageManager();
-        when(mMockDeviceState.getSystemUiStateFlags()).thenReturn(0L);
+        when(mMockSystemUiProxy.getLastSystemUiStateFlags()).thenReturn(0L);
         when(mMockTopTaskTracker.getRunningSplitTaskIds()).thenReturn(new int[]{});
         when(mMockStateManager.isContextualSearchIntentAvailable()).thenReturn(true);
         when(mMockStateManager.isContextualSearchSettingEnabled()).thenReturn(true);
         when(mMockStatsLogManager.logger()).thenReturn(mMockStatsLogger);
-
-        doReturn(mMockContainerInterface).when(mMockOverviewComponentObserver)
-                .getContainerInterface();
         when(mMockContainerInterface.getCreatedContainer()).thenReturn(mMockRecentsViewContainer);
         when(mMockRecentsViewContainer.getOverviewPanel()).thenReturn(mMockRecentsView);
 
-        mContextualSearchInvoker = new ContextualSearchInvoker(context, mMockStateManager,
-                mMockTopTaskTracker, mMockDeviceState, mMockStatsLogManager,
-                mMockContextualSearchHapticManager, mMockOverviewComponentObserver,
-                mMockContextualSearchManager);
+        mContextualSearchInvoker = spy(new ContextualSearchInvoker(context, mMockStateManager,
+                mMockTopTaskTracker, mMockSystemUiProxy, mMockStatsLogManager,
+                mMockContextualSearchHapticManager, mMockContextualSearchManager
+        ));
+        doReturn(mMockContainerInterface).when(mContextualSearchInvoker)
+                .getRecentsContainerInterface();
     }
 
     @Test
@@ -151,7 +148,7 @@ public class ContextualSearchInvokerTest {
 
     @Test
     public void runContextualSearchInvocationChecksAndLogFailures_notificationShadeIsShowing() {
-        when(mMockDeviceState.getSystemUiStateFlags()).thenReturn(SHADE_EXPANDED_SYSUI_FLAGS);
+        when(mMockSystemUiProxy.getLastSystemUiStateFlags()).thenReturn(SHADE_EXPANDED_SYSUI_FLAGS);
 
         assertFalse("Expected invocation checks to fail when notification shade is showing",
                 mContextualSearchInvoker.runContextualSearchInvocationChecksAndLogFailures());
@@ -161,7 +158,7 @@ public class ContextualSearchInvokerTest {
 
     @Test
     public void runContextualSearchInvocationChecksAndLogFailures_keyguardIsShowing() {
-        when(mMockDeviceState.getSystemUiStateFlags()).thenReturn(
+        when(mMockSystemUiProxy.getLastSystemUiStateFlags()).thenReturn(
                 KEYGUARD_SHOWING_SYSUI_FLAGS);
 
         assertFalse("Expected invocation checks to fail when keyguard is showing",

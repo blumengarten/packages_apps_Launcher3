@@ -34,6 +34,7 @@ import static com.android.quickstep.views.RecentsView.ADJACENT_PAGE_HORIZONTAL_O
 import static com.android.quickstep.views.RecentsView.RECENTS_SCALE_PROPERTY;
 import static com.android.quickstep.views.RecentsView.UPDATE_SYSUI_FLAGS_THRESHOLD;
 import static com.android.systemui.shared.system.ActivityManagerWrapper.CLOSE_SYSTEM_WINDOWS_REASON_RECENTS;
+import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_OVERVIEW_DISABLED;
 
 import android.view.MotionEvent;
 
@@ -45,7 +46,7 @@ import com.android.launcher3.touch.SingleAxisSwipeDetector;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.NavigationMode;
-import com.android.quickstep.RecentsAnimationDeviceState;
+import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.TaskUtils;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.TaskView;
@@ -83,7 +84,8 @@ public class QuickSwitchTouchController extends AbstractStateChangeTouchControll
 
     @Override
     protected LauncherState getTargetState(LauncherState fromState, boolean isDragTowardPositive) {
-        if (RecentsAnimationDeviceState.INSTANCE.get(mLauncher).isOverviewDisabled()) {
+        long stateFlags = SystemUiProxy.INSTANCE.get(mLauncher).getLastSystemUiStateFlags();
+        if ((stateFlags & SYSUI_STATE_OVERVIEW_DISABLED) != 0) {
             return NORMAL;
         }
         return isDragTowardPositive ? QUICK_SWITCH_FROM_HOME : NORMAL;

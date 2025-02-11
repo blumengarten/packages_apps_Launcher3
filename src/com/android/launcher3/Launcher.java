@@ -349,7 +349,8 @@ public class Launcher extends StatefulActivity<LauncherState>
 
     private final int[] mTmpAddItemCellCoordinates = new int[2];
 
-    protected Hotseat mHotseat;
+    @Thunk
+    Hotseat mHotseat;
 
     private DropTargetBar mDropTargetBar;
 
@@ -804,6 +805,10 @@ public class Launcher extends StatefulActivity<LauncherState>
         getRotationHelper().setFixedLandscape(
                 Objects.requireNonNull(mDeviceProfile.inv).isFixedLandscape
         );
+    }
+
+    public void onAssistantVisibilityChanged(float visibility) {
+        mHotseat.getQsb().setAlpha(1f - visibility);
     }
 
     /**

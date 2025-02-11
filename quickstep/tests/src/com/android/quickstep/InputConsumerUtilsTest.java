@@ -89,6 +89,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 import javax.inject.Provider;
 
@@ -103,6 +104,7 @@ public class InputConsumerUtilsTest {
     private TaskAnimationManager mTaskAnimationManager;
     private InputChannelCompat.InputEventReceiver mInputEventReceiver;
     @Nullable private ResetGestureInputConsumer mResetGestureInputConsumer;
+    @NonNull private Function<GestureState, AnimatedFloat> mSwipeUpProxyProvider = (state) -> null;
 
     @NonNull @Mock private TaskbarActivityContext mTaskbarActivityContext;
     @NonNull @Mock private OverviewComponentObserver mOverviewComponentObserver;
@@ -444,7 +446,7 @@ public class InputConsumerUtilsTest {
 
     @Test
     public void testNewConsumer_withSwipeUpProxyProvider_returnsProgressDelegateInputConsumer() {
-        doReturn(new AnimatedFloat()).when(mDeviceState).getSwipeUpProxy(any());
+        mSwipeUpProxyProvider = (state) -> new AnimatedFloat();
 
         assertCorrectInputConsumer(
                 this::createInputConsumer,
@@ -494,6 +496,7 @@ public class InputConsumerUtilsTest {
                 otherActivityInputConsumer -> {},
                 mInputEventReceiver,
                 mTaskbarManager,
+                mSwipeUpProxyProvider,
                 mOverviewCommandHelper,
                 event);
 

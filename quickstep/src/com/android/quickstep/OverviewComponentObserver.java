@@ -57,7 +57,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.LongConsumer;
 
 import javax.inject.Inject;
 
@@ -80,7 +79,6 @@ public final class OverviewComponentObserver {
 
     private final Context mContext;
     private final RecentsDisplayModel mRecentsDisplayModel;
-    private final RecentsAnimationDeviceState mDeviceState;
 
     private final Intent mCurrentHomeIntent;
     private final Intent mMyHomeIntent;
@@ -102,11 +100,9 @@ public final class OverviewComponentObserver {
     public OverviewComponentObserver(
             @ApplicationContext Context context,
             RecentsDisplayModel recentsDisplayModel,
-            RecentsAnimationDeviceState deviceState,
             DaggerSingletonTracker lifecycleTracker) {
         mContext = context;
         mRecentsDisplayModel = recentsDisplayModel;
-        mDeviceState = deviceState;
         mCurrentHomeIntent = createHomeIntent();
         mMyHomeIntent = new Intent(mCurrentHomeIntent).setPackage(mContext.getPackageName());
         ResolveInfo info = context.getPackageManager().resolveActivity(mMyHomeIntent, 0);
@@ -132,12 +128,6 @@ public final class OverviewComponentObserver {
         updateOverviewTargets();
 
         lifecycleTracker.addCloseable(this::onDestroy);
-
-        setHomeDisabled(deviceState.isHomeDisabled());
-        LongConsumer flagChangeCallback = l -> setHomeDisabled(deviceState.isHomeDisabled());
-        deviceState.addSysUiFlagChangeCallback(flagChangeCallback);
-        lifecycleTracker.addCloseable(
-                () -> deviceState.removeSysUiFlagChangeCallback(flagChangeCallback));
     }
 
     /** Adds a listener for changes in {@link #isHomeAndOverviewSame()} */
@@ -150,7 +140,11 @@ public final class OverviewComponentObserver {
         mOverviewChangeListeners.remove(overviewChangeListener);
     }
 
-    private void setHomeDisabled(boolean isHomeDisabled) {
+    /**
+     * Called to set home enabled/disabled state via systemUI
+     * @param isHomeDisabled
+     */
+    public void setHomeDisabled(boolean isHomeDisabled) {
         if (isHomeDisabled != mIsHomeDisabled) {
             mIsHomeDisabled = isHomeDisabled;
             updateOverviewTargets();
@@ -181,7 +175,9 @@ public final class OverviewComponentObserver {
         // Set assistant visibility to 0 from launcher's perspective, ensures any elements that
         // launcher made invisible become visible again before the new activity control helper
         // becomes active.
-        mDeviceState.setAssistantVisibility(0f);
+        if (mContainerInterface != null) {
+            mContainerInterface.onAssistantVisibilityChanged(0.f);
+        }
 
         if (SEPARATE_RECENTS_ACTIVITY.get() || Flags.enableLauncherOverviewInWindow()) {
             mIsDefaultHome = false;

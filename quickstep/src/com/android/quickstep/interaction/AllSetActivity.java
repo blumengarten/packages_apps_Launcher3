@@ -72,8 +72,7 @@ import com.android.launcher3.util.Executors;
 import com.android.quickstep.GestureState;
 import com.android.quickstep.OverviewComponentObserver;
 import com.android.quickstep.OverviewComponentObserver.OverviewChangeListener;
-import com.android.quickstep.RecentsAnimationDeviceState;
-import com.android.quickstep.TISBinder;
+import com.android.quickstep.TouchInteractionService.TISBinder;
 import com.android.quickstep.util.ActivityPreloadUtil;
 import com.android.quickstep.util.LottieAnimationColorUtils;
 import com.android.quickstep.util.TISBindHelper;
@@ -284,13 +283,16 @@ public class AllSetActivity extends Activity {
     protected void onResume() {
         super.onResume();
         maybeResumeOrPauseBackgroundAnimation();
-        RecentsAnimationDeviceState.INSTANCE.get(this)
-                .setSwipeUpProxyProvider(this::createSwipeUpProxy);
-        setSetupUIVisible(true);
+        TISBinder binder = mTISBindHelper.getBinder();
+        if (binder != null) {
+            setSetupUIVisible(true);
+            binder.setSwipeUpProxy(this::createSwipeUpProxy);
+        }
     }
 
     private void onTISConnected(TISBinder binder) {
         setSetupUIVisible(isResumed());
+        binder.setSwipeUpProxy(isResumed() ? this::createSwipeUpProxy : null);
         TaskbarManager taskbarManager = binder.getTaskbarManager();
         if (taskbarManager != null) {
             mLauncherStartAnim = taskbarManager.createLauncherStartFromSuwAnim(MAX_SWIPE_DURATION);
@@ -304,12 +306,19 @@ public class AllSetActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        setSetupUIVisible(false);
-        RecentsAnimationDeviceState.INSTANCE.get(this).setSwipeUpProxyProvider(null);
+        clearBinderOverride();
         maybeResumeOrPauseBackgroundAnimation();
         if (mSwipeProgress.value >= 1) {
             finishAndRemoveTask();
             dispatchLauncherAnimStartEnd();
+        }
+    }
+
+    private void clearBinderOverride() {
+        TISBinder binder = mTISBindHelper.getBinder();
+        if (binder != null) {
+            setSetupUIVisible(false);
+            binder.setSwipeUpProxy(null);
         }
     }
 
@@ -329,9 +338,8 @@ public class AllSetActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         getIDP().removeOnChangeListener(mOnIDPChangeListener);
-        // In case bindHelper was not connected during onPause, clear UIVisible flag again
-        setSetupUIVisible(false);
         mTISBindHelper.onDestroy();
+        clearBinderOverride();
         if (mBackgroundAnimatorListener != null) {
             mAnimatedBackground.removeAnimatorListener(mBackgroundAnimatorListener);
         }
