@@ -33,7 +33,8 @@ import android.os.Bundle;
 import android.os.SystemProperties;
 import android.util.ArrayMap;
 import android.util.Log;
-import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 
 import com.android.launcher3.taskbar.TaskbarSharedState;
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController;
@@ -589,15 +590,24 @@ public class BubbleBarController extends IBubblesListener.Stub {
     }
 
     @Override
-    public void onDragItemOverBubbleBarDragZone(BubbleBarLocation location) {
-        //TODO(b/388894910): add meaningful implementation
-        MAIN_EXECUTOR.execute(() ->
-                Toast.makeText(mContext, "onDragItemOver " + location, Toast.LENGTH_SHORT).show());
+    public void onDragItemOverBubbleBarDragZone(@NonNull BubbleBarLocation bubbleBarLocation) {
+        MAIN_EXECUTOR.execute(() -> {
+            mBubbleBarViewController.onDragItemOverBubbleBarDragZone(bubbleBarLocation);
+            if (mBubbleBarViewController.isLocationUpdatedForDropTarget()) {
+                mBubbleBarLocationListener.onBubbleBarLocationAnimated(bubbleBarLocation);
+            }
+        });
     }
 
     @Override
     public void onItemDraggedOutsideBubbleBarDropZone() {
-
+        MAIN_EXECUTOR.execute(() -> {
+            if (mBubbleBarViewController.isLocationUpdatedForDropTarget()) {
+                BubbleBarLocation original = mBubbleBarViewController.getBubbleBarLocation();
+                mBubbleBarLocationListener.onBubbleBarLocationAnimated(original);
+            }
+            mBubbleBarViewController.onItemDraggedOutsideBubbleBarDropZone();
+        });
     }
 
     /** Notifies WMShell to show the expanded view. */
