@@ -47,6 +47,7 @@ import static com.android.quickstep.util.AnimUtils.completeRunnableListCallback;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_NOTIFICATION_PANEL_VISIBLE;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_VOICE_INTERACTION_WINDOW_SHOWING;
 import static com.android.window.flags.Flags.enableStartLaunchTransitionFromTaskbarBugfix;
+import static com.android.window.flags.Flags.enableTaskbarConnectedDisplays;
 import static com.android.wm.shell.Flags.enableTinyTaskbar;
 
 import static java.lang.invoke.MethodHandles.Lookup.PROTECTED;
@@ -433,7 +434,9 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                     .setIsTransientTaskbar(true)
                     .build();
         }
-        mNavMode = DisplayController.getNavigationMode(this);
+        mNavMode = (enableTaskbarConnectedDisplays() && !mIsPrimaryDisplay)
+                ? NavigationMode.THREE_BUTTONS : DisplayController.getNavigationMode(this);
+
     }
 
     /** Called when the visibility of the bubble bar changed. */
