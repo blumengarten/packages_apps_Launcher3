@@ -38,9 +38,10 @@ import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.R;
 import com.android.launcher3.logging.StatsLogManager;
-import com.android.quickstep.RecentsAnimationDeviceState;
+import com.android.quickstep.TouchInteractionService.TISBinder;
 import com.android.quickstep.interaction.TutorialController.TutorialType;
 import com.android.quickstep.util.LayoutUtils;
+import com.android.quickstep.util.TISBindHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,6 +64,7 @@ public class GestureSandboxActivity extends FragmentActivity {
 
     private SharedPreferences mSharedPrefs;
     private StatsLogManager mStatsLogManager;
+    private TISBindHelper mTISBindHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,6 +99,7 @@ public class GestureSandboxActivity extends FragmentActivity {
                 .commit();
 
         correctUserOrientation();
+        mTISBindHelper = new TISBindHelper(this, this::onTISConnected);
 
         initWindowInsets();
     }
@@ -346,6 +349,10 @@ public class GestureSandboxActivity extends FragmentActivity {
         updateServiceState(true);
     }
 
+    private void onTISConnected(TISBinder binder) {
+        updateServiceState(isResumed());
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -353,13 +360,16 @@ public class GestureSandboxActivity extends FragmentActivity {
     }
 
     private void updateServiceState(boolean isEnabled) {
-        RecentsAnimationDeviceState.INSTANCE.get(this)
-                .setGestureBlockingTaskId(isEnabled ? getTaskId() : -1);
+        TISBinder binder = mTISBindHelper.getBinder();
+        if (binder != null) {
+            binder.setGestureBlockedTaskId(isEnabled ? getTaskId() : -1);
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mTISBindHelper.onDestroy();
         updateServiceState(false);
     }
 }

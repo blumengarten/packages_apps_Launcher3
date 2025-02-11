@@ -69,6 +69,14 @@ public final class FallbackActivityInterface extends
         }
     }
 
+    /** 5 */
+    @Override
+    public void onAssistantVisibilityChanged(float visibility) {
+        // This class becomes active when the screen is locked.
+        // Rather than having it handle assistant visibility changes, the assistant visibility is
+        // set to zero prior to this class becoming active.
+    }
+
     /** 6 */
     @Override
     public AnimationFactory prepareRecentsUI(

@@ -50,11 +50,8 @@ import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule
 import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule.InjectController
 import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule.UserSetupMode
 import com.android.launcher3.taskbar.rules.TaskbarWindowSandboxContext
-import com.android.launcher3.util.Executors.MAIN_EXECUTOR
 import com.android.launcher3.util.LauncherMultivalentJUnit
 import com.android.launcher3.util.LauncherMultivalentJUnit.EmulatedDevices
-import com.android.launcher3.util.TestUtil
-import com.android.quickstep.RecentsAnimationDeviceState
 import com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_BUBBLES_EXPANDED
 import com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_VISIBLE
 import com.android.wm.shell.Flags.FLAG_ENABLE_BUBBLE_BAR
@@ -63,8 +60,6 @@ import com.google.common.truth.TruthJUnit.assume
 import org.junit.After
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestWatcher
-import org.junit.runner.Description
 import org.junit.runner.RunWith
 
 @RunWith(LauncherMultivalentJUnit::class)
@@ -73,16 +68,7 @@ import org.junit.runner.RunWith
 class TaskbarStashControllerTest {
     @get:Rule(order = 0) val setFlagsRule = SetFlagsRule()
     @get:Rule(order = 1) val context = TaskbarWindowSandboxContext.create()
-    @get:Rule(order = 2)
-    val initSingleton =
-        object : TestWatcher() {
-            override fun starting(description: Description?) {
-                TestUtil.runOnExecutorSync(MAIN_EXECUTOR) {
-                    RecentsAnimationDeviceState.INSTANCE[context].systemUiStateFlags = 0
-                }
-            }
-        }
-    @get:Rule(order = 3) val taskbarModeRule = TaskbarModeRule(context)
+    @get:Rule(order = 2) val taskbarModeRule = TaskbarModeRule(context)
     @get:Rule(order = 4) val animatorTestRule = AnimatorTestRule(this)
     @get:Rule(order = 5) val taskbarUnitTestRule = TaskbarUnitTestRule(this, context)
 

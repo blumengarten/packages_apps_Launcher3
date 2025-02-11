@@ -83,6 +83,8 @@ public abstract class BaseContainerInterface<STATE_TYPE extends BaseState<STATE_
 
     public abstract boolean isInLiveTileMode();
 
+    public abstract void onAssistantVisibilityChanged(float assistantVisibility);
+
     public abstract boolean isResumed();
 
     public abstract boolean isStarted();

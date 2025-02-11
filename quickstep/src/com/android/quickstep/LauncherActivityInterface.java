@@ -97,6 +97,15 @@ public final class LauncherActivityInterface extends
     }
 
     @Override
+    public void onAssistantVisibilityChanged(float visibility) {
+        QuickstepLauncher launcher = getCreatedContainer();
+        if (launcher == null) {
+            return;
+        }
+        launcher.onAssistantVisibilityChanged(visibility);
+    }
+
+    @Override
     public AnimationFactory prepareRecentsUI(
             boolean activityVisible, Consumer<AnimatorControllerWithResistance> callback) {
         notifyRecentsOfOrientation();

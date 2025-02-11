@@ -28,8 +28,8 @@ import androidx.annotation.Nullable;
 
 import com.android.launcher3.taskbar.TaskbarManager;
 import com.android.quickstep.OverviewCommandHelper;
-import com.android.quickstep.TISBinder;
 import com.android.quickstep.TouchInteractionService;
+import com.android.quickstep.TouchInteractionService.TISBinder;
 
 import java.util.ArrayList;
 import java.util.function.Consumer;
@@ -107,6 +107,15 @@ public class TISBindHelper implements ServiceConnection {
     @Nullable
     public TaskbarManager getTaskbarManager() {
         return mBinder == null ? null : mBinder.getTaskbarManager();
+    }
+
+    /**
+     * Sets flag whether a predictive back-to-home animation is in progress
+     */
+    public void setPredictiveBackToHomeInProgress(boolean isInProgress) {
+        if (mBinder != null) {
+            mBinder.setPredictiveBackToHomeInProgress(isInProgress);
+        }
     }
 
     @Nullable
