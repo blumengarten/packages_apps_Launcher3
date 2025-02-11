@@ -116,6 +116,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         ScrimView.ScrimDrawingController {
 
 
+    private static final String TAG = "ActivityAllAppsContainerView";
     public static final float PULL_MULTIPLIER = .02f;
     public static final float FLING_VELOCITY_MULTIPLIER = 1200f;
     protected static final String BUNDLE_KEY_CURRENT_PAGE = "launcher.allapps.current_page";
@@ -605,6 +606,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             mViewPager.getPageIndicator().setActiveMarker(AdapterHolder.MAIN);
             findViewById(R.id.tab_personal)
                     .setOnClickListener((View view) -> {
+                        Log.d(TAG, "rebindAdapters: " + "Clicked personal tab.");
                         if (mViewPager.snapToPage(AdapterHolder.MAIN)) {
                             mActivityContext.getStatsLogManager().logger()
                                     .log(LAUNCHER_ALLAPPS_TAP_ON_PERSONAL_TAB);
@@ -612,6 +614,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
                     });
             findViewById(R.id.tab_work)
                     .setOnClickListener((View view) -> {
+                        Log.d(TAG, "rebindAdapters: " + "Clicked work tab.");
                         if (mViewPager.snapToPage(AdapterHolder.WORK)) {
                             mActivityContext.getStatsLogManager().logger()
                                     .log(LAUNCHER_ALLAPPS_TAP_ON_WORK_TAB);
