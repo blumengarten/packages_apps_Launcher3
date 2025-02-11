@@ -387,7 +387,8 @@ public class DeviceProfile {
     }
 
     /** TODO: Once we fully migrate to staged split, remove "isMultiWindowMode" */
-    DeviceProfile(Context context, InvariantDeviceProfile inv, Info info, WindowBounds windowBounds,
+    DeviceProfile(Context context, InvariantDeviceProfile inv, Info info,
+            WindowManagerProxy wmProxy, IconShape iconShape, WindowBounds windowBounds,
             SparseArray<DotRenderer> dotRendererCache, boolean isMultiWindowMode,
             boolean transposeLayoutWithOrientation, boolean isMultiDisplay, boolean isGestureMode,
             @NonNull final ViewScaleProvider viewScaleProvider,
@@ -420,7 +421,7 @@ public class DeviceProfile {
         isPhone = !isTablet;
         isTwoPanels = isTablet && isMultiDisplay;
         isTaskbarPresent = (isTablet || (enableTinyTaskbar() && isGestureMode))
-                && WindowManagerProxy.INSTANCE.get(context).isTaskbarDrawnInProcess();
+                && wmProxy.isTaskbarDrawnInProcess();
 
         // Some more constants.
         context = getContext(context, info, inv.isFixedLandscape
@@ -845,8 +846,8 @@ public class DeviceProfile {
         dimensionOverrideProvider.accept(this);
 
         // This is done last, after iconSizePx is calculated above.
-        mDotRendererWorkSpace = createDotRenderer(context, iconSizePx, dotRendererCache);
-        mDotRendererAllApps = createDotRenderer(context, allAppsIconSizePx, dotRendererCache);
+        mDotRendererWorkSpace = createDotRenderer(iconShape, iconSizePx, dotRendererCache);
+        mDotRendererAllApps = createDotRenderer(iconShape, allAppsIconSizePx, dotRendererCache);
     }
 
     /**
@@ -868,12 +869,12 @@ public class DeviceProfile {
     }
 
     private static DotRenderer createDotRenderer(
-            @NonNull Context context, int size, @NonNull SparseArray<DotRenderer> cache) {
+            @NonNull IconShape iconShape, int size, @NonNull SparseArray<DotRenderer> cache) {
         DotRenderer renderer = cache.get(size);
         if (renderer == null) {
             renderer = new DotRenderer(
                     size,
-                    IconShape.INSTANCE.get(context).getShape().getPath(DEFAULT_DOT_SIZE),
+                    iconShape.getShape().getPath(DEFAULT_DOT_SIZE),
                     DEFAULT_DOT_SIZE);
             cache.put(size, renderer);
         }
@@ -1090,7 +1091,7 @@ public class DeviceProfile {
         dotRendererCache.put(iconSizePx, mDotRendererWorkSpace);
         dotRendererCache.put(allAppsIconSizePx, mDotRendererAllApps);
 
-        return new Builder(context, inv, mInfo)
+        return inv.newDPBuilder(context, mInfo)
                 .setWindowBounds(bounds)
                 .setIsMultiDisplay(isMultiDisplay)
                 .setMultiWindowMode(isMultiWindowMode)
@@ -2473,9 +2474,11 @@ public class DeviceProfile {
     }
 
     public static class Builder {
-        private Context mContext;
-        private InvariantDeviceProfile mInv;
-        private Info mInfo;
+        private final Context mContext;
+        private final InvariantDeviceProfile mInv;
+        private final Info mInfo;
+        private final WindowManagerProxy mWMProxy;
+        private final IconShape mIconShape;
 
         private WindowBounds mWindowBounds;
         private boolean mIsMultiDisplay;
@@ -2491,10 +2494,13 @@ public class DeviceProfile {
 
         private boolean mIsTransientTaskbar;
 
-        public Builder(Context context, InvariantDeviceProfile inv, Info info) {
+        public Builder(Context context, InvariantDeviceProfile inv, Info info,
+                WindowManagerProxy wmProxy, IconShape iconShape) {
             mContext = context;
             mInv = inv;
             mInfo = info;
+            mWMProxy = wmProxy;
+            mIconShape = iconShape;
             mIsTransientTaskbar = info.isTransientTaskbar();
         }
 
@@ -2575,7 +2581,8 @@ public class DeviceProfile {
             if (mOverrideProvider == null) {
                 mOverrideProvider = DEFAULT_DIMENSION_PROVIDER;
             }
-            return new DeviceProfile(mContext, mInv, mInfo, mWindowBounds, mDotRendererCache,
+            return new DeviceProfile(mContext, mInv, mInfo, mWMProxy, mIconShape,
+                    mWindowBounds, mDotRendererCache,
                     mIsMultiWindowMode, mTransposeLayoutWithOrientation, mIsMultiDisplay,
                     mIsGestureMode, mViewScaleProvider, mOverrideProvider, mIsTransientTaskbar);
         }

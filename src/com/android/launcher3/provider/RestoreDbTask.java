@@ -415,7 +415,11 @@ public class RestoreDbTask {
     }
 
     public static boolean isPending(Context context) {
-        return LauncherPrefs.get(context).has(RESTORE_DEVICE);
+        return isPending(LauncherPrefs.get(context));
+    }
+
+    public static boolean isPending(LauncherPrefs prefs) {
+        return prefs.has(RESTORE_DEVICE);
     }
 
     /**

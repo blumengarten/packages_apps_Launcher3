@@ -24,6 +24,7 @@ import static com.android.launcher3.BubbleTextView.DISPLAY_TASKBAR;
 import static com.android.launcher3.BubbleTextView.DISPLAY_WORKSPACE;
 import static com.android.launcher3.DeviceProfile.DEFAULT_SCALE;
 import static com.android.launcher3.Hotseat.ALPHA_CHANNEL_PREVIEW_RENDERER;
+import static com.android.launcher3.LauncherPrefs.GRID_NAME;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT_PREDICTION;
 import static com.android.launcher3.Utilities.SHOULD_SHOW_FIRST_PAGE_WIDGET;
@@ -137,14 +138,14 @@ public class LauncherPreviewRenderer extends ContextWrapper
 
         private final String mPrefName;
 
-        public PreviewContext(Context base, InvariantDeviceProfile idp) {
+        public PreviewContext(Context base, String gridName) {
             super(base);
             mPrefName = "preview-" + UUID.randomUUID().toString();
-            initDaggerComponent(DaggerLauncherPreviewRenderer_PreviewAppComponent.builder()
-                    .bindPrefs(new ProxyPrefs(
-                            this, getSharedPreferences(mPrefName, MODE_PRIVATE))));
-
-            putObject(InvariantDeviceProfile.INSTANCE, idp);
+            LauncherPrefs prefs =
+                    new ProxyPrefs(this, getSharedPreferences(mPrefName, MODE_PRIVATE));
+            prefs.put(GRID_NAME, gridName);
+            initDaggerComponent(
+                    DaggerLauncherPreviewRenderer_PreviewAppComponent.builder().bindPrefs(prefs));
             putObject(LauncherAppState.INSTANCE,
                     new LauncherAppState(this, null /* iconCacheFileName */));
         }
@@ -192,8 +193,8 @@ public class LauncherPreviewRenderer extends ContextWrapper
                 this::getAppWidgetScale).build();
         if (context instanceof PreviewContext) {
             Context tempContext = ((PreviewContext) context).getBaseContext();
-            mDpOrig = new InvariantDeviceProfile(tempContext, InvariantDeviceProfile
-                    .getCurrentGridName(tempContext)).getDeviceProfile(tempContext)
+            mDpOrig = InvariantDeviceProfile.INSTANCE.get(tempContext)
+                    .getDeviceProfile(tempContext)
                     .copy(tempContext);
         } else {
             mDpOrig = mDp;

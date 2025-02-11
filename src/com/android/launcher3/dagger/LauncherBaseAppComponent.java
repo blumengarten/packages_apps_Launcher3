@@ -18,6 +18,7 @@ package com.android.launcher3.dagger;
 
 import android.content.Context;
 
+import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.graphics.IconShape;
 import com.android.launcher3.graphics.ThemeManager;
@@ -72,6 +73,7 @@ public interface LauncherBaseAppComponent {
     DisplayController getDisplayController();
     WallpaperColorHints getWallpaperColorHints();
     LockedUserState getLockedUserState();
+    InvariantDeviceProfile getIDP();
 
     /** Builder for LauncherBaseAppComponent. */
     interface Builder {

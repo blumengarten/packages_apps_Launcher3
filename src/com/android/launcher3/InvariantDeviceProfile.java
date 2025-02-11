@@ -30,7 +30,6 @@ import static com.android.launcher3.util.DisplayController.CHANGE_SUPPORTED_BOUN
 import static com.android.launcher3.util.DisplayController.CHANGE_TASKBAR_PINNING;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -46,7 +45,6 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
 import android.util.Xml;
-import android.view.Display;
 
 import androidx.annotation.DimenRes;
 import androidx.annotation.IntDef;
@@ -56,18 +54,21 @@ import androidx.annotation.XmlRes;
 import androidx.core.content.res.ResourcesCompat;
 
 import com.android.launcher3.config.FeatureFlags;
+import com.android.launcher3.dagger.ApplicationContext;
+import com.android.launcher3.dagger.LauncherAppComponent;
+import com.android.launcher3.dagger.LauncherAppSingleton;
+import com.android.launcher3.graphics.IconShape;
 import com.android.launcher3.icons.DotRenderer;
 import com.android.launcher3.logging.FileLog;
 import com.android.launcher3.model.DeviceGridState;
 import com.android.launcher3.provider.RestoreDbTask;
 import com.android.launcher3.testing.shared.ResourceUtils;
+import com.android.launcher3.util.DaggerSingletonObject;
+import com.android.launcher3.util.DaggerSingletonTracker;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.DisplayController.Info;
-import com.android.launcher3.util.MainThreadInitializedObject;
 import com.android.launcher3.util.Partner;
 import com.android.launcher3.util.ResourceHelper;
-import com.android.launcher3.util.RunnableList;
-import com.android.launcher3.util.SafeCloseable;
 import com.android.launcher3.util.SimpleBroadcastReceiver;
 import com.android.launcher3.util.WindowBounds;
 import com.android.launcher3.util.window.CachedDisplayInfo;
@@ -86,12 +87,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class InvariantDeviceProfile implements SafeCloseable {
+import javax.inject.Inject;
+
+@LauncherAppSingleton
+public class InvariantDeviceProfile {
 
     public static final String TAG = "IDP";
     // We do not need any synchronization for this variable as its only written on UI thread.
-    public static final MainThreadInitializedObject<InvariantDeviceProfile> INSTANCE =
-            new MainThreadInitializedObject<>(InvariantDeviceProfile::new);
+    public static final DaggerSingletonObject<InvariantDeviceProfile> INSTANCE =
+            new DaggerSingletonObject<>(LauncherAppComponent::getIDP);
 
     public static final String GRID_NAME_PREFS_KEY = "idp_grid_name";
     public static final String NON_FIXED_LANDSCAPE_GRID_NAME_PREFS_KEY =
@@ -129,7 +133,10 @@ public class InvariantDeviceProfile implements SafeCloseable {
     private static final String RES_GRID_NUM_COLUMNS = "grid_num_columns";
     private static final String RES_GRID_ICON_SIZE_DP = "grid_icon_size_dp";
 
-    private final RunnableList mCloseActions = new RunnableList();
+    private final DisplayController mDisplayController;
+    private final WindowManagerProxy mWMProxy;
+    private final LauncherPrefs mPrefs;
+    private final IconShape mIconShape;
 
     /**
      * Number of icons per row and column in the workspace.
@@ -247,16 +254,22 @@ public class InvariantDeviceProfile implements SafeCloseable {
 
     private final ArrayList<OnIDPChangeListener> mChangeListeners = new ArrayList<>();
 
-    @VisibleForTesting
-    public InvariantDeviceProfile() {
-    }
+    @Inject
+    InvariantDeviceProfile(
+            @ApplicationContext Context context,
+            LauncherPrefs prefs,
+            DisplayController dc,
+            WindowManagerProxy wmProxy,
+            IconShape iconShape,
+            DaggerSingletonTracker lifeCycle) {
+        mDisplayController = dc;
+        mWMProxy = wmProxy;
+        mPrefs = prefs;
+        mIconShape = iconShape;
 
-    @TargetApi(23)
-    private InvariantDeviceProfile(Context context) {
-        String gridName = getCurrentGridName(context);
+        String gridName = prefs.get(GRID_NAME);
         initGrid(context, gridName);
 
-        DisplayController dc = DisplayController.INSTANCE.get(context);
         dc.setPriorityListener(
                 (displayContext, info, flags) -> {
                     if ((flags & (CHANGE_DENSITY | CHANGE_SUPPORTED_BOUNDS
@@ -265,126 +278,46 @@ public class InvariantDeviceProfile implements SafeCloseable {
                         onConfigChanged(displayContext);
                     }
                 });
-        mCloseActions.add(() -> dc.setPriorityListener(null));
+        lifeCycle.addCloseable(() -> dc.setPriorityListener(null));
 
         LauncherPrefChangeListener prefListener = key -> {
             if (FIXED_LANDSCAPE_MODE.getSharedPrefKey().equals(key)
-                    && isFixedLandscape != FIXED_LANDSCAPE_MODE.get(context)) {
+                    && isFixedLandscape != prefs.get(FIXED_LANDSCAPE_MODE)) {
                 Trace.beginSection("InvariantDeviceProfile#setFixedLandscape");
                 if (isFixedLandscape) {
-                    setCurrentGrid(
-                            context, LauncherPrefs.get(context).get(NON_FIXED_LANDSCAPE_GRID_NAME));
+                    setCurrentGrid(context, prefs.get(NON_FIXED_LANDSCAPE_GRID_NAME));
                 } else {
-                    LauncherPrefs.get(context)
-                            .put(NON_FIXED_LANDSCAPE_GRID_NAME, getCurrentGridName(context));
+                    prefs.put(NON_FIXED_LANDSCAPE_GRID_NAME, mPrefs.get(GRID_NAME));
                     onConfigChanged(context);
                 }
                 Trace.endSection();
             } else if (ENABLE_TWOLINE_ALLAPPS_TOGGLE.getSharedPrefKey().equals(key)
-                    && enableTwoLinesInAllApps != ENABLE_TWOLINE_ALLAPPS_TOGGLE.get(context)) {
+                    && enableTwoLinesInAllApps != prefs.get(ENABLE_TWOLINE_ALLAPPS_TOGGLE)) {
                 onConfigChanged(context);
             }
         };
-        LauncherPrefs prefs = LauncherPrefs.INSTANCE.get(context);
         prefs.addListener(prefListener, FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE);
-        mCloseActions.add(() -> prefs.removeListener(prefListener,
+        lifeCycle.addCloseable(() -> prefs.removeListener(prefListener,
                 FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE));
 
         SimpleBroadcastReceiver localeReceiver = new SimpleBroadcastReceiver(
                 MAIN_EXECUTOR, i -> onConfigChanged(context));
         localeReceiver.register(context, Intent.ACTION_LOCALE_CHANGED);
-        mCloseActions.add(() -> localeReceiver.unregisterReceiverSafely(context));
-    }
-
-    /**
-     * This constructor should NOT have any monitors by design.
-     */
-    public InvariantDeviceProfile(Context context, String gridName) {
-        String newName = initGrid(context, gridName);
-        if (newName == null || !newName.equals(gridName)) {
-            throw new IllegalArgumentException("Unknown grid name: " + gridName);
-        }
-    }
-
-    /**
-     * This constructor should NOT have any monitors by design.
-     */
-    public InvariantDeviceProfile(Context context, Display display) {
-        // Ensure that the main device profile is initialized
-        INSTANCE.get(context);
-        String gridName = getCurrentGridName(context);
-
-        // Get the display info based on default display and interpolate it to existing display
-        Info defaultInfo = DisplayController.INSTANCE.get(context).getInfo();
-        @DeviceType int defaultDeviceType = defaultInfo.getDeviceType();
-        DisplayOption defaultDisplayOption = invDistWeightedInterpolate(
-                defaultInfo,
-                getPredefinedDeviceProfiles(
-                        context,
-                        gridName,
-                        defaultInfo,
-                        /*allowDisabledGrid=*/false,
-                        FIXED_LANDSCAPE_MODE.get(context)
-                ),
-                defaultDeviceType);
-
-        Context displayContext = context.createDisplayContext(display);
-        Info myInfo = new Info(displayContext);
-        @DeviceType int deviceType = myInfo.getDeviceType();
-        DisplayOption myDisplayOption = invDistWeightedInterpolate(
-                myInfo,
-                getPredefinedDeviceProfiles(
-                        context,
-                        gridName,
-                        myInfo,
-                        /*allowDisabledGrid=*/false,
-                        FIXED_LANDSCAPE_MODE.get(context)
-                ),
-                deviceType);
-
-        DisplayOption result = new DisplayOption(defaultDisplayOption.grid)
-                .add(myDisplayOption);
-        result.iconSizes[INDEX_DEFAULT] =
-                defaultDisplayOption.iconSizes[INDEX_DEFAULT];
-        for (int i = 1; i < COUNT_SIZES; i++) {
-            result.iconSizes[i] = Math.min(
-                    defaultDisplayOption.iconSizes[i], myDisplayOption.iconSizes[i]);
-        }
-
-        System.arraycopy(defaultDisplayOption.minCellSize, 0, result.minCellSize, 0,
-                COUNT_SIZES);
-        System.arraycopy(defaultDisplayOption.borderSpaces, 0, result.borderSpaces, 0,
-                COUNT_SIZES);
-
-        initGrid(context, myInfo, result);
-    }
-
-    @Override
-    public void close() {
-        mCloseActions.executeAllAndDestroy();
-    }
-
-    public static String getCurrentGridName(Context context) {
-        return LauncherPrefs.get(context).get(GRID_NAME);
+        lifeCycle.addCloseable(() -> localeReceiver.unregisterReceiverSafely(context));
     }
 
     private String initGrid(Context context, String gridName) {
-        FileLog.d(TAG, "Before initGrid:"
-                + "gridName:" + gridName
-                + ", dbFile:" + dbFile
-                + ", LauncherPrefs GRID_NAME:" + LauncherPrefs.get(context).get(GRID_NAME)
-                + ", LauncherPrefs DB_FILE:" + LauncherPrefs.get(context).get(DB_FILE));
-        Info displayInfo = DisplayController.INSTANCE.get(context).getInfo();
+        Info displayInfo = mDisplayController.getInfo();
         List<DisplayOption> allOptions = getPredefinedDeviceProfiles(
                 context,
                 gridName,
                 displayInfo,
-                RestoreDbTask.isPending(context),
-                FIXED_LANDSCAPE_MODE.get(context)
+                RestoreDbTask.isPending(mPrefs),
+                mPrefs.get(FIXED_LANDSCAPE_MODE)
         );
 
         // Filter out options that don't have the same number of columns as the grid
-        DeviceGridState deviceGridState = new DeviceGridState(context);
+        DeviceGridState deviceGridState = new DeviceGridState(mPrefs);
         List<DisplayOption> allOptionsFilteredByColCount =
                 filterByColumnCount(allOptions, deviceGridState.getColumns());
 
@@ -395,15 +328,15 @@ public class InvariantDeviceProfile implements SafeCloseable {
                         displayInfo.getDeviceType());
 
         if (!displayOption.grid.name.equals(gridName)) {
-            LauncherPrefs.get(context).put(GRID_NAME, displayOption.grid.name);
+            mPrefs.put(GRID_NAME, displayOption.grid.name);
         }
 
         initGrid(context, displayInfo, displayOption);
         FileLog.d(TAG, "After initGrid:"
                 + "gridName:" + gridName
                 + ", dbFile:" + dbFile
-                + ", LauncherPrefs GRID_NAME:" + LauncherPrefs.get(context).get(GRID_NAME)
-                + ", LauncherPrefs DB_FILE:" + LauncherPrefs.get(context).get(DB_FILE));
+                + ", LauncherPrefs GRID_NAME:" + mPrefs.get(GRID_NAME)
+                + ", LauncherPrefs DB_FILE:" + mPrefs.get(DB_FILE));
         return displayOption.grid.name;
     }
 
@@ -420,18 +353,13 @@ public class InvariantDeviceProfile implements SafeCloseable {
      */
     @Deprecated
     public void reset(Context context) {
-        initGrid(context, getCurrentGridName(context));
-    }
-
-    @VisibleForTesting
-    public static String getDefaultGridName(Context context) {
-        return new InvariantDeviceProfile().initGrid(context, null);
+        initGrid(context, mPrefs.get(GRID_NAME));
     }
 
     private void initGrid(Context context, Info displayInfo, DisplayOption displayOption) {
         enableTwoLinesInAllApps = Flags.enableTwolineToggle()
                 && Utilities.isEnglishLanguage(context)
-                && ENABLE_TWOLINE_ALLAPPS_TOGGLE.get(context);
+                && mPrefs.get(ENABLE_TWOLINE_ALLAPPS_TOGGLE);
         mLocale = context.getResources().getConfiguration().locale.toString();
 
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
@@ -522,7 +450,7 @@ public class InvariantDeviceProfile implements SafeCloseable {
         defaultWallpaperSize = new Point(displayInfo.currentSize);
         SparseArray<DotRenderer> dotRendererCache = new SparseArray<>();
         for (WindowBounds bounds : displayInfo.supportedBounds) {
-            localSupportedProfiles.add(new DeviceProfile.Builder(context, this, displayInfo)
+            localSupportedProfiles.add(newDPBuilder(context, displayInfo)
                     .setIsMultiDisplay(deviceType == TYPE_MULTI_DISPLAY)
                     .setWindowBounds(bounds)
                     .setDotRendererCache(dotRendererCache)
@@ -561,6 +489,10 @@ public class InvariantDeviceProfile implements SafeCloseable {
                 });
     }
 
+    DeviceProfile.Builder newDPBuilder(Context context, Info info) {
+        return new DeviceProfile.Builder(context, this, info, mWMProxy, mIconShape);
+    }
+
     public void addOnChangeListener(OnIDPChangeListener listener) {
         mChangeListeners.add(listener);
     }
@@ -574,7 +506,7 @@ public class InvariantDeviceProfile implements SafeCloseable {
      * migration.
      */
     public void setCurrentGrid(Context context, String newGridName) {
-        LauncherPrefs.get(context).put(GRID_NAME, newGridName);
+        mPrefs.put(GRID_NAME, newGridName);
         MAIN_EXECUTOR.execute(() -> {
             Trace.beginSection("InvariantDeviceProfile#setCurrentGrid");
             onConfigChanged(context.getApplicationContext());
@@ -594,8 +526,7 @@ public class InvariantDeviceProfile implements SafeCloseable {
         Object[] oldState = toModelState();
 
         // Re-init grid
-        String gridName = getCurrentGridName(context);
-        initGrid(context, gridName);
+        initGrid(context, mPrefs.get(GRID_NAME));
 
         boolean modelPropsChanged = !Arrays.equals(oldState, toModelState());
         for (OnIDPChangeListener listener : mChangeListeners) {
@@ -912,11 +843,20 @@ public class InvariantDeviceProfile implements SafeCloseable {
         return out;
     }
 
-    public DeviceProfile getDeviceProfile(Context context) {
-        WindowManagerProxy windowManagerProxy = WindowManagerProxy.INSTANCE.get(context);
-        Rect bounds = windowManagerProxy.getCurrentBounds(context);
-        int rotation = windowManagerProxy.getRotation(context);
+    public DeviceProfile createDeviceProfileForSecondaryDisplay(Context displayContext) {
+        // Disable transpose layout and use multi-window mode so that the icons are scaled properly
+        return newDPBuilder(displayContext, new Info(displayContext))
+                .setIsMultiDisplay(false)
+                .setMultiWindowMode(true)
+                .setWindowBounds(mWMProxy.getRealBounds(
+                        displayContext, mWMProxy.getDisplayInfo(displayContext)))
+                .setTransposeLayoutWithOrientation(false)
+                .build();
+    }
 
+    public DeviceProfile getDeviceProfile(Context context) {
+        Rect bounds = mWMProxy.getCurrentBounds(context);
+        int rotation = mWMProxy.getRotation(context);
         return getBestMatch(bounds.width(), bounds.height(), rotation);
     }
 
