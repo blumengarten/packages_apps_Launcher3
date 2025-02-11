@@ -20,6 +20,7 @@ import com.android.app.animation.Interpolators.AGGRESSIVE_EASE_IN_OUT
 import com.android.app.animation.Interpolators.FINAL_FRAME
 import com.android.app.animation.Interpolators.INSTANT
 import com.android.app.animation.Interpolators.LINEAR
+import com.android.launcher3.Flags.enableDesktopExplodedView
 import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
 import com.android.launcher3.LauncherState
 import com.android.launcher3.anim.AnimatedFloat
@@ -51,6 +52,7 @@ import com.android.quickstep.views.RecentsView.TASK_PRIMARY_SPLIT_TRANSLATION
 import com.android.quickstep.views.RecentsView.TASK_SECONDARY_SPLIT_TRANSLATION
 import com.android.quickstep.views.RecentsView.TASK_SECONDARY_TRANSLATION
 import com.android.quickstep.views.RecentsView.TASK_THUMBNAIL_SPLASH_ALPHA
+import com.android.quickstep.views.RecentsViewUtils.Companion.DESK_EXPLODE_PROGRESS
 import com.android.quickstep.views.TaskView.Companion.FLAG_UPDATE_ALL
 
 /**
@@ -74,6 +76,13 @@ class RecentsViewStateController(private val launcher: QuickstepLauncher) :
             recentsView,
             if (state.displayOverviewTasksAsGrid(launcher.deviceProfile)) 1f else 0f,
         )
+        if (enableDesktopExplodedView()) {
+            DESK_EXPLODE_PROGRESS.set(
+                recentsView,
+                if (state.displayOverviewTasksAsGrid(launcher.deviceProfile)) 1f else 0f,
+            )
+        }
+
         TASK_THUMBNAIL_SPLASH_ALPHA.set(
             recentsView,
             if (state.showTaskThumbnailSplash()) 1f else 0f,
@@ -155,6 +164,15 @@ class RecentsViewStateController(private val launcher: QuickstepLauncher) :
             if (toState.displayOverviewTasksAsGrid(launcher.deviceProfile)) 1f else 0f,
             getOverviewInterpolator(fromState, toState),
         )
+
+        if (enableDesktopExplodedView()) {
+            builder.setFloat(
+                recentsView,
+                DESK_EXPLODE_PROGRESS,
+                if (toState.isRecentsViewVisible) 1f else 0f,
+                getOverviewInterpolator(fromState, toState),
+            )
+        }
 
         if (enableLargeDesktopWindowingTile()) {
             builder.setFloat(

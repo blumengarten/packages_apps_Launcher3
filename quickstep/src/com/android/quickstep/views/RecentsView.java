@@ -72,6 +72,7 @@ import static com.android.quickstep.views.OverviewActionsView.HIDDEN_NON_ZERO_RO
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_NO_RECENTS;
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_NO_TASKS;
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_SPLIT_SELECT_ACTIVE;
+import static com.android.quickstep.views.RecentsViewUtils.DESK_EXPLODE_PROGRESS;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -2910,13 +2911,15 @@ public abstract class RecentsView<
         }
 
         if (enableDesktopExplodedView()) {
+            if (animatorSet == null) {
+                mUtils.setDeskExplodeProgress(1);
+            } else {
+                animatorSet.play(
+                        ObjectAnimator.ofFloat(this, DESK_EXPLODE_PROGRESS, 1));
+            }
+
             for (TaskView taskView : getTaskViews()) {
                 if (taskView instanceof DesktopTaskView desktopTaskView) {
-                    if (animatorSet == null) {
-                        desktopTaskView.setExplodeProgress(1.0f);
-                    } else {
-                        animatorSet.play(desktopTaskView.startWindowExplodeAnimation());
-                    }
                     desktopTaskView.setRemoteTargetHandles(remoteTargetHandles);
                 }
             }
