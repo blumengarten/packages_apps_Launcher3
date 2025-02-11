@@ -17,6 +17,7 @@ package com.android.launcher3.model
 
 import android.content.pm.ShortcutInfo
 import android.os.UserHandle
+import com.android.launcher3.Flags
 import com.android.launcher3.LauncherModel.ModelUpdateTask
 import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT
 import com.android.launcher3.icons.CacheableShortcutInfo
@@ -59,8 +60,11 @@ class ShortcutsChangedTask(
             val infoWrapper = ApplicationInfoWrapper(context, packageName, user)
             if (shortcuts.isEmpty()) {
                 // Verify that the app is indeed installed.
-                if (!infoWrapper.isInstalled() && !infoWrapper.isArchived()) {
-                    // App is not installed or archived, ignoring package events
+                if (
+                    (!infoWrapper.isInstalled() && !infoWrapper.isArchived()) ||
+                        (Flags.restoreArchivedShortcuts() && infoWrapper.isArchived())
+                ) {
+                    // App is not installed or is archived, ignoring package events
                     return
                 }
             }
@@ -75,7 +79,7 @@ class ShortcutsChangedTask(
             val nonPinnedIds: MutableSet<String> = HashSet(allLauncherKnownIds)
             val updatedWorkspaceItemInfos = ArrayList<WorkspaceItemInfo>()
             for (fullDetails in shortcuts) {
-                if (!fullDetails.isPinned) {
+                if (!fullDetails.isPinned && !Flags.restoreArchivedShortcuts()) {
                     continue
                 }
                 val shortcutId = fullDetails.id

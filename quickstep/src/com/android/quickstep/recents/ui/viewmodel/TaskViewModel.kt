@@ -77,8 +77,7 @@ class TaskViewModel(
             .flowOn(dispatcherProvider.background)
 
     fun bind(vararg taskId: TaskId) {
-        Log.d(TAG, "bind: $taskId")
-        taskIds.value = taskId.toSet()
+        taskIds.value = taskId.toSet().also { Log.d(TAG, "bind: $it") }
     }
 
     fun isThumbnailValid(thumbnail: ThumbnailData?, width: Int, height: Int): Boolean =

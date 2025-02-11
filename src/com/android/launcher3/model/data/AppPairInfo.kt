@@ -23,6 +23,7 @@ import com.android.launcher3.R
 import com.android.launcher3.icons.IconCache
 import com.android.launcher3.logger.LauncherAtom
 import com.android.launcher3.views.ActivityContext
+import java.util.stream.Collectors
 
 /** A type of app collection that launches multiple apps into split screen. */
 class AppPairInfo() : CollectionInfo() {
@@ -54,7 +55,7 @@ class AppPairInfo() : CollectionInfo() {
 
     /** Returns the app pair's member apps as an ArrayList of [ItemInfo]. */
     override fun getContents(): ArrayList<ItemInfo> =
-        ArrayList(contents.stream().map { it as ItemInfo }.toList())
+        ArrayList(contents.stream().map { it as ItemInfo }.collect(Collectors.toList()))
 
     /** Returns the app pair's member apps as an ArrayList of [WorkspaceItemInfo]. */
     override fun getAppContents(): ArrayList<WorkspaceItemInfo> = contents

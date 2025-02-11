@@ -46,6 +46,7 @@ import androidx.annotation.Nullable;
 import com.android.launcher3.BuildConfig;
 import com.android.launcher3.Workspace;
 import com.android.launcher3.config.FeatureFlags;
+import com.android.launcher3.logging.FileLog;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.model.data.CollectionInfo;
 import com.android.launcher3.model.data.ItemInfo;
@@ -210,7 +211,7 @@ public class BgDataModel {
     }
 
     /**
-     * Updates the deep shortucts state in system to match out internal model, pinning any missing
+     * Updates the deep shortcuts state in system to match out internal model, pinning any missing
      * shortcuts and unpinning any extra shortcuts.
      */
     public void updateShortcutPinnedState(Context context) {
@@ -266,6 +267,8 @@ public class BgDataModel {
                     || !systemShortcuts.containsAll(modelShortcuts)) {
                 // Update system state for this package
                 try {
+                    FileLog.d(TAG, "updateShortcutPinnedState:"
+                            + " Pinning Shortcuts: " + entry.getKey() + ": " + modelShortcuts);
                     context.getSystemService(LauncherApps.class).pinShortcuts(
                             entry.getKey(), new ArrayList<>(modelShortcuts), user);
                 } catch (SecurityException | IllegalStateException e) {
@@ -278,6 +281,9 @@ public class BgDataModel {
         systemMap.keySet().forEach(packageName -> {
             // Update system state
             try {
+                FileLog.d(TAG, "updateShortcutPinnedState:"
+                        + " Unpinning extra Shortcuts for package: " + packageName
+                        + ": " + systemMap.get(packageName));
                 context.getSystemService(LauncherApps.class).pinShortcuts(
                         packageName, Collections.emptyList(), user);
             } catch (SecurityException | IllegalStateException e) {

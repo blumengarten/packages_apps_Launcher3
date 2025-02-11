@@ -28,6 +28,7 @@ import androidx.annotation.BinderThread
 import androidx.annotation.UiThread
 import androidx.annotation.VisibleForTesting
 import com.android.internal.jank.Cuj
+import com.android.launcher3.Flags.enableAltTabKqsOnConnectedDisplays
 import com.android.launcher3.Flags.enableFallbackOverviewInWindow
 import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
 import com.android.launcher3.Flags.enableLauncherOverviewInWindow
@@ -38,6 +39,8 @@ import com.android.launcher3.logging.StatsLogManager
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_OVERVIEW_SHOW_OVERVIEW_FROM_3_BUTTON
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_OVERVIEW_SHOW_OVERVIEW_FROM_KEYBOARD_QUICK_SWITCH
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_OVERVIEW_SHOW_OVERVIEW_FROM_KEYBOARD_SHORTCUT
+import com.android.launcher3.taskbar.TaskbarManager
+import com.android.launcher3.taskbar.TaskbarUIController
 import com.android.launcher3.util.Executors
 import com.android.launcher3.util.RunnableList
 import com.android.launcher3.util.coroutines.DispatcherProvider
@@ -48,6 +51,7 @@ import com.android.quickstep.OverviewCommandHelper.CommandType.HOME
 import com.android.quickstep.OverviewCommandHelper.CommandType.KEYBOARD_INPUT
 import com.android.quickstep.OverviewCommandHelper.CommandType.SHOW
 import com.android.quickstep.OverviewCommandHelper.CommandType.TOGGLE
+import com.android.quickstep.fallback.window.RecentsDisplayModel
 import com.android.quickstep.util.ActiveGestureLog
 import com.android.quickstep.util.ActiveGestureProtoLogProxy
 import com.android.quickstep.views.RecentsView
@@ -72,6 +76,9 @@ constructor(
     private val overviewComponentObserver: OverviewComponentObserver,
     private val taskAnimationManager: TaskAnimationManager,
     private val dispatcherProvider: DispatcherProvider = ProductionDispatchers,
+    private val recentsDisplayModel: RecentsDisplayModel,
+    private val focusState: FocusState,
+    private val taskbarManager: TaskbarManager,
 ) {
     private val coroutineScope = CoroutineScope(SupervisorJob() + dispatcherProvider.background)
 
@@ -291,15 +298,51 @@ constructor(
                 deviceProfile != null &&
                 (deviceProfile.isTablet || deviceProfile.isTwoPanels)
 
+        val focusedDisplayId = focusState.focusedDisplayId
+        val focusedDisplayUIController: TaskbarUIController? =
+            if (RecentsDisplayModel.enableOverviewInWindow()) {
+                Log.d(
+                    TAG,
+                    "Querying RecentsDisplayModel for TaskbarUIController for display: $focusedDisplayId",
+                )
+                recentsDisplayModel.getRecentsWindowManager(focusedDisplayId)?.taskbarUIController
+            } else {
+                Log.d(
+                    TAG,
+                    "Querying TaskbarManager for TaskbarUIController for display: $focusedDisplayId",
+                )
+                // TODO(b/395061396): Remove this path when overview in widow is enabled.
+                taskbarManager.getUIControllerForDisplay(focusedDisplayId)
+            }
+        Log.d(
+            TAG,
+            "TaskbarUIController for display $focusedDisplayId was" +
+                "${if (focusedDisplayUIController == null) " not" else ""} found",
+        )
+
         when (command.type) {
             HIDE -> {
                 if (!allowQuickSwitch) return true
-                keyboardTaskFocusIndex = uiController!!.launchFocusedTask()
+                keyboardTaskFocusIndex =
+                    if (
+                        enableAltTabKqsOnConnectedDisplays() && focusedDisplayUIController != null
+                    ) {
+                        focusedDisplayUIController.launchFocusedTask()
+                    } else {
+                        uiController!!.launchFocusedTask()
+                    }
+
                 if (keyboardTaskFocusIndex == -1) return true
             }
             KEYBOARD_INPUT ->
                 if (allowQuickSwitch) {
-                    uiController!!.openQuickSwitchView()
+                    if (
+                        enableAltTabKqsOnConnectedDisplays() && focusedDisplayUIController != null
+                    ) {
+                        focusedDisplayUIController.openQuickSwitchView()
+                    } else {
+                        uiController!!.openQuickSwitchView()
+                    }
                     return true
                 } else {
                     keyboardTaskFocusIndex = 0

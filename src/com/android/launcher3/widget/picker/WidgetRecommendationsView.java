@@ -222,7 +222,8 @@ public final class WidgetRecommendationsView extends PagedView<PageIndicatorDots
         if (shouldShowFullPageView(recommendations)) {
             // Show all widgets in single page with unlimited available height.
             return setRecommendations(
-                    recommendations.values().stream().flatMap(Collection::stream).toList(),
+                    recommendations.values().stream().flatMap(Collection::stream)
+                            .collect(Collectors.toList()),
                     deviceProfile, /*availableHeight=*/ Float.MAX_VALUE, availableWidth,
                     cellPadding);
 
@@ -369,7 +370,7 @@ public final class WidgetRecommendationsView extends PagedView<PageIndicatorDots
         // Show only those widgets that were displayed when user first opened the picker.
         if (!mDisplayedWidgets.isEmpty()) {
             filteredRecommendedWidgets = recommendedWidgets.stream().filter(
-                    w -> mDisplayedWidgets.contains(w.componentName)).toList();
+                    w -> mDisplayedWidgets.contains(w.componentName)).collect(Collectors.toList());
         }
         Context context = getContext();
         LayoutInflater inflater = LayoutInflater.from(context);

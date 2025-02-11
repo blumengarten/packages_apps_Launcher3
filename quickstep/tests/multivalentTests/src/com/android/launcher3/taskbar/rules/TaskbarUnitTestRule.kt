@@ -33,6 +33,7 @@ import com.android.launcher3.taskbar.rules.TaskbarUnitTestRule.InjectController
 import com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR
 import com.android.launcher3.util.TestUtil
 import com.android.quickstep.AllAppsActionManager
+import com.android.quickstep.fallback.window.RecentsDisplayModel
 import java.lang.reflect.Field
 import java.lang.reflect.ParameterizedType
 import java.util.Locale
@@ -110,6 +111,7 @@ class TaskbarUnitTestRule(
                                     PendingIntent(IIntentSender.Default())
                                 },
                                 object : TaskbarNavButtonCallbacks {},
+                                RecentsDisplayModel.INSTANCE.get(context),
                             ) {
                             override fun recreateTaskbar() {
                                 super.recreateTaskbar()

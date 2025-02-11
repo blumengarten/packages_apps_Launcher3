@@ -41,6 +41,7 @@ import com.android.launcher3.widget.picker.util.WidgetPreviewContainerSize;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /** A {@link TableLayout} for showing recommended widgets. */
 public final class WidgetsRecommendationTableLayout extends TableLayout {
@@ -163,6 +164,7 @@ public final class WidgetsRecommendationTableLayout extends TableLayout {
         }
 
         // Perform re-ordering once we have filtered out recommendations that fit.
-        return filteredRows.stream().sorted(WIDGETS_TABLE_ROW_COUNT_COMPARATOR).toList();
+        return filteredRows.stream().sorted(WIDGETS_TABLE_ROW_COUNT_COMPARATOR)
+                .collect(Collectors.toList());
     }
 }

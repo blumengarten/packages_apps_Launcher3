@@ -50,10 +50,14 @@ constructor(
             DaggerSingletonObject<RecentsDisplayModel>(
                 QuickstepBaseAppComponent::getRecentsDisplayModel
             )
+
+        @JvmStatic
+        fun enableOverviewInWindow() =
+            Flags.enableFallbackOverviewInWindow() || Flags.enableLauncherOverviewInWindow()
     }
 
     init {
-        if (Flags.enableFallbackOverviewInWindow() || Flags.enableLauncherOverviewInWindow()) {
+        if (enableOverviewInWindow()) {
             displayManager.registerDisplayListener(displayListener, Executors.MAIN_EXECUTOR.handler)
             // In the scenario where displays were added before this display listener was
             // registered, we should store the RecentsDisplayResources for those displays
