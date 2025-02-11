@@ -19,7 +19,9 @@ import android.content.Context
 import android.os.Debug
 import android.util.Log
 import android.util.SparseArray
+import android.view.Display.DEFAULT_DISPLAY
 import android.window.DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY
+import androidx.core.util.forEach
 import com.android.launcher3.LauncherState
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppComponent
@@ -105,7 +107,7 @@ constructor(
                 field = visibleTasksCount
                 val areDesktopTasksVisibleNow = areDesktopTasksVisibleAndNotInOverview()
                 if (wereDesktopTasksVisibleBefore != areDesktopTasksVisibleNow) {
-                    notifyDesktopVisibilityListeners(areDesktopTasksVisibleNow)
+                    notifyIsInDesktopModeChanged(DEFAULT_DISPLAY, areDesktopTasksVisibleNow)
                 }
 
                 if (
@@ -250,8 +252,23 @@ constructor(
             val wereDesktopTasksVisibleBefore = areDesktopTasksVisibleAndNotInOverview()
             inOverviewState = overviewStateEnabled
             val areDesktopTasksVisibleNow = areDesktopTasksVisibleAndNotInOverview()
-            if (wereDesktopTasksVisibleBefore != areDesktopTasksVisibleNow) {
-                notifyDesktopVisibilityListeners(areDesktopTasksVisibleNow)
+
+            if (!DesktopModeStatus.enableMultipleDesktops(context)) {
+                if (wereDesktopTasksVisibleBefore != areDesktopTasksVisibleNow) {
+                    notifyIsInDesktopModeChanged(DEFAULT_DISPLAY, areDesktopTasksVisibleNow)
+                }
+            } else {
+                // When overview state changes, it changes together on all displays.
+                displaysDesksConfigsMap.forEach { displayId, deskConfig ->
+                    // Overview affects the state of desks only if desktop mode is active on this
+                    // display.
+                    if (isInDesktopMode(displayId)) {
+                        notifyIsInDesktopModeChanged(
+                            displayId,
+                            isInDesktopModeAndNotInOverview(displayId),
+                        )
+                    }
+                }
             }
 
             if (ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY.isTrue) {
@@ -279,19 +296,19 @@ constructor(
         desktopVisibilityListeners.remove(listener)
     }
 
-    private fun notifyDesktopVisibilityListeners(areDesktopTasksVisible: Boolean) {
-        if (DesktopModeStatus.enableMultipleDesktops(context)) {
-            // This is triggered using the legacy way of determining the visibility of the desktop
-            // mode and should not be used when the multi-desks feature is enabled.
-            // (See b/394685645 for details).
-            return
+    private fun notifyIsInDesktopModeChanged(
+        displayId: Int,
+        isInDesktopModeAndNotInOverview: Boolean,
+    ) {
+        if (DEBUG) {
+            Log.d(
+                TAG,
+                "notifyIsInDesktopModeChanged: displayId=$displayId, isInDesktopModeAndNotInOverview=$isInDesktopModeAndNotInOverview",
+            )
         }
 
-        if (DEBUG) {
-            Log.d(TAG, "notifyDesktopVisibilityListeners: visible=$areDesktopTasksVisible")
-        }
         for (listener in desktopVisibilityListeners) {
-            listener.onDesktopVisibilityChanged(areDesktopTasksVisible)
+            listener.onIsInDesktopModeChanged(displayId, isInDesktopModeAndNotInOverview)
         }
     }
 
@@ -438,6 +455,8 @@ constructor(
             return
         }
 
+        val wasInDesktopMode = isInDesktopModeAndNotInOverview(displayId)
+
         getDisplayDeskConfig(displayId).also {
             check(oldActiveDesk == it.activeDeskId) {
                 "Mismatch between the Shell's oldActiveDesk: $oldActiveDesk, and Launcher's: ${it.activeDeskId}"
@@ -446,6 +465,10 @@ constructor(
                 "newActiveDesk: $newActiveDesk was never added to display: $displayId"
             }
             it.activeDeskId = newActiveDesk
+        }
+
+        if (wasInDesktopMode != isInDesktopModeAndNotInOverview(displayId)) {
+            notifyIsInDesktopModeChanged(displayId, !wasInDesktopMode)
         }
     }
 
