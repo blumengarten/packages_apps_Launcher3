@@ -212,6 +212,7 @@ import com.android.quickstep.recents.viewmodel.RecentsViewData;
 import com.android.quickstep.recents.viewmodel.RecentsViewModel;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.quickstep.util.AnimUtils;
+import com.android.quickstep.util.DesktopTask;
 import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.LayoutUtils;
 import com.android.quickstep.util.RecentsAtomicAnimationFactory;
@@ -1981,12 +1982,7 @@ public abstract class RecentsView<
                         splitTask.getBottomRightTask(), mOrientationState,
                         mTaskOverlayFactory, splitTask.getSplitBounds());
             } else if (taskView instanceof DesktopTaskView desktopTaskView) {
-                // Minimized tasks should not be shown in Overview
-                List<Task> nonMinimizedTasks =
-                        groupTask.getTasks().stream()
-                                .filter(task -> !task.isMinimized)
-                                .toList();
-                desktopTaskView.bind(nonMinimizedTasks, mOrientationState,
+                desktopTaskView.bind((DesktopTask) groupTask, mOrientationState,
                         mTaskOverlayFactory);
             } else if (groupTask instanceof SplitTask splitTask) {
                 Task task = splitTask.getTopLeftTask().key.id == stagedTaskIdToBeRemoved
@@ -3034,7 +3030,7 @@ public abstract class RecentsView<
             final TaskView taskView;
             if (needDesktopTask) {
                 taskView = getTaskViewFromPool(TaskViewType.DESKTOP);
-                ((DesktopTaskView) taskView).bind(Arrays.asList(runningTasks),
+                ((DesktopTaskView) taskView).bind(new DesktopTask(Arrays.asList(runningTasks)),
                         mOrientationState, mTaskOverlayFactory);
             } else if (needGroupTaskView) {
                 taskView = getTaskViewFromPool(TaskViewType.GROUPED);
