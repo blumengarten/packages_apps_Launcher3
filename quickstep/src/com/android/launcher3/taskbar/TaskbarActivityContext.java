@@ -47,7 +47,6 @@ import static com.android.quickstep.util.AnimUtils.completeRunnableListCallback;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_NOTIFICATION_PANEL_VISIBLE;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_VOICE_INTERACTION_WINDOW_SHOWING;
 import static com.android.window.flags.Flags.enableStartLaunchTransitionFromTaskbarBugfix;
-import static com.android.window.flags.Flags.enableTaskbarConnectedDisplays;
 import static com.android.wm.shell.Flags.enableTinyTaskbar;
 
 import static java.lang.invoke.MethodHandles.Lookup.PROTECTED;
@@ -77,6 +76,7 @@ import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.Toast;
+import android.window.DesktopExperienceFlags;
 import android.window.DesktopModeFlags;
 import android.window.RemoteTransition;
 
@@ -434,8 +434,9 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                     .setIsTransientTaskbar(true)
                     .build();
         }
-        mNavMode = (enableTaskbarConnectedDisplays() && !mIsPrimaryDisplay)
-                ? NavigationMode.THREE_BUTTONS : DisplayController.getNavigationMode(this);
+        mNavMode = (DesktopExperienceFlags.ENABLE_TASKBAR_CONNECTED_DISPLAYS.isTrue()
+                && !mIsPrimaryDisplay) ? NavigationMode.THREE_BUTTONS
+                : DisplayController.getNavigationMode(this);
 
     }
 
