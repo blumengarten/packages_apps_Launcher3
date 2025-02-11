@@ -43,6 +43,7 @@ import com.android.launcher3.Flags;
 import com.android.launcher3.R;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.IconProvider;
+import com.android.launcher3.util.DaggerSingletonTracker;
 import com.android.launcher3.util.LockedUserState;
 import com.android.launcher3.util.SplitConfigurationOptions;
 import com.android.quickstep.util.GroupTask;
@@ -109,7 +110,7 @@ public class RecentsModelTest {
 
         mRecentsModel = new RecentsModel(mContext, mTasksList, mock(TaskIconCache.class),
                 mThumbnailCache, mock(IconProvider.class), mock(TaskStackChangeListeners.class),
-                mLockedUserState, () -> mThemeManager);
+                mLockedUserState, () -> mThemeManager, mock(DaggerSingletonTracker.class));
 
         mResource = mock(Resources.class);
         when(mResource.getInteger((R.integer.recentsThumbnailCacheSize))).thenReturn(3);
