@@ -40,8 +40,8 @@ import javax.inject.Inject
 open class ThemeManager
 @Inject
 constructor(
-    @ApplicationContext private val context: Context,
-    private val prefs: LauncherPrefs,
+    @ApplicationContext protected val context: Context,
+    protected val prefs: LauncherPrefs,
     lifecycle: DaggerSingletonTracker,
 ) {
 
@@ -53,9 +53,11 @@ constructor(
         set(value) = prefs.put(THEMED_ICONS, value)
         get() = prefs.get(THEMED_ICONS)
 
-    var themeController: IconThemeController? =
-        if (isMonoThemeEnabled) MonoIconThemeController() else null
-        private set
+    val themeController: IconThemeController?
+        get() = iconState.themeController
+
+    val isIconThemeEnabled: Boolean
+        get() = themeController != null
 
     private val listeners = CopyOnWriteArrayList<ThemeChangeListener>()
 
@@ -77,12 +79,10 @@ constructor(
         }
     }
 
-    private fun verifyIconState() {
+    protected fun verifyIconState() {
         val newState = parseIconState()
         if (newState == iconState) return
-
         iconState = newState
-        themeController = if (isMonoThemeEnabled) MonoIconThemeController() else null
 
         listeners.forEach { it.onThemeChanged() }
     }
@@ -105,15 +105,19 @@ constructor(
         return IconState(
             iconMask = iconMask,
             folderShapeMask = shapeModel?.folderPathString ?: iconMask,
-            isMonoTheme = isMonoThemeEnabled,
+            themeController = createThemeController(),
         )
+    }
+
+    protected open fun createThemeController(): IconThemeController? {
+        return if (isMonoThemeEnabled) MONO_THEME_CONTROLLER else null
     }
 
     data class IconState(
         val iconMask: String,
         val folderShapeMask: String,
-        val isMonoTheme: Boolean,
-        val themeCode: String = if (isMonoTheme) "with-theme" else "no-theme",
+        val themeController: IconThemeController?,
+        val themeCode: String = themeController?.themeID ?: "no-theme",
     ) {
         fun toUniqueId() = "${iconMask.hashCode()},$themeCode"
     }
@@ -135,5 +139,8 @@ constructor(
         private const val ACTION_OVERLAY_CHANGED = "android.intent.action.OVERLAY_CHANGED"
         private val CONFIG_ICON_MASK_RES_ID: Int =
             Resources.getSystem().getIdentifier("config_icon_mask", "string", "android")
+
+        // Use a constant to allow equality check in verifyIconState
+        private val MONO_THEME_CONTROLLER = MonoIconThemeController()
     }
 }

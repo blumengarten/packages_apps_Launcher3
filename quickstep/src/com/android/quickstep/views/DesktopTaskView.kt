@@ -55,8 +55,8 @@ import com.android.quickstep.recents.domain.model.DesktopTaskBoundsData
 import com.android.quickstep.recents.ui.viewmodel.DesktopTaskViewModel
 import com.android.quickstep.recents.ui.viewmodel.TaskData
 import com.android.quickstep.task.thumbnail.TaskThumbnailView
+import com.android.quickstep.util.DesktopTask
 import com.android.quickstep.util.RecentsOrientedState
-import com.android.systemui.shared.recents.model.Task
 
 /** TaskView that contains all tasks that are part of the desktop. */
 class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
@@ -271,10 +271,14 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     /** Updates this desktop task to the gives task list defined in `tasks` */
     fun bind(
-        tasks: List<Task>,
+        desktopTask: DesktopTask,
         orientedState: RecentsOrientedState,
         taskOverlayFactory: TaskOverlayFactory,
     ) {
+        // TODO(b/370495260): Minimized tasks should not be filtered with desktop exploded view
+        // support.
+        // Minimized tasks should not be shown in Overview.
+        val tasks = desktopTask.tasks.filterNot { it.isMinimized }
         if (DEBUG) {
             val sb = StringBuilder()
             sb.append("bind tasks=").append(tasks.size).append("\n")

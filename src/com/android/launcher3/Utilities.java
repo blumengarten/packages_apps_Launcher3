@@ -658,9 +658,9 @@ public final class Utilities {
                         appState.getInvariantDeviceProfile().fillResIconDpi);
                 // Only fetch badge if the icon is on workspace
                 if (info.id != ItemInfo.NO_ID && badge == null) {
-                    badge = appState.getIconCache().getShortcutInfoBadge(si)
-                            .newIcon(context, ThemeManager.INSTANCE.get(context)
-                                    .isMonoThemeEnabled() ? FLAG_THEMED : 0);
+                    badge = appState.getIconCache().getShortcutInfoBadge(si).newIcon(
+                            context, ThemeManager.INSTANCE.get(context).isIconThemeEnabled()
+                                    ? FLAG_THEMED : 0);
                 }
             }
         } else if (info.itemType == LauncherSettings.Favorites.ITEM_TYPE_FOLDER) {

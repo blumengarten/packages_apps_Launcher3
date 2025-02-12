@@ -211,6 +211,36 @@ public final class OverviewTask {
     }
 
     /**
+     * Starts dismissing the task by swiping up, then cancels, and task springs back to start.
+     */
+    public void dismissCancel() {
+        try (LauncherInstrumentation.Closable e = mLauncher.eventsCheck();
+             LauncherInstrumentation.Closable c = mLauncher.addContextLayer(
+                     "want to start dismissing an overview task then cancel")) {
+            verifyActiveContainer();
+            int taskCountBeforeDismiss = mOverview.getTaskCount();
+            mLauncher.assertNotEquals("Unable to find a task", 0, taskCountBeforeDismiss);
+
+            final Rect taskBounds = mLauncher.getVisibleBounds(mTask);
+            final int centerX = taskBounds.centerX();
+            final int centerY = taskBounds.bottom - 1;
+            final int endCenterY = centerY - (taskBounds.height() / 4);
+            mLauncher.executeAndWaitForLauncherEvent(
+                    // Set slowDown to true so we do not fling the task at the end of the drag, as
+                    // we want it to cancel and return back to the origin. We use 30 steps to
+                    // perform the gesture slowly as well, to avoid flinging.
+                    () -> mLauncher.linearGesture(centerX, centerY, centerX, endCenterY,
+                            /* steps= */ 30, /* slowDown= */ true,
+                            LauncherInstrumentation.GestureScope.DONT_EXPECT_PILFER),
+                    event -> TestProtocol.DISMISS_ANIMATION_ENDS_MESSAGE.equals(
+                            event.getClassName()),
+                    () -> "Canceling swipe to dismiss did not end with task at origin.",
+                    "cancel swiping to dismiss");
+
+        }
+    }
+
+    /**
      * Clicks the task.
      */
     public LaunchedAppState open() {

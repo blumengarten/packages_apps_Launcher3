@@ -20,6 +20,7 @@ import android.view.MotionEvent
 import androidx.dynamicanimation.animation.SpringAnimation
 import com.android.app.animation.Interpolators.DECELERATE
 import com.android.launcher3.AbstractFloatingView
+import com.android.launcher3.R
 import com.android.launcher3.Utilities.EDGE_NAV_BAR
 import com.android.launcher3.Utilities.boundToRange
 import com.android.launcher3.Utilities.isRtl
@@ -144,7 +145,7 @@ CONTAINER : RecentsViewContainer {
                     0f,
                     dismissLength.toFloat(),
                     0f,
-                    DISMISS_MAX_UNDERSHOOT,
+                    container.resources.getDimension(R.dimen.task_dismiss_max_undershoot),
                     DECELERATE,
                 )
         taskBeingDragged.secondaryDismissTranslationProperty.setValue(
@@ -207,6 +208,5 @@ CONTAINER : RecentsViewContainer {
 
     companion object {
         private const val DISMISS_THRESHOLD_FRACTION = 0.5f
-        private const val DISMISS_MAX_UNDERSHOOT = 25f
     }
 }

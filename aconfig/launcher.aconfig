@@ -615,3 +615,10 @@ flag {
   description: "Enable Strict Mode for the Launcher app"
   bug: "394651876"
 }
+
+flag {
+  name: "extendible_theme_manager"
+  namespace: "launcher"
+  description: "Enables custom theme manager in Launcher"
+  bug: "381897614"
+}
