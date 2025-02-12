@@ -41,7 +41,6 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.annotation.IntDef
 import androidx.annotation.VisibleForTesting
-import androidx.core.view.doOnLayout
 import androidx.core.view.updateLayoutParams
 import com.android.app.animation.Interpolators
 import com.android.launcher3.Flags.enableCursorHoverStates
@@ -671,11 +670,6 @@ constructor(
         taskContainers.forEach { it.destroy() }
     }
 
-    fun destroyScopes() {
-        // TODO(b/391842220): Cancel scope in onDetach instead of having a specific method for this.
-        taskContainers.forEach { it.destroyScopes() }
-    }
-
     // TODO: Clip-out the icon region from the thumbnail, since they are overlapping.
     override fun hasOverlappingRendering() = false
 
@@ -778,9 +772,14 @@ constructor(
             container.setState(
                 state = containerState,
                 liveTile = state.isLiveTile,
-                hasHeader = type == TaskViewType.DESKTOP,
+                hasHeader = state.hasHeader,
             )
             updateThumbnailValidity(container)
+            updateThumbnailMatrix(
+                container = container,
+                width = container.thumbnailView.width,
+                height = container.thumbnailView.height,
+            )
 
             if (enableOverviewIconMenu()) {
                 setIconState(container, containerState)
@@ -796,6 +795,23 @@ constructor(
                 height = container.thumbnailView.height,
             )
         applyThumbnailSplashAlpha()
+    }
+
+    /**
+     * Updates the thumbnail's transformation matrix and rotation state within a TaskContainer.
+     *
+     * This function is called to reposition the thumbnail in the following scenarios:
+     * - When the TTV's size changes (onSizeChanged), and it's displaying a SnapshotSplash.
+     * - When drawing a snapshot (drawSnapshot).
+     *
+     * @param container The TaskContainer holding the thumbnail to be updated.
+     * @param width The desired width of the thumbnail's container.
+     * @param height The desired height of the thumbnail's container.
+     */
+    private fun updateThumbnailMatrix(container: TaskContainer, width: Int, height: Int) {
+        val thumbnailPosition =
+            viewModel!!.getThumbnailPosition(container.thumbnailData, width, height, isLayoutRtl)
+        container.updateThumbnailMatrix(thumbnailPosition.matrix)
     }
 
     override fun onDetachedFromWindow() {
@@ -843,6 +859,7 @@ constructor(
                         getTaskUseCase = RecentsDependencies.get(),
                         getSysUiStatusNavFlagsUseCase = RecentsDependencies.get(),
                         isThumbnailValidUseCase = RecentsDependencies.get(),
+                        getThumbnailPositionUseCase = RecentsDependencies.get(),
                         dispatcherProvider = RecentsDependencies.get(),
                     )
                     .apply { bind(*taskIds) }
@@ -852,7 +869,10 @@ constructor(
             container.bind()
             if (enableRefactorTaskThumbnail()) {
                 container.thumbnailView.cornerRadius = thumbnailFullscreenParams.currentCornerRadius
-                container.thumbnailView.doOnLayout { updateThumbnailValidity(container) }
+                container.thumbnailView.doOnSizeChange { width, height ->
+                    updateThumbnailValidity(container)
+                    updateThumbnailMatrix(container, width, height)
+                }
             }
         }
         setOrientationState(orientedState)

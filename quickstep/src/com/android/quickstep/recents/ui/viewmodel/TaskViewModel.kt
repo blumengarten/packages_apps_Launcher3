@@ -24,7 +24,9 @@ import com.android.quickstep.recents.domain.model.TaskId
 import com.android.quickstep.recents.domain.model.TaskModel
 import com.android.quickstep.recents.domain.usecase.GetSysUiStatusNavFlagsUseCase
 import com.android.quickstep.recents.domain.usecase.GetTaskUseCase
+import com.android.quickstep.recents.domain.usecase.GetThumbnailPositionUseCase
 import com.android.quickstep.recents.domain.usecase.IsThumbnailValidUseCase
+import com.android.quickstep.recents.domain.usecase.ThumbnailPosition
 import com.android.quickstep.recents.viewmodel.RecentsViewData
 import com.android.quickstep.views.TaskViewType
 import com.android.systemui.shared.recents.model.ThumbnailData
@@ -48,6 +50,7 @@ class TaskViewModel(
     private val getTaskUseCase: GetTaskUseCase,
     private val getSysUiStatusNavFlagsUseCase: GetSysUiStatusNavFlagsUseCase,
     private val isThumbnailValidUseCase: IsThumbnailValidUseCase,
+    private val getThumbnailPositionUseCase: GetThumbnailPositionUseCase,
     dispatcherProvider: DispatcherProvider,
 ) {
     private var taskIds = MutableStateFlow(emptySet<Int>())
@@ -82,6 +85,19 @@ class TaskViewModel(
 
     fun isThumbnailValid(thumbnail: ThumbnailData?, width: Int, height: Int): Boolean =
         isThumbnailValidUseCase(thumbnail, width, height)
+
+    fun getThumbnailPosition(
+        thumbnail: ThumbnailData?,
+        width: Int,
+        height: Int,
+        isRtl: Boolean,
+    ): ThumbnailPosition =
+        getThumbnailPositionUseCase(
+            thumbnailData = thumbnail,
+            width = width,
+            height = height,
+            isRtl = isRtl,
+        )
 
     private fun mapToTaskTile(tasks: List<TaskData>, isLiveTile: Boolean): TaskTileUiState {
         val firstThumbnailData = (tasks.firstOrNull() as? TaskData.Data)?.thumbnailData

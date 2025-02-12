@@ -19,12 +19,9 @@ import android.content.Context
 import android.graphics.Color
 import android.view.LayoutInflater
 import com.android.launcher3.R
-import com.android.quickstep.recents.di.RecentsDependencies
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.BackgroundOnly
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.Uninitialized
-import com.android.quickstep.task.viewmodel.TaskThumbnailViewModel
 import com.google.android.apps.nexuslauncher.imagecomparison.goldenpathmanager.ViewScreenshotGoldenPathManager
-import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -45,13 +42,6 @@ class TaskThumbnailViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
             emulationSpec,
             ViewScreenshotGoldenPathManager(getEmulatedDevicePathConfig(emulationSpec)),
         )
-
-    private val taskThumbnailViewModel = FakeTaskThumbnailViewModel()
-
-    @After
-    fun tearDown() {
-        RecentsDependencies.destroy()
-    }
 
     @Test
     fun taskThumbnailView_uninitializedByDefault() {
@@ -125,14 +115,10 @@ class TaskThumbnailViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
     }
 
     private fun createTaskThumbnailView(context: Context): TaskThumbnailView {
-        val di = RecentsDependencies.initialize(context)
         val taskThumbnailView =
             LayoutInflater.from(context).inflate(R.layout.task_thumbnail, null, false)
                 as TaskThumbnailView
         taskThumbnailView.cornerRadius = CORNER_RADIUS
-        val ttvDiScopeId = di.getScope(taskThumbnailView).scopeId
-        di.provide(TaskThumbnailViewModel::class.java, ttvDiScopeId) { taskThumbnailViewModel }
-
         return taskThumbnailView
     }
 

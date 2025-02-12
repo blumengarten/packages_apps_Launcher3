@@ -21,7 +21,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import com.android.quickstep.recents.data.FakeTasksRepository
-import com.android.quickstep.task.viewmodel.TaskOverlayViewModelTest
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.ThumbnailData
 import com.google.common.truth.Truth.assertThat
@@ -62,7 +61,7 @@ class GetThumbnailUseCaseTest {
     @Test
     fun taskNotVisible_returnsNull() {
         tasksRepository.seedTasks(listOf(task))
-        tasksRepository.seedThumbnailData(mapOf(TaskOverlayViewModelTest.TASK_ID to thumbnailData))
+        tasksRepository.seedThumbnailData(mapOf(TASK_ID to thumbnailData))
 
         assertThat(systemUnderTest.run(TASK_ID)).isNull()
     }
@@ -70,8 +69,8 @@ class GetThumbnailUseCaseTest {
     @Test
     fun taskVisible_returnsThumbnail() {
         tasksRepository.seedTasks(listOf(task))
-        tasksRepository.seedThumbnailData(mapOf(TaskOverlayViewModelTest.TASK_ID to thumbnailData))
-        tasksRepository.setVisibleTasks(setOf(TaskOverlayViewModelTest.TASK_ID))
+        tasksRepository.seedThumbnailData(mapOf(TASK_ID to thumbnailData))
+        tasksRepository.setVisibleTasks(setOf(TASK_ID))
 
         assertThat(systemUnderTest.run(TASK_ID)).isEqualTo(thumbnailData.thumbnail)
     }
