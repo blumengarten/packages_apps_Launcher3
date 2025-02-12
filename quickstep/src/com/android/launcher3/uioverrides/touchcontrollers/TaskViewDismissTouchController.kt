@@ -26,10 +26,12 @@ import com.android.launcher3.Utilities.boundToRange
 import com.android.launcher3.Utilities.isRtl
 import com.android.launcher3.Utilities.mapToRange
 import com.android.launcher3.touch.SingleAxisSwipeDetector
+import com.android.launcher3.util.MSDLPlayerWrapper
 import com.android.launcher3.util.TouchController
 import com.android.quickstep.views.RecentsView
 import com.android.quickstep.views.RecentsViewContainer
 import com.android.quickstep.views.TaskView
+import com.google.android.msdl.data.model.MSDLToken
 import kotlin.math.abs
 import kotlin.math.sign
 
@@ -53,6 +55,7 @@ CONTAINER : RecentsViewContainer {
     private var springAnimation: SpringAnimation? = null
     private var dismissLength: Int = 0
     private var verticalFactor: Int = 0
+    private var hasDismissThresholdHapticRun = false
     private var initialDisplacement: Float = 0f
 
     private fun canInterceptTouch(ev: MotionEvent): Boolean =
@@ -159,7 +162,28 @@ CONTAINER : RecentsViewContainer {
             }
             recentsView.redrawLiveTile()
         }
+        playDismissThresholdHaptic(displacement)
         return true
+    }
+
+    /**
+     * Play a haptic to alert the user they have passed the dismiss threshold.
+     *
+     * <p>Check within a range of the threshold value, as the drag event does not necessarily happen
+     * at the exact threshold's displacement.
+     */
+    private fun playDismissThresholdHaptic(displacement: Float) {
+        val dismissThreshold = (DISMISS_THRESHOLD_FRACTION * dismissLength * verticalFactor)
+        val inHapticRange =
+            displacement >= (dismissThreshold - DISMISS_THRESHOLD_HAPTIC_RANGE) &&
+                displacement <= (dismissThreshold + DISMISS_THRESHOLD_HAPTIC_RANGE)
+        if (!inHapticRange) {
+            hasDismissThresholdHapticRun = false
+        } else if (!hasDismissThresholdHapticRun) {
+            MSDLPlayerWrapper.INSTANCE.get(recentsView.context)
+                .playToken(MSDLToken.SWIPE_THRESHOLD_INDICATOR)
+            hasDismissThresholdHapticRun = true
+        }
     }
 
     override fun onDragEnd(velocity: Float) {
@@ -208,5 +232,6 @@ CONTAINER : RecentsViewContainer {
 
     companion object {
         private const val DISMISS_THRESHOLD_FRACTION = 0.5f
+        private const val DISMISS_THRESHOLD_HAPTIC_RANGE = 10f
     }
 }
