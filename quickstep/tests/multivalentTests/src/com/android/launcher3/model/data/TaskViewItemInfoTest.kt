@@ -47,6 +47,7 @@ import com.android.systemui.shared.recents.model.Task.TaskKey
 import com.google.common.truth.Truth.assertThat
 import dagger.BindsInstance
 import dagger.Component
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -76,6 +77,11 @@ class TaskViewItemInfoTest {
             DaggerTaskViewItemInfoTest_TestComponent.builder().bindUserCache(userCache)
         )
         RecentsDependencies.initialize(context)
+    }
+
+    @After
+    fun tearDown() {
+        RecentsDependencies.destroy()
     }
 
     @Test
