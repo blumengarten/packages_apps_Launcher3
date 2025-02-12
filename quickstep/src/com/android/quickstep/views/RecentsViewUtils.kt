@@ -392,47 +392,72 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
         // Add tasks before dragged index, fanning out from the dragged task.
         // The order they are added matters, as each spring drives the next.
         var previousNeighbor = neighborsToSettle
-        getTasksAdjacentToDraggedTask(draggedTaskView, towardsStart = true).forEach {
-            previousNeighbor = createNeighboringTaskViewSpringAnimation(it, previousNeighbor)
+        getTasksOffsetPairAdjacentToDraggedTask(draggedTaskView, towardsStart = true).forEach {
+            (taskView, offset) ->
+            previousNeighbor =
+                createNeighboringTaskViewSpringAnimation(
+                    taskView,
+                    offset * ADDITIONAL_DISMISS_DAMPING_RATIO,
+                    previousNeighbor,
+                )
         }
         // Add tasks after dragged index, fanning out from the dragged task.
         // The order they are added matters, as each spring drives the next.
         previousNeighbor = neighborsToSettle
-        getTasksAdjacentToDraggedTask(draggedTaskView, towardsStart = false).forEach {
-            previousNeighbor = createNeighboringTaskViewSpringAnimation(it, previousNeighbor)
+        getTasksOffsetPairAdjacentToDraggedTask(draggedTaskView, towardsStart = false).forEach {
+            (taskView, offset) ->
+            previousNeighbor =
+                createNeighboringTaskViewSpringAnimation(
+                    taskView,
+                    offset * ADDITIONAL_DISMISS_DAMPING_RATIO,
+                    previousNeighbor,
+                )
         }
     }
 
-    /** Gets adjacent tasks either before or after the dragged task in visual order. */
-    private fun getTasksAdjacentToDraggedTask(
+    /**
+     * Gets pairs of (TaskView, offset) adjacent the dragged task in visual order.
+     *
+     * <p>Gets tasks either before or after the dragged task along with their offset from it. The
+     * offset is the distance between indices for carousels, or distance between columns for grids.
+     */
+    private fun getTasksOffsetPairAdjacentToDraggedTask(
         draggedTaskView: TaskView,
         towardsStart: Boolean,
-    ): Sequence<TaskView> {
+    ): Sequence<Pair<TaskView, Int>> {
         if (recentsView.showAsGrid()) {
-            return gridTaskViewInTabOrderSequence(draggedTaskView, towardsStart)
+            return gridTaskOffsetPairInTabOrderSequence(draggedTaskView, towardsStart)
         } else {
             val taskViewList = taskViews.toList()
             val draggedTaskViewIndex = taskViewList.indexOf(draggedTaskView)
 
             return if (towardsStart) {
-                taskViewList.take(draggedTaskViewIndex).reversed().asSequence()
+                taskViewList
+                    .take(draggedTaskViewIndex)
+                    .reversed()
+                    .mapIndexed { index, taskView -> Pair(taskView, index + 1) }
+                    .asSequence()
             } else {
-                taskViewList.takeLast(taskViewList.size - draggedTaskViewIndex - 1).asSequence()
+                taskViewList
+                    .takeLast(taskViewList.size - draggedTaskViewIndex - 1)
+                    .mapIndexed { index, taskView -> Pair(taskView, index + 1) }
+                    .asSequence()
             }
         }
     }
 
     /**
-     * Returns a sequence of TaskViews in the grid, ordered according to tab navigation, starting
-     * from the dragged TaskView, in the direction of the provided delta.
+     * Returns a sequence of pairs of (TaskViews, offsets) in the grid, ordered according to tab
+     * navigation, starting from the dragged TaskView, towards the start or end of the grid.
      *
      * <p>A positive delta moves forward in the tab order towards the end of the grid, while a
-     * negative value moves backward towards the beginning.
+     * negative value moves backward towards the beginning. The offset is the distance between
+     * columns the tasks are in.
      */
-    private fun gridTaskViewInTabOrderSequence(
+    private fun gridTaskOffsetPairInTabOrderSequence(
         draggedTaskView: TaskView,
         towardsStart: Boolean,
-    ): Sequence<TaskView> = sequence {
+    ): Sequence<Pair<TaskView, Int>> = sequence {
         val taskGridNavHelper =
             TaskGridNavHelper(
                 recentsView.topRowIdArray,
@@ -440,6 +465,7 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
                 getLargeTaskViewIds(),
                 /* hasAddDesktopButton= */ false,
             )
+        val draggedTaskViewColumn = taskGridNavHelper.getColumn(draggedTaskView.taskViewId)
         var nextTaskView: TaskView? = draggedTaskView
         var previousTaskView: TaskView? = null
         while (nextTaskView != previousTaskView && nextTaskView != null) {
@@ -454,7 +480,11 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
                     )
                 )
             if (nextTaskView != null && nextTaskView != previousTaskView) {
-                yield(nextTaskView)
+                val columnOffset =
+                    abs(
+                        taskGridNavHelper.getColumn(nextTaskView.taskViewId) - draggedTaskViewColumn
+                    )
+                yield(Pair(nextTaskView, columnOffset))
             }
         }
     }
@@ -462,6 +492,7 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
     /** Creates a neighboring task view spring, driven by the spring of its neighbor. */
     private fun createNeighboringTaskViewSpringAnimation(
         taskView: TaskView,
+        dampingOffsetRatio: Float,
         previousNeighborSpringAnimation: SpringAnimation,
     ): SpringAnimation {
         val neighboringTaskViewSpringAnimation =
@@ -471,7 +502,7 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
                         taskView.secondaryDismissTranslationProperty
                     ),
                 )
-                .setSpring(createExpressiveDismissSpringForce())
+                .setSpring(createExpressiveDismissSpringForce(dampingOffsetRatio))
         // Update live tile on spring animation.
         if (taskView.isRunningTask && recentsView.enableDrawingLiveTile) {
             neighboringTaskViewSpringAnimation.addUpdateListener { _, _, _ ->
@@ -489,11 +520,12 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
         return neighboringTaskViewSpringAnimation
     }
 
-    private fun createExpressiveDismissSpringForce(): SpringForce {
+    private fun createExpressiveDismissSpringForce(dampingRatioOffset: Float = 0f): SpringForce {
         val resourceProvider = DynamicResource.provider(recentsView.mContainer)
         return SpringForce()
             .setDampingRatio(
-                resourceProvider.getFloat(R.dimen.expressive_dismiss_task_trans_y_damping_ratio)
+                resourceProvider.getFloat(R.dimen.expressive_dismiss_task_trans_y_damping_ratio) +
+                    dampingRatioOffset
             )
             .setStiffness(
                 resourceProvider.getFloat(R.dimen.expressive_dismiss_task_trans_y_stiffness)
@@ -502,5 +534,8 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
 
     companion object {
         val TEMP_RECT = Rect()
+
+        // The additional damping to apply to tasks further from the dismissed task.
+        const val ADDITIONAL_DISMISS_DAMPING_RATIO = 0.15f
     }
 }
