@@ -38,7 +38,7 @@ public class DaggerSingletonTracker implements SafeCloseable {
     private boolean mClosed = false;
 
     @Inject
-    public DaggerSingletonTracker() {
+    DaggerSingletonTracker() {
     }
 
     /**

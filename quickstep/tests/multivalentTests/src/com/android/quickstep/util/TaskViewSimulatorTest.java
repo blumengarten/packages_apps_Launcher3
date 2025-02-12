@@ -16,7 +16,6 @@
 package com.android.quickstep.util;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -38,12 +37,11 @@ import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.dagger.LauncherAppComponent;
 import com.android.launcher3.dagger.LauncherAppSingleton;
-import com.android.launcher3.util.AllModulesMinusWMProxyAndPerDisplayObjectProvider;
+import com.android.launcher3.util.AllModulesMinusWMProxy;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.DisplayController.Info;
 import com.android.launcher3.util.LauncherModelHelper;
 import com.android.launcher3.util.NavigationMode;
-import com.android.launcher3.util.PerDisplayObjectProvider;
 import com.android.launcher3.util.RotationUtils;
 import com.android.launcher3.util.WindowBounds;
 import com.android.launcher3.util.window.CachedDisplayInfo;
@@ -168,11 +166,10 @@ public class TaskViewSimulatorTest {
             LauncherModelHelper helper = new LauncherModelHelper();
             try {
                 DisplayController mockController = mock(DisplayController.class);
-                PerDisplayObjectProvider objectProvider = mock(PerDisplayObjectProvider.class);
 
                 helper.sandboxContext.initDaggerComponent(
                         DaggerTaskViewSimulatorTest_TaskViewSimulatorTestComponent.builder()
-                                .bindPerDisplayObjectProvider(objectProvider));
+                                .bindDisplayController(mockController));
                 int rotation = mDisplaySize.x > mDisplaySize.y
                         ? Surface.ROTATION_90 : Surface.ROTATION_0;
                 CachedDisplayInfo cdi = new CachedDisplayInfo(mDisplaySize, rotation);
@@ -204,8 +201,6 @@ public class TaskViewSimulatorTest {
                 Context configurationContext = helper.sandboxContext.createConfigurationContext(
                         configuration);
 
-                when(objectProvider.getDisplayController(anyInt())).thenReturn(
-                        mockController);
                 DisplayController.Info info = new Info(
                         configurationContext, wmProxy, perDisplayBoundsCache);
                 when(mockController.getInfo()).thenReturn(info);
@@ -286,14 +281,14 @@ public class TaskViewSimulatorTest {
     }
 
     @LauncherAppSingleton
-    @Component(modules = {AllModulesMinusWMProxyAndPerDisplayObjectProvider.class})
+    @Component(modules = {AllModulesMinusWMProxy.class})
     interface TaskViewSimulatorTestComponent extends LauncherAppComponent {
 
         @Component.Builder
         interface Builder extends LauncherAppComponent.Builder {
 
             @BindsInstance
-            Builder bindPerDisplayObjectProvider(PerDisplayObjectProvider provider);
+            Builder bindDisplayController(DisplayController controller);
 
             TaskViewSimulatorTestComponent build();
         }

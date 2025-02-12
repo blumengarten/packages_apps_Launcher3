@@ -31,6 +31,7 @@ import com.android.launcher3.taskbar.TaskbarControllerTestUtil.runOnMainSync
 import com.android.launcher3.taskbar.TaskbarViewTestUtil.createHotseatItems
 import com.android.launcher3.taskbar.bubbles.BubbleBarViewController
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController
+import com.android.launcher3.taskbar.rules.DisplayControllerModule
 import com.android.launcher3.taskbar.rules.MockedRecentsModelHelper
 import com.android.launcher3.taskbar.rules.MockedRecentsModelTestRule
 import com.android.launcher3.taskbar.rules.SandboxParams
@@ -422,7 +423,9 @@ class TaskbarOverflowTest {
 
 /** TaskbarOverflowComponent used to bind the RecentsModel. */
 @LauncherAppSingleton
-@Component(modules = [AllModulesForTest::class, FakePrefsModule::class])
+@Component(
+    modules = [AllModulesForTest::class, FakePrefsModule::class, DisplayControllerModule::class]
+)
 interface TaskbarOverflowComponent : TaskbarSandboxComponent {
 
     @Component.Builder

@@ -425,7 +425,7 @@ public class TaskbarManager {
      */
     public void onUserUnlocked() {
         mUserUnlocked = true;
-        DisplayController.get(mPrimaryWindowContext).addChangeListener(
+        DisplayController.INSTANCE.get(mPrimaryWindowContext).addChangeListener(
                 mRecreationListener);
         recreateTaskbar();
         addTaskbarRootViewToWindow(getDefaultDisplayId());
@@ -798,7 +798,7 @@ public class TaskbarManager {
         mTaskbarBroadcastReceiver.unregisterReceiverSafely(mPrimaryWindowContext);
 
         if (mUserUnlocked) {
-            DisplayController.get(mPrimaryWindowContext).removeChangeListener(
+            DisplayController.INSTANCE.get(mPrimaryWindowContext).removeChangeListener(
                     mRecreationListener);
         }
         SettingsCache.INSTANCE.get(mPrimaryWindowContext)

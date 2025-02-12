@@ -139,7 +139,7 @@ class DisplayControllerTest {
         whenever(context.resources).thenReturn(resources)
 
         // Initialize DisplayController
-        displayController = DisplayController.get(context)
+        displayController = DisplayController.INSTANCE.get(context)
         displayController.addChangeListener(displayInfoChangeListener)
     }
 

@@ -1112,7 +1112,7 @@ public class TouchInteractionService extends Service {
         pw.println("Input state:");
         pw.println("\tmInputMonitorCompat=" + mInputMonitorCompat);
         pw.println("\tmInputEventReceiver=" + mInputEventReceiver);
-        DisplayController.get(this).dump(pw);
+        DisplayController.INSTANCE.get(this).dump(pw);
         pw.println("TouchState:");
         RecentsViewContainer createdOverviewContainer = mOverviewComponentObserver == null ? null
                 : mOverviewComponentObserver.getContainerInterface().getCreatedContainer();

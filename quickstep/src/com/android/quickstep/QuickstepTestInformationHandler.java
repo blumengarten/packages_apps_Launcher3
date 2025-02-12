@@ -28,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-@SuppressWarnings("VisibleForTests")
 public class QuickstepTestInformationHandler extends TestInformationHandler {
 
     protected final Context mContext;
@@ -230,7 +229,7 @@ public class QuickstepTestInformationHandler extends TestInformationHandler {
     }
 
     private void enableTransientTaskbar(boolean enable) {
-        DisplayController.get(mContext).enableTransientTaskbarForTests(enable);
+        DisplayController.INSTANCE.get(mContext).enableTransientTaskbarForTests(enable);
     }
 
     /**
