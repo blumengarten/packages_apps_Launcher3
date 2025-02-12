@@ -432,7 +432,23 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
         towardsStart: Boolean,
     ): Sequence<Pair<TaskView, Int>> {
         if (recentsView.showAsGrid()) {
-            return gridTaskOffsetPairInTabOrderSequence(draggedTaskView, towardsStart)
+            val taskGridNavHelper =
+                TaskGridNavHelper(
+                    recentsView.topRowIdArray,
+                    recentsView.bottomRowIdArray,
+                    getLargeTaskViewIds(),
+                    hasAddDesktopButton = false,
+                )
+            return taskGridNavHelper
+                .gridTaskViewIdOffsetPairInTabOrderSequence(
+                    draggedTaskView.taskViewId,
+                    towardsStart,
+                )
+                .mapNotNull { (taskViewId, columnOffset) ->
+                    recentsView.getTaskViewFromTaskViewId(taskViewId)?.let { taskView ->
+                        Pair(taskView, columnOffset)
+                    }
+                }
         } else {
             val taskViewList = taskViews.toList()
             val draggedTaskViewIndex = taskViewList.indexOf(draggedTaskView)
@@ -448,49 +464,6 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
                     .takeLast(taskViewList.size - draggedTaskViewIndex - 1)
                     .mapIndexed { index, taskView -> Pair(taskView, index + 1) }
                     .asSequence()
-            }
-        }
-    }
-
-    /**
-     * Returns a sequence of pairs of (TaskViews, offsets) in the grid, ordered according to tab
-     * navigation, starting from the dragged TaskView, towards the start or end of the grid.
-     *
-     * <p>A positive delta moves forward in the tab order towards the end of the grid, while a
-     * negative value moves backward towards the beginning. The offset is the distance between
-     * columns the tasks are in.
-     */
-    private fun gridTaskOffsetPairInTabOrderSequence(
-        draggedTaskView: TaskView,
-        towardsStart: Boolean,
-    ): Sequence<Pair<TaskView, Int>> = sequence {
-        val taskGridNavHelper =
-            TaskGridNavHelper(
-                recentsView.topRowIdArray,
-                recentsView.bottomRowIdArray,
-                getLargeTaskViewIds(),
-                /* hasAddDesktopButton= */ false,
-            )
-        val draggedTaskViewColumn = taskGridNavHelper.getColumn(draggedTaskView.taskViewId)
-        var nextTaskView: TaskView? = draggedTaskView
-        var previousTaskView: TaskView? = null
-        while (nextTaskView != previousTaskView && nextTaskView != null) {
-            previousTaskView = nextTaskView
-            nextTaskView =
-                recentsView.getTaskViewFromTaskViewId(
-                    taskGridNavHelper.getNextGridPage(
-                        nextTaskView.taskViewId,
-                        if (towardsStart) -1 else 1,
-                        TaskGridNavHelper.DIRECTION_TAB,
-                        /* cycle = */ false,
-                    )
-                )
-            if (nextTaskView != null && nextTaskView != previousTaskView) {
-                val columnOffset =
-                    abs(
-                        taskGridNavHelper.getColumn(nextTaskView.taskViewId) - draggedTaskViewColumn
-                    )
-                yield(Pair(nextTaskView, columnOffset))
             }
         }
     }
