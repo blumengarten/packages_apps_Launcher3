@@ -851,6 +851,7 @@ public abstract class RecentsView<
     private final RecentsViewModel mRecentsViewModel;
     private final RecentsViewModelHelper mHelper;
     protected final RecentsViewUtils mUtils = new RecentsViewUtils(this);
+    protected final RecentsDismissUtils mDismissUtils = new RecentsDismissUtils(this);
 
     private final Matrix mTmpMatrix = new Matrix();
 
@@ -6943,7 +6944,7 @@ public abstract class RecentsView<
     public SpringAnimation createTaskDismissSettlingSpringAnimation(TaskView draggedTaskView,
             float velocity, boolean isDismissing, SingleAxisSwipeDetector detector,
             int dismissLength, Function0<Unit> onEndRunnable) {
-        return mUtils.createTaskDismissSettlingSpringAnimation(draggedTaskView, velocity,
+        return mDismissUtils.createTaskDismissSettlingSpringAnimation(draggedTaskView, velocity,
                 isDismissing, detector, dismissLength, onEndRunnable);
     }
 
@@ -6951,7 +6952,7 @@ public abstract class RecentsView<
      * Animates RecentsView's scale to the provided value, using spring animations.
      */
     public SpringAnimation animateRecentsScale(float scale) {
-        return mUtils.animateRecentsScale(scale);
+        return mDismissUtils.animateRecentsScale(scale);
     }
 
     public interface TaskLaunchListener {
