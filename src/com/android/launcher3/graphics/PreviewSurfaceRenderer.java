@@ -20,6 +20,7 @@ import static android.content.res.Configuration.UI_MODE_NIGHT_NO;
 import static android.content.res.Configuration.UI_MODE_NIGHT_YES;
 import static android.view.Display.DEFAULT_DISPLAY;
 
+import static com.android.launcher3.LauncherPrefs.GRID_NAME;
 import static com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME;
 import static com.android.launcher3.graphics.ThemeManager.PREF_ICON_SHAPE;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
@@ -60,7 +61,6 @@ import com.android.launcher3.graphics.LauncherPreviewRenderer.PreviewContext;
 import com.android.launcher3.model.BaseLauncherBinder;
 import com.android.launcher3.model.BgDataModel;
 import com.android.launcher3.model.BgDataModel.Callbacks;
-import com.android.launcher3.model.GridSizeMigrationDBController;
 import com.android.launcher3.model.LoaderTask;
 import com.android.launcher3.model.ModelDbController;
 import com.android.launcher3.provider.LauncherDbUtils;
@@ -117,7 +117,7 @@ public class PreviewSurfaceRenderer {
         mGridName = bundle.getString("name");
         bundle.remove("name");
         if (mGridName == null) {
-            mGridName = InvariantDeviceProfile.getCurrentGridName(context);
+            mGridName = LauncherPrefs.get(context).get(GRID_NAME);
         }
         mWallpaperColors = bundle.getParcelable(KEY_COLORS);
         if (Flags.newCustomizationPickerUi()) {
@@ -316,11 +316,10 @@ public class PreviewSurfaceRenderer {
     @WorkerThread
     private void loadModelData() {
         final Context inflationContext = getPreviewContext();
-        final InvariantDeviceProfile idp = new InvariantDeviceProfile(inflationContext, mGridName);
-        if (GridSizeMigrationDBController.needsToMigrate(inflationContext, idp)
+        if (!mGridName.equals(LauncherPrefs.INSTANCE.get(mContext).get(GRID_NAME))
                 || mShapeKey != null) {
             // Start the migration
-            PreviewContext previewContext = new PreviewContext(inflationContext, idp);
+            PreviewContext previewContext = new PreviewContext(inflationContext, mGridName);
             if (mShapeKey != null) {
                 LauncherPrefs.INSTANCE.get(previewContext).put(PREF_ICON_SHAPE, mShapeKey);
             }
@@ -348,6 +347,7 @@ public class PreviewSurfaceRenderer {
 
                 @Override
                 public void run() {
+                    InvariantDeviceProfile idp = LauncherAppState.getIDP(previewContext);
                     DeviceProfile deviceProfile = idp.getDeviceProfile(previewContext);
                     String query =
                             LauncherSettings.Favorites.SCREEN + " = " + Workspace.FIRST_SCREEN_ID
@@ -371,7 +371,7 @@ public class PreviewSurfaceRenderer {
             LauncherAppState.getInstance(inflationContext).getModel().loadAsync(dataModel -> {
                 if (dataModel != null) {
                     MAIN_EXECUTOR.execute(() -> renderView(inflationContext, dataModel, null,
-                            null, idp));
+                            null, LauncherAppState.getIDP(inflationContext)));
                 } else {
                     Log.e(TAG, "Model loading failed");
                 }

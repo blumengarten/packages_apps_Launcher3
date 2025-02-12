@@ -15,7 +15,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.android.dx.mockito.inline.extended.ExtendedMockito
 import com.android.launcher3.Flags
-import com.android.launcher3.InvariantDeviceProfile
 import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherModel
 import com.android.launcher3.LauncherModel.LoaderTransaction
@@ -120,12 +119,11 @@ class LoaderTaskTest {
                 .mockStatic(FirstScreenBroadcastHelper::class.java)
                 .startMocking()
         val idp =
-            InvariantDeviceProfile().apply {
+            context.appComponent.idp.apply {
                 numRows = 5
                 numColumns = 6
                 numDatabaseHotseatIcons = 5
             }
-        context.putObject(InvariantDeviceProfile.INSTANCE, idp)
         context.putObject(LauncherAppState.INSTANCE, app)
 
         doReturn(TestViewHelpers.findWidgetProvider(false))
