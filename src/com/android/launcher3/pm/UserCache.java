@@ -81,10 +81,7 @@ public class UserCache {
     }
 
     private final List<BiConsumer<UserHandle, String>> mUserEventListeners = new ArrayList<>();
-    private final SimpleBroadcastReceiver mUserChangeReceiver =
-            new SimpleBroadcastReceiver(MODEL_EXECUTOR, this::onUsersChanged);
-
-    private final Context mContext;
+    private final SimpleBroadcastReceiver mUserChangeReceiver;
     private final ApiWrapper mApiWrapper;
 
     @NonNull
@@ -99,16 +96,17 @@ public class UserCache {
             DaggerSingletonTracker tracker,
             ApiWrapper apiWrapper
     ) {
-        mContext = context;
         mApiWrapper = apiWrapper;
+        mUserChangeReceiver = new SimpleBroadcastReceiver(context,
+                MODEL_EXECUTOR, this::onUsersChanged);
         mUserToSerialMap = Collections.emptyMap();
         MODEL_EXECUTOR.execute(this::initAsync);
-        tracker.addCloseable(() -> mUserChangeReceiver.unregisterReceiverSafely(mContext));
+        tracker.addCloseable(() -> mUserChangeReceiver.unregisterReceiverSafely());
     }
 
     @WorkerThread
     private void initAsync() {
-        mUserChangeReceiver.register(mContext,
+        mUserChangeReceiver.register(
                 Intent.ACTION_MANAGED_PROFILE_AVAILABLE,
                 Intent.ACTION_MANAGED_PROFILE_UNAVAILABLE,
                 Intent.ACTION_MANAGED_PROFILE_REMOVED,

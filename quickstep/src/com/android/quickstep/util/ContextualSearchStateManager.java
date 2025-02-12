@@ -74,8 +74,7 @@ public class ContextualSearchStateManager  {
             Settings.Secure.getUriFor(Settings.Secure.SEARCH_ALL_ENTRYPOINTS_ENABLED);
 
     private final Runnable mSysUiStateChangeListener = this::updateOverridesToSysUi;
-    private final SimpleBroadcastReceiver mContextualSearchPackageReceiver =
-            new SimpleBroadcastReceiver(UI_HELPER_EXECUTOR, (unused) -> requestUpdateProperties());
+    private final SimpleBroadcastReceiver mContextualSearchPackageReceiver;
     protected final EventLogArray mEventLogArray = new EventLogArray(TAG, MAX_DEBUG_EVENT_SIZE);
 
     // Cached value whether the ContextualSearch intent filter matched any enabled components.
@@ -95,6 +94,9 @@ public class ContextualSearchStateManager  {
             TopTaskTracker topTaskTracker,
             DaggerSingletonTracker lifeCycle) {
         mContext = context;
+        mContextualSearchPackageReceiver =
+                new SimpleBroadcastReceiver(context, UI_HELPER_EXECUTOR,
+                        (unused) -> requestUpdateProperties());
         mContextualSearchPackage = mContext.getResources().getString(
                 com.android.internal.R.string.config_defaultContextualSearchPackageName);
         mSystemUiProxy = systemUiProxy;
@@ -112,7 +114,7 @@ public class ContextualSearchStateManager  {
         requestUpdateProperties();
         registerSearchScreenSystemAction();
         mContextualSearchPackageReceiver.registerPkgActions(
-                context, mContextualSearchPackage, Intent.ACTION_PACKAGE_ADDED,
+                mContextualSearchPackage, Intent.ACTION_PACKAGE_ADDED,
                 Intent.ACTION_PACKAGE_CHANGED, Intent.ACTION_PACKAGE_REMOVED);
 
         SettingsCache.OnChangeListener settingChangedListener =
@@ -124,7 +126,7 @@ public class ContextualSearchStateManager  {
         systemUiProxy.addOnStateChangeListener(mSysUiStateChangeListener);
 
         lifeCycle.addCloseable(() -> {
-            mContextualSearchPackageReceiver.unregisterReceiverSafely(mContext);
+            mContextualSearchPackageReceiver.unregisterReceiverSafely();
             unregisterSearchScreenSystemAction();
             settingsCache.unregister(SEARCH_ALL_ENTRYPOINTS_ENABLED_URI, settingChangedListener);
             systemUiProxy.removeOnStateChangeListener(mSysUiStateChangeListener);

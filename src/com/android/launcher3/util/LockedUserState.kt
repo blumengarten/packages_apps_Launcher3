@@ -44,7 +44,7 @@ constructor(@ApplicationContext private val context: Context, lifeCycle: DaggerS
 
     @VisibleForTesting
     val userUnlockedReceiver =
-        SimpleBroadcastReceiver(UI_HELPER_EXECUTOR) {
+        SimpleBroadcastReceiver(context, UI_HELPER_EXECUTOR) {
             if (Intent.ACTION_USER_UNLOCKED == it.action) {
                 isUserUnlocked = true
             }
@@ -61,7 +61,6 @@ constructor(@ApplicationContext private val context: Context, lifeCycle: DaggerS
         isUserUnlockedAtLauncherStartup = isUserUnlocked
         if (!isUserUnlocked) {
             userUnlockedReceiver.register(
-                context,
                 {
                     // If user is unlocked while registering broadcast receiver, we should update
                     // [isUserUnlocked], which will call [notifyUserUnlocked] in setter
@@ -72,7 +71,7 @@ constructor(@ApplicationContext private val context: Context, lifeCycle: DaggerS
                 Intent.ACTION_USER_UNLOCKED,
             )
         }
-        lifeCycle.addCloseable { userUnlockedReceiver.unregisterReceiverSafely(context) }
+        lifeCycle.addCloseable { userUnlockedReceiver.unregisterReceiverSafely() }
     }
 
     private fun checkIsUserUnlocked() =
@@ -80,7 +79,7 @@ constructor(@ApplicationContext private val context: Context, lifeCycle: DaggerS
 
     private fun notifyUserUnlocked() {
         mUserUnlockedActions.executeAllAndDestroy()
-        userUnlockedReceiver.unregisterReceiverSafely(context)
+        userUnlockedReceiver.unregisterReceiverSafely()
     }
 
     /**
