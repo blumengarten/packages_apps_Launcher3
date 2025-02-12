@@ -109,7 +109,7 @@ public class WindowManagerProxy {
     /**
      * Returns if we are in desktop mode or not.
      */
-    public boolean isInDesktopMode() {
+    public boolean isInDesktopMode(int displayId) {
         return false;
     }
 

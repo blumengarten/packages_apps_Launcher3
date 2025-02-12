@@ -217,7 +217,7 @@ public class TaskbarPopupController implements TaskbarControllers.LoggableTaskba
         }
         shortcuts.add(APP_INFO);
         if (!mControllers.taskbarDesktopModeController
-                .getAreDesktopTasksVisibleAndNotInOverview()) {
+                .isInDesktopModeAndNotInOverview(mContext.getDisplayId())) {
             shortcuts.addAll(mControllers.uiController.getSplitMenuOptions().toList());
         }
         if (BubbleAnythingFlagHelper.enableCreateAnyBubble()) {
