@@ -16,16 +16,7 @@
 
 package com.android.launcher3.dagger
 
-import android.content.Context
-import android.view.Display.DEFAULT_DISPLAY
-import com.android.launcher3.LauncherPrefs
-import com.android.launcher3.util.DaggerSingletonTracker
-import com.android.launcher3.util.DisplayController
-import com.android.launcher3.util.PerDisplayObjectProvider
-import com.android.launcher3.util.window.WindowManagerProxy
-import dagger.Binds
 import dagger.Module
-import javax.inject.Inject
 
 private object Modules {}
 
@@ -36,31 +27,6 @@ private object Modules {}
 @Module abstract class PluginManagerWrapperModule {}
 
 @Module object StaticObjectModule {}
-
-@LauncherAppSingleton
-class DefaultPerDisplayObjectProvider
-@Inject
-constructor(
-    @ApplicationContext context: Context,
-    wmProxy: WindowManagerProxy,
-    launcherPrefs: LauncherPrefs,
-    lifecycleTracker: DaggerSingletonTracker,
-) : PerDisplayObjectProvider {
-    val displayController =
-        DisplayController(context, wmProxy, launcherPrefs, lifecycleTracker, DEFAULT_DISPLAY)
-
-    override fun getDisplayController(displayId: Int): DisplayController {
-        return displayController
-    }
-}
-
-@Module
-abstract class PerDisplayObjectProviderModule {
-    @Binds
-    abstract fun bindPerDisplayObjectProvider(
-        impl: DefaultPerDisplayObjectProvider
-    ): PerDisplayObjectProvider
-}
 
 // Module containing bindings for the final derivative app
 @Module abstract class AppModule {}

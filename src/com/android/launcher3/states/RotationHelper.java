@@ -189,7 +189,7 @@ public class RotationHelper implements LauncherPrefChangeListener,
     public void initialize() {
         if (mInitialized) return;
         mInitialized = true;
-        DisplayController displayController = DisplayController.get(mActivity);
+        DisplayController displayController = DisplayController.INSTANCE.get(mActivity);
         DisplayController.Info info = displayController.getInfo();
         setIgnoreAutoRotateSettings(info.isTablet(info.realBounds));
         displayController.addChangeListener(this);
@@ -201,7 +201,7 @@ public class RotationHelper implements LauncherPrefChangeListener,
         if (mDestroyed) return;
         mDestroyed = true;
         mActivity.removeOnDeviceProfileChangeListener(this);
-        DisplayController.get(mActivity).removeChangeListener(this);
+        DisplayController.INSTANCE.get(mActivity).removeChangeListener(this);
         LauncherPrefs.get(mActivity).removeListener(this, ALLOW_ROTATION);
     }
 

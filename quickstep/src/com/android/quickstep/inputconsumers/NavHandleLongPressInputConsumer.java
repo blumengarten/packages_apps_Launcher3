@@ -73,7 +73,7 @@ public class NavHandleLongPressInputConsumer extends DelegateInputConsumer {
             InputMonitorCompat inputMonitor, RecentsAnimationDeviceState deviceState,
             NavHandle navHandle, GestureState gestureState) {
         super(delegate, inputMonitor);
-        mScreenWidth = DisplayController.get(context).getInfo().currentSize.x;
+        mScreenWidth = DisplayController.INSTANCE.get(context).getInfo().currentSize.x;
         mDeepPressEnabled = DeviceConfigWrapper.get().getEnableLpnhDeepPress();
         ContextualSearchStateManager contextualSearchStateManager =
                 ContextualSearchStateManager.INSTANCE.get(context);

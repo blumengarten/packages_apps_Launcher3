@@ -17,8 +17,6 @@
 
 package com.android.quickstep;
 
-import static android.view.Display.DEFAULT_DISPLAY;
-
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 
 import static com.android.launcher3.util.NavigationMode.NO_BUTTON;
@@ -47,7 +45,6 @@ import androidx.test.filters.SmallTest;
 import com.android.launcher3.testing.shared.ResourceUtils;
 import com.android.launcher3.util.DaggerSingletonTracker;
 import com.android.launcher3.util.DisplayController;
-import com.android.launcher3.util.PerDisplayObjectProvider;
 import com.android.launcher3.util.RotationUtils;
 import com.android.launcher3.util.WindowBounds;
 import com.android.launcher3.util.window.CachedDisplayInfo;
@@ -303,14 +300,9 @@ public class OrientationTouchTransformerTest {
     @Test
     public void testSimpleOrientationTouchTransformer() {
         final DisplayController displayController = mock(DisplayController.class);
-        final PerDisplayObjectProvider displayControllerProvider = mock(
-                PerDisplayObjectProvider.class);
-        doReturn(displayController).when(displayControllerProvider).getDisplayController(
-                DEFAULT_DISPLAY);
         doReturn(mInfo).when(displayController).getInfo();
         final SimpleOrientationTouchTransformer transformer =
-                new SimpleOrientationTouchTransformer(getApplicationContext(),
-                        displayControllerProvider,
+                new SimpleOrientationTouchTransformer(getApplicationContext(), displayController,
                         mock(DaggerSingletonTracker.class));
         final MotionEvent move1 = generateMotionEvent(MotionEvent.ACTION_MOVE, 100, 10);
         transformer.transform(move1, Surface.ROTATION_90);
