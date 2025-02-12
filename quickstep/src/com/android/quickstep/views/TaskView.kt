@@ -1220,6 +1220,7 @@ constructor(
                 recentsView.stateManager,
                 recentsView,
                 recentsView.depthController,
+                /* transitionInfo= */ null,
             )
             addListener(
                 object : AnimatorListenerAdapter() {

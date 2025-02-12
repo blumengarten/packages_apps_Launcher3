@@ -50,6 +50,7 @@ import android.view.RemoteAnimationTarget;
 import android.view.Surface;
 import android.view.SurfaceControl;
 import android.view.SurfaceControl.Transaction;
+import android.window.TransitionInfo;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -172,14 +173,15 @@ public class FallbackSwipeHandler extends
     }
 
     @Override
-    public void onTasksAppeared(@NonNull RemoteAnimationTarget[] appearedTaskTargets) {
+    public void onTasksAppeared(@NonNull RemoteAnimationTarget[] appearedTaskTargets,
+            @Nullable TransitionInfo transitionInfo) {
         if (mActiveAnimationFactory != null && mActiveAnimationFactory.handleHomeTaskAppeared(
                 appearedTaskTargets)) {
             mActiveAnimationFactory = null;
             return;
         }
 
-        super.onTasksAppeared(appearedTaskTargets);
+        super.onTasksAppeared(appearedTaskTargets, transitionInfo);
     }
 
     @Override

@@ -1218,8 +1218,12 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
         override fun onAnimationCanceled(taskIds: IntArray?, taskSnapshots: Array<TaskSnapshot>?) =
             listener.onAnimationCanceled(wrap(taskIds, taskSnapshots))
 
-        override fun onTasksAppeared(apps: Array<RemoteAnimationTarget>?) =
-            listener.onTasksAppeared(apps)
+        override fun onTasksAppeared(
+            apps: Array<RemoteAnimationTarget>?,
+            transitionInfo: TransitionInfo?,
+        ) {
+            listener.onTasksAppeared(apps, transitionInfo)
+        }
     }
 
     //
