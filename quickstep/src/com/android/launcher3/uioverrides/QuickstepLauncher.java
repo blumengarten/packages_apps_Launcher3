@@ -86,7 +86,6 @@ import android.os.SystemProperties;
 import android.os.Trace;
 import android.os.UserHandle;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Display;
 import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
@@ -247,7 +246,6 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     private SplitWithKeyboardShortcutController mSplitWithKeyboardShortcutController;
     private SplitToWorkspaceController mSplitToWorkspaceController;
     private BubbleBarLocation mBubbleBarLocation;
-    private static final String TRACKING_BUG = "b/395214062";
 
     /**
      * If Launcher restarted while in the middle of an Overview split select, it needs this data to
@@ -563,7 +561,6 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
     @Override
     public void onDestroy() {
-        Log.d(TRACKING_BUG, "onDestroy: " + this.hashCode());
         if (mAppTransitionManager != null) {
             mAppTransitionManager.onActivityDestroyed();
         }
@@ -589,10 +586,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
         RecentsView recentsView = getOverviewPanel();
         if (recentsView != null) {
-            Log.d(TRACKING_BUG, "onDestroy - recentsView.destroy(): " + this.hashCode());
             recentsView.destroy();
-        } else {
-            Log.d(TRACKING_BUG, "onDestroy - recentsView is null: " + this.hashCode());
         }
 
         super.onDestroy();
@@ -719,7 +713,6 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TRACKING_BUG, "onCreate: " + this.hashCode());
         if (savedInstanceState != null) {
             mPendingSplitSelectInfo = ObjectWrapper.unwrap(
                     savedInstanceState.getIBinder(PENDING_SPLIT_SELECT_INFO));
@@ -832,7 +825,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(TRACKING_BUG, "onResume: " + this.hashCode());
+
         if (mLauncherUnfoldAnimationController != null) {
             mLauncherUnfoldAnimationController.onResume();
         }
@@ -867,7 +860,6 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d(TRACKING_BUG, "onStop: " + this.hashCode());
         if (mTaskbarUIController != null && FeatureFlags.enableHomeTransitionListener()) {
             mTaskbarUIController.onLauncherStop();
         }

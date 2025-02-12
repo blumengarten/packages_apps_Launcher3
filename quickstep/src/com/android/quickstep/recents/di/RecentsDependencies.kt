@@ -237,7 +237,7 @@ class RecentsDependencies private constructor(private val appContext: Context) {
         fun initialize(view: View): RecentsDependencies = initialize(view.context)
 
         fun initialize(context: Context): RecentsDependencies {
-            Log.d(TAG, "initializing: $activeRecentsCount + 1 more")
+            Log.d(TAG, "initializing")
             synchronized(this) {
                 activeRecentsCount++
                 instance = RecentsDependencies(context.applicationContext)
@@ -277,7 +277,7 @@ class RecentsDependencies private constructor(private val appContext: Context) {
                 Log.d(
                     TAG,
                     "RecentsDependencies was not destroyed. " +
-                        "There is still an active RecentsView instance: $activeRecentsCount",
+                        "There is still an active RecentsView instance.",
                 )
             }
         }
