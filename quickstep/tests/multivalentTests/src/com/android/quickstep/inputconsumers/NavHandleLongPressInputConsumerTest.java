@@ -433,7 +433,7 @@ public class NavHandleLongPressInputConsumerTest {
                 DaggerNavHandleLongPressInputConsumerTest_TopTaskTrackerComponent
                         .builder()
                         .bindTopTaskTracker(mTopTaskTracker));
-        mScreenWidth = DisplayController.INSTANCE.get(mContext).getInfo().currentSize.x;
+        mScreenWidth = DisplayController.get(mContext).getInfo().currentSize.x;
         mUnderTest = new NavHandleLongPressInputConsumer(mContext, mDelegate, mInputMonitor,
                 mDeviceState, mNavHandle, mGestureState);
         mUnderTest.setNavHandleLongPressHandler(mNavHandleLongPressHandler);

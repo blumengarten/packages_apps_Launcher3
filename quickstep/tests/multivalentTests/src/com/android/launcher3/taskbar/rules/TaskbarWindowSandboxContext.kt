@@ -26,11 +26,12 @@ import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppComponent
 import com.android.launcher3.dagger.LauncherAppSingleton
-import com.android.launcher3.util.AllModulesForTest
+import com.android.launcher3.util.AllModulesMinusPerDisplayObjectProvider
 import com.android.launcher3.util.DaggerSingletonTracker
 import com.android.launcher3.util.DisplayController
 import com.android.launcher3.util.FakePrefsModule
 import com.android.launcher3.util.MainThreadInitializedObject.ObjectSandbox
+import com.android.launcher3.util.PerDisplayObjectProvider
 import com.android.launcher3.util.SandboxApplication
 import com.android.launcher3.util.SettingsCache
 import com.android.launcher3.util.SettingsCacheSandbox
@@ -131,14 +132,31 @@ constructor(
     override fun getInfo(): Info = infoModifier?.invoke(super.getInfo()) ?: super.getInfo()
 }
 
+@LauncherAppSingleton
+class PerDisplayObjectProviderImpl
+@Inject
+constructor(private val displayController: DisplayControllerSpy) : PerDisplayObjectProvider {
+    override fun getDisplayController(displayId: Int): DisplayController {
+        return displayController
+    }
+}
+
 @Module
-abstract class DisplayControllerModule {
-    @Binds abstract fun bindDisplayController(controller: DisplayControllerSpy): DisplayController
+abstract class PerDisplayObjectProviderModule {
+    @Binds
+    abstract fun bindPerDisplayObjectProvider(
+        impl: PerDisplayObjectProviderImpl
+    ): PerDisplayObjectProvider
 }
 
 @LauncherAppSingleton
 @Component(
-    modules = [AllModulesForTest::class, FakePrefsModule::class, DisplayControllerModule::class]
+    modules =
+        [
+            AllModulesMinusPerDisplayObjectProvider::class,
+            FakePrefsModule::class,
+            PerDisplayObjectProviderModule::class,
+        ]
 )
 interface TaskbarSandboxComponent : LauncherAppComponent {
 

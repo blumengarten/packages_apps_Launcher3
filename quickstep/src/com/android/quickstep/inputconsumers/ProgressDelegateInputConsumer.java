@@ -99,7 +99,7 @@ public class ProgressDelegateInputConsumer implements InputConsumer,
         mProgress = progress;
 
         // Do not use DeviceProfile as the user data might be locked
-        mDisplaySize = DisplayController.INSTANCE.get(context).getInfo().currentSize;
+        mDisplaySize = DisplayController.get(context).getInfo().currentSize;
 
         // Init states
         mStateCallback = new MultiStateCallback(STATE_NAMES);

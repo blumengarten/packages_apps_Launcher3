@@ -247,7 +247,7 @@ public class StatsLogCompatManager extends StatsLogManager {
         StatsCompatLogger(Context context, ActivityContext activityContext) {
             mContext = context;
             mActivityContext = Optional.ofNullable(activityContext);
-            mDisplayRotation = DisplayController.INSTANCE.get(mContext).getInfo().rotation;
+            mDisplayRotation = DisplayController.get(mContext).getInfo().rotation;
         }
 
         @Override

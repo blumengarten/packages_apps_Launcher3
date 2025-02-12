@@ -16,6 +16,8 @@
 
 package com.android.quickstep.logging;
 
+import static android.view.Display.DEFAULT_DISPLAY;
+
 import static com.android.launcher3.LauncherPrefs.getDevicePrefs;
 import static com.android.launcher3.LauncherPrefs.getPrefs;
 import static com.android.launcher3.graphics.ThemeManager.KEY_THEMED_ICONS;
@@ -54,6 +56,7 @@ import com.android.launcher3.util.DaggerSingletonTracker;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.DisplayController.Info;
 import com.android.launcher3.util.NavigationMode;
+import com.android.launcher3.util.PerDisplayObjectProvider;
 import com.android.launcher3.util.SettingsCache;
 import com.android.quickstep.dagger.QuickstepBaseAppComponent;
 
@@ -94,9 +97,10 @@ public class SettingsChangeLogger implements
     @Inject
     SettingsChangeLogger(@ApplicationContext Context context,
             DaggerSingletonTracker tracker,
-            DisplayController displayController,
+            PerDisplayObjectProvider displayControllerProvider,
             SettingsCache settingsCache) {
-        this(context, StatsLogManager.newInstance(context), tracker, displayController,
+        this(context, StatsLogManager.newInstance(context), tracker,
+                displayControllerProvider.getDisplayController(DEFAULT_DISPLAY),
                 settingsCache);
     }
 

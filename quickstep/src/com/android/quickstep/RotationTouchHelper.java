@@ -43,6 +43,7 @@ import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.DisplayController.DisplayInfoChangeListener;
 import com.android.launcher3.util.DisplayController.Info;
 import com.android.launcher3.util.NavigationMode;
+import com.android.launcher3.util.PerDisplayObjectProvider;
 import com.android.quickstep.util.RecentsOrientedState;
 import com.android.systemui.shared.Flags;
 import com.android.systemui.shared.system.QuickStepContract;
@@ -136,11 +137,11 @@ public class RotationTouchHelper implements DisplayInfoChangeListener {
 
     @Inject
     RotationTouchHelper(@ApplicationContext Context context,
-            DisplayController displayController,
+            PerDisplayObjectProvider displayControllerProvider,
             SystemUiProxy systemUiProxy,
             DaggerSingletonTracker lifeCycle) {
         mContext = context;
-        mDisplayController = displayController;
+        mDisplayController = displayControllerProvider.getDisplayController(DEFAULT_DISPLAY);
         mSystemUiProxy = systemUiProxy;
         mDisplayId = DEFAULT_DISPLAY;
 

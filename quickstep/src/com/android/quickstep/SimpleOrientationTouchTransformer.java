@@ -15,6 +15,8 @@
  */
 package com.android.quickstep;
 
+import static android.view.Display.DEFAULT_DISPLAY;
+
 import static com.android.launcher3.util.DisplayController.CHANGE_ACTIVE_SCREEN;
 import static com.android.launcher3.util.DisplayController.CHANGE_ALL;
 import static com.android.launcher3.util.DisplayController.CHANGE_ROTATION;
@@ -27,6 +29,7 @@ import com.android.launcher3.dagger.LauncherAppSingleton;
 import com.android.launcher3.util.DaggerSingletonObject;
 import com.android.launcher3.util.DaggerSingletonTracker;
 import com.android.launcher3.util.DisplayController;
+import com.android.launcher3.util.PerDisplayObjectProvider;
 import com.android.quickstep.dagger.QuickstepBaseAppComponent;
 
 import javax.inject.Inject;
@@ -45,8 +48,10 @@ public class SimpleOrientationTouchTransformer implements
 
     @Inject
     public SimpleOrientationTouchTransformer(@ApplicationContext Context context,
-            DisplayController displayController,
+            PerDisplayObjectProvider displayControllerProvider,
             DaggerSingletonTracker tracker) {
+        DisplayController displayController = displayControllerProvider.getDisplayController(
+                DEFAULT_DISPLAY);
         displayController.addChangeListener(this);
         tracker.addCloseable(() -> displayController.removeChangeListener(this));
 

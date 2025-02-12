@@ -16,6 +16,8 @@
 
 package com.android.launcher3;
 
+import static android.view.Display.DEFAULT_DISPLAY;
+
 import static com.android.launcher3.LauncherPrefs.DB_FILE;
 import static com.android.launcher3.LauncherPrefs.ENABLE_TWOLINE_ALLAPPS_TOGGLE;
 import static com.android.launcher3.LauncherPrefs.FIXED_LANDSCAPE_MODE;
@@ -256,7 +258,7 @@ public class InvariantDeviceProfile implements SafeCloseable {
         String gridName = getCurrentGridName(context);
         initGrid(context, gridName);
 
-        DisplayController dc = DisplayController.INSTANCE.get(context);
+        DisplayController dc = DisplayController.get(context, DEFAULT_DISPLAY);
         dc.setPriorityListener(
                 (displayContext, info, flags) -> {
                     if ((flags & (CHANGE_DENSITY | CHANGE_SUPPORTED_BOUNDS
@@ -315,7 +317,7 @@ public class InvariantDeviceProfile implements SafeCloseable {
         String gridName = getCurrentGridName(context);
 
         // Get the display info based on default display and interpolate it to existing display
-        Info defaultInfo = DisplayController.INSTANCE.get(context).getInfo();
+        Info defaultInfo = DisplayController.get(context, display.getDisplayId()).getInfo();
         @DeviceType int defaultDeviceType = defaultInfo.getDeviceType();
         DisplayOption defaultDisplayOption = invDistWeightedInterpolate(
                 defaultInfo,
@@ -374,7 +376,7 @@ public class InvariantDeviceProfile implements SafeCloseable {
                 + ", dbFile:" + dbFile
                 + ", LauncherPrefs GRID_NAME:" + LauncherPrefs.get(context).get(GRID_NAME)
                 + ", LauncherPrefs DB_FILE:" + LauncherPrefs.get(context).get(DB_FILE));
-        Info displayInfo = DisplayController.INSTANCE.get(context).getInfo();
+        Info displayInfo = DisplayController.get(context).getInfo();
         List<DisplayOption> allOptions = getPredefinedDeviceProfiles(
                 context,
                 gridName,

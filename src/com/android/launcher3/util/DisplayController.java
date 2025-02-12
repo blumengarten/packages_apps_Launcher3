@@ -16,6 +16,7 @@
 package com.android.launcher3.util;
 
 import static android.view.Display.DEFAULT_DISPLAY;
+import static android.view.Display.INVALID_DISPLAY;
 import static android.view.WindowManager.LayoutParams.TYPE_APPLICATION;
 
 import static com.android.launcher3.InvariantDeviceProfile.TYPE_MULTI_DISPLAY;
@@ -55,7 +56,6 @@ import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.dagger.ApplicationContext;
 import com.android.launcher3.dagger.LauncherAppComponent;
-import com.android.launcher3.dagger.LauncherAppSingleton;
 import com.android.launcher3.logging.FileLog;
 import com.android.launcher3.util.window.CachedDisplayInfo;
 import com.android.launcher3.util.window.WindowManagerProxy;
@@ -71,13 +71,10 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.inject.Inject;
-
 /**
  * Utility class to cache properties of default display to avoid a system RPC on every call.
  */
 @SuppressLint("NewApi")
-@LauncherAppSingleton
 public class DisplayController implements ComponentCallbacks,
         DesktopVisibilityListener {
 
@@ -89,8 +86,8 @@ public class DisplayController implements ComponentCallbacks,
     // TODO(b/254119092) remove all logs with this tag
     public static final String TASKBAR_NOT_DESTROYED_TAG = "b/254119092";
 
-    public static final DaggerSingletonObject<DisplayController> INSTANCE =
-            new DaggerSingletonObject<>(LauncherAppComponent::getDisplayController);
+    public static final DaggerSingletonObject<PerDisplayObjectProvider> PROVIDER =
+            new DaggerSingletonObject<>(LauncherAppComponent::getPerDisplayObjectProvider);
 
     public static final int CHANGE_ACTIVE_SCREEN = 1 << 0;
     public static final int CHANGE_ROTATION = 1 << 1;
@@ -125,14 +122,54 @@ public class DisplayController implements ComponentCallbacks,
 
     private Info mInfo;
     private boolean mDestroyed = false;
+    private final int mDisplayId;
 
-    @Inject
-    protected DisplayController(@ApplicationContext Context context,
+    /**
+     * Get a DisplayController associated with the given Context.
+     * @param context the context (must return a valid display id)
+     * @return the DisplayController instance associated with the display id of the context
+     */
+    public static DisplayController get(Context context) {
+        int displayId = DEFAULT_DISPLAY;
+        if (context != null) {
+            try {
+                displayId = context.getDisplay().getDisplayId();
+            } catch (UnsupportedOperationException ignored) {
+                Log.w(TAG, "DisplayController access from non-display context");
+            }
+        }
+        if (displayId == INVALID_DISPLAY) {
+            displayId = DEFAULT_DISPLAY;
+        }
+        return PROVIDER.get(context).getDisplayController(displayId);
+    }
+
+    /**
+     * Get a DisplayController associated with the given display id.
+     * @param context a context
+     * @param displayId a display id
+     * @return the DisplayController instance associated with the given display id
+     */
+    public static DisplayController get(Context context, int displayId) {
+        return PROVIDER.get(context).getDisplayController(displayId);
+    }
+
+    @VisibleForTesting
+    public DisplayController(@ApplicationContext Context context,
             WindowManagerProxy wmProxy,
             LauncherPrefs prefs,
             DaggerSingletonTracker lifecycle) {
+        this(context, wmProxy, prefs, lifecycle, DEFAULT_DISPLAY);
+    }
+
+    public DisplayController(@ApplicationContext Context context,
+            WindowManagerProxy wmProxy,
+            LauncherPrefs prefs,
+            DaggerSingletonTracker lifecycle,
+            int displayId) {
         mContext = context;
         mWMProxy = wmProxy;
+        mDisplayId = displayId;
 
         if (enableTaskbarPinning()) {
             LauncherPrefChangeListener prefListener = key -> {
@@ -150,11 +187,17 @@ public class DisplayController implements ComponentCallbacks,
             prefs.addListener(prefListener, TASKBAR_PINNING);
             prefs.addListener(prefListener, TASKBAR_PINNING_IN_DESKTOP_MODE);
             lifecycle.addCloseable(() -> prefs.removeListener(
-                        prefListener, TASKBAR_PINNING, TASKBAR_PINNING_IN_DESKTOP_MODE));
+                    prefListener, TASKBAR_PINNING, TASKBAR_PINNING_IN_DESKTOP_MODE));
         }
 
         Display display = context.getSystemService(DisplayManager.class)
-                .getDisplay(DEFAULT_DISPLAY);
+                .getDisplay(displayId);
+        if (display == null) {
+            // Race when a display is rapidly added then removed.
+            mWindowContext = null;
+            mInfo = null;
+            return;
+        }
         mWindowContext = mContext.createWindowContext(display, TYPE_APPLICATION, null);
         mWindowContext.registerComponentCallbacks(this);
 
@@ -174,20 +217,25 @@ public class DisplayController implements ComponentCallbacks,
         });
     }
 
-    /**
-     * Returns the current navigation mode
-     */
-    public static NavigationMode getNavigationMode(Context context) {
-        return INSTANCE.get(context).getInfo().getNavigationMode();
+    public int getDisplayId() {
+        return mDisplayId;
     }
 
     /**
-     * Returns whether taskbar is transient or persistent.
+     * Returns the current navigation mode for the display associated with the given Context.
+     */
+    public static NavigationMode getNavigationMode(Context context) {
+        return get(context).getInfo().getNavigationMode();
+    }
+
+    /**
+     * Returns whether taskbar is transient or persistent  for the display associated with the given
+     * Context.
      *
      * @return {@code true} if transient, {@code false} if persistent.
      */
     public static boolean isTransientTaskbar(Context context) {
-        return INSTANCE.get(context).getInfo().isTransientTaskbar();
+        return get(context).getInfo().isTransientTaskbar();
     }
 
     /**
@@ -207,25 +255,27 @@ public class DisplayController implements ComponentCallbacks,
     }
 
     /**
-     * Returns whether the taskbar is pinned in gesture navigation mode.
+     * Returns whether the taskbar is pinned in gesture navigation mode for the display associated
+     * with the given Context.
      */
     public static boolean isPinnedTaskbar(Context context) {
-        return INSTANCE.get(context).getInfo().isPinnedTaskbar();
+        return get(context).getInfo().isPinnedTaskbar();
     }
 
     /**
-     * Returns whether the taskbar is forced to be pinned when home is visible.
+     * Returns whether the taskbar is forced to be pinned when home is visible for the display
+     * associated with the given Context.
      */
     public static boolean showLockedTaskbarOnHome(Context context) {
-        return INSTANCE.get(context).getInfo().showLockedTaskbarOnHome();
+        return get(context).getInfo().showLockedTaskbarOnHome();
     }
 
     /**
      * Returns whether desktop taskbar (pinned taskbar that shows desktop tasks) is to be used
-     * on the display because the display is a freeform display.
+     * on the display associated with the given Context because the display is a freeform display.
      */
     public static boolean showDesktopTaskbarForFreeformDisplay(Context context) {
-        return INSTANCE.get(context).getInfo().showDesktopTaskbarForFreeformDisplay();
+        return get(context).getInfo().showDesktopTaskbarForFreeformDisplay();
     }
 
     @Override
@@ -261,6 +311,7 @@ public class DisplayController implements ComponentCallbacks,
     @Override
     public final void onConfigurationChanged(Configuration config) {
         Log.d(TASKBAR_NOT_DESTROYED_TAG, "DisplayController#onConfigurationChanged: " + config);
+        if (mWindowContext == null || mInfo == null) return;
         if (config.densityDpi != mInfo.densityDpi
                 || config.fontScale != mInfo.fontScale
                 || !mInfo.mScreenSizeDp.equals(
@@ -295,6 +346,7 @@ public class DisplayController implements ComponentCallbacks,
 
     @AnyThread
     public void notifyConfigChange() {
+        if (mWindowContext == null || mInfo == null) return;
         Info oldInfo = mInfo;
 
         Context displayInfoContext = mWindowContext;
@@ -348,6 +400,7 @@ public class DisplayController implements ComponentCallbacks,
     }
 
     private void notifyChange(Context context, int flags) {
+        if (mInfo == null) return;
         if (mPriorityListener != null) {
             mPriorityListener.onDisplayInfoChanged(context, mInfo, flags);
         }
@@ -582,6 +635,7 @@ public class DisplayController implements ComponentCallbacks,
      * Dumps the current state information
      */
     public void dump(PrintWriter pw) {
+        if (mInfo == null) return;
         Info info = mInfo;
         pw.println("DisplayController.Info:");
         pw.println("  normalizedDisplayInfo=" + info.normalizedDisplayInfo);

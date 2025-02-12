@@ -64,7 +64,7 @@ class SettingsChangeLoggerTest {
 
     @Mock private lateinit var mMockLogger: StatsLogManager.StatsLogger
     @Mock private lateinit var mTracker: DaggerSingletonTracker
-    private var displayController: DisplayController = DisplayController.INSTANCE.get(mContext)
+    private var displayController: DisplayController = DisplayController.get(mContext)
     private var settingsCache: SettingsCache = SettingsCache.INSTANCE.get(mContext)
 
     @Captor private lateinit var mEventCaptor: ArgumentCaptor<StatsLogManager.EventEnum>
