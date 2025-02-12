@@ -335,8 +335,6 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
                 .setStartVelocity(if (detector.isFling(velocity)) velocity else 0f)
                 .addUpdateListener { animation, value, _ ->
                     if (isDismissing && abs(value) >= abs(dismissLength)) {
-                        // TODO(b/393553524): Remove 0 alpha, instead animate task fully off screen.
-                        draggedTaskView.alpha = 0f
                         animation.cancel()
                     } else if (draggedTaskView.isRunningTask && recentsView.enableDrawingLiveTile) {
                         recentsView.runActionOnRemoteHandles { remoteTargetHandle ->

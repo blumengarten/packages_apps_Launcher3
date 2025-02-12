@@ -16,6 +16,7 @@
 package com.android.launcher3.uioverrides.touchcontrollers
 
 import android.content.Context
+import android.graphics.Rect
 import android.view.MotionEvent
 import androidx.dynamicanimation.animation.SpringAnimation
 import com.android.app.animation.Interpolators.DECELERATE
@@ -50,6 +51,7 @@ CONTAINER : RecentsViewContainer {
             recentsView.pagedOrientationHandler.upDownSwipeDirection,
         )
     private val isRtl = isRtl(container.resources)
+    private val tempTaskThumbnailBounds = Rect()
 
     private var taskBeingDragged: TaskView? = null
     private var springAnimation: SpringAnimation? = null
@@ -108,7 +110,9 @@ CONTAINER : RecentsViewContainer {
                     recentsView.isTaskViewVisible(it) && container.dragLayer.isEventOverView(it, ev)
                 }
                 ?.also {
-                    dismissLength = recentsView.pagedOrientationHandler.getSecondaryDimension(it)
+                    // Dismiss length as bottom of task so it is fully off screen when dismissed.
+                    it.getThumbnailBounds(tempTaskThumbnailBounds, relativeToDragLayer = true)
+                    dismissLength = tempTaskThumbnailBounds.bottom
                     verticalFactor =
                         recentsView.pagedOrientationHandler.secondaryTranslationDirectionFactor
                 }
