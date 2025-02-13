@@ -18,6 +18,7 @@ package com.android.quickstep.task.thumbnail
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Matrix
 import android.graphics.Outline
 import android.graphics.Rect
 import android.graphics.drawable.ShapeDrawable
@@ -34,34 +35,15 @@ import com.android.launcher3.LauncherAnimUtils.VIEW_ALPHA
 import com.android.launcher3.R
 import com.android.launcher3.util.MultiPropertyFactory
 import com.android.launcher3.util.ViewPool
-import com.android.launcher3.util.coroutines.DispatcherProvider
-import com.android.quickstep.recents.di.RecentsDependencies
-import com.android.quickstep.recents.di.get
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.BackgroundOnly
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.LiveTile
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.Snapshot
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.SnapshotSplash
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.Uninitialized
-import com.android.quickstep.task.viewmodel.TaskThumbnailViewModel
 import com.android.quickstep.views.FixedSizeImageView
 import com.android.quickstep.views.TaskThumbnailViewHeader
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 
 class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
-    private val recentsCoroutineScope: CoroutineScope = RecentsDependencies.get()
-    private val dispatcherProvider: DispatcherProvider = RecentsDependencies.get()
-
-    // This is initialised here and set in onAttachedToWindow because onLayout can be called before
-    // onAttachedToWindow so this property needs to be initialised as it is used below.
-    private lateinit var viewModel: TaskThumbnailViewModel
-
-    private lateinit var viewAttachedScope: CoroutineScope
-
     private val scrimView: View by lazy { findViewById(R.id.task_thumbnail_scrim) }
     private val liveTileView: LiveTileView by lazy { findViewById(R.id.task_thumbnail_live_tile) }
     private val thumbnailView: FixedSizeImageView by lazy { findViewById(R.id.task_thumbnail) }
@@ -70,6 +52,7 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
     private val dimAlpha: MultiPropertyFactory<View> by lazy {
         MultiPropertyFactory(scrimView, VIEW_ALPHA, ScrimViewAlpha.entries.size, ::maxOf)
     }
+    private var onSizeChanged: ((width: Int, height: Int) -> Unit)? = null
 
     private var taskThumbnailViewHeader: TaskThumbnailViewHeader? = null
 
@@ -104,17 +87,11 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
 
     override fun onFinishInflate() {
         super.onFinishInflate()
-
         maybeCreateHeader()
     }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        viewAttachedScope =
-            CoroutineScope(
-                SupervisorJob() + Dispatchers.Main.immediate + CoroutineName("TaskThumbnailView")
-            )
-        viewModel = RecentsDependencies.get(this)
         clipToOutline = true
         outlineProvider =
             object : ViewOutlineProvider() {
@@ -124,16 +101,9 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
             }
     }
 
-    // TODO(b/391842220): Cancel scope in onDetach instead of having a specific method for this.
-    fun destroyScopes() {
-        val scopeToCancel = viewAttachedScope
-        recentsCoroutineScope.launch(dispatcherProvider.background) {
-            scopeToCancel.cancel("TaskThumbnailView detaching from window")
-        }
-    }
-
     override fun onRecycle() {
         uiState = Uninitialized
+        onSizeChanged = null
         outlineBounds = null
         resetViews()
     }
@@ -170,11 +140,13 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
         splashIcon.alpha = value
     }
 
+    fun doOnSizeChange(action: (width: Int, height: Int) -> Unit) {
+        onSizeChanged = action
+    }
+
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        if (uiState is SnapshotSplash) {
-            setImageMatrix()
-        }
+        onSizeChanged?.invoke(width, height)
         bounds.set(0, 0, w, h)
         invalidateOutline()
     }
@@ -231,11 +203,12 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
         drawBackground(snapshot.backgroundColor)
         thumbnailView.setImageBitmap(snapshot.bitmap)
         thumbnailView.isInvisible = false
-        setImageMatrix()
     }
 
-    private fun setImageMatrix() {
-        thumbnailView.imageMatrix = viewModel.getThumbnailPositionState(width, height, isLayoutRtl)
+    fun setImageMatrix(matrix: Matrix) {
+        if (uiState is SnapshotSplash) {
+            thumbnailView.imageMatrix = matrix
+        }
     }
 
     private fun logDebug(message: String) {

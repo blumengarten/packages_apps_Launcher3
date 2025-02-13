@@ -29,6 +29,7 @@ import com.android.quickstep.recents.data.FakeRecentsRotationStateRepository
 import com.android.quickstep.recents.domain.model.TaskModel
 import com.android.quickstep.recents.domain.usecase.GetSysUiStatusNavFlagsUseCase
 import com.android.quickstep.recents.domain.usecase.GetTaskUseCase
+import com.android.quickstep.recents.domain.usecase.GetThumbnailPositionUseCase
 import com.android.quickstep.recents.domain.usecase.IsThumbnailValidUseCase
 import com.android.quickstep.recents.viewmodel.RecentsViewData
 import com.android.quickstep.views.TaskViewType
@@ -58,6 +59,7 @@ class TaskViewModelTest {
 
     private val recentsViewData = RecentsViewData()
     private val getTaskUseCase = mock<GetTaskUseCase>()
+    private val getThumbnailPositionUseCase = mock<GetThumbnailPositionUseCase>()
     private val isThumbnailValidUseCase =
         spy(IsThumbnailValidUseCase(FakeRecentsRotationStateRepository()))
     private lateinit var sut: TaskViewModel
@@ -71,6 +73,7 @@ class TaskViewModelTest {
                 getTaskUseCase = getTaskUseCase,
                 getSysUiStatusNavFlagsUseCase = GetSysUiStatusNavFlagsUseCase(),
                 isThumbnailValidUseCase = isThumbnailValidUseCase,
+                getThumbnailPositionUseCase = getThumbnailPositionUseCase,
                 dispatcherProvider = TestDispatcherProvider(unconfinedTestDispatcher),
             )
         whenever(getTaskUseCase.invoke(TASK_MODEL_1.id)).thenReturn(flow { emit(TASK_MODEL_1) })
@@ -112,6 +115,7 @@ class TaskViewModelTest {
                         getTaskUseCase = getTaskUseCase,
                         getSysUiStatusNavFlagsUseCase = GetSysUiStatusNavFlagsUseCase(),
                         isThumbnailValidUseCase = isThumbnailValidUseCase,
+                        getThumbnailPositionUseCase = getThumbnailPositionUseCase,
                         dispatcherProvider = TestDispatcherProvider(unconfinedTestDispatcher),
                     )
                 sut.bind(TASK_MODEL_1.id)
