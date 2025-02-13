@@ -222,7 +222,7 @@ public class TransformParams {
         return null;
     }
 
-    // Pubic getters so outside packages can read the values.
+    // Public getters so outside packages can read the values.
 
     public float getProgress() {
         return mProgress;
