@@ -127,7 +127,7 @@ class SplitAnimationController(val splitSelectStateController: SplitSelectStateC
                     val drawable = getDrawable(container.iconView, splitSelectSource)
                     return SplitAnimInitProps(
                         container.snapshotView,
-                        container.splitAnimationThumbnail,
+                        container.thumbnail,
                         drawable,
                         fadeWithThumbnail = true,
                         isStagedTask = true,
@@ -147,7 +147,7 @@ class SplitAnimationController(val splitSelectStateController: SplitSelectStateC
                 val drawable = getDrawable(it.iconView, splitSelectSource)
                 return SplitAnimInitProps(
                     it.snapshotView,
-                    it.splitAnimationThumbnail,
+                    it.thumbnail,
                     drawable,
                     fadeWithThumbnail = true,
                     isStagedTask = true,

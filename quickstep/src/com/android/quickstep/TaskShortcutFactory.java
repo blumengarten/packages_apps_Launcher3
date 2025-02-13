@@ -236,15 +236,14 @@ public interface TaskShortcutFactory {
                         position[0] + width, position[1] + height);
 
                 // Take the thumbnail of the task without a scrim and apply it back after
-                // TODO(b/348643341) add ability to get override the scrim for this Bitmap retrieval
-                float alpha = 0f;
-                if (!enableRefactorTaskThumbnail()) {
-                    alpha = mTaskContainer.getThumbnailViewDeprecated().getDimAlpha();
+                Bitmap thumbnail;
+                if (enableRefactorTaskThumbnail()) {
+                    thumbnail = mTaskContainer.getThumbnail();
+                } else {
+                    float alpha = mTaskContainer.getThumbnailViewDeprecated().getDimAlpha();
                     mTaskContainer.getThumbnailViewDeprecated().setDimAlpha(0);
-                }
-                Bitmap thumbnail = RecentsTransition.drawViewIntoHardwareBitmap(
-                        taskBounds.width(), taskBounds.height(), snapShotView, 1f, Color.BLACK);
-                if (!enableRefactorTaskThumbnail()) {
+                    thumbnail = RecentsTransition.drawViewIntoHardwareBitmap(
+                            taskBounds.width(), taskBounds.height(), snapShotView, 1f, Color.BLACK);
                     mTaskContainer.getThumbnailViewDeprecated().setDimAlpha(alpha);
                 }
 
