@@ -40,6 +40,7 @@ import android.util.SparseArray;
 import android.util.SparseIntArray;
 import android.view.ContextThemeWrapper;
 import android.view.Display;
+import android.view.Surface;
 import android.view.SurfaceControlViewHost;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 import android.view.View;
@@ -286,6 +287,20 @@ public class PreviewSurfaceRenderer {
             }
             context = context.createConfigurationContext(configuration);
         }
+        if (InvariantDeviceProfile.INSTANCE.get(context).isFixedLandscape) {
+            Configuration configuration = new Configuration(
+                    context.getResources().getConfiguration()
+            );
+            int width = configuration.screenWidthDp;
+            int height = configuration.screenHeightDp;
+            if (configuration.screenHeightDp > configuration.screenWidthDp) {
+                configuration.screenWidthDp = height;
+                configuration.screenHeightDp = width;
+                configuration.orientation = Surface.ROTATION_90;
+            }
+            context = context.createConfigurationContext(configuration);
+        }
+
         if (Flags.newCustomizationPickerUi()) {
             if (mPreviewColorOverride != null) {
                 LocalColorExtractor.newInstance(context)
@@ -396,15 +411,28 @@ public class PreviewSurfaceRenderer {
         }
         renderer.hideBottomRow(mHideQsb);
         View view = renderer.getRenderedView(dataModel, widgetProviderInfoMap);
-        // This aspect scales the view to fit in the surface and centers it
-        final float scale = Math.min(mWidth / (float) view.getMeasuredWidth(),
-                mHeight / (float) view.getMeasuredHeight());
-        view.setScaleX(scale);
-        view.setScaleY(scale);
+
         view.setPivotX(0);
         view.setPivotY(0);
-        view.setTranslationX((mWidth - scale * view.getWidth()) / 2);
-        view.setTranslationY((mHeight - scale * view.getHeight()) / 2);
+        if (idp.isFixedLandscape) {
+            final float scale = Math.min(mHeight / (float) view.getMeasuredWidth(),
+                    mWidth / (float) view.getMeasuredHeight());
+            view.setScaleX(scale);
+            view.setScaleY(scale);
+            view.setRotation(90);
+            view.setTranslationX((mHeight - scale * view.getWidth()) / 2 + mWidth);
+            view.setTranslationY((mWidth - scale * view.getHeight()) / 2);
+        } else {
+            // This aspect scales the view to fit in the surface and centers it
+            final float scale = Math.min(mWidth / (float) view.getMeasuredWidth(),
+                    mHeight / (float) view.getMeasuredHeight());
+            view.setScaleX(scale);
+            view.setScaleY(scale);
+            view.setTranslationX((mWidth - scale * view.getWidth()) / 2);
+            view.setTranslationY((mHeight - scale * view.getHeight()) / 2);
+        }
+
+
         if (!Flags.newCustomizationPickerUi()) {
             view.setAlpha(0);
             view.animate().alpha(1)
