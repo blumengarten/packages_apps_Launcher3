@@ -1674,7 +1674,7 @@ public class Launcher extends StatefulActivity<LauncherState>
         } else if (Intent.ACTION_ALL_APPS.equals(intent.getAction())) {
             showAllAppsFromIntent(alreadyOnHome);
         } else if (INTENT_ACTION_ALL_APPS_TOGGLE.equals(intent.getAction())) {
-            toggleAllAppsSearch(alreadyOnHome);
+            toggleAllApps(alreadyOnHome, true);
         } else if (Intent.ACTION_SHOW_WORK_APPS.equals(intent.getAction())) {
             showAllAppsWithSelectedTabFromIntent(alreadyOnHome,
                     ActivityAllAppsContainerView.AdapterHolder.WORK);
@@ -1688,12 +1688,15 @@ public class Launcher extends StatefulActivity<LauncherState>
         // Overridden
     }
 
-    /** Toggles Launcher All Apps with keyboard ready for search. */
-    public void toggleAllAppsSearch() {
-        toggleAllAppsSearch(/* alreadyOnHome= */ true);
+    /**
+     * Toggles Launcher All Apps.
+     * @param focusSearch Indicates whether to make All Apps keyboard ready for search.
+     */
+    public void toggleAllApps(boolean focusSearch) {
+        toggleAllApps(/* alreadyOnHome= */ true, focusSearch);
     }
 
-    protected void toggleAllAppsSearch(boolean alreadyOnHome) {
+    private void toggleAllApps(boolean alreadyOnHome, boolean focusSearch) {
         if (getStateManager().isInStableState(ALL_APPS)) {
             getStateManager().goToState(NORMAL, alreadyOnHome);
         } else {
@@ -1705,7 +1708,8 @@ public class Launcher extends StatefulActivity<LauncherState>
                     new AnimationSuccessListener() {
                         @Override
                         public void onAnimationSuccess(Animator animator) {
-                            if (mAppsView.getSearchUiManager().getEditText() != null) {
+                            if (focusSearch
+                                    && mAppsView.getSearchUiManager().getEditText() != null) {
                                 mAppsView.getSearchUiManager().getEditText().requestFocus();
                             }
                         }
