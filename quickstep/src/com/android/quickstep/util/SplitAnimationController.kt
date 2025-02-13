@@ -215,13 +215,13 @@ class SplitAnimationController(val splitSelectStateController: SplitSelectStateC
         if (enableOverviewIconMenu()) {
             builder.add(
                 ObjectAnimator.ofFloat(
-                    (iconView as IconAppChipView).splitTranslationX,
+                    (iconView as IconAppChipView).getSplitTranslationX(),
                     MULTI_PROPERTY_VALUE,
                     0f,
                 )
             )
             builder.add(
-                ObjectAnimator.ofFloat(iconView.splitTranslationY, MULTI_PROPERTY_VALUE, 0f)
+                ObjectAnimator.ofFloat(iconView.getSplitTranslationY(), MULTI_PROPERTY_VALUE, 0f)
             )
         }
 
@@ -985,12 +985,11 @@ class SplitAnimationController(val splitSelectStateController: SplitSelectStateC
         val splitTree: Pair<Change, List<Change>>? = extractTopParentAndChildren(transitionInfo)
         check(splitTree != null) { "Could not find a split root candidate" }
         val rootCandidate = splitTree.first
-        val stageRootTaskIds: Set<Int> = splitTree.second
-            .map { it.taskInfo!!.taskId }
-            .toSet()
-        val leafTasks: List<Change> = transitionInfo.changes
-            .filter { it.taskInfo != null && it.taskInfo!!.parentTaskId in stageRootTaskIds}
-            .toList()
+        val stageRootTaskIds: Set<Int> = splitTree.second.map { it.taskInfo!!.taskId }.toSet()
+        val leafTasks: List<Change> =
+            transitionInfo.changes
+                .filter { it.taskInfo != null && it.taskInfo!!.parentTaskId in stageRootTaskIds }
+                .toList()
 
         // Starting position is a 34% size tile centered in the middle of the screen.
         // Ending position is the full device screen.
@@ -1031,8 +1030,13 @@ class SplitAnimationController(val splitSelectStateController: SplitSelectStateC
                         val endAbsBounds = leaf.endAbsBounds
 
                         t.setAlpha(leaf.leash, 1f)
-                        t.setCrop(leaf.leash, 0f, 0f,
-                            endAbsBounds.width().toFloat(), endAbsBounds.height().toFloat())
+                        t.setCrop(
+                            leaf.leash,
+                            0f,
+                            0f,
+                            endAbsBounds.width().toFloat(),
+                            endAbsBounds.height().toFloat(),
+                        )
                         t.setPosition(leaf.leash, 0f, 0f)
                     }
 
@@ -1040,10 +1044,18 @@ class SplitAnimationController(val splitSelectStateController: SplitSelectStateC
                         val endAbsBounds = stageRoot.endAbsBounds
 
                         t.setAlpha(stageRoot.leash, 1f)
-                        t.setCrop(stageRoot.leash, 0f, 0f,
-                            endAbsBounds.width().toFloat(), endAbsBounds.height().toFloat())
-                        t.setPosition(stageRoot.leash, endAbsBounds.left.toFloat(),
-                            endAbsBounds.top.toFloat())
+                        t.setCrop(
+                            stageRoot.leash,
+                            0f,
+                            0f,
+                            endAbsBounds.width().toFloat(),
+                            endAbsBounds.height().toFloat(),
+                        )
+                        t.setPosition(
+                            stageRoot.leash,
+                            endAbsBounds.left.toFloat(),
+                            endAbsBounds.top.toFloat(),
+                        )
                     }
                     t.apply()
                 }
