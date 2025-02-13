@@ -300,7 +300,7 @@ public class OrientationTouchTransformerTest {
     @Test
     public void testSimpleOrientationTouchTransformer() {
         final DisplayController displayController = mock(DisplayController.class);
-        doReturn(mInfo).when(displayController).getInfo();
+        doReturn(mInfo).when(displayController).getInfoForDisplay(anyInt());
         final SimpleOrientationTouchTransformer transformer =
                 new SimpleOrientationTouchTransformer(getApplicationContext(), displayController,
                         mock(DaggerSingletonTracker.class));

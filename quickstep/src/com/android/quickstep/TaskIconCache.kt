@@ -72,6 +72,8 @@ class TaskIconCache(
     var taskVisualsChangeListener: TaskVisualsChangeListener? = null
 
     init {
+        // TODO (b/397205964): this will need to be updated when we support caches for different
+        //  displays.
         displayController.addChangeListener(this)
     }
 
