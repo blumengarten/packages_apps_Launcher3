@@ -129,7 +129,7 @@
     <string name="app_pair_name_format" msgid="8134106404716224054">"Ζεύγος εφαρμογών: <xliff:g id="APP1">%1$s</xliff:g> και <xliff:g id="APP2">%2$s</xliff:g>"</string>
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"Ταπετσαρία και στιλ"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"Επεξεργασία αρχικής οθόνης"</string>
-    <string name="settings_button_text" msgid="8873672322605444408">"Ρυθμίσεις Αρχ. Οθ."</string>
+    <string name="settings_button_text" msgid="8873672322605444408">"Ρυθμ. Αρχικής οθόνης"</string>
     <string name="msg_disabled_by_admin" msgid="6898038085516271325">"Απενεργοποιήθηκε από τον διαχειριστή σας"</string>
     <string name="allow_rotation_title" msgid="7222049633713050106">"Να επιτρέπεται η περιστροφή της αρχικής οθόνης"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"Όταν το τηλέφωνο περιστρέφεται"</string>

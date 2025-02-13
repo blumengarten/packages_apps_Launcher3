@@ -425,7 +425,7 @@ public class TaskbarManager {
      */
     public void onUserUnlocked() {
         mUserUnlocked = true;
-        DisplayController.INSTANCE.get(mPrimaryWindowContext).addChangeListener(
+        DisplayController.get(mPrimaryWindowContext).addChangeListener(
                 mRecreationListener);
         recreateTaskbar();
         addTaskbarRootViewToWindow(getDefaultDisplayId());
@@ -629,6 +629,7 @@ public class TaskbarManager {
      */
     public void setSetupUIVisible(boolean isVisible) {
         mSharedState.setupUIVisible = isVisible;
+        mAllAppsActionManager.setSetupUiVisible(isVisible);
         TaskbarActivityContext taskbar = getTaskbarForDisplay(getDefaultDisplayId());
         if (taskbar != null) {
             taskbar.setSetupUIVisible(isVisible);
@@ -797,7 +798,7 @@ public class TaskbarManager {
         mTaskbarBroadcastReceiver.unregisterReceiverSafely(mPrimaryWindowContext);
 
         if (mUserUnlocked) {
-            DisplayController.INSTANCE.get(mPrimaryWindowContext).removeChangeListener(
+            DisplayController.get(mPrimaryWindowContext).removeChangeListener(
                     mRecreationListener);
         }
         SettingsCache.INSTANCE.get(mPrimaryWindowContext)

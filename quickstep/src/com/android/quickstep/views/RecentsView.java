@@ -132,6 +132,7 @@ import android.widget.OverScroller;
 import android.widget.Toast;
 import android.window.DesktopModeFlags;
 import android.window.PictureInPictureSurfaceTransaction;
+import android.window.TransitionInfo;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -1395,12 +1396,13 @@ public abstract class RecentsView<
         RemoteAnimationTargets targets = params.getTargetSet();
         if (targets != null && targets.findTask(taskId) != null) {
             launchSideTaskInLiveTileMode(taskId, targets.apps, targets.wallpapers,
-                    targets.nonApps);
+                    targets.nonApps, /* transitionInfo= */ null);
         }
     }
 
     public void launchSideTaskInLiveTileMode(int taskId, RemoteAnimationTarget[] apps,
-            RemoteAnimationTarget[] wallpaper, RemoteAnimationTarget[] nonApps) {
+            RemoteAnimationTarget[] wallpaper, RemoteAnimationTarget[] nonApps,
+            @Nullable TransitionInfo transitionInfo) {
         AnimatorSet anim = new AnimatorSet();
         TaskView taskView = getTaskViewByTaskId(taskId);
         if (taskView == null || !isTaskViewVisible(taskView)) {
@@ -1452,7 +1454,7 @@ public abstract class RecentsView<
         } else {
             TaskViewUtils.composeRecentsLaunchAnimator(anim, taskView, apps, wallpaper, nonApps,
                     true /* launcherClosing */, getStateManager(), this,
-                    getDepthController());
+                    getDepthController(), transitionInfo);
         }
         anim.start();
     }

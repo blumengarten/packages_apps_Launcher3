@@ -61,7 +61,7 @@ class TaskbarModeRule(private val context: TaskbarWindowSandboxContext) : TestRu
                 val mode = taskbarMode.mode
 
                 getInstrumentation().runOnMainSync {
-                    DisplayController.INSTANCE[context].let {
+                    DisplayController.get(context).let {
                         if (it is DisplayControllerSpy) {
                             it.infoModifier = { info ->
                                 spy(info) {

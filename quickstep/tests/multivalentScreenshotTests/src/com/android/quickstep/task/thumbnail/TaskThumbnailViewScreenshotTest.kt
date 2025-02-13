@@ -24,6 +24,7 @@ import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.BackgroundOnly
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.Uninitialized
 import com.android.quickstep.task.viewmodel.TaskThumbnailViewModel
 import com.google.android.apps.nexuslauncher.imagecomparison.goldenpathmanager.ViewScreenshotGoldenPathManager
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -46,6 +47,11 @@ class TaskThumbnailViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
         )
 
     private val taskThumbnailViewModel = FakeTaskThumbnailViewModel()
+
+    @After
+    fun tearDown() {
+        RecentsDependencies.destroy()
+    }
 
     @Test
     fun taskThumbnailView_uninitializedByDefault() {

@@ -411,7 +411,8 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             @NonNull RemoteAnimationTarget[] nonAppTargets, boolean launcherClosing) {
         TaskViewUtils.composeRecentsLaunchAnimator(anim, v, appTargets, wallpaperTargets,
                 nonAppTargets, launcherClosing, mLauncher.getStateManager(),
-                mLauncher.getOverviewPanel(), mLauncher.getDepthController());
+                mLauncher.getOverviewPanel(), mLauncher.getDepthController(),
+                /* transitionInfo= */ null);
     }
 
     private boolean areAllTargetsTranslucent(@NonNull RemoteAnimationTarget[] targets) {

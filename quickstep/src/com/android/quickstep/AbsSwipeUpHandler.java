@@ -2453,7 +2453,8 @@ public abstract class AbsSwipeUpHandler<
     }
 
     @Override
-    public void onTasksAppeared(@NonNull RemoteAnimationTarget[] appearedTaskTargets) {
+    public void onTasksAppeared(@NonNull RemoteAnimationTarget[] appearedTaskTargets,
+            @Nullable TransitionInfo transitionInfo) {
         if (mRecentsAnimationController == null) {
             return;
         }

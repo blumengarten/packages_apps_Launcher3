@@ -50,7 +50,7 @@
     <string name="add_to_home_screen" msgid="9168649446635919791">"ਹੋਮ ਸਕ੍ਰੀਨ \'ਤੇ ਸ਼ਾਮਲ ਕਰੋ"</string>
     <string name="added_to_home_screen_accessibility_text" msgid="4451545765448884415">"<xliff:g id="WIDGET_NAME">%1$s</xliff:g> ਵਿਜੇਟ ਨੂੰ ਹੋਮ ਸਕ੍ਰੀਨ \'ਤੇ ਸ਼ਾਮਲ ਕੀਤਾ ਗਿਆ"</string>
     <string name="suggested_widgets_header_title" msgid="1844314680798145222">"ਸੁਝਾਅ"</string>
-    <string name="productivity_widget_recommendation_category_label" msgid="3811812719618323750">"ਲੋੜੀਂਦੀਆਂ"</string>
+    <string name="productivity_widget_recommendation_category_label" msgid="3811812719618323750">"ਲੋੜੀਂਦੀਆਂ ਐਪਾਂ ਦੇ ਵਿਜੇਟ"</string>
     <string name="news_widget_recommendation_category_label" msgid="6756167867113741310">"ਖਬਰਾਂ ਅਤੇ ਰਸਾਲੇ"</string>
     <string name="entertainment_widget_recommendation_category_label" msgid="3973107268630717874">"ਮਨੋਰੰਜਨ"</string>
     <string name="social_widget_recommendation_category_label" msgid="689147679536384717">"ਸੋਸ਼ਲ"</string>

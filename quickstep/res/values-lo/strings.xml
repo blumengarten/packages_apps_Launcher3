@@ -90,7 +90,7 @@
     <string name="allset_title" msgid="5021126669778966707">"ຮຽບຮ້ອຍໝົດແລ້ວ!"</string>
     <string name="allset_hint" msgid="459504134589971527">"ປັດຂຶ້ນເພື່ອໄປຫາໜ້າຫຼັກ"</string>
     <string name="allset_button_hint" msgid="2395219947744706291">"ແຕະປຸ່ມໜ້າທຳອິດເພື່ອໄປຫາໂຮມສະກຣີນຂອງທ່ານ"</string>
-    <string name="allset_description_generic" msgid="5385500062202019855">"ທ່ານເລີ່ມໃຊ້ແທັບເລັດ <xliff:g id="DEVICE">%1$s</xliff:g> ຂອງທ່ານໄດ້ແລ້ວ"</string>
+    <string name="allset_description_generic" msgid="5385500062202019855">"ທ່ານເລີ່ມໃຊ້<xliff:g id="DEVICE">%1$s</xliff:g>ຂອງທ່ານໄດ້ແລ້ວ"</string>
     <string name="default_device_name" msgid="6660656727127422487">"ອຸປະກອນ"</string>
     <string name="allset_navigation_settings" msgid="4713404605961476027"><annotation id="link">"ການຕັ້ງຄ່າການນຳທາງລະບົບ"</annotation></string>
     <string name="action_share" msgid="2648470652637092375">"ແບ່ງປັນ"</string>

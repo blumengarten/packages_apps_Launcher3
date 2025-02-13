@@ -54,7 +54,7 @@
     <string name="news_widget_recommendation_category_label" msgid="6756167867113741310">"Újságok és magazinok"</string>
     <string name="entertainment_widget_recommendation_category_label" msgid="3973107268630717874">"Szórakozás"</string>
     <string name="social_widget_recommendation_category_label" msgid="689147679536384717">"Közösségi"</string>
-    <string name="others_widget_recommendation_category_label" msgid="5555987036267226245">"Neked javasolt"</string>
+    <string name="others_widget_recommendation_category_label" msgid="5555987036267226245">"Javaslatok"</string>
     <string name="widget_picker_right_pane_accessibility_title" msgid="1673313931455067502">"A <xliff:g id="SELECTED_HEADER">%1$s</xliff:g>-modulok a jobb, a kereső és a beállítások pedig a bal oldalon találhatók"</string>
     <string name="widgets_count" msgid="6467746476364652096">"{count,plural, =1{# modul}other{# modul}}"</string>
     <string name="shortcuts_count" msgid="8471715556199592381">"{count,plural, =1{# gyorsparancs}other{# gyorsparancs}}"</string>

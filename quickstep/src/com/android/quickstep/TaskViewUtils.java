@@ -169,6 +169,7 @@ public final class TaskViewUtils {
             @NonNull RemoteAnimationTarget[] wallpaperTargets,
             @NonNull RemoteAnimationTarget[] nonAppTargets,
             @Nullable DepthController depthController,
+            @Nullable TransitionInfo transitionInfo,
             PendingAnimation out) {
         boolean isQuickSwitch = v.isEndQuickSwitchCuj();
         v.setEndQuickSwitchCuj(false);
@@ -191,8 +192,7 @@ public final class TaskViewUtils {
             RemoteTargetGluer gluer = new RemoteTargetGluer(v.getContext(),
                     recentsView.getSizeStrategy(), targets, forDesktop);
             if (forDesktop) {
-                remoteTargetHandles =
-                        gluer.assignTargetsForDesktop(targets, /* transitionInfo=*/ null);
+                remoteTargetHandles = gluer.assignTargetsForDesktop(targets, transitionInfo);
             } else if (v.containsMultipleTasks()) {
                 remoteTargetHandles = gluer.assignTargetsForSplitScreen(targets,
                         ((GroupedTaskView) v).getSplitBoundsConfig());
@@ -230,7 +230,7 @@ public final class TaskViewUtils {
 
                 // RecentsView never updates the display rotation until swipe-up so the value may
                 // be stale. Use the display value instead.
-                int displayRotation = DisplayController.INSTANCE.get(context).getInfo().rotation;
+                int displayRotation = DisplayController.get(context).getInfo().rotation;
                 tvsLocal.getOrientationState().update(displayRotation, displayRotation);
 
                 tvsLocal.fullScreenProgress.value = 0;
@@ -462,7 +462,7 @@ public final class TaskViewUtils {
         final RecentsView recentsView = launchingTaskView.getRecentsView();
         composeRecentsLaunchAnimator(animatorSet, launchingTaskView, appTargets, wallpaperTargets,
                 nonAppTargets, /* launcherClosing */ true, stateManager, recentsView,
-                depthController);
+                depthController, /* transitionInfo= */ null);
 
         t.apply();
         animatorSet.start();
@@ -501,7 +501,7 @@ public final class TaskViewUtils {
             composeRecentsLaunchAnimator(animatorSet, launchingTaskView,
                     appTargets, wallpaperTargets, nonAppTargets,
                     true, stateManager,
-                    recentsView, depthController);
+                    recentsView, depthController, /* transitionInfo= */ null);
             animatorSet.start();
             return;
         }
@@ -593,7 +593,7 @@ public final class TaskViewUtils {
 
         composeRecentsLaunchAnimator(animatorSet, launchingTaskView, apps, wallpaper, nonApps,
                 true /* launcherClosing */, stateManager, launchingTaskView.getRecentsView(),
-                depthController);
+                depthController, transitionInfo);
 
         return animatorSet;
     }
@@ -603,13 +603,13 @@ public final class TaskViewUtils {
             @NonNull RemoteAnimationTarget[] wallpaperTargets,
             @NonNull RemoteAnimationTarget[] nonAppTargets, boolean launcherClosing,
             @NonNull StateManager stateManager, @NonNull RecentsView recentsView,
-            @Nullable DepthController depthController) {
+            @Nullable DepthController depthController, @Nullable TransitionInfo transitionInfo) {
         boolean skipLauncherChanges = !launcherClosing;
 
         TaskView taskView = findTaskViewToLaunch(recentsView, v, appTargets);
         PendingAnimation pa = new PendingAnimation(RECENTS_LAUNCH_DURATION);
         createRecentsWindowAnimator(recentsView, taskView, skipLauncherChanges, appTargets,
-                wallpaperTargets, nonAppTargets, depthController, pa);
+                wallpaperTargets, nonAppTargets, depthController, transitionInfo, pa);
         if (launcherClosing) {
             // TODO(b/182592057): differentiate between "restore split" vs "launch fullscreen app"
             TaskViewUtils.createSplitAuxiliarySurfacesAnimator(nonAppTargets, true /*shown*/,

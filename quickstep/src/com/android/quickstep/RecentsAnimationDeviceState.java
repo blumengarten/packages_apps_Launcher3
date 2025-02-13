@@ -73,6 +73,7 @@ import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.DisplayController.DisplayInfoChangeListener;
 import com.android.launcher3.util.DisplayController.Info;
 import com.android.launcher3.util.NavigationMode;
+import com.android.launcher3.util.PerDisplayObjectProvider;
 import com.android.launcher3.util.SettingsCache;
 import com.android.quickstep.TopTaskTracker.CachedTaskInfo;
 import com.android.quickstep.util.ActiveGestureLog;
@@ -141,13 +142,13 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
     RecentsAnimationDeviceState(
             @ApplicationContext Context context,
             GestureExclusionManager exclusionManager,
-            DisplayController displayController,
+            PerDisplayObjectProvider displayControllerProvider,
             ContextualSearchStateManager contextualSearchStateManager,
             RotationTouchHelper rotationTouchHelper,
             SettingsCache settingsCache,
             DaggerSingletonTracker lifeCycle) {
         mContext = context;
-        mDisplayController = displayController;
+        mDisplayController = displayControllerProvider.getDisplayController(DEFAULT_DISPLAY);
         mExclusionManager = exclusionManager;
         mContextualSearchStateManager = contextualSearchStateManager;
         mRotationTouchHelper = rotationTouchHelper;
@@ -156,7 +157,7 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
         // Register for exclusion updates
         lifeCycle.addCloseable(this::unregisterExclusionListener);
 
-        // Register for display changes changes
+        // Register for display changes
         mDisplayController.addChangeListener(this);
         onDisplayInfoChanged(context, mDisplayController.getInfo(), CHANGE_ALL);
         lifeCycle.addCloseable(() -> mDisplayController.removeChangeListener(this));

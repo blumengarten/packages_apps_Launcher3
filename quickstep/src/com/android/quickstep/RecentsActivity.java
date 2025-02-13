@@ -319,7 +319,7 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
     /**
      * Composes the animations for a launch from the recents list if possible.
      */
-    private AnimatorSet  composeRecentsLaunchAnimator(
+    private AnimatorSet composeRecentsLaunchAnimator(
             @NonNull RecentsView recentsView,
             @NonNull TaskView taskView,
             RemoteAnimationTarget[] appTargets,
@@ -329,7 +329,8 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
         boolean activityClosing = taskIsATargetWithMode(appTargets, getTaskId(), MODE_CLOSING);
         PendingAnimation pa = new PendingAnimation(RECENTS_LAUNCH_DURATION);
         createRecentsWindowAnimator(recentsView, taskView, !activityClosing, appTargets,
-                wallpaperTargets, nonAppTargets, null /* depthController */, pa);
+                wallpaperTargets, nonAppTargets, /* depthController= */ null ,
+                /* transitionInfo= */ null, pa);
         target.play(pa.buildAnim());
 
         // Found a visible recents task that matches the opening app, lets launch the app from there
