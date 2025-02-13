@@ -300,10 +300,10 @@ public class InvariantDeviceProfile {
         lifeCycle.addCloseable(() -> prefs.removeListener(prefListener,
                 FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE));
 
-        SimpleBroadcastReceiver localeReceiver = new SimpleBroadcastReceiver(
+        SimpleBroadcastReceiver localeReceiver = new SimpleBroadcastReceiver(context,
                 MAIN_EXECUTOR, i -> onConfigChanged(context));
-        localeReceiver.register(context, Intent.ACTION_LOCALE_CHANGED);
-        lifeCycle.addCloseable(() -> localeReceiver.unregisterReceiverSafely(context));
+        localeReceiver.register(Intent.ACTION_LOCALE_CHANGED);
+        lifeCycle.addCloseable(() -> localeReceiver.unregisterReceiverSafely());
     }
 
     private String initGrid(Context context, String gridName) {

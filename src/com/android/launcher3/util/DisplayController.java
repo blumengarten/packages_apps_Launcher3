@@ -107,7 +107,6 @@ public class DisplayController implements ComponentCallbacks,
     private static final String ACTION_OVERLAY_CHANGED = "android.intent.action.OVERLAY_CHANGED";
     private static final String TARGET_OVERLAY_PACKAGE = "android";
 
-    private final Context mContext;
     private final WindowManagerProxy mWMProxy;
 
     // Null for SDK < S
@@ -120,8 +119,7 @@ public class DisplayController implements ComponentCallbacks,
 
     // We will register broadcast receiver on main thread to ensure not missing changes on
     // TARGET_OVERLAY_PACKAGE and ACTION_OVERLAY_CHANGED.
-    private final SimpleBroadcastReceiver mReceiver =
-            new SimpleBroadcastReceiver(MAIN_EXECUTOR, this::onIntent);
+    private final SimpleBroadcastReceiver mReceiver;
 
     private Info mInfo;
     private boolean mDestroyed = false;
@@ -131,7 +129,6 @@ public class DisplayController implements ComponentCallbacks,
             WindowManagerProxy wmProxy,
             LauncherPrefs prefs,
             DaggerSingletonTracker lifecycle) {
-        mContext = context;
         mWMProxy = wmProxy;
 
         if (enableTaskbarPinning()) {
@@ -155,11 +152,12 @@ public class DisplayController implements ComponentCallbacks,
 
         Display display = context.getSystemService(DisplayManager.class)
                 .getDisplay(DEFAULT_DISPLAY);
-        mWindowContext = mContext.createWindowContext(display, TYPE_APPLICATION, null);
+        mWindowContext = context.createWindowContext(display, TYPE_APPLICATION, null);
         mWindowContext.registerComponentCallbacks(this);
 
         // Initialize navigation mode change listener
-        mReceiver.registerPkgActions(mContext, TARGET_OVERLAY_PACKAGE, ACTION_OVERLAY_CHANGED);
+        mReceiver = new SimpleBroadcastReceiver(context, MAIN_EXECUTOR, this::onIntent);
+        mReceiver.registerPkgActions(TARGET_OVERLAY_PACKAGE, ACTION_OVERLAY_CHANGED);
 
         mInfo = new Info(mWindowContext, wmProxy,
                 wmProxy.estimateInternalDisplayBounds(mWindowContext));
@@ -169,7 +167,7 @@ public class DisplayController implements ComponentCallbacks,
         lifecycle.addCloseable(() -> {
             mDestroyed = true;
             mWindowContext.unregisterComponentCallbacks(this);
-            mReceiver.unregisterReceiverSafely(mContext);
+            mReceiver.unregisterReceiverSafely();
             wmProxy.unregisterDesktopVisibilityListener(this);
         });
     }

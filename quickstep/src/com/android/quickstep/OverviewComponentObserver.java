@@ -72,12 +72,9 @@ public final class OverviewComponentObserver {
             new DaggerSingletonObject<>(LauncherAppComponent::getOverviewComponentObserver);
 
     // We register broadcast receivers on main thread to avoid missing updates.
-    private final SimpleBroadcastReceiver mUserPreferenceChangeReceiver =
-            new SimpleBroadcastReceiver(MAIN_EXECUTOR, this::updateOverviewTargets);
-    private final SimpleBroadcastReceiver mOtherHomeAppUpdateReceiver =
-            new SimpleBroadcastReceiver(MAIN_EXECUTOR, this::updateOverviewTargets);
+    private final SimpleBroadcastReceiver mUserPreferenceChangeReceiver;
+    private final SimpleBroadcastReceiver mOtherHomeAppUpdateReceiver;
 
-    private final Context mContext;
     private final RecentsDisplayModel mRecentsDisplayModel;
 
     private final Intent mCurrentHomeIntent;
@@ -101,10 +98,13 @@ public final class OverviewComponentObserver {
             @ApplicationContext Context context,
             RecentsDisplayModel recentsDisplayModel,
             DaggerSingletonTracker lifecycleTracker) {
-        mContext = context;
+        mUserPreferenceChangeReceiver =
+                new SimpleBroadcastReceiver(context, MAIN_EXECUTOR, this::updateOverviewTargets);
+        mOtherHomeAppUpdateReceiver =
+                new SimpleBroadcastReceiver(context, MAIN_EXECUTOR, this::updateOverviewTargets);
         mRecentsDisplayModel = recentsDisplayModel;
         mCurrentHomeIntent = createHomeIntent();
-        mMyHomeIntent = new Intent(mCurrentHomeIntent).setPackage(mContext.getPackageName());
+        mMyHomeIntent = new Intent(mCurrentHomeIntent).setPackage(context.getPackageName());
         ResolveInfo info = context.getPackageManager().resolveActivity(mMyHomeIntent, 0);
         ComponentName myHomeComponent =
                 new ComponentName(context.getPackageName(), info.activityInfo.name);
@@ -112,7 +112,7 @@ public final class OverviewComponentObserver {
         mConfigChangesMap.append(myHomeComponent.hashCode(), info.activityInfo.configChanges);
         mSetupWizardPkg = context.getString(R.string.setup_wizard_pkg);
 
-        ComponentName fallbackComponent = new ComponentName(mContext, RecentsActivity.class);
+        ComponentName fallbackComponent = new ComponentName(context, RecentsActivity.class);
         mFallbackIntent = new Intent(Intent.ACTION_MAIN)
                 .addCategory(Intent.CATEGORY_DEFAULT)
                 .setComponent(fallbackComponent)
@@ -124,7 +124,7 @@ public final class OverviewComponentObserver {
             mConfigChangesMap.append(fallbackComponent.hashCode(), fallbackInfo.configChanges);
         } catch (PackageManager.NameNotFoundException ignored) { /* Impossible */ }
 
-        mUserPreferenceChangeReceiver.register(mContext, ACTION_PREFERRED_ACTIVITY_CHANGED);
+        mUserPreferenceChangeReceiver.register(ACTION_PREFERRED_ACTIVITY_CHANGED);
         updateOverviewTargets();
 
         lifecycleTracker.addCloseable(this::onDestroy);
@@ -224,7 +224,7 @@ public final class OverviewComponentObserver {
 
                 mUpdateRegisteredPackage = defaultHome.getPackageName();
                 mOtherHomeAppUpdateReceiver.registerPkgActions(
-                        mContext, mUpdateRegisteredPackage, ACTION_PACKAGE_ADDED,
+                        mUpdateRegisteredPackage, ACTION_PACKAGE_ADDED,
                         ACTION_PACKAGE_CHANGED, ACTION_PACKAGE_REMOVED);
             }
         }
@@ -235,13 +235,13 @@ public final class OverviewComponentObserver {
      * Clean up any registered receivers.
      */
     private void onDestroy() {
-        mUserPreferenceChangeReceiver.unregisterReceiverSafely(mContext);
+        mUserPreferenceChangeReceiver.unregisterReceiverSafely();
         unregisterOtherHomeAppUpdateReceiver();
     }
 
     private void unregisterOtherHomeAppUpdateReceiver() {
         if (mUpdateRegisteredPackage != null) {
-            mOtherHomeAppUpdateReceiver.unregisterReceiverSafely(mContext);
+            mOtherHomeAppUpdateReceiver.unregisterReceiverSafely();
             mUpdateRegisteredPackage = null;
         }
     }
