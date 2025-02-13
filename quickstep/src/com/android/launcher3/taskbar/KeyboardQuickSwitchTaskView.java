@@ -104,9 +104,18 @@ public class KeyboardQuickSwitchTaskView extends ConstraintLayout {
         mIcon2 = findViewById(R.id.icon_2);
         mContent = findViewById(R.id.content);
 
-        Resources resources = mContext.getResources();
-
         Preconditions.assertNotNull(mContent);
+
+        TypefaceUtils.setTypeface(
+                mContent.findViewById(R.id.large_text),
+                TypefaceUtils.FONT_FAMILY_HEADLINE_LARGE_EMPHASIZED
+        );
+        TypefaceUtils.setTypeface(
+                mContent.findViewById(R.id.small_text),
+                TypefaceUtils.FONT_FAMILY_LABEL_LARGE_BASELINE
+        );
+
+        Resources resources = mContext.getResources();
         mBorderAnimator = BorderAnimator.createScalingBorderAnimator(
                 /* borderRadiusPx= */ mBorderRadius != INVALID_BORDER_RADIUS
                         ? mBorderRadius
