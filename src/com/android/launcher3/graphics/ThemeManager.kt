@@ -106,6 +106,7 @@ constructor(
             iconMask = iconMask,
             folderShapeMask = shapeModel?.folderPathString ?: iconMask,
             themeController = createThemeController(),
+            iconScale = shapeModel?.iconScale ?: 1f,
         )
     }
 
@@ -118,6 +119,7 @@ constructor(
         val folderShapeMask: String,
         val themeController: IconThemeController?,
         val themeCode: String = themeController?.themeID ?: "no-theme",
+        val iconScale: Float = 1f,
     ) {
         fun toUniqueId() = "${iconMask.hashCode()},$themeCode"
     }
