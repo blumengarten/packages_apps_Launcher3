@@ -17,6 +17,7 @@
 package com.android.quickstep.views
 
 import android.graphics.Rect
+import android.os.VibrationAttributes
 import android.view.View
 import androidx.core.view.children
 import androidx.dynamicanimation.animation.FloatPropertyCompat
@@ -26,14 +27,18 @@ import androidx.dynamicanimation.animation.SpringForce
 import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
 import com.android.launcher3.Flags.enableSeparateExternalDisplayTasks
 import com.android.launcher3.R
+import com.android.launcher3.Utilities.boundToRange
 import com.android.launcher3.touch.SingleAxisSwipeDetector
 import com.android.launcher3.util.DynamicResource
 import com.android.launcher3.util.IntArray
+import com.android.launcher3.util.MSDLPlayerWrapper
 import com.android.quickstep.util.GroupTask
 import com.android.quickstep.util.TaskGridNavHelper
 import com.android.quickstep.util.isExternalDisplay
 import com.android.quickstep.views.RecentsView.RUNNING_TASK_ATTACH_ALPHA
 import com.android.systemui.shared.recents.model.ThumbnailData
+import com.google.android.msdl.data.model.MSDLToken
+import com.google.android.msdl.domain.InteractionProperties
 import java.util.function.BiConsumer
 import kotlin.math.abs
 
@@ -378,7 +383,7 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
             // negative displacement to positive displacement). We do not check for an exact value
             // to compare to, as the update listener does not necessarily hit every value (e.g. a
             // value of zero). Do not check again once it has started settling, as a spring can
-            // bounce past the origin multiple times depending on the stifness and damping ratio.
+            // bounce past the origin multiple times depending on the stiffness and damping ratio.
             if (startSettling) return@addUpdateListener
             if (lastPosition < 0 && value >= 0) {
                 startSettling = true
@@ -386,6 +391,7 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
             lastPosition = value
             if (startSettling) {
                 neighborsToSettle.setStartVelocity(velocity).animateToFinalPosition(0f)
+                playDismissSettlingHaptic(velocity)
             }
         }
 
@@ -529,6 +535,27 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
             )
             .setStiffness(
                 resourceProvider.getFloat(R.dimen.expressive_dismiss_task_trans_y_stiffness)
+            )
+    }
+
+    /**
+     * Plays a haptic as the dragged task view settles back into its rest state.
+     *
+     * <p>Haptic intensity is proportional to velocity.
+     */
+    private fun playDismissSettlingHaptic(velocity: Float) {
+        val maxDismissSettlingVelocity =
+            recentsView.pagedOrientationHandler.getSecondaryDimension(recentsView)
+        MSDLPlayerWrapper.INSTANCE.get(recentsView.context)
+            .playToken(
+                MSDLToken.CANCEL,
+                InteractionProperties.DynamicVibrationScale(
+                    boundToRange(velocity / maxDismissSettlingVelocity, 0f, 1f),
+                    VibrationAttributes.Builder()
+                        .setUsage(VibrationAttributes.USAGE_TOUCH)
+                        .setFlags(VibrationAttributes.FLAG_PIPELINED_EFFECT)
+                        .build(),
+                ),
             )
     }
 
