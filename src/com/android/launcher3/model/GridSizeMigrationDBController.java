@@ -238,16 +238,19 @@ public class GridSizeMigrationDBController {
         Collections.sort(hotseatToBeAdded);
         Collections.sort(workspaceToBeAdded);
 
-        List<Integer> idsInUse = dstWorkspaceItems.stream()
+        List<DbEntry> remainingDstHotseatItems = destReader.loadHotseatEntries();
+        List<DbEntry> remainingDstWorkspaceItems = destReader.loadAllWorkspaceEntries();
+        List<Integer> idsInUse = remainingDstHotseatItems.stream()
                 .map(entry -> entry.id)
                 .collect(Collectors.toList());
-        idsInUse.addAll(dstHotseatItems.stream()
+        idsInUse.addAll(remainingDstWorkspaceItems.stream()
                 .map(entry -> entry.id)
                 .collect(Collectors.toList()));
 
+
         // Migrate hotseat
         solveHotseatPlacement(helper, destHotseatSize,
-                srcReader, destReader, dstHotseatItems, hotseatToBeAdded, idsInUse);
+                srcReader, destReader, remainingDstHotseatItems, hotseatToBeAdded, idsInUse);
 
         // Migrate workspace.
         // First we create a collection of the screens
@@ -467,7 +470,7 @@ public class GridSizeMigrationDBController {
         final Context mContext;
         int mLastScreenId = -1;
 
-        final Map<Integer, List<DbEntry>> mWorkspaceEntriesByScreenId =
+        Map<Integer, List<DbEntry>> mWorkspaceEntriesByScreenId =
                 new ArrayMap<>();
 
         public DbReader(SQLiteDatabase db, String tableName, Context context) {
@@ -539,6 +542,7 @@ public class GridSizeMigrationDBController {
         }
 
         protected List<DbEntry> loadAllWorkspaceEntries() {
+            mWorkspaceEntriesByScreenId.clear();
             final List<DbEntry> workspaceEntries = new ArrayList<>();
             Cursor c = queryWorkspace(
                     new String[]{

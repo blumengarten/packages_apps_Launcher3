@@ -183,9 +183,11 @@ class GridSizeMigrationLogic {
             )
         }
 
+        val remainingDstHotseatItems = destReader.loadHotseatEntries()
+
         placeHotseatItems(
             itemsToBeAdded,
-            dstHotseatItems,
+            remainingDstHotseatItems,
             destHotseatSize,
             helper,
             srcReader,
@@ -265,9 +267,10 @@ class GridSizeMigrationLogic {
             )
         }
 
+        val remainingDstWorkspaceItems = destReader.loadAllWorkspaceEntries()
         placeWorkspaceItems(
             workspaceToBeAdded,
-            dstWorkspaceItems,
+            remainingDstWorkspaceItems,
             targetSize.x,
             targetSize.y,
             helper,
