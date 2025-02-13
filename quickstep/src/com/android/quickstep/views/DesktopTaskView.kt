@@ -21,6 +21,7 @@ import android.content.Context
 import android.graphics.Matrix
 import android.graphics.PointF
 import android.graphics.Rect
+import android.graphics.Rect.intersects
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.util.Log
@@ -30,6 +31,7 @@ import android.view.View
 import android.view.ViewStub
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.updateLayoutParams
+import com.android.internal.hidden_from_bootclasspath.com.android.window.flags.Flags.enableDesktopRecentsTransitionsCornersBugfix
 import com.android.launcher3.Flags.enableDesktopExplodedView
 import com.android.launcher3.Flags.enableOverviewIconMenu
 import com.android.launcher3.Flags.enableRefactorTaskThumbnail
@@ -57,6 +59,7 @@ import com.android.quickstep.recents.ui.viewmodel.TaskData
 import com.android.quickstep.task.thumbnail.TaskThumbnailView
 import com.android.quickstep.util.DesktopTask
 import com.android.quickstep.util.RecentsOrientedState
+import kotlin.math.roundToInt
 
 /** TaskView that contains all tasks that are part of the desktop. */
 class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
@@ -102,7 +105,7 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
      * Holds the default (user placed) positions of task windows. This can be moved into the
      * viewModel once RefactorTaskThumbnail has been launched.
      */
-    private var defaultTaskPositions: List<DesktopTaskBoundsData> = emptyList()
+    private var fullscreenTaskPositions: List<DesktopTaskBoundsData> = emptyList()
 
     /**
      * When enableDesktopExplodedView is enabled, this controls the gradual transition from the
@@ -172,42 +175,44 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
 
         val thumbnailTopMarginPx = container.deviceProfile.overviewTaskThumbnailTopMarginPx
 
-        val containerWidth = layoutParams.width
-        val containerHeight = layoutParams.height - thumbnailTopMarginPx
+        val taskViewWidth = layoutParams.width
+        val taskViewHeight = layoutParams.height - thumbnailTopMarginPx
 
         BaseContainerInterface.getTaskDimension(mContext, container.deviceProfile, tempPointF)
 
-        val windowWidth = tempPointF.x.toInt()
-        val windowHeight = tempPointF.y.toInt()
-        val scaleWidth = containerWidth / windowWidth.toFloat()
-        val scaleHeight = containerHeight / windowHeight.toFloat()
+        val screenWidth = tempPointF.x.toInt()
+        val screenHeight = tempPointF.y.toInt()
+        val screenRect = Rect(0, 0, screenWidth, screenHeight)
+        val scaleWidth = taskViewWidth / screenWidth.toFloat()
+        val scaleHeight = taskViewHeight / screenHeight.toFloat()
 
         taskContainers.forEach {
             val taskId = it.task.key.id
-            val defaultPosition = defaultTaskPositions.firstOrNull { it.taskId == taskId } ?: return
-            val position =
+            val fullscreenTaskPosition =
+                fullscreenTaskPositions.firstOrNull { it.taskId == taskId } ?: return
+            val overviewTaskPosition =
                 if (enableDesktopExplodedView()) {
                     viewModel!!
                         .organizedDesktopTaskPositions
                         .firstOrNull { it.taskId == taskId }
                         ?.let { organizedPosition ->
-                            TEMP_RECT.apply {
+                            TEMP_OVERVIEW_TASK_POSITION.apply {
                                 lerpRect(
-                                    defaultPosition.bounds,
+                                    fullscreenTaskPosition.bounds,
                                     organizedPosition.bounds,
                                     explodeProgress,
                                 )
                             }
-                        } ?: defaultPosition.bounds
+                        } ?: fullscreenTaskPosition.bounds
                 } else {
-                    defaultPosition.bounds
+                    fullscreenTaskPosition.bounds
                 }
 
             if (enableDesktopExplodedView()) {
                 getRemoteTargetHandle(taskId)?.let { remoteTargetHandle ->
                     val fromRect =
-                        TEMP_RECTF1.apply {
-                            set(defaultPosition.bounds)
+                        TEMP_FROM_RECTF.apply {
+                            set(fullscreenTaskPosition.bounds)
                             scale(scaleWidth)
                             offset(
                                 lastComputedTaskSize.left.toFloat(),
@@ -215,8 +220,8 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
                             )
                         }
                     val toRect =
-                        TEMP_RECTF2.apply {
-                            set(position)
+                        TEMP_TO_RECTF.apply {
+                            set(overviewTaskPosition)
                             scale(scaleWidth)
                             offset(
                                 lastComputedTaskSize.left.toFloat(),
@@ -230,10 +235,10 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
                 }
             }
 
-            val taskLeft = position.left * scaleWidth
-            val taskTop = position.top * scaleHeight
-            val taskWidth = position.width() * scaleWidth
-            val taskHeight = position.height() * scaleHeight
+            val taskLeft = overviewTaskPosition.left * scaleWidth
+            val taskTop = overviewTaskPosition.top * scaleHeight
+            val taskWidth = overviewTaskPosition.width() * scaleWidth
+            val taskHeight = overviewTaskPosition.height() * scaleHeight
             // TODO(b/394660950): Revisit the choice to update the layout when explodeProgress == 1.
             // To run the explode animation in reverse, it may be simpler to use translation/scale
             // for all cases where the progress is non-zero.
@@ -253,6 +258,24 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
                     height = taskHeight.toInt()
                     leftMargin = taskLeft.toInt()
                     topMargin = taskTop.toInt()
+                }
+
+                if (
+                    enableDesktopRecentsTransitionsCornersBugfix() && enableRefactorTaskThumbnail()
+                ) {
+                    it.thumbnailView.outlineBounds =
+                        if (intersects(overviewTaskPosition, screenRect))
+                            Rect(overviewTaskPosition).apply {
+                                intersectUnchecked(screenRect)
+                                // Offset to 0,0 to transform into TaskThumbnailView's coordinate
+                                // system.
+                                offset(-overviewTaskPosition.left, -overviewTaskPosition.top)
+                                left = (left * scaleWidth).roundToInt()
+                                top = (top * scaleHeight).roundToInt()
+                                right = (right * scaleWidth).roundToInt()
+                                bottom = (bottom * scaleHeight).roundToInt()
+                            }
+                        else null
                 }
             } else {
                 // During the animation, apply translation and scale such that the view is
@@ -346,13 +369,13 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         val desktopSize = Size(tempPointF.x.toInt(), tempPointF.y.toInt())
         DEFAULT_BOUNDS.set(0, 0, desktopSize.width / 4, desktopSize.height / 4)
 
-        defaultTaskPositions =
+        fullscreenTaskPositions =
             taskContainers.map {
                 DesktopTaskBoundsData(it.task.key.id, it.task.appBounds ?: DEFAULT_BOUNDS)
             }
 
         if (enableDesktopExplodedView()) {
-            viewModel?.organizeDesktopTasks(desktopSize, defaultTaskPositions)
+            viewModel?.organizeDesktopTasks(desktopSize, fullscreenTaskPositions)
         }
         positionTaskWindows()
     }
@@ -449,8 +472,8 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         private const val VIEW_POOL_INITIAL_SIZE = 0
         private val DEFAULT_BOUNDS = Rect()
         // Temporaries used for various purposes to avoid allocations.
-        private val TEMP_RECT = Rect()
-        private val TEMP_RECTF1 = RectF()
-        private val TEMP_RECTF2 = RectF()
+        private val TEMP_OVERVIEW_TASK_POSITION = Rect()
+        private val TEMP_FROM_RECTF = RectF()
+        private val TEMP_TO_RECTF = RectF()
     }
 }
