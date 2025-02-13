@@ -229,7 +229,7 @@ class RecentsWindowManager(context: Context, wallpaperColorHints: Int) :
                 anim,
                 this@RecentsWindowManager,
                 {
-                    getStateManager().goToState(BG_LAUNCHER, false)
+                    getStateManager().goToState(BG_LAUNCHER, true)
                     cleanupRecentsWindow()
                 },
                 true, /* skipFirstFrame */
