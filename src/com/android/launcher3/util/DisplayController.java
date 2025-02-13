@@ -229,8 +229,10 @@ public class DisplayController implements ComponentCallbacks,
     }
 
     @Override
-    public void onDesktopVisibilityChanged(boolean visible) {
-        notifyConfigChange();
+    public void onIsInDesktopModeChanged(int displayId, boolean isInDesktopModeAndNotInOverview) {
+        if (DEFAULT_DISPLAY == displayId) {
+            notifyConfigChange();
+        }
     }
 
     /**
