@@ -178,7 +178,7 @@ class RecentsWindowManager(context: Context, wallpaperColorHints: Int) :
         val recentsView: RecentsView<*, *> = getOverviewPanel()
 
         if (!finishRecentsAnimation) {
-            recentsView.switchToScreenshot(/* onFinishRunnable= */ null)
+            recentsView.switchToScreenshot /* onFinishRunnable= */ {}
             startHomeInternal()
             return
         }

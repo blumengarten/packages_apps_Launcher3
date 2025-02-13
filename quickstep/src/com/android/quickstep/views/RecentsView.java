@@ -241,8 +241,8 @@ import com.android.wm.shell.shared.desktopmode.DesktopModeTransitionSource;
 
 import kotlin.Unit;
 import kotlin.collections.CollectionsKt;
-
 import kotlin.jvm.functions.Function0;
+
 import kotlinx.coroutines.CoroutineScope;
 
 import java.util.ArrayList;
