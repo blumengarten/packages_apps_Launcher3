@@ -4346,6 +4346,11 @@ public abstract class RecentsView<
             PendingAnimation pendingAnimation,
             SplitAnimationTimings splitTimings,
             int index) {
+        // No need to translate the AddDesktopButton on dismissing a TaskView, which should be
+        // always at the right most position, even when dismissing the last TaskView.
+        if (view instanceof AddDesktopButton) {
+            return;
+        }
         FloatProperty translationProperty = view instanceof TaskView
                 ? ((TaskView) view).getPrimaryDismissTranslationProperty()
                 : getPagedOrientationHandler().getPrimaryViewTranslate();
