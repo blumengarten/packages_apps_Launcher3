@@ -40,7 +40,6 @@ class DeviceProfileDumpTest : AbstractDeviceProfileTest() {
             Flags.FLAG_ENABLE_SCALING_REVEAL_HOME_ANIMATION,
         )
         setFlagsRule.setFlags(false, Flags.FLAG_ONE_GRID_SPECS)
-        setFlagsRule.setFlags(false, Flags.FLAG_ENABLE_LAUNCHER_ICON_SHAPES)
     }
 
     @Test
