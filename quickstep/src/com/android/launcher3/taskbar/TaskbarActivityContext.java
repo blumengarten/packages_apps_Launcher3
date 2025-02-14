@@ -1559,7 +1559,10 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
      */
     private void launchFromInAppTaskbar(@Nullable RecentsView recents,
             @Nullable View launchingIconView, List<? extends ItemInfo> itemInfos) {
-        if (recents == null) {
+        boolean launchedFromExternalDisplay =
+                DesktopExperienceFlags.ENABLE_TASKBAR_CONNECTED_DISPLAYS.isTrue()
+                        && !mIsPrimaryDisplay;
+        if (recents == null && !launchedFromExternalDisplay) {
             return;
         }
 
