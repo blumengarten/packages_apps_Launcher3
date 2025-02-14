@@ -48,9 +48,9 @@ class DesktopAppLaunchTransitionManager(
             RemoteTransition(
                 DesktopAppLaunchTransition(
                     context,
-                    MAIN_EXECUTOR,
                     AppLaunchType.UNMINIMIZE,
                     Cuj.CUJ_DESKTOP_MODE_APP_LAUNCH_FROM_INTENT,
+                    MAIN_EXECUTOR,
                 ),
                 "DesktopWindowLimitUnminimize",
             )

@@ -1534,9 +1534,9 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         return new RemoteTransition(
                 new DesktopAppLaunchTransition(
                         this,
-                        getMainExecutor(),
                         appLaunchType,
-                        cujType
+                        cujType,
+                        getMainExecutor()
                 ),
                 "TaskbarDesktopAppLaunch");
     }
