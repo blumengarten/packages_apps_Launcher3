@@ -48,13 +48,13 @@
 
             app:layout_constraintVertical_chainStyle="packed"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/text"
+            app:layout_constraintBottom_toTopOf="@id/small_text"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
         <TextView
             style="@style/KeyboardQuickSwitchText.OnTaskView"
-            android:id="@+id/text"
+            android:id="@+id/small_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAlignment="center"
