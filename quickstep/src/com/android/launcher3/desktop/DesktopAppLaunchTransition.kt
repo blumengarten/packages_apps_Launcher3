@@ -19,6 +19,7 @@ package com.android.launcher3.desktop
 import android.animation.Animator
 import android.content.Context
 import android.os.IBinder
+import android.util.Log
 import android.view.SurfaceControl.Transaction
 import android.view.WindowManager.TRANSIT_OPEN
 import android.view.WindowManager.TRANSIT_TO_FRONT
@@ -43,7 +44,7 @@ class DesktopAppLaunchTransition
 @JvmOverloads
 constructor(
     context: Context,
-    launchType: AppLaunchType,
+    private val launchType: AppLaunchType,
     @Cuj.CujType private val cujType: Int,
     private val mainExecutor: Executor,
     transactionSupplier: Supplier<Transaction> = Supplier { Transaction() },
@@ -66,6 +67,7 @@ constructor(
         transaction: Transaction,
         transitionFinishedCallback: IRemoteTransitionFinishedCallback,
     ) {
+        Log.v(TAG, "startAnimation: launchType=$launchType, cujType=$cujType")
         val safeTransitionFinishedCallback = RemoteRunnable {
             transitionFinishedCallback.onTransitionFinished(/* wct= */ null, /* sct= */ null)
         }
@@ -86,6 +88,7 @@ constructor(
     }
 
     companion object {
+        const val TAG = "DesktopAppLaunchTransition"
         /** Change modes that represent a task becoming visible / launching in Desktop mode. */
         val LAUNCH_CHANGE_MODES = intArrayOf(TRANSIT_OPEN, TRANSIT_TO_FRONT)
 
