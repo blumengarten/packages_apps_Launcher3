@@ -25,6 +25,7 @@ import com.android.launcher3.LauncherPrefs.Companion.backedUpItem
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppComponent
 import com.android.launcher3.dagger.LauncherAppSingleton
+import com.android.launcher3.graphics.ShapeDelegate.Companion.pickBestShape
 import com.android.launcher3.icons.IconThemeController
 import com.android.launcher3.icons.mono.MonoIconThemeController
 import com.android.launcher3.shapes.ShapesProvider
@@ -46,18 +47,24 @@ constructor(
 ) {
 
     /** Representation of the current icon state */
-    var iconState = parseIconState()
+    var iconState = parseIconState(null)
         private set
 
     var isMonoThemeEnabled
         set(value) = prefs.put(THEMED_ICONS, value)
         get() = prefs.get(THEMED_ICONS)
 
-    val themeController: IconThemeController?
+    val themeController
         get() = iconState.themeController
 
-    val isIconThemeEnabled: Boolean
+    val isIconThemeEnabled
         get() = themeController != null
+
+    val iconShape
+        get() = iconState.iconShape
+
+    val folderShape
+        get() = iconState.folderShape
 
     private val listeners = CopyOnWriteArrayList<ThemeChangeListener>()
 
@@ -80,7 +87,7 @@ constructor(
     }
 
     protected fun verifyIconState() {
-        val newState = parseIconState()
+        val newState = parseIconState(iconState)
         if (newState == iconState) return
         iconState = newState
 
@@ -91,7 +98,7 @@ constructor(
 
     fun removeChangeListener(listener: ThemeChangeListener) = listeners.remove(listener)
 
-    private fun parseIconState(): IconState {
+    private fun parseIconState(oldState: IconState?): IconState {
         val shapeModel =
             prefs.get(PREF_ICON_SHAPE).let { shapeOverride ->
                 ShapesProvider.iconShapes.values.firstOrNull { it.key == shapeOverride }
@@ -102,11 +109,27 @@ constructor(
                 CONFIG_ICON_MASK_RES_ID == Resources.ID_NULL -> ""
                 else -> context.resources.getString(CONFIG_ICON_MASK_RES_ID)
             }
+
+        val iconShape =
+            if (oldState != null && oldState.iconMask == iconMask) oldState.iconShape
+            else pickBestShape(iconMask)
+
+        val folderShapeMask = shapeModel?.folderPathString ?: iconMask
+        val folderShape =
+            when {
+                oldState != null && oldState.folderShapeMask == folderShapeMask ->
+                    oldState.folderShape
+                folderShapeMask == iconMask || folderShapeMask.isEmpty() -> iconShape
+                else -> pickBestShape(folderShapeMask)
+            }
+
         return IconState(
             iconMask = iconMask,
-            folderShapeMask = shapeModel?.folderPathString ?: iconMask,
+            folderShapeMask = folderShapeMask,
             themeController = createThemeController(),
             iconScale = shapeModel?.iconScale ?: 1f,
+            iconShape = iconShape,
+            folderShape = folderShape,
         )
     }
 
@@ -120,6 +143,8 @@ constructor(
         val themeController: IconThemeController?,
         val themeCode: String = themeController?.themeID ?: "no-theme",
         val iconScale: Float = 1f,
+        val iconShape: ShapeDelegate,
+        val folderShape: ShapeDelegate,
     ) {
         fun toUniqueId() = "${iconMask.hashCode()},$themeCode"
     }

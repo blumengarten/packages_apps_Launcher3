@@ -47,7 +47,8 @@ import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.dragndrop.FolderAdaptiveIcon;
-import com.android.launcher3.graphics.IconShape;
+import com.android.launcher3.graphics.ShapeDelegate;
+import com.android.launcher3.graphics.ThemeManager;
 
 /**
  * A view used to draw both layers of an {@link AdaptiveIconDrawable}.
@@ -174,7 +175,7 @@ public class ClipIconView extends View implements ClipPathView {
         if (mIsAdaptiveIcon) {
             if (!isOpening && progress >= shapeProgressStart) {
                 if (mRevealAnimator == null) {
-                    mRevealAnimator = IconShape.INSTANCE.get(getContext()).getShape()
+                    mRevealAnimator = ThemeManager.INSTANCE.get(getContext()).getIconShape()
                             .createRevealAnimator(this, mStartRevealRect,
                                     mOutline, mTaskCornerRadius, !isOpening);
                     mRevealAnimator.addListener(forEndCallback(() -> mRevealAnimator = null));
@@ -259,7 +260,7 @@ public class ClipIconView extends View implements ClipPathView {
 
             if (!isFolderIcon) {
                 Utilities.scaleRectAboutCenter(mStartRevealRect,
-                        IconShape.INSTANCE.get(getContext()).getNormalizationScale());
+                        ShapeDelegate.getNormalizationScale());
             }
 
             if (dp.isLandscape) {

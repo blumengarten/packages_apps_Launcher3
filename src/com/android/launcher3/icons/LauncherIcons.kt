@@ -27,7 +27,6 @@ import com.android.launcher3.InvariantDeviceProfile
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.dagger.LauncherComponentProvider.appComponent
-import com.android.launcher3.graphics.IconShape
 import com.android.launcher3.graphics.ThemeManager
 import com.android.launcher3.pm.UserCache
 import com.android.launcher3.util.UserIconInfo
@@ -46,9 +45,8 @@ class LauncherIcons
 internal constructor(
     @ApplicationContext context: Context,
     idp: InvariantDeviceProfile,
-    themeManager: ThemeManager,
+    private var themeManager: ThemeManager,
     private var userCache: UserCache,
-    private var iconShape: IconShape,
     @Assisted private val pool: ConcurrentLinkedQueue<LauncherIcons>,
 ) : BaseIconFactory(context, idp.fillResIconDpi, idp.iconBitmapSize), AutoCloseable {
 
@@ -70,7 +68,7 @@ internal constructor(
 
     public override fun getShapePath(drawable: AdaptiveIconDrawable, iconBounds: Rect): Path {
         if (!Flags.enableLauncherIconShapes()) return drawable.iconMask
-        return iconShape.shape.getPath(iconBounds)
+        return themeManager.iconShape.getPath(iconBounds)
     }
 
     override fun drawAdaptiveIcon(
