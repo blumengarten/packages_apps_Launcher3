@@ -75,8 +75,8 @@ import com.android.launcher3.dot.DotInfo;
 import com.android.launcher3.dragndrop.DragOptions.PreDragCondition;
 import com.android.launcher3.dragndrop.DraggableView;
 import com.android.launcher3.folder.FolderIcon;
-import com.android.launcher3.graphics.IconShape;
 import com.android.launcher3.graphics.PreloadIconDrawable;
+import com.android.launcher3.graphics.ShapeDelegate;
 import com.android.launcher3.icons.DotRenderer;
 import com.android.launcher3.icons.FastBitmapDrawable;
 import com.android.launcher3.icons.IconCache.ItemInfoUpdateReceiver;
@@ -724,7 +724,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         if (!mForceHideDot && (hasDot() || mDotParams.scale > 0)) {
             getIconBounds(mDotParams.iconBounds);
             Utilities.scaleRectAboutCenter(mDotParams.iconBounds,
-                    IconShape.INSTANCE.get(getContext()).getNormalizationScale());
+                    ShapeDelegate.getNormalizationScale());
             final int scrollX = getScrollX();
             final int scrollY = getScrollY();
             canvas.translate(scrollX, scrollY);
@@ -775,7 +775,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         getIconBounds(mRunningAppIconBounds);
         Utilities.scaleRectAboutCenter(
                 mRunningAppIconBounds,
-                IconShape.INSTANCE.get(getContext()).getNormalizationScale());
+                ShapeDelegate.getNormalizationScale());
 
         final boolean isMinimized = mRunningAppState == RunningAppState.MINIMIZED;
         final int indicatorTop = mRunningAppIconBounds.bottom + mRunningAppIndicatorTopMargin;

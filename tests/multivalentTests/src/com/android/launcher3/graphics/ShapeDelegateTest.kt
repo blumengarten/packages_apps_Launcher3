@@ -28,13 +28,13 @@ import android.view.View
 import androidx.core.graphics.PathParser
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
-import com.android.launcher3.graphics.IconShape.Circle
-import com.android.launcher3.graphics.IconShape.Companion.AREA_CALC_SIZE
-import com.android.launcher3.graphics.IconShape.Companion.AREA_DIFF_THRESHOLD
-import com.android.launcher3.graphics.IconShape.Companion.areaDiffCalculator
-import com.android.launcher3.graphics.IconShape.Companion.pickBestShape
-import com.android.launcher3.graphics.IconShape.GenericPathShape
-import com.android.launcher3.graphics.IconShape.RoundedSquare
+import com.android.launcher3.graphics.ShapeDelegate.Circle
+import com.android.launcher3.graphics.ShapeDelegate.Companion.AREA_CALC_SIZE
+import com.android.launcher3.graphics.ShapeDelegate.Companion.AREA_DIFF_THRESHOLD
+import com.android.launcher3.graphics.ShapeDelegate.Companion.areaDiffCalculator
+import com.android.launcher3.graphics.ShapeDelegate.Companion.pickBestShape
+import com.android.launcher3.graphics.ShapeDelegate.GenericPathShape
+import com.android.launcher3.graphics.ShapeDelegate.RoundedSquare
 import com.android.launcher3.icons.GraphicsUtils
 import com.android.launcher3.views.ClipPathView
 import com.google.common.truth.Truth.assertThat
@@ -43,7 +43,7 @@ import org.junit.runner.RunWith
 
 @SmallTest
 @RunWith(AndroidJUnit4::class)
-class IconShapeTest {
+class ShapeDelegateTest {
 
     @Test
     fun `areaDiffCalculator increases with outwards shape`() {

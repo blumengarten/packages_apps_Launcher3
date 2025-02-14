@@ -30,7 +30,7 @@ import androidx.annotation.Nullable;
 
 import com.android.launcher3.R;
 import com.android.launcher3.config.FeatureFlags;
-import com.android.launcher3.graphics.IconShape;
+import com.android.launcher3.graphics.ShapeDelegate;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.util.ApiWrapper;
 
@@ -54,13 +54,13 @@ public class LauncherIconProvider extends IconProvider {
     private Map<String, ThemeData> mThemedIconMap;
 
     private final ApiWrapper mApiWrapper;
-    private final IconShape mIconShape;
+    private final ThemeManager mThemeManager;
 
     public LauncherIconProvider(Context context) {
         super(context);
-        setIconThemeSupported(ThemeManager.INSTANCE.get(context).isMonoThemeEnabled());
+        mThemeManager = ThemeManager.INSTANCE.get(context);
         mApiWrapper = ApiWrapper.INSTANCE.get(context);
-        mIconShape = IconShape.INSTANCE.get(context);
+        setIconThemeSupported(mThemeManager.isMonoThemeEnabled());
     }
 
     /**
@@ -91,7 +91,7 @@ public class LauncherIconProvider extends IconProvider {
     @Override
     protected Drawable loadAppInfoIcon(ApplicationInfo info, Resources resources, int density) {
         // Tries to load the round icon res, if the app defines it as an adaptive icon
-        if (mIconShape.getShape() instanceof IconShape.Circle) {
+        if (mThemeManager.getIconShape() instanceof ShapeDelegate.Circle) {
             int roundIconRes = mApiWrapper.getRoundIconRes(info);
             if (roundIconRes != 0 && roundIconRes != info.icon) {
                 try {
