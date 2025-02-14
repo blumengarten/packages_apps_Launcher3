@@ -21,6 +21,7 @@ import static android.view.RemoteAnimationTarget.MODE_OPENING;
 import static android.view.WindowManager.LayoutParams.TYPE_DOCK_DIVIDER;
 
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
+import static com.android.wm.shell.shared.TransitionUtil.TYPE_SPLIT_SCREEN_DIM_LAYER;
 
 import android.annotation.Nullable;
 import android.graphics.Rect;
@@ -190,7 +191,8 @@ public class RecentsAnimationCallbacks implements
             ArrayList<RemoteAnimationTarget> apps, ArrayList<RemoteAnimationTarget> nonApps) {
         for (int i = 0; i < appTargets.length; i++) {
             RemoteAnimationTarget target = appTargets[i];
-            if (target.windowType == TYPE_DOCK_DIVIDER) {
+            if (target.windowType == TYPE_DOCK_DIVIDER
+                    || target.windowType == TYPE_SPLIT_SCREEN_DIM_LAYER) {
                 nonApps.add(target);
             } else {
                 apps.add(target);
