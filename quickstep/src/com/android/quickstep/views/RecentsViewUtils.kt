@@ -35,6 +35,7 @@ import com.android.launcher3.util.MSDLPlayerWrapper
 import com.android.quickstep.util.GroupTask
 import com.android.quickstep.util.TaskGridNavHelper
 import com.android.quickstep.util.isExternalDisplay
+import com.android.quickstep.views.RecentsView.RECENTS_SCALE_PROPERTY
 import com.android.quickstep.views.RecentsView.RUNNING_TASK_ATTACH_ALPHA
 import com.android.systemui.shared.recents.model.ThumbnailData
 import com.google.android.msdl.data.model.MSDLToken
@@ -362,7 +363,6 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
             addNeighboringSpringAnimationsForDismissCancel(
                 draggedTaskView,
                 draggedTaskViewSpringAnimation,
-                recentsView.pageCount,
             )
         }
         return draggedTaskViewSpringAnimation
@@ -371,7 +371,6 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
     private fun addNeighboringSpringAnimationsForDismissCancel(
         draggedTaskView: TaskView,
         draggedTaskViewSpringAnimation: SpringAnimation,
-        taskCount: Int,
     ) {
         // Empty spring animation exists for conditional start, and to drive neighboring springs.
         val neighborsToSettle =
@@ -532,10 +531,39 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
             )
     }
 
+    /** Animates RecentsView's scale to the provided value, using spring animations. */
+    fun animateRecentsScale(scale: Float): SpringAnimation {
+        val resourceProvider = DynamicResource.provider(recentsView.mContainer)
+        val dampingRatio = resourceProvider.getFloat(R.dimen.swipe_up_rect_scale_damping_ratio)
+        val stiffness = resourceProvider.getFloat(R.dimen.swipe_up_rect_scale_stiffness)
+
+        // Spring which sets the Recents scale on update. This is needed, as the SpringAnimation
+        // struggles to animate small values like changing recents scale from 0.9 to 1. So
+        // we animate over a larger range (e.g. 900 to 1000) and convert back to the required value.
+        // (This is instead of converting RECENTS_SCALE_PROPERTY to a FloatPropertyCompat and
+        // animating it directly via springs.)
+        val initialRecentsScaleSpringValue =
+            RECENTS_SCALE_SPRING_MULTIPLIER * RECENTS_SCALE_PROPERTY.get(recentsView)
+        return SpringAnimation(FloatValueHolder(initialRecentsScaleSpringValue))
+            .setSpring(
+                SpringForce(initialRecentsScaleSpringValue)
+                    .setDampingRatio(dampingRatio)
+                    .setStiffness(stiffness)
+            )
+            .addUpdateListener { _, value, _ ->
+                RECENTS_SCALE_PROPERTY.setValue(
+                    recentsView,
+                    value / RECENTS_SCALE_SPRING_MULTIPLIER,
+                )
+            }
+            .apply { animateToFinalPosition(RECENTS_SCALE_SPRING_MULTIPLIER * scale) }
+    }
+
     companion object {
         val TEMP_RECT = Rect()
 
         // The additional damping to apply to tasks further from the dismissed task.
-        const val ADDITIONAL_DISMISS_DAMPING_RATIO = 0.15f
+        private const val ADDITIONAL_DISMISS_DAMPING_RATIO = 0.15f
+        private const val RECENTS_SCALE_SPRING_MULTIPLIER = 1000f
     }
 }

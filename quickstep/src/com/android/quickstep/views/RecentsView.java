@@ -6947,6 +6947,13 @@ public abstract class RecentsView<
                 isDismissing, detector, dismissLength, onEndRunnable);
     }
 
+    /**
+     * Animates RecentsView's scale to the provided value, using spring animations.
+     */
+    public SpringAnimation animateRecentsScale(float scale) {
+        return mUtils.animateRecentsScale(scale);
+    }
+
     public interface TaskLaunchListener {
         void onTaskLaunched();
     }
