@@ -276,7 +276,10 @@ public class BubbleBarViewController {
 
             @Override
             public boolean isOnLeft() {
-                return mBarView.getBubbleBarLocation().isOnLeft(mBarView.isLayoutRtl());
+                boolean shouldRevertLocation =
+                        mBarView.isShowingDropTarget() && mIsLocationUpdatedForDropTarget;
+                boolean isOnLeft = mBarView.getBubbleBarLocation().isOnLeft(mBarView.isLayoutRtl());
+                return shouldRevertLocation != isOnLeft;
             }
 
             @Override
@@ -1053,7 +1056,12 @@ public class BubbleBarViewController {
         boolean isInApp = mTaskbarStashController.isInApp();
         // if this is the first bubble, animate to the initial state.
         if (mBarView.getBubbleChildCount() == 1 && !isUpdate) {
-            mBubbleBarViewAnimator.animateToInitialState(bubble, isInApp, isExpanding);
+            // If a drop target is visible and the first bubble is added, hide the empty drop target
+            if (mBarView.isShowingDropTarget()) {
+                mBubbleBarPinController.hideDropTarget();
+            }
+            mBubbleBarViewAnimator.animateToInitialState(bubble, isInApp, isExpanding,
+                    mBarView.isShowingDropTarget());
             return;
         }
         // if we're not stashed or we're in persistent taskbar, animate for collapsed state.
