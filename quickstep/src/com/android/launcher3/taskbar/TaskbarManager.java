@@ -124,8 +124,7 @@ public class TaskbarManager {
     private final TaskbarNavButtonController mDefaultNavButtonController;
     private final ComponentCallbacks mDefaultComponentCallbacks;
 
-    private final SimpleBroadcastReceiver mShutdownReceiver =
-            new SimpleBroadcastReceiver(UI_HELPER_EXECUTOR, i -> destroyAllTaskbars());
+    private final SimpleBroadcastReceiver mShutdownReceiver;
 
     // The source for this provider is set when Launcher is available
     // We use 'non-destroyable' version here so the original provider won't be destroyed
@@ -183,8 +182,7 @@ public class TaskbarManager {
 
     private boolean mUserUnlocked = false;
 
-    private final SimpleBroadcastReceiver mTaskbarBroadcastReceiver =
-            new SimpleBroadcastReceiver(UI_HELPER_EXECUTOR, this::showTaskbarFromBroadcast);
+    private final SimpleBroadcastReceiver mTaskbarBroadcastReceiver;
 
     private final AllAppsActionManager mAllAppsActionManager;
     private final RecentsDisplayModel mRecentsDisplayModel;
@@ -266,7 +264,13 @@ public class TaskbarManager {
                 .register(NAV_BAR_KIDS_MODE, mOnSettingsChangeListener);
         Log.d(TASKBAR_NOT_DESTROYED_TAG, "registering component callbacks from constructor.");
         mPrimaryWindowContext.registerComponentCallbacks(mDefaultComponentCallbacks);
-        mShutdownReceiver.register(mPrimaryWindowContext, Intent.ACTION_SHUTDOWN);
+        mShutdownReceiver =
+                new SimpleBroadcastReceiver(
+                        mPrimaryWindowContext, UI_HELPER_EXECUTOR, i -> destroyAllTaskbars());
+        mTaskbarBroadcastReceiver =
+                new SimpleBroadcastReceiver(mPrimaryWindowContext,
+                        UI_HELPER_EXECUTOR, this::showTaskbarFromBroadcast);
+        mShutdownReceiver.register(Intent.ACTION_SHUTDOWN);
         UI_HELPER_EXECUTOR.execute(() -> {
             mSharedState.taskbarSystemActionPendingIntent = PendingIntent.getBroadcast(
                     mPrimaryWindowContext,
@@ -274,8 +278,7 @@ public class TaskbarManager {
                     new Intent(ACTION_SHOW_TASKBAR).setPackage(
                             mPrimaryWindowContext.getPackageName()),
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-            mTaskbarBroadcastReceiver.register(
-                    mPrimaryWindowContext, RECEIVER_NOT_EXPORTED, ACTION_SHOW_TASKBAR);
+            mTaskbarBroadcastReceiver.register(RECEIVER_NOT_EXPORTED, ACTION_SHOW_TASKBAR);
         });
 
         debugWhyTaskbarNotDestroyed("TaskbarManager created");
@@ -425,7 +428,7 @@ public class TaskbarManager {
      */
     public void onUserUnlocked() {
         mUserUnlocked = true;
-        DisplayController.get(mPrimaryWindowContext).addChangeListener(
+        DisplayController.INSTANCE.get(mPrimaryWindowContext).addChangeListener(
                 mRecreationListener);
         recreateTaskbar();
         addTaskbarRootViewToWindow(getDefaultDisplayId());
@@ -795,10 +798,10 @@ public class TaskbarManager {
         mRecentsViewContainer = null;
         debugWhyTaskbarNotDestroyed("TaskbarManager#destroy()");
         removeActivityCallbacksAndListeners();
-        mTaskbarBroadcastReceiver.unregisterReceiverSafely(mPrimaryWindowContext);
+        mTaskbarBroadcastReceiver.unregisterReceiverSafely();
 
         if (mUserUnlocked) {
-            DisplayController.get(mPrimaryWindowContext).removeChangeListener(
+            DisplayController.INSTANCE.get(mPrimaryWindowContext).removeChangeListener(
                     mRecreationListener);
         }
         SettingsCache.INSTANCE.get(mPrimaryWindowContext)
@@ -807,7 +810,7 @@ public class TaskbarManager {
                 .unregister(NAV_BAR_KIDS_MODE, mOnSettingsChangeListener);
         Log.d(TASKBAR_NOT_DESTROYED_TAG, "unregistering component callbacks from destroy().");
         mPrimaryWindowContext.unregisterComponentCallbacks(mDefaultComponentCallbacks);
-        mShutdownReceiver.unregisterReceiverSafely(mPrimaryWindowContext);
+        mShutdownReceiver.unregisterReceiverSafely();
         destroyAllTaskbars();
     }
 

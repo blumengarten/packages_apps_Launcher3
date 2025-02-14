@@ -233,8 +233,10 @@ public abstract class BaseContainerInterface<STATE_TYPE extends BaseState<STATE_
         if (endTarget != null) {
             // We were on our way to this state when we got canceled, end there instead.
             startState = stateFromGestureEndTarget(endTarget);
-            if (DesktopVisibilityController.INSTANCE.get(recentsView.getContext())
-                    .areDesktopTasksVisibleAndNotInOverview() && endTarget == LAST_TASK) {
+            final var context = recentsView.getContext();
+            if (DesktopVisibilityController.INSTANCE.get(context)
+                    .isInDesktopModeAndNotInOverview(context.getDisplayId())
+                    && endTarget == LAST_TASK) {
                 // When we are cancelling the transition and going back to last task, move to
                 // rest state instead when desktop tasks are visible.
                 // If a fullscreen task is visible, launcher goes to normal state when the
@@ -290,7 +292,7 @@ public abstract class BaseContainerInterface<STATE_TYPE extends BaseState<STATE_
             insets = dp.getInsets();
         } else {
             Rect portraitInsets = dp.getInsets();
-            DisplayController displayController = DisplayController.get(context);
+            DisplayController displayController = DisplayController.INSTANCE.get(context);
             @Nullable List<WindowBounds> windowBounds =
                     displayController.getInfo().getCurrentBounds();
             Rect deviceRotationInsets = windowBounds != null

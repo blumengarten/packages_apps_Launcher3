@@ -71,6 +71,9 @@ public class NavigationModeSwitchRule implements TestRule {
 
     private final LauncherInstrumentation mLauncher;
 
+    static final DisplayController DISPLAY_CONTROLLER =
+            DisplayController.INSTANCE.get(getInstrumentation().getTargetContext());
+
     public NavigationModeSwitchRule(LauncherInstrumentation launcher) {
         mLauncher = launcher;
     }
@@ -165,13 +168,11 @@ public class NavigationModeSwitchRule implements TestRule {
                             latch.countDown();
                         }
                     };
-            DisplayController displayController =
-                    DisplayController.get(getInstrumentation().getTargetContext());
             targetContext.getMainExecutor().execute(() ->
-                    displayController.addChangeListener(listener));
+                    DISPLAY_CONTROLLER.addChangeListener(listener));
             latch.await(60, TimeUnit.SECONDS);
             targetContext.getMainExecutor().execute(() ->
-                    displayController.removeChangeListener(listener));
+                    DISPLAY_CONTROLLER.removeChangeListener(listener));
 
             assertTrue(launcher, "Navigation mode didn't change to " + expectedMode,
                     currentSysUiNavigationMode() == expectedMode, description);

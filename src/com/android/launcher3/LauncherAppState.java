@@ -119,14 +119,13 @@ public class LauncherAppState implements SafeCloseable {
         }
 
         SimpleBroadcastReceiver modelChangeReceiver =
-                new SimpleBroadcastReceiver(UI_HELPER_EXECUTOR, mModel::onBroadcastIntent);
+                new SimpleBroadcastReceiver(context, UI_HELPER_EXECUTOR, mModel::onBroadcastIntent);
         modelChangeReceiver.register(
-                mContext,
                 ACTION_DEVICE_POLICY_RESOURCE_UPDATED);
         if (BuildConfig.IS_STUDIO_BUILD) {
-            modelChangeReceiver.register(mContext, RECEIVER_EXPORTED, ACTION_FORCE_ROLOAD);
+            modelChangeReceiver.register(RECEIVER_EXPORTED, ACTION_FORCE_ROLOAD);
         }
-        mOnTerminateCallback.add(() -> modelChangeReceiver.unregisterReceiverSafely(mContext));
+        mOnTerminateCallback.add(() -> modelChangeReceiver.unregisterReceiverSafely());
 
         SafeCloseable userChangeListener = UserCache.INSTANCE.get(mContext)
                 .addUserEventListener(mModel::onUserEvent);

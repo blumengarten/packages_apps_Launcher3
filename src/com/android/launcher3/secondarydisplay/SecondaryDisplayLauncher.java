@@ -115,15 +115,9 @@ public class SecondaryDisplayLauncher extends BaseActivity
         if (mDragLayer != null) {
             return;
         }
-        InvariantDeviceProfile currentDisplayIdp = new InvariantDeviceProfile(
-                this, getWindow().getDecorView().getDisplay());
 
-        // Disable transpose layout and use multi-window mode so that the icons are scaled properly
-        mDeviceProfile = currentDisplayIdp.getDeviceProfile(this)
-                .toBuilder(this)
-                .setMultiWindowMode(true)
-                .setTransposeLayoutWithOrientation(false)
-                .build();
+        mDeviceProfile = InvariantDeviceProfile.INSTANCE.get(this)
+                .createDeviceProfileForSecondaryDisplay(this);
         mDeviceProfile.autoResizeAllAppsCells();
 
         setContentView(R.layout.secondary_launcher);

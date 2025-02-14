@@ -325,9 +325,9 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                     new BubbleDragController(this),
                     new BubbleDismissController(this, mDragLayer),
                     new BubbleBarPinController(this, mDragLayer,
-                            () -> DisplayController.get(this).getInfo().currentSize),
+                            () -> DisplayController.INSTANCE.get(this).getInfo().currentSize),
                     new BubblePinController(this, mDragLayer,
-                            () -> DisplayController.get(this).getInfo().currentSize),
+                            () -> DisplayController.INSTANCE.get(this).getInfo().currentSize),
                     bubbleBarSwipeController,
                     new BubbleCreator(this)
             ));
@@ -1291,7 +1291,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
 
     boolean areDesktopTasksVisible() {
         return mControllers != null
-                && mControllers.taskbarDesktopModeController.getAreDesktopTasksVisible();
+                && mControllers.taskbarDesktopModeController.isInDesktopMode(getDisplayId());
     }
 
     protected void onTaskbarIconClicked(View view) {

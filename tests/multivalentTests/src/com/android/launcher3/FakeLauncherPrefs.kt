@@ -21,19 +21,24 @@ import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppSingleton
-import java.io.File
+import com.android.launcher3.util.DaggerSingletonTracker
+import java.util.UUID
 import javax.inject.Inject
 
 /** Emulates Launcher preferences for a test environment. */
 @LauncherAppSingleton
-class FakeLauncherPrefs @Inject constructor(@ApplicationContext context: Context) :
+class FakeLauncherPrefs
+@Inject
+constructor(@ApplicationContext context: Context, lifeCycle: DaggerSingletonTracker) :
     LauncherPrefs(context) {
 
-    private val backingPrefs =
-        context.getSharedPreferences(
-            File.createTempFile("fake-pref", ".xml", context.filesDir),
-            MODE_PRIVATE,
-        )
+    private val prefName = "fake-pref-" + UUID.randomUUID().toString()
+
+    private val backingPrefs = context.getSharedPreferences(prefName, MODE_PRIVATE)
+
+    init {
+        lifeCycle.addCloseable { context.deleteSharedPreferences(prefName) }
+    }
 
     override fun getSharedPrefs(item: Item): SharedPreferences = backingPrefs
 }

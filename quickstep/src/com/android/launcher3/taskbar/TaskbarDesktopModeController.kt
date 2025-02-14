@@ -30,17 +30,16 @@ class TaskbarDesktopModeController(
     private lateinit var taskbarControllers: TaskbarControllers
     private lateinit var taskbarSharedState: TaskbarSharedState
 
-    val areDesktopTasksVisibleAndNotInOverview: Boolean
-        get() = desktopVisibilityController.areDesktopTasksVisibleAndNotInOverview()
-
-    val areDesktopTasksVisible: Boolean
-        get() = desktopVisibilityController.areDesktopTasksVisible()
-
     fun init(controllers: TaskbarControllers, sharedState: TaskbarSharedState) {
         taskbarControllers = controllers
         taskbarSharedState = sharedState
         desktopVisibilityController.registerTaskbarDesktopModeListener(this)
     }
+
+    fun isInDesktopMode(displayId: Int) = desktopVisibilityController.isInDesktopMode(displayId)
+
+    fun isInDesktopModeAndNotInOverview(displayId: Int) =
+        desktopVisibilityController.isInDesktopModeAndNotInOverview(displayId)
 
     override fun onTaskbarCornerRoundingUpdate(doesAnyTaskRequireTaskbarRounding: Boolean) {
         taskbarSharedState.showCornerRadiusInDesktopMode = doesAnyTaskRequireTaskbarRounding
@@ -49,7 +48,7 @@ class TaskbarDesktopModeController(
     }
 
     fun shouldShowDesktopTasksInTaskbar(): Boolean {
-        return desktopVisibilityController.areDesktopTasksVisible() ||
+        return isInDesktopMode(context.displayId) ||
             DisplayController.showDesktopTaskbarForFreeformDisplay(context) ||
             (DisplayController.showLockedTaskbarOnHome(context) &&
                 taskbarControllers.taskbarStashController.isOnHome)

@@ -1189,7 +1189,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         if (mActivity.isHardwareKeyboard()
                 && mActivity.isThreeButtonNav()
                 && mControllers.taskbarDesktopModeController
-                    .getAreDesktopTasksVisibleAndNotInOverview()) {
+                    .isInDesktopModeAndNotInOverview(mActivity.getDisplayId())) {
             return false;
         }
 

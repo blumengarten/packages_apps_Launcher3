@@ -73,8 +73,8 @@ public class SystemWindowManagerProxy extends WindowManagerProxy {
     }
 
     @Override
-    public boolean isInDesktopMode() {
-        return mDesktopVisibilityController.areDesktopTasksVisible();
+    public boolean isInDesktopMode(int displayId) {
+        return mDesktopVisibilityController.isInDesktopMode(displayId);
     }
 
     @Override

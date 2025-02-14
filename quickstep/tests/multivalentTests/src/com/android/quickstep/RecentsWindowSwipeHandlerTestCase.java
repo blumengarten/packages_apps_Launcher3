@@ -25,12 +25,15 @@ import com.android.launcher3.util.AllModulesForTest;
 import com.android.launcher3.util.LauncherMultivalentJUnit;
 import com.android.quickstep.fallback.FallbackRecentsView;
 import com.android.quickstep.fallback.RecentsState;
+import com.android.quickstep.fallback.window.RecentsDisplayModel;
 import com.android.quickstep.fallback.window.RecentsWindowManager;
 import com.android.quickstep.fallback.window.RecentsWindowSwipeHandler;
 import com.android.quickstep.views.RecentsViewContainer;
 
+import dagger.BindsInstance;
 import dagger.Component;
 
+import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
@@ -43,8 +46,15 @@ public class RecentsWindowSwipeHandlerTestCase extends AbsSwipeUpHandlerTestCase
         RecentsWindowSwipeHandler,
         FallbackWindowInterface> {
 
+    @Mock private RecentsDisplayModel mRecentsDisplayModel;
     @Mock private FallbackRecentsView<RecentsWindowManager> mRecentsView;
     @Mock private RecentsWindowManager mRecentsWindowManager;
+
+    @Before
+    public void setRecentsDisplayModel() {
+        mContext.initDaggerComponent(DaggerRecentsWindowSwipeHandlerTestCase_TestComponent.builder()
+                .bindRecentsDisplayModel(mRecentsDisplayModel));
+    }
 
     @NonNull
     @Override
@@ -77,6 +87,7 @@ public class RecentsWindowSwipeHandlerTestCase extends AbsSwipeUpHandlerTestCase
     interface TestComponent extends LauncherAppComponent {
         @Component.Builder
         interface Builder extends LauncherAppComponent.Builder {
+            @BindsInstance Builder bindRecentsDisplayModel(RecentsDisplayModel model);
             @Override LauncherAppComponent build();
         }
     }

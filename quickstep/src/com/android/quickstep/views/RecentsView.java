@@ -65,11 +65,6 @@ import static com.android.launcher3.util.SystemUiController.UI_STATE_FULLSCREEN_
 import static com.android.quickstep.BaseContainerInterface.getTaskDimension;
 import static com.android.quickstep.TaskUtils.checkCurrentOrManagedUserId;
 import static com.android.quickstep.util.LogUtils.splitFailureMessage;
-import static com.android.quickstep.util.TaskGridNavHelper.DIRECTION_DOWN;
-import static com.android.quickstep.util.TaskGridNavHelper.DIRECTION_LEFT;
-import static com.android.quickstep.util.TaskGridNavHelper.DIRECTION_RIGHT;
-import static com.android.quickstep.util.TaskGridNavHelper.DIRECTION_TAB;
-import static com.android.quickstep.util.TaskGridNavHelper.DIRECTION_UP;
 import static com.android.quickstep.views.ClearAllButton.DISMISS_ALPHA;
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_ACTIONS_IN_MENU;
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_DESKTOP;
@@ -4540,7 +4535,7 @@ public abstract class RecentsView<
     }
 
     private boolean snapToPageRelative(int delta, boolean cycle,
-            @TaskGridNavHelper.TASK_NAV_DIRECTION int direction) {
+            TaskGridNavHelper.TaskNavDirection direction) {
         // Set next page if scroll animation is still running, otherwise cannot snap to the
         // next page on successive key presses. Setting the current page aborts the scroll.
         if (!mScroller.isFinished()) {
@@ -4559,7 +4554,7 @@ public abstract class RecentsView<
         return true;
     }
 
-    private int getNextPageInternal(int delta, @TaskGridNavHelper.TASK_NAV_DIRECTION int direction,
+    private int getNextPageInternal(int delta, TaskGridNavHelper.TaskNavDirection direction,
             boolean cycle) {
         if (!showAsGrid()) {
             return getNextPage() + delta;
@@ -4647,15 +4642,19 @@ public abstract class RecentsView<
         switch (event.getKeyCode()) {
             case KeyEvent.KEYCODE_TAB:
                 return snapToPageRelative(event.isShiftPressed() ? -1 : 1, true /* cycle */,
-                        DIRECTION_TAB);
+                        TaskGridNavHelper.TaskNavDirection.TAB);
             case KeyEvent.KEYCODE_DPAD_RIGHT:
-                return snapToPageRelative(mIsRtl ? -1 : 1, true /* cycle */, DIRECTION_RIGHT);
+                return snapToPageRelative(mIsRtl ? -1 : 1, true /* cycle */,
+                        TaskGridNavHelper.TaskNavDirection.RIGHT);
             case KeyEvent.KEYCODE_DPAD_LEFT:
-                return snapToPageRelative(mIsRtl ? 1 : -1, true /* cycle */, DIRECTION_LEFT);
+                return snapToPageRelative(mIsRtl ? 1 : -1, true /* cycle */,
+                        TaskGridNavHelper.TaskNavDirection.LEFT);
             case KeyEvent.KEYCODE_DPAD_UP:
-                return snapToPageRelative(1, false /* cycle */, DIRECTION_UP);
+                return snapToPageRelative(1, false /* cycle */,
+                        TaskGridNavHelper.TaskNavDirection.UP);
             case KeyEvent.KEYCODE_DPAD_DOWN:
-                return snapToPageRelative(1, false /* cycle */, DIRECTION_DOWN);
+                return snapToPageRelative(1, false /* cycle */,
+                        TaskGridNavHelper.TaskNavDirection.DOWN);
             case KeyEvent.KEYCODE_DEL:
             case KeyEvent.KEYCODE_FORWARD_DEL:
                 dismissCurrentTask();

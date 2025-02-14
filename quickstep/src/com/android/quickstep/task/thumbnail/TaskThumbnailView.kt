@@ -74,6 +74,16 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
     private var taskThumbnailViewHeader: TaskThumbnailViewHeader? = null
 
     private var uiState: TaskThumbnailUiState = Uninitialized
+
+    /**
+     * Sets the outline bounds of the view. Default to use view's bound as outline when set to null.
+     */
+    var outlineBounds: Rect? = null
+        set(value) {
+            field = value
+            invalidateOutline()
+        }
+
     private val bounds = Rect()
 
     var cornerRadius: Float = 0f
@@ -109,7 +119,7 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
         outlineProvider =
             object : ViewOutlineProvider() {
                 override fun getOutline(view: View, outline: Outline) {
-                    outline.setRoundRect(bounds, cornerRadius)
+                    outline.setRoundRect(outlineBounds ?: bounds, cornerRadius)
                 }
             }
     }
@@ -124,6 +134,7 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
 
     override fun onRecycle() {
         uiState = Uninitialized
+        outlineBounds = null
         resetViews()
     }
 

@@ -283,7 +283,7 @@ public class TaskbarUIController implements BubbleBarController.BubbleBarLocatio
                                     foundTask,
                                     taskContainer.getIconView().getDrawable(),
                                     taskContainer.getSnapshotView(),
-                                    taskContainer.getSplitAnimationThumbnail(),
+                                    taskContainer.getThumbnail(),
                                     null /* intent */,
                                     null /* user */,
                                     info);

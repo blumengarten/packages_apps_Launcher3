@@ -68,7 +68,10 @@ public class DeviceGridState implements Comparable<DeviceGridState> {
     }
 
     public DeviceGridState(Context context) {
-        LauncherPrefs lp = LauncherPrefs.get(context);
+        this(LauncherPrefs.get(context));
+    }
+
+    public DeviceGridState(LauncherPrefs lp) {
         mGridSizeString = lp.get(WORKSPACE_SIZE);
         mNumHotseat = lp.get(HOTSEAT_COUNT);
         mDeviceType = lp.get(DEVICE_TYPE);

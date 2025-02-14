@@ -66,7 +66,7 @@ public class NavBarGestureHandler implements OnTouchListener,
                 /* disableHorizontalSwipe= */ true,
                 new NavBarPosition(
                         NavigationMode.NO_BUTTON,
-                        DisplayController.get(mContext).getInfo()),
+                        DisplayController.INSTANCE.get(mContext).getInfo()),
                 /* onSwipeUp= */ this);
         mMotionPauseDetector = new MotionPauseDetector(context);
 

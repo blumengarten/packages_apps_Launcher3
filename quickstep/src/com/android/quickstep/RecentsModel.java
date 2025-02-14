@@ -48,13 +48,11 @@ import com.android.launcher3.util.DaggerSingletonTracker;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.Executors.SimpleThreadFactory;
 import com.android.launcher3.util.LockedUserState;
-import com.android.launcher3.util.PerDisplayObjectProvider;
 import com.android.launcher3.util.SafeCloseable;
 import com.android.quickstep.dagger.QuickstepBaseAppComponent;
 import com.android.quickstep.recents.data.RecentTasksDataSource;
 import com.android.quickstep.recents.data.TaskVisualsChangeNotifier;
 import com.android.quickstep.util.DesktopTask;
-import com.android.quickstep.util.ExternalDisplaysKt;
 import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.TaskVisualsChangeListener;
 import com.android.systemui.shared.recents.model.Task;
@@ -62,8 +60,6 @@ import com.android.systemui.shared.recents.model.ThumbnailData;
 import com.android.systemui.shared.system.ActivityManagerWrapper;
 import com.android.systemui.shared.system.TaskStackChangeListener;
 import com.android.systemui.shared.system.TaskStackChangeListeners;
-
-import dagger.Lazy;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -75,6 +71,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
+
+import dagger.Lazy;
 
 /**
  * Singleton class to load and manage recents model.
@@ -103,17 +101,15 @@ public class RecentsModel implements RecentTasksDataSource, TaskStackChangeListe
      public RecentsModel(@ApplicationContext Context context,
             SystemUiProxy systemUiProxy,
             TopTaskTracker topTaskTracker,
+            DisplayController displayController,
             LockedUserState lockedUserState,
-            PerDisplayObjectProvider perDisplayObjectProvider,
             Lazy<ThemeManager> themeManagerLazy,
             DaggerSingletonTracker tracker
             ) {
         // Lazily inject the ThemeManager and access themeManager once the device is
         // unlocked. See b/393248495 for details.
         this(context, new IconProvider(context), systemUiProxy, topTaskTracker,
-                perDisplayObjectProvider.getDisplayController(
-                        ExternalDisplaysKt.getValidDisplayId(context)),
-                lockedUserState, themeManagerLazy, tracker);
+                displayController, lockedUserState,themeManagerLazy, tracker);
     }
 
     @SuppressLint("VisibleForTests")

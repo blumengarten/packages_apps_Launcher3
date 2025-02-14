@@ -139,7 +139,7 @@ class DisplayControllerTest {
         whenever(context.resources).thenReturn(resources)
 
         // Initialize DisplayController
-        displayController = DisplayController.get(context)
+        displayController = DisplayController.INSTANCE.get(context)
         displayController.addChangeListener(displayInfoChangeListener)
     }
 
@@ -203,7 +203,7 @@ class DisplayControllerTest {
     fun testTaskbarPinningChangeInLockedTaskbarChange() {
         whenever(windowManagerProxy.showLockedTaskbarOnHome(any())).thenReturn(true)
         whenever(windowManagerProxy.isHomeVisible(any())).thenReturn(true)
-        whenever(windowManagerProxy.isInDesktopMode()).thenReturn(false)
+        whenever(windowManagerProxy.isInDesktopMode(any())).thenReturn(false)
         whenever(launcherPrefs.get(TASKBAR_PINNING)).thenReturn(false)
         DisplayController.enableTaskbarModePreferenceForTests(true)
 
@@ -219,7 +219,7 @@ class DisplayControllerTest {
     fun testLockedTaskbarChangeOnConfigurationChanged() {
         whenever(windowManagerProxy.showLockedTaskbarOnHome(any())).thenReturn(true)
         whenever(windowManagerProxy.isHomeVisible(any())).thenReturn(true)
-        whenever(windowManagerProxy.isInDesktopMode()).thenReturn(false)
+        whenever(windowManagerProxy.isInDesktopMode(any())).thenReturn(false)
         whenever(launcherPrefs.get(TASKBAR_PINNING)).thenReturn(false)
         DisplayController.enableTaskbarModePreferenceForTests(true)
         assertTrue(displayController.getInfo().isTransientTaskbar())
@@ -237,7 +237,7 @@ class DisplayControllerTest {
         whenever(windowManagerProxy.showDesktopTaskbarForFreeformDisplay(any())).thenReturn(true)
         whenever(launcherPrefs.get(TASKBAR_PINNING)).thenReturn(false)
         whenever(launcherPrefs.get(TASKBAR_PINNING_IN_DESKTOP_MODE)).thenReturn(false)
-        whenever(windowManagerProxy.isInDesktopMode()).thenReturn(true)
+        whenever(windowManagerProxy.isInDesktopMode(any())).thenReturn(true)
         whenever(windowManagerProxy.isHomeVisible(any())).thenReturn(false)
         DisplayController.enableTaskbarModePreferenceForTests(true)
 
@@ -256,7 +256,7 @@ class DisplayControllerTest {
         whenever(windowManagerProxy.showDesktopTaskbarForFreeformDisplay(any())).thenReturn(true)
         whenever(launcherPrefs.get(TASKBAR_PINNING)).thenReturn(false)
         whenever(launcherPrefs.get(TASKBAR_PINNING_IN_DESKTOP_MODE)).thenReturn(false)
-        whenever(windowManagerProxy.isInDesktopMode()).thenReturn(false)
+        whenever(windowManagerProxy.isInDesktopMode(any())).thenReturn(false)
         whenever(windowManagerProxy.isHomeVisible(any())).thenReturn(false)
         DisplayController.enableTaskbarModePreferenceForTests(true)
 
@@ -275,7 +275,7 @@ class DisplayControllerTest {
         whenever(windowManagerProxy.showDesktopTaskbarForFreeformDisplay(any())).thenReturn(true)
         whenever(launcherPrefs.get(TASKBAR_PINNING)).thenReturn(false)
         whenever(launcherPrefs.get(TASKBAR_PINNING_IN_DESKTOP_MODE)).thenReturn(false)
-        whenever(windowManagerProxy.isInDesktopMode()).thenReturn(false)
+        whenever(windowManagerProxy.isInDesktopMode(any())).thenReturn(false)
         whenever(windowManagerProxy.isHomeVisible(any())).thenReturn(true)
         DisplayController.enableTaskbarModePreferenceForTests(true)
 

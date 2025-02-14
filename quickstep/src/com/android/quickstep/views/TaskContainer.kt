@@ -75,7 +75,9 @@ class TaskContainer(
     }
 
     internal var thumbnailData: ThumbnailData? = null
-    val splitAnimationThumbnail: Bitmap?
+
+    val thumbnail: Bitmap?
+        /** If possible don't use this. It should be replaced as part of b/331753115. */
         get() =
             if (enableRefactorTaskThumbnail()) thumbnailData?.thumbnail
             else thumbnailViewDeprecated.thumbnail

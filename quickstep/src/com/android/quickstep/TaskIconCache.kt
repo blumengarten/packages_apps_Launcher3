@@ -153,7 +153,7 @@ class TaskIconCache(
     private fun createIconFactory() =
         BaseIconFactory(
             context,
-            DisplayController.get(context).info.densityDpi,
+            DisplayController.INSTANCE.get(context).info.densityDpi,
             context.resources.getDimensionPixelSize(R.dimen.task_icon_cache_default_icon_size),
         )
 

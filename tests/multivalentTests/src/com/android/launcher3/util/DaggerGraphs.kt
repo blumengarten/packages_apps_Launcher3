@@ -20,7 +20,6 @@ import com.android.launcher3.FakeLauncherPrefs
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.dagger.ApiWrapperModule
 import com.android.launcher3.dagger.AppModule
-import com.android.launcher3.dagger.PerDisplayObjectProviderModule
 import com.android.launcher3.dagger.StaticObjectModule
 import com.android.launcher3.dagger.WindowManagerProxyModule
 import dagger.Binds
@@ -40,47 +39,15 @@ abstract class FakePrefsModule {
             ApiWrapperModule::class,
             WindowManagerProxyModule::class,
             StaticObjectModule::class,
-            PerDisplayObjectProviderModule::class,
             AppModule::class,
         ]
 )
 class AllModulesForTest
 
 /** All modules except the WMProxy */
-@Module(
-    includes =
-        [
-            ApiWrapperModule::class,
-            StaticObjectModule::class,
-            PerDisplayObjectProviderModule::class,
-            AppModule::class,
-        ]
-)
+@Module(includes = [ApiWrapperModule::class, StaticObjectModule::class, AppModule::class])
 class AllModulesMinusWMProxy
 
 /** All modules except the ApiWrapper */
-@Module(
-    includes =
-        [
-            WindowManagerProxyModule::class,
-            StaticObjectModule::class,
-            PerDisplayObjectProviderModule::class,
-            AppModule::class,
-        ]
-)
+@Module(includes = [WindowManagerProxyModule::class, StaticObjectModule::class, AppModule::class])
 class AllModulesMinusApiWrapper
-
-@Module(includes = [ApiWrapperModule::class, StaticObjectModule::class, AppModule::class])
-class AllModulesMinusWMProxyAndPerDisplayObjectProvider
-
-/** All modules except PerDisplayObjectProvider */
-@Module(
-    includes =
-        [
-            ApiWrapperModule::class,
-            WindowManagerProxyModule::class,
-            StaticObjectModule::class,
-            AppModule::class,
-        ]
-)
-class AllModulesMinusPerDisplayObjectProvider

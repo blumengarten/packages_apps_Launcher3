@@ -47,6 +47,10 @@ object LauncherComponentProvider {
             .component
     }
 
+    /** Extension method easily access LauncherAppComponent */
+    val Context.appComponent: LauncherAppComponent
+        get() = get(this)
+
     private data class Holder(
         val component: LauncherAppComponent,
         private val filter: LayoutInflater.Filter?,

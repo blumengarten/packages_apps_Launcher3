@@ -109,7 +109,7 @@ public class WindowManagerProxy {
     /**
      * Returns if we are in desktop mode or not.
      */
-    public boolean isInDesktopMode() {
+    public boolean isInDesktopMode(int displayId) {
         return false;
     }
 
@@ -503,11 +503,13 @@ public class WindowManagerProxy {
     /** A listener for when the user enters/exits Desktop Mode.  */
     public interface DesktopVisibilityListener {
         /**
-         * Callback for when the user enters or exits Desktop Mode
+         * Called when the desktop mode state on the display whose ID is `displayId` changes.
          *
-         * @param visible whether Desktop Mode is now visible
+         * @param displayId The ID of the display for which this notification is triggering.
+         * @param isInDesktopModeAndNotInOverview True if a desktop is currently active on the given
+         *                                        display, and Overview is currently inactive.
          */
-        void onDesktopVisibilityChanged(boolean visible);
+        void onIsInDesktopModeChanged(int displayId, boolean isInDesktopModeAndNotInOverview);
     }
 
 }

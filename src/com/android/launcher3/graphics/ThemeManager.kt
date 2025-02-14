@@ -62,8 +62,8 @@ constructor(
     private val listeners = CopyOnWriteArrayList<ThemeChangeListener>()
 
     init {
-        val receiver = SimpleBroadcastReceiver(MAIN_EXECUTOR) { verifyIconState() }
-        receiver.registerPkgActions(context, "android", ACTION_OVERLAY_CHANGED)
+        val receiver = SimpleBroadcastReceiver(context, MAIN_EXECUTOR) { verifyIconState() }
+        receiver.registerPkgActions("android", ACTION_OVERLAY_CHANGED)
 
         val prefListener = LauncherPrefChangeListener { key ->
             when (key) {
@@ -74,7 +74,7 @@ constructor(
         prefs.addListener(prefListener, THEMED_ICONS, PREF_ICON_SHAPE)
 
         lifecycle.addCloseable {
-            receiver.unregisterReceiverSafely(context)
+            receiver.unregisterReceiverSafely()
             prefs.removeListener(prefListener)
         }
     }
@@ -106,6 +106,7 @@ constructor(
             iconMask = iconMask,
             folderShapeMask = shapeModel?.folderPathString ?: iconMask,
             themeController = createThemeController(),
+            iconScale = shapeModel?.iconScale ?: 1f,
         )
     }
 
@@ -118,6 +119,7 @@ constructor(
         val folderShapeMask: String,
         val themeController: IconThemeController?,
         val themeCode: String = themeController?.themeID ?: "no-theme",
+        val iconScale: Float = 1f,
     ) {
         fun toUniqueId() = "${iconMask.hashCode()},$themeCode"
     }
