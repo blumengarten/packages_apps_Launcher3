@@ -509,7 +509,17 @@ public class WindowManagerProxy {
          * @param isInDesktopModeAndNotInOverview True if a desktop is currently active on the given
          *                                        display, and Overview is currently inactive.
          */
-        void onIsInDesktopModeChanged(int displayId, boolean isInDesktopModeAndNotInOverview);
+        default void onIsInDesktopModeChanged(int displayId,
+                boolean isInDesktopModeAndNotInOverview) {
+        }
+
+        /**
+         * Called whenever the conditions that allow the creation of desks change.
+         *
+         * @param canCreateDesks whether it is possible to create new desks.
+         */
+        default void onCanCreateDesksChanged(boolean canCreateDesks) {
+        }
     }
 
 }
