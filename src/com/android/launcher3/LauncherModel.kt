@@ -15,13 +15,11 @@
  */
 package com.android.launcher3
 
-import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ShortcutInfo
 import android.os.UserHandle
 import android.text.TextUtils
-import android.util.Log
 import android.util.Pair
 import androidx.annotation.WorkerThread
 import com.android.launcher3.celllayout.CellPosMapper
@@ -47,7 +45,6 @@ import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.model.data.WorkspaceItemInfo
 import com.android.launcher3.pm.UserCache
 import com.android.launcher3.shortcuts.ShortcutRequest
-import com.android.launcher3.testing.shared.TestProtocol.sDebugTracing
 import com.android.launcher3.util.Executors.MAIN_EXECUTOR
 import com.android.launcher3.util.Executors.MODEL_EXECUTOR
 import com.android.launcher3.util.PackageManagerHelper
@@ -173,15 +170,8 @@ class LauncherModel(
         }
     }
 
-    fun onBroadcastIntent(intent: Intent) {
-        if (DEBUG_RECEIVER || sDebugTracing) Log.d(TAG, "onReceive intent=$intent")
-        when (intent.action) {
-            LauncherAppState.ACTION_FORCE_ROLOAD ->
-                // If we have changed locale we need to clear out the labels in all apps/workspace.
-                forceReload()
-            DevicePolicyManager.ACTION_DEVICE_POLICY_RESOURCE_UPDATED ->
-                enqueueModelUpdateTask(ReloadStringCacheTask(this.modelDelegate))
-        }
+    fun reloadStringCache() {
+        enqueueModelUpdateTask(ReloadStringCacheTask(this.modelDelegate))
     }
 
     /**
