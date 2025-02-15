@@ -290,9 +290,9 @@ public class KeyboardQuickSwitchViewController {
             remoteTransition = new RemoteTransition(
                     new DesktopAppLaunchTransition(
                             context,
-                            MAIN_EXECUTOR,
                             UNMINIMIZE,
-                            Cuj.CUJ_DESKTOP_MODE_KEYBOARD_QUICK_SWITCH_APP_LAUNCH
+                            Cuj.CUJ_DESKTOP_MODE_KEYBOARD_QUICK_SWITCH_APP_LAUNCH,
+                            MAIN_EXECUTOR
                     ),
                     "DesktopKeyboardQuickSwitchUnminimize");
         }
