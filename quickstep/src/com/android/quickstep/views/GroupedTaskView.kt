@@ -171,12 +171,10 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
                 val iconMargins = (iconViewMarginStart + iconViewBackgroundMarginStart) * 2
                 // setMaxWidth() needs to be called before mIconView.setIconOrientation which is
                 // called in the super below.
-                (leftTopTaskContainer.iconView as IconAppChipView).setMaxWidth(
+                (leftTopTaskContainer.iconView as IconAppChipView).maxWidth =
                     groupedTaskViewSizes.first.x - iconMargins
-                )
-                (rightBottomTaskContainer.iconView as IconAppChipView).setMaxWidth(
+                (rightBottomTaskContainer.iconView as IconAppChipView).maxWidth =
                     groupedTaskViewSizes.second.x - iconMargins
-                )
             }
         }
         super.setOrientationState(orientationState)

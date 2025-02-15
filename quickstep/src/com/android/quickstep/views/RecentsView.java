@@ -2691,8 +2691,6 @@ public abstract class RecentsView<
         }
         if (enableRefactorTaskThumbnail()) {
             mRecentsViewModel.onReset();
-            // TODO(b/391842220) Remove TaskViews rather than calling specific logic to cancel scope
-            getTaskViews().forEach(TaskView::destroyScopes);
         }
     }
 
@@ -6947,6 +6945,13 @@ public abstract class RecentsView<
             int dismissLength, Function0<Unit> onEndRunnable) {
         return mUtils.createTaskDismissSettlingSpringAnimation(draggedTaskView, velocity,
                 isDismissing, detector, dismissLength, onEndRunnable);
+    }
+
+    /**
+     * Animates RecentsView's scale to the provided value, using spring animations.
+     */
+    public SpringAnimation animateRecentsScale(float scale) {
+        return mUtils.animateRecentsScale(scale);
     }
 
     public interface TaskLaunchListener {

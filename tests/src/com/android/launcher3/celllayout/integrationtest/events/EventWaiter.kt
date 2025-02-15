@@ -16,9 +16,7 @@
 
 package com.android.launcher3.celllayout.integrationtest.events
 
-import android.util.Log
-import com.android.launcher3.debug.TestEvent
-import com.android.launcher3.debug.TestEventEmitter
+import com.android.launcher3.debug.TestEventEmitter.TestEvent
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
@@ -50,41 +48,5 @@ class EventWaiter(val eventToWait: TestEvent) {
 
     fun terminate() {
         deferrable.complete(EventStatus.SUCCESS)
-    }
-}
-
-class TestEventsEmitterImplementation() : TestEventEmitter {
-    companion object {
-        private const val TAG = "TestEvents"
-    }
-
-    private val expectedEvents: ArrayDeque<EventWaiter> = ArrayDeque()
-
-    fun createEventWaiter(expectedEvent: TestEvent): EventWaiter {
-        val eventWaiter = EventWaiter(expectedEvent)
-        expectedEvents.add(eventWaiter)
-        return eventWaiter
-    }
-
-    private fun clearQueue() {
-        expectedEvents.clear()
-    }
-
-    override fun sendEvent(event: TestEvent) {
-        Log.d(TAG, "Signal received $event")
-        Log.d(TAG, "Total expected events ${expectedEvents.size}")
-        if (expectedEvents.isEmpty()) return
-        val eventWaiter = expectedEvents.last()
-        if (eventWaiter.eventToWait == event) {
-            Log.d(TAG, "Removing $event")
-            expectedEvents.removeLast()
-            eventWaiter.terminate()
-        } else {
-            Log.d(TAG, "Not matching $event")
-        }
-    }
-
-    override fun close() {
-        clearQueue()
     }
 }

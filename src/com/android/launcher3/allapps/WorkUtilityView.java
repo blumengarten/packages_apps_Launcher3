@@ -30,6 +30,7 @@ import android.content.Intent;
 import android.graphics.Rect;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
@@ -63,6 +64,7 @@ import java.util.ArrayList;
 public class WorkUtilityView extends LinearLayout implements Insettable,
         KeyboardInsetAnimationCallback.KeyboardInsetListener {
 
+    private static final String TAG = "WorkUtilityView";
     private static final int TEXT_EXPAND_OPACITY_DURATION = 300;
     private static final int TEXT_COLLAPSE_OPACITY_DURATION = 50;
     private static final int EXPAND_COLLAPSE_DURATION = 300;
@@ -143,9 +145,11 @@ public class WorkUtilityView extends LinearLayout implements Insettable,
         mSchedulerButton.setOnClickListener(null);
         if (shouldUseScheduler()) {
             mSchedulerButton.setVisibility(VISIBLE);
-            mSchedulerButton.setOnClickListener(view ->
-                    mActivityContext.startActivitySafely(view,
-                            new Intent(mWorkSchedulerIntentAction), null /* itemInfo */));
+            mSchedulerButton.setOnClickListener(view -> {
+                Log.d(TAG, "WorkScheduler button clicked.");
+                mActivityContext.startActivitySafely(view,
+                        new Intent(mWorkSchedulerIntentAction), null /* itemInfo */);
+            });
         }
     }
 

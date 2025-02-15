@@ -17,6 +17,7 @@
 package com.android.quickstep.views
 
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.view.View
 import com.android.launcher3.Flags.enableRefactorTaskThumbnail
 import com.android.launcher3.model.data.TaskViewItemInfo
@@ -26,11 +27,9 @@ import com.android.quickstep.TaskOverlayFactory
 import com.android.quickstep.ViewUtils.addAccessibleChildToList
 import com.android.quickstep.recents.di.RecentsDependencies
 import com.android.quickstep.recents.di.getScope
-import com.android.quickstep.recents.di.inject
 import com.android.quickstep.recents.ui.mapper.TaskUiStateMapper
 import com.android.quickstep.recents.ui.viewmodel.TaskData
 import com.android.quickstep.task.thumbnail.TaskThumbnailView
-import com.android.quickstep.task.viewmodel.TaskThumbnailViewModel
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.ThumbnailData
 
@@ -55,10 +54,6 @@ class TaskContainer(
 ) {
     val overlay: TaskOverlayFactory.TaskOverlay<*> = taskOverlayFactory.createOverlay(this)
 
-    // TODO(b/390581380): Remove this after this bug is fixed
-    private val taskThumbnailViewModel: TaskThumbnailViewModel by
-        RecentsDependencies.inject(snapshotView)
-
     init {
         if (enableRefactorTaskThumbnail()) {
             require(snapshotView is TaskThumbnailView)
@@ -75,6 +70,7 @@ class TaskContainer(
     }
 
     internal var thumbnailData: ThumbnailData? = null
+        private set
 
     val thumbnail: Bitmap?
         /** If possible don't use this. It should be replaced as part of b/331753115. */
@@ -108,9 +104,7 @@ class TaskContainer(
 
     fun bind() {
         digitalWellBeingToast?.bind(task, taskView, snapshotView, stagePosition)
-        if (enableRefactorTaskThumbnail()) {
-            taskThumbnailViewModel.bind(task.key.id)
-        } else {
+        if (!enableRefactorTaskThumbnail()) {
             thumbnailViewDeprecated.bind(task, overlay, taskView)
         }
         overlay.init()
@@ -128,11 +122,6 @@ class TaskContainer(
         } else {
             thumbnailViewDeprecated.setShowSplashForSplitSelection(false)
         }
-    }
-
-    // TODO(b/391842220): Cancel scope in onDetach instead of having a specific method for this.
-    fun destroyScopes() {
-        thumbnailView.destroyScopes()
     }
 
     fun setOverlayEnabled(enabled: Boolean) {
@@ -190,5 +179,9 @@ class TaskContainer(
         } else {
             thumbnailViewDeprecated.setSplashAlpha(progress)
         }
+    }
+
+    fun updateThumbnailMatrix(matrix: Matrix) {
+        thumbnailView.setImageMatrix(matrix)
     }
 }

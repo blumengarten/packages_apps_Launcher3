@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 The Android Open Source Project
+ * Copyright (C) 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,28 +14,30 @@
  * limitations under the License.
  */
 
-package com.android.quickstep.recents.usecase
+package com.android.quickstep.recents.domain.usecase
 
 import android.graphics.Matrix
 import android.graphics.Rect
-import com.android.quickstep.recents.data.RecentTasksRepository
 import com.android.quickstep.recents.data.RecentsDeviceProfileRepository
 import com.android.quickstep.recents.data.RecentsRotationStateRepository
-import com.android.quickstep.recents.usecase.ThumbnailPositionState.MatrixScaling
-import com.android.quickstep.recents.usecase.ThumbnailPositionState.MissingThumbnail
+import com.android.systemui.shared.recents.model.ThumbnailData
 import com.android.systemui.shared.recents.utilities.PreviewPositionHelper
 
 /** Use case for retrieving [Matrix] for positioning Thumbnail in a View */
 class GetThumbnailPositionUseCase(
     private val deviceProfileRepository: RecentsDeviceProfileRepository,
     private val rotationStateRepository: RecentsRotationStateRepository,
-    private val tasksRepository: RecentTasksRepository,
-    private val previewPositionHelper: PreviewPositionHelper = PreviewPositionHelper(),
+    private val previewPositionHelper: PreviewPositionHelper,
 ) {
-    fun run(taskId: Int, width: Int, height: Int, isRtl: Boolean): ThumbnailPositionState {
-        val thumbnailData =
-            tasksRepository.getCurrentThumbnailById(taskId) ?: return MissingThumbnail
-        val thumbnail = thumbnailData.thumbnail ?: return MissingThumbnail
+    operator fun invoke(
+        thumbnailData: ThumbnailData?,
+        width: Int,
+        height: Int,
+        isRtl: Boolean,
+    ): ThumbnailPosition {
+        val thumbnail =
+            thumbnailData?.thumbnail ?: return ThumbnailPosition(Matrix.IDENTITY_MATRIX, false)
+
         previewPositionHelper.updateThumbnailMatrix(
             Rect(0, 0, thumbnail.width, thumbnail.height),
             thumbnailData,
@@ -45,9 +47,11 @@ class GetThumbnailPositionUseCase(
             rotationStateRepository.getRecentsRotationState().activityRotation,
             isRtl,
         )
-        return MatrixScaling(
-            previewPositionHelper.matrix,
-            previewPositionHelper.isOrientationChanged,
+        return ThumbnailPosition(
+            matrix = previewPositionHelper.matrix,
+            isRotated = previewPositionHelper.isOrientationChanged,
         )
     }
 }
+
+data class ThumbnailPosition(val matrix: Matrix, val isRotated: Boolean)

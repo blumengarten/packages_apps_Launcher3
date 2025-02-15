@@ -168,6 +168,7 @@ filegroup {
         "src/**/*Test.java",
         "src/**/*Test.kt",
         "src/**/RoboApiWrapper.kt",
+        "src/**/EventsRule.kt",
         "multivalentTests/src/**/*Test.java",
         "multivalentTests/src/**/*Test.kt",
     ],

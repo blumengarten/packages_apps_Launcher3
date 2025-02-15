@@ -20,7 +20,6 @@ import android.content.Context;
 
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherPrefs;
-import com.android.launcher3.graphics.IconShape;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.LauncherIcons.IconPool;
 import com.android.launcher3.model.ItemInstallQueue;
@@ -57,7 +56,6 @@ public interface LauncherBaseAppComponent {
     ApiWrapper getApiWrapper();
     CustomWidgetManager getCustomWidgetManager();
     DynamicResource getDynamicResource();
-    IconShape getIconShape();
     InstallSessionHelper getInstallSessionHelper();
     ItemInstallQueue getItemInstallQueue();
     RefreshRateTracker getRefreshRateTracker();

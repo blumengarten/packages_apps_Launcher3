@@ -42,78 +42,38 @@ import androidx.graphics.shapes.rectangle
 import androidx.graphics.shapes.toPath
 import androidx.graphics.shapes.transformed
 import com.android.launcher3.anim.RoundedRectRevealOutlineProvider
-import com.android.launcher3.dagger.LauncherAppComponent
-import com.android.launcher3.dagger.LauncherAppSingleton
-import com.android.launcher3.graphics.ThemeManager.ThemeChangeListener
 import com.android.launcher3.icons.GraphicsUtils
 import com.android.launcher3.icons.IconNormalizer.normalizeAdaptiveIcon
-import com.android.launcher3.util.DaggerSingletonObject
-import com.android.launcher3.util.DaggerSingletonTracker
 import com.android.launcher3.views.ClipPathView
-import javax.inject.Inject
 
 /** Abstract representation of the shape of an icon shape */
-@LauncherAppSingleton
-class IconShape
-@Inject
-constructor(private val themeManager: ThemeManager, lifeCycle: DaggerSingletonTracker) {
+interface ShapeDelegate {
 
-    val normalizationScale =
-        normalizeAdaptiveIcon(
-            AdaptiveIconDrawable(null, ColorDrawable(Color.BLACK)),
-            AREA_CALC_SIZE,
-        )
+    fun getPath(pathSize: Float = DEFAULT_PATH_SIZE) =
+        Path().apply { addToPath(this, 0f, 0f, pathSize / 2) }
 
-    var shape: ShapeDelegate = pickBestShape(themeManager.iconState.iconMask)
-        private set
-
-    var folderShape: ShapeDelegate =
-        themeManager.iconState.run {
-            if (folderShapeMask == iconMask || folderShapeMask.isEmpty()) shape
-            else pickBestShape(folderShapeMask)
+    fun getPath(bounds: Rect) =
+        Path().apply {
+            addToPath(
+                this,
+                bounds.left.toFloat(),
+                bounds.top.toFloat(),
+                // Radius is half of the average size of the icon
+                (bounds.width() + bounds.height()) / 4f,
+            )
         }
-        private set
 
-    init {
-        val changeListener = ThemeChangeListener {
-            shape = pickBestShape(themeManager.iconState.iconMask)
-            folderShape =
-                themeManager.iconState.run {
-                    if (folderShapeMask == iconMask || folderShapeMask.isEmpty()) shape
-                    else pickBestShape(folderShapeMask)
-                }
-        }
-        themeManager.addChangeListener(changeListener)
-        lifeCycle.addCloseable { themeManager.removeChangeListener(changeListener) }
-    }
+    fun drawShape(canvas: Canvas, offsetX: Float, offsetY: Float, radius: Float, paint: Paint)
 
-    interface ShapeDelegate {
-        fun getPath(pathSize: Float = DEFAULT_PATH_SIZE) =
-            Path().apply { addToPath(this, 0f, 0f, pathSize / 2) }
+    fun addToPath(path: Path, offsetX: Float, offsetY: Float, radius: Float)
 
-        fun getPath(bounds: Rect) =
-            Path().apply {
-                addToPath(
-                    this,
-                    bounds.left.toFloat(),
-                    bounds.top.toFloat(),
-                    // Radius is half of the average size of the icon
-                    (bounds.width() + bounds.height()) / 4f,
-                )
-            }
-
-        fun drawShape(canvas: Canvas, offsetX: Float, offsetY: Float, radius: Float, paint: Paint)
-
-        fun addToPath(path: Path, offsetX: Float, offsetY: Float, radius: Float)
-
-        fun <T> createRevealAnimator(
-            target: T,
-            startRect: Rect,
-            endRect: Rect,
-            endRadius: Float,
-            isReversed: Boolean,
-        ): ValueAnimator where T : View, T : ClipPathView
-    }
+    fun <T> createRevealAnimator(
+        target: T,
+        startRect: Rect,
+        endRect: Rect,
+        endRadius: Float,
+        isReversed: Boolean,
+    ): ValueAnimator where T : View, T : ClipPathView
 
     class Circle : RoundedSquare(1f) {
 
@@ -179,10 +139,15 @@ constructor(private val themeManager: ThemeManager, lifeCycle: DaggerSingletonTr
                 }
                 .createRevealAnimator(target, isReversed)
         }
+
+        override fun equals(other: Any?) =
+            other is RoundedSquare && other.radiusRatio == radiusRatio
+
+        override fun hashCode() = radiusRatio.hashCode()
     }
 
     /** Generic shape delegate with pathString in bounds [0, 0, 100, 100] */
-    class GenericPathShape(pathString: String) : ShapeDelegate {
+    data class GenericPathShape(private val pathString: String) : ShapeDelegate {
         private val poly =
             RoundedPolygon(
                 features = SvgPathParser.parseFeatures(pathString),
@@ -287,7 +252,6 @@ constructor(private val themeManager: ThemeManager, lifeCycle: DaggerSingletonTr
     }
 
     companion object {
-        @JvmField var INSTANCE = DaggerSingletonObject(LauncherAppComponent::getIconShape)
 
         const val TAG = "IconShape"
         const val DEFAULT_PATH_SIZE = 100f
@@ -312,7 +276,6 @@ constructor(private val themeManager: ThemeManager, lifeCycle: DaggerSingletonTr
             }
         }
 
-        @VisibleForTesting
         fun pickBestShape(shapeStr: String): ShapeDelegate {
             val baseShape =
                 if (shapeStr.isNotEmpty()) {
@@ -332,7 +295,6 @@ constructor(private val themeManager: ThemeManager, lifeCycle: DaggerSingletonTr
             return pickBestShape(baseShape, shapeStr)
         }
 
-        @VisibleForTesting
         fun pickBestShape(baseShape: Path, shapeStr: String): ShapeDelegate {
             val calcAreaDiff = areaDiffCalculator(baseShape)
 
@@ -379,6 +341,13 @@ constructor(private val themeManager: ThemeManager, lifeCycle: DaggerSingletonTr
                 centerX = (right - left) / 2,
                 centerY = (bottom - top) / 2,
                 rounding = CornerRounding(cornerR),
+            )
+
+        @JvmStatic
+        val normalizationScale =
+            normalizeAdaptiveIcon(
+                AdaptiveIconDrawable(null, ColorDrawable(Color.BLACK)),
+                AREA_CALC_SIZE,
             )
     }
 }

@@ -71,6 +71,7 @@ import static com.android.launcher3.LauncherState.NO_OFFSET;
 import static com.android.launcher3.LauncherState.NO_SCALE;
 import static com.android.launcher3.LauncherState.SPRING_LOADED;
 import static com.android.launcher3.Utilities.postAsyncCallback;
+import static com.android.launcher3.anim.AnimatorListeners.forEndCallback;
 import static com.android.launcher3.config.FeatureFlags.FOLDABLE_SINGLE_PAGE;
 import static com.android.launcher3.config.FeatureFlags.MULTI_SELECT_EDIT_MODE;
 import static com.android.launcher3.logging.KeyboardStateManager.KeyboardState.HIDE;
@@ -182,8 +183,8 @@ import com.android.launcher3.celllayout.CellPosMapper.CellPos;
 import com.android.launcher3.celllayout.CellPosMapper.TwoPanelCellPosMapper;
 import com.android.launcher3.compat.AccessibilityManagerCompat;
 import com.android.launcher3.config.FeatureFlags;
-import com.android.launcher3.debug.TestEvent;
 import com.android.launcher3.debug.TestEventEmitter;
+import com.android.launcher3.debug.TestEventEmitter.TestEvent;
 import com.android.launcher3.dot.DotInfo;
 import com.android.launcher3.dragndrop.DragController;
 import com.android.launcher3.dragndrop.DragLayer;
@@ -610,7 +611,7 @@ public class Launcher extends StatefulActivity<LauncherState>
             RuleController.getInstance(this).setRules(
                     RuleController.parseRules(this, R.xml.split_configuration));
         }
-        TestEventEmitter.INSTANCE.get(this).sendEvent(TestEvent.LAUNCHER_ON_CREATE);
+        TestEventEmitter.sendEvent(TestEvent.LAUNCHER_ON_CREATE);
     }
 
     protected ModelCallbacks createModelCallbacks() {
@@ -1466,7 +1467,10 @@ public class Launcher extends StatefulActivity<LauncherState>
             }
 
             getModelWriter().addItemToDatabase(info, container, screenId, cellXY[0], cellXY[1]);
-            mWorkspace.addInScreen(view, info);
+            AnimatorSet anim = new AnimatorSet();
+            anim.addListener(forEndCallback(() ->
+                    view.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)));
+            bindInflatedItems(Collections.singletonList(Pair.create(info, view)), anim);
         } else {
             // Adding a shortcut to a Folder.
             FolderIcon folderIcon = findFolderIcon(container);

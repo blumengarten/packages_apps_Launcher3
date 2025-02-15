@@ -163,6 +163,10 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
                 R.dimen.keyboard_quick_switch_view_small_spacing);
         mOutlineRadius = resources.getDimensionPixelSize(R.dimen.keyboard_quick_switch_view_radius);
         mIsRtl = Utilities.isRtl(resources);
+
+        TypefaceUtils.setTypeface(
+                mNoRecentItemsPane.findViewById(R.id.no_recent_items_text),
+                TypefaceUtils.FONT_FAMILY_LABEL_LARGE_BASELINE);
     }
 
     private void registerOnBackInvokedCallback() {
@@ -310,7 +314,7 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
                     layoutInflater,
                     previousTaskView);
 
-            desktopButton.<TextView>findViewById(R.id.text).setText(
+            desktopButton.<TextView>findViewById(R.id.small_text).setText(
                     resources.getString(R.string.quick_switch_desktop));
         }
         mDisplayingRecentTasks = !groupTasks.isEmpty() || useDesktopTaskView;

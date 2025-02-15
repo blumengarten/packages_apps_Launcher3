@@ -129,7 +129,7 @@ public final class OverviewTask {
         return mTask.getVisibleCenter().x;
     }
 
-    int getTaskCenterY() {
+    public int getTaskCenterY() {
         return mTask.getVisibleCenter().y;
     }
 

@@ -16,9 +16,11 @@
 package com.android.launcher3.uioverrides.touchcontrollers
 
 import android.content.Context
+import android.graphics.Rect
 import android.view.MotionEvent
 import androidx.dynamicanimation.animation.SpringAnimation
 import com.android.app.animation.Interpolators.DECELERATE
+import com.android.app.animation.Interpolators.LINEAR
 import com.android.launcher3.AbstractFloatingView
 import com.android.launcher3.R
 import com.android.launcher3.Utilities.EDGE_NAV_BAR
@@ -29,6 +31,7 @@ import com.android.launcher3.touch.SingleAxisSwipeDetector
 import com.android.launcher3.util.MSDLPlayerWrapper
 import com.android.launcher3.util.TouchController
 import com.android.quickstep.views.RecentsView
+import com.android.quickstep.views.RecentsView.RECENTS_SCALE_PROPERTY
 import com.android.quickstep.views.RecentsViewContainer
 import com.android.quickstep.views.TaskView
 import com.google.android.msdl.data.model.MSDLToken
@@ -50,6 +53,7 @@ CONTAINER : RecentsViewContainer {
             recentsView.pagedOrientationHandler.upDownSwipeDirection,
         )
     private val isRtl = isRtl(container.resources)
+    private val tempTaskThumbnailBounds = Rect()
 
     private var taskBeingDragged: TaskView? = null
     private var springAnimation: SpringAnimation? = null
@@ -57,6 +61,7 @@ CONTAINER : RecentsViewContainer {
     private var verticalFactor: Int = 0
     private var hasDismissThresholdHapticRun = false
     private var initialDisplacement: Float = 0f
+    private var recentsScaleAnimation: SpringAnimation? = null
 
     private fun canInterceptTouch(ev: MotionEvent): Boolean =
         when {
@@ -98,6 +103,7 @@ CONTAINER : RecentsViewContainer {
 
     private fun onActionDown(ev: MotionEvent): Boolean {
         springAnimation?.cancel()
+        recentsScaleAnimation?.cancel()
         if (!canInterceptTouch(ev)) {
             return false
         }
@@ -108,7 +114,9 @@ CONTAINER : RecentsViewContainer {
                     recentsView.isTaskViewVisible(it) && container.dragLayer.isEventOverView(it, ev)
                 }
                 ?.also {
-                    dismissLength = recentsView.pagedOrientationHandler.getSecondaryDimension(it)
+                    // Dismiss length as bottom of task so it is fully off screen when dismissed.
+                    it.getThumbnailBounds(tempTaskThumbnailBounds, relativeToDragLayer = true)
+                    dismissLength = tempTaskThumbnailBounds.bottom
                     verticalFactor =
                         recentsView.pagedOrientationHandler.secondaryTranslationDirectionFactor
                 }
@@ -162,6 +170,8 @@ CONTAINER : RecentsViewContainer {
             }
             recentsView.redrawLiveTile()
         }
+        val dismissFraction = displacement / (dismissLength * verticalFactor).toFloat()
+        RECENTS_SCALE_PROPERTY.setValue(recentsView, getRecentsScale(dismissFraction))
         playDismissThresholdHaptic(displacement)
         return true
     }
@@ -216,6 +226,10 @@ CONTAINER : RecentsViewContainer {
                         if (isDismissing) (dismissLength * verticalFactor).toFloat() else 0f
                     )
                 }
+        recentsScaleAnimation =
+            recentsView.animateRecentsScale(RECENTS_SCALE_DEFAULT).addEndListener { _, _, _, _ ->
+                recentsScaleAnimation = null
+            }
     }
 
     // Returns if the current task being dragged is towards "positive" (e.g. dismissal).
@@ -230,8 +244,54 @@ CONTAINER : RecentsViewContainer {
         springAnimation = null
     }
 
+    private fun getRecentsScale(dismissFraction: Float): Float {
+        return when {
+            // Do not scale recents when dragging below origin.
+            dismissFraction <= 0 -> {
+                RECENTS_SCALE_DEFAULT
+            }
+            // Initially scale recents as the drag begins, up to the first threshold.
+            dismissFraction < RECENTS_SCALE_FIRST_THRESHOLD_FRACTION -> {
+                mapToRange(
+                    dismissFraction,
+                    0f,
+                    RECENTS_SCALE_FIRST_THRESHOLD_FRACTION,
+                    RECENTS_SCALE_DEFAULT,
+                    RECENTS_SCALE_ON_DISMISS_CANCEL,
+                    LINEAR,
+                )
+            }
+            // Keep scale consistent until dragging to the dismiss threshold.
+            dismissFraction < RECENTS_SCALE_DISMISS_THRESHOLD_FRACTION -> {
+                RECENTS_SCALE_ON_DISMISS_CANCEL
+            }
+            // Scale beyond the dismiss threshold again, to indicate dismiss will occur on release.
+            dismissFraction < RECENTS_SCALE_SECOND_THRESHOLD_FRACTION -> {
+                mapToRange(
+                    dismissFraction,
+                    RECENTS_SCALE_DISMISS_THRESHOLD_FRACTION,
+                    RECENTS_SCALE_SECOND_THRESHOLD_FRACTION,
+                    RECENTS_SCALE_ON_DISMISS_CANCEL,
+                    RECENTS_SCALE_ON_DISMISS_SUCCESS,
+                    LINEAR,
+                )
+            }
+            // Keep scale beyond the dismiss threshold scaling consistent.
+            else -> {
+                RECENTS_SCALE_ON_DISMISS_SUCCESS
+            }
+        }
+    }
+
     companion object {
         private const val DISMISS_THRESHOLD_FRACTION = 0.5f
         private const val DISMISS_THRESHOLD_HAPTIC_RANGE = 10f
+
+        private const val RECENTS_SCALE_ON_DISMISS_CANCEL = 0.9875f
+        private const val RECENTS_SCALE_ON_DISMISS_SUCCESS = 0.975f
+        private const val RECENTS_SCALE_DEFAULT = 1f
+        private const val RECENTS_SCALE_FIRST_THRESHOLD_FRACTION = 0.2f
+        private const val RECENTS_SCALE_DISMISS_THRESHOLD_FRACTION = 0.5f
+        private const val RECENTS_SCALE_SECOND_THRESHOLD_FRACTION = 0.575f
     }
 }
