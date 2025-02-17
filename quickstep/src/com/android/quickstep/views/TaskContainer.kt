@@ -25,8 +25,6 @@ import com.android.launcher3.util.SplitConfigurationOptions
 import com.android.launcher3.util.TransformingTouchDelegate
 import com.android.quickstep.TaskOverlayFactory
 import com.android.quickstep.ViewUtils.addAccessibleChildToList
-import com.android.quickstep.recents.di.RecentsDependencies
-import com.android.quickstep.recents.di.getScope
 import com.android.quickstep.recents.ui.mapper.TaskUiStateMapper
 import com.android.quickstep.recents.ui.viewmodel.TaskData
 import com.android.quickstep.task.thumbnail.TaskThumbnailView
@@ -57,13 +55,6 @@ class TaskContainer(
     init {
         if (enableRefactorTaskThumbnail()) {
             require(snapshotView is TaskThumbnailView)
-            RecentsDependencies.getScope(snapshotView).apply {
-                val taskViewScope = RecentsDependencies.getScope(taskView)
-                linkTo(taskViewScope)
-
-                val taskContainerScope = RecentsDependencies.getScope(this@TaskContainer)
-                linkTo(taskContainerScope)
-            }
         } else {
             require(snapshotView is TaskThumbnailViewDeprecated)
         }
@@ -116,8 +107,6 @@ class TaskContainer(
         snapshotView.scaleY = 1f
         overlay.destroy()
         if (enableRefactorTaskThumbnail()) {
-            RecentsDependencies.getInstance().removeScope(snapshotView)
-            RecentsDependencies.getInstance().removeScope(this)
             isThumbnailValid = false
         } else {
             thumbnailViewDeprecated.setShowSplashForSplitSelection(false)
