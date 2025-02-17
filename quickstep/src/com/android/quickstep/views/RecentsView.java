@@ -2917,28 +2917,40 @@ public abstract class RecentsView<
         BaseState<?> endState = mSizeStrategy.stateFromGestureEndTarget(endTarget);
         if (endState.displayOverviewTasksAsGrid(mContainer.getDeviceProfile())) {
             TaskView runningTaskView = getRunningTaskView();
-            float runningTaskPrimaryGridTranslation = 0;
-            float runningTaskSecondaryGridTranslation = 0;
+            float runningTaskGridTranslationX = 0;
+            float runningTaskGridTranslationY = 0;
             if (runningTaskView != null) {
                 // Apply the grid translation to running task unless it's being snapped to
                 // and removes the current translation applied to the running task.
-                runningTaskPrimaryGridTranslation = runningTaskView.getGridTranslationX()
+                runningTaskGridTranslationX = runningTaskView.getGridTranslationX()
                         - runningTaskView.getNonGridTranslationX();
-                runningTaskSecondaryGridTranslation = runningTaskView.getGridTranslationY();
+                runningTaskGridTranslationY = runningTaskView.getGridTranslationY();
             }
             for (RemoteTargetHandle remoteTargetHandle : remoteTargetHandles) {
                 TaskViewSimulator tvs = remoteTargetHandle.getTaskViewSimulator();
                 if (animatorSet == null) {
                     setGridProgress(1);
-                    tvs.taskPrimaryTranslation.value = runningTaskPrimaryGridTranslation;
-                    tvs.taskSecondaryTranslation.value = runningTaskSecondaryGridTranslation;
+                    if (enableGridOnlyOverview()) {
+                        tvs.taskGridTranslationX.value = runningTaskGridTranslationX;
+                        tvs.taskGridTranslationY.value = runningTaskGridTranslationY;
+                    } else {
+                        tvs.taskPrimaryTranslation.value = runningTaskGridTranslationX;
+                        tvs.taskSecondaryTranslation.value = runningTaskGridTranslationY;
+                    }
                 } else {
                     animatorSet.play(ObjectAnimator.ofFloat(this, RECENTS_GRID_PROGRESS, 1));
-                    animatorSet.play(tvs.carouselScale.animateToValue(1));
-                    animatorSet.play(tvs.taskPrimaryTranslation.animateToValue(
-                            runningTaskPrimaryGridTranslation));
-                    animatorSet.play(tvs.taskSecondaryTranslation.animateToValue(
-                            runningTaskSecondaryGridTranslation));
+                    if (enableGridOnlyOverview()) {
+                        animatorSet.play(tvs.carouselScale.animateToValue(1));
+                        animatorSet.play(tvs.taskGridTranslationX.animateToValue(
+                                runningTaskGridTranslationX));
+                        animatorSet.play(tvs.taskGridTranslationY.animateToValue(
+                                runningTaskGridTranslationY));
+                    } else {
+                        animatorSet.play(tvs.taskPrimaryTranslation.animateToValue(
+                                runningTaskGridTranslationX));
+                        animatorSet.play(tvs.taskSecondaryTranslation.animateToValue(
+                                runningTaskGridTranslationY));
+                    }
                 }
             }
         }
@@ -3491,8 +3503,13 @@ public abstract class RecentsView<
         final TaskView runningTask = getRunningTaskView();
         if (showAsGrid() && enableGridOnlyOverview() && runningTask != null) {
             runActionOnRemoteHandles(
-                    remoteTargetHandle -> remoteTargetHandle.getTaskViewSimulator()
-                            .taskSecondaryTranslation.value = runningTask.getGridTranslationY()
+                    remoteTargetHandle -> {
+                        remoteTargetHandle.getTaskViewSimulator().taskGridTranslationX.value =
+                                runningTask.getGridTranslationX()
+                                        - runningTask.getNonGridTranslationX();
+                        remoteTargetHandle.getTaskViewSimulator().taskGridTranslationY.value =
+                                runningTask.getGridTranslationY();
+                    }
             );
         }
 
@@ -3606,12 +3623,9 @@ public abstract class RecentsView<
         if (taskView.isRunningTask()) {
             anim.addOnFrameCallback(() -> {
                 if (!mEnableDrawingLiveTile) return;
-                runActionOnRemoteHandles(
-                        remoteTargetHandle -> remoteTargetHandle.getTaskViewSimulator()
-                                .taskSecondaryTranslation.value = getPagedOrientationHandler()
-                                .getSecondaryValue(taskView.getTranslationX(),
-                                        taskView.getTranslationY()
-                                ));
+                runActionOnRemoteHandles(remoteTargetHandle ->
+                        remoteTargetHandle.getTaskViewSimulator().taskSecondaryTranslation.value =
+                                taskView.getSecondaryDismissTranslationProperty().get(taskView));
                 redrawLiveTile();
             });
         }
@@ -5655,7 +5669,7 @@ public abstract class RecentsView<
             anim.play(ObjectAnimator.ofFloat(this, FULLSCREEN_PROGRESS, 1));
             anim.addListener(new AnimatorListenerAdapter() {
                 @Override
-                public void onAnimationStart(@NonNull Animator animation, boolean isReverse) {
+                public void onAnimationStart(@NonNull Animator animation) {
                     taskView.getThumbnailBounds(mTempRect, /*relativeToDragLayer=*/true);
                     getTaskDimension(mContext, mContainer.getDeviceProfile(), mTempPointF);
                     Rect fullscreenBounds = new Rect(0, 0, (int) mTempPointF.x,
@@ -5674,6 +5688,18 @@ public abstract class RecentsView<
                                             mTempPointF);
                                     remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(
                                             false);
+                                });
+                    }
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    // If live tile is not launching, reset the pivot applied above.
+                    if (!taskView.isRunningTask()) {
+                        runActionOnRemoteHandles(
+                                remoteTargetHandle -> {
+                                    remoteTargetHandle.getTaskViewSimulator().setPivotOverride(
+                                            null);
                                 });
                     }
                 }
@@ -5785,10 +5811,12 @@ public abstract class RecentsView<
 
         mPendingAnimation = new PendingAnimation(duration);
         mPendingAnimation.add(anim);
-        runActionOnRemoteHandles(
-                remoteTargetHandle -> remoteTargetHandle.getTaskViewSimulator()
-                        .addOverviewToAppAnim(mPendingAnimation, interpolator));
-        mPendingAnimation.addOnFrameCallback(this::redrawLiveTile);
+        if (taskView.isRunningTask()) {
+            runActionOnRemoteHandles(
+                    remoteTargetHandle -> remoteTargetHandle.getTaskViewSimulator()
+                            .addOverviewToAppAnim(mPendingAnimation, interpolator));
+            mPendingAnimation.addOnFrameCallback(this::redrawLiveTile);
+        }
         mPendingAnimation.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
