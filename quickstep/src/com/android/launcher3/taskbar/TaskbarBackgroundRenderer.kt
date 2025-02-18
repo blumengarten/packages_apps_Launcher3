@@ -108,7 +108,7 @@ class TaskbarBackgroundRenderer(private val context: TaskbarActivityContext) {
     fun updateStashedHandleWidth(context: TaskbarActivityContext, res: Resources) {
         stashedHandleWidth =
             res.getDimensionPixelSize(
-                if (context.isPhoneMode || context.isTinyTaskbar) {
+                if (context.isPhoneMode || context.isTinyTaskbar || context.isBubbleBarOnPhone) {
                     R.dimen.taskbar_stashed_small_screen
                 } else {
                     R.dimen.taskbar_stashed_handle_width
