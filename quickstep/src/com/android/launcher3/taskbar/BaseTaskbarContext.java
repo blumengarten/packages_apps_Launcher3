@@ -19,25 +19,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ShortcutInfo;
 import android.os.UserHandle;
-import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 
-import com.android.launcher3.DeviceProfile.OnDeviceProfileChangeListener;
 import com.android.launcher3.popup.SystemShortcut;
+import com.android.launcher3.util.BaseContext;
 import com.android.launcher3.util.Themes;
-import com.android.launcher3.views.ActivityContext;
 import com.android.quickstep.SystemUiProxy;
-
-import java.util.ArrayList;
-import java.util.List;
 
 // TODO(b/218912746): Share more behavior to avoid all apps context depending directly on taskbar.
 /** Base for common behavior between taskbar window contexts. */
-public abstract class BaseTaskbarContext extends ContextThemeWrapper implements ActivityContext,
-        SystemShortcut.BubbleActivityStarter {
+public abstract class BaseTaskbarContext extends BaseContext
+        implements SystemShortcut.BubbleActivityStarter {
 
     protected final LayoutInflater mLayoutInflater;
-    private final List<OnDeviceProfileChangeListener> mDPChangeListeners = new ArrayList<>();
 
     public BaseTaskbarContext(Context windowContext) {
         super(windowContext, Themes.getActivityThemeRes(windowContext));
@@ -47,11 +41,6 @@ public abstract class BaseTaskbarContext extends ContextThemeWrapper implements 
     @Override
     public final LayoutInflater getLayoutInflater() {
         return mLayoutInflater;
-    }
-
-    @Override
-    public final List<OnDeviceProfileChangeListener> getOnDeviceProfileChangeListeners() {
-        return mDPChangeListeners;
     }
 
     @Override

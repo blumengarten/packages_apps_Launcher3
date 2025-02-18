@@ -64,6 +64,7 @@ public class TaskbarOverlayContext extends BaseTaskbarContext {
         mStashedTaskbarHeight = controllers.taskbarStashController.getStashedHeight();
 
         mUiController = controllers.uiController;
+        onViewCreated();
     }
 
     public @Nullable TaskbarSearchSessionController getSearchSessionController() {

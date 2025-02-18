@@ -71,7 +71,6 @@ import android.os.Process;
 import android.os.Trace;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.Display;
 import android.view.Gravity;
 import android.view.Surface;
 import android.view.View;
@@ -159,7 +158,6 @@ import com.android.launcher3.util.SettingsCache;
 import com.android.launcher3.util.SplitConfigurationOptions.SplitSelectSource;
 import com.android.launcher3.util.TraceHelper;
 import com.android.launcher3.util.VibratorWrapper;
-import com.android.launcher3.util.ViewCache;
 import com.android.launcher3.views.ActivityContext;
 import com.android.quickstep.NavHandle;
 import com.android.quickstep.RecentsModel;
@@ -225,7 +223,6 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
 
     private NavigationMode mNavMode;
     private boolean mImeDrawsImeNavBar;
-    private final ViewCache mViewCache = new ViewCache();
 
     private final boolean mIsSafeModeEnabled;
     private final boolean mIsUserSetupComplete;
@@ -285,7 +282,6 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         mIsNavBarForceVisible = mIsNavBarKidsMode;
 
         // Get display and corners first, as views might use them in constructor.
-        Display display = windowContext.getDisplay();
         Context c = getApplicationContext();
         mWindowManager = c.getSystemService(WindowManager.class);
 
@@ -387,6 +383,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                         DesktopVisibilityController.INSTANCE.get(this)));
 
         mLauncherPrefs = LauncherPrefs.get(this);
+        onViewCreated();
     }
 
     /** Updates {@link DeviceProfile} instances for any Taskbar windows. */
@@ -801,11 +798,6 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
     }
 
     @Override
-    public ViewCache getViewCache() {
-        return mViewCache;
-    }
-
-    @Override
     public View.OnClickListener getItemOnClickListener() {
         return this::onTaskbarIconClicked;
     }
@@ -994,6 +986,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
      * Called when this instance of taskbar is no longer needed
      */
     public void onDestroy() {
+        onViewDestroyed();
         mIsDestroyed = true;
         mTaskbarFeatureEvaluator.onDestroy();
         setUIController(TaskbarUIController.DEFAULT);

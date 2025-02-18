@@ -38,7 +38,6 @@ import android.appwidget.AppWidgetHost;
 import android.appwidget.AppWidgetHostView;
 import android.appwidget.AppWidgetProviderInfo;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.PointF;
@@ -64,7 +63,6 @@ import androidx.annotation.Nullable;
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.CellLayout;
 import com.android.launcher3.DeviceProfile;
-import com.android.launcher3.DeviceProfile.OnDeviceProfileChangeListener;
 import com.android.launcher3.Hotseat;
 import com.android.launcher3.InsettableFrameLayout;
 import com.android.launcher3.InvariantDeviceProfile;
@@ -90,11 +88,13 @@ import com.android.launcher3.model.data.FolderInfo;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.LauncherAppWidgetInfo;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
+import com.android.launcher3.util.BaseContext;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.IntArray;
 import com.android.launcher3.util.IntSet;
 import com.android.launcher3.util.SandboxContext;
+import com.android.launcher3.util.Themes;
 import com.android.launcher3.util.WindowBounds;
 import com.android.launcher3.util.window.WindowManagerProxy;
 import com.android.launcher3.views.ActivityContext;
@@ -109,7 +109,6 @@ import com.android.systemui.shared.Flags;
 import dagger.BindsInstance;
 import dagger.Component;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -127,7 +126,7 @@ import java.util.stream.IntStream;
  *   3) Place appropriate elements like icons and first-page qsb
  *   4) Measure and draw the view on a canvas
  */
-public class LauncherPreviewRenderer extends ContextWrapper
+public class LauncherPreviewRenderer extends BaseContext
         implements ActivityContext, WorkspaceLayoutManager, LayoutInflater.Factory2 {
 
     /**
@@ -156,7 +155,6 @@ public class LauncherPreviewRenderer extends ContextWrapper
         }
     }
 
-    private final List<OnDeviceProfileChangeListener> mDpChangeListeners = new ArrayList<>();
     private final Handler mUiHandler;
     private final Context mContext;
     private final InvariantDeviceProfile mIdp;
@@ -184,7 +182,7 @@ public class LauncherPreviewRenderer extends ContextWrapper
             WallpaperColors wallpaperColorsOverride,
             @Nullable final SparseArray<Size> launcherWidgetSpanInfo) {
 
-        super(context);
+        super(context, Themes.getActivityThemeRes(context));
         mUiHandler = new Handler(Looper.getMainLooper());
         mContext = context;
         mIdp = idp;
@@ -263,6 +261,13 @@ public class LauncherPreviewRenderer extends ContextWrapper
                     : null;
         }
         mAppWidgetHost = new LauncherPreviewAppWidgetHost(context);
+
+        onViewCreated();
+    }
+
+    @Override
+    public InsettableFrameLayout getRootView() {
+        return mRootView;
     }
 
     /**
@@ -346,11 +351,6 @@ public class LauncherPreviewRenderer extends ContextWrapper
     @Override
     public DeviceProfile getDeviceProfile() {
         return mDp;
-    }
-
-    @Override
-    public List<OnDeviceProfileChangeListener> getOnDeviceProfileChangeListeners() {
-        return mDpChangeListeners;
     }
 
     @Override
