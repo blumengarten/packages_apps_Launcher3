@@ -294,6 +294,8 @@ abstract class AbstractDeviceProfileTest {
         gridName: String? = GRID_NAME.defaultValue,
     ) {
         setFlagsRule.setFlags(true, Flags.FLAG_ENABLE_TWOLINE_TOGGLE)
+        // TODO: re-enable as part of b/396211437
+        setFlagsRule.setFlags(false, Flags.FLAG_ENABLE_LAUNCHER_ICON_SHAPES)
         val windowsBounds = perDisplayBoundsCache[displayInfo]!!
         val realBounds = windowsBounds[rotation]
         whenever(windowManagerProxy.getDisplayInfo(any())).thenReturn(displayInfo)
