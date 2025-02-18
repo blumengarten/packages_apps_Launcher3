@@ -51,6 +51,8 @@ import androidx.core.util.Pair;
 import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.Utilities;
+import com.android.launcher3.dagger.ApplicationContext;
+import com.android.launcher3.dagger.LauncherAppSingleton;
 import com.android.launcher3.icons.cache.BaseIconCache;
 import com.android.launcher3.icons.cache.CacheLookupFlag;
 import com.android.launcher3.icons.cache.CachedObject;
@@ -66,6 +68,7 @@ import com.android.launcher3.pm.InstallSessionHelper;
 import com.android.launcher3.pm.UserCache;
 import com.android.launcher3.util.CancellableTask;
 import com.android.launcher3.util.ComponentKey;
+import com.android.launcher3.util.DaggerSingletonTracker;
 import com.android.launcher3.util.InstantAppResolver;
 import com.android.launcher3.util.PackageUserKey;
 import com.android.launcher3.widget.WidgetSections;
@@ -79,9 +82,13 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 /**
  * Cache of application icons.  Icons can be made from any thread.
  */
+@LauncherAppSingleton
 public class IconCache extends BaseIconCache {
 
     // Shortcut extra which can point to a packageName and can be used to indicate an alternate
@@ -96,24 +103,39 @@ public class IconCache extends BaseIconCache {
 
     private final LauncherApps mLauncherApps;
     private final UserCache mUserManager;
+    private final InstallSessionHelper mInstallSessionHelper;
     private final InstantAppResolver mInstantAppResolver;
     private final CancellableTask mCancelledTask;
+    private final LauncherIcons.IconPool mIconPool;
 
     private final SparseArray<BitmapInfo> mWidgetCategoryBitmapInfos;
 
     private int mPendingIconRequestCount = 0;
 
-    public IconCache(Context context, InvariantDeviceProfile idp, String dbFileName,
-            IconProvider iconProvider) {
+    @Inject
+    public IconCache(
+            @ApplicationContext Context context,
+            InvariantDeviceProfile idp,
+            @Nullable @Named("ICONS_DB") String dbFileName,
+            UserCache userCache,
+            LauncherIconProvider iconProvider,
+            InstallSessionHelper installSessionHelper,
+            LauncherIcons.IconPool iconPool,
+            DaggerSingletonTracker lifecycle) {
         super(context, dbFileName, MODEL_EXECUTOR.getLooper(),
                 idp.fillResIconDpi, idp.iconBitmapSize, true /* inMemoryCache */, iconProvider);
         mLauncherApps = context.getSystemService(LauncherApps.class);
-        mUserManager = UserCache.INSTANCE.get(context);
+        mUserManager = userCache;
+        mInstallSessionHelper = installSessionHelper;
+        mIconPool = iconPool;
+
         mInstantAppResolver = InstantAppResolver.newInstance(context);
         mWidgetCategoryBitmapInfos = new SparseArray<>();
 
         mCancelledTask = new CancellableTask(() -> null, MAIN_EXECUTOR, c -> { });
         mCancelledTask.cancel();
+
+        lifecycle.addCloseable(this::close);
     }
 
     @Override
@@ -129,7 +151,7 @@ public class IconCache extends BaseIconCache {
     @NonNull
     @Override
     public BaseIconFactory getIconFactory() {
-        return LauncherIcons.obtain(context);
+        return mIconPool.obtain();
     }
 
     /**
@@ -279,8 +301,7 @@ public class IconCache extends BaseIconCache {
         String override = shortcutInfo.getExtras() == null ? null
                 : shortcutInfo.getExtras().getString(EXTRA_SHORTCUT_BADGE_OVERRIDE_PACKAGE);
         if (!TextUtils.isEmpty(override)
-                && InstallSessionHelper.INSTANCE.get(context)
-                .isTrustedPackage(pkg, shortcutInfo.getUserHandle())) {
+                && mInstallSessionHelper.isTrustedPackage(pkg, shortcutInfo.getUserHandle())) {
             pkg = override;
         } else {
             // Try component based badge before trying the normal package badge
@@ -536,7 +557,7 @@ public class IconCache extends BaseIconCache {
             return;
         }
 
-        try (LauncherIcons li = LauncherIcons.obtain(context)) {
+        try (LauncherIcons li = mIconPool.obtain()) {
             final BitmapInfo tempBitmap = li.createBadgedIconBitmap(
                     context.getDrawable(widgetSection.mSectionDrawable),
                     new BaseIconFactory.IconOptions());

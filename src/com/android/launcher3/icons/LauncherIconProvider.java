@@ -30,6 +30,8 @@ import androidx.annotation.Nullable;
 
 import com.android.launcher3.R;
 import com.android.launcher3.config.FeatureFlags;
+import com.android.launcher3.dagger.ApplicationContext;
+import com.android.launcher3.dagger.LauncherAppSingleton;
 import com.android.launcher3.graphics.ShapeDelegate;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.util.ApiWrapper;
@@ -39,9 +41,12 @@ import org.xmlpull.v1.XmlPullParser;
 import java.util.Collections;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 /**
  * Extension of {@link IconProvider} with support for overriding theme icons
  */
+@LauncherAppSingleton
 public class LauncherIconProvider extends IconProvider {
 
     private static final String TAG_ICON = "icon";
@@ -56,10 +61,14 @@ public class LauncherIconProvider extends IconProvider {
     private final ApiWrapper mApiWrapper;
     private final ThemeManager mThemeManager;
 
-    public LauncherIconProvider(Context context) {
+    @Inject
+    public LauncherIconProvider(
+            @ApplicationContext Context context,
+            ThemeManager themeManager,
+            ApiWrapper apiWrapper) {
         super(context);
-        mThemeManager = ThemeManager.INSTANCE.get(context);
-        mApiWrapper = ApiWrapper.INSTANCE.get(context);
+        mThemeManager = themeManager;
+        mApiWrapper = apiWrapper;
         setIconThemeSupported(mThemeManager.isMonoThemeEnabled());
     }
 
@@ -79,7 +88,7 @@ public class LauncherIconProvider extends IconProvider {
     @Override
     public void updateSystemState() {
         super.updateSystemState();
-        mSystemState += "," + ThemeManager.INSTANCE.get(mContext).getIconState().toUniqueId();
+        mSystemState += "," + mThemeManager.getIconState().toUniqueId();
     }
 
     @Override

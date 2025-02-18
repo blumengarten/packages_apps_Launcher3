@@ -155,7 +155,7 @@ class AddWorkspaceItemsTaskTest : AbstractWorkspaceModelTest() {
     private fun verifyItemSpaceFinderCall(nonEmptyScreenIds: List<Int>, numberOfExpectedCall: Int) {
         verify(mWorkspaceItemSpaceFinder, times(numberOfExpectedCall))
             .findSpaceForItem(
-                same(mAppState),
+                eq(mAppState),
                 same(mModelHelper.bgDataModel),
                 eq(IntArray.wrap(*nonEmptyScreenIds.toIntArray())),
                 eq(IntArray()),
