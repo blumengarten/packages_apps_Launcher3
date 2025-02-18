@@ -19,6 +19,7 @@ package com.android.launcher3.graphics
 import android.content.Context
 import android.content.res.Resources
 import com.android.launcher3.EncryptionType
+import com.android.launcher3.Item
 import com.android.launcher3.LauncherPrefChangeListener
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherPrefs.Companion.backedUpItem
@@ -38,11 +39,12 @@ import javax.inject.Inject
 
 /** Centralized class for managing Launcher icon theming */
 @LauncherAppSingleton
-open class ThemeManager
+class ThemeManager
 @Inject
 constructor(
-    @ApplicationContext protected val context: Context,
-    protected val prefs: LauncherPrefs,
+    @ApplicationContext private val context: Context,
+    private val prefs: LauncherPrefs,
+    private val iconControllerFactory: IconControllerFactory,
     lifecycle: DaggerSingletonTracker,
 ) {
 
@@ -72,21 +74,21 @@ constructor(
         val receiver = SimpleBroadcastReceiver(context, MAIN_EXECUTOR) { verifyIconState() }
         receiver.registerPkgActions("android", ACTION_OVERLAY_CHANGED)
 
-        val prefListener = LauncherPrefChangeListener { key ->
-            when (key) {
-                KEY_THEMED_ICONS,
-                KEY_ICON_SHAPE -> verifyIconState()
-            }
-        }
-        prefs.addListener(prefListener, THEMED_ICONS, PREF_ICON_SHAPE)
+        val keys = (iconControllerFactory.prefKeys + PREF_ICON_SHAPE)
 
+        val keysArray = keys.toTypedArray()
+        val prefKeySet = keys.map { it.sharedPrefKey }
+        val prefListener = LauncherPrefChangeListener { key ->
+            if (prefKeySet.contains(key)) verifyIconState()
+        }
+        prefs.addListener(prefListener, *keysArray)
         lifecycle.addCloseable {
             receiver.unregisterReceiverSafely()
-            prefs.removeListener(prefListener)
+            prefs.removeListener(prefListener, *keysArray)
         }
     }
 
-    protected fun verifyIconState() {
+    private fun verifyIconState() {
         val newState = parseIconState(iconState)
         if (newState == iconState) return
         iconState = newState
@@ -126,15 +128,11 @@ constructor(
         return IconState(
             iconMask = iconMask,
             folderShapeMask = folderShapeMask,
-            themeController = createThemeController(),
+            themeController = iconControllerFactory.createThemeController(),
             iconScale = shapeModel?.iconScale ?: 1f,
             iconShape = iconShape,
             folderShape = folderShape,
         )
-    }
-
-    protected open fun createThemeController(): IconThemeController? {
-        return if (isMonoThemeEnabled) MONO_THEME_CONTROLLER else null
     }
 
     data class IconState(
@@ -152,6 +150,15 @@ constructor(
     /** Interface for receiving theme change events */
     fun interface ThemeChangeListener {
         fun onThemeChanged()
+    }
+
+    open class IconControllerFactory @Inject constructor(protected val prefs: LauncherPrefs) {
+
+        open val prefKeys: List<Item> = listOf(THEMED_ICONS)
+
+        open fun createThemeController(): IconThemeController? {
+            return if (prefs.get(THEMED_ICONS)) MONO_THEME_CONTROLLER else null
+        }
     }
 
     companion object {
