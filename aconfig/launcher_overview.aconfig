@@ -96,3 +96,10 @@ flag {
     description: "Enable overview on connected displays."
     bug: "363251602"
 }
+
+flag {
+    name: "enable_overview_background_wallpaper_blur"
+    namespace: "launcher_overview"
+    description: "Enable wallpaper blur in overview."
+    bug: "369975912"
+}
