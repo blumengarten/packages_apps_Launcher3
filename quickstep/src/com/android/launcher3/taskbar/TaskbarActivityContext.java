@@ -18,6 +18,7 @@ package com.android.launcher3.taskbar;
 import static android.os.Trace.TRACE_TAG_APP;
 import static android.view.Display.DEFAULT_DISPLAY;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+import static android.view.WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM;
 import static android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
 import static android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
 import static android.view.WindowManager.LayoutParams.TYPE_NAVIGATION_BAR;
@@ -869,7 +870,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
 
     @Override
     public void onPopupVisibilityChanged(boolean isVisible) {
-        setTaskbarWindowFocusable(isVisible);
+        setTaskbarWindowFocusable(isVisible /* focusable */, false /* imeFocusable */);
     }
 
     @Override
@@ -1228,17 +1229,29 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
     }
 
     /**
-     * Either adds or removes {@link WindowManager.LayoutParams#FLAG_NOT_FOCUSABLE} on the taskbar
-     * window.
+     * Sets whether the taskbar window should be focusable and IME focusable. This won't be IME
+     * focusable unless it is also focusable.
+     *
+     * @param focusable    whether it should be focusable.
+     * @param imeFocusable whether it should be IME focusable.
+     *
+     * @see WindowManager.LayoutParams#FLAG_NOT_FOCUSABLE
+     * @see WindowManager.LayoutParams#FLAG_ALT_FOCUSABLE_IM
      */
-    public void setTaskbarWindowFocusable(boolean focusable) {
+    public void setTaskbarWindowFocusable(boolean focusable, boolean imeFocusable) {
         if (isPhoneMode()) {
             return;
         }
         if (focusable) {
             mWindowLayoutParams.flags &= ~FLAG_NOT_FOCUSABLE;
+            if (imeFocusable) {
+                mWindowLayoutParams.flags &= ~FLAG_ALT_FOCUSABLE_IM;
+            } else {
+                mWindowLayoutParams.flags |= FLAG_ALT_FOCUSABLE_IM;
+            }
         } else {
             mWindowLayoutParams.flags |= FLAG_NOT_FOCUSABLE;
+            mWindowLayoutParams.flags &= ~FLAG_ALT_FOCUSABLE_IM;
         }
         notifyUpdateLayoutParams();
     }
@@ -1259,8 +1272,12 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
     }
 
     /**
-     * Either adds or removes {@link WindowManager.LayoutParams#FLAG_NOT_FOCUSABLE} on the taskbar
-     * window. If we're now focusable, also move nav buttons to a separate window above IME.
+     * Sets whether the taskbar window should be focusable, as well as IME focusable. If we're now
+     * focusable, also move nav buttons to a separate window above IME.
+     *
+     * @param focusable whether it should be focusable.
+     *
+     * @see WindowManager.LayoutParams#FLAG_NOT_FOCUSABLE
      */
     public void setTaskbarWindowFocusableForIme(boolean focusable) {
         if (focusable) {
@@ -1268,7 +1285,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         } else {
             mControllers.navbarButtonsViewController.moveNavButtonsBackToTaskbarWindow();
         }
-        setTaskbarWindowFocusable(focusable);
+        setTaskbarWindowFocusable(focusable, true /* imeFocusable */);
     }
 
     /** Adds the given view to WindowManager with the provided LayoutParams (creates new window). */
