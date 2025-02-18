@@ -144,7 +144,7 @@ open class SystemApiWrapper @Inject constructor(@ApplicationContext context: Con
     override fun isNonResizeableActivity(lai: LauncherActivityInfo) =
         lai.activityInfo.resizeMode == ActivityInfo.RESIZE_MODE_UNRESIZEABLE
 
-    override fun supportsMultiInstance(lai: LauncherActivityInfo) : Boolean {
+    override fun supportsMultiInstance(lai: LauncherActivityInfo): Boolean {
         return try {
             super.supportsMultiInstance(lai) || lai.supportsMultiInstance()
         } catch (e: Exception) {
@@ -202,4 +202,7 @@ open class SystemApiWrapper @Inject constructor(@ApplicationContext context: Con
         (appInfo.sourceDir?.hashCode() ?: 0).toString() + " " + appInfo.longVersionCode
 
     override fun getRoundIconRes(appInfo: ApplicationInfo) = appInfo.roundIconRes
+
+    override fun isFileDrawable(shortcutInfo: ShortcutInfo) =
+        shortcutInfo.hasIconFile() || shortcutInfo.hasIconUri()
 }
