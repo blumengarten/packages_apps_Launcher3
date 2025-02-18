@@ -131,12 +131,13 @@ public class BubbleBarViewController {
     // Whether the bar is hidden when stashed
     private boolean mHiddenForStashed;
     private boolean mShouldShowEducation;
-
     public boolean mOverflowAdded;
+    private boolean mIsLocationUpdatedForDropTarget = false;
 
     private BubbleBarViewAnimator mBubbleBarViewAnimator;
     private final FrameLayout mBubbleBarContainer;
     private BubbleBarFlyoutController mBubbleBarFlyoutController;
+    private BubbleBarPinController mBubbleBarPinController;
     private TaskbarSharedState mTaskbarSharedState;
     private final TimeSource mTimeSource = System::currentTimeMillis;
     private final int mTaskbarTranslationDelta;
@@ -166,6 +167,7 @@ public class BubbleBarViewController {
         mBubbleStashController = bubbleControllers.bubbleStashController;
         mBubbleBarController = bubbleControllers.bubbleBarController;
         mBubbleDragController = bubbleControllers.bubbleDragController;
+        mBubbleBarPinController = bubbleControllers.bubbleBarPinController;
         mTaskbarStashController = controllers.taskbarStashController;
         mTaskbarInsetsController = controllers.taskbarInsetsController;
         mBubbleBarFlyoutController = new BubbleBarFlyoutController(
@@ -274,7 +276,10 @@ public class BubbleBarViewController {
 
             @Override
             public boolean isOnLeft() {
-                return mBarView.getBubbleBarLocation().isOnLeft(mBarView.isLayoutRtl());
+                boolean shouldRevertLocation =
+                        mBarView.isShowingDropTarget() && mIsLocationUpdatedForDropTarget;
+                boolean isOnLeft = mBarView.getBubbleBarLocation().isOnLeft(mBarView.isLayoutRtl());
+                return shouldRevertLocation != isOnLeft;
             }
 
             @Override
@@ -522,6 +527,61 @@ public class BubbleBarViewController {
      */
     public void animateBubbleBarLocation(BubbleBarLocation bubbleBarLocation) {
         mBarView.animateToBubbleBarLocation(bubbleBarLocation);
+    }
+
+    /** Returns whether the Bubble Bar is currently displaying a drop target. */
+    public boolean isShowingDropTarget() {
+        return mBarView.isShowingDropTarget();
+    }
+
+    /**
+     * Notifies the controller that a drag event is over the Bubble Bar drop zone. The controller
+     * will display the appropriate drop target and enter drop target mode. The controller will also
+     * update the return value of {@link #isLocationUpdatedForDropTarget()} to true if location was
+     * updated.
+     */
+    public void onDragItemOverBubbleBarDragZone(@NonNull BubbleBarLocation bubbleBarLocation) {
+        mBarView.showDropTarget(/* isDropTarget = */ true);
+        mIsLocationUpdatedForDropTarget = getBubbleBarLocation() != bubbleBarLocation;
+        if (mIsLocationUpdatedForDropTarget) {
+            animateBubbleBarLocation(bubbleBarLocation);
+        }
+        if (!hasBubbles()) {
+            mBubbleBarPinController.showDropTarget(bubbleBarLocation);
+        }
+    }
+
+    /**
+     * Returns {@code true} if location was updated after most recent
+     * {@link #onDragItemOverBubbleBarDragZone}}.
+     */
+    public boolean isLocationUpdatedForDropTarget() {
+        return mIsLocationUpdatedForDropTarget;
+    }
+
+    /**
+     * Notifies the controller that the drag event is outside the Bubble Bar drop zone.
+     * This will hide the drop target zone if there are no bubbles or return the
+     * Bubble Bar to its original location. The controller will also exit drop target
+     * mode and reset the value returned from {@link #isLocationUpdatedForDropTarget()} to false.
+     */
+    public void onItemDraggedOutsideBubbleBarDropZone() {
+        mBarView.showDropTarget(/* isDropTarget = */ false);
+        if (mIsLocationUpdatedForDropTarget) {
+            animateBubbleBarLocation(getBubbleBarLocation());
+        }
+        mBubbleBarPinController.hideDropTarget();
+        mIsLocationUpdatedForDropTarget = false;
+    }
+
+    /**
+     * Notifies the controller that the drag has completed over the Bubble Bar drop zone.
+     * The controller will hide the drop target if there are no bubbles and exit drop target mode.
+     */
+    public void onItemDroppedInBubbleBarDragZone() {
+        mBarView.showDropTarget(/* isDropTarget = */ false);
+        mBubbleBarPinController.hideDropTarget();
+        mIsLocationUpdatedForDropTarget = false;
     }
 
     /**
@@ -996,7 +1056,12 @@ public class BubbleBarViewController {
         boolean isInApp = mTaskbarStashController.isInApp();
         // if this is the first bubble, animate to the initial state.
         if (mBarView.getBubbleChildCount() == 1 && !isUpdate) {
-            mBubbleBarViewAnimator.animateToInitialState(bubble, isInApp, isExpanding);
+            // If a drop target is visible and the first bubble is added, hide the empty drop target
+            if (mBarView.isShowingDropTarget()) {
+                mBubbleBarPinController.hideDropTarget();
+            }
+            mBubbleBarViewAnimator.animateToInitialState(bubble, isInApp, isExpanding,
+                    mBarView.isShowingDropTarget());
             return;
         }
         // if we're not stashed or we're in persistent taskbar, animate for collapsed state.

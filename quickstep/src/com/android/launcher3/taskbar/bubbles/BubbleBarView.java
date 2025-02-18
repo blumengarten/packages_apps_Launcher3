@@ -536,6 +536,16 @@ public class BubbleBarView extends FrameLayout {
         return (float) (displayWidth - getWidth() - margin);
     }
 
+    /** Set whether the background should show the drop target */
+    public void showDropTarget(boolean isDropTarget) {
+        mBubbleBarBackground.showDropTarget(isDropTarget);
+    }
+
+    /** Returns whether the Bubble Bar is currently displaying a drop target. */
+    public boolean isShowingDropTarget() {
+        return mBubbleBarBackground.isShowingDropTarget();
+    }
+
     /**
      * Animate bubble bar to the given location transiently. Does not modify the layout or the value
      * returned by {@link #getBubbleBarLocation()}.
