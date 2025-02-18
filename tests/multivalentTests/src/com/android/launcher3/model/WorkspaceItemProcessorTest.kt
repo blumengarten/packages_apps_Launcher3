@@ -454,7 +454,7 @@ class WorkspaceItemProcessorTest {
         assertThat(mAllDeepShortcuts).isEmpty()
         verify(mockCursor)
             .markDeleted(
-                "Pinned shortcut not found from request. package=pkg, user=UserHandle{0}",
+                "Pinned shortcut not found from request. package=pkg, user=$mUserHandle",
                 "shortcut_not_found",
             )
     }
@@ -513,7 +513,7 @@ class WorkspaceItemProcessorTest {
         verify(mockCursor, times(0)).checkAndAddItem(any(), any(), anyOrNull())
         verify(mockCursor)
             .markDeleted(
-                "Pinned shortcut not found from request. package=pkg, user=UserHandle{0}",
+                "Pinned shortcut not found from request. package=pkg, user=$mUserHandle",
                 "shortcut_not_found",
             )
     }
@@ -533,7 +533,7 @@ class WorkspaceItemProcessorTest {
                 whenever(disabledMessage).thenReturn("")
                 whenever(disabledReason).thenReturn(0)
                 whenever(persons).thenReturn(EMPTY_PERSON_ARRAY)
-                whenever(userHandle).thenReturn(Process.myUserHandle())
+                whenever(userHandle).thenReturn(mUserHandle)
             }
         mIconRequestInfos = mutableListOf()
         // Make sure shortcuts map has expected key from expected package
@@ -565,7 +565,7 @@ class WorkspaceItemProcessorTest {
         mockBgDataModel = mock<BgDataModel>()
         mockCursor =
             mock<LoaderCursor>().apply {
-                user = UserHandle(0)
+                user = mUserHandle
                 itemType = ITEM_TYPE_FOLDER
                 id = 1
                 container = 100
