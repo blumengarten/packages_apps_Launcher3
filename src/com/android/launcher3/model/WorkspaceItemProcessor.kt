@@ -194,29 +194,35 @@ class WorkspaceItemProcessor(
         if (intent.`package` == null) {
             intent.`package` = targetPkg
         }
-        val isPreArchived = appInfoWrapper.isArchived() && c.restoreFlag != 0
+
+        val isPreArchivedShortcut =
+            Flags.restoreArchivedShortcuts() &&
+                appInfoWrapper.isArchived() &&
+                c.itemType == Favorites.ITEM_TYPE_DEEP_SHORTCUT &&
+                c.restoreFlag != 0
 
         // else if cn == null => can't infer much, leave it
         // else if !validPkg => could be restored icon or missing sd-card
         when {
-            !TextUtils.isEmpty(targetPkg) && (!validTarget || isPreArchived) -> {
+            !TextUtils.isEmpty(targetPkg) && (!validTarget || isPreArchivedShortcut) -> {
                 // Points to a valid app (superset of cn != null) but the apk
                 // is not available.
                 when {
-                    c.restoreFlag != 0 || isPreArchived -> {
+                    c.restoreFlag != 0 || isPreArchivedShortcut -> {
                         // Package is not yet available but might be
                         // installed later.
                         FileLog.d(
                             TAG,
                             "package not yet restored: $targetPkg, itemType=${c.itemType}" +
-                                "isPreArchived=$isPreArchived, restoreFlag=${c.restoreFlag}",
+                                ", isPreArchivedShortcut=$isPreArchivedShortcut" +
+                                ", restoreFlag=${c.restoreFlag}",
                         )
                         tempPackageKey.update(targetPkg, c.user)
                         when {
                             c.hasRestoreFlag(WorkspaceItemInfo.FLAG_RESTORE_STARTED) -> {
                                 // Restore has started once.
                             }
-                            installingPkgs.containsKey(tempPackageKey) || isPreArchived -> {
+                            installingPkgs.containsKey(tempPackageKey) || isPreArchivedShortcut -> {
                                 // App restore has started. Update the flag
                                 c.restoreFlag =
                                     c.restoreFlag or WorkspaceItemInfo.FLAG_RESTORE_STARTED
@@ -268,7 +274,7 @@ class WorkspaceItemProcessor(
             )
             validTarget = false
         }
-        if (validTarget && !isPreArchived) {
+        if (validTarget && !isPreArchivedShortcut) {
             FileLog.d(
                 TAG,
                 "valid target true, marking restored: $targetPkg," +
@@ -283,7 +289,7 @@ class WorkspaceItemProcessor(
         when {
             c.restoreFlag != 0 -> {
                 // Already verified above that user is same as default user
-                info = c.getRestoredItemInfo(intent, isPreArchived)
+                info = c.getRestoredItemInfo(intent, isPreArchivedShortcut)
             }
             c.itemType == Favorites.ITEM_TYPE_APPLICATION ->
                 info = c.getAppShortcutInfo(intent, allowMissingTarget, useLowResIcon, false)
