@@ -31,7 +31,6 @@ import com.android.quickstep.recents.domain.usecase.GetTaskUseCase
 import com.android.quickstep.recents.domain.usecase.GetThumbnailPositionUseCase
 import com.android.quickstep.recents.domain.usecase.IsThumbnailValidUseCase
 import com.android.quickstep.recents.domain.usecase.OrganizeDesktopTasksUseCase
-import com.android.quickstep.recents.usecase.GetThumbnailUseCase
 import com.android.quickstep.recents.viewmodel.RecentsViewData
 import com.android.quickstep.task.viewmodel.TaskOverlayViewModel
 import com.android.systemui.shared.recents.model.Task
@@ -42,7 +41,7 @@ import kotlinx.coroutines.SupervisorJob
 
 internal typealias RecentsScopeId = String
 
-class RecentsDependencies private constructor(private val appContext: Context) {
+class RecentsDependencies private constructor(appContext: Context) {
     private val scopes = mutableMapOf<RecentsScopeId, RecentsDependenciesScope>()
 
     init {
@@ -185,7 +184,6 @@ class RecentsDependencies private constructor(private val appContext: Context) {
                 IsThumbnailValidUseCase::class.java ->
                     IsThumbnailValidUseCase(rotationStateRepository = inject())
                 GetTaskUseCase::class.java -> GetTaskUseCase(repository = inject())
-                GetThumbnailUseCase::class.java -> GetThumbnailUseCase(taskRepository = inject())
                 GetSysUiStatusNavFlagsUseCase::class.java -> GetSysUiStatusNavFlagsUseCase()
                 GetThumbnailPositionUseCase::class.java ->
                     GetThumbnailPositionUseCase(

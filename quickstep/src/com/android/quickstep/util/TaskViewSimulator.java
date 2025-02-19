@@ -97,6 +97,8 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
     private final FullscreenDrawParams mCurrentFullscreenParams;
     public final AnimatedFloat taskPrimaryTranslation = new AnimatedFloat();
     public final AnimatedFloat taskSecondaryTranslation = new AnimatedFloat();
+    public final AnimatedFloat taskGridTranslationX = new AnimatedFloat();
+    public final AnimatedFloat taskGridTranslationY = new AnimatedFloat();
 
     // Carousel properties
     public final AnimatedFloat carouselScale = new AnimatedFloat();
@@ -445,6 +447,7 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
                 taskPrimaryTranslation.value);
         mOrientationState.getOrientationHandler().setSecondary(mMatrix, MATRIX_POST_TRANSLATE,
                 taskSecondaryTranslation.value);
+        mMatrix.postTranslate(taskGridTranslationX.value, taskGridTranslationY.value);
 
         mMatrix.postScale(carouselScale.value, carouselScale.value,
                 mIsRecentsRtl ? mCarouselTaskSize.right : mCarouselTaskSize.left,
@@ -484,6 +487,8 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
                 + " taskRect: " + mTaskRect
                 + " taskPrimaryT: " + taskPrimaryTranslation.value
                 + " taskSecondaryT: " + taskSecondaryTranslation.value
+                + " taskGridTranslationX: " + taskGridTranslationX.value
+                + " taskGridTranslationY: " + taskGridTranslationY.value
                 + " recentsPrimaryT: " + recentsViewPrimaryTranslation.value
                 + " recentsSecondaryT: " + recentsViewSecondaryTranslation.value
                 + " recentsScroll: " + recentsViewScroll.value

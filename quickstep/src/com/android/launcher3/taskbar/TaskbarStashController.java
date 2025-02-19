@@ -104,6 +104,8 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
     private static final int FLAG_DELAY_TASKBAR_BG_TAG = 1 << 12;
     public static final int FLAG_STASHED_FOR_BUBBLES = 1 << 13; // show handle for stashed hotseat
     public static final int FLAG_TASKBAR_HIDDEN = 1 << 14; // taskbar hidden during dream, etc...
+    // taskbar should always be stashed for bubble bar on phone
+    public static final int FLAG_STASHED_BUBBLE_BAR_ON_PHONE = 1 << 15;
 
     // If any of these flags are enabled, isInApp should return true.
     private static final int FLAGS_IN_APP = FLAG_IN_APP | FLAG_IN_SETUP;
@@ -126,7 +128,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
     // If any of these flags are enabled, the taskbar must be stashed.
     private static final int FLAGS_FORCE_STASHED = FLAG_STASHED_SYSUI | FLAG_STASHED_DEVICE_LOCKED
             | FLAG_STASHED_IN_TASKBAR_ALL_APPS | FLAG_STASHED_SMALL_SCREEN
-            | FLAG_STASHED_FOR_BUBBLES;
+            | FLAG_STASHED_FOR_BUBBLES | FLAG_STASHED_BUBBLE_BAR_ON_PHONE;
 
     /**
      * How long to stash/unstash when manually invoked via long press.
@@ -359,6 +361,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         // For now, assume we're in an app, since LauncherTaskbarUIController won't be able to tell
         // us that we're paused until a bit later. This avoids flickering upon recreating taskbar.
         updateStateForFlag(FLAG_IN_APP, true);
+        updateStateForFlag(FLAG_STASHED_BUBBLE_BAR_ON_PHONE, mActivity.isBubbleBarOnPhone());
 
         applyState(/* duration = */ 0);
 
@@ -574,7 +577,8 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
      */
     public void updateAndAnimateTransientTaskbar(boolean stash, boolean shouldBubblesFollow,
             boolean delayTaskbarBackground) {
-        if (!DisplayController.isTransientTaskbar(mActivity)) {
+        if (!DisplayController.isTransientTaskbar(mActivity)
+                || mActivity.isBubbleBarOnPhone()) {
             return;
         }
 

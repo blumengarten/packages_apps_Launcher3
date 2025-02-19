@@ -141,6 +141,10 @@ open class TaskbarEduTooltipController(context: Context) :
         tooltipStep = TOOLTIP_STEP_FEATURES
         inflateTooltip(R.layout.taskbar_edu_swipe)
         tooltip?.run {
+            TypefaceUtils.setTypeface(
+                requireViewById(R.id.taskbar_edu_title),
+                TypefaceUtils.FONT_FAMILY_HEADLINE_SMALL_EMPHASIZED,
+            )
             requireViewById<LottieAnimationView>(R.id.swipe_animation).supportLightTheme()
             show()
         }
@@ -179,6 +183,23 @@ open class TaskbarEduTooltipController(context: Context) :
                 suggestionsAnim.setAnimation(R.raw.taskbar_edu_suggestions_persistent)
                 pinningEdu.visibility = GONE
             }
+
+            TypefaceUtils.setTypeface(
+                requireViewById(R.id.taskbar_edu_title),
+                TypefaceUtils.FONT_FAMILY_HEADLINE_SMALL_EMPHASIZED,
+            )
+            TypefaceUtils.setTypeface(
+                requireViewById(R.id.splitscreen_text),
+                TypefaceUtils.FONT_FAMILY_BODY_MEDIUM_BASELINE,
+            )
+            TypefaceUtils.setTypeface(
+                requireViewById(R.id.suggestions_text),
+                TypefaceUtils.FONT_FAMILY_BODY_MEDIUM_BASELINE,
+            )
+            TypefaceUtils.setTypeface(
+                requireViewById(R.id.pinning_text),
+                TypefaceUtils.FONT_FAMILY_BODY_MEDIUM_BASELINE,
+            )
 
             // Set up layout parameters.
             content.updateLayoutParams { width = MATCH_PARENT }
@@ -231,6 +252,15 @@ open class TaskbarEduTooltipController(context: Context) :
             requireViewById<LottieAnimationView>(R.id.standalone_pinning_animation)
                 .supportLightTheme()
 
+            TypefaceUtils.setTypeface(
+                requireViewById(R.id.taskbar_edu_title),
+                TypefaceUtils.FONT_FAMILY_HEADLINE_SMALL_EMPHASIZED,
+            )
+            TypefaceUtils.setTypeface(
+                requireViewById(R.id.pinning_text),
+                TypefaceUtils.FONT_FAMILY_BODY_MEDIUM_BASELINE,
+            )
+
             updateLayoutParams<BaseDragLayer.LayoutParams> {
                 if (DisplayController.isTransientTaskbar(activityContext)) {
                     bottomMargin += activityContext.deviceProfile.taskbarHeight
@@ -276,6 +306,13 @@ open class TaskbarEduTooltipController(context: Context) :
             allowTouchDismissal = true
             requireViewById<LottieAnimationView>(R.id.search_edu_animation).supportLightTheme()
             val eduSubtitle: TextView = requireViewById(R.id.search_edu_text)
+
+            TypefaceUtils.setTypeface(
+                requireViewById(R.id.taskbar_edu_title),
+                TypefaceUtils.FONT_FAMILY_HEADLINE_SMALL_EMPHASIZED,
+            )
+            TypefaceUtils.setTypeface(eduSubtitle, TypefaceUtils.FONT_FAMILY_BODY_SMALL_BASELINE)
+
             showDisclosureText(eduSubtitle)
             updateLayoutParams<BaseDragLayer.LayoutParams> {
                 if (DisplayController.isTransientTaskbar(activityContext)) {
