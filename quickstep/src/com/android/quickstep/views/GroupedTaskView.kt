@@ -189,16 +189,12 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         val inSplitSelection = getThisTaskCurrentlyInSplitSelection() != INVALID_TASK_ID
 
         if (enableFlexibleTwoAppSplit()) {
-            val topLeftTaskPercent =
-                if (deviceProfile.isLeftRightSplit) splitBoundsConfig.leftTaskPercent
-                else splitBoundsConfig.topTaskPercent
-            val bottomRightTaskPercent = 1 - topLeftTaskPercent
-            leftTopTaskContainer.iconView.setFlexSplitAlpha(
-                if (topLeftTaskPercent < MINIMUM_RATIO_TO_SHOW_ICON) 0f else 1f
-            )
-            rightBottomTaskContainer.iconView.setFlexSplitAlpha(
-                if (bottomRightTaskPercent < MINIMUM_RATIO_TO_SHOW_ICON) 0f else 1f
-            )
+            val topLeftTaskPercent = splitBoundsConfig.leftTopTaskPercent
+            val bottomRightTaskPercent = splitBoundsConfig.rightBottomTaskPercent
+            val hideTopLeftIcon = topLeftTaskPercent < MINIMUM_RATIO_TO_SHOW_ICON
+            val hideBottomRightIcon = bottomRightTaskPercent < MINIMUM_RATIO_TO_SHOW_ICON
+            leftTopTaskContainer.iconView.setFlexSplitAlpha(if (hideTopLeftIcon) 0f else 1f)
+            rightBottomTaskContainer.iconView.setFlexSplitAlpha(if (hideBottomRightIcon) 0f else 1f)
         }
 
         if (enableOverviewIconMenu()) {
