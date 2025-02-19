@@ -234,6 +234,20 @@ public class PopupContainerWithArrow<T extends Context & ActivityContext>
      */
     public void populateAndShowRows(final BubbleTextView originalIcon,
             int deepShortcutCount, List<SystemShortcut> systemShortcuts) {
+        populateAndShowRows(originalIcon, (ItemInfo) originalIcon.getTag(), deepShortcutCount,
+                systemShortcuts);
+    }
+
+    /**
+     * Populate and show shortcuts for the Launcher U app shortcut design.
+     * Will inflate the container and shortcut View instances for the popup container.
+     * @param originalIcon App icon that the popup is shown for
+     * @param itemInfo The info that is used to load app shortcuts
+     * @param deepShortcutCount Number of DeepShortcutView instances to add to container
+     * @param systemShortcuts List of SystemShortcuts to add to container
+     */
+    public void populateAndShowRows(final BubbleTextView originalIcon, ItemInfo itemInfo,
+            int deepShortcutCount, List<SystemShortcut> systemShortcuts) {
 
         mOriginalIcon = originalIcon;
         mContainerWidth = getResources().getDimensionPixelSize(R.dimen.bg_popup_item_width);
@@ -246,7 +260,7 @@ public class PopupContainerWithArrow<T extends Context & ActivityContext>
                     R.layout.system_shortcut);
         }
         show();
-        loadAppShortcuts((ItemInfo) originalIcon.getTag());
+        loadAppShortcuts(itemInfo);
     }
 
     /**
