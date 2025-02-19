@@ -709,15 +709,14 @@ public class TaskbarManager {
             return;
         }
 
-        // TODO (b/391965805): remove once onDisplayAddSystemDecorations is working.
-        WindowManager wm = getWindowManager(displayId);
-        if (wm == null || !wm.shouldShowSystemDecors(displayId)) {
-            return;
-        }
-
         Context newWindowContext = createWindowContext(displayId);
         if (newWindowContext != null) {
             addWindowContextToMap(displayId, newWindowContext);
+            // TODO (b/391965805): remove once onDisplayAddSystemDecorations is working.
+            WindowManager wm = getWindowManager(displayId);
+            if (wm == null || !wm.shouldShowSystemDecors(displayId)) {
+                return;
+            }
             createTaskbarRootLayout(displayId);
             createNavButtonController(displayId);
             createAndRegisterComponentCallbacks(displayId);
