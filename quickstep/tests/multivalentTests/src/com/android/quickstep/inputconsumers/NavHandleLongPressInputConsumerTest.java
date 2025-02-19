@@ -24,6 +24,8 @@ import static android.view.MotionEvent.ACTION_UP;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 
+import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_LONG_PRESS_NAVBAR;
+import static com.android.launcher3.logging.StatsLogManager.LauncherLatencyEvent.LAUNCHER_LATENCY_CONTEXTUAL_SEARCH_LPNH_ABANDON;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.quickstep.DeviceConfigWrapper.DEFAULT_LPNH_TIMEOUT_MS;
 
@@ -33,9 +35,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.os.SystemClock;
@@ -47,6 +51,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.launcher3.dagger.LauncherAppComponent;
 import com.android.launcher3.dagger.LauncherAppSingleton;
+import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.util.AllModulesForTest;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.MainThreadInitializedObject.SandboxContext;
@@ -83,6 +88,7 @@ public class NavHandleLongPressInputConsumerTest {
     private NavHandleLongPressInputConsumer mUnderTest;
     private SandboxContext mContext;
     private float mScreenWidth;
+    private long mDownTimeMs;
     @Mock InputConsumer mDelegate;
     @Mock InputMonitorCompat mInputMonitor;
     @Mock RecentsAnimationDeviceState mDeviceState;
@@ -91,6 +97,9 @@ public class NavHandleLongPressInputConsumerTest {
     @Mock NavHandleLongPressHandler mNavHandleLongPressHandler;
     @Mock TopTaskTracker mTopTaskTracker;
     @Mock TopTaskTracker.CachedTaskInfo mTaskInfo;
+    @Mock StatsLogManager mStatsLogManager;
+    @Mock StatsLogManager.StatsLogger mStatsLogger;
+    @Mock StatsLogManager.StatsLatencyLogger mStatsLatencyLogger;
 
     @Before
     public void setup() {
@@ -100,6 +109,11 @@ public class NavHandleLongPressInputConsumerTest {
         when(mDelegate.allowInterceptByParent()).thenReturn(true);
         mLongPressTriggered.set(false);
         when(mNavHandleLongPressHandler.getLongPressRunnable(any())).thenReturn(mLongPressRunnable);
+        when(mStatsLogger.withPackageName(any())).thenReturn(mStatsLogger);
+        when(mStatsLatencyLogger.withInstanceId(any())).thenReturn(mStatsLatencyLogger);
+        when(mStatsLatencyLogger.withLatency(anyLong())).thenReturn(mStatsLatencyLogger);
+        when(mStatsLogManager.logger()).thenReturn(mStatsLogger);
+        when(mStatsLogManager.latencyLogger()).thenReturn(mStatsLatencyLogger);
         initializeObjectUnderTest();
     }
 
@@ -124,17 +138,24 @@ public class NavHandleLongPressInputConsumerTest {
         assertThat(mUnderTest.mState).isEqualTo(DelegateInputConsumer.STATE_INACTIVE);
         verify(mNavHandleLongPressHandler, never()).onTouchStarted(any());
         verify(mNavHandleLongPressHandler, never()).onTouchFinished(any(), any());
+        verifyNoMoreInteractions(mStatsLogManager);
+        verifyNoMoreInteractions(mStatsLogger);
+        verifyNoMoreInteractions(mStatsLatencyLogger);
     }
 
     @Test
     public void testDelegateDisallowsTouchInterceptAfterTouchDown() {
+        // Touch down and wait the minimum abandonment time.
         mUnderTest.onMotionEvent(generateCenteredMotionEvent(ACTION_DOWN));
+        SystemClock.sleep(NavHandleLongPressInputConsumer.MIN_TIME_TO_LOG_ABANDON_MS);
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 
         // Delegate should still get touches unless long press is triggered.
         verify(mDelegate).onMotionEvent(any());
         verify(mNavHandleLongPressHandler, times(1)).onTouchStarted(any());
         verify(mNavHandleLongPressHandler, never()).onTouchFinished(any(), any());
 
+        // Child delegate blocks us from intercepting further motion events.
         when(mDelegate.allowInterceptByParent()).thenReturn(false);
         mUnderTest.onMotionEvent(generateCenteredMotionEvent(ACTION_MOVE));
 
@@ -144,6 +165,9 @@ public class NavHandleLongPressInputConsumerTest {
         assertThat(mUnderTest.mState).isEqualTo(DelegateInputConsumer.STATE_INACTIVE);
         verify(mNavHandleLongPressHandler, times(1)).onTouchStarted(any());
         verify(mNavHandleLongPressHandler, times(1)).onTouchFinished(any(), any());
+        verifyNoMoreInteractions(mStatsLogger);
+        // Because we handled touch down before the child blocked additional events, log abandon.
+        verify(mStatsLatencyLogger).log(LAUNCHER_LATENCY_CONTEXTUAL_SEARCH_LPNH_ABANDON);
     }
 
     @Test
@@ -156,6 +180,12 @@ public class NavHandleLongPressInputConsumerTest {
         assertTrue(mLongPressTriggered.get());
         verify(mNavHandleLongPressHandler, times(1)).onTouchStarted(any());
         verify(mNavHandleLongPressHandler, never()).onTouchFinished(any(), any());
+        verify(mStatsLogger).log(LAUNCHER_LONG_PRESS_NAVBAR);
+        verifyNoMoreInteractions(mStatsLatencyLogger);
+
+        // Ensure abandon latency is still not logged after long press.
+        mUnderTest.onMotionEvent(generateCenteredMotionEvent(ACTION_UP));
+        verifyNoMoreInteractions(mStatsLatencyLogger);
     }
 
     @Test
@@ -170,6 +200,8 @@ public class NavHandleLongPressInputConsumerTest {
         assertTrue(mLongPressTriggered.get());
         verify(mNavHandleLongPressHandler, times(1)).onTouchStarted(any());
         verify(mNavHandleLongPressHandler, never()).onTouchFinished(any(), any());
+        verify(mStatsLogger).log(LAUNCHER_LONG_PRESS_NAVBAR);
+        verifyNoMoreInteractions(mStatsLatencyLogger);
     }
 
     @Test
@@ -184,6 +216,8 @@ public class NavHandleLongPressInputConsumerTest {
         assertTrue(mLongPressTriggered.get());
         verify(mNavHandleLongPressHandler, times(1)).onTouchStarted(any());
         verify(mNavHandleLongPressHandler, never()).onTouchFinished(any(), any());
+        verify(mStatsLogger).log(LAUNCHER_LONG_PRESS_NAVBAR);
+        verifyNoMoreInteractions(mStatsLatencyLogger);
     }
 
     @Test
@@ -215,6 +249,8 @@ public class NavHandleLongPressInputConsumerTest {
             assertTrue(mLongPressTriggered.get());
             verify(mNavHandleLongPressHandler, times(1)).onTouchStarted(any());
             verify(mNavHandleLongPressHandler, never()).onTouchFinished(any(), any());
+            verify(mStatsLogger).log(LAUNCHER_LONG_PRESS_NAVBAR);
+            verifyNoMoreInteractions(mStatsLatencyLogger);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -235,6 +271,8 @@ public class NavHandleLongPressInputConsumerTest {
             assertTrue(mLongPressTriggered.get());
             verify(mNavHandleLongPressHandler, times(1)).onTouchStarted(any());
             verify(mNavHandleLongPressHandler, never()).onTouchFinished(any(), any());
+            verify(mStatsLogger).log(LAUNCHER_LONG_PRESS_NAVBAR);
+            verifyNoMoreInteractions(mStatsLatencyLogger);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -258,6 +296,8 @@ public class NavHandleLongPressInputConsumerTest {
         assertFalse(mLongPressTriggered.get());
         verify(mNavHandleLongPressHandler, times(1)).onTouchStarted(any());
         verify(mNavHandleLongPressHandler, times(1)).onTouchFinished(any(), any());
+        verifyNoMoreInteractions(mStatsLogger);
+        verify(mStatsLatencyLogger).log(LAUNCHER_LATENCY_CONTEXTUAL_SEARCH_LPNH_ABANDON);
     }
 
     @Test
@@ -278,6 +318,8 @@ public class NavHandleLongPressInputConsumerTest {
         assertFalse(mLongPressTriggered.get());
         verify(mNavHandleLongPressHandler, times(1)).onTouchStarted(any());
         verify(mNavHandleLongPressHandler, times(1)).onTouchFinished(any(), any());
+        verifyNoMoreInteractions(mStatsLogger);
+        verify(mStatsLatencyLogger).log(LAUNCHER_LATENCY_CONTEXTUAL_SEARCH_LPNH_ABANDON);
     }
 
     @Test
@@ -299,6 +341,8 @@ public class NavHandleLongPressInputConsumerTest {
         assertFalse(mLongPressTriggered.get());
         verify(mNavHandleLongPressHandler, times(1)).onTouchStarted(any());
         verify(mNavHandleLongPressHandler, times(1)).onTouchFinished(any(), any());
+        verifyNoMoreInteractions(mStatsLogger);
+        verify(mStatsLatencyLogger).log(LAUNCHER_LATENCY_CONTEXTUAL_SEARCH_LPNH_ABANDON);
     }
 
     @Test
@@ -320,6 +364,8 @@ public class NavHandleLongPressInputConsumerTest {
         assertFalse(mLongPressTriggered.get());
         verify(mNavHandleLongPressHandler, times(1)).onTouchStarted(any());
         verify(mNavHandleLongPressHandler, times(1)).onTouchFinished(any(), any());
+        verifyNoMoreInteractions(mStatsLogger);
+        verify(mStatsLatencyLogger).log(LAUNCHER_LATENCY_CONTEXTUAL_SEARCH_LPNH_ABANDON);
     }
 
     @Test
@@ -354,6 +400,8 @@ public class NavHandleLongPressInputConsumerTest {
             verify(mNavHandleLongPressHandler, times(1)).onTouchStarted(any());
             // Touch cancelled.
             verify(mNavHandleLongPressHandler, times(1)).onTouchFinished(any(), any());
+            verifyNoMoreInteractions(mStatsLogger);
+            verify(mStatsLatencyLogger).log(LAUNCHER_LATENCY_CONTEXTUAL_SEARCH_LPNH_ABANDON);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -391,6 +439,8 @@ public class NavHandleLongPressInputConsumerTest {
             verify(mNavHandleLongPressHandler, times(1)).onTouchStarted(any());
             // Touch cancelled.
             verify(mNavHandleLongPressHandler, times(1)).onTouchFinished(any(), any());
+            verifyNoMoreInteractions(mStatsLogger);
+            verify(mStatsLatencyLogger).log(LAUNCHER_LATENCY_CONTEXTUAL_SEARCH_LPNH_ABANDON);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -408,6 +458,9 @@ public class NavHandleLongPressInputConsumerTest {
         assertFalse(mLongPressTriggered.get());
         verify(mNavHandleLongPressHandler, never()).onTouchStarted(any());
         verify(mNavHandleLongPressHandler, never()).onTouchFinished(any(), any());
+        verifyNoMoreInteractions(mStatsLogManager);
+        verifyNoMoreInteractions(mStatsLogger);
+        verifyNoMoreInteractions(mStatsLatencyLogger);
     }
 
     @Test
@@ -422,6 +475,21 @@ public class NavHandleLongPressInputConsumerTest {
         mUnderTest.onHoverEvent(generateCenteredMotionEvent(ACTION_HOVER_ENTER));
 
         verify(mDelegate, times(2)).onHoverEvent(any());
+
+        verifyNoMoreInteractions(mStatsLogManager);
+        verifyNoMoreInteractions(mStatsLogger);
+        verifyNoMoreInteractions(mStatsLatencyLogger);
+    }
+
+    @Test
+    public void testNoLogsForShortTouch() {
+        mUnderTest.onMotionEvent(generateCenteredMotionEvent(ACTION_DOWN));
+        SystemClock.sleep(10);
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+        mUnderTest.onMotionEvent(generateCenteredMotionEvent(ACTION_UP));
+        verifyNoMoreInteractions(mStatsLogManager);
+        verifyNoMoreInteractions(mStatsLogger);
+        verifyNoMoreInteractions(mStatsLatencyLogger);
     }
 
     private void initializeObjectUnderTest() {
@@ -437,6 +505,8 @@ public class NavHandleLongPressInputConsumerTest {
         mUnderTest = new NavHandleLongPressInputConsumer(mContext, mDelegate, mInputMonitor,
                 mDeviceState, mNavHandle, mGestureState);
         mUnderTest.setNavHandleLongPressHandler(mNavHandleLongPressHandler);
+        mUnderTest.setStatsLogManager(mStatsLogManager);
+        mDownTimeMs = 0;
     }
 
     /** Generate a motion event centered horizontally in the screen. */
@@ -449,8 +519,12 @@ public class NavHandleLongPressInputConsumerTest {
         return generateMotionEvent(motionAction, mScreenWidth / 2f, y);
     }
 
-    private static MotionEvent generateMotionEvent(int motionAction, float x, float y) {
-        return MotionEvent.obtain(0, 0, motionAction, x, y, 0);
+    private MotionEvent generateMotionEvent(int motionAction, float x, float y) {
+        if (motionAction == ACTION_DOWN) {
+            mDownTimeMs = SystemClock.uptimeMillis();
+        }
+        long eventTime = SystemClock.uptimeMillis();
+        return MotionEvent.obtain(mDownTimeMs, eventTime, motionAction, x, y, 0);
     }
 
     private static AutoCloseable overrideTwoStageFlag(boolean value) {

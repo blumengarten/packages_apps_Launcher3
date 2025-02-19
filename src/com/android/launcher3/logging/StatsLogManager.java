@@ -905,6 +905,10 @@ public class StatsLogManager implements ResourceBasedOverride {
         @UiEvent(doc = "Time passed between Contextual Search runnable creation and execution. This"
                 + " ensures that Recent animations have finished before Contextual Search starts.")
         LAUNCHER_LATENCY_OMNI_RUNNABLE(1546),
+
+        @UiEvent(doc = "Time passed between nav handle touch down and cancellation without "
+                + "triggering Contextual Search")
+        LAUNCHER_LATENCY_CONTEXTUAL_SEARCH_LPNH_ABANDON(2171),
         ;
 
         private final int mId;
