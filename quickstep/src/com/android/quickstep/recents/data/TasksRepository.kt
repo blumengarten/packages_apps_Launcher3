@@ -160,7 +160,17 @@ class TasksRepository(
                     updateThumbnail(task.key.id, thumbnailData)
                 }
 
-                override fun onHighResLoadingStateChanged() {
+                override fun onHighResLoadingStateChanged(highResEnabled: Boolean) {
+                    val isTaskVisible = taskRequests.containsKey(task.key.id)
+                    if (!isTaskVisible) return
+
+                    val isCurrentThumbnailLowRes =
+                        tasks.value[task.key.id]?.thumbnail?.reducedResolution
+                    val isRequestedResHigherThanCurrent =
+                        isCurrentThumbnailLowRes == null ||
+                            (isCurrentThumbnailLowRes && highResEnabled)
+                    if (!isRequestedResHigherThanCurrent) return
+
                     recentsCoroutineScope.launch(dispatcherProvider.background) {
                         updateThumbnail(task.key.id, getThumbnailFromDataSource(task))
                     }
