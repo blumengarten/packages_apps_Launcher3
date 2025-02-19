@@ -220,7 +220,7 @@ constructor(
                 SPLIT_SELECT_TRANSLATION_Y,
             )
 
-    protected val primaryDismissTranslationProperty: FloatProperty<TaskView>
+    val primaryDismissTranslationProperty: FloatProperty<TaskView>
         get() =
             pagedOrientationHandler.getPrimaryValue(DISMISS_TRANSLATION_X, DISMISS_TRANSLATION_Y)
 
@@ -743,9 +743,10 @@ constructor(
             // The TaskView lifecycle is starts the ViewModel during onBind, and cleans it in
             // onRecycle. So it should be initialized at this point. TaskView Lifecycle:
             // `bind` -> `onBind` ->  onAttachedToWindow() -> onDetachFromWindow -> onRecycle
-            coroutineJobs += coroutineScope.launch(dispatcherProvider.main) {
-                viewModel!!.state.collectLatest(::updateTaskViewState)
-            }
+            coroutineJobs +=
+                coroutineScope.launch(dispatcherProvider.main) {
+                    viewModel!!.state.collectLatest(::updateTaskViewState)
+                }
         }
     }
 
@@ -1653,7 +1654,7 @@ constructor(
     protected fun getScrollAdjustment(gridEnabled: Boolean) =
         if (gridEnabled) gridTranslationX else nonGridTranslationX
 
-    protected fun getOffsetAdjustment(gridEnabled: Boolean) = getScrollAdjustment(gridEnabled)
+    fun getOffsetAdjustment(gridEnabled: Boolean) = getScrollAdjustment(gridEnabled)
 
     fun getSizeAdjustment(fullscreenEnabled: Boolean) = if (fullscreenEnabled) nonGridScale else 1f
 
