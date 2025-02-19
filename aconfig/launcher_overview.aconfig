@@ -103,3 +103,10 @@ flag {
     description: "Enable wallpaper blur in overview."
     bug: "369975912"
 }
+
+flag {
+    name: "enable_overview_desktop_tile_wallpaper_background"
+    namespace: "launcher_overview"
+    description: "Enable wallpaper background for desktop tasks in overview."
+    bug: "363257721"
+}
