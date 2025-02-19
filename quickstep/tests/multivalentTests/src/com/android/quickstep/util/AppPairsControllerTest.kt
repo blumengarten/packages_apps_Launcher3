@@ -16,7 +16,9 @@
 
 package com.android.quickstep.util
 
+import android.app.WindowConfiguration.WINDOWING_MODE_FREEFORM
 import android.content.Context
+import android.content.res.Resources
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.launcher3.apppairs.AppPairIcon
 import com.android.launcher3.logging.StatsLogManager
@@ -28,6 +30,7 @@ import com.android.quickstep.TopTaskTracker
 import com.android.quickstep.TopTaskTracker.CachedTaskInfo
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.Task.TaskKey
+import com.android.wm.shell.shared.desktopmode.DesktopModeStatus
 import com.android.wm.shell.shared.split.SplitScreenConstants.SNAP_TO_2_33_66
 import com.android.wm.shell.shared.split.SplitScreenConstants.SNAP_TO_2_50_50
 import com.android.wm.shell.shared.split.SplitScreenConstants.SNAP_TO_2_66_33
@@ -54,6 +57,7 @@ import org.mockito.kotlin.whenever
 @RunWith(AndroidJUnit4::class)
 class AppPairsControllerTest {
     @Mock lateinit var context: Context
+    @Mock lateinit var resources: Resources
     @Mock lateinit var splitSelectStateController: SplitSelectStateController
     @Mock lateinit var statsLogManager: StatsLogManager
 
@@ -109,6 +113,8 @@ class AppPairsControllerTest {
         doNothing()
             .whenever(spyAppPairsController)
             .launchToSide(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())
+        whenever(mockAppPairIcon.context.resources).thenReturn(resources)
+        whenever(DesktopModeStatus.canEnterDesktopMode(mockAppPairIcon.context)).thenReturn(false)
     }
 
     @Test
@@ -389,6 +395,68 @@ class AppPairsControllerTest {
         verify(spyAppPairsController, never()).launchAppPair(any(), any())
         verify(spyAppPairsController, times(1))
             .launchToSide(anyOrNull(), anyOrNull(), anyOrNull(), eq(STAGE_POSITION_TOP_OR_LEFT))
+    }
+
+    @Test
+    fun handleAppPairLaunchInApp_freeformTask1IsOnScreen_shouldLaunchAppPair() {
+        whenever(DesktopModeStatus.canEnterDesktopMode(mockAppPairIcon.context)).thenReturn(true)
+        /// Test launching apps 1 and 2 from app pair
+        whenever(mockTaskKey1.getId()).thenReturn(1)
+        whenever(mockTaskKey2.getId()).thenReturn(2)
+        // Task 1 is in freeform windowing mode
+        mockTaskKey1.windowingMode = WINDOWING_MODE_FREEFORM
+        // ... and app 1 is already on screen
+        if (com.android.wm.shell.Flags.enableShellTopTaskTracking()) {
+            whenever(mockCachedTaskInfo.topGroupedTaskContainsTask(eq(1))).thenReturn(true)
+        } else {
+            whenever(mockCachedTaskInfo.taskId).thenReturn(1)
+        }
+
+        // Trigger app pair launch, capture and run callback from findLastActiveTasksAndRunCallback
+        spyAppPairsController.handleAppPairLaunchInApp(
+            mockAppPairIcon,
+            listOf(mockItemInfo1, mockItemInfo2),
+        )
+        verify(splitSelectStateController)
+            .findLastActiveTasksAndRunCallback(any(), any(), callbackCaptor.capture())
+        val callback: Consumer<Array<Task>> = callbackCaptor.value
+        callback.accept(arrayOf(mockTask1, mockTask2))
+
+        // Verify that launchAppPair was called
+        verify(spyAppPairsController, times(1)).launchAppPair(any(), any())
+        verify(spyAppPairsController, never())
+            .launchToSide(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())
+    }
+
+    @Test
+    fun handleAppPairLaunchInApp_freeformTask2IsOnScreen_shouldLaunchAppPair() {
+        whenever(DesktopModeStatus.canEnterDesktopMode(mockAppPairIcon.context)).thenReturn(true)
+        /// Test launching apps 1 and 2 from app pair
+        whenever(mockTaskKey1.getId()).thenReturn(1)
+        whenever(mockTaskKey2.getId()).thenReturn(2)
+        // Task 2 is in freeform windowing mode
+        mockTaskKey1.windowingMode = WINDOWING_MODE_FREEFORM
+        // ... and app 2 is already on screen
+        if (com.android.wm.shell.Flags.enableShellTopTaskTracking()) {
+            whenever(mockCachedTaskInfo.topGroupedTaskContainsTask(eq(2))).thenReturn(true)
+        } else {
+            whenever(mockCachedTaskInfo.taskId).thenReturn(2)
+        }
+
+        // Trigger app pair launch, capture and run callback from findLastActiveTasksAndRunCallback
+        spyAppPairsController.handleAppPairLaunchInApp(
+            mockAppPairIcon,
+            listOf(mockItemInfo1, mockItemInfo2),
+        )
+        verify(splitSelectStateController)
+            .findLastActiveTasksAndRunCallback(any(), any(), callbackCaptor.capture())
+        val callback: Consumer<Array<Task>> = callbackCaptor.value
+        callback.accept(arrayOf(mockTask1, mockTask2))
+
+        // Verify that launchAppPair was called
+        verify(spyAppPairsController, times(1)).launchAppPair(any(), any())
+        verify(spyAppPairsController, never())
+            .launchToSide(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())
     }
 
     @Test
