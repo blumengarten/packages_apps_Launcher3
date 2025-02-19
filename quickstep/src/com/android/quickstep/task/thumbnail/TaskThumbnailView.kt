@@ -20,6 +20,7 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Outline
+import android.graphics.Path
 import android.graphics.Rect
 import android.graphics.drawable.ShapeDrawable
 import android.util.AttributeSet
@@ -52,6 +53,7 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
     private val dimAlpha: MultiPropertyFactory<View> by lazy {
         MultiPropertyFactory(scrimView, VIEW_ALPHA, ScrimViewAlpha.entries.size, ::maxOf)
     }
+    private val outlinePath = Path()
     private var onSizeChanged: ((width: Int, height: Int) -> Unit)? = null
 
     private var taskThumbnailViewHeader: TaskThumbnailViewHeader? = null
@@ -96,7 +98,20 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
         outlineProvider =
             object : ViewOutlineProvider() {
                 override fun getOutline(view: View, outline: Outline) {
-                    outline.setRoundRect(outlineBounds ?: bounds, cornerRadius)
+                    val outlineRect = outlineBounds ?: bounds
+                    outlinePath.apply {
+                        rewind()
+                        addRoundRect(
+                            outlineRect.left.toFloat(),
+                            outlineRect.top.toFloat(),
+                            outlineRect.right.toFloat(),
+                            outlineRect.bottom.toFloat(),
+                            cornerRadius / scaleX,
+                            cornerRadius / scaleY,
+                            Path.Direction.CW,
+                        )
+                    }
+                    outline.setPath(outlinePath)
                 }
             }
     }
