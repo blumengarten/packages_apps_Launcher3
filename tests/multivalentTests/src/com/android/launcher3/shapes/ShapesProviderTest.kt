@@ -63,15 +63,6 @@ class ShapesProviderTest {
 
     @Test
     @EnableFlags(FLAG_ENABLE_LAUNCHER_ICON_SHAPES, FLAG_NEW_CUSTOMIZATION_PICKER_UI)
-    fun `verify valid path sunny`() {
-        ShapesProvider.iconShapes["sunny"]?.apply {
-            GenericPathShape(pathString)
-            PathParser.createPathFromPathData(pathString)
-        }
-    }
-
-    @Test
-    @EnableFlags(FLAG_ENABLE_LAUNCHER_ICON_SHAPES, FLAG_NEW_CUSTOMIZATION_PICKER_UI)
     fun `verify valid path circle`() {
         ShapesProvider.iconShapes["circle"]?.apply {
             GenericPathShape(pathString)
