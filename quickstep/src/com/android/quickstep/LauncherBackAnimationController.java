@@ -514,7 +514,13 @@ public class LauncherBackAnimationController {
 
     private void finishAnimation() {
         mLauncher.setPredictiveBackToHomeInProgress(false);
+        if (mBackTarget != null && mBackTarget.leash.isValid()) {
+            mBackTarget.leash.release();
+        }
         mBackTarget = null;
+        if (mLauncherTarget != null && mLauncherTarget.leash.isValid()) {
+            mLauncherTarget.leash.release();
+        }
         mLauncherTarget = null;
         mBackInProgress = false;
         mBackProgress = 0;
