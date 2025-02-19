@@ -246,10 +246,12 @@ public abstract class DragView<T extends Context & ActivityContext> extends Fram
     public void setItemInfo(final ItemInfo info) {
         // Load the adaptive icon on a background thread and add the view in ui thread.
         MODEL_EXECUTOR.getHandler().postAtFrontOfQueue(() -> {
+            ThemeManager themeManager = ThemeManager.INSTANCE.get(getContext());
             int w = mWidth;
             int h = mHeight;
             Pair<AdaptiveIconDrawable, Drawable> fullDrawable = Utilities.getFullDrawable(
-                    mActivity, info, w, h, true /* shouldThemeIcon */);
+                    mActivity, info, w, h,
+                    themeManager.isIconThemeEnabled());
             if (fullDrawable != null) {
                 AdaptiveIconDrawable adaptiveIcon = fullDrawable.first;
                 int blurMargin = (int) mActivity.getResources()
@@ -274,7 +276,6 @@ public abstract class DragView<T extends Context & ActivityContext> extends Fram
                 Utilities.scaleRectAboutCenter(shrunkBounds, 0.98f);
                 adaptiveIcon.setBounds(shrunkBounds);
 
-                ThemeManager themeManager = ThemeManager.INSTANCE.get(getContext());
                 final Path mask = (adaptiveIcon instanceof FolderAdaptiveIcon
                         ? themeManager.getFolderShape() : themeManager.getIconShape())
                         .getPath(shrunkBounds);
