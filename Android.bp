@@ -455,6 +455,9 @@ android_app {
         extra_check_modules: ["Launcher3LintChecker"],
         baseline_filename: "lint-baseline.xml",
     },
+    kotlincflags: [
+        "-Xjvm-default=all",
+    ],
 }
 
 // Library with all the dependencies for building quickstep
@@ -519,6 +522,9 @@ android_library {
     min_sdk_version: "current",
     // TODO(b/319712088): re-enable use_resource_processor
     use_resource_processor: false,
+    kotlincflags: [
+        "-Xjvm-default=all",
+    ],
 }
 
 // Library with all the source code and dependencies for building Quickstep
@@ -552,6 +558,9 @@ android_library {
     min_sdk_version: "current",
     // TODO(b/319712088): re-enable use_resource_processor
     use_resource_processor: false,
+    kotlincflags: [
+        "-Xjvm-default=all",
+    ],
 }
 
 // Build rule for Quickstep app.
