@@ -18,6 +18,7 @@ package com.android.launcher3.statehandlers
 import android.content.Context
 import android.os.Debug
 import android.util.Log
+import android.util.Slog
 import android.util.SparseArray
 import android.view.Display.DEFAULT_DISPLAY
 import android.window.DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY
@@ -152,7 +153,8 @@ constructor(
             return areDesktopTasksVisible()
         }
 
-        val isInDesktopMode = displaysDesksConfigsMap[displayId].activeDeskId != INACTIVE_DESK_ID
+        val activeDeskId = getDisplayDeskConfig(displayId)?.activeDeskId ?: INACTIVE_DESK_ID
+        val isInDesktopMode = activeDeskId != INACTIVE_DESK_ID
         if (DEBUG) {
             Log.d(TAG, "isInDesktopMode: $isInDesktopMode")
         }
@@ -409,18 +411,16 @@ constructor(
         }
     }
 
-    private fun getDisplayDeskConfig(displayId: Int): DisplayDeskConfig {
-        return checkNotNull(displaysDesksConfigsMap[displayId]) {
-            "Expected non-null desk config for display: $displayId"
-        }
-    }
+    private fun getDisplayDeskConfig(displayId: Int) =
+        displaysDesksConfigsMap[displayId]
+            ?: null.also { Slog.e(TAG, "Expected non-null desk config for display: $displayId") }
 
     private fun onCanCreateDesksChanged(displayId: Int, canCreateDesks: Boolean) {
         if (!DesktopModeStatus.enableMultipleDesktops(context)) {
             return
         }
 
-        getDisplayDeskConfig(displayId).canCreateDesks = canCreateDesks
+        getDisplayDeskConfig(displayId)?.canCreateDesks = canCreateDesks
     }
 
     private fun onDeskAdded(displayId: Int, deskId: Int) {
@@ -428,7 +428,7 @@ constructor(
             return
         }
 
-        getDisplayDeskConfig(displayId).also {
+        getDisplayDeskConfig(displayId)?.also {
             check(it.deskIds.add(deskId)) {
                 "Found a duplicate desk Id: $deskId on display: $displayId"
             }
@@ -440,7 +440,7 @@ constructor(
             return
         }
 
-        getDisplayDeskConfig(displayId).also {
+        getDisplayDeskConfig(displayId)?.also {
             check(it.deskIds.remove(deskId)) {
                 "Removing non-existing desk Id: $deskId on display: $displayId"
             }
@@ -457,7 +457,7 @@ constructor(
 
         val wasInDesktopMode = isInDesktopModeAndNotInOverview(displayId)
 
-        getDisplayDeskConfig(displayId).also {
+        getDisplayDeskConfig(displayId)?.also {
             check(oldActiveDesk == it.activeDeskId) {
                 "Mismatch between the Shell's oldActiveDesk: $oldActiveDesk, and Launcher's: ${it.activeDeskId}"
             }
