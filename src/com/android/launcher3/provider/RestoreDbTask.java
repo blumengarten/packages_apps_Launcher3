@@ -51,6 +51,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
+import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherFiles;
@@ -130,9 +131,11 @@ public class RestoreDbTask {
         removeOldDBs(context, oldPhoneFileName);
         // The idp before this contains data about the old phone, after this it becomes the idp
         // of the current phone.
-        FileLog.d(TAG, "Resetting IDP to default for restore dest device");
-        idp.reset(context);
-        trySettingPreviousGridAsCurrent(context, idp, oldPhoneFileName, previousDbs);
+        if (!Flags.oneGridSpecs()) {
+            FileLog.d(TAG, "Resetting IDP to default for restore dest device");
+            idp.reset(context);
+            trySettingPreviousGridAsCurrent(context, idp, oldPhoneFileName, previousDbs);
+        }
     }
 
 
