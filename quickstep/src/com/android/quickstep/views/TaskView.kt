@@ -789,11 +789,11 @@ constructor(
 
     private fun updateThumbnailValidity(container: TaskContainer) {
         container.isThumbnailValid =
-            viewModel!!.isThumbnailValid(
+            viewModel?.isThumbnailValid(
                 thumbnail = container.thumbnailData,
                 width = container.thumbnailView.width,
                 height = container.thumbnailView.height,
-            )
+            ) ?: return
         applyThumbnailSplashAlpha()
     }
 
@@ -810,7 +810,8 @@ constructor(
      */
     private fun updateThumbnailMatrix(container: TaskContainer, width: Int, height: Int) {
         val thumbnailPosition =
-            viewModel!!.getThumbnailPosition(container.thumbnailData, width, height, isLayoutRtl)
+            viewModel?.getThumbnailPosition(container.thumbnailData, width, height, isLayoutRtl)
+                ?: return
         container.updateThumbnailMatrix(thumbnailPosition.matrix)
     }
 
