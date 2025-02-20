@@ -322,6 +322,8 @@
     <string name="move_drop_target_top_or_left">Move to top&#47;left</string>
     <!-- Label for moving drop target to the bottom or right side of the screen, depending on orientation (from the Taskbar only). -->
     <string name="move_drop_target_bottom_or_right">Move to bottom&#47;right</string>
+    <!-- Label for creating an application bubble (from the Taskbar only). -->
+    <string name="open_app_as_a_bubble">Open app as a bubble</string>
 
     <!-- Label for quick switch tile showing how many more apps are available. The number will be displayed above this text. [CHAR LIMIT=NONE] -->
     <string name="quick_switch_overflow">{count, plural,
