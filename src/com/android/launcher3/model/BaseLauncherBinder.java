@@ -167,7 +167,7 @@ public class BaseLauncherBinder {
             return;
         }
         Map<PackageItemInfo, List<WidgetItem>>
-                widgetsByPackageItem = mBgDataModel.widgetsModel.getWidgetsByPackageItem();
+                widgetsByPackageItem = mBgDataModel.widgetsModel.getWidgetsByPackageItemForPicker();
         List<WidgetsListBaseEntry> widgets = new WidgetsListBaseEntriesBuilder(mApp.getContext())
                 .build(widgetsByPackageItem);
         Predicate<WidgetItem> filter = mBgDataModel.widgetsModel.getDefaultWidgetsFilter();
