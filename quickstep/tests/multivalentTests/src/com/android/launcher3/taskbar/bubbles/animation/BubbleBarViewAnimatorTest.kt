@@ -60,6 +60,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -570,6 +571,71 @@ class BubbleBarViewAnimatorTest {
         assertThat(notifiedBubbleBarVisible).isTrue()
 
         verify(bubbleStashController).stashBubbleBarImmediate()
+    }
+
+    @Test
+    fun animateToInitialState_whileDragging_inApp() {
+        setUpBubbleBar()
+        setUpBubbleStashController()
+        whenever(bubbleStashController.bubbleBarTranslationY)
+            .thenReturn(BAR_TRANSLATION_Y_FOR_TASKBAR)
+
+        val handle = View(context)
+        val handleAnimator = PhysicsAnimator.getInstance(handle)
+        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+
+        val barAnimator = PhysicsAnimator.getInstance(bubbleBarView)
+
+        var notifiedBubbleBarVisible = false
+        val onBubbleBarVisible = Runnable { notifiedBubbleBarVisible = true }
+        val animator =
+            BubbleBarViewAnimator(
+                bubbleBarView,
+                bubbleStashController,
+                flyoutController,
+                bubbleBarParentViewController,
+                onExpanded = emptyRunnable,
+                onBubbleBarVisible = onBubbleBarVisible,
+                animatorScheduler,
+            )
+
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            bubbleBarView.visibility = INVISIBLE
+            animator.animateToInitialState(
+                bubble,
+                isInApp = true,
+                isExpanding = false,
+                isDragging = true,
+            )
+        }
+
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {}
+        PhysicsAnimatorTestUtils.blockUntilAnimationsEnd(DynamicAnimation.TRANSLATION_Y)
+
+        barAnimator.assertIsNotRunning()
+        assertThat(animator.isAnimating).isTrue()
+        assertThat(bubbleBarView.alpha).isEqualTo(1)
+        assertThat(bubbleBarView.translationY).isEqualTo(BAR_TRANSLATION_Y_FOR_TASKBAR)
+        assertThat(bubbleBarParentViewController.timesInvoked).isEqualTo(1)
+        waitForFlyoutToShow()
+
+        assertThat(animatorScheduler.delayedBlock).isNotNull()
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(animatorScheduler.delayedBlock!!)
+
+        waitForFlyoutToHide()
+
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {}
+        PhysicsAnimatorTestUtils.blockUntilAnimationsEnd(DynamicAnimation.TRANSLATION_Y)
+
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+        assertThat(bubbleBarParentViewController.timesInvoked).isEqualTo(2)
+        assertThat(animator.isAnimating).isFalse()
+        assertThat(bubbleBarView.alpha).isEqualTo(1)
+        assertThat(handle.translationY).isEqualTo(0)
+        assertThat(bubbleBarView.visibility).isEqualTo(VISIBLE)
+        assertThat(notifiedBubbleBarVisible).isTrue()
+
+        verify(bubbleStashController, never()).stashBubbleBarImmediate()
     }
 
     @Test

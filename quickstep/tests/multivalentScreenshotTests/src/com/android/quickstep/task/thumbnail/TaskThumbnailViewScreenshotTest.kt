@@ -16,10 +16,19 @@
 package com.android.quickstep.task.thumbnail
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Matrix
+import android.graphics.Paint
+import android.graphics.drawable.BitmapDrawable
 import android.view.LayoutInflater
+import android.view.Surface.ROTATION_0
+import androidx.core.graphics.set
 import com.android.launcher3.R
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.BackgroundOnly
+import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.Snapshot
+import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.SnapshotSplash
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.Uninitialized
 import com.google.android.apps.nexuslauncher.imagecomparison.goldenpathmanager.ViewScreenshotGoldenPathManager
 import org.junit.Rule
@@ -81,6 +90,96 @@ class TaskThumbnailViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
     }
 
     @Test
+    fun taskThumbnailView_liveTile_withoutHeader() {
+        screenshotRule.screenshotTest("taskThumbnailView_liveTile") { activity ->
+            activity.actionBar?.hide()
+            createTaskThumbnailView(activity).apply {
+                setState(TaskThumbnailUiState.LiveTile.WithoutHeader)
+            }
+        }
+    }
+
+    @Test
+    fun taskThumbnailView_image_withoutHeader() {
+        screenshotRule.screenshotTest("taskThumbnailView_image") { activity ->
+            activity.actionBar?.hide()
+            createTaskThumbnailView(activity).apply {
+                setState(
+                    SnapshotSplash(
+                        Snapshot.WithoutHeader(createBitmap(), ROTATION_0, Color.DKGRAY),
+                        null,
+                    )
+                )
+            }
+        }
+    }
+
+    @Test
+    fun taskThumbnailView_image_withoutHeader_withImageMatrix() {
+        screenshotRule.screenshotTest("taskThumbnailView_image_withMatrix") { activity ->
+            activity.actionBar?.hide()
+            createTaskThumbnailView(activity).apply {
+                val lessThanHeightMatchingAspectRatio = (VIEW_ENV_HEIGHT / 2) - 200
+                setState(
+                    SnapshotSplash(
+                        Snapshot.WithoutHeader(
+                            createBitmap(
+                                width = VIEW_ENV_WIDTH / 2,
+                                height = lessThanHeightMatchingAspectRatio,
+                            ),
+                            ROTATION_0,
+                            Color.DKGRAY,
+                        ),
+                        null,
+                    )
+                )
+                setImageMatrix(Matrix().apply { postScale(2f, 2f) })
+            }
+        }
+    }
+
+    @Test
+    fun taskThumbnailView_splash_withoutHeader() {
+        screenshotRule.screenshotTest("taskThumbnailView_partial_splash") { activity ->
+            activity.actionBar?.hide()
+            createTaskThumbnailView(activity).apply {
+                setState(
+                    SnapshotSplash(
+                        Snapshot.WithoutHeader(createBitmap(), ROTATION_0, Color.DKGRAY),
+                        BitmapDrawable(activity.resources, createSplash()),
+                    )
+                )
+                updateSplashAlpha(0.5f)
+            }
+        }
+    }
+
+    @Test
+    fun taskThumbnailView_splash_withoutHeader_withImageMatrix() {
+        screenshotRule.screenshotTest("taskThumbnailView_partial_splash_withMatrix") { activity ->
+            activity.actionBar?.hide()
+            createTaskThumbnailView(activity).apply {
+                val lessThanHeightMatchingAspectRatio = (VIEW_ENV_HEIGHT / 2) - 200
+                setState(
+                    SnapshotSplash(
+                        Snapshot.WithoutHeader(
+                            createBitmap(
+                                width = VIEW_ENV_WIDTH / 2,
+                                height = lessThanHeightMatchingAspectRatio,
+                            ),
+                            ROTATION_0,
+                            Color.DKGRAY,
+                        ),
+                        BitmapDrawable(activity.resources, createSplash()),
+                    )
+                )
+                setImageMatrix(Matrix().apply { postScale(2f, 2f) })
+                updateSplashAlpha(0.5f)
+            }
+        }
+    }
+
+    @Test
     fun taskThumbnailView_dimmed_tintAmount() {
         screenshotRule.screenshotTest("taskThumbnailView_dimmed_40") { activity ->
             activity.actionBar?.hide()
@@ -122,6 +221,27 @@ class TaskThumbnailViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
         return taskThumbnailView
     }
 
+    private fun createSplash() = createBitmap(width = 20, height = 20, rectColorRotation = 1)
+
+    private fun createBitmap(
+        width: Int = VIEW_ENV_WIDTH,
+        height: Int = VIEW_ENV_HEIGHT,
+        rectColorRotation: Int = 0,
+    ) =
+        Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).apply {
+            Canvas(this).apply {
+                val paint = Paint()
+                paint.color = BITMAP_RECT_COLORS[rectColorRotation % 4]
+                drawRect(0f, 0f, width / 2f, height / 2f, paint)
+                paint.color = BITMAP_RECT_COLORS[(1 + rectColorRotation) % 4]
+                drawRect(width / 2f, 0f, width.toFloat(), height / 2f, paint)
+                paint.color = BITMAP_RECT_COLORS[(2 + rectColorRotation) % 4]
+                drawRect(0f, height / 2f, width / 2f, height.toFloat(), paint)
+                paint.color = BITMAP_RECT_COLORS[(3 + rectColorRotation) % 4]
+                drawRect(width / 2f, height / 2f, width.toFloat(), height.toFloat(), paint)
+            }
+        }
+
     companion object {
         @Parameters(name = "{0}")
         @JvmStatic
@@ -133,5 +253,8 @@ class TaskThumbnailViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
             )
 
         const val CORNER_RADIUS = 56f
+        val BITMAP_RECT_COLORS = listOf(Color.GREEN, Color.RED, Color.BLUE, Color.CYAN)
+        const val VIEW_ENV_WIDTH = 1440
+        const val VIEW_ENV_HEIGHT = 3120
     }
 }

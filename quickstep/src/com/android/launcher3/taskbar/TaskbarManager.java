@@ -747,7 +747,11 @@ public class TaskbarManager {
     /**
      * Signal from SysUI indicating that system decorations should be removed from the display.
      */
-    public void onDisplayRemoveSystemDecorations(int displayId) {}
+    public void onDisplayRemoveSystemDecorations(int displayId) {
+        // The display mirroring starts. The handling logic is the same as when removing a
+        // display.
+        onDisplayRemoved(displayId);
+    }
 
     private void removeActivityCallbacksAndListeners() {
         if (mActivity != null) {

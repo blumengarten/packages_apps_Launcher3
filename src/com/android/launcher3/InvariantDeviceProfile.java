@@ -85,6 +85,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -252,7 +253,7 @@ public class InvariantDeviceProfile {
 
     public Point defaultWallpaperSize;
 
-    private final ArrayList<OnIDPChangeListener> mChangeListeners = new ArrayList<>();
+    private final List<OnIDPChangeListener> mChangeListeners = new CopyOnWriteArrayList<>();
 
     @Inject
     InvariantDeviceProfile(
