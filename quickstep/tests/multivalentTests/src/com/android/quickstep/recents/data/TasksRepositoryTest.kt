@@ -326,8 +326,9 @@ class TasksRepositoryTest {
         }
 
     @Test
-    fun onHighResLoadingStateChanged_setsNewThumbnailDataOnTask() =
+    fun onHighResLoadingStateChanged_highResReplacesLowResThumbnail() =
         testScope.runTest {
+            taskThumbnailDataSource.highResEnabled = false
             recentsModel.seedTasks(defaultTaskList)
             systemUnderTest.getAllTaskData(forceRefresh = true)
 
@@ -337,16 +338,77 @@ class TasksRepositoryTest {
             val expectedPreviousBitmap = taskThumbnailDataSource.taskIdToBitmap[1]
             val taskDataFlow = systemUnderTest.getTaskDataById(1)
 
-            val task1ThumbnailValues = mutableListOf<Bitmap?>()
+            val task1ThumbnailValues = mutableListOf<ThumbnailData?>()
             testScope.backgroundScope.launch {
-                taskDataFlow.map { it?.thumbnail?.thumbnail }.toList(task1ThumbnailValues)
+                taskDataFlow.map { it?.thumbnail }.toList(task1ThumbnailValues)
             }
 
             taskThumbnailDataSource.taskIdToBitmap[1] = expectedBitmap
+            taskThumbnailDataSource.highResEnabled = true
             taskVisualsChangedDelegate.onHighResLoadingStateChanged(true)
 
-            assertThat(task1ThumbnailValues.first()).isEqualTo(expectedPreviousBitmap)
-            assertThat(task1ThumbnailValues.last()).isEqualTo(expectedBitmap)
+            val firstThumbnailValue = task1ThumbnailValues.first()!!
+            assertThat(firstThumbnailValue.thumbnail).isEqualTo(expectedPreviousBitmap)
+            assertThat(firstThumbnailValue.reducedResolution).isTrue()
+
+            val lastThumbnailValue = task1ThumbnailValues.last()!!
+            assertThat(lastThumbnailValue.thumbnail).isEqualTo(expectedBitmap)
+            assertThat(lastThumbnailValue.reducedResolution).isFalse()
+        }
+
+    @Test
+    fun onHighResLoadingStateChanged_invisibleTaskIgnored() =
+        testScope.runTest {
+            taskThumbnailDataSource.highResEnabled = false
+            recentsModel.seedTasks(defaultTaskList)
+            systemUnderTest.getAllTaskData(forceRefresh = true)
+
+            systemUnderTest.setVisibleTasks(setOf(1))
+
+            val invisibleTaskId = 2
+            val taskDataFlow = systemUnderTest.getTaskDataById(invisibleTaskId)
+
+            val task2ThumbnailValues = mutableListOf<ThumbnailData?>()
+            testScope.backgroundScope.launch {
+                taskDataFlow.map { it?.thumbnail }.toList(task2ThumbnailValues)
+            }
+
+            taskThumbnailDataSource.highResEnabled = true
+            taskVisualsChangedDelegate.onHighResLoadingStateChanged(true)
+
+            assertThat(task2ThumbnailValues.filterNotNull()).isEmpty()
+            assertThat(taskThumbnailDataSource.getNumberOfGetThumbnailCalls(2)).isEqualTo(0)
+        }
+
+    @Test
+    fun onHighResLoadingStateChanged_lowResDoesNotReplaceHighResThumbnail() =
+        testScope.runTest {
+            taskThumbnailDataSource.highResEnabled = true
+            recentsModel.seedTasks(defaultTaskList)
+            systemUnderTest.getAllTaskData(forceRefresh = true)
+
+            systemUnderTest.setVisibleTasks(setOf(1))
+
+            val expectedBitmap = mock<Bitmap>()
+            val expectedPreviousBitmap = taskThumbnailDataSource.taskIdToBitmap[1]
+            val taskDataFlow = systemUnderTest.getTaskDataById(1)
+
+            val task1ThumbnailValues = mutableListOf<ThumbnailData?>()
+            testScope.backgroundScope.launch {
+                taskDataFlow.map { it?.thumbnail }.toList(task1ThumbnailValues)
+            }
+
+            taskThumbnailDataSource.taskIdToBitmap[1] = expectedBitmap
+            taskThumbnailDataSource.highResEnabled = false
+            taskVisualsChangedDelegate.onHighResLoadingStateChanged(false)
+
+            val firstThumbnailValue = task1ThumbnailValues.first()!!
+            assertThat(firstThumbnailValue.thumbnail).isEqualTo(expectedPreviousBitmap)
+            assertThat(firstThumbnailValue.reducedResolution).isFalse()
+
+            val lastThumbnailValue = task1ThumbnailValues.last()!!
+            assertThat(lastThumbnailValue.thumbnail).isEqualTo(expectedPreviousBitmap)
+            assertThat(lastThumbnailValue.reducedResolution).isFalse()
         }
 
     @Test

@@ -22,7 +22,6 @@ import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.ThumbnailData
 import kotlinx.coroutines.yield
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 
 class FakeTaskThumbnailDataSource : TaskThumbnailDataSource {
 
@@ -31,6 +30,8 @@ class FakeTaskThumbnailDataSource : TaskThumbnailDataSource {
     private val completionPrevented: MutableSet<Int> = mutableSetOf()
     private val getThumbnailCalls = mutableMapOf<Int, Int>()
 
+    var highResEnabled = true
+
     /** Retrieves and sets a thumbnail on [task] from [taskIdToBitmap]. */
     override suspend fun getThumbnail(task: Task): ThumbnailData {
         getThumbnailCalls[task.key.id] = (getThumbnailCalls[task.key.id] ?: 0) + 1
@@ -38,9 +39,10 @@ class FakeTaskThumbnailDataSource : TaskThumbnailDataSource {
         while (task.key.id in completionPrevented) {
             yield()
         }
-        return mock<ThumbnailData>().also {
-            whenever(it.thumbnail).thenReturn(taskIdToBitmap[task.key.id])
-        }
+        return ThumbnailData(
+            thumbnail = taskIdToBitmap[task.key.id],
+            reducedResolution = !highResEnabled,
+        )
     }
 
     fun getNumberOfGetThumbnailCalls(taskId: Int): Int = getThumbnailCalls[taskId] ?: 0
