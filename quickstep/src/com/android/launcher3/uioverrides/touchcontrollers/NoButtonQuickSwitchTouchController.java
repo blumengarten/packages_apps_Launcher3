@@ -64,6 +64,7 @@ import android.animation.ValueAnimator;
 import android.graphics.PointF;
 import android.view.MotionEvent;
 import android.view.animation.Interpolator;
+import android.window.DesktopModeFlags;
 
 import com.android.internal.jank.Cuj;
 import com.android.launcher3.LauncherState;
@@ -86,7 +87,6 @@ import com.android.quickstep.util.MotionPauseDetector;
 import com.android.quickstep.util.WorkspaceRevealAnim;
 import com.android.quickstep.views.RecentsView;
 import com.android.systemui.shared.system.InteractionJankMonitorWrapper;
-import com.android.window.flags.Flags;
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 
 /**
@@ -188,7 +188,7 @@ public class NoButtonQuickSwitchTouchController implements TouchController,
         }
         if (DesktopModeStatus.canEnterDesktopMode(mLauncher)
                 //TODO(b/345296916): replace with dev option once in teamfood
-                && Flags.enableQuickswitchDesktopSplitBugfix()
+                && DesktopModeFlags.ENABLE_QUICKSWITCH_DESKTOP_SPLIT_BUGFIX.isTrue()
                 && mRecentsView.getNonDesktopTaskViewCount() < 1) {
             return false;
         }
