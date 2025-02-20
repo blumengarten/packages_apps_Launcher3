@@ -20,6 +20,7 @@ import android.content.Context;
 
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherPrefs;
+import com.android.launcher3.graphics.GridCustomizationsProxy;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.LauncherIcons.IconPool;
 import com.android.launcher3.model.ItemInstallQueue;
@@ -74,6 +75,8 @@ public interface LauncherBaseAppComponent {
     LockedUserState getLockedUserState();
     InvariantDeviceProfile getIDP();
     IconPool getIconPool();
+
+    GridCustomizationsProxy getGridCustomizationsProxy();
 
     /** Builder for LauncherBaseAppComponent. */
     interface Builder {

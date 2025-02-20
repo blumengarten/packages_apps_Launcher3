@@ -22,7 +22,6 @@ import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 
 import static java.util.Objects.requireNonNullElse;
 
-import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -45,9 +44,13 @@ import com.android.launcher3.InvariantDeviceProfile.GridOption;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherModel;
 import com.android.launcher3.LauncherPrefs;
+import com.android.launcher3.dagger.ApplicationContext;
+import com.android.launcher3.dagger.LauncherAppSingleton;
 import com.android.launcher3.model.BgDataModel;
 import com.android.launcher3.shapes.IconShapeModel;
 import com.android.launcher3.shapes.ShapesProvider;
+import com.android.launcher3.util.ContentProviderProxy.ProxyProvider;
+import com.android.launcher3.util.DaggerSingletonTracker;
 import com.android.launcher3.util.Executors;
 import com.android.launcher3.util.Preconditions;
 import com.android.launcher3.util.RunnableList;
@@ -61,6 +64,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+
+import javax.inject.Inject;
 
 /**
  * Exposes various launcher grid options and allows the caller to change them.
@@ -76,7 +81,7 @@ import java.util.concurrent.ExecutionException;
  *          rows: number of rows in the grid
  *          cols: number of columns in the grid
  *          preview_count: number of previews available for this grid option. The preview uri
- *                         looks like /preview/<grid-name>/<preview index starting with 0>
+ *                         looks like /preview/[grid-name]/[preview index starting with 0]
  *          is_default: true if this grid option is currently set to the system
  *
  *     /get_preview: Open a file stream for the grid preview
@@ -85,7 +90,8 @@ import java.util.concurrent.ExecutionException;
  *          shape_key: key of the shape to apply
  *          name: key of the grid to apply
  */
-public class GridCustomizationsProvider extends ContentProvider {
+@LauncherAppSingleton
+public class GridCustomizationsProxy implements ProxyProvider {
 
     private static final String TAG = "GridCustomizationsProvider";
 
@@ -132,17 +138,31 @@ public class GridCustomizationsProvider extends ContentProvider {
     private final Set<PreviewLifecycleObserver> mActivePreviews =
             Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-    @Override
-    public boolean onCreate() {
-        return true;
+    private final Context mContext;
+    private final ThemeManager mThemeManager;
+    private final LauncherPrefs mPrefs;
+    private final InvariantDeviceProfile mIdp;
+
+    @Inject
+    GridCustomizationsProxy(
+            @ApplicationContext Context context,
+            ThemeManager themeManager,
+            LauncherPrefs prefs,
+            InvariantDeviceProfile idp,
+            DaggerSingletonTracker lifeCycle
+    ) {
+        mContext = context;
+        mThemeManager = themeManager;
+        mPrefs = prefs;
+        mIdp = idp;
+        lifeCycle.addCloseable(() -> mActivePreviews.forEach(PreviewLifecycleObserver::binderDied));
     }
 
     @Override
     public Cursor query(Uri uri, String[] projection, String selection,
             String[] selectionArgs, String sortOrder) {
-        Context context = getContext();
         String path = uri.getPath();
-        if (context == null || path == null) {
+        if (path == null) {
             return null;
         }
 
@@ -151,8 +171,7 @@ public class GridCustomizationsProvider extends ContentProvider {
                 if (Flags.newCustomizationPickerUi()) {
                     MatrixCursor cursor = new MatrixCursor(new String[]{
                             KEY_SHAPE_KEY, KEY_SHAPE_TITLE, KEY_PATH, KEY_IS_DEFAULT});
-                    String currentShapePath =
-                            ThemeManager.INSTANCE.get(context).getIconState().getIconMask();
+                    String currentShapePath = mThemeManager.getIconState().getIconMask();
                     Optional<IconShapeModel> selectedShape = ShapesProvider.INSTANCE.getIconShapes()
                             .values()
                             .stream()
@@ -180,8 +199,7 @@ public class GridCustomizationsProvider extends ContentProvider {
                 MatrixCursor cursor = new MatrixCursor(new String[]{
                         KEY_NAME, KEY_GRID_TITLE, KEY_ROWS, KEY_COLS, KEY_PREVIEW_COUNT,
                         KEY_IS_DEFAULT, KEY_GRID_ICON_ID});
-                InvariantDeviceProfile idp = InvariantDeviceProfile.INSTANCE.get(getContext());
-                List<GridOption> gridOptionList = idp.parseAllGridOptions(getContext());
+                List<GridOption> gridOptionList = mIdp.parseAllGridOptions(mContext);
                 if (com.android.launcher3.Flags.oneGridSpecs()) {
                     gridOptionList.sort(Comparator
                             .comparingInt((GridOption option) -> option.numColumns)
@@ -194,8 +212,8 @@ public class GridCustomizationsProvider extends ContentProvider {
                             .add(KEY_ROWS, gridOption.numRows)
                             .add(KEY_COLS, gridOption.numColumns)
                             .add(KEY_PREVIEW_COUNT, 1)
-                            .add(KEY_IS_DEFAULT, idp.numColumns == gridOption.numColumns
-                                    && idp.numRows == gridOption.numRows)
+                            .add(KEY_IS_DEFAULT, mIdp.numColumns == gridOption.numColumns
+                                    && mIdp.numRows == gridOption.numRows)
                             .add(KEY_GRID_ICON_ID, gridOption.gridIconId);
                 }
                 return cursor;
@@ -203,8 +221,7 @@ public class GridCustomizationsProvider extends ContentProvider {
             case GET_ICON_THEMED:
             case ICON_THEMED: {
                 MatrixCursor cursor = new MatrixCursor(new String[]{BOOLEAN_VALUE});
-                cursor.newRow().add(BOOLEAN_VALUE,
-                        ThemeManager.INSTANCE.get(getContext()).isMonoThemeEnabled() ? 1 : 0);
+                cursor.newRow().add(BOOLEAN_VALUE, mThemeManager.isMonoThemeEnabled() ? 1 : 0);
                 return cursor;
             }
             default:
@@ -213,38 +230,21 @@ public class GridCustomizationsProvider extends ContentProvider {
     }
 
     @Override
-    public String getType(Uri uri) {
-        return "vnd.android.cursor.dir/launcher_grid";
-    }
-
-    @Override
-    public Uri insert(Uri uri, ContentValues initialValues) {
-        return null;
-    }
-
-    @Override
-    public int delete(Uri uri, String selection, String[] selectionArgs) {
-        return 0;
-    }
-
-    @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         String path = uri.getPath();
-        Context context = getContext();
-        if (path == null || context == null) {
+        if (path == null) {
             return 0;
         }
         switch (path) {
             case KEY_DEFAULT_GRID: {
                 if (Flags.newCustomizationPickerUi()) {
-                    LauncherPrefs.INSTANCE.get(context).put(PREF_ICON_SHAPE,
+                    mPrefs.put(PREF_ICON_SHAPE,
                             requireNonNullElse(values.getAsString(KEY_SHAPE_KEY), ""));
                 }
                 String gridName = values.getAsString(KEY_NAME);
-                InvariantDeviceProfile idp = InvariantDeviceProfile.INSTANCE.get(context);
                 // Verify that this is a valid grid option
                 GridOption match = null;
-                for (GridOption option : idp.parseAllGridOptions(context)) {
+                for (GridOption option : mIdp.parseAllGridOptions(mContext)) {
                     String name = option.name;
                     if (name != null && name.equals(gridName)) {
                         match = option;
@@ -255,23 +255,22 @@ public class GridCustomizationsProvider extends ContentProvider {
                     return 0;
                 }
 
-                idp.setCurrentGrid(context, gridName);
+                mIdp.setCurrentGrid(mContext, gridName);
                 if (Flags.newCustomizationPickerUi()) {
                     try {
                         // Wait for device profile to be fully reloaded and applied to the launcher
-                        loadModelSync(context);
+                        loadModelSync(mContext);
                     } catch (ExecutionException | InterruptedException e) {
                         Log.e(TAG, "Fail to load model", e);
                     }
                 }
-                context.getContentResolver().notifyChange(uri, null);
+                mContext.getContentResolver().notifyChange(uri, null);
                 return 1;
             }
             case ICON_THEMED:
             case SET_ICON_THEMED: {
-                ThemeManager.INSTANCE.get(context)
-                        .setMonoThemeEnabled(values.getAsBoolean(BOOLEAN_VALUE));
-                context.getContentResolver().notifyChange(uri, null);
+                mThemeManager.setMonoThemeEnabled(values.getAsBoolean(BOOLEAN_VALUE));
+                mContext.getContentResolver().notifyChange(uri, null);
                 return 1;
             }
             default:
@@ -298,12 +297,7 @@ public class GridCustomizationsProvider extends ContentProvider {
 
     @Override
     public Bundle call(@NonNull String method, String arg, Bundle extras) {
-        Context context = getContext();
-        if (context == null) {
-            return null;
-        }
-
-        if (context.checkPermission("android.permission.BIND_WALLPAPER",
+        if (mContext.checkPermission("android.permission.BIND_WALLPAPER",
                 Binder.getCallingPid(), Binder.getCallingUid())
                 != PackageManager.PERMISSION_GRANTED) {
             return null;
@@ -317,14 +311,10 @@ public class GridCustomizationsProvider extends ContentProvider {
     }
 
     private synchronized Bundle getPreview(Bundle request) {
-        Context context = getContext();
-        if (context == null) {
-            return null;
-        }
         RunnableList lifeCycleTracker = new RunnableList();
         try {
             PreviewSurfaceRenderer renderer = new PreviewSurfaceRenderer(
-                    getContext(), lifeCycleTracker, request);
+                    mContext, lifeCycleTracker, request);
             PreviewLifecycleObserver observer =
                     new PreviewLifecycleObserver(lifeCycleTracker, renderer);
 

@@ -124,7 +124,7 @@ public class PreviewSurfaceRenderer {
         if (Flags.newCustomizationPickerUi()) {
             updateColorOverrides(bundle);
         }
-        mHideQsb = bundle.getBoolean(GridCustomizationsProvider.KEY_HIDE_BOTTOM_ROW);
+        mHideQsb = bundle.getBoolean(GridCustomizationsProxy.KEY_HIDE_BOTTOM_ROW);
 
         mHostToken = bundle.getBinder(KEY_HOST_TOKEN);
         mWidth = bundle.getInt(KEY_VIEW_WIDTH);
