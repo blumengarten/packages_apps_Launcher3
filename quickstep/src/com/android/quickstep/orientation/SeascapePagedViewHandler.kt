@@ -353,17 +353,18 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
         isRtl: Boolean,
         overviewTaskMarginPx: Int,
         dividerSize: Int,
+        oneIconHiddenDueToSmallWidth: Boolean,
     ): SplitIconPositions {
         return if (Flags.enableOverviewIconMenu()) {
             if (isRtl) {
                 SplitIconPositions(
                     topLeftY = totalThumbnailHeight - primarySnapshotHeight,
-                    bottomRightY = 0
+                    bottomRightY = 0,
                 )
             } else {
                 SplitIconPositions(
                     topLeftY = 0,
-                    bottomRightY = -(primarySnapshotHeight + dividerSize)
+                    bottomRightY = -(primarySnapshotHeight + dividerSize),
                 )
             }
         } else {
@@ -372,10 +373,19 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
             // from the bottom to the almost-center of the screen using the bottom margin.
             // The primary snapshot is placed at the bottom, thus we translate the icons using
             // the size of the primary snapshot minus the icon size for the top-left icon.
-            SplitIconPositions(
-                topLeftY = primarySnapshotHeight - taskIconHeight,
-                bottomRightY = primarySnapshotHeight + dividerSize
-            )
+            if (oneIconHiddenDueToSmallWidth) {
+                // Center both icons
+                val centerY = primarySnapshotHeight + ((dividerSize - taskIconHeight) / 2)
+                SplitIconPositions(
+                    topLeftY = centerY,
+                    bottomRightY = centerY,
+                )
+            } else {
+                SplitIconPositions(
+                    topLeftY = primarySnapshotHeight - taskIconHeight,
+                    bottomRightY = primarySnapshotHeight + dividerSize,
+                )
+            }
         }
     }
 

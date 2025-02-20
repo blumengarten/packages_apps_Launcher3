@@ -671,7 +671,8 @@ public class PortraitPagedViewHandler extends DefaultPagedViewHandler implements
     public void setSplitIconParams(View primaryIconView, View secondaryIconView,
             int taskIconHeight, int primarySnapshotWidth, int primarySnapshotHeight,
             int groupedTaskViewHeight, int groupedTaskViewWidth, boolean isRtl,
-            DeviceProfile deviceProfile, SplitBounds splitConfig, boolean inSplitSelection) {
+            DeviceProfile deviceProfile, SplitBounds splitConfig, boolean inSplitSelection,
+            boolean oneIconHiddenDueToSmallWidth) {
         FrameLayout.LayoutParams primaryIconParams =
                 (FrameLayout.LayoutParams) primaryIconView.getLayoutParams();
         FrameLayout.LayoutParams secondaryIconParams = enableOverviewIconMenu()
@@ -726,16 +727,30 @@ public class PortraitPagedViewHandler extends DefaultPagedViewHandler implements
                 secondaryIconParams.gravity = TOP | (isRtl ? END : START);
                 if (!inSplitSelection) {
                     if (splitConfig.initiatedFromSeascape) {
-                        // if the split was initiated from seascape,
-                        // the task on the right (secondary) is slightly larger
-                        primaryIconView.setTranslationX(bottomToMidpointOffset - taskIconHeight);
-                        secondaryIconView.setTranslationX(bottomToMidpointOffset);
+                        if (oneIconHiddenDueToSmallWidth) {
+                            // Center both icons
+                            float centerX = bottomToMidpointOffset - (taskIconHeight / 2f);
+                            primaryIconView.setTranslationX(centerX);
+                            secondaryIconView.setTranslationX(centerX);
+                        } else {
+                            // the task on the right (secondary) is slightly larger
+                            primaryIconView.setTranslationX(
+                                    bottomToMidpointOffset - taskIconHeight);
+                            secondaryIconView.setTranslationX(bottomToMidpointOffset);
+                        }
                     } else {
-                        // if not,
-                        // the task on the left (primary) is slightly larger
-                        primaryIconView.setTranslationX(bottomToMidpointOffset + insetOffset
-                                - taskIconHeight);
-                        secondaryIconView.setTranslationX(bottomToMidpointOffset + insetOffset);
+                        if (oneIconHiddenDueToSmallWidth) {
+                            // Center both icons
+                            float centerX =
+                                    bottomToMidpointOffset + insetOffset - (taskIconHeight / 2f);
+                            primaryIconView.setTranslationX(centerX);
+                            secondaryIconView.setTranslationX(centerX);
+                        } else {
+                            // the task on the left (primary) is slightly larger
+                            primaryIconView.setTranslationX(bottomToMidpointOffset + insetOffset
+                                    - taskIconHeight);
+                            secondaryIconView.setTranslationX(bottomToMidpointOffset + insetOffset);
+                        }
                     }
                 }
             } else {
@@ -743,16 +758,30 @@ public class PortraitPagedViewHandler extends DefaultPagedViewHandler implements
                 secondaryIconParams.gravity = TOP | (isRtl ? START : END);
                 if (!inSplitSelection) {
                     if (!splitConfig.initiatedFromSeascape) {
-                        // if the split was initiated from landscape,
-                        // the task on the left (primary) is slightly larger
-                        primaryIconView.setTranslationX(-bottomToMidpointOffset);
-                        secondaryIconView.setTranslationX(-bottomToMidpointOffset + taskIconHeight);
+                        if (oneIconHiddenDueToSmallWidth) {
+                            // Center both icons
+                            float centerX = -bottomToMidpointOffset + (taskIconHeight / 2f);
+                            primaryIconView.setTranslationX(centerX);
+                            secondaryIconView.setTranslationX(centerX);
+                        } else {
+                            // the task on the left (primary) is slightly larger
+                            primaryIconView.setTranslationX(-bottomToMidpointOffset);
+                            secondaryIconView.setTranslationX(
+                                    -bottomToMidpointOffset + taskIconHeight);
+                        }
                     } else {
-                        // if not,
-                        // the task on the right (secondary) is slightly larger
-                        primaryIconView.setTranslationX(-bottomToMidpointOffset - insetOffset);
-                        secondaryIconView.setTranslationX(-bottomToMidpointOffset - insetOffset
-                                + taskIconHeight);
+                        if (oneIconHiddenDueToSmallWidth) {
+                            // Center both icons
+                            float centerX =
+                                    -bottomToMidpointOffset - insetOffset + (taskIconHeight / 2f);
+                            primaryIconView.setTranslationX(centerX);
+                            secondaryIconView.setTranslationX(centerX);
+                        } else {
+                            // the task on the right (secondary) is slightly larger
+                            primaryIconView.setTranslationX(-bottomToMidpointOffset - insetOffset);
+                            secondaryIconView.setTranslationX(-bottomToMidpointOffset - insetOffset
+                                    + taskIconHeight);
+                        }
                     }
                 }
             }
@@ -760,9 +789,15 @@ public class PortraitPagedViewHandler extends DefaultPagedViewHandler implements
             primaryIconParams.gravity = TOP | CENTER_HORIZONTAL;
             secondaryIconParams.gravity = TOP | CENTER_HORIZONTAL;
             if (!inSplitSelection) {
-                // shifts icon half a width left (height is used here since icons are square)
-                primaryIconView.setTranslationX(-(taskIconHeight / 2f));
-                secondaryIconView.setTranslationX(taskIconHeight / 2f);
+                if (oneIconHiddenDueToSmallWidth) {
+                    // Center both icons
+                    primaryIconView.setTranslationX(0);
+                    secondaryIconView.setTranslationX(0);
+                } else {
+                    // shifts icon half a width left (height is used here since icons are square)
+                    primaryIconView.setTranslationX(-(taskIconHeight / 2f));
+                    secondaryIconView.setTranslationX(taskIconHeight / 2f);
+                }
             }
         }
         if (!enableOverviewIconMenu() && !inSplitSelection) {
