@@ -809,8 +809,9 @@ public class TouchInteractionService extends Service {
     }
 
     private void onInputEvent(InputEvent ev) {
+        int displayId = ev.getDisplayId();
         if (!(ev instanceof MotionEvent)) {
-            ActiveGestureProtoLogProxy.logUnknownInputEvent(ev.toString());
+            ActiveGestureProtoLogProxy.logUnknownInputEvent(displayId, ev.toString());
             return;
         }
         MotionEvent event = (MotionEvent) ev;
@@ -819,19 +820,19 @@ public class TouchInteractionService extends Service {
                 TestProtocol.SEQUENCE_TIS, "TouchInteractionService.onInputEvent", event);
 
         if (!LockedUserState.get(this).isUserUnlocked()) {
-            ActiveGestureProtoLogProxy.logOnInputEventUserLocked();
+            ActiveGestureProtoLogProxy.logOnInputEventUserLocked(displayId);
             return;
         }
 
         NavigationMode currentNavMode = mDeviceState.getMode();
         if (mGestureStartNavMode != null && mGestureStartNavMode != currentNavMode) {
             ActiveGestureProtoLogProxy.logOnInputEventNavModeSwitched(
-                    mGestureStartNavMode.name(), currentNavMode.name());
+                    displayId, mGestureStartNavMode.name(), currentNavMode.name());
             event.setAction(ACTION_CANCEL);
         } else if (mDeviceState.isButtonNavMode()
                 && !mDeviceState.supportsAssistantGestureInButtonNav()
                 && !isTrackpadMotionEvent(event)) {
-            ActiveGestureProtoLogProxy.logOnInputEventThreeButtonNav();
+            ActiveGestureProtoLogProxy.logOnInputEventThreeButtonNav(displayId);
             return;
         }
 
@@ -847,13 +848,12 @@ public class TouchInteractionService extends Service {
             }
             if (mTaskAnimationManager.shouldIgnoreMotionEvents()) {
                 if (action == ACTION_DOWN || isHoverActionWithoutConsumer) {
-                    ActiveGestureProtoLogProxy.logOnInputIgnoringFollowingEvents();
+                    ActiveGestureProtoLogProxy.logOnInputIgnoringFollowingEvents(displayId);
                 }
                 return;
             }
         }
 
-        int displayId = ev.getDisplayId();
         InputMonitorCompat inputMonitorCompat = getInputMonitorCompat(displayId);
         InputEventReceiver inputEventReceiver = getInputEventReceiver(displayId);
 
@@ -960,25 +960,28 @@ public class TouchInteractionService extends Service {
         if (mUncheckedConsumer != InputConsumer.NO_OP) {
             switch (action) {
                 case ACTION_DOWN:
-                    ActiveGestureProtoLogProxy.logOnInputEventActionDown(reasonString);
+                    ActiveGestureProtoLogProxy.logOnInputEventActionDown(displayId, reasonString);
                     // fall through
                 case ACTION_UP:
                     ActiveGestureProtoLogProxy.logOnInputEventActionUp(
                             (int) event.getRawX(),
                             (int) event.getRawY(),
                             action,
-                            MotionEvent.classificationToString(event.getClassification()));
+                            MotionEvent.classificationToString(event.getClassification()),
+                            displayId);
                     break;
                 case ACTION_MOVE:
                     ActiveGestureProtoLogProxy.logOnInputEventActionMove(
                             MotionEvent.actionToString(action),
                             MotionEvent.classificationToString(event.getClassification()),
-                            event.getPointerCount());
+                            event.getPointerCount(),
+                            displayId);
                     break;
                 default: {
                     ActiveGestureProtoLogProxy.logOnInputEventGenericAction(
                             MotionEvent.actionToString(action),
-                            MotionEvent.classificationToString(event.getClassification()));
+                            MotionEvent.classificationToString(event.getClassification()),
+                            displayId);
                 }
             }
         }
