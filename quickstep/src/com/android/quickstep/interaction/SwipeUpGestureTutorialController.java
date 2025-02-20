@@ -34,6 +34,7 @@ import android.graphics.Outline;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.view.Display;
 import android.view.View;
 import android.view.ViewOutlineProvider;
 
@@ -84,8 +85,8 @@ abstract class SwipeUpGestureTutorialController extends TutorialController {
 
     SwipeUpGestureTutorialController(TutorialFragment tutorialFragment, TutorialType tutorialType) {
         super(tutorialFragment, tutorialType);
-        mTaskViewSwipeUpAnimation = new ViewSwipeUpAnimation(mContext,
-                new GestureState(OverviewComponentObserver.INSTANCE.get(mContext), -1));
+        mTaskViewSwipeUpAnimation = new ViewSwipeUpAnimation(mContext, new GestureState(
+                OverviewComponentObserver.INSTANCE.get(mContext), Display.DEFAULT_DISPLAY, -1));
 
         DeviceProfile dp = InvariantDeviceProfile.INSTANCE.get(mContext)
                 .getDeviceProfile(mContext)

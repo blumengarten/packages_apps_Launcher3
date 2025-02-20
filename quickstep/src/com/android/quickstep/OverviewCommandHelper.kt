@@ -399,6 +399,7 @@ constructor(
 
         val gestureState =
             touchInteractionService.createGestureState(
+                focusedDisplayId,
                 GestureState.DEFAULT_STATE,
                 GestureState.TrackpadGestureType.NONE,
             )

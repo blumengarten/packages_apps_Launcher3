@@ -89,9 +89,12 @@ public class ProgressDelegateInputConsumer implements InputConsumer,
     private RecentsAnimationController mRecentsAnimationController;
     private Boolean mFlingEndsOnHome;
 
-    public ProgressDelegateInputConsumer(Context context,
-            TaskAnimationManager taskAnimationManager, GestureState gestureState,
-            InputMonitorCompat inputMonitorCompat, AnimatedFloat progress) {
+    public ProgressDelegateInputConsumer(
+            Context context,
+            TaskAnimationManager taskAnimationManager,
+            GestureState gestureState,
+            InputMonitorCompat inputMonitorCompat,
+            AnimatedFloat progress) {
         mContext = context;
         mTaskAnimationManager = taskAnimationManager;
         mGestureState = gestureState;
@@ -115,6 +118,11 @@ public class ProgressDelegateInputConsumer implements InputConsumer,
     @Override
     public int getType() {
         return TYPE_PROGRESS_DELEGATE;
+    }
+
+    @Override
+    public int getDisplayId() {
+        return mGestureState.getDisplayId();
     }
 
     @Override

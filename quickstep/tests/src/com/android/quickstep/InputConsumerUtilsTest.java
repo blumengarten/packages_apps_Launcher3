@@ -30,6 +30,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Looper;
 import android.view.Choreographer;
+import android.view.Display;
 import android.view.MotionEvent;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -99,7 +100,8 @@ public class InputConsumerUtilsTest {
 
     @Rule public final SandboxApplication mContext = new SandboxApplication();
 
-    @NonNull private final InputMonitorCompat mInputMonitorCompat = new InputMonitorCompat("", 0);
+    @NonNull private final InputMonitorCompat mInputMonitorCompat =
+            new InputMonitorCompat("", Display.DEFAULT_DISPLAY);
 
     private TaskAnimationManager mTaskAnimationManager;
     private InputChannelCompat.InputEventReceiver mInputEventReceiver;
@@ -196,7 +198,6 @@ public class InputConsumerUtilsTest {
 
     @Before
     public void setupDeviceState() {
-        when(mDeviceState.getDisplayId()).thenReturn(0);
         when(mDeviceState.canStartTrackpadGesture()).thenReturn(true);
         when(mDeviceState.canStartSystemGesture()).thenReturn(true);
         when(mDeviceState.isFullyGesturalNavMode()).thenReturn(true);

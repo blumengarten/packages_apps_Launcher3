@@ -74,10 +74,14 @@ public class NavHandleLongPressInputConsumer extends DelegateInputConsumer {
     private MotionEvent mCurrentMotionEvent;  // Most recent motion event.
     private boolean mDeepPressLogged;  // Whether deep press has been logged for the current touch.
 
-    public NavHandleLongPressInputConsumer(Context context, InputConsumer delegate,
-            InputMonitorCompat inputMonitor, RecentsAnimationDeviceState deviceState,
-            NavHandle navHandle, GestureState gestureState) {
-        super(delegate, inputMonitor);
+    public NavHandleLongPressInputConsumer(
+            Context context,
+            InputConsumer delegate,
+            InputMonitorCompat inputMonitor,
+            RecentsAnimationDeviceState deviceState,
+            NavHandle navHandle,
+            GestureState gestureState) {
+        super(gestureState.getDisplayId(), delegate, inputMonitor);
         mScreenWidth = DisplayController.INSTANCE.get(context).getInfo().currentSize.x;
         mDeepPressEnabled = DeviceConfigWrapper.get().getEnableLpnhDeepPress();
         ContextualSearchStateManager contextualSearchStateManager =
