@@ -250,11 +250,13 @@ public class TaskbarPopupController implements TaskbarControllers.LoggableTaskba
             return null;
         }
         if (itemInfo.container == CONTAINER_HOTSEAT) {
-            return new PinToTaskbarShortcut<>(target, itemInfo, originalView, false);
+            return new PinToTaskbarShortcut<>(target, itemInfo, originalView, false,
+                    mHotseatInfosList);
         }
         if (mHotseatInfosList.size()
                 < mContext.getTaskbarSpecsEvaluator().getNumShownHotseatIcons()) {
-            return new PinToTaskbarShortcut<>(target, itemInfo, originalView, true);
+            return new PinToTaskbarShortcut<>(target, itemInfo, originalView, true,
+                    mHotseatInfosList);
         }
 
         return null;
