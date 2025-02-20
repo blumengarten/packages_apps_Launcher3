@@ -22,6 +22,7 @@ import android.graphics.PointF
 import android.os.SystemClock
 import android.os.Trace
 import android.util.Log
+import android.view.Display.DEFAULT_DISPLAY
 import android.view.View
 import android.window.TransitionInfo
 import androidx.annotation.BinderThread
@@ -91,9 +92,11 @@ constructor(
      */
     private var keyboardTaskFocusIndex = -1
 
+    // TODO (b/397942185): get per-display interface
     private val containerInterface: BaseContainerInterface<*, *>
-        get() = overviewComponentObserver.containerInterface
+        get() = overviewComponentObserver.getContainerInterface(DEFAULT_DISPLAY)
 
+    // TODO (b/397942185): get per-display RecentsView
     private val visibleRecentsView: RecentsView<*, *>?
         get() = containerInterface.getVisibleRecentsView<RecentsView<*, *>>()
 

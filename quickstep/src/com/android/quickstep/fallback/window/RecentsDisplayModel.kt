@@ -18,6 +18,7 @@ package com.android.quickstep.fallback.window
 
 import android.content.Context
 import android.view.Display
+import androidx.core.util.valueIterator
 import com.android.launcher3.Flags
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppSingleton
@@ -77,6 +78,12 @@ constructor(
     fun getFallbackWindowInterface(displayId: Int): FallbackWindowInterface? {
         return getDisplayResource(displayId)?.fallbackWindowInterface
     }
+
+    val activeDisplayResources: Iterable<RecentsDisplayResource>
+        get() =
+            object : Iterable<RecentsDisplayResource> {
+                override fun iterator() = displayResourceArray.valueIterator()
+            }
 
     data class RecentsDisplayResource(
         val displayId: Int,
