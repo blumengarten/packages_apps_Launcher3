@@ -286,8 +286,32 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
         mCallbacks.addListener(listener);
 
         final ActivityOptions options = ActivityOptions.makeBasic();
+        options.setPendingIntentBackgroundActivityStartMode(
+                ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOW_ALWAYS);
+        options.setTransientLaunch();
+        options.setSourceInfo(ActivityOptions.SourceInfo.TYPE_RECENTS_ANIMATION, eventTime);
 
-        // TODO:(b/365777482) if flag is enabled, but on launcher it will crash.
+        // Notify taskbar that we should skip reacting to launcher visibility change to
+        // avoid a jumping taskbar.
+        TaskbarUIController taskbarUIController = containerInterface.getTaskbarController();
+        if (enableScalingRevealHomeAnimation() && taskbarUIController != null) {
+            taskbarUIController.setSkipLauncherVisibilityChange(true);
+
+            mCallbacks.addListener(new RecentsAnimationCallbacks.RecentsAnimationListener() {
+                @Override
+                public void onRecentsAnimationCanceled(
+                        @NonNull HashMap<Integer, ThumbnailData> thumbnailDatas) {
+                    taskbarUIController.setSkipLauncherVisibilityChange(false);
+                }
+
+                @Override
+                public void onRecentsAnimationFinished(
+                        @NonNull RecentsAnimationController controller) {
+                    taskbarUIController.setSkipLauncherVisibilityChange(false);
+                }
+            });
+        }
+
         if(containerInterface.getCreatedContainer() instanceof RecentsWindowManager
                 && (Flags.enableFallbackOverviewInWindow()
                         || Flags.enableLauncherOverviewInWindow())) {
@@ -297,32 +321,6 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
                     .getRecentsWindowManager(mDeviceState.getDisplayId())
                     .startRecentsWindow(mCallbacks);
         } else {
-            options.setPendingIntentBackgroundActivityStartMode(
-                    ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOW_ALWAYS);
-            options.setTransientLaunch();
-            options.setSourceInfo(ActivityOptions.SourceInfo.TYPE_RECENTS_ANIMATION, eventTime);
-
-            // Notify taskbar that we should skip reacting to launcher visibility change to
-            // avoid a jumping taskbar.
-            TaskbarUIController taskbarUIController = containerInterface.getTaskbarController();
-            if (enableScalingRevealHomeAnimation() && taskbarUIController != null) {
-                taskbarUIController.setSkipLauncherVisibilityChange(true);
-
-                mCallbacks.addListener(new RecentsAnimationCallbacks.RecentsAnimationListener() {
-                    @Override
-                    public void onRecentsAnimationCanceled(
-                            @NonNull HashMap<Integer, ThumbnailData> thumbnailDatas) {
-                        taskbarUIController.setSkipLauncherVisibilityChange(false);
-                    }
-
-                    @Override
-                    public void onRecentsAnimationFinished(
-                            @NonNull RecentsAnimationController controller) {
-                        taskbarUIController.setSkipLauncherVisibilityChange(false);
-                    }
-                });
-            }
-
             mRecentsAnimationStartPending = getSystemUiProxy().startRecentsActivity(intent,
                     options, mCallbacks, false /* useSyntheticRecentsTransition */);
         }

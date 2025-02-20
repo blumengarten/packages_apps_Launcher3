@@ -61,9 +61,13 @@ open class RecentsWindowContext(windowContext: Context, wallpaperColorHints: Int
         return dragLayer
     }
 
+    fun initDeviceProfile() {
+        deviceProfile = InvariantDeviceProfile.INSTANCE[this].getDeviceProfile(this)
+    }
+
     override fun getDeviceProfile(): DeviceProfile {
         if (deviceProfile == null) {
-            deviceProfile = InvariantDeviceProfile.INSTANCE[this].getDeviceProfile(this).copy(this)
+            initDeviceProfile()
         }
         return deviceProfile!!
     }
@@ -79,7 +83,10 @@ open class RecentsWindowContext(windowContext: Context, wallpaperColorHints: Int
      * @param type The window type to pass to the created WindowManager.LayoutParams.
      * @param title The window title to pass to the created WindowManager.LayoutParams.
      */
-    fun createDefaultWindowLayoutParams(type: Int, title: String): WindowManager.LayoutParams {
+    private fun createDefaultWindowLayoutParams(
+        type: Int,
+        title: String,
+    ): WindowManager.LayoutParams {
         var windowFlags =
             (WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
                 WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS or
