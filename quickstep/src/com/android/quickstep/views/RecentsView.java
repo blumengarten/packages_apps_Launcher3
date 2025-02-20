@@ -3044,8 +3044,12 @@ public abstract class RecentsView<
             // Add an empty view for now until the task plan is loaded and applied
             final TaskView taskView;
             if (needDesktopTask) {
+                final int activeDeskId =
+                        DesktopVisibilityController.INSTANCE.get(mContext).getActiveDeskId(
+                                mContainer.getDisplay().getDisplayId());
                 taskView = getTaskViewFromPool(TaskViewType.DESKTOP);
-                ((DesktopTaskView) taskView).bind(new DesktopTask(Arrays.asList(runningTasks)),
+                ((DesktopTaskView) taskView).bind(
+                        new DesktopTask(activeDeskId, Arrays.asList(runningTasks)),
                         mOrientationState, mTaskOverlayFactory);
             } else if (needGroupTaskView) {
                 taskView = getTaskViewFromPool(TaskViewType.GROUPED);

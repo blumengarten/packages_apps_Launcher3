@@ -32,10 +32,12 @@ import android.content.Context;
 import android.os.Process;
 import android.os.RemoteException;
 import android.util.SparseBooleanArray;
+import android.window.DesktopExperienceFlags;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.android.launcher3.statehandlers.DesktopVisibilityController;
 import com.android.launcher3.util.LooperExecutor;
 import com.android.launcher3.util.SplitConfigurationOptions;
 import com.android.quickstep.util.DesktopTask;
@@ -354,8 +356,8 @@ public class RecentTasksList {
         int numVisibleTasks = 0;
         for (GroupedTaskInfo rawTask : rawTasks) {
             if (rawTask.isBaseType(TYPE_DESK)) {
-                // TYPE_FREEFORM tasks is only created when desktop mode can be entered,
-                // leftover TYPE_FREEFORM tasks created when flag was on should be ignored.
+                // TYPE_DESK tasks is only created when desktop mode can be entered,
+                // leftover TYPE_DESK tasks created when flag was on should be ignored.
                 if (DesktopModeStatus.canEnterDesktopMode(mContext)) {
                     List<DesktopTask> desktopTasks = createDesktopTasks(
                             rawTask.getBaseGroupedTask());
@@ -442,7 +444,11 @@ public class RecentTasksList {
         Set<Integer> minimizedTaskIds = minimizedTaskIdArray != null
                 ? CollectionsKt.toSet(ArraysKt.asIterable(minimizedTaskIdArray))
                 : Collections.emptySet();
-        if (enableSeparateExternalDisplayTasks()) {
+        if (enableSeparateExternalDisplayTasks()
+                && !DesktopExperienceFlags.ENABLE_MULTIPLE_DESKTOPS_BACKEND.isTrue()) {
+            // This code is not needed when the multiple desktop feature is enabled, since Shell
+            // will send a single `GroupedTaskInfo` for each desk with a unique `deskId` across
+            // all displays.
             Map<Integer, List<Task>> perDisplayTasks = new HashMap<>();
             for (TaskInfo taskInfo : recentTaskInfo.getTaskInfoList()) {
                 Task task = createTask(taskInfo, minimizedTaskIds);
@@ -450,11 +456,16 @@ public class RecentTasksList {
                         k -> new ArrayList<>());
                 tasks.add(task);
             }
-            return MapsKt.map(perDisplayTasks, it -> new DesktopTask(it.getValue()));
+            // When the multiple desktop feature is disabled, there can only be up to a single desk
+            // on each display, The desk ID doesn't matter and should not be used.
+            return MapsKt.map(perDisplayTasks,
+                    it -> new DesktopTask(DesktopVisibilityController.INACTIVE_DESK_ID,
+                            it.getValue()));
         } else {
+            final int deskId = recentTaskInfo.getDeskId();
             List<Task> tasks = CollectionsKt.map(recentTaskInfo.getTaskInfoList(),
                     it -> createTask(it, minimizedTaskIds));
-            return List.of(new DesktopTask(tasks));
+            return List.of(new DesktopTask(deskId, tasks));
         }
     }
 

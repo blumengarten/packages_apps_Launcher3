@@ -877,7 +877,7 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
         val allTasks =
             ArrayList<GroupTask>().apply {
                 if (!runningTasks.isEmpty()) {
-                    add(DesktopTask(ArrayList(runningTasks)))
+                    add(DesktopTask(deskId = 0, ArrayList(runningTasks)))
                 }
                 addAll(recentTasks)
             }
