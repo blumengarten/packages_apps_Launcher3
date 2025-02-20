@@ -62,8 +62,6 @@ constructor(
      * (Used only when multiple desks are enabled).
      *
      * @property displayId The ID of the display this object represents.
-     * @property canCreateDesks true if it's possible to create new desks on the display represented
-     *   by this object.
      * @property activeDeskId The ID of the active desk on the associated display (if any). It has a
      *   value of `INACTIVE_DESK_ID` (-1) if there are no active desks. Note that there can only be
      *   at most one active desk on each display.
@@ -71,10 +69,17 @@ constructor(
      */
     private data class DisplayDeskConfig(
         val displayId: Int,
-        var canCreateDesks: Boolean,
         var activeDeskId: Int = INACTIVE_DESK_ID,
         val deskIds: MutableSet<Int>,
     )
+
+    /** True if it is possible to create new desks on current setup. */
+    var canCreateDesks: Boolean = false
+        private set(value) {
+            if (field == value) return
+            field = value
+            desktopVisibilityListeners.forEach { it.onCanCreateDesksChanged(field) }
+        }
 
     /** Maps each display by its ID to its desks configuration. */
     private val displaysDesksConfigsMap = SparseArray<DisplayDeskConfig>()
@@ -393,7 +398,10 @@ constructor(
         }
     }
 
-    private fun onListenerConnected(displayDeskStates: Array<DisplayDeskState>) {
+    private fun onListenerConnected(
+        displayDeskStates: Array<DisplayDeskState>,
+        canCreateDesks: Boolean,
+    ) {
         if (!DesktopModeStatus.enableMultipleDesktops(context)) {
             return
         }
@@ -404,23 +412,24 @@ constructor(
             displaysDesksConfigsMap[displayDeskState.displayId] =
                 DisplayDeskConfig(
                     displayId = displayDeskState.displayId,
-                    canCreateDesks = displayDeskState.canCreateDesk,
                     activeDeskId = displayDeskState.activeDeskId,
                     deskIds = displayDeskState.deskIds.toMutableSet(),
                 )
         }
+
+        this.canCreateDesks = canCreateDesks
     }
 
     private fun getDisplayDeskConfig(displayId: Int) =
         displaysDesksConfigsMap[displayId]
             ?: null.also { Slog.e(TAG, "Expected non-null desk config for display: $displayId") }
 
-    private fun onCanCreateDesksChanged(displayId: Int, canCreateDesks: Boolean) {
+    private fun onCanCreateDesksChanged(canCreateDesks: Boolean) {
         if (!DesktopModeStatus.enableMultipleDesktops(context)) {
             return
         }
 
-        getDisplayDeskConfig(displayId)?.canCreateDesks = canCreateDesks
+        this.canCreateDesks = canCreateDesks
     }
 
     private fun onDeskAdded(displayId: Int, deskId: Int) {
@@ -525,9 +534,12 @@ constructor(
     ) : Stub() {
         private val controller = WeakReference(controller)
 
-        override fun onListenerConnected(displayDeskStates: Array<DisplayDeskState>) {
+        override fun onListenerConnected(
+            displayDeskStates: Array<DisplayDeskState>,
+            canCreateDesks: Boolean,
+        ) {
             Executors.MAIN_EXECUTOR.execute {
-                controller.get()?.onListenerConnected(displayDeskStates)
+                controller.get()?.onListenerConnected(displayDeskStates, canCreateDesks)
             }
         }
 
@@ -565,9 +577,9 @@ constructor(
 
         override fun onExitDesktopModeTransitionStarted(transitionDuration: Int) {}
 
-        override fun onCanCreateDesksChanged(displayId: Int, canCreateDesks: Boolean) {
+        override fun onCanCreateDesksChanged(canCreateDesks: Boolean) {
             Executors.MAIN_EXECUTOR.execute {
-                controller.get()?.onCanCreateDesksChanged(displayId, canCreateDesks)
+                controller.get()?.onCanCreateDesksChanged(canCreateDesks)
             }
         }
 

@@ -157,6 +157,7 @@ import com.android.launcher3.logger.LauncherAtom;
 import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.statehandlers.DepthController;
+import com.android.launcher3.statehandlers.DesktopVisibilityController;
 import com.android.launcher3.statemanager.BaseState;
 import com.android.launcher3.statemanager.StateManager;
 import com.android.launcher3.statemanager.StatefulContainer;
@@ -179,6 +180,7 @@ import com.android.launcher3.util.TranslateEdgeEffect;
 import com.android.launcher3.util.VibratorWrapper;
 import com.android.launcher3.util.ViewPool;
 import com.android.launcher3.util.coroutines.DispatcherProvider;
+import com.android.launcher3.util.window.WindowManagerProxy.DesktopVisibilityListener;
 import com.android.quickstep.BaseContainerInterface;
 import com.android.quickstep.GestureState;
 import com.android.quickstep.HighResLoadingState;
@@ -265,7 +267,7 @@ public abstract class RecentsView<
         CONTAINER_TYPE extends Context & RecentsViewContainer & StatefulContainer<STATE_TYPE>,
         STATE_TYPE extends BaseState<STATE_TYPE>> extends PagedView implements Insettable,
         HighResLoadingState.HighResLoadingStateChangedCallback,
-        TaskVisualsChangeListener {
+        TaskVisualsChangeListener, DesktopVisibilityListener {
 
     private static final String TAG = "RecentsView";
     private static final boolean DEBUG = false;
@@ -556,6 +558,10 @@ public abstract class RecentsView<
     private final Rect mTaskViewDeadZoneRect = new Rect();
     private final Rect mTopRowDeadZoneRect = new Rect();
     private final Rect mBottomRowDeadZoneRect = new Rect();
+
+    @Nullable
+    private DesktopVisibilityController mDesktopVisibilityController = null;
+
     /**
      * Reflects if Recents is currently in the middle of a gesture, and if so, which tasks are
      * running. If a gesture is not in progress, this will be null.
@@ -913,6 +919,8 @@ public abstract class RecentsView<
             mAddDesktopButton = (AddDesktopButton) LayoutInflater.from(context).inflate(
                     R.layout.overview_add_desktop_button, this, false);
             mAddDesktopButton.setOnClickListener(this::createDesk);
+
+            mDesktopVisibilityController = DesktopVisibilityController.INSTANCE.get(mContext);
         }
 
         mTaskViewPool = new ViewPool<>(context, this, R.layout.task, 20 /* max size */,
@@ -1227,13 +1235,16 @@ public abstract class RecentsView<
         mSyncTransactionApplier = new SurfaceTransactionApplier(this);
         runActionOnRemoteHandles(remoteTargetHandle -> remoteTargetHandle.getTransformParams()
                 .setSyncTransactionApplier(mSyncTransactionApplier));
-        RecentsModel.INSTANCE.get(getContext()).addThumbnailChangeListener(this);
+        RecentsModel.INSTANCE.get(mContext).addThumbnailChangeListener(this);
         mIPipAnimationListener.setActivityAndRecentsView(mContainer, this);
-        SystemUiProxy.INSTANCE.get(getContext()).setPipAnimationListener(
+        SystemUiProxy.INSTANCE.get(mContext).setPipAnimationListener(
                 mIPipAnimationListener);
         mOrientationState.initListeners();
         mTaskOverlayFactory.initListeners();
         mSplitSelectStateController.registerSplitListener(mSplitSelectionListener);
+        if (mDesktopVisibilityController != null) {
+            mDesktopVisibilityController.registerDesktopVisibilityListener(this);
+        }
     }
 
     @Override
@@ -1248,12 +1259,15 @@ public abstract class RecentsView<
         runActionOnRemoteHandles(remoteTargetHandle -> remoteTargetHandle.getTransformParams()
                 .setSyncTransactionApplier(null));
         executeSideTaskLaunchCallback();
-        RecentsModel.INSTANCE.get(getContext()).removeThumbnailChangeListener(this);
-        SystemUiProxy.INSTANCE.get(getContext()).setPipAnimationListener(null);
+        RecentsModel.INSTANCE.get(mContext).removeThumbnailChangeListener(this);
+        SystemUiProxy.INSTANCE.get(mContext).setPipAnimationListener(null);
         mIPipAnimationListener.setActivityAndRecentsView(null, null);
         mOrientationState.destroyListeners();
         mTaskOverlayFactory.removeListeners();
         mSplitSelectStateController.unregisterSplitListener(mSplitSelectionListener);
+        if (mDesktopVisibilityController != null) {
+            mDesktopVisibilityController.unregisterDesktopVisibilityListener(this);
+        }
         reset();
     }
 
@@ -6857,6 +6871,11 @@ public abstract class RecentsView<
                 mRecentsView.mSizeStrategy.getTaskbarController().onExpandPip();
             });
         }
+    }
+
+    @Override
+    public void onCanCreateDesksChanged(boolean canCreateDesks) {
+        // TODO: b/389209338 - update the AddDesktopButton's visibility on this.
     }
 
     /** Get the color used for foreground scrimming the RecentsView for sharing. */
