@@ -81,7 +81,6 @@ import com.android.quickstep.views.RecentsViewContainer
 import com.android.systemui.shared.recents.model.ThumbnailData
 import com.android.systemui.shared.system.TaskStackChangeListener
 import com.android.systemui.shared.system.TaskStackChangeListeners
-import java.util.function.Predicate
 
 /**
  * Class that will manage RecentsView lifecycle within a window and interface correctly where
@@ -135,7 +134,6 @@ class RecentsWindowManager(context: Context, wallpaperColorHints: Int) :
     // Callback array that corresponds to events defined in @ActivityEvent
     private val eventCallbacks =
         listOf(RunnableList(), RunnableList(), RunnableList(), RunnableList())
-    private var onInitListener: Predicate<Boolean>? = null
 
     private val animationToHomeFactory =
         RemoteAnimationFactory {
@@ -334,10 +332,6 @@ class RecentsWindowManager(context: Context, wallpaperColorHints: Int) :
 
     override fun getTaskbarUIController(): TaskbarUIController? {
         return taskbarUIController
-    }
-
-    fun registerInitListener(onInitListener: Predicate<Boolean>) {
-        this.onInitListener = onInitListener
     }
 
     override fun collectStateHandlers(out: MutableList<StateManager.StateHandler<RecentsState?>>?) {
