@@ -401,6 +401,39 @@ constructor(
         DisplayController.INSTANCE.get(context).notifyConfigChange()
     }
 
+    private fun notifyOnDeskAdded(displayId: Int, deskId: Int) {
+        if (DEBUG) {
+            Log.d(TAG, "notifyOnDeskAdded: displayId=$displayId, deskId=$deskId")
+        }
+
+        for (listener in desktopVisibilityListeners) {
+            listener.onDeskAdded(displayId, deskId)
+        }
+    }
+
+    private fun notifyOnDeskRemoved(displayId: Int, deskId: Int) {
+        if (DEBUG) {
+            Log.d(TAG, "notifyOnDeskRemoved: displayId=$displayId, deskId=$deskId")
+        }
+
+        for (listener in desktopVisibilityListeners) {
+            listener.onDeskRemoved(displayId, deskId)
+        }
+    }
+
+    private fun notifyOnActiveDeskChanged(displayId: Int, newActiveDesk: Int, oldActiveDesk: Int) {
+        if (DEBUG) {
+            Log.d(
+                TAG,
+                "notifyOnActiveDeskChanged: displayId=$displayId, newActiveDesk=$newActiveDesk, oldActiveDesk=$oldActiveDesk",
+            )
+        }
+
+        for (listener in desktopVisibilityListeners) {
+            listener.onActiveDeskChanged(displayId, newActiveDesk, oldActiveDesk)
+        }
+    }
+
     /** TODO: b/333533253 - Remove after flag rollout */
     private fun setBackgroundStateEnabled(backgroundStateEnabled: Boolean) {
         if (DEBUG) {
@@ -511,6 +544,8 @@ constructor(
                 "Found a duplicate desk Id: $deskId on display: $displayId"
             }
         }
+
+        notifyOnDeskAdded(displayId, deskId)
     }
 
     private fun onDeskRemoved(displayId: Int, deskId: Int) {
@@ -526,6 +561,8 @@ constructor(
                 it.activeDeskId = INACTIVE_DESK_ID
             }
         }
+
+        notifyOnDeskRemoved(displayId, deskId)
     }
 
     private fun onActiveDeskChanged(displayId: Int, newActiveDesk: Int, oldActiveDesk: Int) {
@@ -539,10 +576,14 @@ constructor(
             check(oldActiveDesk == it.activeDeskId) {
                 "Mismatch between the Shell's oldActiveDesk: $oldActiveDesk, and Launcher's: ${it.activeDeskId}"
             }
-            check(it.deskIds.contains(newActiveDesk)) {
+            check(newActiveDesk == INACTIVE_DESK_ID || it.deskIds.contains(newActiveDesk)) {
                 "newActiveDesk: $newActiveDesk was never added to display: $displayId"
             }
             it.activeDeskId = newActiveDesk
+        }
+
+        if (newActiveDesk != oldActiveDesk) {
+            notifyOnActiveDeskChanged(displayId, newActiveDesk, oldActiveDesk)
         }
 
         if (wasInDesktopMode != isInDesktopModeAndNotInOverview(displayId)) {
@@ -718,6 +759,6 @@ constructor(
         private const val TAG = "DesktopVisController"
         private const val DEBUG = false
 
-        public const val INACTIVE_DESK_ID = -1
+        const val INACTIVE_DESK_ID = -1
     }
 }

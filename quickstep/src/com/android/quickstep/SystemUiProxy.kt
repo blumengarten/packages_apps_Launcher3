@@ -1089,17 +1089,25 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
     // Desktop Mode
     //
     /** Calls shell to create a new desk (if possible) on the display whose ID is `displayId`. */
-    fun createDesktop(displayId: Int) =
+    fun createDesk(displayId: Int) =
         executeWithErrorLog({ "Failed call createDesk" }) { desktopMode?.createDesk(displayId) }
 
     /**
      * Calls shell to activate the desk whose ID is `deskId` on whatever display it exists on. This
      * will bring all tasks on this desk to the front.
      */
-    fun activateDesktop(deskId: Int, transition: RemoteTransition?) =
+    fun activateDesk(deskId: Int, transition: RemoteTransition?) =
         executeWithErrorLog({ "Failed call activateDesk" }) {
             desktopMode?.activateDesk(deskId, transition)
         }
+
+    /** Calls shell to remove the desk whose ID is `deskId`. */
+    fun removeDesk(deskId: Int) =
+        executeWithErrorLog({ "Failed call removeDesk" }) { desktopMode?.removeDesk(deskId) }
+
+    /** Calls shell to remove all the available desks on all displays. */
+    fun removeAllDesks() =
+        executeWithErrorLog({ "Failed call removeAllDesks" }) { desktopMode?.removeAllDesks() }
 
     /** Call shell to show all apps active on the desktop */
     fun showDesktopApps(displayId: Int, transition: RemoteTransition?) =
@@ -1152,9 +1160,9 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
         }
 
     /** Call shell to remove the desktop that is on given `displayId` */
-    fun removeDesktop(displayId: Int) =
-        executeWithErrorLog({ "Failed call removeDesktop" }) {
-            desktopMode?.removeDesktop(displayId)
+    fun removeDefaultDeskInDisplay(displayId: Int) =
+        executeWithErrorLog({ "Failed call removeDefaultDeskInDisplay" }) {
+            desktopMode?.removeDefaultDeskInDisplay(displayId)
         }
 
     /** Call shell to move a task with given `taskId` to external display. */
