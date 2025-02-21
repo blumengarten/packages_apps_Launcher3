@@ -64,7 +64,6 @@ import com.android.launcher3.model.BgDataModel;
 import com.android.launcher3.model.BgDataModel.Callbacks;
 import com.android.launcher3.model.LoaderTask;
 import com.android.launcher3.model.ModelDbController;
-import com.android.launcher3.provider.LauncherDbUtils;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.Themes;
@@ -336,16 +335,6 @@ public class PreviewSurfaceRenderer {
             // Start the migration
             PreviewContext previewContext =
                     new PreviewContext(inflationContext, mGridName, mShapeKey);
-            // Copy existing data to preview DB
-            LauncherDbUtils.copyTable(LauncherAppState.getInstance(mContext)
-                            .getModel().getModelDbController().getDb(),
-                    TABLE_NAME,
-                    LauncherAppState.getInstance(previewContext)
-                            .getModel().getModelDbController().getDb(),
-                    TABLE_NAME,
-                    mContext);
-            LauncherAppState.getInstance(previewContext)
-                    .getModel().getModelDbController().clearEmptyDbFlag();
 
             BgDataModel bgModel = new BgDataModel();
             new LoaderTask(
