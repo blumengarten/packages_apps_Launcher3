@@ -28,6 +28,7 @@ import static com.android.launcher3.LauncherPrefs.GRID_NAME;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT_PREDICTION;
 import static com.android.launcher3.Utilities.SHOULD_SHOW_FIRST_PAGE_WIDGET;
+import static com.android.launcher3.graphics.ThemeManager.PREF_ICON_SHAPE;
 import static com.android.launcher3.model.ModelUtils.currentScreenContentFilter;
 
 import android.app.Fragment;
@@ -137,12 +138,13 @@ public class LauncherPreviewRenderer extends ContextWrapper
 
         private final String mPrefName;
 
-        public PreviewContext(Context base, String gridName) {
+        public PreviewContext(Context base, String gridName, String shapeKey) {
             super(base);
             mPrefName = "preview-" + UUID.randomUUID().toString();
             LauncherPrefs prefs =
                     new ProxyPrefs(this, getSharedPreferences(mPrefName, MODE_PRIVATE));
             prefs.put(GRID_NAME, gridName);
+            prefs.put(PREF_ICON_SHAPE, shapeKey);
             initDaggerComponent(
                     DaggerLauncherPreviewRenderer_PreviewAppComponent.builder().bindPrefs(prefs));
         }

@@ -377,7 +377,9 @@ public class GridCustomizationsProxy implements ProxyProvider {
                     if (Flags.newCustomizationPickerUi()
                             && com.android.launcher3.Flags.enableLauncherIconShapes()) {
                         String shapeKey = message.getData().getString(KEY_SHAPE_KEY);
-                        renderer.updateShape(shapeKey);
+                        if (!TextUtils.isEmpty(shapeKey)) {
+                            renderer.updateShape(shapeKey);
+                        }
                     }
                     break;
                 case MESSAGE_ID_UPDATE_GRID:
