@@ -221,7 +221,7 @@ public class IconCache extends BaseIconCache {
     private void onIconRequestEnd() {
         mPendingIconRequestCount--;
         if (mPendingIconRequestCount <= 0) {
-            MODEL_EXECUTOR.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+            MODEL_EXECUTOR.setThreadPriority(Process.THREAD_PRIORITY_DEFAULT);
         }
     }
 

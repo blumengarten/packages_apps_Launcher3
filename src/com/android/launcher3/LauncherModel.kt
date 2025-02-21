@@ -328,7 +328,7 @@ constructor(
                     launcherBinder.bindWidgets()
                     return true
                 } else {
-                    mLoaderTask =
+                    val task =
                         LoaderTask(
                             appProvider.get(),
                             mBgAllAppsList,
@@ -337,10 +337,11 @@ constructor(
                             launcherBinder,
                             widgetsFilterDataProvider,
                         )
+                    mLoaderTask = task
 
                     // Always post the loader task, instead of running directly
                     // (even on same thread) so that we exit any nested synchronized blocks
-                    MODEL_EXECUTOR.post(mLoaderTask)
+                    MODEL_EXECUTOR.post(task)
                 }
             }
         }
