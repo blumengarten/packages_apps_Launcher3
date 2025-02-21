@@ -6248,8 +6248,8 @@ public abstract class RecentsView<
         int addDesktopButtonIndex = indexOfChild(mAddDesktopButton);
         if (addDesktopButtonIndex != -1 && addDesktopButtonIndex < outPageScrolls.length) {
             outPageScrolls[addDesktopButtonIndex] =
-                    newPageScrolls[addDesktopButtonIndex] + Math.round(
-                            mAddDesktopButton.getGridTranslationX());
+                    newPageScrolls[addDesktopButtonIndex] + mAddDesktopButton.getScrollAdjustment(
+                            showAsGrid);
         }
 
         int lastTaskScroll = getLastTaskScroll(clearAllScroll, clearAllWidth);
