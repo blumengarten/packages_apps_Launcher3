@@ -66,9 +66,14 @@ internal constructor(
         return userCache.getUserInfo(user)
     }
 
-    public override fun getShapePath(drawable: AdaptiveIconDrawable, iconBounds: Rect): Path {
-        if (!Flags.enableLauncherIconShapes()) return drawable.iconMask
+    override fun getShapePath(drawable: AdaptiveIconDrawable, iconBounds: Rect): Path {
+        if (!Flags.enableLauncherIconShapes()) return super.getShapePath(drawable, iconBounds)
         return themeManager.iconShape.getPath(iconBounds)
+    }
+
+    override fun getIconScale(): Float {
+        if (!Flags.enableLauncherIconShapes()) return super.getIconScale()
+        return themeManager.iconState.iconScale
     }
 
     override fun drawAdaptiveIcon(
