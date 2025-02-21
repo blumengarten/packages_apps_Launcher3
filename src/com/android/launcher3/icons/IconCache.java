@@ -20,6 +20,7 @@ import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_DEEP_SH
 import static com.android.launcher3.icons.cache.CacheLookupFlag.DEFAULT_LOOKUP_FLAG;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
+import static com.android.launcher3.util.LooperExecutor.CALLER_ICON_CACHE;
 import static com.android.launcher3.widget.WidgetSections.NO_CATEGORY;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -35,7 +36,6 @@ import android.content.pm.ShortcutInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 import android.os.Looper;
-import android.os.Process;
 import android.os.Trace;
 import android.os.UserHandle;
 import android.text.TextUtils;
@@ -204,7 +204,7 @@ public class IconCache extends BaseIconCache {
         Runnable endRunnable;
         if (Looper.myLooper() == Looper.getMainLooper()) {
             if (mPendingIconRequestCount <= 0) {
-                MODEL_EXECUTOR.setThreadPriority(Process.THREAD_PRIORITY_FOREGROUND);
+                MODEL_EXECUTOR.elevatePriority(CALLER_ICON_CACHE);
             }
             mPendingIconRequestCount++;
             endRunnable = this::onIconRequestEnd;
@@ -221,7 +221,7 @@ public class IconCache extends BaseIconCache {
     private void onIconRequestEnd() {
         mPendingIconRequestCount--;
         if (mPendingIconRequestCount <= 0) {
-            MODEL_EXECUTOR.setThreadPriority(Process.THREAD_PRIORITY_DEFAULT);
+            MODEL_EXECUTOR.restorePriority(CALLER_ICON_CACHE);
         }
     }
 
