@@ -21,6 +21,7 @@ import android.animation.AnimatorSet
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Rect
+import android.util.Log
 import android.view.Choreographer
 import android.view.SurfaceControl.Transaction
 import android.view.WindowManager.TRANSIT_CLOSE
@@ -63,7 +64,19 @@ class DesktopAppLaunchAnimatorHelper(
 
     fun createAnimators(info: TransitionInfo, finishCallback: (Animator) -> Unit): List<Animator> {
         val launchChange = getLaunchChange(info)
-        requireNotNull(launchChange) { "expected an app launch Change" }
+        requireNotNull(launchChange) {
+            val changesString =
+                info.changes.joinToString(", ") { change ->
+                    "Change: mode=${change.mode}, " +
+                        "taskId=${change.taskInfo?.id}, " +
+                        "isFreeform=${change.taskInfo?.isFreeform}"
+                }
+            Log.e(
+                TAG,
+                "No launch change found: Transition type=${info.type}, changes=$changesString",
+            )
+            "expected an app launch Change"
+        }
 
         val transaction = transactionSupplier.get()
 
@@ -188,5 +201,9 @@ class DesktopAppLaunchAnimatorHelper(
                 transaction.setAlpha(change.leash, animation.animatedValue as Float).apply()
             }
         }
+    }
+
+    private companion object {
+        const val TAG = "DesktopAppLaunchAnimatorHelper"
     }
 }

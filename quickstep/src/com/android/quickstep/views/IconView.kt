@@ -78,7 +78,8 @@ class IconView : View, TaskViewIcon {
     override fun setDrawable(d: Drawable?) {
         drawable?.callback = null
 
-        drawable = d
+        // Copy drawable so that mutations below do not affect other users of the drawable
+        drawable = d?.constantState?.newDrawable()?.mutate()
         drawable?.let {
             it.callback = this
             setDrawableSizeInternal(width, height)

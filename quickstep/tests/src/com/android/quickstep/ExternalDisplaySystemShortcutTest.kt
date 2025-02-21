@@ -20,6 +20,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.platform.test.annotations.DisableFlags
 import android.platform.test.annotations.EnableFlags
 import android.platform.test.flag.junit.SetFlagsRule
 import android.view.Display.DEFAULT_DISPLAY
@@ -113,6 +114,7 @@ class ExternalDisplaySystemShortcutTest {
         Flags.FLAG_MOVE_TO_EXTERNAL_DISPLAY_SHORTCUT,
         Flags.FLAG_ENABLE_DESKTOP_WINDOWING_MODALS_POLICY,
     )
+    @DisableFlags(Flags.FLAG_ENABLE_MODALS_FULLSCREEN_WITH_PERMISSION)
     fun createExternalDisplayTaskShortcut_transparentTask() {
         val baseComponent = ComponentName("", /* class */ "")
         val taskKey =

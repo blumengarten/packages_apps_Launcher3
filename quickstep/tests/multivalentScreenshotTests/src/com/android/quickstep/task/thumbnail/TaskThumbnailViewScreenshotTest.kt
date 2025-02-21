@@ -213,6 +213,18 @@ class TaskThumbnailViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
         }
     }
 
+    @Test
+    fun taskThumbnailView_scaled_roundRoundedCorners() {
+        screenshotRule.screenshotTest("taskThumbnailView_scaledRoundedCorners") { activity ->
+            activity.actionBar?.hide()
+            createTaskThumbnailView(activity).apply {
+                scaleX = 0.75f
+                scaleY = 0.3f
+                setState(BackgroundOnly(Color.YELLOW))
+            }
+        }
+    }
+
     private fun createTaskThumbnailView(context: Context): TaskThumbnailView {
         val taskThumbnailView =
             LayoutInflater.from(context).inflate(R.layout.task_thumbnail, null, false)

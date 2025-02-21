@@ -153,7 +153,7 @@ public class AllAppsState extends LauncherState {
         return new PageAlphaProvider(DECELERATE_2) {
             @Override
             public float getPageAlpha(int pageIndex) {
-                return launcher.getDeviceProfile().shouldShowAllAppsOnSheet()
+                return launcher.getDeviceProfile().isTablet
                         ? superPageAlphaProvider.getPageAlpha(pageIndex)
                         : 0;
             }
@@ -164,7 +164,7 @@ public class AllAppsState extends LauncherState {
     public int getVisibleElements(Launcher launcher) {
         int elements = ALL_APPS_CONTENT | FLOATING_SEARCH_BAR;
         // When All Apps is presented on a bottom sheet, HOTSEAT_ICONS are visible.
-        if (launcher.getDeviceProfile().shouldShowAllAppsOnSheet()) {
+        if (launcher.getDeviceProfile().isTablet) {
             elements |= HOTSEAT_ICONS;
         }
         return elements;

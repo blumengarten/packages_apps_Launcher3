@@ -226,7 +226,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
     private static final int TASKBAR_TO_HOME_DURATION_FAST = 300;
     private static final int TASKBAR_TO_HOME_DURATION_SLOW = 1000;
     protected static final int CONTENT_SCALE_DURATION = 350;
-    protected static final int CONTENT_SCRIM_DURATION = 350;
 
     private static final int MAX_NUM_TASKS = 5;
 
@@ -244,7 +243,13 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
     private final StartingWindowListener mStartingWindowListener =
             new StartingWindowListener(this);
-    private ContentObserver mAnimationRemovalObserver = new ContentObserver(
+
+    // TODO(b/397690719): Investigate the memory leak from TaskStackChangeListeners#mImpl
+    // This is a temporary fix of memory leak b/397690719. We track registered
+    // {@link TaskRestartedDuringLaunchListener}, and remove them on activity destroy.
+    private final List<TaskRestartedDuringLaunchListener> mRegisteredTaskStackChangeListener =
+            new ArrayList<>();
+    private final ContentObserver mAnimationRemovalObserver = new ContentObserver(
             ORDERED_BG_EXECUTOR.getHandler()) {
         @Override
         public void onChange(boolean selfChange) {
@@ -338,7 +343,14 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         TaskRestartedDuringLaunchListener restartedListener =
                 new TaskRestartedDuringLaunchListener();
         restartedListener.register(onEndCallback::executeAllAndDestroy);
-        onEndCallback.add(restartedListener::unregister);
+        mRegisteredTaskStackChangeListener.add(restartedListener);
+        onEndCallback.add(new Runnable() {
+            @Override
+            public void run() {
+                restartedListener.unregister();
+                mRegisteredTaskStackChangeListener.remove(restartedListener);
+            }
+        });
 
         RemoteAnimationRunnerCompat runner = createAppLaunchRunner(v, onEndCallback);
 
@@ -1210,6 +1222,12 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         SystemUiProxy.INSTANCE.get(mLauncher).setStartingWindowListener(null);
         ORDERED_BG_EXECUTOR.execute(() -> mLauncher.getContentResolver()
                 .unregisterContentObserver(mAnimationRemovalObserver));
+        if (BuildConfig.IS_STUDIO_BUILD && !mRegisteredTaskStackChangeListener.isEmpty()) {
+            throw new IllegalStateException("Failed to run onEndCallback created from"
+                    + " getActivityLaunchOptions()");
+        }
+        mRegisteredTaskStackChangeListener.forEach(TaskRestartedDuringLaunchListener::unregister);
+        mRegisteredTaskStackChangeListener.clear();
     }
 
     /**

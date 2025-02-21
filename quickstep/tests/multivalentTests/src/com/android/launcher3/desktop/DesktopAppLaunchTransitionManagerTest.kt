@@ -27,12 +27,10 @@ import android.view.WindowManager.TRANSIT_TO_FRONT
 import android.window.TransitionFilter
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
-import com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession
 import com.android.quickstep.SystemUiProxy
 import com.android.window.flags.Flags.FLAG_ENABLE_DESKTOP_APP_LAUNCH_TRANSITIONS_BUGFIX
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus
 import com.google.common.truth.Truth.assertThat
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -43,19 +41,12 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.mockito.quality.Strictness
 
 @SmallTest
 @RunWith(AndroidJUnit4::class)
 class DesktopAppLaunchTransitionManagerTest {
 
     @get:Rule val mSetFlagsRule = SetFlagsRule()
-
-    private val mockitoSession =
-        mockitoSession()
-            .strictness(Strictness.LENIENT)
-            .mockStatic(DesktopModeStatus::class.java)
-            .startMocking()
 
     private val context = mock<Context>()
     private val systemUiProxy = mock<SystemUiProxy>()
@@ -66,11 +57,6 @@ class DesktopAppLaunchTransitionManagerTest {
         whenever(context.resources).thenReturn(mock())
         whenever(DesktopModeStatus.canEnterDesktopMode(context)).thenReturn(true)
         transitionManager = DesktopAppLaunchTransitionManager(context, systemUiProxy)
-    }
-
-    @After
-    fun tearDown() {
-        mockitoSession.finishMocking()
     }
 
     @Test

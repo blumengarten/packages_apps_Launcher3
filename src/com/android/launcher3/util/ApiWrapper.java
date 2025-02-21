@@ -216,6 +216,13 @@ public class ApiWrapper {
         return 0;
     }
 
+    /**
+     * Checks if the shortcut is using an icon with file or URI source
+     */
+    public boolean isFileDrawable(@NonNull ShortcutInfo shortcutInfo) {
+        return false;
+    }
+
     private static class NoopDrawable extends ColorDrawable {
         @Override
         public int getIntrinsicHeight() {

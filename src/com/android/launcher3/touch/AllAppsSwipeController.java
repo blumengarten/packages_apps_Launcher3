@@ -207,6 +207,11 @@ public class AllAppsSwipeController extends AbstractStateChangeTouchController {
             }
             config.setInterpolator(ANIM_WORKSPACE_SCALE, DECELERATED_EASE);
             config.setInterpolator(ANIM_DEPTH, DECELERATED_EASE);
+            if (launcher.getDeviceProfile().isPhone) {
+                config.setInterpolator(ANIM_WORKSPACE_FADE, INSTANT);
+                config.setInterpolator(ANIM_HOTSEAT_FADE, INSTANT);
+                config.animFlags |= StateAnimationConfig.SKIP_DEPTH_CONTROLLER;
+            }
         } else {
             if (config.isUserControlled()) {
                 config.setInterpolator(ANIM_DEPTH, Interpolators.reverse(BLUR_MANUAL));
@@ -248,6 +253,11 @@ public class AllAppsSwipeController extends AbstractStateChangeTouchController {
             }
             config.setInterpolator(ANIM_WORKSPACE_SCALE, DECELERATED_EASE);
             config.setInterpolator(ANIM_DEPTH, DECELERATED_EASE);
+            if (launcher.getDeviceProfile().isPhone) {
+                config.setInterpolator(ANIM_WORKSPACE_FADE, FINAL_FRAME);
+                config.setInterpolator(ANIM_HOTSEAT_FADE, FINAL_FRAME);
+                config.animFlags |= StateAnimationConfig.SKIP_DEPTH_CONTROLLER;
+            }
         } else {
             config.setInterpolator(ANIM_DEPTH,
                     config.isUserControlled() ? BLUR_MANUAL : BLUR_ATOMIC);
