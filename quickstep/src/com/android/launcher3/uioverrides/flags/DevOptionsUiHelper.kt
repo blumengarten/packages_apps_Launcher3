@@ -317,6 +317,12 @@ class DevOptionsUiHelper(c: Context, attr: AttributeSet?) : PreferenceGroup(c, a
             )
             addPreference(
                 Preference(context).apply {
+                    title = "Launch Full Gesture Tutorial"
+                    intent = Intent(launchSandboxIntent).putExtra("use_tutorial_menu", false)
+                }
+            )
+            addPreference(
+                Preference(context).apply {
                     title = "Launch Back Tutorial"
                     intent =
                         Intent(launchSandboxIntent)
