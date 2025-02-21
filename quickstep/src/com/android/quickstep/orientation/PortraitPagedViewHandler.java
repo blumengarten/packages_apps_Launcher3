@@ -271,12 +271,8 @@ public class PortraitPagedViewHandler extends DefaultPagedViewHandler implements
         if (splitBounds != null) {
             if (deviceProfile.isLeftRightSplit) {
                 if (desiredTaskId == splitBounds.rightBottomTaskId) {
-                    float leftTopTaskPercent = splitBounds.appsStackedVertically
-                            ? splitBounds.topTaskPercent
-                            : splitBounds.leftTaskPercent;
-                    float dividerThicknessPercent = splitBounds.appsStackedVertically
-                            ? splitBounds.dividerHeightPercent
-                            : splitBounds.dividerWidthPercent;
+                    float leftTopTaskPercent = splitBounds.getLeftTopTaskPercent();
+                    float dividerThicknessPercent = splitBounds.getDividerPercent();
                     translationX = ((taskViewWidth * leftTopTaskPercent)
                             + (taskViewWidth * dividerThicknessPercent));
                 }
@@ -285,9 +281,9 @@ public class PortraitPagedViewHandler extends DefaultPagedViewHandler implements
                     FrameLayout.LayoutParams snapshotParams =
                             (FrameLayout.LayoutParams) thumbnailViews[0]
                                     .getLayoutParams();
-                    float bottomRightTaskPlusDividerPercent = splitBounds.appsStackedVertically
-                            ? (1f - splitBounds.topTaskPercent)
-                            : (1f - splitBounds.leftTaskPercent);
+                    float bottomRightTaskPlusDividerPercent =
+                            splitBounds.getRightBottomTaskPercent()
+                                    + splitBounds.getDividerPercent();
                     translationY = -((taskViewHeight - snapshotParams.topMargin)
                             * bottomRightTaskPlusDividerPercent);
                 }
@@ -506,12 +502,8 @@ public class PortraitPagedViewHandler extends DefaultPagedViewHandler implements
     @Override
     public void setSplitTaskSwipeRect(DeviceProfile dp, Rect outRect,
             SplitBounds splitInfo, int desiredStagePosition) {
-        float topLeftTaskPercent = splitInfo.appsStackedVertically
-                ? splitInfo.topTaskPercent
-                : splitInfo.leftTaskPercent;
-        float dividerBarPercent = splitInfo.appsStackedVertically
-                ? splitInfo.dividerHeightPercent
-                : splitInfo.dividerWidthPercent;
+        float topLeftTaskPercent = splitInfo.getLeftTopTaskPercent();
+        float dividerBarPercent = splitInfo.getDividerPercent();
 
         int taskbarHeight = dp.isTransientTaskbar ? 0 : dp.taskbarHeight;
         float scale = (float) outRect.height() / (dp.availableHeightPx - taskbarHeight);
@@ -559,9 +551,7 @@ public class PortraitPagedViewHandler extends DefaultPagedViewHandler implements
         primaryParams.topMargin = spaceAboveSnapshot;
 
         int totalThumbnailHeight = parentHeight - spaceAboveSnapshot;
-        float dividerScale = splitBoundsConfig.appsStackedVertically
-                ? splitBoundsConfig.dividerHeightPercent
-                : splitBoundsConfig.dividerWidthPercent;
+        float dividerScale = splitBoundsConfig.getDividerPercent();
         Pair<Point, Point> taskViewSizes =
                 getGroupedTaskViewSizes(dp, splitBoundsConfig, parentWidth, parentHeight);
         if (!inSplitSelection) {
@@ -610,12 +600,8 @@ public class PortraitPagedViewHandler extends DefaultPagedViewHandler implements
             int parentHeight) {
         int spaceAboveSnapshot = dp.overviewTaskThumbnailTopMarginPx;
         int totalThumbnailHeight = parentHeight - spaceAboveSnapshot;
-        float dividerScale = splitBoundsConfig.appsStackedVertically
-                ? splitBoundsConfig.dividerHeightPercent
-                : splitBoundsConfig.dividerWidthPercent;
-        float taskPercent = splitBoundsConfig.appsStackedVertically
-                ? splitBoundsConfig.topTaskPercent
-                : splitBoundsConfig.leftTaskPercent;
+        float dividerScale = splitBoundsConfig.getDividerPercent();
+        float taskPercent = splitBoundsConfig.getLeftTopTaskPercent();
 
         Point firstTaskViewSize = new Point();
         Point secondTaskViewSize = new Point();

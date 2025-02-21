@@ -106,15 +106,8 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
         splitInfo: SplitBounds,
         desiredStagePosition: Int
     ) {
-        val topLeftTaskPercent: Float
-        val dividerBarPercent: Float
-        if (splitInfo.appsStackedVertically) {
-            topLeftTaskPercent = splitInfo.topTaskPercent
-            dividerBarPercent = splitInfo.dividerHeightPercent
-        } else {
-            topLeftTaskPercent = splitInfo.leftTaskPercent
-            dividerBarPercent = splitInfo.dividerWidthPercent
-        }
+        val topLeftTaskPercent = splitInfo.leftTopTaskPercent
+        val dividerBarPercent = splitInfo.dividerPercent
 
         // In seascape, the primary thumbnail is counterintuitively placed at the physical bottom of
         // the screen. This is to preserve consistency when the user rotates: From the user's POV,
@@ -166,11 +159,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
         } else {
             if (desiredTaskId == splitBounds.leftTopTaskId) {
                 val bottomRightTaskPlusDividerPercent =
-                    if (splitBounds.appsStackedVertically) {
-                        1f - splitBounds.topTaskPercent
-                    } else {
-                        1f - splitBounds.leftTaskPercent
-                    }
+                    splitBounds.rightBottomTaskPercent + splitBounds.dividerPercent
                 translationY =
                     banner.height -
                         (taskViewHeight - snapshotParams.topMargin) *
@@ -331,12 +320,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
         val totalThumbnailHeight = parentHeight - spaceAboveSnapshot
         val dividerBar = getDividerBarSize(totalThumbnailHeight, splitBoundsConfig)
 
-        val taskPercent =
-            if (splitBoundsConfig.appsStackedVertically) {
-                splitBoundsConfig.topTaskPercent
-            } else {
-                splitBoundsConfig.leftTaskPercent
-            }
+        val taskPercent = splitBoundsConfig.leftTopTaskPercent
         val firstTaskViewSize = Point(parentWidth, (totalThumbnailHeight * taskPercent).toInt())
         val secondTaskViewSize =
             Point(parentWidth, totalThumbnailHeight - firstTaskViewSize.y - dividerBar)
