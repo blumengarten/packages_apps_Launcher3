@@ -79,7 +79,7 @@ public final class WidgetsPredictionUpdateTask implements ModelUpdateTask {
         // Widgets (excluding shortcuts & already added widgets) that belong to apps eligible for
         // being in predictions.
         Map<ComponentKey, WidgetItem> allEligibleWidgets =
-                dataModel.widgetsModel.getWidgetsByComponentKey()
+                dataModel.widgetsModel.getWidgetsByComponentKeyForPicker()
                         .entrySet()
                         .stream()
                         .filter(entry -> entry.getValue().widgetInfo != null

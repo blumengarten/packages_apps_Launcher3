@@ -322,13 +322,14 @@ public class WidgetPickerActivity extends BaseActivity {
             stringCache.loadStrings(this);
 
             bindStringCache(stringCache);
-            bindWidgets(mModel.getWidgetsByPackageItem(), mModel.getDefaultWidgetsFilter());
+            bindWidgets(mModel.getWidgetsByPackageItemForPicker(),
+                    mModel.getDefaultWidgetsFilter());
             // Open sheet once widgets are available, so that it doesn't interrupt the open
             // animation.
             openWidgetsSheet();
             if (mUiSurface != null) {
                 mWidgetPredictionsRequester = new WidgetPredictionsRequester(app.getContext(),
-                        mUiSurface, mModel.getWidgetsByComponentKey());
+                        mUiSurface, mModel.getWidgetsByComponentKeyForPicker());
                 mWidgetPredictionsRequester.request(mAddedWidgets, this::bindRecommendedWidgets);
             }
         });
