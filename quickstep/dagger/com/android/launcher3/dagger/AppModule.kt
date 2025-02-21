@@ -16,10 +16,17 @@
 
 package com.android.launcher3.dagger
 
+import com.android.launcher3.model.ModelDelegate
+import com.android.launcher3.model.QuickstepModelDelegate
+import dagger.Binds
 import dagger.Module
 
 /**
  * Module containing bindings for the final derivative app, an implementation of this module should
  * be included in the final app code.
  */
-@Module abstract class AppModule {}
+@Module
+abstract class AppModule {
+
+    @Binds abstract fun bindModelDelegate(impl: QuickstepModelDelegate): ModelDelegate
+}

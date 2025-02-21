@@ -38,18 +38,20 @@ import com.android.launcher3.icons.LauncherIcons.IconPool
 import com.android.launcher3.notification.NotificationListener
 import com.android.launcher3.pm.InstallSessionHelper
 import com.android.launcher3.pm.UserCache
+import com.android.launcher3.util.DaggerSingletonTracker
 import com.android.launcher3.util.Executors.MODEL_EXECUTOR
 import com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR
-import com.android.launcher3.util.SafeCloseable
 import com.android.launcher3.util.SettingsCache
 import com.android.launcher3.util.SettingsCache.NOTIFICATION_BADGING_URI
 import com.android.launcher3.util.SettingsCache.PRIVATE_SPACE_HIDE_WHEN_LOCKED_URI
 import com.android.launcher3.util.SimpleBroadcastReceiver
 import com.android.launcher3.widget.custom.CustomWidgetManager
-import java.util.function.Consumer
+import javax.inject.Inject
 
 /** Utility class for initializing all model callbacks */
-class ModelInitializer(
+class ModelInitializer
+@Inject
+constructor(
     @ApplicationContext private val context: Context,
     private val iconPool: IconPool,
     private val iconCache: IconCache,
@@ -60,7 +62,7 @@ class ModelInitializer(
     private val iconProvider: LauncherIconProvider,
     private val customWidgetManager: CustomWidgetManager,
     private val installSessionHelper: InstallSessionHelper,
-    private val closeActions: Consumer<SafeCloseable>,
+    private val lifeCycle: DaggerSingletonTracker,
 ) {
 
     fun initialize(model: LauncherModel) {
@@ -75,18 +77,18 @@ class ModelInitializer(
             if (modelChanged) refreshAndReloadLauncher()
         }
         idp.addOnChangeListener(idpChangeListener)
-        closeActions.accept { idp.removeOnChangeListener(idpChangeListener) }
+        lifeCycle.addCloseable { idp.removeOnChangeListener(idpChangeListener) }
 
         // Theme changes
         val themeChangeListener = ThemeChangeListener { refreshAndReloadLauncher() }
         themeManager.addChangeListener(themeChangeListener)
-        closeActions.accept { themeManager.removeChangeListener(themeChangeListener) }
+        lifeCycle.addCloseable { themeManager.removeChangeListener(themeChangeListener) }
 
         // System changes
         val modelCallbacks = model.newModelCallbacks()
         val launcherApps = context.getSystemService(LauncherApps::class.java)!!
-        launcherApps.registerCallback(modelCallbacks)
-        closeActions.accept { launcherApps.unregisterCallback(modelCallbacks) }
+        launcherApps.registerCallback(modelCallbacks, MODEL_EXECUTOR.handler)
+        lifeCycle.addCloseable { launcherApps.unregisterCallback(modelCallbacks) }
 
         if (Utilities.ATLEAST_V && Flags.enableSupportForArchiving()) {
             launcherApps.setArchiveCompatibility(
@@ -101,23 +103,23 @@ class ModelInitializer(
         val dpUpdateReceiver =
             SimpleBroadcastReceiver(context, UI_HELPER_EXECUTOR) { model.reloadStringCache() }
         dpUpdateReceiver.register(ACTION_DEVICE_POLICY_RESOURCE_UPDATED)
-        closeActions.accept { dpUpdateReceiver.unregisterReceiverSafely() }
+        lifeCycle.addCloseable { dpUpdateReceiver.unregisterReceiverSafely() }
 
         // Development helper
         if (BuildConfig.IS_STUDIO_BUILD) {
             val reloadReceiver =
                 SimpleBroadcastReceiver(context, UI_HELPER_EXECUTOR) { model.forceReload() }
             reloadReceiver.register(Context.RECEIVER_EXPORTED, ACTION_FORCE_RELOAD)
-            closeActions.accept { reloadReceiver.unregisterReceiverSafely() }
+            lifeCycle.addCloseable { reloadReceiver.unregisterReceiverSafely() }
         }
 
         // User changes
-        closeActions.accept(userCache.addUserEventListener(model::onUserEvent))
+        lifeCycle.addCloseable(userCache.addUserEventListener(model::onUserEvent))
 
         // Private space settings changes
         val psSettingsListener = SettingsCache.OnChangeListener { model.forceReload() }
         settingsCache.register(PRIVATE_SPACE_HIDE_WHEN_LOCKED_URI, psSettingsListener)
-        closeActions.accept {
+        lifeCycle.addCloseable {
             settingsCache.unregister(PRIVATE_SPACE_HIDE_WHEN_LOCKED_URI, psSettingsListener)
         }
 
@@ -131,7 +133,7 @@ class ModelInitializer(
             }
         settingsCache.register(NOTIFICATION_BADGING_URI, notificationChanges)
         notificationChanges.onSettingsChanged(settingsCache.getValue(NOTIFICATION_BADGING_URI))
-        closeActions.accept {
+        lifeCycle.addCloseable {
             settingsCache.unregister(NOTIFICATION_BADGING_URI, notificationChanges)
         }
 
@@ -142,21 +144,21 @@ class ModelInitializer(
                     if (LoaderTask.SMARTSPACE_ON_HOME_SCREEN == key) model.forceReload()
                 }
             getPrefs(context).registerOnSharedPreferenceChangeListener(smartSpacePrefChanges)
-            closeActions.accept {
+            lifeCycle.addCloseable {
                 getPrefs(context).unregisterOnSharedPreferenceChangeListener(smartSpacePrefChanges)
             }
         }
 
         // Custom widgets
-        closeActions.accept(customWidgetManager.addWidgetRefreshCallback(model::rebindCallbacks))
+        lifeCycle.addCloseable(customWidgetManager.addWidgetRefreshCallback(model::rebindCallbacks))
 
         // Icon changes
-        closeActions.accept(
+        lifeCycle.addCloseable(
             iconProvider.registerIconChangeListener(model::onAppIconChanged, MODEL_EXECUTOR.handler)
         )
 
         // Install session changes
-        closeActions.accept(installSessionHelper.registerInstallTracker(modelCallbacks))
+        lifeCycle.addCloseable(installSessionHelper.registerInstallTracker(modelCallbacks))
     }
 
     companion object {

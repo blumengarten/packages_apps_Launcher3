@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Process;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.launcher3.Flags;
@@ -44,6 +45,7 @@ public abstract class ItemInfoWithIcon extends ItemInfo {
     /**
      * The bitmap for the application icon
      */
+    @NonNull
     public BitmapInfo bitmap = BitmapInfo.LOW_RES_INFO;
 
     /**

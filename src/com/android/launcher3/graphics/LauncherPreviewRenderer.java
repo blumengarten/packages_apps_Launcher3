@@ -67,7 +67,6 @@ import com.android.launcher3.DeviceProfile.OnDeviceProfileChangeListener;
 import com.android.launcher3.Hotseat;
 import com.android.launcher3.InsettableFrameLayout;
 import com.android.launcher3.InvariantDeviceProfile;
-import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherSettings.Favorites;
 import com.android.launcher3.ProxyPrefs;
@@ -146,8 +145,6 @@ public class LauncherPreviewRenderer extends ContextWrapper
             prefs.put(GRID_NAME, gridName);
             initDaggerComponent(
                     DaggerLauncherPreviewRenderer_PreviewAppComponent.builder().bindPrefs(prefs));
-            putObject(LauncherAppState.INSTANCE,
-                    new LauncherAppState(this, null /* iconCacheFileName */));
         }
 
         @Override

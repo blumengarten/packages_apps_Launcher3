@@ -47,6 +47,7 @@ import android.content.pm.LauncherApps;
 import android.content.pm.ShortcutInfo;
 import android.os.Bundle;
 import android.os.UserHandle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.StatsEvent;
 
@@ -61,6 +62,7 @@ import com.android.launcher3.ConstantItem;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherPrefs;
+import com.android.launcher3.dagger.ApplicationContext;
 import com.android.launcher3.icons.cache.CacheLookupFlag;
 import com.android.launcher3.logger.LauncherAtom;
 import com.android.launcher3.logging.InstanceId;
@@ -89,6 +91,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 /**
  * Model delegate which loads prediction items
  */
@@ -114,18 +119,29 @@ public class QuickstepModelDelegate extends ModelDelegate {
             CONTAINER_WIDGETS_PREDICTION, "widgets_prediction", DESKTOP_ICON_FLAG);
 
     private final InvariantDeviceProfile mIDP;
+    private final PackageManagerHelper mPmHelper;
     private final AppEventProducer mAppEventProducer;
+
     private final StatsManager mStatsManager;
 
     protected boolean mActive = false;
 
-    public QuickstepModelDelegate(Context context) {
+    @Inject
+    public QuickstepModelDelegate(@ApplicationContext Context context,
+            InvariantDeviceProfile idp,
+            PackageManagerHelper pmHelper,
+            @Nullable @Named("ICONS_DB") String dbFileName) {
         super(context);
-        mAppEventProducer = new AppEventProducer(context, this::onAppTargetEvent);
+        mIDP = idp;
+        mPmHelper = pmHelper;
 
-        mIDP = InvariantDeviceProfile.INSTANCE.get(context);
+        mAppEventProducer = new AppEventProducer(context, this::onAppTargetEvent);
         StatsLogCompatManager.LOGS_CONSUMER.add(mAppEventProducer);
-        mStatsManager = context.getSystemService(StatsManager.class);
+
+        // Only register for launcher snapshot logging if this is the primary ModelDelegate
+        // instance, as there will be additional instances that may be destroyed at any time.
+        mStatsManager = TextUtils.isEmpty(dbFileName)
+                ? null : context.getSystemService(StatsManager.class);
     }
 
     @CallSuper
@@ -154,10 +170,10 @@ public class QuickstepModelDelegate extends ModelDelegate {
         // TODO: Implement caching and preloading
 
         WorkspaceItemFactory factory =
-                new WorkspaceItemFactory(mApp, ums, mPmHelper, pinnedShortcuts, numColumns,
+                new WorkspaceItemFactory(mContext, ums, mPmHelper, pinnedShortcuts, numColumns,
                         state.containerId, state.lookupFlag);
         FixedContainerItems fci = new FixedContainerItems(state.containerId,
-                state.storage.read(mApp.getContext(), factory, ums.allUsers::get));
+                state.storage.read(mContext, factory, ums.allUsers::get));
         mDataModel.extraItems.put(state.containerId, fci);
     }
 
@@ -220,7 +236,7 @@ public class QuickstepModelDelegate extends ModelDelegate {
         super.modelLoadComplete();
 
         // Log snapshot of the model
-        LauncherPrefs prefs = LauncherPrefs.get(mApp.getContext());
+        LauncherPrefs prefs = LauncherPrefs.get(mContext);
         long lastSnapshotTimeMillis = prefs.get(LAST_SNAPSHOT_TIME_MILLIS);
         // Log snapshot only if previous snapshot was older than a day
         long now = System.currentTimeMillis();
@@ -245,11 +261,7 @@ public class QuickstepModelDelegate extends ModelDelegate {
             prefs.put(LAST_SNAPSHOT_TIME_MILLIS, now);
         }
 
-        // Only register for launcher snapshot logging if this is the primary ModelDelegate
-        // instance, as there will be additional instances that may be destroyed at any time.
-        if (mIsPrimaryInstance) {
-            registerSnapshotLoggingCallback();
-        }
+        registerSnapshotLoggingCallback();
     }
 
     protected void additionalSnapshotEvents(InstanceId snapshotInstanceId){}
@@ -257,9 +269,9 @@ public class QuickstepModelDelegate extends ModelDelegate {
     /**
      * Registers a callback to log launcher workspace layout using Statsd pulled atom.
      */
-    protected void registerSnapshotLoggingCallback() {
+    private void registerSnapshotLoggingCallback() {
         if (mStatsManager == null) {
-            Log.d(TAG, "Failed to get StatsManager");
+            Log.d(TAG, "Skipping snapshot logging");
         }
 
         try {
@@ -332,7 +344,7 @@ public class QuickstepModelDelegate extends ModelDelegate {
         super.destroy();
         mActive = false;
         StatsLogCompatManager.LOGS_CONSUMER.remove(mAppEventProducer);
-        if (mIsPrimaryInstance && mStatsManager != null) {
+        if (mStatsManager != null) {
             try {
                 mStatsManager.clearPullAtomCallback(SysUiStatsLog.LAUNCHER_LAYOUT_SNAPSHOT);
             } catch (RuntimeException e) {
@@ -354,25 +366,24 @@ public class QuickstepModelDelegate extends ModelDelegate {
         if (!mActive) {
             return;
         }
-        Context context = mApp.getContext();
-        AppPredictionManager apm = context.getSystemService(AppPredictionManager.class);
+        AppPredictionManager apm = mContext.getSystemService(AppPredictionManager.class);
         if (apm == null) {
             return;
         }
 
         registerPredictor(mAllAppsState, apm.createAppPredictionSession(
-                new AppPredictionContext.Builder(context)
+                new AppPredictionContext.Builder(mContext)
                         .setUiSurface("home")
                         .setPredictedTargetCount(mIDP.numDatabaseAllAppsColumns)
                         .build()));
 
         // TODO: get bundle
-        registerHotseatPredictor(apm, context);
+        registerHotseatPredictor(apm, mContext);
 
         registerWidgetsPredictor(apm.createAppPredictionSession(
-                new AppPredictionContext.Builder(context)
+                new AppPredictionContext.Builder(mContext)
                         .setUiSurface("widgets")
-                        .setExtras(getBundleForWidgetsOnWorkspace(context, mDataModel))
+                        .setExtras(getBundleForWidgetsOnWorkspace(mContext, mDataModel))
                         .setPredictedTargetCount(NUM_OF_RECOMMENDED_WIDGETS_PREDICATION)
                         .build()));
     }
@@ -383,12 +394,11 @@ public class QuickstepModelDelegate extends ModelDelegate {
         if (!mActive) {
             return;
         }
-        Context context = mApp.getContext();
-        AppPredictionManager apm = context.getSystemService(AppPredictionManager.class);
+        AppPredictionManager apm = mContext.getSystemService(AppPredictionManager.class);
         if (apm == null) {
             return;
         }
-        registerHotseatPredictor(apm, context);
+        registerHotseatPredictor(apm, mContext);
     }
 
     private void registerHotseatPredictor(AppPredictionManager apm, Context context) {
@@ -413,7 +423,7 @@ public class QuickstepModelDelegate extends ModelDelegate {
             // No diff, skip
             return;
         }
-        mApp.getModel().enqueueModelUpdateTask(new PredictionUpdateTask(state, targets));
+        mModel.enqueueModelUpdateTask(new PredictionUpdateTask(state, targets));
     }
 
     private void registerWidgetsPredictor(AppPredictor predictor) {
@@ -424,7 +434,7 @@ public class QuickstepModelDelegate extends ModelDelegate {
                         // No diff, skip
                         return;
                     }
-                    mApp.getModel().enqueueModelUpdateTask(
+                    mModel.enqueueModelUpdateTask(
                             new WidgetsPredictionUpdateTask(mWidgetsRecommendationState, targets));
                 });
         mWidgetsRecommendationState.predictor.requestPredictionUpdate();
@@ -536,7 +546,7 @@ public class QuickstepModelDelegate extends ModelDelegate {
 
     private static class WorkspaceItemFactory implements PersistedItemArray.ItemFactory<ItemInfo> {
 
-        private final LauncherAppState mAppState;
+        private final Context mContext;
         private final UserManagerState mUMS;
         private final PackageManagerHelper mPmHelper;
         private final Map<ShortcutKey, ShortcutInfo> mPinnedShortcuts;
@@ -546,10 +556,11 @@ public class QuickstepModelDelegate extends ModelDelegate {
 
         private int mReadCount = 0;
 
-        protected WorkspaceItemFactory(LauncherAppState appState, UserManagerState ums,
+        protected WorkspaceItemFactory(
+                Context context, UserManagerState ums,
                 PackageManagerHelper pmHelper, Map<ShortcutKey, ShortcutInfo> pinnedShortcuts,
                 int maxCount, int container, CacheLookupFlag lookupFlag) {
-            mAppState = appState;
+            mContext = context;
             mUMS = ums;
             mPmHelper = pmHelper;
             mPinnedShortcuts = pinnedShortcuts;
@@ -566,7 +577,7 @@ public class QuickstepModelDelegate extends ModelDelegate {
             }
             switch (itemType) {
                 case ITEM_TYPE_APPLICATION: {
-                    LauncherActivityInfo lai = mAppState.getContext()
+                    LauncherActivityInfo lai = mContext
                             .getSystemService(LauncherApps.class)
                             .resolveActivity(intent, user);
                     if (lai == null) {
@@ -574,14 +585,15 @@ public class QuickstepModelDelegate extends ModelDelegate {
                     }
                     AppInfo info = new AppInfo(
                             lai,
-                            UserCache.INSTANCE.get(mAppState.getContext()).getUserInfo(user),
-                            ApiWrapper.INSTANCE.get(mAppState.getContext()),
+                            UserCache.INSTANCE.get(mContext).getUserInfo(user),
+                            ApiWrapper.INSTANCE.get(mContext),
                             mPmHelper,
                             mUMS.isUserQuiet(user));
                     info.container = mContainer;
-                    mAppState.getIconCache().getTitleAndIcon(info, lai, mLookupFlag);
+                    LauncherAppState.getInstance(mContext).getIconCache()
+                            .getTitleAndIcon(info, lai, mLookupFlag);
                     mReadCount++;
-                    return info.makeWorkspaceItem(mAppState.getContext());
+                    return info.makeWorkspaceItem(mContext);
                 }
                 case ITEM_TYPE_DEEP_SHORTCUT: {
                     ShortcutKey key = ShortcutKey.fromIntent(intent, user);
@@ -592,9 +604,9 @@ public class QuickstepModelDelegate extends ModelDelegate {
                     if (si == null) {
                         return null;
                     }
-                    WorkspaceItemInfo wii = new WorkspaceItemInfo(si, mAppState.getContext());
+                    WorkspaceItemInfo wii = new WorkspaceItemInfo(si, mContext);
                     wii.container = mContainer;
-                    mAppState.getIconCache().getShortcutIcon(wii, si);
+                    LauncherAppState.getInstance(mContext).getIconCache().getShortcutIcon(wii, si);
                     mReadCount++;
                     return wii;
                 }

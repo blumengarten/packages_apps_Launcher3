@@ -61,11 +61,10 @@ public class LauncherProvider extends ContentProvider {
      */
     @Override
     public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
-        LauncherAppState.INSTANCE.executeIfCreated(appState -> {
-            if (appState.getModel().isModelLoaded()) {
-                appState.getModel().dumpState("", fd, writer, args);
-            }
-        });
+        LauncherModel model = LauncherAppState.INSTANCE.get(getContext()).getModel();
+        if (model.isModelLoaded()) {
+            model.dumpState("", fd, writer, args);
+        }
     }
 
     @Override

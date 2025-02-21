@@ -203,7 +203,7 @@ public class WidgetPredictionsRequester {
         List<ItemInfo> items;
         if (enableCategorizedWidgetSuggestions()) {
             WidgetRecommendationCategoryProvider categoryProvider =
-                    WidgetRecommendationCategoryProvider.newInstance(mContext);
+                    new WidgetRecommendationCategoryProvider();
             items = widgetItems.stream()
                     .map(it -> new PendingAddWidgetInfo(it.widgetInfo, CONTAINER_WIDGETS_PREDICTION,
                             categoryProvider.getWidgetRecommendationCategory(mContext, it)))

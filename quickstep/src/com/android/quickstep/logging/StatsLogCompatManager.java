@@ -382,18 +382,15 @@ public class StatsLogCompatManager extends StatsLogManager {
                 return;
             }
 
-            if (mItemInfo.container < 0 || !LauncherAppState.INSTANCE.executeIfCreated(app -> {
-                // Item is inside a collection, fetch collection info in a BG thread
-                // and then write to StatsLog.
-                app.getModel().enqueueModelUpdateTask((taskController, dataModel, apps) ->
-                        write(event, applyOverwrites(mItemInfo.buildProto(
-                                (CollectionInfo) dataModel.itemsIdMap.get(mItemInfo.container),
-                                mContext))));
-            })) {
-                // Write log on the model thread so that logs do not go out of order
-                // (for eg: drop comes after drag)
-                Executors.MODEL_EXECUTOR.execute(
-                        () -> write(event, applyOverwrites(mItemInfo.buildProto(mContext))));
+            // Item is inside a collection, fetch collection info in a BG thread
+            // and then write to StatsLog.
+            if (mItemInfo.container < 0) {
+                LauncherAppState.INSTANCE.get(mContext).getModel().enqueueModelUpdateTask(
+                        (taskController, dataModel, apps) -> write(event, applyOverwrites(
+                                mItemInfo.buildProto(
+                                        (CollectionInfo) dataModel.itemsIdMap
+                                                .get(mItemInfo.container),
+                                        mContext))));
             }
         }
 

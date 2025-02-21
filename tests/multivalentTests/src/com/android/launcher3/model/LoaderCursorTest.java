@@ -70,6 +70,7 @@ import androidx.test.filters.SmallTest;
 import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
+import com.android.launcher3.icons.BitmapInfo;
 import com.android.launcher3.icons.LauncherIcons;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
@@ -258,7 +259,6 @@ public class LoaderCursorTest {
         initCursor(ITEM_TYPE_APPLICATION, "title");
         assertTrue(mLoaderCursor.moveToNext());
         WorkspaceItemInfo itemInfo = new WorkspaceItemInfo();
-        itemInfo.bitmap = null;
         itemInfo.runtimeStatusFlags |= FLAG_ARCHIVED;
         Bitmap expectedBitmap = LauncherIcons.obtain(mContext)
                 .createIconBitmap(decodeByteArray(sTestBlob, 0, sTestBlob.length))
@@ -289,7 +289,7 @@ public class LoaderCursorTest {
         initCursor(ITEM_TYPE_APPLICATION, "title");
         assertTrue(mLoaderCursor.moveToNext());
         WorkspaceItemInfo itemInfo = new WorkspaceItemInfo();
-        itemInfo.bitmap = null;
+        BitmapInfo original = itemInfo.bitmap;
         itemInfo.runtimeStatusFlags |= FLAG_ARCHIVED;
         Intent intent = new Intent();
         intent.setComponent(new ComponentName("package", "class"));
@@ -297,7 +297,7 @@ public class LoaderCursorTest {
         // When
         mLoaderCursor.loadWorkspaceTitleAndIcon(false, false, itemInfo);
         // Then
-        assertThat(itemInfo.bitmap).isNull();
+        assertThat(itemInfo.bitmap).isEqualTo(original);
     }
 
     @Test
