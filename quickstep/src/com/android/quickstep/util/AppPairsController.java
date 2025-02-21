@@ -26,6 +26,7 @@ import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
 import static com.android.launcher3.util.SplitConfigurationOptions.STAGE_POSITION_BOTTOM_OR_RIGHT;
 import static com.android.launcher3.util.SplitConfigurationOptions.STAGE_POSITION_TOP_OR_LEFT;
+import static com.android.systemui.shared.recents.utilities.Utilities.isFreeformTask;
 import static com.android.wm.shell.shared.split.SplitScreenConstants.SNAP_TO_2_50_50;
 import static com.android.wm.shell.shared.split.SplitScreenConstants.SNAP_TO_NONE;
 import static com.android.wm.shell.shared.split.SplitScreenConstants.getIndex;
@@ -69,6 +70,7 @@ import com.android.quickstep.views.TaskContainer;
 import com.android.quickstep.views.TaskView;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.system.InteractionJankMonitorWrapper;
+import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 import com.android.wm.shell.shared.split.SplitScreenConstants.PersistentSnapPosition;
 
 import java.util.Arrays;
@@ -337,10 +339,12 @@ public class AppPairsController {
      *   c) App B is on-screen, but App A isn't.
      *   d) Neither is on-screen.
      *
-     * If the user tapped an app pair while inside a single app, there are 3 cases:
-     *   a) The on-screen app is App A of the app pair.
-     *   b) The on-screen app is App B of the app pair.
-     *   c) It is neither.
+     * If the user tapped an app pair while a fullscreen or freeform app is visible on screen,
+     * there are 4 cases:
+     *   a) At least one of the apps in the app pair is in freeform windowing mode.
+     *   b) The on-screen app is App A of the app pair.
+     *   c) The on-screen app is App B of the app pair.
+     *   d) It is neither.
      *
      * For each case, we call the appropriate animation and split launch type.
      */
@@ -422,6 +426,14 @@ public class AppPairsController {
                     foundTasks -> {
                         Task foundTask1 = foundTasks[0];
                         Task foundTask2 = foundTasks[1];
+
+                        if (DesktopModeStatus.canEnterDesktopMode(context) && (isFreeformTask(
+                                foundTask1) || isFreeformTask(foundTask2))) {
+                            launchAppPair(launchingIconView,
+                                    CUJ_LAUNCHER_LAUNCH_APP_PAIR_FROM_TASKBAR);
+                            return;
+                        }
+
                         boolean task1IsOnScreen;
                         boolean task2IsOnScreen;
                         if (com.android.wm.shell.Flags.enableShellTopTaskTracking()) {
