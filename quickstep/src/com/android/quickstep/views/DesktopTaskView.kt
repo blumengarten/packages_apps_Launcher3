@@ -15,7 +15,6 @@
  */
 package com.android.quickstep.views
 
-import android.animation.Animator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Matrix
@@ -36,7 +35,6 @@ import com.android.launcher3.Flags.enableDesktopExplodedView
 import com.android.launcher3.Flags.enableOverviewIconMenu
 import com.android.launcher3.Flags.enableRefactorTaskThumbnail
 import com.android.launcher3.R
-import com.android.launcher3.anim.AnimatedFloat
 import com.android.launcher3.testing.TestLogging
 import com.android.launcher3.testing.shared.TestProtocol
 import com.android.launcher3.util.RunnableList
@@ -164,9 +162,6 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
             }
             ?.inflate()
     }
-
-    fun startWindowExplodeAnimation(): Animator =
-        AnimatedFloat { progress -> explodeProgress = progress }.animateToValue(0.0f, 1.0f)
 
     private fun positionTaskWindows() {
         if (taskContainers.isEmpty()) {

@@ -18,6 +18,7 @@ package com.android.quickstep.fallback;
 import static com.android.app.animation.Interpolators.FINAL_FRAME;
 import static com.android.app.animation.Interpolators.INSTANT;
 import static com.android.app.animation.Interpolators.LINEAR;
+import static com.android.launcher3.Flags.enableDesktopExplodedView;
 import static com.android.launcher3.Flags.enableLargeDesktopWindowingTile;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_MODAL;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_SCALE;
@@ -36,6 +37,7 @@ import static com.android.quickstep.views.RecentsView.TASK_PRIMARY_SPLIT_TRANSLA
 import static com.android.quickstep.views.RecentsView.TASK_SECONDARY_SPLIT_TRANSLATION;
 import static com.android.quickstep.views.RecentsView.TASK_SECONDARY_TRANSLATION;
 import static com.android.quickstep.views.RecentsView.TASK_THUMBNAIL_SPLASH_ALPHA;
+import static com.android.quickstep.views.RecentsViewUtils.DESK_EXPLODE_PROGRESS;
 import static com.android.quickstep.views.TaskView.FLAG_UPDATE_ALL;
 
 import android.util.FloatProperty;
@@ -121,6 +123,10 @@ public class FallbackRecentsStateController implements StateHandler<RecentsState
         if (enableLargeDesktopWindowingTile()) {
             setter.setFloat(mRecentsView, DESKTOP_CAROUSEL_DETACH_PROGRESS,
                     state.detachDesktopCarousel() ? 1f : 0f,
+                    getOverviewInterpolator(state));
+        }
+        if (enableDesktopExplodedView()) {
+            setter.setFloat(mRecentsView, DESK_EXPLODE_PROGRESS, showAsGrid ? 1f : 0f,
                     getOverviewInterpolator(state));
         }
 

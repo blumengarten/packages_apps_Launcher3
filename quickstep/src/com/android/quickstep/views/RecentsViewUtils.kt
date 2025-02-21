@@ -17,6 +17,7 @@
 package com.android.quickstep.views
 
 import android.graphics.Rect
+import android.util.FloatProperty
 import android.view.View
 import androidx.core.view.children
 import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
@@ -294,7 +295,24 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
         }
     }
 
+    var deskExplodeProgress: Float = 0f
+        set(value) {
+            field = value
+            taskViews.filterIsInstance<DesktopTaskView>().forEach { it.explodeProgress = field }
+        }
+
     companion object {
+        @JvmField
+        val DESK_EXPLODE_PROGRESS =
+            object : FloatProperty<RecentsView<*, *>>("deskExplodeProgress") {
+                override fun setValue(recentsView: RecentsView<*, *>, value: Float) {
+                    recentsView.mUtils.deskExplodeProgress = value
+                }
+
+                override fun get(recentsView: RecentsView<*, *>) =
+                    recentsView.mUtils.deskExplodeProgress
+            }
+
         val TEMP_RECT = Rect()
     }
 }
