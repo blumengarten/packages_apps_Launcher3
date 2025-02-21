@@ -413,7 +413,7 @@ public abstract class AbsSwipeUpHandler<
         mMSDLPlayerWrapper = msdlPlayerWrapper;
 
         initTransitionEndpoints(mRemoteTargetHandles[0].getTaskViewSimulator()
-                .getOrientationState().getLauncherDeviceProfile());
+                .getOrientationState().getLauncherDeviceProfile(gestureState.getDisplayId()));
         initStateCallbacks();
 
         mIsTransientTaskbar = mDp.isTaskbarPresent
@@ -991,7 +991,8 @@ public abstract class AbsSwipeUpHandler<
             // both split and non-split
             RecentsOrientedState orientationState = mRemoteTargetHandles[0].getTaskViewSimulator()
                     .getOrientationState();
-            DeviceProfile dp = orientationState.getLauncherDeviceProfile();
+            DeviceProfile dp = orientationState.getLauncherDeviceProfile(
+                    mGestureState.getDisplayId());
             if (targets.minimizedHomeBounds != null && primaryTaskTarget != null) {
                 Rect overviewStackBounds = mContainerInterface
                         .getOverviewWindowBounds(targets.minimizedHomeBounds, primaryTaskTarget);
