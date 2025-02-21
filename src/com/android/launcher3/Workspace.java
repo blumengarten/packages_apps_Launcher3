@@ -53,6 +53,7 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -299,6 +300,17 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
     private final StatsLogManager mStatsLogManager;
 
     private final MSDLPlayerWrapper mMSDLPlayerWrapper;
+
+    private final StateManager.StateListener<LauncherState> mAccessibilityDropListener =
+            new StateListener<>() {
+                @Override
+                public void onStateTransitionComplete(LauncherState finalState) {
+                    if (finalState == NORMAL) {
+                        performAccessibilityActionOnViewTree(Workspace.this);
+                    }
+                }
+            };
+
     @Nullable
     private DragController.DragListener mAccessibilityDragListener;
 
@@ -1454,11 +1466,13 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         super.onAttachedToWindow();
         mWallpaperOffset.setWindowToken(getWindowToken());
         computeScroll();
+        mLauncher.getStateManager().addStateListener(mAccessibilityDropListener);
     }
 
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         mWallpaperOffset.setWindowToken(null);
+        mLauncher.getStateManager().removeStateListener(mAccessibilityDropListener);
     }
 
     @Override
@@ -2239,16 +2253,8 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
                 // the order of operations in this method related to the StateListener below, please
                 // test that accessibility moves retain focus after accessibility dropping an item.
                 // Accessibility focus must be requested after launcher is back to a normal state
-                mLauncher.getStateManager().addStateListener(new StateListener<LauncherState>() {
-                    @Override
-                    public void onStateTransitionComplete(LauncherState finalState) {
-                        if (finalState == NORMAL) {
-                            cell.performAccessibilityAction(
-                                    AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null);
-                            mLauncher.getStateManager().removeStateListener(this);
-                        }
-                    }
-                });
+                cell.setTag(R.id.perform_a11y_action_on_launcher_state_normal_tag,
+                        AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS);
             }
         }
 
@@ -3578,6 +3584,24 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         @Override
         public void onAnimationEnd(Animator animation) {
             onEndStateTransition();
+        }
+    }
+
+    /**
+     * Recursively check view tag {@link R.id.perform_a11y_action_on_launcher_state_normal_tag} and
+     * call {@link View#performAccessibilityAction(int, Bundle)} on view tree. The tag is cleared
+     * after this call.
+     */
+    private static void performAccessibilityActionOnViewTree(View view) {
+        Object tag = view.getTag(R.id.perform_a11y_action_on_launcher_state_normal_tag);
+        if (tag instanceof Integer) {
+            view.performAccessibilityAction((int) tag, null);
+            view.setTag(R.id.perform_a11y_action_on_launcher_state_normal_tag, null);
+        }
+        if (view instanceof ViewGroup viewgroup) {
+            for (int i = 0; i < viewgroup.getChildCount(); i++) {
+                performAccessibilityActionOnViewTree(viewgroup.getChildAt(i));
+            }
         }
     }
 }
