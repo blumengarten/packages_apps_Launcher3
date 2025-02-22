@@ -197,8 +197,7 @@ public class KeyboardQuickSwitchTaskView extends ConstraintLayout {
 
 
         final boolean isLeftRightSplit = !splitBounds.appsStackedVertically;
-        final float leftOrTopTaskPercent = isLeftRightSplit
-                ? splitBounds.leftTaskPercent : splitBounds.topTaskPercent;
+        final float leftOrTopTaskPercent = splitBounds.getLeftTopTaskPercent();
 
         ConstraintLayout.LayoutParams leftTopParams = (ConstraintLayout.LayoutParams)
                 mThumbnailView1.getLayoutParams();

@@ -98,7 +98,7 @@ class GroupTaskTest {
     @Test
     fun testGroupTask_differentType_isNotEqual() {
         val task1 = SingleTask(createTask(1))
-        val task2 = DesktopTask(listOf(createTask(1)))
+        val task2 = DesktopTask(deskId = 0, listOf(createTask(1)))
         assertThat(task1).isNotEqualTo(task2)
     }
 

@@ -152,6 +152,20 @@ constructor(
         }
     }
 
+    /**
+     * Returns the ID of the active desk (if any) on the display whose ID is [displayId], or
+     * [INACTIVE_DESK_ID] if no desk is currently active or the multiple desks feature is disabled.
+     */
+    fun getActiveDeskId(displayId: Int): Int {
+        if (!DesktopModeStatus.enableMultipleDesktops(context)) {
+            // When the multiple desks feature is disabled, callers should not rely on the concept
+            // of a desk ID.
+            return INACTIVE_DESK_ID
+        }
+
+        return getDisplayDeskConfig(displayId)?.activeDeskId ?: INACTIVE_DESK_ID
+    }
+
     /** Returns whether a desk is currently active on the display with the given [displayId]. */
     fun isInDesktopMode(displayId: Int): Boolean {
         if (!DesktopModeStatus.enableMultipleDesktops(context)) {
@@ -615,6 +629,6 @@ constructor(
         private const val TAG = "DesktopVisController"
         private const val DEBUG = false
 
-        private const val INACTIVE_DESK_ID = -1
+        public const val INACTIVE_DESK_ID = -1
     }
 }

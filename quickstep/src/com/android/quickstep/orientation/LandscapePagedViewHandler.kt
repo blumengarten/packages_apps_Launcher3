@@ -285,11 +285,7 @@ open class LandscapePagedViewHandler : RecentsPagedOrientationHandler {
                 translationY = snapshotParams.topMargin.toFloat()
             } else {
                 val topLeftTaskPlusDividerPercent =
-                    if (splitBounds.appsStackedVertically) {
-                        splitBounds.topTaskPercent + splitBounds.dividerHeightPercent
-                    } else {
-                        splitBounds.leftTaskPercent + splitBounds.dividerWidthPercent
-                    }
+                    splitBounds.leftTopTaskPercent + splitBounds.dividerPercent
                 translationY =
                     snapshotParams.topMargin +
                         (taskViewHeight - snapshotParams.topMargin) * topLeftTaskPlusDividerPercent
@@ -440,15 +436,8 @@ open class LandscapePagedViewHandler : RecentsPagedOrientationHandler {
         splitInfo: SplitBounds,
         desiredStagePosition: Int
     ) {
-        val topLeftTaskPercent: Float
-        val dividerBarPercent: Float
-        if (splitInfo.appsStackedVertically) {
-            topLeftTaskPercent = splitInfo.topTaskPercent
-            dividerBarPercent = splitInfo.dividerHeightPercent
-        } else {
-            topLeftTaskPercent = splitInfo.leftTaskPercent
-            dividerBarPercent = splitInfo.dividerWidthPercent
-        }
+        val topLeftTaskPercent = splitInfo.leftTopTaskPercent
+        val dividerBarPercent = splitInfo.dividerPercent
 
         if (desiredStagePosition == STAGE_POSITION_TOP_OR_LEFT) {
             outRect.bottom = outRect.top + (outRect.height() * topLeftTaskPercent).toInt()
@@ -510,12 +499,7 @@ open class LandscapePagedViewHandler : RecentsPagedOrientationHandler {
         val totalThumbnailHeight = parentHeight - spaceAboveSnapshot
         val dividerBar = getDividerBarSize(totalThumbnailHeight, splitBoundsConfig)
 
-        val taskPercent =
-            if (splitBoundsConfig.appsStackedVertically) {
-                splitBoundsConfig.topTaskPercent
-            } else {
-                splitBoundsConfig.leftTaskPercent
-            }
+        val taskPercent = splitBoundsConfig.leftTopTaskPercent
         val firstTaskViewSize = Point(parentWidth, (totalThumbnailHeight * taskPercent).toInt())
         val secondTaskViewSize =
             Point(parentWidth, totalThumbnailHeight - firstTaskViewSize.y - dividerBar)
@@ -715,11 +699,7 @@ open class LandscapePagedViewHandler : RecentsPagedOrientationHandler {
      * @return The divider size for the group task view.
      */
     protected fun getDividerBarSize(totalThumbnailHeight: Int, splitConfig: SplitBounds): Int {
-        return Math.round(
-            totalThumbnailHeight *
-                if (splitConfig.appsStackedVertically) splitConfig.dividerHeightPercent
-                else splitConfig.dividerWidthPercent
-        )
+        return Math.round(totalThumbnailHeight * splitConfig.dividerPercent)
     }
 
     /**

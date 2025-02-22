@@ -21,6 +21,7 @@ import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.platform.test.annotations.EnableFlags
 import android.view.Surface
+import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.launcher3.Flags
 import com.android.quickstep.recents.ui.viewmodel.TaskData
@@ -43,6 +44,7 @@ class TaskUiStateMapperTest {
                 taskData = null,
                 isLiveTile = false,
                 hasHeader = false,
+                clickCloseListener = null,
             )
         assertThat(result).isEqualTo(TaskThumbnailUiState.Uninitialized)
     }
@@ -57,6 +59,7 @@ class TaskUiStateMapperTest {
                     taskData = input,
                     isLiveTile = true,
                     hasHeader = false,
+                    clickCloseListener = null,
                 )
             assertThat(result).isEqualTo(LiveTile.WithoutHeader)
         }
@@ -72,14 +75,18 @@ class TaskUiStateMapperTest {
                 TASK_DATA.copy(isLocked = true),
                 TASK_DATA.copy(title = null),
             )
+        val closeCallback = View.OnClickListener {}
         val expected =
-            LiveTile.WithHeader(header = ThumbnailHeader(TASK_ICON, TASK_TITLE_DESCRIPTION))
+            LiveTile.WithHeader(
+                header = ThumbnailHeader(TASK_ICON, TASK_TITLE_DESCRIPTION, closeCallback)
+            )
         inputs.forEach { taskData ->
             val result =
                 TaskUiStateMapper.toTaskThumbnailUiState(
                     taskData = taskData,
                     isLiveTile = true,
                     hasHeader = true,
+                    clickCloseListener = closeCallback,
                 )
             assertThat(result).isEqualTo(expected)
         }
@@ -101,6 +108,7 @@ class TaskUiStateMapperTest {
                     taskData = taskData,
                     isLiveTile = true,
                     hasHeader = true,
+                    clickCloseListener = {},
                 )
             assertThat(result).isEqualTo(LiveTile.WithoutHeader)
         }
@@ -113,6 +121,7 @@ class TaskUiStateMapperTest {
                 taskData = TASK_DATA,
                 isLiveTile = false,
                 hasHeader = false,
+                clickCloseListener = null,
             )
 
         val expected =
@@ -133,6 +142,7 @@ class TaskUiStateMapperTest {
     @Test
     fun taskData_isStaticTile_withHeader_returns_SnapshotSplashWithHeader() {
         val inputs = listOf(TASK_DATA, TASK_DATA.copy(title = null))
+        val closeCallback = View.OnClickListener {}
         val expected =
             TaskThumbnailUiState.SnapshotSplash(
                 snapshot =
@@ -140,7 +150,7 @@ class TaskUiStateMapperTest {
                         backgroundColor = TASK_BACKGROUND_COLOR,
                         bitmap = TASK_THUMBNAIL,
                         thumbnailRotation = Surface.ROTATION_0,
-                        header = ThumbnailHeader(TASK_ICON, TASK_TITLE_DESCRIPTION),
+                        header = ThumbnailHeader(TASK_ICON, TASK_TITLE_DESCRIPTION, closeCallback),
                     ),
                 splash = TASK_ICON,
             )
@@ -150,6 +160,7 @@ class TaskUiStateMapperTest {
                     taskData = taskData,
                     isLiveTile = false,
                     hasHeader = true,
+                    clickCloseListener = closeCallback,
                 )
             assertThat(result).isEqualTo(expected)
         }
@@ -176,6 +187,7 @@ class TaskUiStateMapperTest {
                     taskData = taskData,
                     isLiveTile = false,
                     hasHeader = true,
+                    clickCloseListener = {},
                 )
 
             assertThat(result).isInstanceOf(TaskThumbnailUiState.SnapshotSplash::class.java)
@@ -191,6 +203,7 @@ class TaskUiStateMapperTest {
                 taskData = TASK_DATA.copy(thumbnailData = null),
                 isLiveTile = false,
                 hasHeader = false,
+                clickCloseListener = null,
             )
 
         val expected = TaskThumbnailUiState.BackgroundOnly(TASK_BACKGROUND_COLOR)
@@ -204,6 +217,7 @@ class TaskUiStateMapperTest {
                 taskData = TASK_DATA.copy(isLocked = true),
                 isLiveTile = false,
                 hasHeader = false,
+                clickCloseListener = null,
             )
 
         val expected = TaskThumbnailUiState.BackgroundOnly(TASK_BACKGROUND_COLOR)
@@ -212,6 +226,7 @@ class TaskUiStateMapperTest {
 
     private companion object {
         const val TASK_TITLE_DESCRIPTION = "Title Description 1"
+        var TASK_ID = 1
         val TASK_ICON = ShapeDrawable()
         val TASK_THUMBNAIL = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         val TASK_THUMBNAIL_DATA =
@@ -219,7 +234,7 @@ class TaskUiStateMapperTest {
         val TASK_BACKGROUND_COLOR = Color.rgb(1, 2, 3)
         val TASK_DATA =
             TaskData.Data(
-                1,
+                TASK_ID,
                 title = "Task 1",
                 titleDescription = TASK_TITLE_DESCRIPTION,
                 icon = TASK_ICON,

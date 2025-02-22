@@ -676,11 +676,11 @@ public abstract class RecentsView<
                     MAIN_EXECUTOR,
                     apkRemoved -> {
                         if (apkRemoved) {
-                            dismissTask(taskId);
+                            dismissTask(taskId, /*animate=*/true, /*removeTask=*/false);
                         } else {
                             mModel.isTaskRemoved(taskKey.id, taskRemoved -> {
                                 if (taskRemoved) {
-                                    dismissTask(taskId);
+                                    dismissTask(taskId, /*animate=*/true, /*removeTask=*/false);
                                 }
                             }, RecentsFilterState.getFilter(mFilterState.getPackageNameToFilter()));
                         }
@@ -3048,8 +3048,12 @@ public abstract class RecentsView<
             // Add an empty view for now until the task plan is loaded and applied
             final TaskView taskView;
             if (needDesktopTask) {
+                final int activeDeskId =
+                        DesktopVisibilityController.INSTANCE.get(mContext).getActiveDeskId(
+                                mContainer.getDisplay().getDisplayId());
                 taskView = getTaskViewFromPool(TaskViewType.DESKTOP);
-                ((DesktopTaskView) taskView).bind(new DesktopTask(Arrays.asList(runningTasks)),
+                ((DesktopTaskView) taskView).bind(
+                        new DesktopTask(activeDeskId, Arrays.asList(runningTasks)),
                         mOrientationState, mTaskOverlayFactory);
             } else if (needGroupTaskView) {
                 taskView = getTaskViewFromPool(TaskViewType.GROUPED);
@@ -4627,17 +4631,27 @@ public abstract class RecentsView<
     }
 
     @UiThread
-    private void dismissTask(int taskId) {
+    public void dismissTask(int taskId, boolean animate, boolean removeTask) {
         TaskView taskView = getTaskViewByTaskId(taskId);
         if (taskView == null) {
             Log.d(TAG, "dismissTask: " + taskId + ",  no associated TaskView");
             return;
         }
         Log.d(TAG, "dismissTask: " + taskId);
-        dismissTask(taskView, true /* animate */, false /* removeTask */);
+
+        if (enableDesktopExplodedView() && taskView instanceof  DesktopTaskView desktopTaskView) {
+            desktopTaskView.removeTaskFromExplodedView(taskId, animate);
+
+            if (removeTask) {
+                ActivityManagerWrapper.getInstance().removeTask(taskId);
+            }
+        } else {
+            dismissTaskView(taskView, animate, removeTask);
+        }
     }
 
-    public void dismissTask(TaskView taskView, boolean animateTaskView, boolean removeTask) {
+    /** Dismisses the entire [taskView]. */
+    public void dismissTaskView(TaskView taskView, boolean animateTaskView, boolean removeTask) {
         PendingAnimation pa = new PendingAnimation(DISMISS_TASK_DURATION);
         createTaskDismissAnimation(pa, taskView, animateTaskView, removeTask, DISMISS_TASK_DURATION,
                 false /* dismissingForSplitSelection*/);
@@ -4653,7 +4667,7 @@ public abstract class RecentsView<
     private void dismissCurrentTask() {
         TaskView taskView = getNextPageTaskView();
         if (taskView != null) {
-            dismissTask(taskView, true /*animateTaskView*/, true /*removeTask*/);
+            dismissTaskView(taskView, true /*animateTaskView*/, true /*removeTask*/);
         }
     }
 
