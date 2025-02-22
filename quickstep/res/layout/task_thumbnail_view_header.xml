@@ -18,6 +18,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:id="@+id/task_thumbnail_view_header"
     android:background="@drawable/task_thumbnail_header_bg">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -61,6 +62,7 @@
             android:layout_marginStart="@dimen/task_thumbnail_header_margin_between_views"
             android:src="@drawable/task_header_close_button"
             android:tint="@android:color/darker_gray"
+            android:background="@null"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"

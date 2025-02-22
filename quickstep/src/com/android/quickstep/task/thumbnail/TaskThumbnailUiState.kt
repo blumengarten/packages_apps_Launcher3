@@ -19,6 +19,7 @@ package com.android.quickstep.task.thumbnail
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.view.Surface
+import android.view.View.OnClickListener
 import androidx.annotation.ColorInt
 
 sealed class TaskThumbnailUiState {
@@ -54,5 +55,9 @@ sealed class TaskThumbnailUiState {
         ) : Snapshot()
     }
 
-    data class ThumbnailHeader(val icon: Drawable, val title: String)
+    data class ThumbnailHeader(
+        val icon: Drawable,
+        val title: String,
+        val clickCloseListener: OnClickListener,
+    )
 }

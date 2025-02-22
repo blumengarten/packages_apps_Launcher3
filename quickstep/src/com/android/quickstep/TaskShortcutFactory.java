@@ -312,7 +312,7 @@ public interface TaskShortcutFactory {
             RecentsView<?, ?> recentsView = taskView.getRecentsView();
             if (recentsView != null) {
                 dismissTaskMenuView();
-                recentsView.dismissTask(taskView, true, true);
+                recentsView.dismissTaskView(taskView, true, true);
                 mTarget.getStatsLogManager().logger().withItemInfo(mTaskContainer.getItemInfo())
                         .log(LAUNCHER_SYSTEM_SHORTCUT_CLOSE_APP_TAP);
             }

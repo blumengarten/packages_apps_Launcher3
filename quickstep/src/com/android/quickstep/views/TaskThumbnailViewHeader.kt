@@ -19,6 +19,7 @@ package com.android.quickstep.views
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.FrameLayout
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import com.android.launcher3.R
@@ -30,9 +31,11 @@ constructor(context: Context, attrs: AttributeSet? = null) : FrameLayout(context
 
     private val headerTitleView: TextView by lazy { findViewById(R.id.header_app_title) }
     private val headerIconView: ImageView by lazy { findViewById(R.id.header_app_icon) }
+    private val headerCloseButton: ImageButton by lazy { findViewById(R.id.header_close_button) }
 
     fun setHeader(header: ThumbnailHeader) {
         headerTitleView.setText(header.title)
         headerIconView.setImageDrawable(header.icon)
+        headerCloseButton.setOnClickListener(header.clickCloseListener)
     }
 }

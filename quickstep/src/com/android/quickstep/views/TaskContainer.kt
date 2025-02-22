@@ -19,6 +19,7 @@ package com.android.quickstep.views
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.view.View
+import android.view.View.OnClickListener
 import com.android.launcher3.Flags.enableRefactorTaskThumbnail
 import com.android.launcher3.model.data.TaskViewItemInfo
 import com.android.launcher3.util.SplitConfigurationOptions
@@ -127,9 +128,19 @@ class TaskContainer(
         overlay.addChildForAccessibility(outChildren)
     }
 
-    fun setState(state: TaskData?, liveTile: Boolean, hasHeader: Boolean) {
+    fun setState(
+        state: TaskData?,
+        liveTile: Boolean,
+        hasHeader: Boolean,
+        clickCloseListener: OnClickListener?,
+    ) {
         thumbnailView.setState(
-            TaskUiStateMapper.toTaskThumbnailUiState(state, liveTile, hasHeader),
+            TaskUiStateMapper.toTaskThumbnailUiState(
+                state,
+                liveTile,
+                hasHeader,
+                clickCloseListener,
+            ),
             state?.taskId,
         )
         thumbnailData = if (state is TaskData.Data) state.thumbnailData else null
