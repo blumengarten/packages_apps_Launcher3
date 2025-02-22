@@ -64,7 +64,7 @@ class TasksRepositoryTest {
                     /* snapPosition = */ SNAP_TO_2_50_50,
                 ),
             ),
-            DesktopTask(tasks.subList(3, 6)),
+            DesktopTask(deskId = 0, tasks.subList(3, 6)),
         )
     private val recentsModel = FakeRecentTasksDataSource()
     private val taskThumbnailDataSource = FakeTaskThumbnailDataSource()

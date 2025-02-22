@@ -332,7 +332,7 @@ class TaskbarOverflowTest {
             (0..<tasksToAdd).map {
                 Task(Task.TaskKey(it, 0, Intent(), ComponentName("", ""), 0, 2000))
             }
-        recentsModel.updateRecentTasks(listOf(DesktopTask(tasks)))
+        recentsModel.updateRecentTasks(listOf(DesktopTask(deskId = 0, tasks)))
         desktopTaskListener?.onTasksVisibilityChanged(
             context.virtualDisplay.display.displayId,
             tasksToAdd,
