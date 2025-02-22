@@ -39,8 +39,10 @@ object LauncherComponentProvider {
 
         // Create a new component
         return Holder(
-                DaggerLauncherAppComponent.builder().appContext(app).build()
-                    as LauncherAppComponent,
+                DaggerLauncherAppComponent.builder()
+                    .appContext(app)
+                    .setSafeModeEnabled(true)
+                    .build() as LauncherAppComponent,
                 existingFilter,
             )
             .apply { inflater.filter = this }

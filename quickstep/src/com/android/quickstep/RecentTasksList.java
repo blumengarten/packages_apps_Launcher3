@@ -21,7 +21,7 @@ import static android.content.Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS;
 import static com.android.launcher3.Flags.enableSeparateExternalDisplayTasks;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 import static com.android.quickstep.util.SplitScreenUtils.convertShellSplitBoundsToLauncher;
-import static com.android.wm.shell.shared.GroupedTaskInfo.TYPE_FREEFORM;
+import static com.android.wm.shell.shared.GroupedTaskInfo.TYPE_DESK;
 import static com.android.wm.shell.shared.GroupedTaskInfo.TYPE_SPLIT;
 
 import android.app.ActivityManager.RunningTaskInfo;
@@ -353,7 +353,7 @@ public class RecentTasksList {
 
         int numVisibleTasks = 0;
         for (GroupedTaskInfo rawTask : rawTasks) {
-            if (rawTask.isBaseType(TYPE_FREEFORM)) {
+            if (rawTask.isBaseType(TYPE_DESK)) {
                 // TYPE_FREEFORM tasks is only created when desktop mode can be entered,
                 // leftover TYPE_FREEFORM tasks created when flag was on should be ignored.
                 if (DesktopModeStatus.canEnterDesktopMode(mContext)) {

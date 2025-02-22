@@ -46,12 +46,12 @@
     <string name="widget_accessible_dims_format" msgid="3640149169885301790">"šířka %1$d, výška %2$d"</string>
     <string name="widget_preview_context_description" msgid="9045841361655787574">"<xliff:g id="WIDGET_NAME">%1$s</xliff:g> widget"</string>
     <string name="widget_preview_name_and_dims_content_description" msgid="8489038126122831595">"Widget <xliff:g id="WIDGET_NAME">%1$s</xliff:g>, šířka %2$d, výška %3$d"</string>
-    <string name="add_item_request_drag_hint" msgid="8730547755622776606">"Pokud chcete widgetem pohybovat po ploše, podržte ho"</string>
+    <string name="add_item_request_drag_hint" msgid="8730547755622776606">"Pokud chcete widgetem pohybovat po ploše, podržte ho."</string>
     <string name="add_to_home_screen" msgid="9168649446635919791">"Přidat na plochu"</string>
     <string name="added_to_home_screen_accessibility_text" msgid="4451545765448884415">"Widget <xliff:g id="WIDGET_NAME">%1$s</xliff:g> byl přidán na plochu"</string>
     <string name="suggested_widgets_header_title" msgid="1844314680798145222">"Návrhy"</string>
     <string name="productivity_widget_recommendation_category_label" msgid="3811812719618323750">"Nejdůležitější aplikace"</string>
-    <string name="news_widget_recommendation_category_label" msgid="6756167867113741310">"Zprávy a časopisy"</string>
+    <string name="news_widget_recommendation_category_label" msgid="6756167867113741310">"Noviny a časopisy"</string>
     <string name="entertainment_widget_recommendation_category_label" msgid="3973107268630717874">"Zábava"</string>
     <string name="social_widget_recommendation_category_label" msgid="689147679536384717">"Sociální sítě"</string>
     <string name="others_widget_recommendation_category_label" msgid="5555987036267226245">"Návrhy pro vás"</string>

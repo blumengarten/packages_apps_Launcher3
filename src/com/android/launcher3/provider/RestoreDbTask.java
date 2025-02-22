@@ -538,7 +538,7 @@ public class RestoreDbTask {
         }
 
         logFavoritesTable(controller.getDb(), "launcher db after remap widget ids", null, null);
-        LauncherAppState.INSTANCE.executeIfCreated(app -> app.getModel().forceReload());
+        LauncherAppState.INSTANCE.get(context).getModel().reloadIfActive();
     }
 
     private static void logDatabaseWidgetInfo(ModelDbController controller) {

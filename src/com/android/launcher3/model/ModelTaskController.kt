@@ -77,7 +77,7 @@ class ModelTaskController(
     }
 
     fun bindUpdatedWidgets(dataModel: BgDataModel) {
-        val widgetsByPackageItem = dataModel.widgetsModel.widgetsByPackageItem
+        val widgetsByPackageItem = dataModel.widgetsModel.widgetsByPackageItemForPicker
         val allWidgets = WidgetsListBaseEntriesBuilder(app.context).build(widgetsByPackageItem)
 
         val defaultWidgetsFilter = dataModel.widgetsModel.defaultWidgetsFilter

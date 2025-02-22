@@ -79,7 +79,7 @@ public final class WidgetsPredictionUpdateTask implements ModelUpdateTask {
         // Widgets (excluding shortcuts & already added widgets) that belong to apps eligible for
         // being in predictions.
         Map<ComponentKey, WidgetItem> allEligibleWidgets =
-                dataModel.widgetsModel.getWidgetsByComponentKey()
+                dataModel.widgetsModel.getWidgetsByComponentKeyForPicker()
                         .entrySet()
                         .stream()
                         .filter(entry -> entry.getValue().widgetInfo != null
@@ -137,7 +137,7 @@ public final class WidgetsPredictionUpdateTask implements ModelUpdateTask {
         List<ItemInfo> items;
         if (enableCategorizedWidgetSuggestions()) {
             WidgetRecommendationCategoryProvider categoryProvider =
-                    WidgetRecommendationCategoryProvider.newInstance(context);
+                    new WidgetRecommendationCategoryProvider();
             items = servicePredictedItems.stream()
                     .map(it -> new PendingAddWidgetInfo(it.widgetInfo, CONTAINER_WIDGETS_PREDICTION,
                             categoryProvider.getWidgetRecommendationCategory(context, it)))

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import android.R
 import android.os.Process
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
+import com.android.dx.mockito.inline.extended.ExtendedMockito.spyOn
 import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_FOLDER
@@ -61,11 +62,11 @@ import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runner.RunWith
 import org.junit.runners.model.Statement
+import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
-import org.mockito.kotlin.spy
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -85,6 +86,7 @@ class PreviewItemManagerTest {
 
     @Before
     fun setup() {
+        MockitoAnnotations.initMocks(this)
         modelHelper = LauncherModelHelper()
         context = modelHelper.sandboxContext
         context.initDaggerComponent(DaggerPreviewItemManagerTestComponent.builder())
@@ -93,10 +95,8 @@ class PreviewItemManagerTest {
         }
         folderIcon = FolderIcon(ActivityContextWrapper(context))
 
-        val app = spy(LauncherAppState.getInstance(context))
-        iconCache = spy(app.iconCache)
-        doReturn(iconCache).whenever(app).iconCache
-        context.putObject(LauncherAppState.INSTANCE, app)
+        iconCache = LauncherAppState.INSTANCE[context].iconCache
+        spyOn(iconCache)
         doReturn(null).whenever(iconCache).updateIconInBackground(any(), any())
 
         previewItemManager = PreviewItemManager(folderIcon)

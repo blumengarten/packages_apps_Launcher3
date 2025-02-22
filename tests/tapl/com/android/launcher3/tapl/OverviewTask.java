@@ -125,7 +125,7 @@ public final class OverviewTask {
         return right - left;
     }
 
-    int getTaskCenterX() {
+    public int getTaskCenterX() {
         return mTask.getVisibleCenter().x;
     }
 

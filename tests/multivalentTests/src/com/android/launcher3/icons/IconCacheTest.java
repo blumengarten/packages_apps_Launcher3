@@ -56,7 +56,7 @@ import androidx.annotation.Nullable;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
 
-import com.android.launcher3.InvariantDeviceProfile;
+import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.icons.cache.CachingLogic;
 import com.android.launcher3.icons.cache.IconCacheUpdateHandler;
 import com.android.launcher3.icons.cache.LauncherActivityCachingLogic;
@@ -69,11 +69,13 @@ import com.android.launcher3.shortcuts.ShortcutKey;
 import com.android.launcher3.util.ApplicationInfoWrapper;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.PackageUserKey;
+import com.android.launcher3.util.SandboxApplication;
 
 import com.google.common.truth.Truth;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -85,20 +87,18 @@ import java.util.Set;
 @RunWith(AndroidJUnit4.class)
 public class IconCacheTest {
 
-    private Context mContext;
+    @Rule public SandboxApplication mContext = new SandboxApplication();
+
     private IconCache mIconCache;
 
     private ComponentName mMyComponent;
 
     @Before
     public void setup() {
-        mContext = getInstrumentation().getTargetContext();
         mMyComponent = new ComponentName(mContext, SettingsActivity.class);
 
         // In memory icon cache
-        mIconCache = new IconCache(mContext,
-                InvariantDeviceProfile.INSTANCE.get(mContext), null,
-                new LauncherIconProvider(mContext));
+        mIconCache = LauncherAppState.getInstance(mContext).getIconCache();
     }
 
     @After

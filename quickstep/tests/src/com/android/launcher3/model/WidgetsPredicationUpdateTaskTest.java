@@ -91,6 +91,7 @@ public final class WidgetsPredicationUpdateTaskTest {
     private AppWidgetProviderInfo mApp4Provider1;
     private AppWidgetProviderInfo mApp4Provider2;
     private AppWidgetProviderInfo mApp5Provider1;
+    private AppWidgetProviderInfo mApp6PinOnlyProvider1;
     private List<AppWidgetProviderInfo> allWidgets;
 
     private FakeBgDataModelCallback mCallback = new FakeBgDataModelCallback();
@@ -117,8 +118,14 @@ public final class WidgetsPredicationUpdateTaskTest {
                 ComponentName.createRelative("app4", ".provider2"));
         mApp5Provider1 = createAppWidgetProviderInfo(
                 ComponentName.createRelative("app5", "provider1"));
+        mApp6PinOnlyProvider1 = createAppWidgetProviderInfo(
+                ComponentName.createRelative("app6", "provider1"),
+                /*hideFromPicker=*/ true
+        );
+
+
         allWidgets = Arrays.asList(mApp1Provider1, mApp1Provider2, mApp2Provider1,
-                mApp4Provider1, mApp4Provider2, mApp5Provider1);
+                mApp4Provider1, mApp4Provider2, mApp5Provider1, mApp6PinOnlyProvider1);
 
         mLauncherApps = mModelHelper.sandboxContext.spyService(LauncherApps.class);
         doAnswer(i -> {
@@ -267,6 +274,32 @@ public final class WidgetsPredicationUpdateTaskTest {
                     mApp2Provider1.provider,
                     // From prediction service, not on workspace, eligible app per filter
                     mApp4Provider2.provider);
+        });
+    }
+
+    @Test
+    public void widgetsRecommendations_excludesWidgetsHiddenForPicker() {
+        runOnExecutorSync(MODEL_EXECUTOR, () -> {
+
+            // Not installed widget - hence eligible
+            AppTarget widget1 = new AppTarget(new AppTargetId("app1"), "app1", "provider1",
+                    mUserHandle);
+            // Provider marked as hidden from picker - hence not eligible
+            AppTarget widget6 = new AppTarget(new AppTargetId("app6"), "app6", "provider1",
+                    mUserHandle);
+
+            mCallback.mRecommendedWidgets = null;
+            mModelHelper.getModel().enqueueModelUpdateTask(
+                    newWidgetsPredicationTask(List.of(widget1, widget6)));
+            runOnExecutorSync(MAIN_EXECUTOR, () -> { });
+
+            // Only widget 1 (and no widget 6 as its meant to be hidden from picker).
+            List<PendingAddWidgetInfo> recommendedWidgets = mCallback.mRecommendedWidgets.items
+                    .stream()
+                    .map(itemInfo -> (PendingAddWidgetInfo) itemInfo)
+                    .collect(Collectors.toList());
+            assertThat(recommendedWidgets).hasSize(1);
+            assertThat(recommendedWidgets.get(0).componentName.getPackageName()).isEqualTo("app1");
         });
     }
 

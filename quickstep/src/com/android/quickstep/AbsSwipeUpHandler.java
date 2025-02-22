@@ -223,6 +223,7 @@ public abstract class AbsSwipeUpHandler<
         mRecentsView = null;
         mContainer = null;
         mStateCallback.clearState(STATE_LAUNCHER_PRESENT);
+        mRecentsAnimationStartCallbacks.clear();
     };
 
     private static int FLAG_COUNT = 0;

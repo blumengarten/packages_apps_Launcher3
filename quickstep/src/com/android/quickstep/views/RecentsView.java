@@ -38,6 +38,7 @@ import static com.android.launcher3.BaseActivity.STATE_HANDLER_INVISIBILITY_FLAG
 import static com.android.launcher3.Flags.enableAdditionalHomeAnimations;
 import static com.android.launcher3.Flags.enableDesktopExplodedView;
 import static com.android.launcher3.Flags.enableDesktopTaskAlphaAnimation;
+import static com.android.launcher3.Flags.enableExpressiveDismissTaskMotion;
 import static com.android.launcher3.Flags.enableGridOnlyOverview;
 import static com.android.launcher3.Flags.enableLargeDesktopWindowingTile;
 import static com.android.launcher3.Flags.enableRefactorTaskThumbnail;
@@ -72,6 +73,7 @@ import static com.android.quickstep.views.OverviewActionsView.HIDDEN_NON_ZERO_RO
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_NO_RECENTS;
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_NO_TASKS;
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_SPLIT_SELECT_ACTIVE;
+import static com.android.quickstep.views.RecentsViewUtils.DESK_EXPLODE_PROGRESS;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -2910,13 +2912,15 @@ public abstract class RecentsView<
         }
 
         if (enableDesktopExplodedView()) {
+            if (animatorSet == null) {
+                mUtils.setDeskExplodeProgress(1);
+            } else {
+                animatorSet.play(
+                        ObjectAnimator.ofFloat(this, DESK_EXPLODE_PROGRESS, 1));
+            }
+
             for (TaskView taskView : getTaskViews()) {
                 if (taskView instanceof DesktopTaskView desktopTaskView) {
-                    if (animatorSet == null) {
-                        desktopTaskView.setExplodeProgress(1.0f);
-                    } else {
-                        animatorSet.play(desktopTaskView.startWindowExplodeAnimation());
-                    }
                     desktopTaskView.setRemoteTargetHandles(remoteTargetHandles);
                 }
             }
@@ -3854,7 +3858,8 @@ public abstract class RecentsView<
                 newClearAllShortTotalWidthTranslation = expectedFirstTaskStart - firstTaskStart;
             }
         }
-        if (lastGridTaskView != null && lastGridTaskView.isVisibleToUser()) {
+        if (lastGridTaskView != null && (lastGridTaskView.isVisibleToUser() || (
+                enableExpressiveDismissTaskMotion() && lastGridTaskView == dismissedTaskView))) {
             // After dismissal, animate translation of the remaining tasks to fill any gap left
             // between the end of the grid and the clear all button. Only animate if the clear
             // all button is visible or would become visible after dismissal.
@@ -6243,8 +6248,8 @@ public abstract class RecentsView<
         int addDesktopButtonIndex = indexOfChild(mAddDesktopButton);
         if (addDesktopButtonIndex != -1 && addDesktopButtonIndex < outPageScrolls.length) {
             outPageScrolls[addDesktopButtonIndex] =
-                    newPageScrolls[addDesktopButtonIndex] + Math.round(
-                            mAddDesktopButton.getGridTranslationX());
+                    newPageScrolls[addDesktopButtonIndex] + mAddDesktopButton.getScrollAdjustment(
+                            showAsGrid);
         }
 
         int lastTaskScroll = getLastTaskScroll(clearAllScroll, clearAllWidth);

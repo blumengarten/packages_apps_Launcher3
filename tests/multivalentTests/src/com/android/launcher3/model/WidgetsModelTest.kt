@@ -119,6 +119,11 @@ class WidgetsModelTest {
                     // A widget in different package (none of that app's widgets are in widget
                     // sections xml)
                     createAppWidgetProviderInfo(AppBTestWidgetComponent),
+                    // A widget in different app that is meant to be hidden from picker
+                    createAppWidgetProviderInfo(
+                        AppCPinOnlyTestWidgetComponent,
+                        /*hideFromPicker=*/ true,
+                    ),
                 )
             )
 
@@ -129,12 +134,13 @@ class WidgetsModelTest {
     }
 
     @Test
-    fun widgetsByPackage_treatsWidgetSectionsAsSeparatePackageItems() {
+    fun widgetsByPackageForPicker_treatsWidgetSectionsAsSeparatePackageItems() {
         loadWidgets()
 
-        val packages: Map<PackageItemInfo, List<WidgetItem>> = underTest.widgetsByPackageItem
+        val packages: Map<PackageItemInfo, List<WidgetItem>> =
+            underTest.widgetsByPackageItemForPicker
 
-        // expect 3 package items
+        // expect 3 package items (no app C as its widget is hidden from picker)
         // one for the custom section with widget from appA
         // one for package section for second widget from appA (that wasn't listed in xml)
         // and one for package section for appB
@@ -167,6 +173,13 @@ class WidgetsModelTest {
         assertThat(appBPackageSection).hasSize(1)
         val widgetsInAppBSection = appBPackageSection.entries.first().value
         assertThat(widgetsInAppBSection).hasSize(1)
+
+        // No App C's package section - as the only widget hosted by it is hidden in picker
+        val appCPackageSection =
+            packageSections.filter {
+                it.key.packageName == AppCPinOnlyTestWidgetComponent.packageName
+            }
+        assertThat(appCPackageSection).isEmpty()
     }
 
     @Test
@@ -175,7 +188,29 @@ class WidgetsModelTest {
 
         val widgetsByComponentKey: Map<ComponentKey, WidgetItem> = underTest.widgetsByComponentKey
 
+        // Has all widgets including ones not visible in picker
+        assertThat(widgetsByComponentKey).hasSize(4)
+        widgetsByComponentKey.forEach { entry ->
+            assertThat(entry.key).isEqualTo(entry.value as ComponentKey)
+        }
+    }
+
+    @Test
+    fun widgetComponentMapForPicker_excludesWidgetsHiddenInPicker() {
+        loadWidgets()
+
+        val widgetsByComponentKey: Map<ComponentKey, WidgetItem> =
+            underTest.widgetsByComponentKeyForPicker
+
+        // Has all widgets excluding the appC's widget.
         assertThat(widgetsByComponentKey).hasSize(3)
+        assertThat(
+                widgetsByComponentKey.filter {
+                    it.key.componentName == AppCPinOnlyTestWidgetComponent
+                }
+            )
+            .isEmpty()
+        // widgets mapped correctly
         widgetsByComponentKey.forEach { entry ->
             assertThat(entry.key).isEqualTo(entry.value as ComponentKey)
         }
@@ -189,7 +224,7 @@ class WidgetsModelTest {
     }
 
     @Test
-    fun getWidgetsByPackageItem_returnsACopyOfMap() {
+    fun getWidgetsByPackageItemForPicker_returnsACopyOfMap() {
         loadWidgets()
 
         val latch = CountDownLatch(1)
@@ -198,8 +233,8 @@ class WidgetsModelTest {
 
             // each "widgetsByPackageItem" read returns a different copy of the map held internally.
             // Modifying one shouldn't impact another.
-            for ((_, _) in underTest.widgetsByPackageItem.entries) {
-                underTest.widgetsByPackageItem.clear()
+            for ((_, _) in underTest.widgetsByPackageItemForPicker.entries) {
+                underTest.widgetsByPackageItemForPicker.clear()
                 if (update) { // trigger update
                     update = false
                     // Similarly, model could update its code independently while a client is
@@ -255,6 +290,9 @@ class WidgetsModelTest {
 
         private val AppBTestWidgetComponent: ComponentName =
             ComponentName.createRelative("com.test.package", "TestProvider")
+
+        private val AppCPinOnlyTestWidgetComponent: ComponentName =
+            ComponentName.createRelative("com.testC.package", "PinOnlyTestProvider")
 
         private const val LOAD_WIDGETS_TIMEOUT_SECONDS = 2L
     }

@@ -70,6 +70,7 @@ public class WidgetsModel {
     private final Map<PackageItemInfo, List<WidgetItem>> mWidgetsByPackageItem = new HashMap<>();
     @Nullable private Predicate<WidgetItem> mDefaultWidgetsFilter = null;
     @Nullable private Predicate<WidgetItem> mPredictedWidgetsFilter = null;
+    @Nullable private WidgetValidityCheckForPicker mWidgetValidityCheckForPicker = null;
 
     /**
      * Returns all widgets keyed by their component key.
@@ -87,13 +88,44 @@ public class WidgetsModel {
     }
 
     /**
-     * Returns widgets grouped by the package item that they should belong to.
+     * Returns widgets (eligible for display in picker) keyed by their component key.
      */
-    public synchronized Map<PackageItemInfo, List<WidgetItem>> getWidgetsByPackageItem() {
-        if (!WIDGETS_ENABLED) {
+    public synchronized Map<ComponentKey, WidgetItem> getWidgetsByComponentKeyForPicker() {
+        if (!WIDGETS_ENABLED || mWidgetValidityCheckForPicker == null) {
             return Collections.emptyMap();
         }
-        return new HashMap<>(mWidgetsByPackageItem);
+
+        return mWidgetsByPackageItem.values().stream()
+                .flatMap(Collection::stream).distinct()
+                .filter(widgetItem -> mWidgetValidityCheckForPicker.test(widgetItem))
+                .collect(Collectors.toMap(
+                        widget -> new ComponentKey(widget.componentName, widget.user),
+                        Function.identity()
+                ));
+    }
+
+    /**
+     * Returns widgets (displayable in the widget picker) grouped by the package item that
+     * they should belong to.
+     */
+    public synchronized Map<PackageItemInfo, List<WidgetItem>> getWidgetsByPackageItemForPicker() {
+        if (!WIDGETS_ENABLED || mWidgetValidityCheckForPicker == null) {
+            return Collections.emptyMap();
+        }
+
+        return mWidgetsByPackageItem.entrySet().stream()
+                .collect(
+                        Collectors.toMap(
+                                Map.Entry::getKey,
+                                entry -> entry.getValue().stream()
+                                        .filter(widgetItem ->
+                                                mWidgetValidityCheckForPicker.test(widgetItem))
+                                        .collect(Collectors.toList())
+                        )
+                )
+                .entrySet().stream()
+                .filter(entry -> !entry.getValue().isEmpty())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     /**
@@ -181,6 +213,9 @@ public class WidgetsModel {
             Log.d(TAG, "addWidgetsAndShortcuts, widgetsShortcuts#=" + rawWidgetsShortcuts.size());
         }
 
+        // Refresh the validity checker with latest app state.
+        mWidgetValidityCheckForPicker = new WidgetValidityCheckForPicker(app);
+
         // Temporary cache for {@link PackageItemInfos} to avoid having to go through
         // {@link mPackageItemInfos} to locate the key to be used for {@link #mWidgetsList}
         PackageItemInfoCache packageItemInfoCache = new PackageItemInfoCache();
@@ -195,7 +230,6 @@ public class WidgetsModel {
 
         // add and update.
         mWidgetsByPackageItem.putAll(rawWidgetsShortcuts.stream()
-                .filter(new WidgetValidityCheck(app))
                 .filter(new WidgetFlagCheck())
                 .flatMap(widgetItem -> getPackageUserKeys(app.getContext(), widgetItem).stream()
                         .map(key -> new Pair<>(packageItemInfoCache.getOrCreate(key), widgetItem)))
@@ -270,12 +304,15 @@ public class WidgetsModel {
         return packageUserKeys;
     }
 
-    private static class WidgetValidityCheck implements Predicate<WidgetItem> {
+    /**
+     * Checks if widgets are eligible for displaying in widget picker / tray.
+     */
+    private static class WidgetValidityCheckForPicker implements Predicate<WidgetItem> {
 
         private final InvariantDeviceProfile mIdp;
         private final AppFilter mAppFilter;
 
-        WidgetValidityCheck(LauncherAppState app) {
+        WidgetValidityCheckForPicker(LauncherAppState app) {
             mIdp = app.getInvariantDeviceProfile();
             mAppFilter = new AppFilter(app.getContext());
         }
@@ -310,6 +347,10 @@ public class WidgetsModel {
         }
     }
 
+    /**
+     * Checks if certain widgets that are available behind flag can be used across all surfaces in
+     * launcher.
+     */
     private static class WidgetFlagCheck implements Predicate<WidgetItem> {
 
         private static final String BUBBLES_SHORTCUT_WIDGET =

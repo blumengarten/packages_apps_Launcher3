@@ -177,8 +177,8 @@ public class RecentTasksListTest {
                 createRecentTaskInfo(4 /* taskId */, DEFAULT_DISPLAY),
                 createRecentTaskInfo(5 /* taskId */, 1 /* displayId */),
                 createRecentTaskInfo(6 /* taskId */, 1 /* displayId */));
-        GroupedTaskInfo recentTaskInfos = GroupedTaskInfo.forFreeformTasks(
-                tasks, Collections.emptySet() /* minimizedTaskIds */);
+        GroupedTaskInfo recentTaskInfos = GroupedTaskInfo.forDeskTasks(
+                0 /* deskId */, tasks, Collections.emptySet() /* minimizedTaskIds */);
         when(mSystemUiProxy.getRecentTasks(anyInt(), anyInt()))
                 .thenReturn(new ArrayList<>(Collections.singletonList(recentTaskInfos)));
 
@@ -207,8 +207,8 @@ public class RecentTasksListTest {
                 createRecentTaskInfo(4 /* taskId */, DEFAULT_DISPLAY),
                 createRecentTaskInfo(5 /* taskId */, 1 /* displayId */),
                 createRecentTaskInfo(6 /* taskId */, 1 /* displayId */));
-        GroupedTaskInfo recentTaskInfos = GroupedTaskInfo.forFreeformTasks(
-                tasks, Collections.emptySet() /* minimizedTaskIds */);
+        GroupedTaskInfo recentTaskInfos = GroupedTaskInfo.forDeskTasks(
+                0 /* deskId */, tasks, Collections.emptySet() /* minimizedTaskIds */);
         when(mSystemUiProxy.getRecentTasks(anyInt(), anyInt()))
                 .thenReturn(new ArrayList<>(Collections.singletonList(recentTaskInfos)));
 
@@ -241,7 +241,8 @@ public class RecentTasksListTest {
                 createRecentTaskInfo(5 /* taskId */, DEFAULT_DISPLAY));
         Set<Integer> minimizedTaskIds =
                 Arrays.stream(new Integer[]{1, 4, 5}).collect(Collectors.toSet());
-        GroupedTaskInfo recentTaskInfos = GroupedTaskInfo.forFreeformTasks(tasks, minimizedTaskIds);
+        GroupedTaskInfo recentTaskInfos = GroupedTaskInfo.forDeskTasks(
+                0 /* deskId */, tasks, minimizedTaskIds);
         when(mSystemUiProxy.getRecentTasks(anyInt(), anyInt()))
                 .thenReturn(new ArrayList<>(Collections.singletonList(recentTaskInfos)));
 

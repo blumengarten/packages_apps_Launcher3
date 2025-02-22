@@ -18,8 +18,12 @@ package com.android.launcher3.dagger;
 
 import android.content.Context;
 
+import androidx.annotation.Nullable;
+
 import com.android.launcher3.InvariantDeviceProfile;
+import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherPrefs;
+import com.android.launcher3.graphics.GridCustomizationsProxy;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.LauncherIcons.IconPool;
 import com.android.launcher3.model.ItemInstallQueue;
@@ -42,6 +46,8 @@ import com.android.launcher3.util.window.WindowManagerProxy;
 import com.android.launcher3.widget.custom.CustomWidgetManager;
 
 import dagger.BindsInstance;
+
+import javax.inject.Named;
 
 /**
  * Launcher base component for Dagger injection.
@@ -74,10 +80,15 @@ public interface LauncherBaseAppComponent {
     LockedUserState getLockedUserState();
     InvariantDeviceProfile getIDP();
     IconPool getIconPool();
+    LauncherAppState getLauncherAppState();
+
+    GridCustomizationsProxy getGridCustomizationsProxy();
 
     /** Builder for LauncherBaseAppComponent. */
     interface Builder {
         @BindsInstance Builder appContext(@ApplicationContext Context context);
+        @BindsInstance Builder iconsDbName(@Nullable @Named("ICONS_DB") String dbFileName);
+        @BindsInstance Builder setSafeModeEnabled(@Named("SAFE_MODE") boolean safeModeEnabled);
         LauncherBaseAppComponent build();
     }
 }

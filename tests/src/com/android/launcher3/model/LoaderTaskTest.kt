@@ -14,6 +14,7 @@ import android.provider.Settings
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.android.dx.mockito.inline.extended.ExtendedMockito
+import com.android.dx.mockito.inline.extended.ExtendedMockito.spyOn
 import com.android.launcher3.Flags
 import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherModel
@@ -67,7 +68,6 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.spy
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
@@ -92,7 +92,6 @@ class LoaderTaskTest {
         )
     private lateinit var mockitoSession: MockitoSession
 
-    @Mock private lateinit var app: LauncherAppState
     @Mock private lateinit var bgAllAppsList: AllAppsList
     @Mock private lateinit var modelDelegate: ModelDelegate
     @Mock private lateinit var launcherBinder: BaseLauncherBinder
@@ -108,6 +107,9 @@ class LoaderTaskTest {
 
     @get:Rule val setFlagsRule = SetFlagsRule()
 
+    private val app: LauncherAppState
+        get() = context.appComponent.launcherAppState
+
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
@@ -118,32 +120,28 @@ class LoaderTaskTest {
                 .strictness(Strictness.LENIENT)
                 .mockStatic(FirstScreenBroadcastHelper::class.java)
                 .startMocking()
-        val idp =
-            context.appComponent.idp.apply {
-                numRows = 5
-                numColumns = 6
-                numDatabaseHotseatIcons = 5
-            }
-        context.putObject(LauncherAppState.INSTANCE, app)
-
         doReturn(TestViewHelpers.findWidgetProvider(false))
             .`when`(context.spyService(AppWidgetManager::class.java))
             .getAppWidgetInfo(any())
-        `when`(app.context).thenReturn(context)
-        `when`(app.model).thenReturn(launcherModel)
 
         `when`(launcherModel.beginLoader(any())).thenReturn(transaction)
-        `when`(app.iconCache).thenReturn(iconCache)
         `when`(launcherModel.modelDbController)
             .thenReturn(FactitiousDbController(context, INSERTION_STATEMENT_FILE))
-        `when`(app.invariantDeviceProfile).thenReturn(idp)
         `when`(launcherBinder.newIdleLock(any())).thenReturn(idleLock)
         `when`(idleLock.awaitLocked(1000)).thenReturn(false)
         `when`(iconCache.getUpdateHandler()).thenReturn(iconCacheUpdateHandler)
         `when`(widgetsFilterDataProvider.getDefaultWidgetsFilter()).thenReturn(Predicate { true })
         context.initDaggerComponent(
-            DaggerLoaderTaskTest_TestComponent.builder().bindUserCache(userCache)
+            DaggerLoaderTaskTest_TestComponent.builder()
+                .bindUserCache(userCache)
+                .bindIconCache(iconCache)
+                .bindLauncherModel(launcherModel)
         )
+        context.appComponent.idp.apply {
+            numRows = 5
+            numColumns = 6
+            numDatabaseHotseatIcons = 5
+        }
         TestUtil.grantWriteSecurePermission()
     }
 
@@ -281,8 +279,8 @@ class LoaderTaskTest {
     @EnableFlags(Flags.FLAG_ENABLE_FIRST_SCREEN_BROADCAST_ARCHIVING_EXTRAS)
     fun `When broadcast flag on and is restore and secure setting off then send new broadcast`() {
         // Given
-        val spyContext = spy(context)
-        `when`(app.context).thenReturn(spyContext)
+        spyOn(context)
+        val spyContext = context
         whenever(
                 FirstScreenBroadcastHelper.createModelsForFirstScreenBroadcast(
                     any(),
@@ -357,8 +355,8 @@ class LoaderTaskTest {
     @EnableFlags(Flags.FLAG_ENABLE_FIRST_SCREEN_BROADCAST_ARCHIVING_EXTRAS)
     fun `When not a restore then installed item broadcast not sent`() {
         // Given
-        val spyContext = spy(context)
-        `when`(app.context).thenReturn(spyContext)
+        spyOn(context)
+        val spyContext = context
         whenever(
                 FirstScreenBroadcastHelper.createModelsForFirstScreenBroadcast(
                     any(),
@@ -398,8 +396,8 @@ class LoaderTaskTest {
     @DisableFlags(Flags.FLAG_ENABLE_FIRST_SCREEN_BROADCAST_ARCHIVING_EXTRAS)
     fun `When broadcast flag off then installed item broadcast not sent`() {
         // Given
-        val spyContext = spy(context)
-        `when`(app.context).thenReturn(spyContext)
+        spyOn(context)
+        val spyContext = context
         whenever(
                 FirstScreenBroadcastHelper.createModelsForFirstScreenBroadcast(
                     any(),
@@ -444,8 +442,8 @@ class LoaderTaskTest {
     @EnableFlags(Flags.FLAG_ENABLE_FIRST_SCREEN_BROADCAST_ARCHIVING_EXTRAS)
     fun `When failsafe secure setting on then installed item broadcast not sent`() {
         // Given
-        val spyContext = spy(context)
-        `when`(app.context).thenReturn(spyContext)
+        spyOn(context)
+        val spyContext = context
         whenever(
                 FirstScreenBroadcastHelper.createModelsForFirstScreenBroadcast(
                     any(),
@@ -643,6 +641,10 @@ class LoaderTaskTest {
         @Component.Builder
         interface Builder : LauncherAppComponent.Builder {
             @BindsInstance fun bindUserCache(userCache: UserCache): Builder
+
+            @BindsInstance fun bindLauncherModel(model: LauncherModel): Builder
+
+            @BindsInstance fun bindIconCache(iconCache: IconCache): Builder
 
             override fun build(): TestComponent
         }
