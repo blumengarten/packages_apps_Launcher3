@@ -30,11 +30,14 @@ import com.android.launcher3.Flags
 class TypefaceUtils {
 
     companion object {
-        const val FONT_FAMILY_HEADLINE_SMALL_EMPHASIZED = "variable-headline-small-emphasized"
-        const val FONT_FAMILY_HEADLINE_LARGE_EMPHASIZED = "variable-headline-large-emphasized"
         const val FONT_FAMILY_BODY_SMALL_BASELINE = "variable-body-small"
         const val FONT_FAMILY_BODY_MEDIUM_BASELINE = "variable-body-medium"
+        const val FONT_FAMILY_BODY_LARGE_BASELINE = "variable-body-large"
         const val FONT_FAMILY_LABEL_LARGE_BASELINE = "variable-label-large"
+        const val FONT_FAMILY_DISPLAY_SMALL_EMPHASIZED = "variable-display-small-emphasized"
+        const val FONT_FAMILY_DISPLAY_MEDIUM_EMPHASIZED = "variable-display-medium-emphasized"
+        const val FONT_FAMILY_HEADLINE_SMALL_EMPHASIZED = "variable-headline-small-emphasized"
+        const val FONT_FAMILY_HEADLINE_LARGE_EMPHASIZED = "variable-headline-large-emphasized"
 
         @JvmStatic
         @JvmOverloads
