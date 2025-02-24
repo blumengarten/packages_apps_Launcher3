@@ -301,7 +301,7 @@ constructor(
     var sysUiStatusNavFlags: Int = 0
         get() =
             if (enableRefactorTaskThumbnail()) field
-            else taskContainers.first().thumbnailViewDeprecated.sysUiStatusNavFlags
+            else firstTaskContainer?.thumbnailViewDeprecated?.sysUiStatusNavFlags ?: 0
         private set
 
     // Various animation progress variables.
