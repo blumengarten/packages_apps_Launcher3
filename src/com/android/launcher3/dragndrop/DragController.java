@@ -521,17 +521,13 @@ public abstract class DragController<T extends ActivityContext>
 
         mDragObject.dragComplete = true;
         if (mIsInPreDrag) {
-            if (dropTarget != null) {
-                dropTarget.onDragExit(mDragObject);
-            }
-            return;
+            mDragObject.cancelled = true;
         }
-
         // Drop onto the target.
         boolean accepted = false;
         if (dropTarget != null) {
             dropTarget.onDragExit(mDragObject);
-            if (dropTarget.acceptDrop(mDragObject)) {
+            if (!mIsInPreDrag && dropTarget.acceptDrop(mDragObject)) {
                 if (flingAnimation != null) {
                     flingAnimation.run();
                 } else {
