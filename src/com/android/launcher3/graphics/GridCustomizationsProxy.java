@@ -24,11 +24,9 @@ import static java.util.Objects.requireNonNullElse;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
-import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder.DeathRecipient;
@@ -297,12 +295,6 @@ public class GridCustomizationsProxy implements ProxyProvider {
 
     @Override
     public Bundle call(@NonNull String method, String arg, Bundle extras) {
-        if (mContext.checkPermission("android.permission.BIND_WALLPAPER",
-                Binder.getCallingPid(), Binder.getCallingUid())
-                != PackageManager.PERMISSION_GRANTED) {
-            return null;
-        }
-
         if (METHOD_GET_PREVIEW.equals(method)) {
             return getPreview(extras);
         } else {
