@@ -113,8 +113,8 @@ class TaskbarUnitTestRule(
                                 object : TaskbarNavButtonCallbacks {},
                                 RecentsDisplayModel.INSTANCE.get(context),
                             ) {
-                            override fun recreateTaskbar() {
-                                super.recreateTaskbar()
+                            override fun recreateTaskbars() {
+                                super.recreateTaskbars()
                                 if (currentActivityContext != null) {
                                     injectControllers()
                                     controllerInjectionCallback.invoke()
@@ -146,7 +146,7 @@ class TaskbarUnitTestRule(
     }
 
     /** Simulates Taskbar recreation lifecycle. */
-    fun recreateTaskbar() = instrumentation.runOnMainSync { taskbarManager.recreateTaskbar() }
+    fun recreateTaskbar() = instrumentation.runOnMainSync { taskbarManager.recreateTaskbars() }
 
     private fun injectControllers() {
         val bubbleControllerTypes =
