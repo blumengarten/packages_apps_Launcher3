@@ -64,6 +64,7 @@ import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.R;
+import com.android.launcher3.RemoveAnimationSettingsTracker;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.anim.AnimatedFloat;
 import com.android.launcher3.anim.AnimatorPlaybackController;
@@ -107,6 +108,9 @@ public class AllSetActivity extends Activity {
 
     private static final float ANIMATION_PAUSE_ALPHA_THRESHOLD = 0.1f;
 
+    private static final String KEY_BACKGROUND_ANIMATION_TOGGLED_ON =
+            "background_animation_toggled_on";
+
     private final AnimatedFloat mSwipeProgress = new AnimatedFloat(this::onSwipeProgressUpdate);
 
     private final InvariantDeviceProfile.OnIDPChangeListener mOnIDPChangeListener =
@@ -123,6 +127,9 @@ public class AllSetActivity extends Activity {
     private Animator.AnimatorListener mBackgroundAnimatorListener;
 
     private AnimatorPlaybackController mLauncherStartAnim = null;
+
+    // Auto play background animation by default
+    private boolean mBackgroundAnimationToggledOn = true;
 
     private TextView mHintView;
 
@@ -200,12 +207,27 @@ public class AllSetActivity extends Activity {
                         LOTTIE_TERTIARY_COLOR_TOKEN, R.color.all_set_bg_tertiary),
                 getTheme());
 
+        mBackgroundAnimationToggledOn = savedInstanceState == null
+                || savedInstanceState.getBoolean(KEY_BACKGROUND_ANIMATION_TOGGLED_ON, true);
+        // The animated background is behind a scroll view, which intercepts all input.
+        // However, the content view also covers the full screen
+        requireViewById(R.id.content).setOnClickListener(v -> {
+            mBackgroundAnimationToggledOn = !mBackgroundAnimationToggledOn;
+            maybeResumeOrPauseBackgroundAnimation();
+        });
+
         setUpBackgroundAnimation(getDP().isTablet);
         getIDP().addOnChangeListener(mOnIDPChangeListener);
 
         OverviewComponentObserver.INSTANCE.get(this)
                 .addOverviewChangeListener(mOverviewChangeListener);
         ActivityPreloadUtil.preloadOverviewForSUWAllSet(this);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(KEY_BACKGROUND_ANIMATION_TOGGLED_ON, mBackgroundAnimationToggledOn);
     }
 
     private InvariantDeviceProfile getIDP() {
@@ -368,8 +390,10 @@ public class AllSetActivity extends Activity {
 
     private void maybeResumeOrPauseBackgroundAnimation() {
         boolean shouldPlayAnimation =
-                getContentViewAlphaForSwipeProgress() > ANIMATION_PAUSE_ALPHA_THRESHOLD
-                        && isResumed();
+                !RemoveAnimationSettingsTracker.INSTANCE.get(this).isRemoveAnimationEnabled()
+                        && getContentViewAlphaForSwipeProgress() > ANIMATION_PAUSE_ALPHA_THRESHOLD
+                        && isResumed()
+                        && mBackgroundAnimationToggledOn;
         if (mAnimatedBackground.isAnimating() && !shouldPlayAnimation) {
             mAnimatedBackground.pauseAnimation();
         } else if (!mAnimatedBackground.isAnimating() && shouldPlayAnimation) {
