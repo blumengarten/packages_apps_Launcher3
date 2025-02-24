@@ -68,6 +68,7 @@ import com.android.launcher3.dragndrop.DragDriver;
 import com.android.launcher3.dragndrop.DragOptions;
 import com.android.launcher3.dragndrop.DragView;
 import com.android.launcher3.dragndrop.DraggableView;
+import com.android.launcher3.folder.Folder;
 import com.android.launcher3.graphics.DragPreviewProvider;
 import com.android.launcher3.logger.LauncherAtom.ContainerInfo;
 import com.android.launcher3.logging.StatsLogManager;
@@ -765,8 +766,11 @@ public class TaskbarDragController extends DragController<BaseTaskbarContext> im
 
     @Override
     public void addDropTarget(DropTarget target) {
-        // No-op as Taskbar currently doesn't support any drop targets internally.
-        // Note: if we do add internal DropTargets, we'll still need to ignore Folder.
+        if (target instanceof Folder) {
+            // we need to ignore Folder.
+            return;
+        }
+        super.addDropTarget(target);
     }
 
     @Override
