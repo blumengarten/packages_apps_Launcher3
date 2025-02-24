@@ -551,4 +551,13 @@ public class ActiveGestureProtoLogProxy {
                 displayRotation, displaySize.flattenToString(), swipeRegion.toShortString(),
                 ohmRegion.toShortString(), gesturalHeight, largerGesturalHeight, reason);
     }
+
+    public static void logOnTaskAnimationManagerNotAvailable(int displayId) {
+        ActiveGestureLog.INSTANCE.addLog(new ActiveGestureLog.CompoundString(
+                "TaskAnimationManager not available for displayId=%d",
+                displayId));
+        if (!enableActiveGestureProtoLog() || !isProtoLogInitialized()) return;
+        ProtoLog.d(ACTIVE_GESTURE_LOG, "TaskAnimationManager not available for displayId=%d",
+                displayId);
+    }
 }

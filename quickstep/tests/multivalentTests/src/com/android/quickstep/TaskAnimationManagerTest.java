@@ -26,6 +26,7 @@ import static org.mockito.Mockito.verify;
 import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
+import android.view.Display;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
@@ -54,7 +55,7 @@ public class TaskAnimationManagerTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         mTaskAnimationManager = new TaskAnimationManager(mContext,
-                RecentsAnimationDeviceState.INSTANCE.get(mContext)) {
+                RecentsAnimationDeviceState.INSTANCE.get(mContext), Display.DEFAULT_DISPLAY) {
             @Override
             SystemUiProxy getSystemUiProxy() {
                 return mSystemUiProxy;

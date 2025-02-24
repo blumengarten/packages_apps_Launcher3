@@ -75,7 +75,6 @@ class OverviewCommandHelper
 constructor(
     private val touchInteractionService: TouchInteractionService,
     private val overviewComponentObserver: OverviewComponentObserver,
-    private val taskAnimationManager: TaskAnimationManager,
     private val dispatcherProvider: DispatcherProvider = ProductionDispatchers,
     private val recentsDisplayModel: RecentsDisplayModel,
     private val focusState: FocusState,
@@ -457,6 +456,14 @@ constructor(
                 }
             }
 
+        val displayId = gestureState.displayId
+        val taskAnimationManager =
+            recentsDisplayModel.getTaskAnimationManager(displayId)
+                ?: run {
+                    Log.e(TAG, "No TaskAnimationManager found for display $displayId")
+                    ActiveGestureProtoLogProxy.logOnTaskAnimationManagerNotAvailable(displayId)
+                    return false
+                }
         if (taskAnimationManager.isRecentsAnimationRunning) {
             command.setAnimationCallbacks(
                 taskAnimationManager.continueRecentsAnimation(gestureState)

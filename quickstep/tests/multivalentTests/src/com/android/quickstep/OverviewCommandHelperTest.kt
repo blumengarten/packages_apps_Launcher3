@@ -67,7 +67,6 @@ class OverviewCommandHelperTest {
                 OverviewCommandHelper(
                     touchInteractionService = mock(),
                     overviewComponentObserver = mock(),
-                    taskAnimationManager = mock(),
                     dispatcherProvider = TestDispatcherProvider(dispatcher),
                     recentsDisplayModel = mock(),
                     focusState = mock(),
