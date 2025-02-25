@@ -177,7 +177,7 @@ public class QuickstepTestInformationHandler extends TestInformationHandler {
 
             case TestProtocol.REQUEST_RECREATE_TASKBAR:
                 // Allow null-pointer to catch illegal states.
-                runOnTISBinder(tisBinder -> tisBinder.getTaskbarManager().recreateTaskbar());
+                runOnTISBinder(tisBinder -> tisBinder.getTaskbarManager().recreateTaskbars());
                 return response;
             case TestProtocol.REQUEST_TASKBAR_IME_DOCKED:
                 return getTISBinderUIProperty(Bundle::putBoolean, tisBinder ->
