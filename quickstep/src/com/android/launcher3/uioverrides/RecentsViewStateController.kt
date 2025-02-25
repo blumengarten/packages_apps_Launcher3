@@ -38,7 +38,6 @@ import com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_TRANSLATE
 import com.android.launcher3.states.StateAnimationConfig.SKIP_OVERVIEW
 import com.android.launcher3.util.MultiPropertyFactory.MULTI_PROPERTY_VALUE
 import com.android.quickstep.util.AnimUtils
-import com.android.quickstep.views.ClearAllButton
 import com.android.quickstep.views.RecentsView
 import com.android.quickstep.views.RecentsView.ADJACENT_PAGE_HORIZONTAL_OFFSET
 import com.android.quickstep.views.RecentsView.CONTENT_ALPHA
@@ -288,8 +287,8 @@ class RecentsViewStateController(private val launcher: QuickstepLauncher) :
         val clearAllButtonAlpha =
             if (state.areElementsVisible(launcher, LauncherState.CLEAR_ALL_BUTTON)) 1f else 0f
         propertySetter.setFloat(
-            recentsView.clearAllButton,
-            ClearAllButton.VISIBILITY_ALPHA,
+            recentsView.clearAllButton.visibilityAlphaProperty,
+            MULTI_PROPERTY_VALUE,
             clearAllButtonAlpha,
             LINEAR,
         )
