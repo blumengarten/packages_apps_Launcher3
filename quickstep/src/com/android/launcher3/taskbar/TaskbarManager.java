@@ -60,6 +60,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.launcher3.DeviceProfile;
+import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.anim.AnimatorPlaybackController;
@@ -153,6 +154,8 @@ public class TaskbarManager {
             new SparseArray<>();
     /** DisplayId - {@link ComponentCallbacks} map for Connected Display. */
     private final SparseArray<ComponentCallbacks> mComponentCallbacks = new SparseArray<>();
+    /** DisplayId - {@link DeviceProfile} map for Connected Display. */
+    private final SparseArray<DeviceProfile> mExternalDeviceProfiles = new SparseArray<>();
     private StatefulActivity mActivity;
     private RecentsViewContainer mRecentsViewContainer;
 
@@ -389,9 +392,8 @@ public class TaskbarManager {
             // remove all defaults that we store
             removeTaskbarFromMap(displayId);
         }
-        // TODO (b/381113004): make this display-specific via getWindowContext()
-        DeviceProfile dp = mUserUnlocked ? LauncherAppState.getIDP(
-                mPrimaryWindowContext).getDeviceProfile(mPrimaryWindowContext) : null;
+
+        DeviceProfile dp = getDeviceProfile(displayId);
         if (dp == null || !isTaskbarEnabled(dp)) {
             removeTaskbarRootViewFromWindow(displayId);
         }
@@ -570,8 +572,7 @@ public class TaskbarManager {
         try {
             Log.d(ILLEGAL_ARGUMENT_WM_ADD_VIEW, "recreateTaskbarForDisplay: " + displayId);
             // TODO (b/381113004): make this display-specific via getWindowContext()
-            DeviceProfile dp = mUserUnlocked ? LauncherAppState.getIDP(
-                    mPrimaryWindowContext).getDeviceProfile(mPrimaryWindowContext) : null;
+            DeviceProfile dp = getDeviceProfile(displayId);
 
             // All Apps action is unrelated to navbar unification, so we only need to check DP.
             final boolean isLargeScreenTaskbar = dp != null && dp.isTaskbarPresent;
@@ -789,6 +790,7 @@ public class TaskbarManager {
             if (wm == null || !wm.shouldShowSystemDecors(displayId)) {
                 return;
             }
+            createExternalDeviceProfile(displayId);
             createTaskbarRootLayout(displayId);
             createNavButtonController(displayId);
             createAndRegisterComponentCallbacks(displayId);
@@ -811,6 +813,7 @@ public class TaskbarManager {
             removeNavButtonController(displayId);
             removeAndUnregisterComponentCallbacks(displayId);
             destroyTaskbarForDisplay(displayId);
+            removeDeviceProfileFromMap(displayId);
             removeWindowContextFromMap(displayId);
         }
     }
@@ -1006,6 +1009,61 @@ public class TaskbarManager {
     }
 
     /**
+     * Creates a {@link DeviceProfile} for the given display and adds it to the map.
+     * @param displayId The ID of the display.
+     */
+    private void createExternalDeviceProfile(int displayId) {
+        if (!mUserUnlocked) {
+            return;
+        }
+
+        InvariantDeviceProfile idp = LauncherAppState.getIDP(mPrimaryWindowContext);
+        if (idp == null) {
+            return;
+        }
+
+        Context displayContext = getWindowContext(displayId);
+        if (displayContext == null) {
+            return;
+        }
+
+        DeviceProfile externalDeviceProfile = idp.createDeviceProfileForSecondaryDisplay(
+                displayContext);
+        mExternalDeviceProfiles.put(displayId, externalDeviceProfile);
+    }
+
+    /**
+     * Gets a {@link DeviceProfile} for the given displayId.
+     * @param displayId The ID of the display.
+     */
+    private @Nullable DeviceProfile getDeviceProfile(int displayId) {
+        if (!mUserUnlocked) {
+            return null;
+        }
+
+        InvariantDeviceProfile idp = LauncherAppState.getIDP(mPrimaryWindowContext);
+        if (idp == null) {
+            return null;
+        }
+
+        boolean isPrimary = isDefaultDisplay(displayId)
+                || !DesktopExperienceFlags.ENABLE_TASKBAR_CONNECTED_DISPLAYS.isTrue();
+        if (isPrimary) {
+            return idp.getDeviceProfile(mPrimaryWindowContext);
+        }
+
+        return mExternalDeviceProfiles.get(displayId);
+    }
+
+    /**
+     * Removes the {@link DeviceProfile} associated with the given display ID from the map.
+     * @param displayId The ID of the display for which to remove the taskbar.
+     */
+    private void removeDeviceProfileFromMap(int displayId) {
+        mExternalDeviceProfiles.delete(displayId);
+    }
+
+    /**
      * Create {@link ComponentCallbacks} for the given display and register it to the relevant
      * WindowContext. For external displays, populate maps.
      * @param displayId The ID of the display.
@@ -1021,9 +1079,8 @@ public class TaskbarManager {
                         "onConfigurationChanged: " + newConfig);
                 debugTaskbarManager(
                         "TaskbarManager#mComponentCallbacks.onConfigurationChanged: " + newConfig);
-                // TODO (b/381113004): make this display-specific via getWindowContext()
-                DeviceProfile dp = mUserUnlocked ? LauncherAppState.getIDP(
-                        mPrimaryWindowContext).getDeviceProfile(mPrimaryWindowContext) : null;
+
+                DeviceProfile dp = getDeviceProfile(displayId);
                 int configDiff = mOldConfig.diff(newConfig) & ~SKIP_RECREATE_CONFIG_CHANGES;
 
                 if ((configDiff & ActivityInfo.CONFIG_UI_MODE) != 0) {
@@ -1356,8 +1413,11 @@ public class TaskbarManager {
             return;
         }
 
-        boolean contextTaskbarPresent = mUserUnlocked && LauncherAppState.getIDP(windowContext)
-                .getDeviceProfile(windowContext).isTaskbarPresent;
+        boolean contextTaskbarPresent = false;
+        if (mUserUnlocked) {
+            DeviceProfile dp = getDeviceProfile(displayId);
+            contextTaskbarPresent = dp != null && dp.isTaskbarPresent;
+        }
         if (activityTaskbarPresent == contextTaskbarPresent) {
             log.add("mActivity and mWindowContext agree taskbarIsPresent=" + contextTaskbarPresent);
             Log.d(TASKBAR_NOT_DESTROYED_TAG, log.toString());
@@ -1379,8 +1439,8 @@ public class TaskbarManager {
         log.add("\t\tWindowContext.getResources().getConfiguration()="
                 + windowContext.getResources().getConfiguration());
         if (mUserUnlocked) {
-            log.add("\t\tLauncherAppState.getIDP().getDeviceProfile(mPrimaryWindowContext)"
-                    + ".isTaskbarPresent=" + contextTaskbarPresent);
+            log.add("\t\tgetDeviceProfile(mPrimaryWindowContext).isTaskbarPresent="
+                    + contextTaskbarPresent);
         } else {
             log.add("\t\tCouldn't get DeviceProfile because !mUserUnlocked");
         }
