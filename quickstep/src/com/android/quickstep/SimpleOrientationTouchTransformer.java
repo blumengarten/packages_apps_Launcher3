@@ -15,6 +15,8 @@
  */
 package com.android.quickstep;
 
+import static android.view.Display.DEFAULT_DISPLAY;
+
 import static com.android.launcher3.util.DisplayController.CHANGE_ACTIVE_SCREEN;
 import static com.android.launcher3.util.DisplayController.CHANGE_ALL;
 import static com.android.launcher3.util.DisplayController.CHANGE_ROTATION;
@@ -42,15 +44,20 @@ public class SimpleOrientationTouchTransformer implements
     private OrientationRectF mOrientationRectF;
     private OrientationRectF mTouchingOrientationRectF;
     private int mViewRotation;
+    private final int mDisplayId;
 
     @Inject
     public SimpleOrientationTouchTransformer(@ApplicationContext Context context,
             DisplayController displayController,
             DaggerSingletonTracker tracker) {
-        displayController.addChangeListener(this);
-        tracker.addCloseable(() -> displayController.removeChangeListener(this));
+        // TODO (b/398195845): make sure non-default displays don't get affected by default display
+        // changes.
+        mDisplayId = DEFAULT_DISPLAY;
+        displayController.addChangeListenerForDisplay(this, mDisplayId);
+        tracker.addCloseable(
+                () -> displayController.removeChangeListenerForDisplay(this, mDisplayId));
 
-        onDisplayInfoChanged(context, displayController.getInfo(), CHANGE_ALL);
+        onDisplayInfoChanged(context, displayController.getInfoForDisplay(mDisplayId), CHANGE_ALL);
     }
 
     @Override
