@@ -24,5 +24,13 @@ public final class GrowthConstants {
      */
     public static final String BROADCAST_SHOW_NUDGE =
             "com.android.launcher3.growth.BROADCAST_SHOW_NUDGE";
+
+    /**
+     * For filtering package of broadcast intent received.
+     */
+    public static final String GROWTH_NUDGE_PERMISSION =
+            "com.android.growth.permission.GROWTH_NUDGE_PERMISSION"
+                    + " android:protectionLevel=\"signature|preinstalled\"";
+
     private GrowthConstants() {}
 }
