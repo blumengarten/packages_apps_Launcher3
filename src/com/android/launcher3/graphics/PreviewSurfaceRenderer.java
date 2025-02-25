@@ -89,8 +89,9 @@ public class PreviewSurfaceRenderer {
     private static final String KEY_COLOR_RESOURCE_IDS = "color_resource_ids";
     private static final String KEY_COLOR_VALUES = "color_values";
     private static final String KEY_DARK_MODE = "use_dark_mode";
+    public static final String KEY_SKIP_ANIMATIONS = "skip_animations";
 
-    private Context mContext;
+    private final Context mContext;
     private SparseIntArray mPreviewColorOverride;
     private String mGridName;
     private String mShapeKey;
@@ -103,6 +104,7 @@ public class PreviewSurfaceRenderer {
     private final IBinder mHostToken;
     private final int mWidth;
     private final int mHeight;
+    private final boolean mSkipAnimations;
     private final int mDisplayId;
     private final Display mDisplay;
     private final WallpaperColors mWallpaperColors;
@@ -129,6 +131,7 @@ public class PreviewSurfaceRenderer {
         mHostToken = bundle.getBinder(KEY_HOST_TOKEN);
         mWidth = bundle.getInt(KEY_VIEW_WIDTH);
         mHeight = bundle.getInt(KEY_VIEW_HEIGHT);
+        mSkipAnimations = bundle.getBoolean(KEY_SKIP_ANIMATIONS, false);
         mDisplayId = bundle.getInt(KEY_DISPLAY_ID);
         mDisplay = context.getSystemService(DisplayManager.class)
                 .getDisplay(mDisplayId);
@@ -432,7 +435,7 @@ public class PreviewSurfaceRenderer {
 
 
         if (!Flags.newCustomizationPickerUi()) {
-            view.setAlpha(0);
+            view.setAlpha(mSkipAnimations ? 1 : 0);
             view.animate().alpha(1)
                     .setInterpolator(new AccelerateDecelerateInterpolator())
                     .setDuration(FADE_IN_ANIMATION_DURATION)
@@ -453,7 +456,7 @@ public class PreviewSurfaceRenderer {
             );
             mViewRoot.setLayoutParams(layoutParams);
             mViewRoot.addView(view);
-            mViewRoot.setAlpha(0);
+            mViewRoot.setAlpha(mSkipAnimations ? 1 : 0);
             mViewRoot.animate().alpha(1)
                     .setInterpolator(new AccelerateDecelerateInterpolator())
                     .setDuration(FADE_IN_ANIMATION_DURATION)
