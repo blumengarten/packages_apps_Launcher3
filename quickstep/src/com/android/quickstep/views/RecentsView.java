@@ -1462,7 +1462,8 @@ public abstract class RecentsView<
             anim.addListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
-                    finishRecentsAnimation(false /* toRecents */, null);
+                    finishRecentsAnimation(false /* toRecents */, true /*shouldPip*/,
+                            allAppsAreTranslucent(apps), null);
                 }
             });
         } else {
@@ -1471,6 +1472,18 @@ public abstract class RecentsView<
                     getDepthController(), transitionInfo);
         }
         anim.start();
+    }
+
+    private boolean allAppsAreTranslucent(RemoteAnimationTarget[] apps) {
+        if (apps == null) {
+            return false;
+        }
+        for (int i = apps.length - 1; i >= 0; --i) {
+            if (!apps[i].isTranslucent) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public boolean isTaskViewVisible(TaskView tv) {
