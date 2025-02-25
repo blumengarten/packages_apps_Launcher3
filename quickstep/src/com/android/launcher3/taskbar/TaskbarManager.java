@@ -16,10 +16,12 @@
 package com.android.launcher3.taskbar;
 
 import static android.content.Context.RECEIVER_NOT_EXPORTED;
+import static android.content.Context.RECEIVER_EXPORTED;
 import static android.view.WindowManager.LayoutParams.TYPE_NAVIGATION_BAR;
 import static android.view.WindowManager.LayoutParams.TYPE_NAVIGATION_BAR_PANEL;
 
 import static com.android.launcher3.BaseActivity.EVENT_DESTROYED;
+import static com.android.launcher3.Flags.enableGrowthNudge;
 import static com.android.launcher3.Flags.enableUnfoldStateAnimation;
 import static com.android.launcher3.config.FeatureFlags.ENABLE_TASKBAR_NAVBAR_UNIFICATION;
 import static com.android.launcher3.config.FeatureFlags.enableTaskbarNoRecreate;
@@ -30,6 +32,7 @@ import static com.android.launcher3.util.DisplayController.CHANGE_SHOW_LOCKED_TA
 import static com.android.launcher3.util.DisplayController.CHANGE_TASKBAR_PINNING;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 import static com.android.launcher3.util.FlagDebugUtils.formatFlagChange;
+import static com.android.launcher3.taskbar.growth.GrowthConstants.BROADCAST_SHOW_NUDGE;
 import static com.android.quickstep.util.SystemActionConstants.ACTION_SHOW_TASKBAR;
 import static com.android.quickstep.util.SystemActionConstants.SYSTEM_ACTION_ID_TASKBAR;
 
@@ -103,6 +106,9 @@ public class TaskbarManager {
     private static final String TAG = "TaskbarManager";
     private static final boolean DEBUG = false;
     private static final int TASKBAR_DESTROY_DURATION = 100;
+
+    // TODO: b/397738606  - Remove all logs with this tag after the growth framework is integrated.
+    public static final String GROWTH_FRAMEWORK_TAG = "Growth Framework";
 
     /**
      * All the configurations which do not initiate taskbar recreation.
@@ -325,6 +331,8 @@ public class TaskbarManager {
 
     private final SimpleBroadcastReceiver mTaskbarBroadcastReceiver;
 
+    private final SimpleBroadcastReceiver mGrowthBroadcastReceiver;
+
     private final AllAppsActionManager mAllAppsActionManager;
     private final RecentsDisplayModel mRecentsDisplayModel;
 
@@ -416,7 +424,18 @@ public class TaskbarManager {
         mTaskbarBroadcastReceiver =
                 new SimpleBroadcastReceiver(mPrimaryWindowContext,
                         UI_HELPER_EXECUTOR, this::showTaskbarFromBroadcast);
+
         mShutdownReceiver.register(Intent.ACTION_SHUTDOWN);
+        if (enableGrowthNudge()) {
+            // TODO: b/397739323 - Add permission to limit access to Growth Framework.
+            mGrowthBroadcastReceiver =
+                    new SimpleBroadcastReceiver(
+                            mPrimaryWindowContext, UI_HELPER_EXECUTOR, this::showGrowthNudge);
+            mGrowthBroadcastReceiver.register(RECEIVER_EXPORTED,
+                    BROADCAST_SHOW_NUDGE);
+        } else {
+            mGrowthBroadcastReceiver = null;
+        }
         UI_HELPER_EXECUTOR.execute(() -> {
             mSharedState.taskbarSystemActionPendingIntent = PendingIntent.getBroadcast(
                     mPrimaryWindowContext,
@@ -474,8 +493,18 @@ public class TaskbarManager {
         debugPrimaryTaskbar("destroyTaskbarForDisplay");
         // TODO: make this code displayId specific
         TaskbarActivityContext taskbar = getTaskbarForDisplay(getDefaultDisplayId());
-        if (ACTION_SHOW_TASKBAR.equals(intent.getAction()) && taskbar != null) {
+        if (ACTION_SHOW_TASKBAR.equals(intent.getAction())) {
             taskbar.showTaskbarFromBroadcast();
+        }
+    }
+
+    private void showGrowthNudge(Intent intent) {
+        if (!enableGrowthNudge()) {
+            return;
+        }
+        if (BROADCAST_SHOW_NUDGE.equals(intent.getAction())) {
+            // TODO: b/397738606 - extract the details and create a nudge payload.
+            Log.d(GROWTH_FRAMEWORK_TAG, "Intent received");
         }
     }
 
@@ -790,7 +819,7 @@ public class TaskbarManager {
     }
 
     public void transitionTo(int displayId, @BarTransitions.TransitionMode int barMode,
-            boolean animate) {
+                             boolean animate) {
         TaskbarActivityContext taskbar = getTaskbarForDisplay(displayId);
         if (taskbar != null) {
             taskbar.transitionTo(barMode, animate);
@@ -996,6 +1025,9 @@ public class TaskbarManager {
                 mTaskbarDesktopModeListener);
         removeActivityCallbacksAndListeners();
         mTaskbarBroadcastReceiver.unregisterReceiverSafely();
+        if (mGrowthBroadcastReceiver != null) {
+            mGrowthBroadcastReceiver.unregisterReceiverSafely();
+        }
 
         if (mUserUnlocked) {
             DisplayController.INSTANCE.get(mPrimaryWindowContext).removeChangeListener(
