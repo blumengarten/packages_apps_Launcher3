@@ -53,6 +53,7 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Choreographer;
+import android.view.Display;
 import android.view.InputDevice;
 import android.view.InputEvent;
 import android.view.MotionEvent;
@@ -274,11 +275,12 @@ public class TouchInteractionService extends Service {
         }
 
         @BinderThread
-        public void onSystemUiStateChanged(@SystemUiStateFlags long stateFlags) {
+        public void onSystemUiStateChanged(@SystemUiStateFlags long stateFlags, int displayId) {
             MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(tis -> {
-                long lastFlags = tis.mDeviceState.getSystemUiStateFlags();
-                tis.mDeviceState.setSystemUiFlags(stateFlags);
-                tis.onSystemUiFlagsChanged(lastFlags);
+                // Last flags is only used for the default display case.
+                long lastFlags = tis.mDeviceState.getSysuiStateFlag();
+                tis.mDeviceState.setSysUIStateFlagsForDisplay(stateFlags, displayId);
+                tis.onSystemUiFlagsChanged(lastFlags, displayId);
             }));
         }
 
@@ -312,6 +314,9 @@ public class TouchInteractionService extends Service {
         public void onDisplayRemoved(int displayId) {
             executeForTaskbarManager(taskbarManager ->
                     taskbarManager.onDisplayRemoved(displayId));
+            executeForTouchInteractionService(tis -> {
+                tis.mDeviceState.clearSysUIStateFlagsForDisplay(displayId);
+            });
         }
 
         @BinderThread
@@ -649,7 +654,9 @@ public class TouchInteractionService extends Service {
         mResetGestureInputConsumer = new ResetGestureInputConsumer(
                 mTaskAnimationManager, mTaskbarManager::getCurrentActivityContext);
         mInputConsumer.registerInputConsumer();
-        onSystemUiFlagsChanged(mDeviceState.getSystemUiStateFlags());
+        for (int displayId : mDeviceState.getDisplaysWithSysUIState()) {
+            onSystemUiFlagsChanged(mDeviceState.getSystemUiStateFlags(displayId), displayId);
+        }
         onAssistantVisibilityChanged();
 
         // Initialize the task tracker
@@ -711,13 +718,19 @@ public class TouchInteractionService extends Service {
     }
 
     @UiThread
-    private void onSystemUiFlagsChanged(@SystemUiStateFlags long lastSysUIFlags) {
+    private void onSystemUiFlagsChanged(@SystemUiStateFlags long lastSysUIFlags, int displayId) {
         if (LockedUserState.get(this).isUserUnlocked()) {
-            long systemUiStateFlags = mDeviceState.getSystemUiStateFlags();
-            SystemUiProxy.INSTANCE.get(this).setLastSystemUiStateFlags(systemUiStateFlags);
-            mOverviewComponentObserver.setHomeDisabled(mDeviceState.isHomeDisabled());
-            mTaskbarManager.onSystemUiFlagsChanged(systemUiStateFlags);
-            mTaskAnimationManager.onSystemUiFlagsChanged(lastSysUIFlags, systemUiStateFlags);
+            long systemUiStateFlags = mDeviceState.getSystemUiStateFlags(displayId);
+            mTaskbarManager.onSystemUiFlagsChanged(systemUiStateFlags, displayId);
+            if (displayId == Display.DEFAULT_DISPLAY) {
+                // The following don't care about non-default displays, at least for now. If they
+                // ever will, they should be taken care of.
+                SystemUiProxy.INSTANCE.get(this).setLastSystemUiStateFlags(systemUiStateFlags);
+                mOverviewComponentObserver.setHomeDisabled(mDeviceState.isHomeDisabled());
+                // TODO b/399371607 - Propagate to taskAnimationManager once overview is multi
+                //  display.
+                mTaskAnimationManager.onSystemUiFlagsChanged(lastSysUIFlags, systemUiStateFlags);
+            }
         }
     }
 

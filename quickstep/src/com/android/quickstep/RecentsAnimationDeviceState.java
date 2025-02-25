@@ -88,6 +88,9 @@ import com.android.systemui.shared.system.TaskStackChangeListener;
 import com.android.systemui.shared.system.TaskStackChangeListeners;
 
 import java.io.PrintWriter;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 
@@ -119,6 +122,7 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
             InputMethodService.canImeRenderGesturalNavButtons();
 
     private @SystemUiStateFlags long mSystemUiStateFlags = QuickStepContract.SYSUI_STATE_AWAKE;
+    private final Map<Integer, Long> mSysUIStateFlagsPerDisplay = new ConcurrentHashMap<>();
     private NavigationMode mMode = THREE_BUTTONS;
     private NavBarPosition mNavBarPosition;
 
@@ -353,21 +357,50 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
     }
 
     /**
-     * Updates the system ui state flags from SystemUI.
+     * Updates the system ui state flags from SystemUI for a specific display.
+     *
+     * @param stateFlags the current {@link SystemUiStateFlags} for the display.
+     * @param displayId  the display's ID.
      */
-    public void setSystemUiFlags(@SystemUiStateFlags long stateFlags) {
-        mSystemUiStateFlags = stateFlags;
+    public void setSysUIStateFlagsForDisplay(@SystemUiStateFlags long stateFlags,
+            int displayId) {
+        mSysUIStateFlagsPerDisplay.put(displayId, stateFlags);
     }
 
     /**
-     * @return the system ui state flags.
+     * Clears the system ui state flags for a specific display. This is called when the display is
+     * destroyed.
+     *
+     * @param displayId the display's ID.
+     */
+    public void clearSysUIStateFlagsForDisplay(int displayId) {
+        mSysUIStateFlagsPerDisplay.remove(displayId);
+    }
+
+    /**
+     * @return the system ui state flags for the default display.
      */
     // TODO(141886704): See if we can remove this
     @SystemUiStateFlags
-    public long getSystemUiStateFlags() {
-        return mSystemUiStateFlags;
+    public long getSysuiStateFlag() {
+        return getSystemUiStateFlags(DEFAULT_DISPLAY);
     }
 
+    /**
+     * @return the system ui state flags for a given display ID.
+     */
+    @SystemUiStateFlags
+    public long getSystemUiStateFlags(int displayId) {
+        return mSysUIStateFlagsPerDisplay.getOrDefault(displayId,
+                QuickStepContract.SYSUI_STATE_AWAKE);
+    }
+
+    /**
+     * @return the display ids that have sysui state.
+     */
+    public Set<Integer> getDisplaysWithSysUIState() {
+        return mSysUIStateFlagsPerDisplay.keySet();
+    }
     /**
      * Sets the flag that indicates whether a predictive back-to-home animation is in progress
      */
@@ -386,8 +419,8 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
      * @return whether SystemUI is in a state where we can start a system gesture.
      */
     public boolean canStartSystemGesture() {
-        boolean canStartWithNavHidden = (mSystemUiStateFlags & SYSUI_STATE_NAV_BAR_HIDDEN) == 0
-                || (mSystemUiStateFlags & SYSUI_STATE_ALLOW_GESTURE_IGNORING_BAR_VISIBILITY) != 0
+        boolean canStartWithNavHidden = (getSysuiStateFlag() & SYSUI_STATE_NAV_BAR_HIDDEN) == 0
+                || (getSysuiStateFlag() & SYSUI_STATE_ALLOW_GESTURE_IGNORING_BAR_VISIBILITY) != 0
                 || mRotationTouchHelper.isTaskListFrozen();
         return canStartWithNavHidden && canStartAnyGesture();
     }
@@ -399,7 +432,7 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
      */
     public boolean canStartTrackpadGesture() {
         boolean trackpadGesturesEnabled =
-                (mSystemUiStateFlags & SYSUI_STATE_TOUCHPAD_GESTURES_DISABLED) == 0;
+                (getSysuiStateFlag() & SYSUI_STATE_TOUCHPAD_GESTURES_DISABLED) == 0;
         return trackpadGesturesEnabled && canStartAnyGesture();
     }
 
@@ -407,8 +440,8 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
      * Common logic to determine if either trackpad or finger gesture can be started
      */
     private boolean canStartAnyGesture() {
-        boolean homeOrOverviewEnabled = (mSystemUiStateFlags & SYSUI_STATE_HOME_DISABLED) == 0
-                || (mSystemUiStateFlags & SYSUI_STATE_OVERVIEW_DISABLED) == 0;
+        boolean homeOrOverviewEnabled = (getSysuiStateFlag() & SYSUI_STATE_HOME_DISABLED) == 0
+                || (getSysuiStateFlag() & SYSUI_STATE_OVERVIEW_DISABLED) == 0;
         long gestureDisablingStates = SYSUI_STATE_NOTIFICATION_PANEL_EXPANDED
                         | SYSUI_STATE_STATUS_BAR_KEYGUARD_SHOWING
                         | SYSUI_STATE_QUICK_SETTINGS_EXPANDED
@@ -416,7 +449,7 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
                         | SYSUI_STATE_DEVICE_DREAMING
                         | SYSUI_STATE_DISABLE_GESTURE_SPLIT_INVOCATION
                         | SYSUI_STATE_DISABLE_GESTURE_PIP_ANIMATING;
-        return (gestureDisablingStates & mSystemUiStateFlags) == 0 && homeOrOverviewEnabled;
+        return (gestureDisablingStates & getSysuiStateFlag()) == 0 && homeOrOverviewEnabled;
     }
 
     /**
@@ -424,35 +457,35 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
      *         (like camera or maps)
      */
     public boolean isKeyguardShowingOccluded() {
-        return (mSystemUiStateFlags & SYSUI_STATE_STATUS_BAR_KEYGUARD_SHOWING_OCCLUDED) != 0;
+        return (getSysuiStateFlag() & SYSUI_STATE_STATUS_BAR_KEYGUARD_SHOWING_OCCLUDED) != 0;
     }
 
     /**
      * @return whether screen pinning is enabled and active
      */
     public boolean isScreenPinningActive() {
-        return (mSystemUiStateFlags & SYSUI_STATE_SCREEN_PINNING) != 0;
+        return (getSysuiStateFlag() & SYSUI_STATE_SCREEN_PINNING) != 0;
     }
 
     /**
      * @return whether assistant gesture is constraint
      */
     public boolean isAssistantGestureIsConstrained() {
-        return (mSystemUiStateFlags & SYSUI_STATE_ASSIST_GESTURE_CONSTRAINED) != 0;
+        return (getSysuiStateFlag() & SYSUI_STATE_ASSIST_GESTURE_CONSTRAINED) != 0;
     }
 
     /**
      * @return whether the bubble stack is expanded
      */
     public boolean isBubblesExpanded() {
-        return (mSystemUiStateFlags & SYSUI_STATE_BUBBLES_EXPANDED) != 0;
+        return (getSysuiStateFlag() & SYSUI_STATE_BUBBLES_EXPANDED) != 0;
     }
 
     /**
      * @return whether the global actions dialog is showing
      */
     public boolean isSystemUiDialogShowing() {
-        return (mSystemUiStateFlags & SYSUI_STATE_DIALOG_SHOWING) != 0;
+        return (getSysuiStateFlag() & SYSUI_STATE_DIALOG_SHOWING) != 0;
     }
 
     /**
@@ -466,35 +499,35 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
      * @return whether the accessibility menu is available.
      */
     public boolean isAccessibilityMenuAvailable() {
-        return (mSystemUiStateFlags & SYSUI_STATE_A11Y_BUTTON_CLICKABLE) != 0;
+        return (getSysuiStateFlag() & SYSUI_STATE_A11Y_BUTTON_CLICKABLE) != 0;
     }
 
     /**
      * @return whether the accessibility menu shortcut is available.
      */
     public boolean isAccessibilityMenuShortcutAvailable() {
-        return (mSystemUiStateFlags & SYSUI_STATE_A11Y_BUTTON_LONG_CLICKABLE) != 0;
+        return (getSysuiStateFlag() & SYSUI_STATE_A11Y_BUTTON_LONG_CLICKABLE) != 0;
     }
 
     /**
      * @return whether home is disabled (either by SUW/SysUI/device policy)
      */
     public boolean isHomeDisabled() {
-        return (mSystemUiStateFlags & SYSUI_STATE_HOME_DISABLED) != 0;
+        return (getSysuiStateFlag() & SYSUI_STATE_HOME_DISABLED) != 0;
     }
 
     /**
      * @return whether overview is disabled (either by SUW/SysUI/device policy)
      */
     public boolean isOverviewDisabled() {
-        return (mSystemUiStateFlags & SYSUI_STATE_OVERVIEW_DISABLED) != 0;
+        return (getSysuiStateFlag() & SYSUI_STATE_OVERVIEW_DISABLED) != 0;
     }
 
     /**
      * @return whether one-handed mode is enabled and active
      */
     public boolean isOneHandedModeActive() {
-        return (mSystemUiStateFlags & SYSUI_STATE_ONE_HANDED_ACTIVE) != 0;
+        return (getSysuiStateFlag() & SYSUI_STATE_ONE_HANDED_ACTIVE) != 0;
     }
 
     /**
@@ -557,7 +590,7 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
      */
     public boolean canTriggerAssistantAction(MotionEvent ev) {
         return mAssistantAvailable
-                && !QuickStepContract.isAssistantGestureDisabled(mSystemUiStateFlags)
+                && !QuickStepContract.isAssistantGestureDisabled(getSysuiStateFlag())
                 && mRotationTouchHelper.touchInAssistantRegion(ev)
                 && !isTrackpadScroll(ev)
                 && !isLockToAppActive();
@@ -597,7 +630,7 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
     /** Returns whether IME is rendering nav buttons, and IME is currently showing. */
     public boolean isImeRenderingNavButtons() {
         return mCanImeRenderGesturalNavButtons && mMode == NO_BUTTON
-                && ((mSystemUiStateFlags & SYSUI_STATE_IME_VISIBLE) != 0);
+                && ((getSysuiStateFlag() & SYSUI_STATE_IME_VISIBLE) != 0);
     }
 
     /**
@@ -629,24 +662,37 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
         return touchSlop * touchSlop;
     }
 
+    /** Returns a string representation of the system ui state flags for the default display. */
     public String getSystemUiStateString() {
-        return  QuickStepContract.getSystemUiStateString(mSystemUiStateFlags);
+        return  getSystemUiStateString(getSysuiStateFlag());
+    }
+
+    /** Returns a string representation of the system ui state flags. */
+    public String getSystemUiStateString(long flags) {
+        return  QuickStepContract.getSystemUiStateString(flags);
     }
 
     public void dump(PrintWriter pw) {
         pw.println("DeviceState:");
         pw.println("  canStartSystemGesture=" + canStartSystemGesture());
-        pw.println("  systemUiFlags=" + mSystemUiStateFlags);
+        pw.println("  systemUiFlagsForDefaultDisplay=" + getSysuiStateFlag());
         pw.println("  systemUiFlagsDesc=" + getSystemUiStateString());
         pw.println("  assistantAvailable=" + mAssistantAvailable);
         pw.println("  assistantDisabled="
-                + QuickStepContract.isAssistantGestureDisabled(mSystemUiStateFlags));
+                + QuickStepContract.isAssistantGestureDisabled(getSysuiStateFlag()));
         pw.println("  isOneHandedModeEnabled=" + mIsOneHandedModeEnabled);
         pw.println("  isSwipeToNotificationEnabled=" + mIsSwipeToNotificationEnabled);
         pw.println("  deferredGestureRegion=" + mDeferredGestureRegion.getBounds());
         pw.println("  exclusionRegion=" + mExclusionRegion.getBounds());
         pw.println("  pipIsActive=" + mPipIsActive);
         pw.println("  predictiveBackToHomeInProgress=" + mIsPredictiveBackToHomeInProgress);
+        for (int displayId : mSysUIStateFlagsPerDisplay.keySet()) {
+            pw.println("  systemUiFlagsForDisplay" + displayId + "=" + getSystemUiStateFlags(
+                    displayId));
+            pw.println("  systemUiFlagsForDisplay" + displayId + "Desc=" + getSystemUiStateString(
+                    getSystemUiStateFlags(displayId)));
+        }
+        pw.println("  RotationTouchHelper:");
         mRotationTouchHelper.dump(pw);
     }
 }
