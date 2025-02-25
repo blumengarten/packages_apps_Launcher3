@@ -4762,9 +4762,8 @@ public abstract class RecentsView<
         }
         mClearAllButton.setContentAlpha(mContentAlpha);
 
-        // TODO(b/389209338): Handle the visibility of the `mAddDesktopButton`.
         if (mAddDesktopButton != null) {
-            mAddDesktopButton.setAlpha(mContentAlpha);
+            mAddDesktopButton.setContentAlpha(mContentAlpha);
         }
         int alphaInt = Math.round(alpha * 255);
         mEmptyMessagePaint.setAlpha(alphaInt);
@@ -6327,6 +6326,11 @@ public abstract class RecentsView<
 
     public ClearAllButton getClearAllButton() {
         return mClearAllButton;
+    }
+
+    @Nullable
+    public AddDesktopButton getAddDeskButton() {
+        return mAddDesktopButton;
     }
 
     /**

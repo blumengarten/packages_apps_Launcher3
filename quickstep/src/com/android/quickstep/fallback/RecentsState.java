@@ -45,14 +45,16 @@ public class RecentsState implements BaseState<RecentsState> {
     private static final int FLAG_RECENTS_VIEW_VISIBLE = BaseState.getFlag(7);
     private static final int FLAG_TASK_THUMBNAIL_SPLASH = BaseState.getFlag(8);
     private static final int FLAG_DETACH_DESKTOP_CAROUSEL = BaseState.getFlag(9);
+    private static final int FLAG_ADD_DESK_BUTTON = BaseState.getFlag(10);
 
     private static final RecentsState[] sAllStates = new RecentsState[6];
 
     public static final RecentsState DEFAULT = new RecentsState(0,
             FLAG_DISABLE_RESTORE | FLAG_CLEAR_ALL_BUTTON | FLAG_OVERVIEW_ACTIONS | FLAG_SHOW_AS_GRID
-                    | FLAG_SCRIM | FLAG_LIVE_TILE | FLAG_RECENTS_VIEW_VISIBLE);
+                    | FLAG_SCRIM | FLAG_LIVE_TILE | FLAG_RECENTS_VIEW_VISIBLE
+                    | FLAG_ADD_DESK_BUTTON);
     public static final RecentsState MODAL_TASK = new ModalState(1,
-            FLAG_DISABLE_RESTORE | FLAG_CLEAR_ALL_BUTTON | FLAG_OVERVIEW_ACTIONS | FLAG_MODAL
+            FLAG_DISABLE_RESTORE | FLAG_OVERVIEW_ACTIONS | FLAG_MODAL
                     | FLAG_SHOW_AS_GRID | FLAG_SCRIM | FLAG_LIVE_TILE | FLAG_RECENTS_VIEW_VISIBLE);
     public static final RecentsState BACKGROUND_APP = new BackgroundAppState(2,
             FLAG_DISABLE_RESTORE | FLAG_NON_INTERACTIVE | FLAG_FULL_SCREEN
@@ -119,6 +121,13 @@ public class RecentsState implements BaseState<RecentsState> {
      */
     public boolean hasClearAllButton() {
         return hasFlag(FLAG_CLEAR_ALL_BUTTON);
+    }
+
+    /**
+     * For this state, whether add desk button should be shown.
+     */
+    public boolean hasAddDeskButton() {
+        return hasFlag(FLAG_ADD_DESK_BUTTON);
     }
 
     /**
