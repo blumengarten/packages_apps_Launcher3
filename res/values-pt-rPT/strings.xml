@@ -64,7 +64,7 @@
     <string name="widgets_full_sheet_cancel_button_description" msgid="5766167035728653605">"Limpe o texto da caixa de pesquisa"</string>
     <string name="no_widgets_available" msgid="4337693382501046170">"Os widgets e os atalhos não estão disponíveis"</string>
     <string name="no_search_results" msgid="3787956167293097509">"Nenhum widget ou atalho encontrado"</string>
-    <string name="widgets_full_sheet_personal_tab" msgid="2743540105607120182">"Pessoais"</string>
+    <string name="widgets_full_sheet_personal_tab" msgid="2743540105607120182">"Pessoal"</string>
     <string name="widgets_full_sheet_work_tab" msgid="3767150027110633765">"Trabalho"</string>
     <string name="widget_category_conversations" msgid="8894438636213590446">"Conversas"</string>
     <string name="widget_category_note_taking" msgid="3469689394504266039">"Tomar notas"</string>
