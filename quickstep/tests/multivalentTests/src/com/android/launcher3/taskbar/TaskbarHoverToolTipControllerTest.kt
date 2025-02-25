@@ -48,6 +48,7 @@ class TaskbarHoverToolTipControllerTest {
     @get:Rule(order = 1) val taskbarUnitTestRule = TaskbarUnitTestRule(this, context)
 
     @InjectController lateinit var autohideSuspendController: TaskbarAutohideSuspendController
+    @InjectController lateinit var popupController: TaskbarPopupController
 
     private val taskbarContext: TaskbarActivityContext by taskbarUnitTestRule::activityContext
 
@@ -132,6 +133,15 @@ class TaskbarHoverToolTipControllerTest {
     fun onHover_hoverEnterFolderOpen_noToolTip() {
         runOnMainSync {
             folderIcon.folder.animateOpen()
+            iconView.dispatchGenericMotionEvent(HOVER_ENTER)
+        }
+        assertThat(isHoverToolTipOpen).isFalse()
+    }
+
+    @Test
+    fun onHover_hoverEnterPopupOpen_noToolTip() {
+        runOnMainSync {
+            popupController.showForIcon(iconView)
             iconView.dispatchGenericMotionEvent(HOVER_ENTER)
         }
         assertThat(isHoverToolTipOpen).isFalse()
