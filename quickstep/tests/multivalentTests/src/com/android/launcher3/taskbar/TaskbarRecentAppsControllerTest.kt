@@ -959,6 +959,8 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
     private fun setInDesktopMode(inDesktopMode: Boolean) {
         whenever(taskbarControllers.taskbarDesktopModeController.shouldShowDesktopTasksInTaskbar())
             .thenReturn(inDesktopMode)
+        whenever(taskbarControllers.taskbarDesktopModeController.isInDesktopMode)
+            .thenReturn(inDesktopMode)
     }
 
     private fun createItemInfo(

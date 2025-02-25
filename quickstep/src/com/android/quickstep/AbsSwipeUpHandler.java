@@ -120,6 +120,7 @@ import com.android.launcher3.compat.AccessibilityManagerCompat;
 import com.android.launcher3.dragndrop.DragView;
 import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.logging.StatsLogManager.StatsLogger;
+import com.android.launcher3.statehandlers.DesktopVisibilityController;
 import com.android.launcher3.statemanager.BaseState;
 import com.android.launcher3.statemanager.StatefulContainer;
 import com.android.launcher3.taskbar.TaskbarThresholdUtils;
@@ -1421,8 +1422,10 @@ public abstract class AbsSwipeUpHandler<
         }
         if (endTarget == HOME) {
             boolean isPinnedTaskbar = DisplayController.isPinnedTaskbar(mContext);
+            boolean isNotInDesktop =  !DisplayController.isInDesktopMode(mContext);
             duration = mContainer != null && mContainer.getDeviceProfile().isTaskbarPresent
-                    ? QuickstepTransitionManager.getTaskbarToHomeDuration(isPinnedTaskbar)
+                    ? QuickstepTransitionManager.getTaskbarToHomeDuration(
+                    isPinnedTaskbar && isNotInDesktop)
                     : StaggeredWorkspaceAnim.DURATION_MS;
             SystemUiProxy.INSTANCE.get(mContext).updateContextualEduStats(
                     mGestureState.isTrackpadGesture(), GestureType.HOME);
@@ -1602,9 +1605,27 @@ public abstract class AbsSwipeUpHandler<
             if (mParallelRunningAnim != null) {
                 mParallelRunningAnim.addListener(new AnimatorListenerAdapter() {
                     @Override
+                    public void onAnimationStart(Animator animation) {
+                        if (DisplayController.isInDesktopMode(mContext)
+                                && mGestureState.getEndTarget() == HOME) {
+                            // Set launcher animation started, so we don't notify from
+                            // desktop visibility controller
+                            DesktopVisibilityController.INSTANCE.get(
+                                    mContext).setLauncherAnimationRunning(true);
+                        }
+                    }
+
+                    @Override
                     public void onAnimationEnd(Animator animation) {
                         mParallelRunningAnim = null;
                         mStateCallback.setStateOnUiThread(STATE_PARALLEL_ANIM_FINISHED);
+                        // Swipe to home animation finished, notify DesktopVisibilityController
+                        // to recreate Taskbar
+                        if (DisplayController.isInDesktopMode(mContext)
+                                && mGestureState.getEndTarget() == HOME) {
+                            DesktopVisibilityController.INSTANCE.get(
+                                    mContext).onLauncherAnimationFromDesktopEnd();
+                        }
                     }
                 });
                 mParallelRunningAnim.start();
@@ -1691,7 +1712,6 @@ public abstract class AbsSwipeUpHandler<
                 if (mHandOffAnimationToHome) {
                     handOffAnimation(velocityPxPerMs);
                 }
-
                 windowAnim[0].addAnimatorListener(new AnimationSuccessListener() {
                     @Override
                     public void onAnimationSuccess(Animator animator) {

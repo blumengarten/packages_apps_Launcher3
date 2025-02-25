@@ -99,10 +99,11 @@ public class DisplayController implements ComponentCallbacks,
     public static final int CHANGE_NAVIGATION_MODE = 1 << 4;
     public static final int CHANGE_TASKBAR_PINNING = 1 << 5;
     public static final int CHANGE_DESKTOP_MODE = 1 << 6;
+    public static final int CHANGE_SHOW_LOCKED_TASKBAR = 1 << 7;
 
     public static final int CHANGE_ALL = CHANGE_ACTIVE_SCREEN | CHANGE_ROTATION
             | CHANGE_DENSITY | CHANGE_SUPPORTED_BOUNDS | CHANGE_NAVIGATION_MODE
-            | CHANGE_TASKBAR_PINNING | CHANGE_DESKTOP_MODE;
+            | CHANGE_TASKBAR_PINNING | CHANGE_DESKTOP_MODE | CHANGE_SHOW_LOCKED_TASKBAR;
 
     private static final String ACTION_OVERLAY_CHANGED = "android.intent.action.OVERLAY_CHANGED";
     private static final String TARGET_OVERLAY_PACKAGE = "android";
@@ -209,6 +210,13 @@ public class DisplayController implements ComponentCallbacks,
      */
     public static boolean isPinnedTaskbar(Context context) {
         return INSTANCE.get(context).getInfo().isPinnedTaskbar();
+    }
+
+    /**
+     * Returns whether the taskbar is pinned in gesture navigation mode.
+     */
+    public static boolean isInDesktopMode(Context context) {
+        return INSTANCE.get(context).getInfo().isInDesktopMode();
     }
 
     /**
@@ -334,6 +342,9 @@ public class DisplayController implements ComponentCallbacks,
         }
         if (newInfo.mIsInDesktopMode != oldInfo.mIsInDesktopMode) {
             change |= CHANGE_DESKTOP_MODE;
+        }
+        if (newInfo.mShowLockedTaskbarOnHome != oldInfo.mShowLockedTaskbarOnHome) {
+            change |= CHANGE_SHOW_LOCKED_TASKBAR;
         }
 
         if (DEBUG) {
@@ -494,6 +505,13 @@ public class DisplayController implements ComponentCallbacks,
         }
 
         /**
+         * Returns whether the taskbar is in desktop mode.
+         */
+        public boolean isInDesktopMode() {
+            return mIsInDesktopMode;
+        }
+
+        /**
          * Returns {@code true} if the bounds represent a tablet.
          */
         public boolean isTablet(WindowBounds bounds) {
@@ -575,6 +593,7 @@ public class DisplayController implements ComponentCallbacks,
         appendFlag(result, change, CHANGE_NAVIGATION_MODE, "CHANGE_NAVIGATION_MODE");
         appendFlag(result, change, CHANGE_TASKBAR_PINNING, "CHANGE_TASKBAR_VARIANT");
         appendFlag(result, change, CHANGE_DESKTOP_MODE, "CHANGE_DESKTOP_MODE");
+        appendFlag(result, change, CHANGE_SHOW_LOCKED_TASKBAR, "CHANGE_SHOW_LOCKED_TASKBAR");
         return result.toString();
     }
 
@@ -592,6 +611,7 @@ public class DisplayController implements ComponentCallbacks,
         pw.println("  isTaskbarPinned=" + info.mIsTaskbarPinned);
         pw.println("  isTaskbarPinnedInDesktopMode=" + info.mIsTaskbarPinnedInDesktopMode);
         pw.println("  isInDesktopMode=" + info.mIsInDesktopMode);
+        pw.println("  showLockedTaskbarOnHome=" + info.showLockedTaskbarOnHome());
         pw.println("  currentSize=" + info.currentSize);
         info.mPerDisplayBounds.forEach((key, value) -> pw.println(
                 "  perDisplayBounds - " + key + ": " + value));
