@@ -64,8 +64,8 @@
     <string name="widgets_full_sheet_cancel_button_description" msgid="5766167035728653605">"پاک کردن نوشتار از چارگوش جستجو"</string>
     <string name="no_widgets_available" msgid="4337693382501046170">"ابزاره و میان‌بری دردسترس نیست"</string>
     <string name="no_search_results" msgid="3787956167293097509">"هیچ ابزاره یا میان‌بری پیدا نشد"</string>
-    <string name="widgets_full_sheet_personal_tab" msgid="2743540105607120182">"ابزاره‌های شخصی"</string>
-    <string name="widgets_full_sheet_work_tab" msgid="3767150027110633765">"ابزاره‌های کاری"</string>
+    <string name="widgets_full_sheet_personal_tab" msgid="2743540105607120182">"شخصی"</string>
+    <string name="widgets_full_sheet_work_tab" msgid="3767150027110633765">"کاری"</string>
     <string name="widget_category_conversations" msgid="8894438636213590446">"مکالمه‌ها"</string>
     <string name="widget_category_note_taking" msgid="3469689394504266039">"یادداشت‌برداری"</string>
     <string name="widget_cell_tap_to_show_add_button_label" msgid="4354194214317043581">"نشان دادن دکمه افزودن"</string>
