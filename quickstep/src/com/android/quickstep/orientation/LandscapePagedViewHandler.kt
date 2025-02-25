@@ -311,6 +311,14 @@ open class LandscapePagedViewHandler : RecentsPagedOrientationHandler {
 
     override fun getTaskDragDisplacementFactor(isRtl: Boolean): Int = if (isRtl) 1 else -1
 
+    override fun getTaskDismissVerticalDirection(): Int = 1
+
+    override fun getTaskDismissLength(secondaryDimension: Int, taskThumbnailBounds: Rect): Int =
+        secondaryDimension - taskThumbnailBounds.left
+
+    override fun getTaskLaunchLength(secondaryDimension: Int, taskThumbnailBounds: Rect): Int =
+        taskThumbnailBounds.left
+
     /* -------------------- */
 
     override fun getChildBounds(

@@ -36,7 +36,6 @@ import com.android.quickstep.views.RecentsViewContainer
 import com.android.quickstep.views.TaskView
 import com.google.android.msdl.data.model.MSDLToken
 import kotlin.math.abs
-import kotlin.math.sign
 
 /** Touch controller for handling task view card dismiss swipes */
 class TaskViewDismissTouchController<CONTAINER>(
@@ -53,6 +52,8 @@ CONTAINER : RecentsViewContainer {
             recentsView.pagedOrientationHandler.upDownSwipeDirection,
         )
     private val isRtl = isRtl(container.resources)
+    private val upDirection: Int = recentsView.pagedOrientationHandler.getUpDirection(isRtl)
+
     private val tempTaskThumbnailBounds = Rect()
 
     private var taskBeingDragged: TaskView? = null
@@ -96,7 +97,11 @@ CONTAINER : RecentsViewContainer {
         }
 
         onControllerTouchEvent(ev)
-        return detector.isDraggingState && detector.wasInitialTouchPositive()
+        val upDirectionIsPositive = upDirection == SingleAxisSwipeDetector.DIRECTION_POSITIVE
+        val wasInitialTouchUp =
+            (upDirectionIsPositive && detector.wasInitialTouchPositive()) ||
+                (!upDirectionIsPositive && !detector.wasInitialTouchPositive())
+        return detector.isDraggingState && wasInitialTouchUp
     }
 
     override fun onControllerTouchEvent(ev: MotionEvent?): Boolean = detector.onTouchEvent(ev)
@@ -107,25 +112,27 @@ CONTAINER : RecentsViewContainer {
         if (!canInterceptTouch(ev)) {
             return false
         }
-
         taskBeingDragged =
             recentsView.taskViews
                 .firstOrNull {
                     recentsView.isTaskViewVisible(it) && container.dragLayer.isEventOverView(it, ev)
                 }
                 ?.also {
+                    val secondaryLayerDimension =
+                        recentsView.pagedOrientationHandler.getSecondaryDimension(
+                            container.dragLayer
+                        )
                     // Dismiss length as bottom of task so it is fully off screen when dismissed.
                     it.getThumbnailBounds(tempTaskThumbnailBounds, relativeToDragLayer = true)
-                    dismissLength = tempTaskThumbnailBounds.bottom
+                    dismissLength =
+                        recentsView.pagedOrientationHandler.getTaskDismissLength(
+                            secondaryLayerDimension,
+                            tempTaskThumbnailBounds,
+                        )
                     verticalFactor =
-                        recentsView.pagedOrientationHandler.secondaryTranslationDirectionFactor
+                        recentsView.pagedOrientationHandler.getTaskDismissVerticalDirection()
                 }
-
-        detector.setDetectableScrollConditions(
-            recentsView.pagedOrientationHandler.getUpDirection(isRtl),
-            /* ignoreSlop = */ false,
-        )
-
+        detector.setDetectableScrollConditions(upDirection, /* ignoreSlop= */ false)
         return true
     }
 
@@ -148,8 +155,8 @@ CONTAINER : RecentsViewContainer {
             boundToRange(abs(currentDisplacement), 0f, dismissLength.toFloat())
         // When swiping below origin, allow slight undershoot to simulate resisting the movement.
         val totalDisplacement =
-            if (isDisplacementPositiveDirection(currentDisplacement))
-                boundedDisplacement * sign(currentDisplacement)
+            if (recentsView.pagedOrientationHandler.isGoingUp(currentDisplacement, isRtl))
+                boundedDisplacement * verticalFactor
             else
                 mapToRange(
                     boundedDisplacement,
@@ -158,7 +165,7 @@ CONTAINER : RecentsViewContainer {
                     0f,
                     container.resources.getDimension(R.dimen.task_dismiss_max_undershoot),
                     DECELERATE,
-                )
+                ) * -verticalFactor
         taskBeingDragged.secondaryDismissTranslationProperty.setValue(
             taskBeingDragged,
             totalDisplacement,
@@ -207,8 +214,9 @@ CONTAINER : RecentsViewContainer {
         }
         val isBeyondDismissThreshold =
             abs(currentDisplacement) > abs(DISMISS_THRESHOLD_FRACTION * dismissLength)
-        val isFlingingTowardsDismiss = detector.isFling(velocity) && velocity < 0
-        val isFlingingTowardsRestState = detector.isFling(velocity) && velocity > 0
+        val velocityIsGoingUp = recentsView.pagedOrientationHandler.isGoingUp(velocity, isRtl)
+        val isFlingingTowardsDismiss = detector.isFling(velocity) && velocityIsGoingUp
+        val isFlingingTowardsRestState = detector.isFling(velocity) && !velocityIsGoingUp
         val isDismissing =
             isFlingingTowardsDismiss || (isBeyondDismissThreshold && !isFlingingTowardsRestState)
         springAnimation =
@@ -231,10 +239,6 @@ CONTAINER : RecentsViewContainer {
                 recentsScaleAnimation = null
             }
     }
-
-    // Returns if the current task being dragged is towards "positive" (e.g. dismissal).
-    private fun isDisplacementPositiveDirection(displacement: Float): Boolean =
-        sign(displacement) == sign(verticalFactor.toFloat())
 
     private fun clearState() {
         detector.finishedScrolling()
