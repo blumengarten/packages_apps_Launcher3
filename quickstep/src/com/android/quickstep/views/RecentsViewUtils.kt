@@ -85,6 +85,9 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
     /** Counts [TaskView]s that are large tiles. */
     fun getLargeTileCount(): Int = taskViews.count { it.isLargeTile }
 
+    /** Counts [TaskView]s that are grid tasks. */
+    fun getGridTaskCount(): Int = taskViews.count { it.isGridTask }
+
     /** Returns the first TaskView that should be displayed as a large tile. */
     fun getFirstLargeTaskView(): TaskView? =
         taskViews.firstOrNull {

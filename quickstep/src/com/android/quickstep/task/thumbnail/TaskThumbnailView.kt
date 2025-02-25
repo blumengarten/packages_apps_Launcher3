@@ -181,8 +181,10 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
     private fun resetViews() {
         liveTileView.isInvisible = true
         thumbnailView.isInvisible = true
+        thumbnailView.setImageBitmap(null)
         splashBackground.alpha = 0f
         splashIcon.alpha = 0f
+        splashIcon.setImageDrawable(null)
         scrimView.alpha = 0f
         setBackgroundColor(Color.BLACK)
         taskThumbnailViewHeader?.isInvisible = true

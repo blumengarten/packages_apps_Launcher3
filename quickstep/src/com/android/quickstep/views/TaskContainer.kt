@@ -109,6 +109,8 @@ class TaskContainer(
         overlay.destroy()
         if (enableRefactorTaskThumbnail()) {
             isThumbnailValid = false
+            thumbnailData = null
+            thumbnailView.onRecycle()
         } else {
             thumbnailViewDeprecated.setShowSplashForSplitSelection(false)
         }

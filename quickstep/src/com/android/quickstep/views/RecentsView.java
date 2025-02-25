@@ -3908,6 +3908,22 @@ public abstract class RecentsView<
                 // the only invariant point in landscape split screen.
                 snapToLastTask = true;
             }
+            if (mUtils.getGridTaskCount() == 1 && dismissedTaskView.isGridTask()) {
+                TaskView lastLargeTile = mUtils.getLastLargeTaskView();
+                if (lastLargeTile != null) {
+                    // Calculate the distance to put last large tile back to middle of the screen.
+                    int primaryScroll = getPagedOrientationHandler().getPrimaryScroll(this);
+                    int lastLargeTileScroll = getScrollForPage(indexOfChild(lastLargeTile));
+                    longGridRowWidthDiff = primaryScroll - lastLargeTileScroll;
+
+                    if (!isClearAllHidden) {
+                        // If ClearAllButton is visible, reduce the distance by scroll difference
+                        // between ClearAllButton and the last task.
+                        longGridRowWidthDiff += getLastTaskScroll(/*clearAllScroll=*/0,
+                                getPagedOrientationHandler().getPrimarySize(mClearAllButton));
+                    }
+                }
+            }
 
             // If we need to animate the grid to compensate the clear all gap, we split the second
             // half of the dismiss pending animation (in which the non-dismissed tasks slide into
