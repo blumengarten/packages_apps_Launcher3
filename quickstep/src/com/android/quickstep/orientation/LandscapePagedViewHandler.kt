@@ -577,7 +577,8 @@ open class LandscapePagedViewHandler : RecentsPagedOrientationHandler {
         isRtl: Boolean,
         deviceProfile: DeviceProfile,
         splitConfig: SplitBounds,
-        inSplitSelection: Boolean
+        inSplitSelection: Boolean,
+        oneIconHiddenDueToSmallWidth: Boolean,
     ) {
         val spaceAboveSnapshot = deviceProfile.overviewTaskThumbnailTopMarginPx
         val totalThumbnailHeight = groupedTaskViewHeight - spaceAboveSnapshot
@@ -590,7 +591,8 @@ open class LandscapePagedViewHandler : RecentsPagedOrientationHandler {
                 totalThumbnailHeight,
                 isRtl,
                 deviceProfile.overviewTaskMarginPx,
-                dividerBar
+                dividerBar,
+                oneIconHiddenDueToSmallWidth,
             )
 
         updateSplitIconsPosition(primaryIconView, topLeftY, isRtl)
@@ -647,6 +649,7 @@ open class LandscapePagedViewHandler : RecentsPagedOrientationHandler {
         isRtl: Boolean,
         overviewTaskMarginPx: Int,
         dividerSize: Int,
+        oneIconHiddenDueToSmallWidth: Boolean,
     ): SplitIconPositions {
         return if (Flags.enableOverviewIconMenu()) {
             if (isRtl) {
@@ -655,11 +658,21 @@ open class LandscapePagedViewHandler : RecentsPagedOrientationHandler {
                 SplitIconPositions(0, primarySnapshotHeight + dividerSize)
             }
         } else {
-            val topLeftY = primarySnapshotHeight + overviewTaskMarginPx
-            SplitIconPositions(
-                topLeftY = topLeftY,
-                bottomRightY = topLeftY + dividerSize + taskIconHeight
-            )
+            if (oneIconHiddenDueToSmallWidth) {
+                // Center both icons
+                val centerY = primarySnapshotHeight + overviewTaskMarginPx +
+                        ((taskIconHeight + dividerSize) / 2)
+                SplitIconPositions(
+                    topLeftY = centerY,
+                    bottomRightY = centerY,
+                )
+            } else {
+                val topLeftY = primarySnapshotHeight + overviewTaskMarginPx
+                SplitIconPositions(
+                    topLeftY = topLeftY,
+                    bottomRightY = topLeftY + dividerSize + taskIconHeight,
+                )
+            }
         }
     }
 
