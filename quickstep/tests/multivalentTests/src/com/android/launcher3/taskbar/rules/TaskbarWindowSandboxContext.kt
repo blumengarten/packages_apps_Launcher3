@@ -26,7 +26,7 @@ import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppComponent
 import com.android.launcher3.dagger.LauncherAppSingleton
-import com.android.launcher3.util.AllModulesForTest
+import com.android.launcher3.util.AllModulesMinusWMProxy
 import com.android.launcher3.util.DaggerSingletonTracker
 import com.android.launcher3.util.DisplayController
 import com.android.launcher3.util.FakePrefsModule
@@ -138,7 +138,13 @@ abstract class DisplayControllerModule {
 
 @LauncherAppSingleton
 @Component(
-    modules = [AllModulesForTest::class, FakePrefsModule::class, DisplayControllerModule::class]
+    modules =
+        [
+            AllModulesMinusWMProxy::class,
+            FakePrefsModule::class,
+            DisplayControllerModule::class,
+            TaskbarSandboxModule::class,
+        ]
 )
 interface TaskbarSandboxComponent : LauncherAppComponent {
 
