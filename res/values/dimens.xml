@@ -307,6 +307,7 @@
 
     <!-- Folders -->
     <dimen name="page_indicator_dot_size">6dp</dimen>
+    <dimen name="page_indicator_gap_width">4dp</dimen>
     <dimen name="page_indicator_size">10dp</dimen>
 
 
