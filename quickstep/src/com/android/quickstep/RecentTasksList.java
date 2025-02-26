@@ -353,7 +353,7 @@ public class RecentTasksList {
 
         TaskLoadResult allTasks = new TaskLoadResult(requestId, loadKeysOnly, rawTasks.size());
 
-        int numVisibleTasks = 0;
+        boolean isFirstVisibleTaskFound = false;
         for (GroupedTaskInfo rawTask : rawTasks) {
             if (rawTask.isBaseType(TYPE_DESK)) {
                 // TYPE_DESK tasks is only created when desktop mode can be entered,
@@ -362,6 +362,14 @@ public class RecentTasksList {
                     List<DesktopTask> desktopTasks = createDesktopTasks(
                             rawTask.getBaseGroupedTask());
                     allTasks.addAll(desktopTasks);
+
+                    // If any task in desktop group task is visible, set isFirstVisibleTaskFound to
+                    // true. This way if there is a transparent task in the list later on, it does
+                    // not get its own tile in Overview.
+                    if (rawTask.getBaseGroupedTask().getTaskInfoList().stream().anyMatch(
+                            taskInfo -> taskInfo.isVisible)) {
+                        isFirstVisibleTaskFound = true;
+                    }
                 }
                 continue;
             }
@@ -402,7 +410,7 @@ public class RecentTasksList {
                                     tmpLockedUsers.get(task2Key.userId) /* isLocked */);
                 } else {
                     // Is fullscreen task
-                    if (numVisibleTasks > 0) {
+                    if (!isFirstVisibleTaskFound) {
                         boolean isExcluded = (taskInfo1.baseIntent.getFlags()
                                 & FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS) != 0;
                         if (taskInfo1.isTopActivityTransparent && isExcluded) {
@@ -413,7 +421,7 @@ public class RecentTasksList {
                     }
                 }
                 if (taskInfo1.isVisible) {
-                    numVisibleTasks++;
+                    isFirstVisibleTaskFound = true;
                 }
                 if (task2 != null) {
                     Objects.requireNonNull(rawTask.getSplitBounds());
