@@ -19,6 +19,7 @@ package com.android.launcher3.taskbar
 import android.animation.AnimatorTestRule
 import android.content.ComponentName
 import android.content.Intent
+import android.os.Process
 import android.platform.test.annotations.DisableFlags
 import android.platform.test.annotations.EnableFlags
 import android.platform.test.flag.junit.SetFlagsRule
@@ -27,6 +28,7 @@ import com.android.launcher3.Flags.FLAG_ENABLE_MULTI_INSTANCE_MENU_TASKBAR
 import com.android.launcher3.Flags.FLAG_TASKBAR_OVERFLOW
 import com.android.launcher3.R
 import com.android.launcher3.dagger.LauncherAppSingleton
+import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.taskbar.TaskbarControllerTestUtil.runOnMainSync
 import com.android.launcher3.taskbar.TaskbarViewTestUtil.createHotseatItems
 import com.android.launcher3.taskbar.bubbles.BubbleBarViewController
@@ -111,6 +113,7 @@ class TaskbarOverflowTest {
     @InjectController lateinit var recentAppsController: TaskbarRecentAppsController
     @InjectController lateinit var bubbleBarViewController: BubbleBarViewController
     @InjectController lateinit var bubbleStashController: BubbleStashController
+    @InjectController lateinit var keyboardQuickSwitchController: KeyboardQuickSwitchController
 
     private var desktopTaskListener: IDesktopTaskListener? = null
 
@@ -209,8 +212,10 @@ class TaskbarOverflowTest {
         runOnMainSync {
             val taskbarView: TaskbarView =
                 taskbarUnitTestRule.activityContext.dragLayer.findViewById(R.id.taskbar_view)
+            val hotseatItems = createHotseatItems(maxNumberOfTaskbarIcons - initialIconCount)
+
             taskbarView.updateItems(
-                createHotseatItems(maxNumberOfTaskbarIcons - initialIconCount),
+                recentAppsController.updateHotseatItemInfos(hotseatItems as Array<ItemInfo?>),
                 recentAppsController.shownTasks,
             )
         }
@@ -327,13 +332,122 @@ class TaskbarOverflowTest {
         assertThat(taskbarIconsCentered).isTrue()
     }
 
+    @Test
+    @TaskbarMode(PINNED)
+    fun testPressingOverflowButtonOpensKeyboardQuickSwitch() {
+        val maxNumIconViews = maxNumberOfTaskbarIcons
+        // Assume there are at least all apps and divider icon, as they would appear once running
+        // apps are added, even if not present initially.
+        val initialIconCount = currentNumberOfTaskbarIcons.coerceAtLeast(2)
+
+        val targetOverflowSize = 5
+        val createdTasks = maxNumIconViews - initialIconCount + targetOverflowSize
+        createDesktopTask(createdTasks)
+
+        assertThat(taskbarOverflowIconIndex).isEqualTo(initialIconCount)
+        tapOverflowIcon()
+        // Keyboard quick switch view is shown only after list of recent task is asynchronously
+        // retrieved from the recents model.
+        runOnMainSync { recentsModel.resolvePendingTaskRequests() }
+
+        assertThat(getOnUiThread { keyboardQuickSwitchController.isShownFromTaskbar }).isTrue()
+        assertThat(getOnUiThread { keyboardQuickSwitchController.shownTaskIds() })
+            .containsExactlyElementsIn(0..<createdTasks)
+
+        tapOverflowIcon()
+        assertThat(keyboardQuickSwitchController.isShown).isFalse()
+    }
+
+    @Test
+    @TaskbarMode(PINNED)
+    fun testHotseatItemTasksNotShownInRecents() {
+        val maxNumIconViews = maxNumberOfTaskbarIcons
+        // Assume there are at least all apps and divider icon, as they would appear once running
+        // apps are added, even if not present initially.
+        val initialIconCount = currentNumberOfTaskbarIcons.coerceAtLeast(2)
+        val hotseatItems = createHotseatItems(1)
+
+        val targetOverflowSize = 5
+        val createdTasks = maxNumIconViews - initialIconCount + targetOverflowSize
+        createDesktopTaskWithTasksFromPackages(
+            listOf("fake") +
+                listOf(hotseatItems[0]?.targetPackage ?: "") +
+                List(createdTasks - 2) { "fake" }
+        )
+
+        runOnMainSync {
+            val taskbarView: TaskbarView =
+                taskbarUnitTestRule.activityContext.dragLayer.findViewById(R.id.taskbar_view)
+            taskbarView.updateItems(
+                recentAppsController.updateHotseatItemInfos(hotseatItems as Array<ItemInfo?>),
+                recentAppsController.shownTasks,
+            )
+        }
+
+        assertThat(maxNumberOfTaskbarIcons).isEqualTo(maxNumIconViews)
+        assertThat(currentNumberOfTaskbarIcons).isEqualTo(maxNumIconViews)
+        assertThat(taskbarOverflowIconIndex).isEqualTo(initialIconCount + hotseatItems.size)
+        assertThat(overflowItems)
+            .containsExactlyElementsIn(listOf(0) + (2..targetOverflowSize + 1).toList())
+    }
+
+    @Test
+    @TaskbarMode(PINNED)
+    fun testHotseatItemTasksNotShownInKQS() {
+        val maxNumIconViews = maxNumberOfTaskbarIcons
+        // Assume there are at least all apps and divider icon, as they would appear once running
+        // apps are added, even if not present initially.
+        val initialIconCount = currentNumberOfTaskbarIcons.coerceAtLeast(2)
+        val hotseatItems = createHotseatItems(1)
+
+        val targetOverflowSize = 5
+        val createdTasks = maxNumIconViews - initialIconCount + targetOverflowSize
+        createDesktopTaskWithTasksFromPackages(
+            listOf("fake") +
+                listOf(hotseatItems[0]?.targetPackage ?: "") +
+                List(createdTasks - 2) { "fake" }
+        )
+
+        runOnMainSync {
+            val taskbarView: TaskbarView =
+                taskbarUnitTestRule.activityContext.dragLayer.findViewById(R.id.taskbar_view)
+            taskbarView.updateItems(
+                recentAppsController.updateHotseatItemInfos(hotseatItems as Array<ItemInfo?>),
+                recentAppsController.shownTasks,
+            )
+        }
+
+        tapOverflowIcon()
+        // Keyboard quick switch view is shown only after list of recent task is asynchronously
+        // retrieved from the recents model.
+        runOnMainSync { recentsModel.resolvePendingTaskRequests() }
+
+        assertThat(getOnUiThread { keyboardQuickSwitchController.isShownFromTaskbar }).isTrue()
+        assertThat(getOnUiThread { keyboardQuickSwitchController.shownTaskIds() })
+            .containsExactlyElementsIn(listOf(0) + (2..<createdTasks).toList())
+    }
+
     private fun createDesktopTask(tasksToAdd: Int) {
+        createDesktopTaskWithTasksFromPackages((0..<tasksToAdd).map { "fake" })
+    }
+
+    private fun createDesktopTaskWithTasksFromPackages(packages: List<String>) {
         val tasks =
-            (0..<tasksToAdd).map {
-                Task(Task.TaskKey(it, 0, Intent(), ComponentName("", ""), 0, 2000))
-            }
+            packages.mapIndexed({ index, p ->
+                Task(
+                    Task.TaskKey(
+                        index,
+                        0,
+                        Intent().apply { `package` = p },
+                        ComponentName(p, ""),
+                        Process.myUserHandle().identifier,
+                        2000,
+                    )
+                )
+            })
+
         recentsModel.updateRecentTasks(listOf(DesktopTask(deskId = 0, tasks)))
-        for (task in 1..tasksToAdd) {
+        for (task in 1..tasks.size) {
             desktopTaskListener?.onTasksVisibilityChanged(
                 context.virtualDisplay.display.displayId,
                 task,
@@ -393,6 +507,14 @@ class TaskbarOverflowTest {
                 }
             }
         }
+
+    private fun tapOverflowIcon() {
+        runOnMainSync {
+            val overflowIcon =
+                taskbarViewController.iconViews.firstOrNull { it is TaskbarOverflowView }
+            assertThat(overflowIcon?.callOnClick()).isTrue()
+        }
+    }
 
     /**
      * Adds enough running apps for taskbar to enter overflow of `targetOverflowSize`, and verifies
