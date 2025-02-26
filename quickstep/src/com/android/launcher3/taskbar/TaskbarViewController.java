@@ -1167,11 +1167,8 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         mTaskbarNavButtonTranslationY.updateValue(-deviceProfile.getTaskbarOffsetY());
     }
 
-    /**
-     * Maps the given operator to all the top-level children of TaskbarView.
-     */
-    public void mapOverItems(LauncherBindableItemsContainer.ItemOperator op) {
-        mTaskbarView.mapOverItems(op);
+    public LauncherBindableItemsContainer getContent() {
+        return mModelCallbacks;
     }
 
     /**

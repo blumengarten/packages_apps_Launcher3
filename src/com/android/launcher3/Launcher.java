@@ -185,7 +185,6 @@ import com.android.launcher3.compat.AccessibilityManagerCompat;
 import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.debug.TestEventEmitter;
 import com.android.launcher3.debug.TestEventEmitter.TestEvent;
-import com.android.launcher3.dot.DotInfo;
 import com.android.launcher3.dragndrop.DragController;
 import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.dragndrop.DragView;
@@ -237,6 +236,7 @@ import com.android.launcher3.util.IntArray;
 import com.android.launcher3.util.IntSet;
 import com.android.launcher3.util.ItemInflater;
 import com.android.launcher3.util.KeyboardShortcutsDelegate;
+import com.android.launcher3.util.LauncherBindableItemsContainer;
 import com.android.launcher3.util.LockedUserState;
 import com.android.launcher3.util.MSDLPlayerWrapper;
 import com.android.launcher3.util.PackageUserKey;
@@ -544,7 +544,7 @@ public class Launcher extends StatefulActivity<LauncherState>
         mItemInflater = new ItemInflater<>(this, mAppWidgetHolder, getItemOnClickListener(),
                 mFocusHandler, new CellLayout(mWorkspace.getContext(), mWorkspace));
 
-        mPopupDataProvider = new PopupDataProvider(this::updateNotificationDots);
+        mPopupDataProvider = new PopupDataProvider(this);
         mWidgetPickerDataProvider = new WidgetPickerDataProvider();
         PillColorProvider.getInstance(mWorkspace.getContext()).registerObserver();
 
@@ -1597,11 +1597,6 @@ public class Launcher extends StatefulActivity<LauncherState>
     }
 
     private final ScreenOnListener mScreenOnListener = this::onScreenOnChanged;
-
-    private void updateNotificationDots(Predicate<PackageUserKey> updatedDots) {
-        mWorkspace.updateNotificationDots(updatedDots);
-        mAppsView.getAppsStore().updateNotificationDots(updatedDots);
-    }
 
     @Override
     public void onAttachedToWindow() {
@@ -3027,11 +3022,6 @@ public class Launcher extends StatefulActivity<LauncherState>
         return mWidgetPickerDataProvider;
     }
 
-    @Override
-    public DotInfo getDotInfoForItem(ItemInfo info) {
-        return mPopupDataProvider.getDotInfoForItem(info);
-    }
-
     @NonNull
     public LauncherOverlayManager getOverlayManager() {
         return mOverlayManager;
@@ -3044,6 +3034,12 @@ public class Launcher extends StatefulActivity<LauncherState>
     @Override
     public DragLayer getDragLayer() {
         return mDragLayer;
+    }
+
+    @NonNull
+    @Override
+    public LauncherBindableItemsContainer getContent() {
+        return mWorkspace;
     }
 
     @Override
