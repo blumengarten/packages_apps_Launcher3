@@ -16,23 +16,27 @@
 package com.android.launcher3.taskbar;
 
 import static android.content.Context.RECEIVER_NOT_EXPORTED;
+import static android.content.Context.RECEIVER_EXPORTED;
 import static android.view.WindowManager.LayoutParams.TYPE_NAVIGATION_BAR;
 import static android.view.WindowManager.LayoutParams.TYPE_NAVIGATION_BAR_PANEL;
 
 import static com.android.launcher3.BaseActivity.EVENT_DESTROYED;
+import static com.android.launcher3.Flags.enableGrowthNudge;
 import static com.android.launcher3.Flags.enableUnfoldStateAnimation;
 import static com.android.launcher3.config.FeatureFlags.ENABLE_TASKBAR_NAVBAR_UNIFICATION;
 import static com.android.launcher3.config.FeatureFlags.enableTaskbarNoRecreate;
 import static com.android.launcher3.util.DisplayController.CHANGE_DENSITY;
 import static com.android.launcher3.util.DisplayController.CHANGE_DESKTOP_MODE;
 import static com.android.launcher3.util.DisplayController.CHANGE_NAVIGATION_MODE;
+import static com.android.launcher3.util.DisplayController.CHANGE_SHOW_LOCKED_TASKBAR;
 import static com.android.launcher3.util.DisplayController.CHANGE_TASKBAR_PINNING;
-import static com.android.launcher3.util.DisplayController.TASKBAR_NOT_DESTROYED_TAG;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 import static com.android.launcher3.util.FlagDebugUtils.formatFlagChange;
+import static com.android.launcher3.taskbar.growth.GrowthConstants.BROADCAST_SHOW_NUDGE;
 import static com.android.quickstep.util.SystemActionConstants.ACTION_SHOW_TASKBAR;
 import static com.android.quickstep.util.SystemActionConstants.SYSTEM_ACTION_ID_TASKBAR;
 
+import android.animation.AnimatorSet;
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.ComponentCallbacks;
@@ -60,9 +64,12 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.launcher3.DeviceProfile;
+import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherAppState;
+import com.android.launcher3.anim.AnimatorListeners;
 import com.android.launcher3.anim.AnimatorPlaybackController;
+import com.android.launcher3.statehandlers.DesktopVisibilityController;
 import com.android.launcher3.statemanager.StatefulActivity;
 import com.android.launcher3.taskbar.TaskbarNavButtonController.TaskbarNavButtonCallbacks;
 import com.android.launcher3.taskbar.unfold.NonDestroyableScopedUnfoldTransitionProgressProvider;
@@ -98,9 +105,10 @@ import java.util.StringJoiner;
 public class TaskbarManager {
     private static final String TAG = "TaskbarManager";
     private static final boolean DEBUG = false;
-    // TODO(b/382378283) remove all logs with this tag
-    public static final String NULL_TASKBAR_ROOT_LAYOUT_TAG = "b/382378283";
-    public static final String ILLEGAL_ARGUMENT_WM_ADD_VIEW = "b/391653300";
+    private static final int TASKBAR_DESTROY_DURATION = 100;
+
+    // TODO: b/397738606  - Remove all logs with this tag after the growth framework is integrated.
+    public static final String GROWTH_FRAMEWORK_TAG = "Growth Framework";
 
     /**
      * All the configurations which do not initiate taskbar recreation.
@@ -125,10 +133,10 @@ public class TaskbarManager {
             Settings.Secure.NAV_BAR_KIDS_MODE);
 
     private final Context mBaseContext;
-    private TaskbarNavButtonCallbacks mNavCallbacks;
+    private final TaskbarNavButtonCallbacks mNavCallbacks;
     // TODO: Remove this during the connected displays lifecycle refactor.
     private final Context mPrimaryWindowContext;
-    private WindowManager mPrimaryWindowManager;
+    private final WindowManager mPrimaryWindowManager;
     private TaskbarNavButtonController mPrimaryNavButtonController;
     private ComponentCallbacks mPrimaryComponentCallbacks;
 
@@ -153,6 +161,8 @@ public class TaskbarManager {
             new SparseArray<>();
     /** DisplayId - {@link ComponentCallbacks} map for Connected Display. */
     private final SparseArray<ComponentCallbacks> mComponentCallbacks = new SparseArray<>();
+    /** DisplayId - {@link DeviceProfile} map for Connected Display. */
+    private final SparseArray<DeviceProfile> mExternalDeviceProfiles = new SparseArray<>();
     private StatefulActivity mActivity;
     private RecentsViewContainer mRecentsViewContainer;
 
@@ -172,33 +182,47 @@ public class TaskbarManager {
         @Override
         public void onDisplayInfoChanged(Context context, DisplayController.Info info, int flags) {
             if ((flags & CHANGE_DENSITY) != 0) {
-                debugTaskbarManager("onDisplayInfoChanged - Display density changed",
+                debugTaskbarManager("onDisplayInfoChanged: Display density changed",
                         context.getDisplayId());
             }
             if ((flags & CHANGE_NAVIGATION_MODE) != 0) {
-                debugTaskbarManager("onDisplayInfoChanged - Navigation mode changed",
+                debugTaskbarManager("onDisplayInfoChanged: Navigation mode changed",
                         context.getDisplayId());
             }
             if ((flags & CHANGE_DESKTOP_MODE) != 0) {
-                debugTaskbarManager("onDisplayInfoChanged - Desktop mode changed",
+                debugTaskbarManager("onDisplayInfoChanged: Desktop mode changed",
                         context.getDisplayId());
             }
             if ((flags & CHANGE_TASKBAR_PINNING) != 0) {
-                debugTaskbarManager("onDisplayInfoChanged - Taskbar pinning changed",
+                debugTaskbarManager("onDisplayInfoChanged: Taskbar pinning changed",
                         context.getDisplayId());
             }
 
             if ((flags & (CHANGE_DENSITY | CHANGE_NAVIGATION_MODE | CHANGE_DESKTOP_MODE
-                    | CHANGE_TASKBAR_PINNING)) != 0) {
-                debugTaskbarManager("onDisplayInfoChanged - Recreating Taskbar!",
+                    | CHANGE_TASKBAR_PINNING | CHANGE_SHOW_LOCKED_TASKBAR)) != 0) {
+                debugTaskbarManager("onDisplayInfoChanged: Recreating Taskbar!",
                         context.getDisplayId());
-                recreateTaskbar();
+                TaskbarActivityContext taskbarActivityContext = getCurrentActivityContext();
+                if ((flags & CHANGE_SHOW_LOCKED_TASKBAR) != 0) {
+                    recreateTaskbars();
+                } else if ((flags & CHANGE_DESKTOP_MODE) != 0) {
+                    // Only Handles Special Exit Cases for Desktop Mode Taskbar Recreation.
+                    if (taskbarActivityContext != null
+                            && !DesktopVisibilityController.INSTANCE.get(taskbarActivityContext)
+                            .isInDesktopMode()
+                            && !DisplayController.showLockedTaskbarOnHome(context)) {
+                        recreateTaskbars();
+                    }
+                } else {
+                    recreateTaskbars();
+                }
             }
         }
     }
+
     private final SettingsCache.OnChangeListener mOnSettingsChangeListener = c -> {
-        debugTaskbarManager("Settings changed! Recreating Taskbar!");
-        recreateTaskbar();
+        debugPrimaryTaskbar("Settings changed! Recreating Taskbar!");
+        recreateTaskbars();
     };
 
     private final PerceptibleTaskListener mTaskStackListener;
@@ -258,11 +282,56 @@ public class TaskbarManager {
         public void onTaskRemoved(int taskId) {
             mPerceptibleTasks.remove(taskId);
         }
-    };
+    }
+
+    private final DesktopVisibilityController.TaskbarDesktopModeListener
+            mTaskbarDesktopModeListener =
+            new DesktopVisibilityController.TaskbarDesktopModeListener() {
+                @Override
+                public void onExitDesktopMode(int duration) {
+                    for (int taskbarIndex = 0; taskbarIndex < mTaskbars.size(); taskbarIndex++) {
+                        int displayId = mTaskbars.keyAt(taskbarIndex);
+                        TaskbarActivityContext taskbarActivityContext = getTaskbarForDisplay(
+                                displayId);
+                        if (taskbarActivityContext != null
+                                && !taskbarActivityContext.isInOverview()) {
+                            AnimatorSet animatorSet = taskbarActivityContext.onDestroyAnimation(
+                                    TASKBAR_DESTROY_DURATION);
+                            animatorSet.addListener(AnimatorListeners.forEndCallback(
+                                    () -> recreateTaskbarForDisplay(getDefaultDisplayId(),
+                                            duration)));
+                            animatorSet.start();
+                        }
+                    }
+                }
+
+                @Override
+                public void onEnterDesktopMode(int duration) {
+                    for (int taskbarIndex = 0; taskbarIndex < mTaskbars.size(); taskbarIndex++) {
+                        int displayId = mTaskbars.keyAt(taskbarIndex);
+                        TaskbarActivityContext taskbarActivityContext = getTaskbarForDisplay(
+                                displayId);
+                        AnimatorSet animatorSet = taskbarActivityContext.onDestroyAnimation(
+                                TASKBAR_DESTROY_DURATION);
+                        animatorSet.addListener(AnimatorListeners.forEndCallback(
+                                () -> recreateTaskbarForDisplay(getDefaultDisplayId(), duration)));
+                        animatorSet.start();
+                    }
+                }
+
+                @Override
+                public void onTaskbarCornerRoundingUpdate(
+                        boolean doesAnyTaskRequireTaskbarRounding) {
+                    //NO-OP
+                }
+            };
+
 
     private boolean mUserUnlocked = false;
 
     private final SimpleBroadcastReceiver mTaskbarBroadcastReceiver;
+
+    private final SimpleBroadcastReceiver mGrowthBroadcastReceiver;
 
     private final AllAppsActionManager mAllAppsActionManager;
     private final RecentsDisplayModel mRecentsDisplayModel;
@@ -271,14 +340,12 @@ public class TaskbarManager {
         @Override
         public void run() {
             int displayId = getDefaultDisplayId();
-            debugTaskbarManager("mActivityOnDestroyCallback running!", displayId);
+            debugTaskbarManager("onActivityDestroyed:", displayId);
             if (mActivity != null) {
                 displayId = mActivity.getDisplayId();
                 mActivity.removeOnDeviceProfileChangeListener(
                         mDebugActivityDeviceProfileChanged);
-                Log.d(TASKBAR_NOT_DESTROYED_TAG,
-                        "unregistering activity lifecycle callbacks from "
-                                + "onActivityDestroyed.");
+                debugTaskbarManager("onActivityDestroyed: unregistering callbacks", displayId);
                 mActivity.removeEventCallback(EVENT_DESTROYED, this);
             }
             if (mActivity == mRecentsViewContainer) {
@@ -287,7 +354,10 @@ public class TaskbarManager {
             mActivity = null;
             TaskbarActivityContext taskbar = getTaskbarForDisplay(displayId);
             if (taskbar != null) {
+                debugTaskbarManager("onActivityDestroyed: setting taskbarUIController", displayId);
                 taskbar.setUIController(TaskbarUIController.DEFAULT);
+            } else {
+                debugTaskbarManager("onActivityDestroyed: taskbar is null!", displayId);
             }
             mUnfoldProgressProvider.setSourceProvider(null);
         }
@@ -297,26 +367,26 @@ public class TaskbarManager {
             new UnfoldTransitionProgressProvider.TransitionProgressListener() {
                 @Override
                 public void onTransitionStarted() {
-                    debugTaskbarManager("fold/unfold transition started getting called.");
+                    debugPrimaryTaskbar("fold/unfold transition started getting called.");
                 }
 
                 @Override
                 public void onTransitionProgress(float progress) {
-                    debugTaskbarManager(
+                    debugPrimaryTaskbar(
                             "fold/unfold transition progress getting called. | progress="
                                     + progress);
                 }
 
                 @Override
                 public void onTransitionFinishing() {
-                    debugTaskbarManager(
+                    debugPrimaryTaskbar(
                             "fold/unfold transition finishing getting called.");
 
                 }
 
                 @Override
                 public void onTransitionFinished() {
-                    debugTaskbarManager(
+                    debugPrimaryTaskbar(
                             "fold/unfold transition finished getting called.");
                 }
             };
@@ -334,9 +404,12 @@ public class TaskbarManager {
 
         // Set up primary display.
         int primaryDisplayId = getDefaultDisplayId();
-        debugTaskbarManager("TaskbarManager constructor", primaryDisplayId);
+        debugPrimaryTaskbar("TaskbarManager constructor");
         mPrimaryWindowContext = createWindowContext(primaryDisplayId);
         mPrimaryWindowManager = mPrimaryWindowContext.getSystemService(WindowManager.class);
+        DesktopVisibilityController.INSTANCE.get(
+                mPrimaryWindowContext).registerTaskbarDesktopModeListener(
+                mTaskbarDesktopModeListener);
         createTaskbarRootLayout(primaryDisplayId);
         createNavButtonController(primaryDisplayId);
         createAndRegisterComponentCallbacks(primaryDisplayId);
@@ -351,7 +424,18 @@ public class TaskbarManager {
         mTaskbarBroadcastReceiver =
                 new SimpleBroadcastReceiver(mPrimaryWindowContext,
                         UI_HELPER_EXECUTOR, this::showTaskbarFromBroadcast);
+
         mShutdownReceiver.register(Intent.ACTION_SHUTDOWN);
+        if (enableGrowthNudge()) {
+            // TODO: b/397739323 - Add permission to limit access to Growth Framework.
+            mGrowthBroadcastReceiver =
+                    new SimpleBroadcastReceiver(
+                            mPrimaryWindowContext, UI_HELPER_EXECUTOR, this::showGrowthNudge);
+            mGrowthBroadcastReceiver.register(RECEIVER_EXPORTED,
+                    BROADCAST_SHOW_NUDGE);
+        } else {
+            mGrowthBroadcastReceiver = null;
+        }
         UI_HELPER_EXECUTOR.execute(() -> {
             mSharedState.taskbarSystemActionPendingIntent = PendingIntent.getBroadcast(
                     mPrimaryWindowContext,
@@ -368,30 +452,35 @@ public class TaskbarManager {
         } else {
             mTaskStackListener = null;
         }
-        debugTaskbarManager("TaskbarManager created");
-        recreateTaskbar();
+        recreateTaskbars();
+        debugPrimaryTaskbar("TaskbarManager created");
     }
 
     private void destroyAllTaskbars() {
+        debugPrimaryTaskbar("destroyAllTaskbars");
         for (int i = 0; i < mTaskbars.size(); i++) {
             int displayId = mTaskbars.keyAt(i);
+            debugTaskbarManager("destroyAllTaskbars: call destroyTaskbarForDisplay", displayId);
             destroyTaskbarForDisplay(displayId);
+
+            debugTaskbarManager("destroyAllTaskbars: call removeTaskbarRootViewFromWindow",
+                    displayId);
             removeTaskbarRootViewFromWindow(displayId);
         }
     }
 
     private void destroyTaskbarForDisplay(int displayId) {
-        Log.d(ILLEGAL_ARGUMENT_WM_ADD_VIEW, "destroyTaskbarForDisplay: " + displayId);
+        debugTaskbarManager("destroyTaskbarForDisplay", displayId);
         TaskbarActivityContext taskbar = getTaskbarForDisplay(displayId);
-        debugTaskbarManager("destroyTaskbarForDisplay: " + taskbar, displayId);
         if (taskbar != null) {
             taskbar.onDestroy();
             // remove all defaults that we store
             removeTaskbarFromMap(displayId);
+        } else {
+            debugTaskbarManager("destroyTaskbarForDisplay: taskbar is NULL!", displayId);
         }
-        // TODO (b/381113004): make this display-specific via getWindowContext()
-        DeviceProfile dp = mUserUnlocked ? LauncherAppState.getIDP(
-                mPrimaryWindowContext).getDeviceProfile(mPrimaryWindowContext) : null;
+
+        DeviceProfile dp = getDeviceProfile(displayId);
         if (dp == null || !isTaskbarEnabled(dp)) {
             removeTaskbarRootViewFromWindow(displayId);
         }
@@ -401,10 +490,21 @@ public class TaskbarManager {
      * Show Taskbar upon receiving broadcast
      */
     private void showTaskbarFromBroadcast(Intent intent) {
+        debugPrimaryTaskbar("destroyTaskbarForDisplay");
         // TODO: make this code displayId specific
         TaskbarActivityContext taskbar = getTaskbarForDisplay(getDefaultDisplayId());
-        if (ACTION_SHOW_TASKBAR.equals(intent.getAction()) && taskbar != null) {
+        if (ACTION_SHOW_TASKBAR.equals(intent.getAction())) {
             taskbar.showTaskbarFromBroadcast();
+        }
+    }
+
+    private void showGrowthNudge(Intent intent) {
+        if (!enableGrowthNudge()) {
+            return;
+        }
+        if (BROADCAST_SHOW_NUDGE.equals(intent.getAction())) {
+            // TODO: b/397738606 - extract the details and create a nudge payload.
+            Log.d(GROWTH_FRAMEWORK_TAG, "Intent received");
         }
     }
 
@@ -437,12 +537,15 @@ public class TaskbarManager {
      * Called when the user is unlocked
      */
     public void onUserUnlocked() {
+        debugPrimaryTaskbar("onUserUnlocked");
         mUserUnlocked = true;
         DisplayController.INSTANCE.get(mPrimaryWindowContext).addChangeListener(
                 mRecreationListener);
-        recreateTaskbar();
+        debugPrimaryTaskbar("onUserUnlocked: recreating all taskbars!");
+        recreateTaskbars();
         for (int i = 0; i < mTaskbars.size(); i++) {
             int displayId = mTaskbars.keyAt(i);
+            debugTaskbarManager("onUserUnlocked: addTaskbarRootViewToWindow()", displayId);
             addTaskbarRootViewToWindow(displayId);
         }
     }
@@ -451,15 +554,15 @@ public class TaskbarManager {
      * Sets a {@link StatefulActivity} to act as taskbar callback
      */
     public void setActivity(@NonNull StatefulActivity activity) {
+        debugPrimaryTaskbar("setActivity: mActivity=" + mActivity);
         if (mActivity == activity) {
+            debugPrimaryTaskbar("setActivity: No need to set activity!");
             return;
         }
         removeActivityCallbacksAndListeners();
         mActivity = activity;
-        debugTaskbarManager("Set mActivity=" + mActivity);
         mActivity.addOnDeviceProfileChangeListener(mDebugActivityDeviceProfileChanged);
-        Log.d(TASKBAR_NOT_DESTROYED_TAG,
-                "registering activity lifecycle callbacks from setActivity().");
+        debugPrimaryTaskbar("setActivity: registering activity lifecycle callbacks.");
         mActivity.addEventCallback(EVENT_DESTROYED, mActivityOnDestroyCallback);
         UnfoldTransitionProgressProvider unfoldTransitionProgressProvider =
                 getUnfoldTransitionProgressProviderForActivity(activity);
@@ -477,6 +580,7 @@ public class TaskbarManager {
      * Sets the current RecentsViewContainer, from which we create a TaskbarUIController.
      */
     public void setRecentsViewContainer(@NonNull RecentsViewContainer recentsViewContainer) {
+        debugPrimaryTaskbar("setRecentsViewContainer");
         if (mRecentsViewContainer == recentsViewContainer) {
             return;
         }
@@ -500,6 +604,7 @@ public class TaskbarManager {
      */
     private UnfoldTransitionProgressProvider getUnfoldTransitionProgressProviderForActivity(
             StatefulActivity activity) {
+        debugPrimaryTaskbar("getUnfoldTransitionProgressProviderForActivity");
         if (!enableUnfoldStateAnimation()) {
             if (activity instanceof QuickstepLauncher ql) {
                 return ql.getUnfoldTransitionProgressProvider();
@@ -512,6 +617,7 @@ public class TaskbarManager {
 
     /** Creates a {@link TaskbarUIController} to use with non default displays. */
     private TaskbarUIController createTaskbarUIControllerForNonDefaultDisplay(int displayId) {
+        debugPrimaryTaskbar("createTaskbarUIControllerForNonDefaultDisplay");
         if (RecentsDisplayModel.enableOverviewInWindow()) {
             RecentsViewContainer rvc = mRecentsDisplayModel.getRecentsWindowManager(displayId);
             if (rvc != null) {
@@ -527,6 +633,7 @@ public class TaskbarManager {
      */
     private TaskbarUIController createTaskbarUIControllerForRecentsViewContainer(
             RecentsViewContainer container) {
+        debugPrimaryTaskbar("createTaskbarUIControllerForRecentsViewContainer");
         if (container instanceof QuickstepLauncher quickstepLauncher) {
             return new LauncherTaskbarUIController(quickstepLauncher);
         }
@@ -547,16 +654,19 @@ public class TaskbarManager {
      * In other case (folding/unfolding) we don't need to remove and add window.
      */
     @VisibleForTesting
-    public synchronized void recreateTaskbar() {
+    public synchronized void recreateTaskbars() {
+        debugPrimaryTaskbar("recreateTaskbars");
         // Handles initial creation case.
         if (mTaskbars.size() == 0) {
-            recreateTaskbarForDisplay(getDefaultDisplayId());
+            debugTaskbarManager("recreateTaskbars: create primary taskbar", getDefaultDisplayId());
+            recreateTaskbarForDisplay(getDefaultDisplayId(), 0);
             return;
         }
 
         for (int i = 0; i < mTaskbars.size(); i++) {
             int displayId = mTaskbars.keyAt(i);
-            recreateTaskbarForDisplay(displayId);
+            debugTaskbarManager("recreateTaskbars: create external taskbar", displayId);
+            recreateTaskbarForDisplay(displayId, 0);
         }
     }
 
@@ -565,37 +675,42 @@ public class TaskbarManager {
      * we fully want to destroy an existing taskbar for a specified display and create a new one.
      * In other case (folding/unfolding) we don't need to remove and add window.
      */
-    private void recreateTaskbarForDisplay(int displayId) {
+    private void recreateTaskbarForDisplay(int displayId, int duration) {
+        debugTaskbarManager("recreateTaskbarForDisplay: ", displayId);
         Trace.beginSection("recreateTaskbarForDisplay");
         try {
-            Log.d(ILLEGAL_ARGUMENT_WM_ADD_VIEW, "recreateTaskbarForDisplay: " + displayId);
+            debugTaskbarManager("recreateTaskbarForDisplay: getting device profile", displayId);
             // TODO (b/381113004): make this display-specific via getWindowContext()
-            DeviceProfile dp = mUserUnlocked ? LauncherAppState.getIDP(
-                    mPrimaryWindowContext).getDeviceProfile(mPrimaryWindowContext) : null;
+            DeviceProfile dp = getDeviceProfile(displayId);
 
             // All Apps action is unrelated to navbar unification, so we only need to check DP.
             final boolean isLargeScreenTaskbar = dp != null && dp.isTaskbarPresent;
             mAllAppsActionManager.setTaskbarPresent(isLargeScreenTaskbar);
-
+            debugTaskbarManager("recreateTaskbarForDisplay: destroying taskbar", displayId);
             destroyTaskbarForDisplay(displayId);
 
             boolean displayExists = getDisplay(displayId) != null;
             boolean isTaskbarEnabled = dp != null && isTaskbarEnabled(dp);
             debugTaskbarManager("recreateTaskbarForDisplay: isTaskbarEnabled=" + isTaskbarEnabled
-                + " [dp != null (i.e. mUserUnlocked)]=" + (dp != null)
-                + " FLAG_HIDE_NAVBAR_WINDOW=" + ENABLE_TASKBAR_NAVBAR_UNIFICATION
+                    + " [dp != null (i.e. mUserUnlocked)]=" + (dp != null)
+                    + " FLAG_HIDE_NAVBAR_WINDOW=" + ENABLE_TASKBAR_NAVBAR_UNIFICATION
                     + " dp.isTaskbarPresent=" + (dp == null ? "null" : dp.isTaskbarPresent)
-                    + " displayExists=" + displayExists);
+                    + " displayExists=" + displayExists, displayId);
             if (!isTaskbarEnabled || !isLargeScreenTaskbar || !displayExists) {
                 SystemUiProxy.INSTANCE.get(mBaseContext)
-                    .notifyTaskbarStatus(/* visible */ false, /* stashed */ false);
+                        .notifyTaskbarStatus(/* visible */ false, /* stashed */ false);
                 if (!isTaskbarEnabled || !displayExists) {
+                    debugTaskbarManager(
+                            "recreateTaskbarForDisplay: exiting bc (!isTaskbarEnabled || "
+                                    + "!displayExists)",
+                            displayId);
                     return;
                 }
             }
 
             TaskbarActivityContext taskbar = getTaskbarForDisplay(displayId);
             if (enableTaskbarNoRecreate() || taskbar == null) {
+                debugTaskbarManager("recreateTaskbarForDisplay: creating taskbar", displayId);
                 taskbar = createTaskbarActivityContext(dp, displayId);
                 if (taskbar == null) {
                     debugTaskbarManager(
@@ -603,12 +718,14 @@ public class TaskbarManager {
                     return;
                 }
             } else {
+                debugTaskbarManager("recreateTaskbarForDisplay: updating taskbar device profile",
+                        displayId);
                 taskbar.updateDeviceProfile(dp);
             }
             mSharedState.startTaskbarVariantIsTransient =
                     DisplayController.isTransientTaskbar(taskbar);
             mSharedState.allAppsVisible = mSharedState.allAppsVisible && isLargeScreenTaskbar;
-            taskbar.init(mSharedState);
+            taskbar.init(mSharedState, duration);
 
             // Non default displays should not use LauncherTaskbarUIController as they shouldn't
             // have access to the Launcher activity.
@@ -621,15 +738,17 @@ public class TaskbarManager {
             }
 
             if (enableTaskbarNoRecreate()) {
+                debugTaskbarManager("recreateTaskbarForDisplay: adding rootView", displayId);
                 addTaskbarRootViewToWindow(displayId);
                 FrameLayout taskbarRootLayout = getTaskbarRootLayoutForDisplay(displayId);
                 if (taskbarRootLayout != null) {
+                    debugTaskbarManager("recreateTaskbarForDisplay: adding root layout", displayId);
                     taskbarRootLayout.removeAllViews();
                     taskbarRootLayout.addView(taskbar.getDragLayer());
                     taskbar.notifyUpdateLayoutParams();
                 } else {
-                    Log.e(NULL_TASKBAR_ROOT_LAYOUT_TAG,
-                            "taskbarRootLayout is null for displayId=" + displayId);
+                    debugTaskbarManager("recreateTaskbarForDisplay: taskbarRootLayout is null!",
+                            displayId);
                 }
             }
         } finally {
@@ -700,7 +819,7 @@ public class TaskbarManager {
     }
 
     public void transitionTo(int displayId, @BarTransitions.TransitionMode int barMode,
-            boolean animate) {
+                             boolean animate) {
         TaskbarActivityContext taskbar = getTaskbarForDisplay(displayId);
         if (taskbar != null) {
             taskbar.transitionTo(barMode, animate);
@@ -774,26 +893,62 @@ public class TaskbarManager {
      * primary device or a previously mirroring display is switched to extended mode.
      */
     public void onDisplayAddSystemDecorations(int displayId) {
+        debugTaskbarManager("onDisplayAddSystemDecorations: ", displayId);
         Display display = getDisplay(displayId);
-        if (!DesktopExperienceFlags.ENABLE_TASKBAR_CONNECTED_DISPLAYS.isTrue() || isDefaultDisplay(
-                displayId) || display == null) {
-            debugTaskbarManager("onDisplayAddSystemDecorations: not adding display");
+        if (display == null) {
+            debugTaskbarManager("onDisplayAddSystemDecorations: can't find display!", displayId);
             return;
         }
 
+        if (!DesktopExperienceFlags.ENABLE_TASKBAR_CONNECTED_DISPLAYS.isTrue() || isDefaultDisplay(
+                displayId)) {
+            debugTaskbarManager(
+                    "onDisplayAddSystemDecorations: not an external display! | "
+                            + "ENABLE_TASKBAR_CONNECTED_DISPLAYS="
+                            + DesktopExperienceFlags.ENABLE_TASKBAR_CONNECTED_DISPLAYS.isTrue()
+                            + " isDefaultDisplay=" + isDefaultDisplay(displayId), displayId);
+            return;
+        }
+        debugTaskbarManager("onDisplayAddSystemDecorations: creating new windowContext!",
+                displayId);
         Context newWindowContext = createWindowContext(displayId);
         if (newWindowContext != null) {
+            debugTaskbarManager("onDisplayAddSystemDecorations: add new windowContext to map!",
+                    displayId);
             addWindowContextToMap(displayId, newWindowContext);
-            // TODO (b/391965805): remove once onDisplayAddSystemDecorations is working.
             WindowManager wm = getWindowManager(displayId);
             if (wm == null || !wm.shouldShowSystemDecors(displayId)) {
+                String wmStatus = wm == null ? "WindowManager is null!" : "WindowManager exists";
+                boolean showDecor = wm != null && wm.shouldShowSystemDecors(displayId);
+                debugTaskbarManager(
+                        "onDisplayAddSystemDecorations:\n\t" + wmStatus + "\n\tshowSystemDecors="
+                                + showDecor, displayId);
                 return;
             }
+            debugTaskbarManager("onDisplayAddSystemDecorations: creating RootLayout!", displayId);
+
+            createExternalDeviceProfile(displayId);
+
+            debugTaskbarManager("onDisplayAddSystemDecorations: creating RootLayout!", displayId);
             createTaskbarRootLayout(displayId);
+
+            debugTaskbarManager("onDisplayAddSystemDecorations: creating NavButtonController!",
+                    displayId);
             createNavButtonController(displayId);
+
+            debugTaskbarManager(
+                    "onDisplayAddSystemDecorations: createAndRegisterComponentCallbacks!",
+                    displayId);
             createAndRegisterComponentCallbacks(displayId);
-            recreateTaskbarForDisplay(displayId);
+            debugTaskbarManager("onDisplayAddSystemDecorations: recreateTaskbarForDisplay!",
+                    displayId);
+            recreateTaskbarForDisplay(displayId, 0);
+        } else {
+            debugTaskbarManager("onDisplayAddSystemDecorations: newWindowContext is NULL!",
+                    displayId);
         }
+
+        debugTaskbarManager("onDisplayAddSystemDecorations: finished!", displayId);
     }
 
     /**
@@ -801,17 +956,38 @@ public class TaskbarManager {
      * removed from the primary device.
      */
     public void onDisplayRemoved(int displayId) {
+        debugTaskbarManager("onDisplayRemoved: ", displayId);
         if (!DesktopExperienceFlags.ENABLE_TASKBAR_CONNECTED_DISPLAYS.isTrue() || isDefaultDisplay(
                 displayId)) {
+            debugTaskbarManager(
+                    "onDisplayRemoved: not an external display! | "
+                            + "ENABLE_TASKBAR_CONNECTED_DISPLAYS="
+                            + DesktopExperienceFlags.ENABLE_TASKBAR_CONNECTED_DISPLAYS.isTrue()
+                            + " isDefaultDisplay=" + isDefaultDisplay(displayId), displayId);
             return;
         }
 
         Context windowContext = getWindowContext(displayId);
         if (windowContext != null) {
+            debugTaskbarManager("onDisplayRemoved: removing NavButtonController!", displayId);
             removeNavButtonController(displayId);
+
+            debugTaskbarManager("onDisplayRemoved: removeAndUnregisterComponentCallbacks!",
+                    displayId);
             removeAndUnregisterComponentCallbacks(displayId);
+
+            debugTaskbarManager("onDisplayRemoved: destroying Taskbar!", displayId);
             destroyTaskbarForDisplay(displayId);
+
+            debugTaskbarManager("onDisplayRemoved: removing DeviceProfile from map!", displayId);
+            removeDeviceProfileFromMap(displayId);
+
+            debugTaskbarManager("onDisplayRemoved: removing WindowContext from map!", displayId);
             removeWindowContextFromMap(displayId);
+
+            debugTaskbarManager("onDisplayRemoved: finished!", displayId);
+        } else {
+            debugTaskbarManager("onDisplayRemoved: removing NavButtonController!", displayId);
         }
     }
 
@@ -827,9 +1003,7 @@ public class TaskbarManager {
     private void removeActivityCallbacksAndListeners() {
         if (mActivity != null) {
             mActivity.removeOnDeviceProfileChangeListener(mDebugActivityDeviceProfileChanged);
-            Log.d(TASKBAR_NOT_DESTROYED_TAG,
-                    "unregistering activity lifecycle callbacks from "
-                            + "removeActivityCallbackAndListeners().");
+            debugPrimaryTaskbar("unregistering activity lifecycle callbacks");
             mActivity.removeEventCallback(EVENT_DESTROYED, mActivityOnDestroyCallback);
             UnfoldTransitionProgressProvider unfoldTransitionProgressProvider =
                     getUnfoldTransitionProgressProviderForActivity(mActivity);
@@ -843,10 +1017,17 @@ public class TaskbarManager {
      * Called when the manager is no longer needed
      */
     public void destroy() {
+        debugPrimaryTaskbar("TaskbarManager#destroy()");
         mRecentsViewContainer = null;
-        debugTaskbarManager("TaskbarManager#destroy()");
+        debugPrimaryTaskbar("destroy: removing activity callbacks");
+        DesktopVisibilityController.INSTANCE.get(
+                mPrimaryWindowContext).unregisterTaskbarDesktopModeListener(
+                mTaskbarDesktopModeListener);
         removeActivityCallbacksAndListeners();
         mTaskbarBroadcastReceiver.unregisterReceiverSafely();
+        if (mGrowthBroadcastReceiver != null) {
+            mGrowthBroadcastReceiver.unregisterReceiverSafely();
+        }
 
         if (mUserUnlocked) {
             DisplayController.INSTANCE.get(mPrimaryWindowContext).removeChangeListener(
@@ -856,16 +1037,18 @@ public class TaskbarManager {
                 .unregister(USER_SETUP_COMPLETE_URI, mOnSettingsChangeListener);
         SettingsCache.INSTANCE.get(mPrimaryWindowContext)
                 .unregister(NAV_BAR_KIDS_MODE, mOnSettingsChangeListener);
-        Log.d(TASKBAR_NOT_DESTROYED_TAG, "unregistering component callbacks from destroy().");
+        debugPrimaryTaskbar("destroy: unregistering component callbacks");
         removeAndUnregisterComponentCallbacks(getDefaultDisplayId());
         mShutdownReceiver.unregisterReceiverSafely();
         if (ActivityManagerWrapper.usePerceptibleTasks(getPrimaryWindowContext())) {
-            for (Integer taskId: mTaskStackListener.mPerceptibleTasks) {
+            for (Integer taskId : mTaskStackListener.mPerceptibleTasks) {
                 ActivityManagerWrapper.getInstance().setTaskIsPerceptible(taskId, false);
             }
         }
         TaskStackChangeListeners.getInstance().unregisterTaskStackListener(mTaskStackListener);
+        debugPrimaryTaskbar("destroy: destroying all taskbars!");
         destroyAllTaskbars();
+        debugPrimaryTaskbar("destroy: finished!");
     }
 
     public @Nullable TaskbarActivityContext getCurrentActivityContext() {
@@ -888,14 +1071,15 @@ public class TaskbarManager {
     }
 
     private void addTaskbarRootViewToWindow(int displayId) {
+        debugTaskbarManager("addTaskbarRootViewToWindow:", displayId);
         TaskbarActivityContext taskbar = getTaskbarForDisplay(displayId);
         if (!enableTaskbarNoRecreate() || taskbar == null) {
-            debugTaskbarManager("addTaskbarRootViewToWindow - taskbar null", displayId);
+            debugTaskbarManager("addTaskbarRootViewToWindow: taskbar null", displayId);
             return;
         }
 
         if (getDisplay(displayId) == null) {
-            debugTaskbarManager("addTaskbarRootViewToWindow - display null", displayId);
+            debugTaskbarManager("addTaskbarRootViewToWindow: display null", displayId);
             return;
         }
 
@@ -906,18 +1090,21 @@ public class TaskbarManager {
                 windowManager.addView(rootLayout, taskbar.getWindowLayoutParams());
                 mAddedRootLayouts.put(displayId, true);
             } else {
-                Log.d(ILLEGAL_ARGUMENT_WM_ADD_VIEW,
-                        "addTaskbarRootViewToWindow - root layout null | displayId=" + displayId);
+                String rootLayoutStatus =
+                        (rootLayout == null) ? "rootLayout is NULL!" : "rootLayout exists!";
+                String wmStatus = (windowManager == null) ? "windowManager is NULL!"
+                        : "windowManager exists!";
+                debugTaskbarManager(
+                        "addTaskbarRootViewToWindow: \n\t" + rootLayoutStatus + "\n\t" + wmStatus,
+                        displayId);
             }
         } else {
-            Log.d(NULL_TASKBAR_ROOT_LAYOUT_TAG,
-                    "addTaskbarRootViewToWindow - root layout already added | displayId="
-                            + displayId);
+            debugTaskbarManager("addTaskbarRootViewToWindow: rootLayout already added!", displayId);
         }
     }
 
     private void removeTaskbarRootViewFromWindow(int displayId) {
-        Log.d(ILLEGAL_ARGUMENT_WM_ADD_VIEW, "removeTaskbarRootViewFromWindow: " + displayId);
+        debugTaskbarManager("removeTaskbarRootViewFromWindow", displayId);
         FrameLayout rootLayout = getTaskbarRootLayoutForDisplay(displayId);
         if (!enableTaskbarNoRecreate() || rootLayout == null) {
             return;
@@ -929,7 +1116,7 @@ public class TaskbarManager {
             mAddedRootLayouts.put(displayId, false);
             removeTaskbarRootLayoutFromMap(displayId);
         } else {
-            debugTaskbarManager("removeTaskbarRootViewFromWindow - WindowManager is null",
+            debugTaskbarManager("removeTaskbarRootViewFromWindow: WindowManager is null",
                     displayId);
         }
     }
@@ -940,7 +1127,7 @@ public class TaskbarManager {
      *
      * @param displayId The ID of the display to retrieve the taskbar for.
      * @return The {@link TaskbarUIController} for the specified display, or
-     *         {@code null} if no taskbar is associated with that display.
+     * {@code null} if no taskbar is associated with that display.
      */
     @Nullable
     public TaskbarUIController getUIControllerForDisplay(int displayId) {
@@ -967,7 +1154,7 @@ public class TaskbarManager {
      *
      * @param displayId The ID of the display to retrieve the taskbar for.
      * @return The {@link TaskbarActivityContext} for the specified display, or
-     *         {@code null} if no taskbar is associated with that display.
+     * {@code null} if no taskbar is associated with that display.
      */
     private TaskbarActivityContext getTaskbarForDisplay(int displayId) {
         return mTaskbars.get(displayId);
@@ -976,7 +1163,8 @@ public class TaskbarManager {
 
     /**
      * Creates a {@link TaskbarActivityContext} for the given display and adds it to the map.
-     * @param dp The {@link DeviceProfile} for the display.
+     *
+     * @param dp        The {@link DeviceProfile} for the display.
      * @param displayId The ID of the display.
      */
     private @Nullable TaskbarActivityContext createTaskbarActivityContext(DeviceProfile dp,
@@ -1006,11 +1194,68 @@ public class TaskbarManager {
     }
 
     /**
+     * Creates a {@link DeviceProfile} for the given display and adds it to the map.
+     * @param displayId The ID of the display.
+     */
+    private void createExternalDeviceProfile(int displayId) {
+        if (!mUserUnlocked) {
+            return;
+        }
+
+        InvariantDeviceProfile idp = LauncherAppState.getIDP(mPrimaryWindowContext);
+        if (idp == null) {
+            return;
+        }
+
+        Context displayContext = getWindowContext(displayId);
+        if (displayContext == null) {
+            return;
+        }
+
+        DeviceProfile externalDeviceProfile = idp.createDeviceProfileForSecondaryDisplay(
+                displayContext);
+        mExternalDeviceProfiles.put(displayId, externalDeviceProfile);
+    }
+
+    /**
+     * Gets a {@link DeviceProfile} for the given displayId.
+     * @param displayId The ID of the display.
+     */
+    private @Nullable DeviceProfile getDeviceProfile(int displayId) {
+        if (!mUserUnlocked) {
+            return null;
+        }
+
+        InvariantDeviceProfile idp = LauncherAppState.getIDP(mPrimaryWindowContext);
+        if (idp == null) {
+            return null;
+        }
+
+        boolean isPrimary = isDefaultDisplay(displayId)
+                || !DesktopExperienceFlags.ENABLE_TASKBAR_CONNECTED_DISPLAYS.isTrue();
+        if (isPrimary) {
+            return idp.getDeviceProfile(mPrimaryWindowContext);
+        }
+
+        return mExternalDeviceProfiles.get(displayId);
+    }
+
+    /**
+     * Removes the {@link DeviceProfile} associated with the given display ID from the map.
+     * @param displayId The ID of the display for which to remove the taskbar.
+     */
+    private void removeDeviceProfileFromMap(int displayId) {
+        mExternalDeviceProfiles.delete(displayId);
+    }
+
+    /**
      * Create {@link ComponentCallbacks} for the given display and register it to the relevant
      * WindowContext. For external displays, populate maps.
+     *
      * @param displayId The ID of the display.
      */
     private void createAndRegisterComponentCallbacks(int displayId) {
+        debugTaskbarManager("createAndRegisterComponentCallbacks", displayId);
         ComponentCallbacks callbacks = new ComponentCallbacks() {
             private Configuration mOldConfig =
                     getWindowContext(displayId).getResources().getConfiguration();
@@ -1019,15 +1264,13 @@ public class TaskbarManager {
             public void onConfigurationChanged(Configuration newConfig) {
                 Trace.instantForTrack(Trace.TRACE_TAG_APP, "TaskbarManager",
                         "onConfigurationChanged: " + newConfig);
-                debugTaskbarManager(
-                        "TaskbarManager#mComponentCallbacks.onConfigurationChanged: " + newConfig);
-                // TODO (b/381113004): make this display-specific via getWindowContext()
-                DeviceProfile dp = mUserUnlocked ? LauncherAppState.getIDP(
-                        mPrimaryWindowContext).getDeviceProfile(mPrimaryWindowContext) : null;
+                debugTaskbarManager("onConfigurationChanged: " + newConfig, displayId);
+
+                DeviceProfile dp = getDeviceProfile(displayId);
                 int configDiff = mOldConfig.diff(newConfig) & ~SKIP_RECREATE_CONFIG_CHANGES;
 
                 if ((configDiff & ActivityInfo.CONFIG_UI_MODE) != 0) {
-                    Log.d(ILLEGAL_ARGUMENT_WM_ADD_VIEW, "onConfigurationChanged: theme changed");
+                    debugTaskbarManager("onConfigurationChanged: theme changed", displayId);
                     // Only recreate for theme changes, not other UI mode changes such as docking.
                     int oldUiNightMode = (mOldConfig.uiMode & Configuration.UI_MODE_NIGHT_MASK);
                     int newUiNightMode = (newConfig.uiMode & Configuration.UI_MODE_NIGHT_MASK);
@@ -1036,27 +1279,36 @@ public class TaskbarManager {
                     }
                 }
 
-                debugTaskbarManager("ComponentCallbacks#onConfigurationChanged() "
-                        + "configDiff=" + Configuration.configurationDiffToString(configDiff));
+                debugTaskbarManager("onConfigurationChanged: | configDiff="
+                        + Configuration.configurationDiffToString(configDiff), displayId);
                 if (configDiff != 0 || getCurrentActivityContext() == null) {
-                    recreateTaskbar();
-                } else {
+                    debugTaskbarManager("onConfigurationChanged: call recreateTaskbars", displayId);
+                    recreateTaskbars();
+                } else if (dp != null) {
                     // Config change might be handled without re-creating the taskbar
-                    if (dp != null && !isTaskbarEnabled(dp)) {
+                    if (!isTaskbarEnabled(dp)) {
+                        debugPrimaryTaskbar(
+                                "onConfigurationChanged: isTaskbarEnabled(dp)=False | "
+                                        + "destroyTaskbarForDisplay");
                         destroyTaskbarForDisplay(getDefaultDisplayId());
                     } else {
-                        if (dp != null && isTaskbarEnabled(dp)) {
-                            if (ENABLE_TASKBAR_NAVBAR_UNIFICATION) {
-                                // Re-initialize for screen size change? Should this be done
-                                // by looking at screen-size change flag in configDiff in the
-                                // block above?
-                                recreateTaskbar();
-                            } else {
-                                getCurrentActivityContext().updateDeviceProfile(dp);
-                            }
+                        debugPrimaryTaskbar("onConfigurationChanged: isTaskbarEnabled(dp)=True");
+                        if (ENABLE_TASKBAR_NAVBAR_UNIFICATION) {
+                            // Re-initialize for screen size change? Should this be done
+                            // by looking at screen-size change flag in configDiff in the
+                            // block above?
+                            debugPrimaryTaskbar("onConfigurationChanged: call recreateTaskbars");
+                            recreateTaskbars();
+                        } else {
+                            debugPrimaryTaskbar(
+                                    "onConfigurationChanged: updateDeviceProfile for current "
+                                            + "taskbar.");
+                            getCurrentActivityContext().updateDeviceProfile(dp);
                         }
-                        getCurrentActivityContext().onConfigurationChanged(configDiff);
                     }
+                } else {
+
+                    getCurrentActivityContext().onConfigurationChanged(configDiff);
                 }
                 mOldConfig = new Configuration(newConfig);
                 // reset taskbar was pinned value, so we don't automatically unstash taskbar upon
@@ -1065,7 +1317,8 @@ public class TaskbarManager {
             }
 
             @Override
-            public void onLowMemory() { }
+            public void onLowMemory() {
+            }
         };
         if (isDefaultDisplay(displayId)
                 || !DesktopExperienceFlags.ENABLE_TASKBAR_CONNECTED_DISPLAYS.isTrue()) {
@@ -1080,6 +1333,7 @@ public class TaskbarManager {
     /**
      * Unregister {@link ComponentCallbacks} for the given display from its WindowContext. For
      * external displays, remove from the map.
+     *
      * @param displayId The ID of the display.
      */
     private void removeAndUnregisterComponentCallbacks(int displayId) {
@@ -1096,6 +1350,7 @@ public class TaskbarManager {
     /**
      * Creates a {@link TaskbarNavButtonController} for the given display and adds it to the map
      * if it doesn't already exist.
+     *
      * @param displayId The ID of the display
      */
     private void createNavButtonController(int displayId) {
@@ -1137,7 +1392,7 @@ public class TaskbarManager {
      * Adds the {@link TaskbarActivityContext} associated with the given display ID to taskbar
      * map if there is not already a taskbar mapped to that displayId.
      *
-     * @param displayId The ID of the display to retrieve the taskbar for.
+     * @param displayId  The ID of the display to retrieve the taskbar for.
      * @param newTaskbar The new {@link TaskbarActivityContext} to add to the map.
      */
     private void addTaskbarToMap(int displayId, TaskbarActivityContext newTaskbar) {
@@ -1157,10 +1412,11 @@ public class TaskbarManager {
 
     /**
      * Creates {@link FrameLayout} for the taskbar on the specified display and adds it to map.
+     *
      * @param displayId The ID of the display for which to create the taskbar root layout.
      */
     private void createTaskbarRootLayout(int displayId) {
-        Log.d(ILLEGAL_ARGUMENT_WM_ADD_VIEW, "createTaskbarRootLayout: " + displayId);
+        debugTaskbarManager("createTaskbarRootLayout: ", displayId);
         if (!enableTaskbarNoRecreate()) {
             return;
         }
@@ -1168,6 +1424,7 @@ public class TaskbarManager {
         FrameLayout newTaskbarRootLayout = new FrameLayout(getWindowContext(displayId)) {
             @Override
             public boolean dispatchTouchEvent(MotionEvent ev) {
+                debugTaskbarManager("dispatchTouchEvent: ", displayId);
                 // The motion events can be outside the view bounds of task bar, and hence
                 // manually dispatching them to the drag layer here.
                 TaskbarActivityContext taskbar = getTaskbarForDisplay(displayId);
@@ -1177,8 +1434,9 @@ public class TaskbarManager {
                 return super.dispatchTouchEvent(ev);
             }
         };
+
+        debugTaskbarManager("createTaskbarRootLayout: adding to map", displayId);
         addTaskbarRootLayoutToMap(displayId, newTaskbarRootLayout);
-        Log.d(NULL_TASKBAR_ROOT_LAYOUT_TAG, "created new root layout - displayId=" + displayId);
     }
 
     private boolean isDefaultDisplay(int displayId) {
@@ -1192,13 +1450,12 @@ public class TaskbarManager {
      * @return The taskbar root layout {@link FrameLayout} for a given display or {@code null}.
      */
     private FrameLayout getTaskbarRootLayoutForDisplay(int displayId) {
-        Log.d(ILLEGAL_ARGUMENT_WM_ADD_VIEW, "getTaskbarRootLayoutForDisplay: " + displayId);
+        debugTaskbarManager("getTaskbarRootLayoutForDisplay:", displayId);
         FrameLayout frameLayout = mRootLayouts.get(displayId);
         if (frameLayout != null) {
             return frameLayout;
         } else {
-            Log.d(NULL_TASKBAR_ROOT_LAYOUT_TAG,
-                    "getTaskbarRootLayoutForDisplay == null | displayId=" + displayId);
+            debugTaskbarManager("getTaskbarRootLayoutForDisplay: rootLayout is null!", displayId);
             return null;
         }
     }
@@ -1206,15 +1463,18 @@ public class TaskbarManager {
     /**
      * Adds the taskbar root layout {@link FrameLayout} to taskbar map, mapped to display ID.
      *
-     * @param displayId The ID of the display to associate with the taskbar root layout.
+     * @param displayId  The ID of the display to associate with the taskbar root layout.
      * @param rootLayout The taskbar root layout {@link FrameLayout} to add to the map.
      */
     private void addTaskbarRootLayoutToMap(int displayId, FrameLayout rootLayout) {
+        debugTaskbarManager("addTaskbarRootLayoutToMap: ", displayId);
         if (!mRootLayouts.contains(displayId) && rootLayout != null) {
             mRootLayouts.put(displayId, rootLayout);
         }
 
-        Log.d(NULL_TASKBAR_ROOT_LAYOUT_TAG, "mRootLayouts.size()=" + mRootLayouts.size());
+        debugTaskbarManager(
+                "addTaskbarRootLayoutToMap: finished! mRootLayouts.size()=" + mRootLayouts.size(),
+                displayId);
     }
 
     /**
@@ -1223,23 +1483,26 @@ public class TaskbarManager {
      * @param displayId The ID of the display for which to remove the taskbar root layout.
      */
     private void removeTaskbarRootLayoutFromMap(int displayId) {
+        debugTaskbarManager("removeTaskbarRootLayoutFromMap:", displayId);
         if (mRootLayouts.contains(displayId)) {
             mAddedRootLayouts.delete(displayId);
             mRootLayouts.delete(displayId);
         }
 
-        Log.d(NULL_TASKBAR_ROOT_LAYOUT_TAG, "mRootLayouts.size()=" + mRootLayouts.size());
+        debugTaskbarManager("removeTaskbarRootLayoutFromMap: finished! mRootLayouts.size="
+                + mRootLayouts.size(), displayId);
     }
 
     /**
      * Creates {@link Context} for the taskbar on the specified display.
+     *
      * @param displayId The ID of the display for which to create the window context.
      */
     private @Nullable Context createWindowContext(int displayId) {
-        debugTaskbarManager("createWindowContext: " + displayId);
+        debugTaskbarManager("createWindowContext: ", displayId);
         Display display = getDisplay(displayId);
         if (display == null) {
-            debugTaskbarManager("createWindowContext: display null", displayId);
+            debugTaskbarManager("createWindowContext: display null!", displayId);
             return null;
         }
 
@@ -1312,7 +1575,7 @@ public class TaskbarManager {
     /**
      * Adds the window context {@link Context} to taskbar map, mapped to display ID.
      *
-     * @param displayId The ID of the display to associate with the taskbar root layout.
+     * @param displayId     The ID of the display to associate with the taskbar root layout.
      * @param windowContext The window context {@link Context} to add to the map.
      */
     private void addWindowContextToMap(int displayId, @NonNull Context windowContext) {
@@ -1336,31 +1599,73 @@ public class TaskbarManager {
         return mBaseContext.getDisplayId();
     }
 
-    /** Temp logs for b/254119092. */
-    public void debugTaskbarManager(String debugReason) {
-        debugTaskbarManager(debugReason, getDefaultDisplayId());
-    }
-
-    /** Temp logs for b/254119092. */
+    /**
+     * Logs debug information about the TaskbarManager for primary display.
+     * @param debugReason A string describing the reason for the debug log.
+     * @param displayId The ID of the display for which to log debug information.
+     */
     public void debugTaskbarManager(String debugReason, int displayId) {
         StringJoiner log = new StringJoiner("\n");
         log.add(debugReason + " displayId=" + displayId + " isDefaultDisplay=" + isDefaultDisplay(
                 displayId));
+        Log.d(TAG, log.toString());
+    }
 
+    /**
+     * Logs verbose debug information about the TaskbarManager for primary display.
+     * @param debugReason A string describing the reason for the debug log.
+     * @param displayId The ID of the display for which to log debug information.
+     * @param verbose Indicates whether or not to debug with detail.
+     */
+    public void debugTaskbarManager(String debugReason, int displayId, boolean verbose) {
+        StringJoiner log = new StringJoiner("\n");
+        log.add(debugReason + " displayId=" + displayId + " isDefaultDisplay=" + isDefaultDisplay(
+                displayId));
+        if (verbose) {
+            generateVerboseLogs(log, displayId);
+        }
+        Log.d(TAG, log.toString());
+    }
+
+    /**
+     * Logs debug information about the TaskbarManager for primary display.
+     * @param debugReason A string describing the reason for the debug log.
+     *
+     */
+    public void debugPrimaryTaskbar(String debugReason) {
+        debugTaskbarManager(debugReason, getDefaultDisplayId(), false);
+    }
+
+    /**
+     * Logs debug information about the TaskbarManager for primary display.
+     * @param debugReason A string describing the reason for the debug log.
+     *
+     */
+    public void debugPrimaryTaskbar(String debugReason, boolean verbose) {
+        debugTaskbarManager(debugReason, getDefaultDisplayId(), verbose);
+    }
+
+    /**
+     * Logs verbose debug information about the TaskbarManager for a specific display.
+     */
+    private void generateVerboseLogs(StringJoiner log, int displayId) {
         boolean activityTaskbarPresent = mActivity != null
                 && mActivity.getDeviceProfile().isTaskbarPresent;
         // TODO (b/381113004): make this display-specific via getWindowContext()
         Context windowContext = mPrimaryWindowContext;
         if (windowContext == null) {
-            log.add("window context for displayId" + displayId);
+            log.add("windowContext is null!");
             return;
         }
 
-        boolean contextTaskbarPresent = mUserUnlocked && LauncherAppState.getIDP(windowContext)
-                .getDeviceProfile(windowContext).isTaskbarPresent;
+        boolean contextTaskbarPresent = false;
+        if (mUserUnlocked) {
+            DeviceProfile dp = getDeviceProfile(displayId);
+            contextTaskbarPresent = dp != null && dp.isTaskbarPresent;
+        }
         if (activityTaskbarPresent == contextTaskbarPresent) {
             log.add("mActivity and mWindowContext agree taskbarIsPresent=" + contextTaskbarPresent);
-            Log.d(TASKBAR_NOT_DESTROYED_TAG, log.toString());
+            Log.d(TAG, log.toString());
             return;
         }
 
@@ -1379,16 +1684,14 @@ public class TaskbarManager {
         log.add("\t\tWindowContext.getResources().getConfiguration()="
                 + windowContext.getResources().getConfiguration());
         if (mUserUnlocked) {
-            log.add("\t\tLauncherAppState.getIDP().getDeviceProfile(mPrimaryWindowContext)"
-                    + ".isTaskbarPresent=" + contextTaskbarPresent);
+            log.add("\t\tgetDeviceProfile(mPrimaryWindowContext).isTaskbarPresent="
+                    + contextTaskbarPresent);
         } else {
             log.add("\t\tCouldn't get DeviceProfile because !mUserUnlocked");
         }
-
-        Log.d(TASKBAR_NOT_DESTROYED_TAG, log.toString());
     }
 
     private final DeviceProfile.OnDeviceProfileChangeListener mDebugActivityDeviceProfileChanged =
-            dp -> debugTaskbarManager("mActivity onDeviceProfileChanged");
+            dp -> debugPrimaryTaskbar("mActivity onDeviceProfileChanged", true);
 
 }

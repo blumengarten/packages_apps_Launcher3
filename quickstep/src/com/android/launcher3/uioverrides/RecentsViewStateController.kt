@@ -27,17 +27,16 @@ import com.android.launcher3.anim.AnimatedFloat
 import com.android.launcher3.anim.AnimatorListeners.forSuccessCallback
 import com.android.launcher3.anim.PendingAnimation
 import com.android.launcher3.anim.PropertySetter
-import com.android.launcher3.logging.StatsLogManager.LauncherEvent
 import com.android.launcher3.statemanager.StateManager.StateHandler
 import com.android.launcher3.states.StateAnimationConfig
 import com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_ACTIONS_FADE
 import com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_FADE
 import com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_MODAL
 import com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_SCALE
-import com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_SPLIT_SELECT_INSTRUCTIONS_FADE
 import com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_TRANSLATE_X
 import com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_TRANSLATE_Y
 import com.android.launcher3.states.StateAnimationConfig.SKIP_OVERVIEW
+import com.android.launcher3.util.MultiPropertyFactory.MULTI_PROPERTY_VALUE
 import com.android.quickstep.util.AnimUtils
 import com.android.quickstep.views.ClearAllButton
 import com.android.quickstep.views.RecentsView
@@ -226,8 +225,8 @@ class RecentsViewStateController(private val launcher: QuickstepLauncher) :
         builder: PendingAnimation,
         animate: Boolean,
     ) {
-        val goingToOverviewFromWorkspaceContextual = toState == LauncherState.OVERVIEW &&
-                launcher.isSplitSelectionActive
+        val goingToOverviewFromWorkspaceContextual =
+            toState == LauncherState.OVERVIEW && launcher.isSplitSelectionActive
         if (
             toState != LauncherState.OVERVIEW_SPLIT_SELECT &&
                 !goingToOverviewFromWorkspaceContextual
@@ -302,6 +301,14 @@ class RecentsViewStateController(private val launcher: QuickstepLauncher) :
             overviewButtonAlpha,
             config.getInterpolator(ANIM_OVERVIEW_ACTIONS_FADE, LINEAR),
         )
+        recentsView.addDeskButton?.let {
+            propertySetter.setFloat(
+                it.visibilityAlphaProperty,
+                MULTI_PROPERTY_VALUE,
+                if (state.areElementsVisible(launcher, LauncherState.ADD_DESK_BUTTON)) 1f else 0f,
+                LINEAR,
+            )
+        }
     }
 
     private fun getOverviewInterpolator(fromState: LauncherState, toState: LauncherState) =

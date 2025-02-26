@@ -27,6 +27,7 @@ import static android.window.SplashScreen.SPLASH_SCREEN_STYLE_UNDEFINED;
 
 import static androidx.annotation.VisibleForTesting.PACKAGE_PRIVATE;
 
+import static com.android.app.animation.Interpolators.LINEAR;
 import static com.android.launcher3.AbstractFloatingView.TYPE_ALL;
 import static com.android.launcher3.AbstractFloatingView.TYPE_ON_BOARD_POPUP;
 import static com.android.launcher3.AbstractFloatingView.TYPE_REBIND_SAFE;
@@ -449,14 +450,25 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         mControllers.taskbarViewController.adjustTaskbarForBubbleBar();
     }
 
-    public void init(@NonNull TaskbarSharedState sharedState) {
+    /**
+     * Init of taskbar activity context.
+     * @param duration If duration is greater than 0, it will be used to create an animation
+ *                     for the taskbar create/recreate process.
+     */
+    public void init(@NonNull TaskbarSharedState sharedState, int duration) {
         mImeDrawsImeNavBar = getBoolByName(IME_DRAWS_IME_NAV_BAR_RES_NAME, getResources(), false);
         mLastRequestedNonFullscreenSize = getDefaultTaskbarWindowSize();
         mWindowLayoutParams = createAllWindowParams();
         mLastUpdatedLayoutParams = new WindowManager.LayoutParams();
 
+
+        AnimatorSet recreateAnim = null;
+        if (duration > 0) {
+            recreateAnim = onRecreateAnimation(duration);
+        }
+
         // Initialize controllers after all are constructed.
-        mControllers.init(sharedState);
+        mControllers.init(sharedState, recreateAnim);
         // This may not be necessary and can be reverted once we move towards recreating all
         // controllers without re-creating the window
         mControllers.rotationButtonController.onNavigationModeChanged(mNavMode.resValue);
@@ -484,6 +496,33 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         } else {
             notifyUpdateLayoutParams();
         }
+
+
+        if (recreateAnim != null) {
+            recreateAnim.start();
+        }
+    }
+
+    /**
+     * Create AnimatorSet for taskbar create/recreate animation. Further used in init
+     */
+    public AnimatorSet onRecreateAnimation(int duration) {
+        AnimatorSet animatorSet = new AnimatorSet();
+        animatorSet.setDuration(duration);
+        return animatorSet;
+    }
+
+    /**
+     * Called when we want destroy current taskbar with animation as part of recreate process.
+     */
+    public AnimatorSet onDestroyAnimation(int duration) {
+        mIsDestroyed = true;
+        AnimatorSet animatorSet = new AnimatorSet();
+        mControllers.taskbarViewController.onDestroyAnimation(animatorSet);
+        mControllers.taskbarDragLayerController.onDestroyAnimation(animatorSet);
+        animatorSet.setInterpolator(LINEAR);
+        animatorSet.setDuration(duration);
+        return animatorSet;
     }
 
     /**
@@ -1981,6 +2020,10 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
 
     public boolean isInApp() {
         return mControllers.taskbarStashController.isInApp();
+    }
+
+    public boolean isInOverview() {
+        return mControllers.taskbarStashController.isInOverview();
     }
 
     public boolean isInStashedLauncherState() {

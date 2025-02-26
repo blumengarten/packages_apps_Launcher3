@@ -34,6 +34,7 @@ import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.util.DisplayController.CHANGE_DENSITY
 import com.android.launcher3.util.DisplayController.CHANGE_DESKTOP_MODE
 import com.android.launcher3.util.DisplayController.CHANGE_ROTATION
+import com.android.launcher3.util.DisplayController.CHANGE_SHOW_LOCKED_TASKBAR
 import com.android.launcher3.util.DisplayController.CHANGE_TASKBAR_PINNING
 import com.android.launcher3.util.DisplayController.DisplayInfoChangeListener
 import com.android.launcher3.util.LauncherModelHelper.SandboxModelContext
@@ -209,8 +210,13 @@ class DisplayControllerTest {
 
         assertTrue(displayController.getInfo().isTransientTaskbar())
         displayController.notifyConfigChange()
+
         verify(displayInfoChangeListener)
-            .onDisplayInfoChanged(any(), any(), eq(CHANGE_TASKBAR_PINNING))
+            .onDisplayInfoChanged(
+                any(),
+                any(),
+                eq(CHANGE_TASKBAR_PINNING or CHANGE_SHOW_LOCKED_TASKBAR),
+            )
         assertFalse(displayController.getInfo().isTransientTaskbar())
     }
 
@@ -227,7 +233,11 @@ class DisplayControllerTest {
         displayController.onConfigurationChanged(configuration)
 
         verify(displayInfoChangeListener)
-            .onDisplayInfoChanged(any(), any(), eq(CHANGE_TASKBAR_PINNING))
+            .onDisplayInfoChanged(
+                any(),
+                any(),
+                eq(CHANGE_TASKBAR_PINNING or CHANGE_SHOW_LOCKED_TASKBAR),
+            )
         assertFalse(displayController.getInfo().isTransientTaskbar())
     }
 

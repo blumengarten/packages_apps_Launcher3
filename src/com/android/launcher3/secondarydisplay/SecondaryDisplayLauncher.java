@@ -16,6 +16,7 @@
 package com.android.launcher3.secondarydisplay;
 
 import static com.android.launcher3.util.WallpaperThemeManager.setWallpaperDependentTheme;
+import static com.android.window.flags.Flags.enableTaskbarConnectedDisplays;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -124,6 +125,10 @@ public class SecondaryDisplayLauncher extends BaseActivity
         mDragLayer = findViewById(R.id.drag_layer);
         mAppsView = findViewById(R.id.apps_view);
         mAppsButton = findViewById(R.id.all_apps_button);
+        // TODO (b/391965805): Replace this flag with DesktopExperiences flag.
+        if (enableTaskbarConnectedDisplays()) {
+            mAppsButton.setVisibility(View.INVISIBLE);
+        }
 
         mDragController.addDragListener(this);
         mPopupDataProvider = new PopupDataProvider(
@@ -243,7 +248,9 @@ public class SecondaryDisplayLauncher extends BaseActivity
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     mAppsView.setVisibility(View.INVISIBLE);
-                    mAppsButton.setVisibility(View.VISIBLE);
+                    // TODO (b/391965805): Replace this flag with DesktopExperiences flag.
+                    mAppsButton.setVisibility(
+                            enableTaskbarConnectedDisplays() ? View.INVISIBLE : View.VISIBLE);
                     mAppsView.getSearchUiManager().resetSearch();
                 }
             });

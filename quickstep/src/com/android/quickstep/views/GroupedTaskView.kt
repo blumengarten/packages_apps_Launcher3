@@ -187,14 +187,30 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         val taskIconHeight = deviceProfile.overviewTaskIconSizePx
         val isRtl = layoutDirection == LAYOUT_DIRECTION_RTL
         val inSplitSelection = getThisTaskCurrentlyInSplitSelection() != INVALID_TASK_ID
+        var oneIconHiddenDueToSmallWidth = false
 
         if (enableFlexibleTwoAppSplit()) {
-            val topLeftTaskPercent = splitBoundsConfig.leftTopTaskPercent
-            val bottomRightTaskPercent = splitBoundsConfig.rightBottomTaskPercent
-            val hideTopLeftIcon = topLeftTaskPercent < MINIMUM_RATIO_TO_SHOW_ICON
-            val hideBottomRightIcon = bottomRightTaskPercent < MINIMUM_RATIO_TO_SHOW_ICON
-            leftTopTaskContainer.iconView.setFlexSplitAlpha(if (hideTopLeftIcon) 0f else 1f)
-            rightBottomTaskContainer.iconView.setFlexSplitAlpha(if (hideBottomRightIcon) 0f else 1f)
+            // Update values for both icons' setFlexSplitAlpha. Mainly, we want to hide an icon if
+            // its app tile is too small. But we also have to set the alphas back if we go to
+            // split selection.
+            val hideLeftTopIcon: Boolean
+            val hideRightBottomIcon: Boolean
+            if (inSplitSelection) {
+                hideLeftTopIcon =
+                    getThisTaskCurrentlyInSplitSelection() == splitBoundsConfig.leftTopTaskId
+                hideRightBottomIcon =
+                    getThisTaskCurrentlyInSplitSelection() == splitBoundsConfig.rightBottomTaskId
+            } else {
+                hideLeftTopIcon = splitBoundsConfig.leftTopTaskPercent < MINIMUM_RATIO_TO_SHOW_ICON
+                hideRightBottomIcon =
+                    splitBoundsConfig.rightBottomTaskPercent < MINIMUM_RATIO_TO_SHOW_ICON
+                if (hideLeftTopIcon || hideRightBottomIcon) {
+                    oneIconHiddenDueToSmallWidth = true
+                }
+            }
+
+            leftTopTaskContainer.iconView.setFlexSplitAlpha(if (hideLeftTopIcon) 0f else 1f)
+            rightBottomTaskContainer.iconView.setFlexSplitAlpha(if (hideRightBottomIcon) 0f else 1f)
         }
 
         if (enableOverviewIconMenu()) {
@@ -217,6 +233,7 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
                 deviceProfile,
                 splitBoundsConfig,
                 inSplitSelection,
+                oneIconHiddenDueToSmallWidth,
             )
         } else {
             pagedOrientationHandler.setSplitIconParams(
@@ -231,6 +248,7 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
                 deviceProfile,
                 splitBoundsConfig,
                 inSplitSelection,
+                oneIconHiddenDueToSmallWidth,
             )
         }
     }

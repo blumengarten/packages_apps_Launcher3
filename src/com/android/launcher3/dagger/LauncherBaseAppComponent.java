@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherPrefs;
+import com.android.launcher3.RemoveAnimationSettingsTracker;
 import com.android.launcher3.graphics.GridCustomizationsProxy;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.LauncherIcons.IconPool;
@@ -80,8 +81,8 @@ public interface LauncherBaseAppComponent {
     LockedUserState getLockedUserState();
     InvariantDeviceProfile getIDP();
     IconPool getIconPool();
+    RemoveAnimationSettingsTracker getRemoveAnimationSettingsTracker();
     LauncherAppState getLauncherAppState();
-
     GridCustomizationsProxy getGridCustomizationsProxy();
 
     /** Builder for LauncherBaseAppComponent. */

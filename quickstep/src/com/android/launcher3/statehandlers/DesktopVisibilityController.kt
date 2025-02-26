@@ -32,7 +32,8 @@ import com.android.launcher3.statemanager.StatefulActivity
 import com.android.launcher3.uioverrides.QuickstepLauncher
 import com.android.launcher3.util.DaggerSingletonObject
 import com.android.launcher3.util.DaggerSingletonTracker
-import com.android.launcher3.util.Executors
+import com.android.launcher3.util.DisplayController
+import com.android.launcher3.util.Executors.MAIN_EXECUTOR
 import com.android.launcher3.util.window.WindowManagerProxy.DesktopVisibilityListener
 import com.android.quickstep.GestureState.GestureEndTarget
 import com.android.quickstep.SystemUiProxy
@@ -87,9 +88,22 @@ constructor(
     private val desktopVisibilityListeners: MutableSet<DesktopVisibilityListener> = HashSet()
     private val taskbarDesktopModeListeners: MutableSet<TaskbarDesktopModeListener> = HashSet()
 
+    // This simply indicates that user is currently in desktop mode or not.
+    var isInDesktopMode = false
+        private set
+
+    // to track if any pending notification to be done.
+    var isNotifyingDesktopVisibilityPending = false
+
+    // to let launcher hold off on notifying desktop visibility listeners.
+    var launcherAnimationRunning = false
+
     // TODO: b/394387739 - Deprecate this and replace it with something that tracks the count per
     //  desk.
-    /** Number of visible desktop windows in desktop mode. */
+    /**
+     * Number of visible desktop windows in desktop mode. This can be > 0 when user goes to overview
+     * from desktop window mode.
+     */
     var visibleDesktopTasksCount: Int = 0
         /**
          * Sets the number of desktop windows that are visible and updates launcher visibility based
@@ -107,13 +121,27 @@ constructor(
             }
 
             if (visibleTasksCount != field) {
+                if (visibleDesktopTasksCount == 0 && visibleTasksCount == 1) {
+                    isInDesktopMode = true
+                }
+                if (visibleDesktopTasksCount == 1 && visibleTasksCount == 0) {
+                    isInDesktopMode = false
+                }
                 val wasVisible = field > 0
                 val isVisible = visibleTasksCount > 0
                 val wereDesktopTasksVisibleBefore = areDesktopTasksVisibleAndNotInOverview()
                 field = visibleTasksCount
                 val areDesktopTasksVisibleNow = areDesktopTasksVisibleAndNotInOverview()
-                if (wereDesktopTasksVisibleBefore != areDesktopTasksVisibleNow) {
-                    notifyIsInDesktopModeChanged(DEFAULT_DISPLAY, areDesktopTasksVisibleNow)
+
+                if (
+                    wereDesktopTasksVisibleBefore != areDesktopTasksVisibleNow ||
+                        wasVisible != isVisible
+                ) {
+                    if (!launcherAnimationRunning) {
+                        notifyIsInDesktopModeChanged(DEFAULT_DISPLAY, areDesktopTasksVisibleNow)
+                    } else {
+                        isNotifyingDesktopVisibilityPending = true
+                    }
                 }
 
                 if (
@@ -169,7 +197,7 @@ constructor(
     /** Returns whether a desk is currently active on the display with the given [displayId]. */
     fun isInDesktopMode(displayId: Int): Boolean {
         if (!DesktopModeStatus.enableMultipleDesktops(context)) {
-            return areDesktopTasksVisible()
+            return isInDesktopMode
         }
 
         val activeDeskId = getDisplayDeskConfig(displayId)?.activeDeskId ?: INACTIVE_DESK_ID
@@ -193,15 +221,6 @@ constructor(
             Log.d(TAG, "isInDesktopModeAndNotInOverview: overview=$inOverviewState")
         }
         return isInDesktopMode(displayId) && !inOverviewState
-    }
-
-    /** Whether desktop tasks are visible in desktop mode. */
-    private fun areDesktopTasksVisible(): Boolean {
-        val desktopTasksVisible: Boolean = visibleDesktopTasksCount > 0
-        if (DEBUG) {
-            Log.d(TAG, "areDesktopTasksVisible: desktopVisible=$desktopTasksVisible")
-        }
-        return desktopTasksVisible
     }
 
     /** Whether desktop tasks are visible in desktop mode. */
@@ -235,6 +254,22 @@ constructor(
             state === LauncherState.BACKGROUND_APP,
             state.isRecentsViewVisible,
         )
+    }
+
+    /**
+     * Launcher Driven Desktop Mode changes. For example, swipe to home and quick switch from
+     * Desktop Windowing Mode. if there is any pending notification please notify desktop visibility
+     * listeners.
+     */
+    fun onLauncherAnimationFromDesktopEnd() {
+        launcherAnimationRunning = false
+        if (isNotifyingDesktopVisibilityPending) {
+            isNotifyingDesktopVisibilityPending = false
+            notifyIsInDesktopModeChanged(
+                DEFAULT_DISPLAY,
+                isInDesktopModeAndNotInOverview(DEFAULT_DISPLAY),
+            )
+        }
     }
 
     fun onLauncherStateChanged(state: RecentsState) {
@@ -344,6 +379,26 @@ constructor(
         for (listener in taskbarDesktopModeListeners) {
             listener.onTaskbarCornerRoundingUpdate(doesAnyTaskRequireTaskbarRounding)
         }
+    }
+
+    private fun notifyTaskbarDesktopModeListenersForEntry(duration: Int) {
+        if (DEBUG) {
+            Log.d(TAG, "notifyTaskbarDesktopModeListenersForEntry: duration=" + duration)
+        }
+        for (listener in taskbarDesktopModeListeners) {
+            listener.onEnterDesktopMode(duration)
+        }
+        DisplayController.INSTANCE.get(context).notifyConfigChange()
+    }
+
+    private fun notifyTaskbarDesktopModeListenersForExit(duration: Int) {
+        if (DEBUG) {
+            Log.d(TAG, "notifyTaskbarDesktopModeListenersForExit: duration=" + duration)
+        }
+        for (listener in taskbarDesktopModeListeners) {
+            listener.onExitDesktopMode(duration)
+        }
+        DisplayController.INSTANCE.get(context).notifyConfigChange()
     }
 
     /** TODO: b/333533253 - Remove after flag rollout */
@@ -552,14 +607,14 @@ constructor(
             displayDeskStates: Array<DisplayDeskState>,
             canCreateDesks: Boolean,
         ) {
-            Executors.MAIN_EXECUTOR.execute {
+            MAIN_EXECUTOR.execute {
                 controller.get()?.onListenerConnected(displayDeskStates, canCreateDesks)
             }
         }
 
         override fun onTasksVisibilityChanged(displayId: Int, visibleTasksCount: Int) {
             if (displayId != this.displayId) return
-            Executors.MAIN_EXECUTOR.execute {
+            MAIN_EXECUTOR.execute {
                 controller.get()?.apply {
                     if (DEBUG) {
                         Log.d(TAG, "desktop visible tasks count changed=$visibleTasksCount")
@@ -575,7 +630,7 @@ constructor(
 
         override fun onTaskbarCornerRoundingUpdate(doesAnyTaskRequireTaskbarRounding: Boolean) {
             if (!DesktopModeStatus.useRoundedCorners()) return
-            Executors.MAIN_EXECUTOR.execute {
+            MAIN_EXECUTOR.execute {
                 controller.get()?.apply {
                     Log.d(
                         TAG,
@@ -587,26 +642,46 @@ constructor(
             }
         }
 
-        override fun onEnterDesktopModeTransitionStarted(transitionDuration: Int) {}
-
-        override fun onExitDesktopModeTransitionStarted(transitionDuration: Int) {}
-
-        override fun onCanCreateDesksChanged(canCreateDesks: Boolean) {
-            Executors.MAIN_EXECUTOR.execute {
-                controller.get()?.onCanCreateDesksChanged(canCreateDesks)
+        override fun onEnterDesktopModeTransitionStarted(transitionDuration: Int) {
+            MAIN_EXECUTOR.execute {
+                Log.d(
+                    TAG,
+                    ("DesktopTaskListenerImpl: onEnterDesktopModeTransitionStarted with " +
+                        "duration= " +
+                        transitionDuration),
+                )
+                controller.get()?.isInDesktopMode = true
+                controller.get()?.notifyTaskbarDesktopModeListenersForEntry(transitionDuration)
             }
         }
 
+        override fun onExitDesktopModeTransitionStarted(transitionDuration: Int) {
+            MAIN_EXECUTOR.execute {
+                Log.d(
+                    TAG,
+                    ("DesktopTaskListenerImpl: onExitDesktopModeTransitionStarted with " +
+                        "duration= " +
+                        transitionDuration),
+                )
+                controller.get()?.isInDesktopMode = false
+                controller.get()?.notifyTaskbarDesktopModeListenersForExit(transitionDuration)
+            }
+        }
+
+        override fun onCanCreateDesksChanged(canCreateDesks: Boolean) {
+            MAIN_EXECUTOR.execute { controller.get()?.onCanCreateDesksChanged(canCreateDesks) }
+        }
+
         override fun onDeskAdded(displayId: Int, deskId: Int) {
-            Executors.MAIN_EXECUTOR.execute { controller.get()?.onDeskAdded(displayId, deskId) }
+            MAIN_EXECUTOR.execute { controller.get()?.onDeskAdded(displayId, deskId) }
         }
 
         override fun onDeskRemoved(displayId: Int, deskId: Int) {
-            Executors.MAIN_EXECUTOR.execute { controller.get()?.onDeskRemoved(displayId, deskId) }
+            MAIN_EXECUTOR.execute { controller.get()?.onDeskRemoved(displayId, deskId) }
         }
 
         override fun onActiveDeskChanged(displayId: Int, newActiveDesk: Int, oldActiveDesk: Int) {
-            Executors.MAIN_EXECUTOR.execute {
+            MAIN_EXECUTOR.execute {
                 controller.get()?.onActiveDeskChanged(displayId, newActiveDesk, oldActiveDesk)
             }
         }
@@ -619,7 +694,21 @@ constructor(
          *
          * @param doesAnyTaskRequireTaskbarRounding whether task requires taskbar corner roundness.
          */
-        fun onTaskbarCornerRoundingUpdate(doesAnyTaskRequireTaskbarRounding: Boolean)
+        fun onTaskbarCornerRoundingUpdate(doesAnyTaskRequireTaskbarRounding: Boolean) {}
+
+        /**
+         * Callback for when user is exiting desktop mode.
+         *
+         * @param duration for exit transition
+         */
+        fun onExitDesktopMode(duration: Int) {}
+
+        /**
+         * Callback for when user is entering desktop mode.
+         *
+         * @param duration for enter transition
+         */
+        fun onEnterDesktopMode(duration: Int) {}
     }
 
     companion object {

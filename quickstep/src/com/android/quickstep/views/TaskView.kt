@@ -199,7 +199,7 @@ constructor(
          */
         get() = (getNonGridTrans(nonGridTranslationX) + getGridTrans(this.gridTranslationX))
 
-    protected val persistentTranslationY: Float
+    val persistentTranslationY: Float
         /**
          * Returns addition of translationY that is persistent (e.g. fullscreen and grid), and does
          * not change according to a temporary state (e.g. task offset).

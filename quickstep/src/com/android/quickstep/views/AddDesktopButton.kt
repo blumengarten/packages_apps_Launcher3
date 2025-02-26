@@ -20,10 +20,12 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Rect
 import android.util.AttributeSet
+import android.view.View
 import android.widget.ImageButton
 import com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_X
 import com.android.launcher3.R
 import com.android.launcher3.util.MultiPropertyFactory
+import com.android.launcher3.util.MultiValueAlpha
 import com.android.quickstep.util.BorderAnimator
 import com.android.quickstep.util.BorderAnimator.Companion.createSimpleBorderAnimator
 
@@ -33,6 +35,22 @@ import com.android.quickstep.util.BorderAnimator.Companion.createSimpleBorderAni
  */
 class AddDesktopButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
     ImageButton(context, attrs) {
+
+    private enum class Alpha {
+        CONTENT,
+        VISIBILITY,
+    }
+
+    private val addDeskButtonAlpha = MultiValueAlpha(this, Alpha.entries.size)
+
+    var contentAlpha
+        set(value) {
+            addDeskButtonAlpha.get(Alpha.CONTENT.ordinal).value = value
+        }
+        get() = addDeskButtonAlpha.get(Alpha.CONTENT.ordinal).value
+
+    val visibilityAlphaProperty: MultiPropertyFactory<View>.MultiProperty
+        get() = addDeskButtonAlpha.get(Alpha.VISIBILITY.ordinal)
 
     private enum class TranslationX {
         GRID,

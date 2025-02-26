@@ -237,7 +237,8 @@ interface RecentsPagedOrientationHandler : PagedOrientationHandler {
         isRtl: Boolean,
         deviceProfile: DeviceProfile,
         splitConfig: SplitConfigurationOptions.SplitBounds,
-        inSplitSelection: Boolean
+        inSplitSelection: Boolean,
+        oneIconHiddenDueToSmallWidth: Boolean,
     )
 
     /*

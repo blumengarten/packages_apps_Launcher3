@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.net.Uri;
@@ -37,6 +36,7 @@ import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherState;
 import com.android.launcher3.allapps.AllAppsRecyclerView;
 import com.android.launcher3.celllayout.FavoriteItemsTransaction;
+import com.android.launcher3.dagger.LauncherComponentProvider;
 import com.android.launcher3.icons.mono.ThemedIconDrawable;
 import com.android.launcher3.popup.ArrowPopup;
 import com.android.launcher3.util.BaseLauncherActivityTest;
@@ -139,7 +139,7 @@ public class ThemeIconsTest extends BaseLauncherActivityTest<Launcher> {
         return icon;
     }
 
-    private void setThemeEnabled(boolean isEnabled) throws Exception {
+    private void setThemeEnabled(boolean isEnabled) {
         Uri uri = new Uri.Builder()
                 .scheme(ContentResolver.SCHEME_CONTENT)
                 .authority(targetContext().getPackageName() + ".grid_control")
@@ -147,11 +147,10 @@ public class ThemeIconsTest extends BaseLauncherActivityTest<Launcher> {
                 .build();
         ContentValues values = new ContentValues();
         values.put("boolean_value", isEnabled);
-        try (ContentProviderClient client = targetContext().getContentResolver()
-                .acquireContentProviderClient(uri)) {
-            int result = client.update(uri, values, null);
-            assertTrue(result > 0);
-        }
+
+        int result = LauncherComponentProvider.get(targetContext()).getGridCustomizationsProxy()
+                .update(uri, values, null, null);
+        assertTrue(result > 0);
     }
 
     private void switchToAllApps() {
