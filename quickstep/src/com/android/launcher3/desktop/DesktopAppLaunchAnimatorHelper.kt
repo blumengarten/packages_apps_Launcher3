@@ -64,18 +64,13 @@ class DesktopAppLaunchAnimatorHelper(
 
     fun createAnimators(info: TransitionInfo, finishCallback: (Animator) -> Unit): List<Animator> {
         val launchChange = getLaunchChange(info)
-        requireNotNull(launchChange) {
-            val changesString =
+        if (launchChange == null) {
+            val tasksInfo =
                 info.changes.joinToString(", ") { change ->
-                    "Change: mode=${change.mode}, " +
-                        "taskId=${change.taskInfo?.id}, " +
-                        "isFreeform=${change.taskInfo?.isFreeform}"
+                    "${change.taskInfo?.taskId}:${change.taskInfo?.isFreeform}"
                 }
-            Log.e(
-                TAG,
-                "No launch change found: Transition type=${info.type}, changes=$changesString",
-            )
-            "expected an app launch Change"
+            Log.e(TAG, "No launch change found: Transition info=$info, tasks state=$tasksInfo")
+            return emptyList()
         }
 
         val transaction = transactionSupplier.get()
@@ -105,10 +100,14 @@ class DesktopAppLaunchAnimatorHelper(
     }
 
     private fun getLaunchChange(info: TransitionInfo): Change? =
-        info.changes.firstOrNull { change -> change.mode in LAUNCH_CHANGE_MODES }
+        info.changes.firstOrNull { change ->
+            change.mode in LAUNCH_CHANGE_MODES && change.taskInfo?.isFreeform == true
+        }
 
     private fun getMinimizeChange(info: TransitionInfo): Change? =
-        info.changes.firstOrNull { change -> change.mode == TRANSIT_TO_BACK }
+        info.changes.firstOrNull { change ->
+            change.mode == TRANSIT_TO_BACK && change.taskInfo?.isFreeform == true
+        }
 
     private fun getTrampolineCloseChange(info: TransitionInfo): Change? {
         if (
