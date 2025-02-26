@@ -19,11 +19,12 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Rect
 import android.util.AttributeSet
-import android.view.View
+import android.util.FloatProperty
 import android.widget.Button
 import com.android.launcher3.Flags.enableFocusOutline
 import com.android.launcher3.R
-import com.android.launcher3.util.MultiPropertyFactory
+import com.android.launcher3.util.KFloatProperty
+import com.android.launcher3.util.MultiPropertyDelegate
 import com.android.launcher3.util.MultiValueAlpha
 import com.android.quickstep.util.BorderAnimator
 import com.android.quickstep.util.BorderAnimator.Companion.createSimpleBorderAnimator
@@ -33,13 +34,6 @@ import kotlin.math.min
 class ClearAllButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
     Button(context, attrs) {
 
-    private enum class Alpha {
-        SCROLL,
-        CONTENT,
-        VISIBILITY,
-        DISMISS,
-    }
-
     private val clearAllButtonAlpha =
         object : MultiValueAlpha(this, Alpha.entries.size) {
             override fun apply(value: Float) {
@@ -47,32 +41,10 @@ class ClearAllButton @JvmOverloads constructor(context: Context, attrs: Attribut
                 isClickable = value >= 1f
             }
         }
-
-    var scrollAlpha
-        set(value) {
-            clearAllButtonAlpha.get(Alpha.SCROLL.ordinal).value = value
-        }
-        get() = clearAllButtonAlpha.get(Alpha.SCROLL.ordinal).value
-
-    var contentAlpha
-        set(value) {
-            clearAllButtonAlpha.get(Alpha.CONTENT.ordinal).value = value
-        }
-        get() = clearAllButtonAlpha.get(Alpha.CONTENT.ordinal).value
-
-    @JvmField
-    val visibilityAlphaProperty: MultiPropertyFactory<View>.MultiProperty =
-        clearAllButtonAlpha.get(Alpha.VISIBILITY.ordinal)
-
-    var dismissAlpha
-        set(value) {
-            dismissAlphaProperty.value = value
-        }
-        get() = dismissAlphaProperty.value
-
-    @JvmField
-    val dismissAlphaProperty: MultiPropertyFactory<View>.MultiProperty =
-        clearAllButtonAlpha.get(Alpha.DISMISS.ordinal)
+    var scrollAlpha by MultiPropertyDelegate(clearAllButtonAlpha, Alpha.SCROLL)
+    var contentAlpha by MultiPropertyDelegate(clearAllButtonAlpha, Alpha.CONTENT)
+    var visibilityAlpha by MultiPropertyDelegate(clearAllButtonAlpha, Alpha.VISIBILITY)
+    var dismissAlpha by MultiPropertyDelegate(clearAllButtonAlpha, Alpha.DISMISS)
 
     var fullscreenProgress = 1f
         set(value) {
@@ -257,4 +229,21 @@ class ClearAllButton @JvmOverloads constructor(context: Context, attrs: Attribut
         if (fullscreenProgress > 0) endTranslation else 0f
 
     private fun getGridTrans(endTranslation: Float) = if (gridProgress > 0) endTranslation else 0f
+
+    companion object {
+        private enum class Alpha {
+            SCROLL,
+            CONTENT,
+            VISIBILITY,
+            DISMISS,
+        }
+
+        @JvmField
+        val VISIBILITY_ALPHA: FloatProperty<ClearAllButton> =
+            KFloatProperty(ClearAllButton::visibilityAlpha)
+
+        @JvmField
+        val DISMISS_ALPHA: FloatProperty<ClearAllButton> =
+            KFloatProperty(ClearAllButton::dismissAlpha)
+    }
 }

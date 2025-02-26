@@ -36,8 +36,9 @@ import com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_SCALE
 import com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_TRANSLATE_X
 import com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_TRANSLATE_Y
 import com.android.launcher3.states.StateAnimationConfig.SKIP_OVERVIEW
-import com.android.launcher3.util.MultiPropertyFactory.MULTI_PROPERTY_VALUE
 import com.android.quickstep.util.AnimUtils
+import com.android.quickstep.views.AddDesktopButton
+import com.android.quickstep.views.ClearAllButton
 import com.android.quickstep.views.RecentsView
 import com.android.quickstep.views.RecentsView.ADJACENT_PAGE_HORIZONTAL_OFFSET
 import com.android.quickstep.views.RecentsView.CONTENT_ALPHA
@@ -287,8 +288,8 @@ class RecentsViewStateController(private val launcher: QuickstepLauncher) :
         val clearAllButtonAlpha =
             if (state.areElementsVisible(launcher, LauncherState.CLEAR_ALL_BUTTON)) 1f else 0f
         propertySetter.setFloat(
-            recentsView.clearAllButton.visibilityAlphaProperty,
-            MULTI_PROPERTY_VALUE,
+            recentsView.clearAllButton,
+            ClearAllButton.VISIBILITY_ALPHA,
             clearAllButtonAlpha,
             LINEAR,
         )
@@ -302,8 +303,8 @@ class RecentsViewStateController(private val launcher: QuickstepLauncher) :
         )
         recentsView.addDeskButton?.let {
             propertySetter.setFloat(
-                it.visibilityAlphaProperty,
-                MULTI_PROPERTY_VALUE,
+                it,
+                AddDesktopButton.VISIBILITY_ALPHA,
                 if (state.areElementsVisible(launcher, LauncherState.ADD_DESK_BUTTON)) 1f else 0f,
                 LINEAR,
             )

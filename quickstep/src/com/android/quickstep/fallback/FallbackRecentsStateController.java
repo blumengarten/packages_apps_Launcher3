@@ -26,7 +26,6 @@ import static com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_TR
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_TRANSLATE_Y;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_SCRIM_FADE;
 import static com.android.launcher3.states.StateAnimationConfig.SKIP_OVERVIEW;
-import static com.android.launcher3.util.MultiPropertyFactory.MULTI_PROPERTY_VALUE;
 import static com.android.quickstep.fallback.RecentsState.OVERVIEW_SPLIT_SELECT;
 import static com.android.quickstep.views.RecentsView.ADJACENT_PAGE_HORIZONTAL_OFFSET;
 import static com.android.quickstep.views.RecentsView.DESKTOP_CAROUSEL_DETACH_PROGRESS;
@@ -52,6 +51,8 @@ import com.android.launcher3.anim.PendingAnimation;
 import com.android.launcher3.anim.PropertySetter;
 import com.android.launcher3.statemanager.StateManager.StateHandler;
 import com.android.launcher3.states.StateAnimationConfig;
+import com.android.quickstep.views.AddDesktopButton;
+import com.android.quickstep.views.ClearAllButton;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
 
@@ -97,12 +98,12 @@ public class FallbackRecentsStateController implements StateHandler<RecentsState
     private void setProperties(RecentsState state, StateAnimationConfig config,
             PropertySetter setter) {
         float clearAllButtonAlpha = state.hasClearAllButton() ? 1 : 0;
-        setter.setFloat(mRecentsView.getClearAllButton().visibilityAlphaProperty,
-                MULTI_PROPERTY_VALUE, clearAllButtonAlpha, LINEAR);
+        setter.setFloat(mRecentsView.getClearAllButton(),
+                ClearAllButton.VISIBILITY_ALPHA, clearAllButtonAlpha, LINEAR);
         if (mRecentsView.getAddDeskButton() != null) {
             float addDeskButtonAlpha = state.hasAddDeskButton() ? 1 : 0;
-            setter.setFloat(mRecentsView.getAddDeskButton().getVisibilityAlphaProperty(),
-                    MULTI_PROPERTY_VALUE, addDeskButtonAlpha, LINEAR);
+            setter.setFloat(mRecentsView.getAddDeskButton(), AddDesktopButton.VISIBILITY_ALPHA,
+                    addDeskButtonAlpha, LINEAR);
         }
         float overviewButtonAlpha = state.hasOverviewActions() ? 1 : 0;
         setter.setFloat(mRecentsViewContainer.getActionsView().getVisibilityAlpha(),
