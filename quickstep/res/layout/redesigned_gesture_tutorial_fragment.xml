@@ -137,6 +137,7 @@
         android:layout_above="@id/gesture_tutorial_fragment_action_button"
         android:layout_centerHorizontal="true"
         android:background="@android:color/transparent"
+        android:screenReaderFocusable="true"
         android:paddingTop="24dp"
         android:paddingHorizontal="24dp"
         android:layout_marginBottom="16dp">
@@ -146,8 +147,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="104dp"
-            android:accessibilityHeading="true"
-            android:accessibilityTraversalBefore="@id/gesture_tutorial_fragment_feedback_subtitle"
             android:gravity="top"
             android:lineSpacingExtra="-1sp"
             android:textAppearance="@style/TextAppearance.GestureTutorial.MainTitle"
@@ -162,8 +161,6 @@
             android:layout_marginTop="24dp"
             android:lineSpacingExtra="4sp"
             android:textAppearance="@style/TextAppearance.GestureTutorial.MainSubtitle"
-            android:accessibilityTraversalAfter="@id/gesture_tutorial_fragment_feedback_title"
-            android:accessibilityTraversalBefore="@id/gesture_tutorial_fragment_action_button"
 
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/gesture_tutorial_fragment_feedback_title" />
