@@ -629,3 +629,10 @@ flag {
   description: "Enable Alt + Tab KQS view to show apps in flattened structure"
   bug: "382769617"
 }
+
+flag {
+  name: "enable_gesture_nav_on_connected_displays"
+  namespace: "lse_desktop_experience"
+  description: "Enables gesture navigation handling on connected displays"
+  bug: "382130680"
+}
