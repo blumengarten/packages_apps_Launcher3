@@ -18,8 +18,6 @@ package com.android.launcher3.util;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
-import static com.android.launcher3.util.MainThreadInitializedObject.SandboxContext;
-
 import android.content.ContextWrapper;
 
 import androidx.annotation.Nullable;
@@ -44,7 +42,7 @@ import java.util.concurrent.CountDownLatch;
  * There are 2 constructors in this class. The base context can be {@link SandboxContext} or
  * Instrumentation target context.
  * Using {@link SandboxContext} as base context allows custom implementations for
- * MainThreadInitializedObject providers.
+ * providing objects in Dagger components.
  */
 
 public class TestSandboxModelContextWrapper extends ActivityContextWrapper implements

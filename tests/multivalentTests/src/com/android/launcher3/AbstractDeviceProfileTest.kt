@@ -35,8 +35,8 @@ import com.android.launcher3.testing.shared.ResourceUtils
 import com.android.launcher3.util.AllModulesMinusWMProxy
 import com.android.launcher3.util.DisplayController
 import com.android.launcher3.util.FakePrefsModule
-import com.android.launcher3.util.MainThreadInitializedObject.SandboxContext
 import com.android.launcher3.util.NavigationMode
+import com.android.launcher3.util.SandboxContext
 import com.android.launcher3.util.WindowBounds
 import com.android.launcher3.util.rule.TestStabilityRule
 import com.android.launcher3.util.rule.setFlags
