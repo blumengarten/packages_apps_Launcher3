@@ -52,7 +52,6 @@ import com.android.launcher3.anim.PendingAnimation;
 import com.android.launcher3.anim.PropertySetter;
 import com.android.launcher3.statemanager.StateManager.StateHandler;
 import com.android.launcher3.states.StateAnimationConfig;
-import com.android.quickstep.views.ClearAllButton;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
 
@@ -98,8 +97,8 @@ public class FallbackRecentsStateController implements StateHandler<RecentsState
     private void setProperties(RecentsState state, StateAnimationConfig config,
             PropertySetter setter) {
         float clearAllButtonAlpha = state.hasClearAllButton() ? 1 : 0;
-        setter.setFloat(mRecentsView.getClearAllButton(), ClearAllButton.VISIBILITY_ALPHA,
-                clearAllButtonAlpha, LINEAR);
+        setter.setFloat(mRecentsView.getClearAllButton().visibilityAlphaProperty,
+                MULTI_PROPERTY_VALUE, clearAllButtonAlpha, LINEAR);
         if (mRecentsView.getAddDeskButton() != null) {
             float addDeskButtonAlpha = state.hasAddDeskButton() ? 1 : 0;
             setter.setFloat(mRecentsView.getAddDeskButton().getVisibilityAlphaProperty(),
