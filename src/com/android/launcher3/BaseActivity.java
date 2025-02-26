@@ -481,10 +481,8 @@ public abstract class BaseActivity extends Activity implements ActivityContext,
     public static <T extends BaseActivity> T fromContext(Context context) {
         if (context instanceof BaseActivity) {
             return (T) context;
-        } else if (context instanceof ActivityContextDelegate) {
-            return (T) ((ActivityContextDelegate) context).mDelegate;
-        } else if (context instanceof ContextWrapper) {
-            return fromContext(((ContextWrapper) context).getBaseContext());
+        } else if (context instanceof ContextWrapper cw) {
+            return fromContext(cw.getBaseContext());
         } else {
             throw new IllegalArgumentException("Cannot find BaseActivity in parent tree");
         }

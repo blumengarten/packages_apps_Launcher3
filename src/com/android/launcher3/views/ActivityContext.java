@@ -43,7 +43,6 @@ import android.os.IBinder;
 import android.os.Process;
 import android.os.UserHandle;
 import android.util.Log;
-import android.view.ContextThemeWrapper;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -552,21 +551,10 @@ public interface ActivityContext {
     static <T extends Context & ActivityContext> T lookupContextNoThrow(Context context) {
         if (context instanceof ActivityContext) {
             return (T) context;
-        } else if (context instanceof ActivityContextDelegate acd) {
-            return (T) acd.mDelegate;
-        } else if (context instanceof ContextWrapper) {
-            return lookupContextNoThrow(((ContextWrapper) context).getBaseContext());
+        } else if (context instanceof ContextWrapper cw) {
+            return lookupContextNoThrow(cw.getBaseContext());
         } else {
             return null;
-        }
-    }
-
-    class ActivityContextDelegate extends ContextThemeWrapper {
-        public final ActivityContext mDelegate;
-
-        public ActivityContextDelegate(Context base, int themeResId, ActivityContext delegate) {
-            super(base, themeResId);
-            mDelegate = delegate;
         }
     }
 }
