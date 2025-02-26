@@ -53,7 +53,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
 
     override fun getSplitTranslationDirectionFactor(
         stagePosition: Int,
-        deviceProfile: DeviceProfile
+        deviceProfile: DeviceProfile,
     ): Int = if (stagePosition == STAGE_POSITION_BOTTOM_OR_RIGHT) -1 else 1
 
     override fun getRecentsRtlSetting(resources: Resources): Boolean = Utilities.isRtl(resources)
@@ -70,7 +70,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
         thumbnailView: View,
         deviceProfile: DeviceProfile,
         taskInsetMargin: Float,
-        taskViewIcon: View
+        taskViewIcon: View,
     ): Float = x + taskInsetMargin
 
     override fun getTaskMenuY(
@@ -79,7 +79,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
         stagePosition: Int,
         taskMenuView: View,
         taskInsetMargin: Float,
-        taskViewIcon: View
+        taskViewIcon: View,
     ): Float {
         if (Flags.enableOverviewIconMenu()) {
             return y
@@ -97,14 +97,14 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
         taskInsetMargin: Float,
         deviceProfile: DeviceProfile,
         taskMenuX: Float,
-        taskMenuY: Float
+        taskMenuY: Float,
     ): Int = (deviceProfile.availableWidthPx - taskInsetMargin - taskMenuX).toInt()
 
     override fun setSplitTaskSwipeRect(
         dp: DeviceProfile,
         outRect: Rect,
         splitInfo: SplitBounds,
-        desiredStagePosition: Int
+        desiredStagePosition: Int,
     ) {
         val topLeftTaskPercent = splitInfo.leftTopTaskPercent
         val dividerBarPercent = splitInfo.dividerPercent
@@ -126,7 +126,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
         deviceProfile: DeviceProfile,
         snapshotViewWidth: Int,
         snapshotViewHeight: Int,
-        banner: View
+        banner: View,
     ) {
         banner.pivotX = 0f
         banner.pivotY = 0f
@@ -149,7 +149,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
         deviceProfile: DeviceProfile,
         thumbnailViews: Array<View>,
         desiredTaskId: Int,
-        banner: View
+        banner: View,
     ): Pair<Float, Float> {
         val snapshotParams = thumbnailViews[0].layoutParams as FrameLayout.LayoutParams
         val translationX: Float = (taskViewWidth - banner.height).toFloat()
@@ -181,7 +181,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
                 R.drawable.ic_split_horizontal,
                 R.string.recent_task_option_split_screen,
                 STAGE_POSITION_BOTTOM_OR_RIGHT,
-                STAGE_TYPE_MAIN
+                STAGE_TYPE_MAIN,
             )
         )
 
@@ -189,7 +189,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
         out: View,
         dp: DeviceProfile,
         splitInstructionsHeight: Int,
-        splitInstructionsWidth: Int
+        splitInstructionsWidth: Int,
     ) {
         out.pivotX = 0f
         out.pivotY = splitInstructionsHeight.toFloat()
@@ -217,7 +217,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
         taskIconMargin: Int,
         taskIconHeight: Int,
         thumbnailTopMargin: Int,
-        isRtl: Boolean
+        isRtl: Boolean,
     ) {
         iconParams.gravity =
             if (isRtl) {
@@ -230,7 +230,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
 
     override fun setIconAppChipChildrenParams(
         iconParams: FrameLayout.LayoutParams,
-        chipChildMarginStart: Int
+        chipChildMarginStart: Int,
     ) {
         iconParams.setMargins(0, 0, 0, 0)
         iconParams.marginStart = chipChildMarginStart
@@ -241,7 +241,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
         iconAppChipView: IconAppChipView,
         iconMenuParams: FrameLayout.LayoutParams,
         iconMenuMargin: Int,
-        thumbnailTopMargin: Int
+        thumbnailTopMargin: Int,
     ) {
         val isRtl = iconAppChipView.layoutDirection == View.LAYOUT_DIRECTION_RTL
         val iconCenter = iconAppChipView.getHeight() / 2f
@@ -268,7 +268,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
 
     /**
      * @param inSplitSelection Whether user currently has a task from this task group staged for
-     * split screen. Currently this state is not reachable in fake seascape.
+     *   split screen. Currently this state is not reachable in fake seascape.
      */
     override fun measureGroupedTaskViewThumbnailBounds(
         primarySnapshot: View,
@@ -278,7 +278,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
         splitBoundsConfig: SplitBounds,
         dp: DeviceProfile,
         isRtl: Boolean,
-        inSplitSelection: Boolean
+        inSplitSelection: Boolean,
     ) {
         val primaryParams = primarySnapshot.layoutParams as FrameLayout.LayoutParams
         val secondaryParams = secondarySnapshot.layoutParams as FrameLayout.LayoutParams
@@ -300,11 +300,11 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
             (taskViewSecond.y + spaceAboveSnapshot + dividerBar).toFloat()
         primarySnapshot.measure(
             MeasureSpec.makeMeasureSpec(taskViewFirst.x, MeasureSpec.EXACTLY),
-            MeasureSpec.makeMeasureSpec(taskViewFirst.y, MeasureSpec.EXACTLY)
+            MeasureSpec.makeMeasureSpec(taskViewFirst.y, MeasureSpec.EXACTLY),
         )
         secondarySnapshot.measure(
             MeasureSpec.makeMeasureSpec(taskViewSecond.x, MeasureSpec.EXACTLY),
-            MeasureSpec.makeMeasureSpec(taskViewSecond.y, MeasureSpec.EXACTLY)
+            MeasureSpec.makeMeasureSpec(taskViewSecond.y, MeasureSpec.EXACTLY),
         )
     }
 
@@ -312,7 +312,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
         dp: DeviceProfile,
         splitBoundsConfig: SplitBounds,
         parentWidth: Int,
-        parentHeight: Int
+        parentHeight: Int,
     ): Pair<Point, Point> {
         // Measure and layout the thumbnails bottom up, since the primary is on the visual left
         // (portrait bottom) and secondary is on the right (portrait top)
@@ -376,10 +376,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
             if (oneIconHiddenDueToSmallWidth) {
                 // Center both icons
                 val centerY = primarySnapshotHeight + ((dividerSize - taskIconHeight) / 2)
-                SplitIconPositions(
-                    topLeftY = centerY,
-                    bottomRightY = centerY,
-                )
+                SplitIconPositions(topLeftY = centerY, bottomRightY = centerY)
             } else {
                 SplitIconPositions(
                     topLeftY = primarySnapshotHeight - taskIconHeight,
