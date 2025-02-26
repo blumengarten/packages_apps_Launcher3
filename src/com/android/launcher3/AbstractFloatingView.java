@@ -126,7 +126,8 @@ public abstract class AbstractFloatingView extends LinearLayout implements Touch
     /** Type of popups that should get exclusive accessibility focus. */
     public static final int TYPE_ACCESSIBLE = TYPE_ALL & ~TYPE_DISCOVERY_BOUNCE & ~TYPE_LISTENER
             & ~TYPE_ALL_APPS_EDU & ~TYPE_TASKBAR_ALL_APPS & ~TYPE_PIN_IME_POPUP
-            & ~TYPE_WIDGET_RESIZE_FRAME & ~TYPE_ONE_GRID_MIGRATION_EDU & ~TYPE_ON_BOARD_POPUP;
+            & ~TYPE_WIDGET_RESIZE_FRAME & ~TYPE_ONE_GRID_MIGRATION_EDU & ~TYPE_ON_BOARD_POPUP
+            & ~TYPE_TASKBAR_OVERLAY_PROXY;
 
     // These view all have particular operation associated with swipe down interaction.
     public static final int TYPE_STATUS_BAR_SWIPE_DOWN_DISALLOW = TYPE_WIDGETS_BOTTOM_SHEET |
