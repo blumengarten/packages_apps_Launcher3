@@ -1,6 +1,7 @@
 package com.android.launcher3.util
 
 import android.content.ContentValues
+import android.os.Process
 import com.android.launcher3.Flags
 import com.android.launcher3.LauncherModel
 import com.android.launcher3.LauncherSettings.Favorites
@@ -66,7 +67,7 @@ object ModelTestExtensions {
         spanX: Int = 1,
         spanY: Int = 1,
         id: Int = 0,
-        profileId: Int = 0,
+        profileId: Int = Process.myUserHandle().identifier,
         tableName: String = Favorites.TABLE_NAME,
         appWidgetId: Int = -1,
         appWidgetSource: Int = -1,
