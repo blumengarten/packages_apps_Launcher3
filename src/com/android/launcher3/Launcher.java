@@ -2948,11 +2948,6 @@ public class Launcher extends StatefulActivity<LauncherState>
         return mModelCallbacks.getWorkspaceLoading();
     }
 
-    @Override
-    public boolean isBindingItems() {
-        return isWorkspaceLoading();
-    }
-
     /**
      * Returns true if a touch interaction is in progress
      */

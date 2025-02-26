@@ -270,11 +270,6 @@ public interface ActivityContext {
      */
     default void applyOverwritesToLogItem(LauncherAtom.ItemInfo.Builder itemInfoBuilder) { }
 
-    /** Returns {@code true} if items are currently being bound within this context. */
-    default boolean isBindingItems() {
-        return false;
-    }
-
     default View.OnClickListener getItemOnClickListener() {
         return v -> {
             // No op.
