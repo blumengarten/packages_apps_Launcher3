@@ -636,3 +636,13 @@ flag {
   description: "Enables gesture navigation handling on connected displays"
   bug: "382130680"
 }
+
+flag {
+  name: "enable_taskbar_behind_shade"
+  namespace: "lse_desktop_experience"
+  description: "Keeps taskbar behind notification shade when its pulled down"
+  bug: "343194358"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+}
