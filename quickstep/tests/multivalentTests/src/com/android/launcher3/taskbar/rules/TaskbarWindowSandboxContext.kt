@@ -30,7 +30,6 @@ import com.android.launcher3.util.AllModulesMinusWMProxy
 import com.android.launcher3.util.DaggerSingletonTracker
 import com.android.launcher3.util.DisplayController
 import com.android.launcher3.util.FakePrefsModule
-import com.android.launcher3.util.MainThreadInitializedObject.ObjectSandbox
 import com.android.launcher3.util.SandboxApplication
 import com.android.launcher3.util.SettingsCache
 import com.android.launcher3.util.SettingsCacheSandbox
@@ -58,7 +57,7 @@ private constructor(
     private val base: SandboxApplication,
     val virtualDisplay: VirtualDisplay,
     private val params: SandboxParams,
-) : ContextWrapper(base), ObjectSandbox by base, TestRule {
+) : ContextWrapper(base), TestRule {
 
     val settingsCacheSandbox = SettingsCacheSandbox()
 

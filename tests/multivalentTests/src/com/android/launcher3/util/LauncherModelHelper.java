@@ -56,7 +56,6 @@ import com.android.launcher3.model.BgDataModel;
 import com.android.launcher3.model.BgDataModel.Callbacks;
 import com.android.launcher3.model.ModelDbController;
 import com.android.launcher3.testing.TestInformationProvider;
-import com.android.launcher3.util.MainThreadInitializedObject.SandboxContext;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

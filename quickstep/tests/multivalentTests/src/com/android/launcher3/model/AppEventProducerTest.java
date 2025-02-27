@@ -41,7 +41,7 @@ import com.android.launcher3.logger.LauncherAtom;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.pm.UserCache;
 import com.android.launcher3.util.AllModulesForTest;
-import com.android.launcher3.util.MainThreadInitializedObject.SandboxContext;
+import com.android.launcher3.util.SandboxContext;
 import com.android.launcher3.util.UserIconInfo;
 import com.android.systemui.shared.system.SysUiStatsLog;
 
