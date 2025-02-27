@@ -296,7 +296,7 @@ constructor(
     fun getMenuTranslationY(): MultiPropertyFactory<View>.MultiProperty =
         viewTranslationY[INDEX_MENU_TRANSLATION]
 
-    internal fun revealAnim(isRevealing: Boolean) {
+    internal fun revealAnim(isRevealing: Boolean, animated: Boolean = true) {
         cancelInProgressAnimations()
         val collapsedBackgroundBounds = getCollapsedBackgroundLtrBounds()
         val expandedBackgroundBounds = getExpandedBackgroundLtrBounds()
@@ -392,6 +392,7 @@ constructor(
             animator!!.setDuration(MENU_BACKGROUND_HIDE_DURATION.toLong())
         }
 
+        if (!animated) animator!!.duration = 0
         animator!!.interpolator = Interpolators.EMPHASIZED
         animator!!.start()
     }

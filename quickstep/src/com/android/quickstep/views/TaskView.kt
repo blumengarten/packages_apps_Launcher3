@@ -301,7 +301,7 @@ constructor(
     var sysUiStatusNavFlags: Int = 0
         get() =
             if (enableRefactorTaskThumbnail()) field
-            else taskContainers.first().thumbnailViewDeprecated.sysUiStatusNavFlags
+            else firstTaskContainer?.thumbnailViewDeprecated?.sysUiStatusNavFlags ?: 0
         private set
 
     // Various animation progress variables.
@@ -1476,7 +1476,8 @@ constructor(
         return if (enableOverviewIconMenu() && menuContainer.iconView is IconAppChipView) {
             menuContainer.iconView.revealAnim(/* isRevealing= */ true)
             TaskMenuView.showForTask(menuContainer) {
-                menuContainer.iconView.revealAnim(/* isRevealing= */ false)
+                val isAnimated = !recentsView.isSplitSelectionActive
+                menuContainer.iconView.revealAnim(/* isRevealing= */ false, isAnimated)
                 if (enableHoverOfChildElementsInTaskview()) {
                     recentsView.setTaskBorderEnabled(true)
                 }

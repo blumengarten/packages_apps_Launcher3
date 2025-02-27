@@ -19,6 +19,7 @@ package com.android.launcher3.taskbar.rules
 import com.android.quickstep.RecentsModel
 import com.android.quickstep.RecentsModel.RecentTasksChangedListener
 import com.android.quickstep.TaskIconCache
+import com.android.quickstep.TaskThumbnailCache
 import com.android.quickstep.util.GroupTask
 import java.util.function.Consumer
 import org.mockito.kotlin.any
@@ -27,15 +28,19 @@ import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 
-/** Helper class to mock the {@link RecentsModel} object in test */
+/** Helper class to mock the [RecentsModel] object in test */
 class MockedRecentsModelHelper {
     private val mockIconCache: TaskIconCache = mock()
+    private val mockThumbnailCache: TaskThumbnailCache = mock()
+
     var taskListId = 0
     var recentTasksChangedListener: RecentTasksChangedListener? = null
     var taskRequests: MutableList<(List<GroupTask>) -> Unit> = mutableListOf()
 
     val mockRecentsModel: RecentsModel = mock {
         on { iconCache } doReturn mockIconCache
+
+        on { thumbnailCache } doReturn mockThumbnailCache
 
         on { unregisterRecentTasksChangedListener() } doAnswer { recentTasksChangedListener = null }
 

@@ -75,7 +75,7 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
         if (ev.action == MotionEvent.ACTION_DOWN) {
             if (!recentsViewContainer.dragLayer.isEventOverView(this, ev)) {
                 // TODO: log this once we have a new container type for it?
-                close(true)
+                animateOpenOrClosed(true)
                 return true
             }
         }
@@ -83,7 +83,7 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
     }
 
     override fun handleClose(animate: Boolean) {
-        animateClose()
+        animateOpenOrClosed(true, animated = false)
     }
 
     override fun isOfType(type: Int): Boolean = (type and TYPE_TASK_MENU) != 0
@@ -260,11 +260,7 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
     private val iconView: View
         get() = taskContainer.iconView.asView()
 
-    private fun animateClose() {
-        animateOpenOrClosed(true)
-    }
-
-    private fun animateOpenOrClosed(closing: Boolean) {
+    private fun animateOpenOrClosed(closing: Boolean, animated: Boolean = true) {
         openCloseAnimator?.let { if (it.isRunning) it.cancel() }
         openCloseAnimator = AnimatorSet()
         // If we're opening, we just start from the beginning as a new `TaskMenuView` is created
@@ -312,7 +308,12 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
                 }
             }
         )
-        val animationDuration = if (closing) REVEAL_CLOSE_DURATION else REVEAL_OPEN_DURATION
+        val animationDuration =
+            when {
+                animated && closing -> REVEAL_CLOSE_DURATION
+                animated && !closing -> REVEAL_OPEN_DURATION
+                else -> 0L
+            }
         openCloseAnimator!!.setDuration(animationDuration)
         openCloseAnimator!!.start()
     }

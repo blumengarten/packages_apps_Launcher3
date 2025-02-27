@@ -55,6 +55,7 @@ import com.android.launcher3.util.RunnableList;
 import com.android.systemui.shared.Flags;
 
 import java.lang.ref.WeakReference;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -130,8 +131,6 @@ public class GridCustomizationsProxy implements ProxyProvider {
     private static final int MESSAGE_ID_UPDATE_GRID = 7414;
     private static final int MESSAGE_ID_UPDATE_COLOR = 856;
 
-    private static final String DEFAULT_SHAPE_KEY = "circle";
-
     // Set of all active previews used to track duplicate memory allocations
     private final Set<PreviewLifecycleObserver> mActivePreviews =
             Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -170,18 +169,18 @@ public class GridCustomizationsProxy implements ProxyProvider {
                     MatrixCursor cursor = new MatrixCursor(new String[]{
                             KEY_SHAPE_KEY, KEY_SHAPE_TITLE, KEY_PATH, KEY_IS_DEFAULT});
                     String currentShapePath = mThemeManager.getIconState().getIconMask();
-                    Optional<IconShapeModel> selectedShape = ShapesProvider.INSTANCE.getIconShapes()
-                            .values()
-                            .stream()
-                            .filter(shape -> shape.getPathString().equals(currentShapePath))
-                            .findFirst();
+                    Optional<IconShapeModel> selectedShape = Arrays.stream(
+                            ShapesProvider.INSTANCE.getIconShapes()).filter(
+                                    shape -> shape.getPathString().equals(currentShapePath)
+                    ).findFirst();
                     // Handle default for when current shape doesn't match new shapes.
                     if (selectedShape.isEmpty()) {
-                        selectedShape = Optional.ofNullable(ShapesProvider.INSTANCE.getIconShapes()
-                                .get(DEFAULT_SHAPE_KEY));
+                        selectedShape = Optional.of(Arrays.stream(
+                                ShapesProvider.INSTANCE.getIconShapes()
+                        ).findFirst().get());
                     }
 
-                    for (IconShapeModel shape : ShapesProvider.INSTANCE.getIconShapes().values()) {
+                    for (IconShapeModel shape : ShapesProvider.INSTANCE.getIconShapes()) {
                         cursor.newRow()
                                 .add(KEY_SHAPE_KEY, shape.getKey())
                                 .add(KEY_SHAPE_TITLE, shape.getTitle())
