@@ -20,6 +20,9 @@ import static android.graphics.fonts.FontStyle.FONT_WEIGHT_BOLD;
 import static android.graphics.fonts.FontStyle.FONT_WEIGHT_NORMAL;
 import static android.text.Layout.Alignment.ALIGN_NORMAL;
 
+import static com.android.launcher3.BubbleTextView.RunningAppState.RUNNING;
+import static com.android.launcher3.BubbleTextView.RunningAppState.NOT_RUNNING;
+import static com.android.launcher3.BubbleTextView.RunningAppState.MINIMIZED;
 import static com.android.launcher3.Flags.enableContrastTiles;
 import static com.android.launcher3.Flags.enableCursorHoverStates;
 import static com.android.launcher3.graphics.PreloadIconDrawable.newPendingIcon;
@@ -208,6 +211,9 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     private final int mRunningAppIndicatorColor;
     private final int mMinimizedAppIndicatorColor;
 
+    private final String mMinimizedStateDescription;
+    private final String mRunningStateDescription;
+
     /**
      * Various options for the running state of an app.
      */
@@ -240,6 +246,9 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         super(context, attrs, defStyle);
         mActivity = ActivityContext.lookupContext(context);
         FastBitmapDrawable.setFlagHoverEnabled(enableCursorHoverStates());
+        mMinimizedStateDescription = getContext().getString(
+                R.string.app_minimized_state_description);
+        mRunningStateDescription = getContext().getString(R.string.app_running_state_description);
 
         TypedArray a = context.obtainStyledAttributes(attrs,
                 R.styleable.BubbleTextView, defStyle, 0);
@@ -430,6 +439,19 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     public void updateRunningState(RunningAppState runningAppState) {
         mRunningAppState = runningAppState;
         invalidate();
+    }
+
+    /**
+     * Returns state description of this icon.
+     */
+    public String getIconStateDescription() {
+        if (mRunningAppState == MINIMIZED) {
+            return mMinimizedStateDescription;
+        } else if (mRunningAppState == RUNNING) {
+            return mRunningStateDescription;
+        } else {
+            return "";
+        }
     }
 
     protected void setItemInfo(ItemInfoWithIcon itemInfo) {
@@ -768,13 +790,13 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
     /** Draws a line under the app icon if this is representing a running app in Desktop Mode. */
     protected void drawRunningAppIndicatorIfNecessary(Canvas canvas) {
-        if (mRunningAppState == RunningAppState.NOT_RUNNING || mDisplay != DISPLAY_TASKBAR) {
+        if (mRunningAppState == NOT_RUNNING || mDisplay != DISPLAY_TASKBAR) {
             return;
         }
         getIconBounds(mRunningAppIconBounds);
         Utilities.scaleRectAboutCenter(mRunningAppIconBounds, ICON_VISIBLE_AREA_FACTOR);
 
-        final boolean isMinimized = mRunningAppState == RunningAppState.MINIMIZED;
+        final boolean isMinimized = mRunningAppState == MINIMIZED;
         final int indicatorTop = mRunningAppIconBounds.bottom + mRunningAppIndicatorTopMargin;
         final int indicatorWidth =
                 isMinimized ? mMinimizedAppIndicatorWidth : mRunningAppIndicatorWidth;

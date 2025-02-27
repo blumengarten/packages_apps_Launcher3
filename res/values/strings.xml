@@ -293,6 +293,9 @@
     <!-- Description for a new page on homescreen[CHAR_LIMIT=none] -->
     <string name="workspace_new_page">New home screen page</string>
 
+    <string name="app_running_state_description">Active</string>
+    <string name="app_minimized_state_description">Minimized</string>
+
     <!-- Folder accessibility -->
     <!-- The format string for when a folder is opened, speaks the dimensions -->
     <string name="folder_opened">Folder opened, <xliff:g id="width" example="5">%1$d</xliff:g> by <xliff:g id="height" example="3">%2$d</xliff:g></string>

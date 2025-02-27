@@ -83,6 +83,8 @@ import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.TaskItemInfo;
 import com.android.launcher3.taskbar.bubbles.BubbleBarController;
 import com.android.launcher3.taskbar.bubbles.BubbleControllers;
+import com.android.launcher3.taskbar.customization.TaskbarAllAppsButtonContainer;
+import com.android.launcher3.taskbar.customization.TaskbarDividerContainer;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.ItemInfoMatcher;
 import com.android.launcher3.util.LauncherBindableItemsContainer;
@@ -735,8 +737,19 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         for (View iconView : getIconViews()) {
             if (iconView instanceof BubbleTextView btv) {
                 btv.updateRunningState(getRunningAppState(btv));
+                if (shouldUpdateIconContentDescription(btv)) {
+                    btv.setContentDescription(
+                            btv.getContentDescription() + " " + btv.getIconStateDescription());
+                }
             }
         }
+    }
+
+    private boolean shouldUpdateIconContentDescription(BubbleTextView btv) {
+        boolean isInDesktopMode = mControllers.taskbarDesktopModeController.isInDesktopMode();
+        boolean isAllAppsButton = btv instanceof TaskbarAllAppsButtonContainer;
+        boolean isDividerButton = btv instanceof TaskbarDividerContainer;
+        return isInDesktopMode && !isAllAppsButton && !isDividerButton;
     }
 
     /**
