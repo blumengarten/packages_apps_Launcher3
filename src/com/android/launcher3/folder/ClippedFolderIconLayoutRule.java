@@ -53,8 +53,18 @@ public class ClippedFolderIconLayoutRule {
         } else if (index >= MAX_NUM_ITEMS_IN_PREVIEW) {
             // Items beyond those displayed in the preview are animated to the center
             mTmpPoint[0] = mTmpPoint[1] = mAvailableSpace / 2 - (mIconSize * totalScale) / 2;
-        } else {
-            getPosition(index, curNumItems, mTmpPoint);
+        } else if (index == 0) {
+            // top left
+            getGridPosition(0, 0, mTmpPoint);
+        } else if (index == 1) {
+            // top right
+            getGridPosition(0, 1, mTmpPoint);
+        } else if (index == 2) {
+            // bottom left
+            getGridPosition(1, 0, mTmpPoint);
+        } else if (index == 3) {
+            // bottom right
+            getGridPosition(1, 1, mTmpPoint);
         }
 
         transX = mTmpPoint[0];
