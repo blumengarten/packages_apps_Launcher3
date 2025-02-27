@@ -20,10 +20,12 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Rect
 import android.util.AttributeSet
-import android.view.View
+import android.util.FloatProperty
 import android.widget.ImageButton
 import com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_X
 import com.android.launcher3.R
+import com.android.launcher3.util.KFloatProperty
+import com.android.launcher3.util.MultiPropertyDelegate
 import com.android.launcher3.util.MultiPropertyFactory
 import com.android.launcher3.util.MultiValueAlpha
 import com.android.quickstep.util.BorderAnimator
@@ -36,44 +38,17 @@ import com.android.quickstep.util.BorderAnimator.Companion.createSimpleBorderAni
 class AddDesktopButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
     ImageButton(context, attrs) {
 
-    private enum class Alpha {
-        CONTENT,
-        VISIBILITY,
-    }
-
     private val addDeskButtonAlpha = MultiValueAlpha(this, Alpha.entries.size)
-
-    var contentAlpha
-        set(value) {
-            addDeskButtonAlpha.get(Alpha.CONTENT.ordinal).value = value
-        }
-        get() = addDeskButtonAlpha.get(Alpha.CONTENT.ordinal).value
-
-    val visibilityAlphaProperty: MultiPropertyFactory<View>.MultiProperty
-        get() = addDeskButtonAlpha.get(Alpha.VISIBILITY.ordinal)
-
-    private enum class TranslationX {
-        GRID,
-        OFFSET,
-    }
+    var contentAlpha by MultiPropertyDelegate(addDeskButtonAlpha, Alpha.CONTENT)
+    var visibilityAlpha by MultiPropertyDelegate(addDeskButtonAlpha, Alpha.VISIBILITY)
 
     private val multiTranslationX =
         MultiPropertyFactory(this, VIEW_TRANSLATE_X, TranslationX.entries.size) { a: Float, b: Float
             ->
             a + b
         }
-
-    var gridTranslationX
-        get() = multiTranslationX[TranslationX.GRID.ordinal].value
-        set(value) {
-            multiTranslationX[TranslationX.GRID.ordinal].value = value
-        }
-
-    var offsetTranslationX
-        get() = multiTranslationX[TranslationX.OFFSET.ordinal].value
-        set(value) {
-            multiTranslationX[TranslationX.OFFSET.ordinal].value = value
-        }
+    var gridTranslationX by MultiPropertyDelegate(multiTranslationX, TranslationX.GRID)
+    var offsetTranslationX by MultiPropertyDelegate(multiTranslationX, TranslationX.OFFSET)
 
     private val focusBorderAnimator: BorderAnimator =
         createSimpleBorderAnimator(
@@ -109,7 +84,7 @@ class AddDesktopButton @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    protected fun getScrollAdjustment(showAsGrid: Boolean): Int =
+    fun getScrollAdjustment(showAsGrid: Boolean): Int =
         if (showAsGrid) gridTranslationX.toInt() else 0
 
     private fun getBorderBounds(bounds: Rect) {
@@ -122,5 +97,21 @@ class AddDesktopButton @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun draw(canvas: Canvas) {
         focusBorderAnimator.drawBorder(canvas)
         super.draw(canvas)
+    }
+
+    companion object {
+        private enum class Alpha {
+            CONTENT,
+            VISIBILITY,
+        }
+
+        private enum class TranslationX {
+            GRID,
+            OFFSET,
+        }
+
+        @JvmField
+        val VISIBILITY_ALPHA: FloatProperty<AddDesktopButton> =
+            KFloatProperty(AddDesktopButton::visibilityAlpha)
     }
 }

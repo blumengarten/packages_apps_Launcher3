@@ -28,6 +28,7 @@ import com.android.quickstep.util.isExternalDisplay
 import com.android.quickstep.views.RecentsView.RUNNING_TASK_ATTACH_ALPHA
 import com.android.systemui.shared.recents.model.ThumbnailData
 import java.util.function.BiConsumer
+import kotlin.reflect.KMutableProperty1
 
 /**
  * Helper class for [RecentsView]. This util class contains refactored and extracted functions from
@@ -305,16 +306,19 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
         }
 
     companion object {
-        @JvmField
-        val DESK_EXPLODE_PROGRESS =
-            object : FloatProperty<RecentsView<*, *>>("deskExplodeProgress") {
-                override fun setValue(recentsView: RecentsView<*, *>, value: Float) {
-                    recentsView.mUtils.deskExplodeProgress = value
-                }
+        class RecentsViewFloatProperty(
+            private val utilsProperty: KMutableProperty1<RecentsViewUtils, Float>
+        ) : FloatProperty<RecentsView<*, *>>(utilsProperty.name) {
+            override fun get(recentsView: RecentsView<*, *>): Float =
+                utilsProperty.get(recentsView.mUtils)
 
-                override fun get(recentsView: RecentsView<*, *>) =
-                    recentsView.mUtils.deskExplodeProgress
+            override fun setValue(recentsView: RecentsView<*, *>, value: Float) {
+                utilsProperty.set(recentsView.mUtils, value)
             }
+        }
+
+        @JvmField
+        val DESK_EXPLODE_PROGRESS = RecentsViewFloatProperty(RecentsViewUtils::deskExplodeProgress)
 
         val TEMP_RECT = Rect()
     }

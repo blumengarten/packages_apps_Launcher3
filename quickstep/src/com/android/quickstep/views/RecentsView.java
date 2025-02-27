@@ -66,6 +66,7 @@ import static com.android.launcher3.util.SystemUiController.UI_STATE_FULLSCREEN_
 import static com.android.quickstep.BaseContainerInterface.getTaskDimension;
 import static com.android.quickstep.TaskUtils.checkCurrentOrManagedUserId;
 import static com.android.quickstep.util.LogUtils.splitFailureMessage;
+import static com.android.quickstep.views.ClearAllButton.DISMISS_ALPHA;
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_ACTIONS_IN_MENU;
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_DESKTOP;
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_NON_ZERO_ROTATION;
@@ -73,6 +74,7 @@ import static com.android.quickstep.views.OverviewActionsView.HIDDEN_NO_RECENTS;
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_NO_TASKS;
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_SPLIT_SELECT_ACTIVE;
 import static com.android.quickstep.views.RecentsViewUtils.DESK_EXPLODE_PROGRESS;
+import static com.android.quickstep.views.TaskView.SPLIT_ALPHA;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -3974,8 +3976,7 @@ public abstract class RecentsView<
 
                 // Change alpha of clear all if translating grid to hide it
                 if (isClearAllHidden) {
-                    anim.setFloat(mClearAllButton.dismissAlphaProperty, MULTI_PROPERTY_VALUE, 0,
-                            LINEAR);
+                    anim.setFloat(mClearAllButton, DISMISS_ALPHA, 0, LINEAR);
                     anim.addListener(new AnimatorListenerAdapter() {
                         @Override
                         public void onAnimationEnd(Animator animation) {
@@ -5354,8 +5355,7 @@ public abstract class RecentsView<
                                 clampToProgress(timings.getDesktopTaskScaleInterpolator(), 0f,
                                         timings.getDesktopFadeSplitAnimationEndOffset()));
                     }
-                    builder.addFloat(taskView.getSplitAlphaProperty(),
-                            MULTI_PROPERTY_VALUE, 1f, 0f,
+                    builder.addFloat(taskView, SPLIT_ALPHA, 1f, 0f,
                             clampToProgress(deskTopFadeInterPolator, 0f,
                                     timings.getDesktopFadeSplitAnimationEndOffset()));
                 }
