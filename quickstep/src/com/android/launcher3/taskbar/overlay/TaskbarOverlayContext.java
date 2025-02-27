@@ -116,11 +116,6 @@ public class TaskbarOverlayContext extends BaseTaskbarContext {
     }
 
     @Override
-    public boolean isBindingItems() {
-        return mTaskbarContext.isBindingItems();
-    }
-
-    @Override
     public View.OnClickListener getItemOnClickListener() {
         return mTaskbarContext.getItemOnClickListener();
     }
