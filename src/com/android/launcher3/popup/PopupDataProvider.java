@@ -90,7 +90,7 @@ public class PopupDataProvider implements NotificationListener.NotificationsChan
         mContext.getContent().mapOverItems(op);
         Folder folder = Folder.getOpen(mContext);
         if (folder != null) {
-            folder.iterateOverItems(op);
+            folder.mapOverItems(op);
         }
 
         ActivityAllAppsContainerView<?> appsView = mContext.getAppsView();

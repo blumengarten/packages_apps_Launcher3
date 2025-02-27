@@ -72,9 +72,10 @@ class DropTargetHandler(launcher: Launcher) {
             AbstractFloatingView.TYPE_WIDGET_RESIZE_FRAME,
         )
         var pageItem: ItemInfo = item
-        if (item.container <= 0) {
-            val v = mLauncher.workspace.getHomescreenIconByItemId(item.container)
-            v?.let { pageItem = v.tag as ItemInfo }
+        if (item.container >= 0) {
+            mLauncher.workspace.getViewByItemId(item.container)?.let {
+                pageItem = it.tag as ItemInfo
+            }
         }
         val pageIds =
             if (pageItem.container == LauncherSettings.Favorites.CONTAINER_DESKTOP)
