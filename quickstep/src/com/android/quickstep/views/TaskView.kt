@@ -835,6 +835,7 @@ constructor(
         taskOverlayFactory: TaskOverlayFactory,
     ) {
         cancelPendingLoadTasks()
+        this.orientedState = orientedState // Needed for dependencies
         taskContainers =
             listOf(
                 createTaskContainer(
@@ -852,15 +853,17 @@ constructor(
 
     protected open fun onBind(orientedState: RecentsOrientedState) {
         if (enableRefactorTaskThumbnail()) {
+            val scopeId = context
+            Log.d(TAG, "onBind $scopeId ${orientedState.containerInterface}")
             viewModel =
                 TaskViewModel(
                         taskViewType = type,
-                        recentsViewData = RecentsDependencies.get(),
-                        getTaskUseCase = RecentsDependencies.get(),
-                        getSysUiStatusNavFlagsUseCase = RecentsDependencies.get(),
-                        isThumbnailValidUseCase = RecentsDependencies.get(),
-                        getThumbnailPositionUseCase = RecentsDependencies.get(),
-                        dispatcherProvider = RecentsDependencies.get(),
+                        recentsViewData = RecentsDependencies.get(scopeId),
+                        getTaskUseCase = RecentsDependencies.get(scopeId),
+                        getSysUiStatusNavFlagsUseCase = RecentsDependencies.get(scopeId),
+                        isThumbnailValidUseCase = RecentsDependencies.get(scopeId),
+                        getThumbnailPositionUseCase = RecentsDependencies.get(scopeId),
+                        dispatcherProvider = RecentsDependencies.get(scopeId),
                     )
                     .apply { bind(*taskIds) }
         }

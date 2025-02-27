@@ -76,12 +76,12 @@ class TaskViewItemInfoTest {
         context.initDaggerComponent(
             DaggerTaskViewItemInfoTest_TestComponent.builder().bindUserCache(userCache)
         )
-        RecentsDependencies.initialize(context)
+        RecentsDependencies.maybeInitialize(context)
     }
 
     @After
     fun tearDown() {
-        RecentsDependencies.destroy()
+        RecentsDependencies.destroy(context)
     }
 
     @Test

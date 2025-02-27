@@ -865,7 +865,6 @@ public abstract class RecentsView<
     private final Matrix mTmpMatrix = new Matrix();
 
     private int mTaskViewCount = 0;
-
     @Nullable
     public TaskView getFirstTaskView() {
         return mUtils.getFirstTaskView();
@@ -885,22 +884,23 @@ public abstract class RecentsView<
 
         // Start Recents Dependency graph
         if (enableRefactorTaskThumbnail()) {
-            RecentsDependencies recentsDependencies = RecentsDependencies.Companion.initialize(
-                    this);
+            RecentsDependencies recentsDependencies = RecentsDependencies.Companion.maybeInitialize(
+                    context);
+            String scopeId = recentsDependencies.createRecentsViewScope(context);
             mRecentsViewModel = new RecentsViewModel(
-                    recentsDependencies.inject(RecentTasksRepository.class),
-                    recentsDependencies.inject(RecentsViewData.class)
+                    recentsDependencies.inject(RecentTasksRepository.class, scopeId),
+                    recentsDependencies.inject(RecentsViewData.class, scopeId)
             );
             mHelper = new RecentsViewModelHelper(
                     mRecentsViewModel,
-                    recentsDependencies.inject(CoroutineScope.class),
-                    recentsDependencies.inject(DispatcherProvider.class)
+                    recentsDependencies.inject(CoroutineScope.class, scopeId),
+                    recentsDependencies.inject(DispatcherProvider.class, scopeId)
             );
 
-            recentsDependencies.provide(RecentsRotationStateRepository.class,
+            recentsDependencies.provide(RecentsRotationStateRepository.class, scopeId,
                     () -> new RecentsRotationStateRepositoryImpl(mOrientationState));
 
-            recentsDependencies.provide(RecentsDeviceProfileRepository.class,
+            recentsDependencies.provide(RecentsDeviceProfileRepository.class, scopeId,
                     () -> new RecentsDeviceProfileRepositoryImpl(mContainer));
         } else {
             mRecentsViewModel = null;
@@ -1288,7 +1288,7 @@ public abstract class RecentsView<
                 Log.e(TAG, "Ongoing initializations could not be killed", e);
             }
             mHelper.onDestroy();
-            RecentsDependencies.destroy();
+            RecentsDependencies.destroy(getContext());
         }
     }
 
