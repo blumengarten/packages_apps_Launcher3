@@ -15,7 +15,6 @@
  */
 package com.android.launcher3.widget.picker;
 
-import static com.android.launcher3.Flags.enableCategorizedWidgetSuggestions;
 import static com.android.launcher3.Flags.enableTieredWidgetsByDefaultInPicker;
 import static com.android.launcher3.Flags.enableUnfoldedTwoPanePicker;
 import static com.android.launcher3.UtilitiesKt.CLIP_CHILDREN_FALSE_MODIFIER;
@@ -215,22 +214,9 @@ public class WidgetsTwoPaneSheet extends WidgetsFullSheet {
 
     @Override
     protected int getTabletHorizontalMargin(DeviceProfile deviceProfile) {
-        if (enableCategorizedWidgetSuggestions()) {
-            // two pane picker is full width for fold as well as tablet.
-            return getResources().getDimensionPixelSize(
-                    R.dimen.widget_picker_two_panels_left_right_margin);
-        }
-        if (deviceProfile.isTwoPanels && enableUnfoldedTwoPanePicker()) {
-            // enableUnfoldedTwoPanePicker made two pane picker full-width for fold only.
-            return getResources().getDimensionPixelSize(
-                    R.dimen.widget_picker_two_panels_left_right_margin);
-        }
-        if (deviceProfile.isLandscape && !deviceProfile.isTwoPanels) {
-            // non-fold tablet landscape margins (ag/22163531)
-            return getResources().getDimensionPixelSize(
-                    R.dimen.widget_picker_landscape_tablet_left_right_margin);
-        }
-        return deviceProfile.allAppsLeftRightMargin;
+        // two pane picker is full width for fold as well as tablet.
+        return getResources().getDimensionPixelSize(
+                R.dimen.widget_picker_two_panels_left_right_margin);
     }
 
     @Override
@@ -552,13 +538,9 @@ public class WidgetsTwoPaneSheet extends WidgetsFullSheet {
                 }
 
                 WidgetsListContentEntry contentEntryToBind;
-                if (enableCategorizedWidgetSuggestions()) {
-                    // Setting max span size enables row to understand how to fit more than one item
-                    // in a row.
-                    contentEntryToBind = contentEntry.withMaxSpanSize(mMaxSpanPerRow);
-                } else {
-                    contentEntryToBind = contentEntry;
-                }
+                // Setting max span size enables row to understand how to fit more than one item
+                // in a row.
+                contentEntryToBind = contentEntry.withMaxSpanSize(mMaxSpanPerRow);
 
                 WidgetsRowViewHolder widgetsRowViewHolder =
                         mWidgetsListTableViewHolderBinder.newViewHolder(mRightPane);

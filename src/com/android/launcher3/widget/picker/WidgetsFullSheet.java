@@ -15,7 +15,6 @@
  */
 package com.android.launcher3.widget.picker;
 
-import static com.android.launcher3.Flags.enableCategorizedWidgetSuggestions;
 import static com.android.launcher3.Flags.enableTieredWidgetsByDefaultInPicker;
 import static com.android.launcher3.Flags.enableUnfoldedTwoPanePicker;
 import static com.android.launcher3.allapps.ActivityAllAppsContainerView.AdapterHolder.SEARCH;
@@ -82,12 +81,10 @@ import com.android.launcher3.workprofile.PersonalWorkPagedView;
 import com.android.launcher3.workprofile.PersonalWorkSlidingTabStrip.OnActivePageChangedListener;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -632,35 +629,19 @@ public class WidgetsFullSheet extends BaseWidgetSheet
         if (mIsInSearchMode) {
             return;
         }
-        if (enableCategorizedWidgetSuggestions()) {
-            // We avoid applying new recommendations when some are already displayed.
-            if (mRecommendedWidgetsMap.isEmpty()) {
-                mRecommendedWidgetsMap =
-                        mActivityContext.getWidgetPickerDataProvider().get().getRecommendations();
-            }
-            mRecommendedWidgetsCount = mWidgetRecommendationsView.setRecommendations(
-                    mRecommendedWidgetsMap,
-                    mDeviceProfile,
-                    /* availableHeight= */ getMaxAvailableHeightForRecommendations(),
-                    /* availableWidth= */ mMaxSpanPerRow,
-                    /* cellPadding= */ mWidgetCellHorizontalPadding,
-                    /* requestedPage= */ mRecommendationsCurrentPage
-            );
-        } else {
-            if (mRecommendedWidgets.isEmpty()) {
-                mRecommendedWidgets = mActivityContext.getWidgetPickerDataProvider().get()
-                        .getRecommendations()
-                        .values().stream()
-                        .flatMap(Collection::stream).collect(Collectors.toList());
-                mRecommendedWidgetsCount = mWidgetRecommendationsView.setRecommendations(
-                        mRecommendedWidgets,
-                        mDeviceProfile,
-                        /* availableHeight= */ getMaxAvailableHeightForRecommendations(),
-                        /* availableWidth= */ mMaxSpanPerRow,
-                        /* cellPadding= */ mWidgetCellHorizontalPadding
-                );
-            }
+        // We avoid applying new recommendations when some are already displayed.
+        if (mRecommendedWidgetsMap.isEmpty()) {
+            mRecommendedWidgetsMap =
+                    mActivityContext.getWidgetPickerDataProvider().get().getRecommendations();
         }
+        mRecommendedWidgetsCount = mWidgetRecommendationsView.setRecommendations(
+                mRecommendedWidgetsMap,
+                mDeviceProfile,
+                /* availableHeight= */ getMaxAvailableHeightForRecommendations(),
+                /* availableWidth= */ mMaxSpanPerRow,
+                /* cellPadding= */ mWidgetCellHorizontalPadding,
+                /* requestedPage= */ mRecommendationsCurrentPage
+        );
 
         mWidgetRecommendationsContainer.setVisibility(
                 mRecommendedWidgetsCount > 0 ? VISIBLE : GONE);
@@ -792,13 +773,7 @@ public class WidgetsFullSheet extends BaseWidgetSheet
     }
 
     private static int getWidgetSheetId(BaseActivity activity) {
-        boolean isTwoPane = (activity.getDeviceProfile().isTablet
-                // Enables two pane picker for tablets in all orientations when the
-                // enableCategorizedWidgetSuggestions flag is on.
-                && (activity.getDeviceProfile().isLandscape || enableCategorizedWidgetSuggestions())
-                && !activity.getDeviceProfile().isTwoPanels)
-                // Enables two pane picker for unfolded foldables if the flag is on.
-                || (activity.getDeviceProfile().isTwoPanels && enableUnfoldedTwoPanePicker());
+        boolean isTwoPane = activity.getDeviceProfile().isTablet;
 
         return isTwoPane ? R.layout.widgets_two_pane_sheet : R.layout.widgets_full_sheet;
     }
@@ -945,16 +920,7 @@ public class WidgetsFullSheet extends BaseWidgetSheet
     private static boolean shouldRecreateLayout(DeviceProfile oldDp, DeviceProfile newDp) {
         // When folding/unfolding the foldables, we need to switch between the regular widget picker
         // and the two pane picker, so we rebuild the picker with the correct layout.
-        boolean isFoldUnFold =
-                oldDp.isTwoPanels != newDp.isTwoPanels && enableUnfoldedTwoPanePicker();
-        // In tablets, on orientation change we switch between single and two pane picker unless the
-        // categorized suggestions flag was on. With the categorized suggestions feature, we use a
-        // two pane picker across all orientations.
-        boolean useDifferentLayoutOnOrientationChange =
-                (!enableCategorizedWidgetSuggestions() && (newDp.isTablet && !newDp.isTwoPanels
-                        && oldDp.isLandscape != newDp.isLandscape));
-
-        return isFoldUnFold || useDifferentLayoutOnOrientationChange;
+        return oldDp.isTwoPanels != newDp.isTwoPanels && enableUnfoldedTwoPanePicker();
     }
 
     /**

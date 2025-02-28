@@ -16,7 +16,6 @@
 
 package com.android.launcher3.model;
 
-import static com.android.launcher3.Flags.enableCategorizedWidgetSuggestions;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_WIDGETS_PREDICTION;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
@@ -200,19 +199,12 @@ public class WidgetPredictionsRequester {
      * Converts the list of {@link WidgetItem}s to the list of {@link ItemInfo}s.
      */
     private List<ItemInfo> mapWidgetItemsToItemInfo(List<WidgetItem> widgetItems) {
-        List<ItemInfo> items;
-        if (enableCategorizedWidgetSuggestions()) {
-            WidgetRecommendationCategoryProvider categoryProvider =
-                    new WidgetRecommendationCategoryProvider();
-            items = widgetItems.stream()
-                    .map(it -> new PendingAddWidgetInfo(it.widgetInfo, CONTAINER_WIDGETS_PREDICTION,
-                            categoryProvider.getWidgetRecommendationCategory(mContext, it)))
-                    .collect(Collectors.toList());
-        } else {
-            items = widgetItems.stream().map(it -> new PendingAddWidgetInfo(it.widgetInfo,
-                    CONTAINER_WIDGETS_PREDICTION)).collect(Collectors.toList());
-        }
-        return items;
+        WidgetRecommendationCategoryProvider categoryProvider =
+                new WidgetRecommendationCategoryProvider();
+        return widgetItems.stream()
+                .map(it -> new PendingAddWidgetInfo(it.widgetInfo, CONTAINER_WIDGETS_PREDICTION,
+                        categoryProvider.getWidgetRecommendationCategory(mContext, it)))
+                .collect(Collectors.toList());
     }
 
     /** Cleans up any open prediction sessions. */
