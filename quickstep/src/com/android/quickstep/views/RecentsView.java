@@ -3011,9 +3011,22 @@ public abstract class RecentsView<
         startIconFadeInOnGestureComplete();
         animateActionsViewIn();
 
-        for (TaskView taskView : getTaskViews()) {
-            if (taskView instanceof DesktopTaskView desktopTaskView) {
-                desktopTaskView.setRemoteTargetHandles(mRemoteTargetHandles);
+        if (mEnableDrawingLiveTile) {
+            for (TaskView taskView : getTaskViews()) {
+                if (taskView instanceof DesktopTaskView desktopTaskView) {
+                    desktopTaskView.setRemoteTargetHandles(mRemoteTargetHandles);
+                }
+            }
+            TaskView runningTaskView = getRunningTaskView();
+            if (showAsGrid() && enableGridOnlyOverview() && runningTaskView != null) {
+                runActionOnRemoteHandles(remoteTargetHandle -> {
+                    TaskViewSimulator taskViewSimulator = remoteTargetHandle.getTaskViewSimulator();
+                    // After settling in Overview, recentsScroll will be used to adjust horizontally
+                    // location and taskGridTranslationX doesn't needs to be applied.
+                    taskViewSimulator.taskGridTranslationX.value = 0;
+                    taskViewSimulator.taskGridTranslationY.value =
+                            runningTaskView.getGridTranslationY();
+                });
             }
         }
 
@@ -3526,19 +3539,6 @@ public abstract class RecentsView<
                 translationX += largeTaskWidthAndSpacing;
             }
             mAddDesktopButton.setGridTranslationX(translationX);
-        }
-
-        final TaskView runningTask = getRunningTaskView();
-        if (showAsGrid() && enableGridOnlyOverview() && runningTask != null) {
-            runActionOnRemoteHandles(
-                    remoteTargetHandle -> {
-                        remoteTargetHandle.getTaskViewSimulator().taskGridTranslationX.value =
-                                runningTask.getGridTranslationX()
-                                        - runningTask.getNonGridTranslationX();
-                        remoteTargetHandle.getTaskViewSimulator().taskGridTranslationY.value =
-                                runningTask.getGridTranslationY();
-                    }
-            );
         }
 
         mClearAllButton.setGridTranslationPrimary(
