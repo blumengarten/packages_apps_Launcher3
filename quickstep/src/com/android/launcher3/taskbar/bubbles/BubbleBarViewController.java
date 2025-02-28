@@ -145,7 +145,7 @@ public class BubbleBarViewController {
         @Override
         public void onLauncherItemDroppedOverBubbleBarDragZone(@NonNull BubbleBarLocation location,
                 @NonNull ItemInfo itemInfo) {
-            //TODO(b/397459664) : fix task bar icon animation after drop
+            //TODO(b/397459664) : fix drag interruption when there are no bubbles
             //TODO(b/397459664) : update bubble bar location
             ShortcutInfo shortcutInfo = null;
             if (itemInfo instanceof WorkspaceItemInfo) {

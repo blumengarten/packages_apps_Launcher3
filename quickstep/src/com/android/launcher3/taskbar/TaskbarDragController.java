@@ -117,6 +117,7 @@ public class TaskbarDragController extends DragController<BaseTaskbarContext> im
     private int mRegistrationY;
 
     private boolean mIsSystemDragInProgress;
+    private boolean mIsDropHandledByDropTarget;
 
     // Animation for the drag shadow back into position after an unsuccessful drag
     private ValueAnimator mReturnAnimator;
@@ -253,7 +254,8 @@ public class TaskbarDragController extends DragController<BaseTaskbarContext> im
                 /* originalView = */ btv,
                 dragLayerX + dragOffset.x,
                 dragLayerY + dragOffset.y,
-                (View target, DropTarget.DragObject d, boolean success) -> {} /* DragSource */,
+                (View target, DropTarget.DragObject d, boolean success) ->
+                        mIsDropHandledByDropTarget = success /* DragSource */,
                 btv.getTag() instanceof ItemInfo itemInfo ? itemInfo : null,
                 dragRect,
                 scale * iconScale,
@@ -562,7 +564,7 @@ public class TaskbarDragController extends DragController<BaseTaskbarContext> im
 
     @Override
     protected void endDrag() {
-        if (mDisallowGlobalDrag) {
+        if (mDisallowGlobalDrag && !mIsDropHandledByDropTarget) {
             // We need to explicitly set deferDragViewCleanupPostAnimation to true here so the
             // super call doesn't remove it from the drag layer before the animation completes.
             // This variable gets set in to false in super.dispatchDropComplete() because it
