@@ -77,19 +77,10 @@ class ModelTaskController(
     }
 
     fun bindUpdatedWidgets(dataModel: BgDataModel) {
-        val widgetsByPackageItem = dataModel.widgetsModel.widgetsByPackageItemForPicker
-        val allWidgets = WidgetsListBaseEntriesBuilder(app.context).build(widgetsByPackageItem)
-
-        val defaultWidgetsFilter = dataModel.widgetsModel.defaultWidgetsFilter
-        val defaultWidgets =
-            if (defaultWidgetsFilter != null) {
-                WidgetsListBaseEntriesBuilder(app.context)
-                    .build(widgetsByPackageItem, defaultWidgetsFilter)
-            } else {
-                emptyList()
-            }
-
-        scheduleCallbackTask { it.bindAllWidgets(allWidgets, defaultWidgets) }
+        val allWidgets =
+            WidgetsListBaseEntriesBuilder(app.context)
+                .build(dataModel.widgetsModel.widgetsByPackageItemForPicker)
+        scheduleCallbackTask { it.bindAllWidgets(allWidgets) }
     }
 
     fun deleteAndBindComponentsRemoved(matcher: Predicate<ItemInfo?>, reason: String?) {

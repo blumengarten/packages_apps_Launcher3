@@ -28,6 +28,7 @@ import com.android.launcher3.allapps.ActivityAllAppsContainerView;
 import com.android.launcher3.allapps.AllAppsStore;
 import com.android.launcher3.allapps.AlphabeticalAppsList;
 import com.android.launcher3.model.BgDataModel;
+import com.android.launcher3.model.WidgetsFilterDataProvider;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.pm.UserCache;
 import com.android.launcher3.popup.PopupDataProvider;
@@ -58,7 +59,7 @@ public class TestSandboxModelContextWrapper extends ActivityContextWrapper imple
 
     private final PopupDataProvider mPopupDataProvider = new PopupDataProvider(this);
     private final WidgetPickerDataProvider mWidgetPickerDataProvider =
-            new WidgetPickerDataProvider();
+            new WidgetPickerDataProvider(new WidgetsFilterDataProvider());
     protected final UserCache mUserCache;
 
     public TestSandboxModelContextWrapper(SandboxContext base) {

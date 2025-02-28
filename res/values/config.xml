@@ -80,9 +80,6 @@
     <string name="local_colors_extraction_class" translatable="false"></string>
     <string name="search_session_manager_class" translatable="false"></string>
 
-    <!-- Filters for widgets displayed in the widget picker  -->
-    <string name="widgets_filter_data_provider_class" translatable="false"></string>
-
     <!-- Scalable Grid configuration -->
     <!-- This is a float because it is converted to dp later in DeviceProfile -->
     <dimen name="hotseat_bar_bottom_space_default">48</dimen>

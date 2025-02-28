@@ -343,9 +343,7 @@ public class PreviewSurfaceRenderer {
                     bgModel,
                     LauncherAppState.getInstance(previewContext).getModel().getModelDelegate(),
                     new BaseLauncherBinder(LauncherAppState.getInstance(previewContext), bgModel,
-                            /* bgAllAppsList= */ null, new Callbacks[0]),
-                    LauncherAppState.getInstance(
-                            previewContext).getModel().getWidgetsFilterDataProvider()) {
+                            /* bgAllAppsList= */ null, new Callbacks[0])) {
 
                 @Override
                 public void run() {

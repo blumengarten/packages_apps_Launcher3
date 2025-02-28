@@ -45,7 +45,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /** Task to update model as a result of predicted widgets update */
@@ -68,8 +67,6 @@ public final class WidgetsPredictionUpdateTask implements ModelUpdateTask {
     @Override
     public void execute(@NonNull ModelTaskController taskController, @NonNull BgDataModel dataModel,
             @NonNull AllAppsList apps) {
-        Predicate<WidgetItem> predictedWidgetsFilter = enableTieredWidgetsByDefaultInPicker()
-                ? dataModel.widgetsModel.getPredictedWidgetsFilter() : null;
         Set<ComponentKey> widgetsInWorkspace = dataModel.itemsIdMap
                 .stream()
                 .filter(WIDGET_FILTER)
@@ -84,8 +81,6 @@ public final class WidgetsPredictionUpdateTask implements ModelUpdateTask {
                         .stream()
                         .filter(entry -> entry.getValue().widgetInfo != null
                                 && !widgetsInWorkspace.contains(entry.getValue())
-                                && (predictedWidgetsFilter == null
-                                || predictedWidgetsFilter.test(entry.getValue()))
                         ).collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         Context context = taskController.getApp().getContext();
