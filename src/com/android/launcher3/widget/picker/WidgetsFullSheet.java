@@ -16,7 +16,6 @@
 package com.android.launcher3.widget.picker;
 
 import static com.android.launcher3.Flags.enableTieredWidgetsByDefaultInPicker;
-import static com.android.launcher3.Flags.enableUnfoldedTwoPanePicker;
 import static com.android.launcher3.allapps.ActivityAllAppsContainerView.AdapterHolder.SEARCH;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_WIDGETSTRAY_EXPAND_PRESS;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_WIDGETSTRAY_SEARCHED;
@@ -920,7 +919,7 @@ public class WidgetsFullSheet extends BaseWidgetSheet
     private static boolean shouldRecreateLayout(DeviceProfile oldDp, DeviceProfile newDp) {
         // When folding/unfolding the foldables, we need to switch between the regular widget picker
         // and the two pane picker, so we rebuild the picker with the correct layout.
-        return oldDp.isTwoPanels != newDp.isTwoPanels && enableUnfoldedTwoPanePicker();
+        return oldDp.isTwoPanels != newDp.isTwoPanels;
     }
 
     /**

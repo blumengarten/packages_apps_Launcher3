@@ -16,7 +16,6 @@
 package com.android.launcher3.widget.picker;
 
 import static com.android.launcher3.Flags.enableTieredWidgetsByDefaultInPicker;
-import static com.android.launcher3.Flags.enableUnfoldedTwoPanePicker;
 import static com.android.launcher3.UtilitiesKt.CLIP_CHILDREN_FALSE_MODIFIER;
 import static com.android.launcher3.UtilitiesKt.CLIP_TO_PADDING_FALSE_MODIFIER;
 import static com.android.launcher3.UtilitiesKt.modifyAttributesOnViewTree;
@@ -243,7 +242,7 @@ public class WidgetsTwoPaneSheet extends WidgetsFullSheet {
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         super.onLayout(changed, l, t, r, b);
-        if (changed && mDeviceProfile.isTwoPanels && enableUnfoldedTwoPanePicker()) {
+        if (changed && mDeviceProfile.isTwoPanels) {
             LinearLayout layout = mContent.findViewById(R.id.linear_layout_container);
             FrameLayout leftPane = layout.findViewById(R.id.recycler_view_container);
             LinearLayout.LayoutParams layoutParams = (LayoutParams) leftPane.getLayoutParams();
@@ -413,7 +412,7 @@ public class WidgetsTwoPaneSheet extends WidgetsFullSheet {
     protected int getAvailableWidthForSuggestions(int pickerAvailableWidth) {
         int rightPaneWidth = (int) Math.ceil(0.67 * pickerAvailableWidth);
 
-        if (mDeviceProfile.isTwoPanels && enableUnfoldedTwoPanePicker()) {
+        if (mDeviceProfile.isTwoPanels) {
             // See onLayout
             int leftPaneWidth = (int) (0.33 * pickerAvailableWidth);
             @Px int minLeftPaneWidthPx = Utilities.dpToPx(MINIMUM_WIDTH_LEFT_PANE_FOLDABLE_DP);
