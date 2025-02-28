@@ -102,6 +102,7 @@ import android.window.PictureInPictureSurfaceTransaction;
 import android.window.TransitionInfo;
 import android.window.WindowAnimationState;
 
+import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
@@ -221,6 +222,7 @@ public abstract class AbsSwipeUpHandler<
 
     private final Runnable mLauncherOnDestroyCallback = () -> {
         ActiveGestureProtoLogProxy.logLauncherDestroyed();
+        mRecentsView.removeOnScrollChangedListener(mOnRecentsScrollListener);
         mRecentsView = null;
         mContainer = null;
         mStateCallback.clearState(STATE_LAUNCHER_PRESENT);
@@ -313,7 +315,7 @@ public abstract class AbsSwipeUpHandler<
      */
     private static final int LOG_NO_OP_PAGE_INDEX = -1;
 
-    protected final TaskAnimationManager mTaskAnimationManager;
+    protected TaskAnimationManager mTaskAnimationManager;
     // Either RectFSpringAnim (if animating home) or ObjectAnimator (from mCurrentShift) otherwise
     private RunningWindowAnim[] mRunningWindowAnim;
     // Possible second animation running at the same time as mRunningWindowAnim
@@ -1382,7 +1384,7 @@ public abstract class AbsSwipeUpHandler<
                 && mIsTransientTaskbar
                 && mContainerInterface.getTaskbarController() != null) {
             mContainerInterface.getTaskbarController()
-                    .setUserIsNotGoingHome(endTarget != GestureState.GestureEndTarget.HOME);
+                    .setUserIsNotGoingHome(endTarget != HOME);
         }
 
         float endShift = endTarget.isLauncher ? 1 : 0;
@@ -2070,7 +2072,7 @@ public abstract class AbsSwipeUpHandler<
      * specific edge case: if we switch from A to B, and back to A before B appears, we need to
      * start A again to ensure it stays on top.
      */
-    @androidx.annotation.CallSuper
+    @CallSuper
     protected void onRestartPreviouslyAppearedTask() {
         // Finish the controller here, since we won't get onTaskAppeared() for a task that already
         // appeared.
