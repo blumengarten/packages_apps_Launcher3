@@ -219,6 +219,6 @@ public class UserCache {
     public static UserBadgeDrawable getBadgeDrawable(Context context, UserHandle userHandle) {
         return (UserBadgeDrawable) BitmapInfo.LOW_RES_INFO.withFlags(UserCache.getInstance(context)
                         .getUserInfo(userHandle).applyBitmapInfoFlags(FlagOp.NO_OP))
-                .getBadgeDrawable(context, false /* isThemed */);
+                .getBadgeDrawable(context, false /* isThemed */, null);
     }
 }
