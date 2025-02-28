@@ -483,7 +483,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     }
 
     private void setNonPendingIcon(ItemInfoWithIcon info) {
-        int flags = shouldUseTheme() ? FLAG_THEMED : 0;
+        int flags = shouldUseTheme() ? FLAG_THEMED : info.bitmap.creationFlags;
         // Remove badge on icons smaller than 48dp.
         if (mHideBadge || mDisplay == DISPLAY_SEARCH_RESULT_SMALL) {
             flags |= FLAG_NO_BADGE;
