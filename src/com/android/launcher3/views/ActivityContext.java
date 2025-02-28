@@ -80,6 +80,7 @@ import com.android.launcher3.model.data.WorkspaceItemInfo;
 import com.android.launcher3.popup.PopupDataProvider;
 import com.android.launcher3.util.ActivityOptionsWrapper;
 import com.android.launcher3.util.ApplicationInfoWrapper;
+import com.android.launcher3.util.LauncherBindableItemsContainer;
 import com.android.launcher3.util.Preconditions;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.SplitConfigurationOptions;
@@ -99,10 +100,6 @@ public interface ActivityContext {
 
     default boolean finishAutoCancelActionMode() {
         return false;
-    }
-
-    default DotInfo getDotInfoForItem(ItemInfo info) {
-        return null;
     }
 
     default AccessibilityDelegate getAccessibilityDelegate() {
@@ -194,6 +191,14 @@ public interface ActivityContext {
     }
 
     /**
+     * Returns the primary content of this context
+     */
+    @NonNull
+    default LauncherBindableItemsContainer getContent() {
+        return op -> { };
+    }
+
+    /**
      * The all apps container, if it exists in this context.
      */
     default ActivityAllAppsContainerView<?> getAppsView() {
@@ -281,9 +286,13 @@ public interface ActivityContext {
         return v -> false;
     }
 
-    @Nullable
+    @NonNull
     default PopupDataProvider getPopupDataProvider() {
-        return null;
+        return new PopupDataProvider(this);
+    }
+
+    default DotInfo getDotInfoForItem(ItemInfo info) {
+        return getPopupDataProvider().getDotInfoForItem(info);
     }
 
     /**

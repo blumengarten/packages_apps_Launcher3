@@ -83,7 +83,6 @@ import com.android.launcher3.celllayout.CellPosMapper.CellPos;
 import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.debug.TestEventEmitter;
 import com.android.launcher3.debug.TestEventEmitter.TestEvent;
-import com.android.launcher3.dot.FolderDotInfo;
 import com.android.launcher3.dragndrop.DragController;
 import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.dragndrop.DragOptions;
@@ -119,7 +118,6 @@ import com.android.launcher3.util.IntSparseArrayMap;
 import com.android.launcher3.util.LauncherBindableItemsContainer;
 import com.android.launcher3.util.MSDLPlayerWrapper;
 import com.android.launcher3.util.OverlayEdgeEffect;
-import com.android.launcher3.util.PackageUserKey;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.Thunk;
 import com.android.launcher3.util.WallpaperOffsetInterpolator;
@@ -3417,38 +3415,6 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
             }
         }
         return null;
-    }
-
-    public void updateNotificationDots(Predicate<PackageUserKey> updatedDots) {
-        final PackageUserKey packageUserKey = new PackageUserKey(null, null);
-        Predicate<ItemInfo> matcher = info -> !packageUserKey.updateFromItemInfo(info)
-                || updatedDots.test(packageUserKey);
-
-        ItemOperator op = (info, v) -> {
-            if (info instanceof WorkspaceItemInfo && v instanceof BubbleTextView) {
-                if (matcher.test(info)) {
-                    ((BubbleTextView) v).applyDotState(info, true /* animate */);
-                }
-            } else if (info instanceof FolderInfo && v instanceof FolderIcon) {
-                FolderInfo fi = (FolderInfo) info;
-                if (fi.anyMatch(matcher)) {
-                    FolderDotInfo folderDotInfo = new FolderDotInfo();
-                    for (ItemInfo si : fi.getContents()) {
-                        folderDotInfo.addDotInfo(mLauncher.getDotInfoForItem(si));
-                    }
-                    ((FolderIcon) v).setDotInfo(folderDotInfo);
-                }
-            }
-
-            // process all the shortcuts
-            return false;
-        };
-
-        mapOverItems(op);
-        Folder folder = Folder.getOpen(mLauncher);
-        if (folder != null) {
-            folder.iterateOverItems(op);
-        }
     }
 
     /**
