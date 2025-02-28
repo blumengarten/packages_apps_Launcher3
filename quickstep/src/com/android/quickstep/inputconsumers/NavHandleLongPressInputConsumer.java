@@ -254,13 +254,15 @@ public class NavHandleLongPressInputConsumer extends DelegateInputConsumer {
             Log.d(TAG, "cancelLongPress: " + reason);
         }
         // Log LPNH abandon latency if we didn't trigger but were still prepared to.
-        long latencyMs = mCurrentMotionEvent.getEventTime() - mCurrentDownEvent.getEventTime();
-        if (mState != STATE_ACTIVE && MAIN_EXECUTOR.getHandler().hasCallbacks(mTriggerLongPress)
-                && latencyMs >= MIN_TIME_TO_LOG_ABANDON_MS) {
-            mStatsLogManager.latencyLogger()
-                    .withInstanceId(new InstanceIdSequence().newInstanceId())
-                    .withLatency(latencyMs)
-                    .log(LAUNCHER_LATENCY_CONTEXTUAL_SEARCH_LPNH_ABANDON);
+        if (mCurrentMotionEvent != null && mCurrentDownEvent != null) {
+            long latencyMs = mCurrentMotionEvent.getEventTime() - mCurrentDownEvent.getEventTime();
+            if (mState != STATE_ACTIVE && MAIN_EXECUTOR.getHandler().hasCallbacks(mTriggerLongPress)
+                    && latencyMs >= MIN_TIME_TO_LOG_ABANDON_MS) {
+                mStatsLogManager.latencyLogger()
+                        .withInstanceId(new InstanceIdSequence().newInstanceId())
+                        .withLatency(latencyMs)
+                        .log(LAUNCHER_LATENCY_CONTEXTUAL_SEARCH_LPNH_ABANDON);
+            }
         }
         mGestureState.setIsInExtendedSlopRegion(false);
         MAIN_EXECUTOR.getHandler().removeCallbacks(mTriggerLongPress);
