@@ -410,7 +410,7 @@ public class RecentTasksList {
                                     tmpLockedUsers.get(task2Key.userId) /* isLocked */);
                 } else {
                     // Is fullscreen task
-                    if (!isFirstVisibleTaskFound) {
+                    if (isFirstVisibleTaskFound) {
                         boolean isExcluded = (taskInfo1.baseIntent.getFlags()
                                 & FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS) != 0;
                         if (taskInfo1.isTopActivityTransparent && isExcluded) {
