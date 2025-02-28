@@ -4968,6 +4968,10 @@ public abstract class RecentsView<
         }
         setPivotX(mTempPointF.x);
         setPivotY(mTempPointF.y);
+        if (enableGridOnlyOverview()) {
+            runActionOnRemoteHandles(remoteTargetHandle ->
+                    remoteTargetHandle.getTaskViewSimulator().setPivotOverride(mTempPointF));
+        }
     }
 
     /**
