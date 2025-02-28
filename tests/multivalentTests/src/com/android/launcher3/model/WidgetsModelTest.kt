@@ -25,9 +25,9 @@ import android.platform.test.rule.DeviceProduct
 import android.platform.test.rule.LimitDevicesRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.launcher3.AppFilter
 import com.android.launcher3.DeviceProfile
 import com.android.launcher3.InvariantDeviceProfile
-import com.android.launcher3.LauncherAppState
 import com.android.launcher3.icons.IconCache
 import com.android.launcher3.model.data.PackageItemInfo
 import com.android.launcher3.pm.UserCache
@@ -62,7 +62,6 @@ class WidgetsModelTest {
     @Rule @JvmField val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
     @Mock private lateinit var appWidgetManager: AppWidgetManager
-    @Mock private lateinit var app: LauncherAppState
     @Mock private lateinit var iconCacheMock: IconCache
 
     private lateinit var context: Context
@@ -93,9 +92,6 @@ class WidgetsModelTest {
 
         whenever(iconCacheMock.getTitleNoCache(any<LauncherAppWidgetProviderInfo>()))
             .thenReturn("title")
-        whenever(app.iconCache).thenReturn(iconCacheMock)
-        whenever(app.context).thenReturn(context)
-        whenever(app.invariantDeviceProfile).thenReturn(idp)
 
         val widgetToCategoryEntry: Map.Entry<ComponentName, IntSet> =
             WidgetSections.getWidgetsToCategory(context).entries.first()
@@ -128,7 +124,7 @@ class WidgetsModelTest {
         val userCache = spy(UserCache.INSTANCE.get(context))
         whenever(userCache.userProfiles).thenReturn(listOf(UserHandle.CURRENT))
 
-        underTest = WidgetsModel()
+        underTest = WidgetsModel(context, idp, iconCacheMock, AppFilter(context))
     }
 
     @Test
@@ -237,7 +233,7 @@ class WidgetsModelTest {
                     update = false
                     // Similarly, model could update its code independently while a client is
                     // iterating on the list.
-                    underTest.update(app, /* packageUser= */ null)
+                    underTest.update(/* packageUser= */ null)
                 }
             }
 
@@ -253,7 +249,7 @@ class WidgetsModelTest {
     private fun loadWidgets() {
         val latch = CountDownLatch(1)
         Executors.MODEL_EXECUTOR.execute {
-            underTest.update(app, /* packageUser= */ null)
+            underTest.update(/* packageUser= */ null)
             latch.countDown()
         }
         if (!latch.await(LOAD_WIDGETS_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {

@@ -58,19 +58,21 @@ import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.Workspace;
+import com.android.launcher3.dagger.LauncherComponentProvider;
+import com.android.launcher3.graphics.LauncherPreviewRenderer.PreviewAppComponent;
 import com.android.launcher3.graphics.LauncherPreviewRenderer.PreviewContext;
-import com.android.launcher3.model.BaseLauncherBinder;
 import com.android.launcher3.model.BgDataModel;
 import com.android.launcher3.model.BgDataModel.Callbacks;
 import com.android.launcher3.model.LoaderTask;
 import com.android.launcher3.model.ModelDbController;
+import com.android.launcher3.model.UserManagerState;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.Themes;
 import com.android.launcher3.widget.LocalColorExtractor;
 import com.android.systemui.shared.Flags;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -338,38 +340,32 @@ public class PreviewSurfaceRenderer {
             // Start the migration
             PreviewContext previewContext =
                     new PreviewContext(inflationContext, mGridName, mShapeKey);
+            PreviewAppComponent appComponent =
+                    (PreviewAppComponent) LauncherComponentProvider.get(previewContext);
 
-            BgDataModel bgModel = new BgDataModel();
-            new LoaderTask(
-                    LauncherAppState.getInstance(previewContext),
-                    /* bgAllAppsList= */ null,
-                    bgModel,
-                    LauncherAppState.getInstance(previewContext).getModel().getModelDelegate(),
-                    new BaseLauncherBinder(LauncherAppState.getInstance(previewContext), bgModel,
-                            /* bgAllAppsList= */ null, new Callbacks[0])) {
+            LoaderTask task = appComponent.getLoaderTaskFactory().newLoaderTask(
+                    appComponent.getBaseLauncherBinderFactory().createBinder(new Callbacks[0]),
+                    new UserManagerState());
 
-                @Override
-                public void run() {
-                    InvariantDeviceProfile idp = LauncherAppState.getIDP(previewContext);
-                    DeviceProfile deviceProfile = idp.getDeviceProfile(previewContext);
-                    String query =
-                            LauncherSettings.Favorites.SCREEN + " = " + Workspace.FIRST_SCREEN_ID
-                                    + " or " + LauncherSettings.Favorites.CONTAINER + " = "
-                                    + LauncherSettings.Favorites.CONTAINER_HOTSEAT;
-                    if (deviceProfile.isTwoPanels) {
-                        query += " or " + LauncherSettings.Favorites.SCREEN + " = "
-                                + Workspace.SECOND_SCREEN_ID;
-                    }
-                    loadWorkspace(new ArrayList<>(), query, null, null);
+            InvariantDeviceProfile idp = appComponent.getIDP();
+            DeviceProfile deviceProfile = idp.getDeviceProfile(previewContext);
+            String query =
+                    LauncherSettings.Favorites.SCREEN + " = " + Workspace.FIRST_SCREEN_ID
+                            + " or " + LauncherSettings.Favorites.CONTAINER + " = "
+                            + LauncherSettings.Favorites.CONTAINER_HOTSEAT;
+            if (deviceProfile.isTwoPanels) {
+                query += " or " + LauncherSettings.Favorites.SCREEN + " = "
+                        + Workspace.SECOND_SCREEN_ID;
+            }
 
-                    final SparseArray<Size> spanInfo = getLoadedLauncherWidgetInfo();
-                    MAIN_EXECUTOR.execute(() -> {
-                        renderView(previewContext, mBgDataModel, mWidgetProvidersMap, spanInfo,
-                                idp);
-                        mLifeCycleTracker.add(previewContext::onDestroy);
-                    });
-                }
-            }.run();
+            Map<ComponentKey, AppWidgetProviderInfo> widgetProviderInfoMap = new HashMap<>();
+            task.loadWorkspaceForPreview(query, widgetProviderInfoMap);
+            final SparseArray<Size> spanInfo = getLoadedLauncherWidgetInfo();
+            MAIN_EXECUTOR.execute(() -> {
+                renderView(previewContext, appComponent.getDataModel(), widgetProviderInfoMap,
+                        spanInfo, idp);
+                mLifeCycleTracker.add(previewContext::onDestroy);
+            });
         } else {
             LauncherAppState.getInstance(inflationContext).getModel().loadAsync(dataModel -> {
                 if (dataModel != null) {
@@ -419,7 +415,6 @@ public class PreviewSurfaceRenderer {
             view.setTranslationX((mWidth - scale * view.getWidth()) / 2);
             view.setTranslationY((mHeight - scale * view.getHeight()) / 2);
         }
-
 
         if (!Flags.newCustomizationPickerUi()) {
             view.setAlpha(mSkipAnimations ? 1 : 0);
@@ -477,5 +472,4 @@ public class PreviewSurfaceRenderer {
             MAIN_EXECUTOR.execute(mLifecycleTracker::executeAllAndDestroy);
         }
     }
-
 }

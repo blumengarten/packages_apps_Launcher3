@@ -18,6 +18,7 @@ package com.android.launcher3.model
 import android.annotation.SuppressLint
 import android.appwidget.AppWidgetProviderInfo
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
 import android.content.pm.LauncherApps.ShortcutQuery
@@ -29,10 +30,10 @@ import android.util.Log
 import android.util.LongSparseArray
 import com.android.launcher3.Flags
 import com.android.launcher3.InvariantDeviceProfile
-import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherSettings.Favorites
 import com.android.launcher3.backuprestore.LauncherRestoreEventLogger.RestoreError
 import com.android.launcher3.icons.CacheableShortcutInfo
+import com.android.launcher3.icons.IconCache
 import com.android.launcher3.icons.cache.CacheLookupFlag.Companion.DEFAULT_LOOKUP_FLAG
 import com.android.launcher3.logging.FileLog
 import com.android.launcher3.model.data.AppInfo
@@ -70,7 +71,10 @@ class WorkspaceItemProcessor(
     private val launcherApps: LauncherApps,
     private val pendingPackages: MutableSet<PackageUserKey>,
     private val shortcutKeyToPinnedShortcuts: Map<ShortcutKey, ShortcutInfo>,
-    private val app: LauncherAppState,
+    private val context: Context,
+    private val idp: InvariantDeviceProfile,
+    private val iconCache: IconCache,
+    private val isSafeMode: Boolean,
     private val bgDataModel: BgDataModel,
     private val widgetProvidersMap: MutableMap<ComponentKey, AppWidgetProviderInfo?>,
     private val installingPkgs: HashMap<PackageUserKey, PackageInstaller.SessionInfo>,
@@ -82,9 +86,7 @@ class WorkspaceItemProcessor(
     private val allDeepShortcuts: MutableList<CacheableShortcutInfo>,
 ) {
 
-    private val isSafeMode = app.isSafeModeEnabled
     private val tempPackageKey = PackageUserKey(null, null)
-    private val iconCache = app.iconCache
 
     /**
      * This is the entry point for processing 1 workspace item. This method is like the midfielder
@@ -159,7 +161,7 @@ class WorkspaceItemProcessor(
             )
             return
         }
-        val appInfoWrapper = ApplicationInfoWrapper(app.context, targetPkg, c.user)
+        val appInfoWrapper = ApplicationInfoWrapper(context, targetPkg, c.user)
         var validTarget = launcherApps.isPackageEnabled(targetPkg, c.user)
 
         // If it's a deep shortcut, we'll use pinned shortcuts to restore it
@@ -306,7 +308,7 @@ class WorkspaceItemProcessor(
                         )
                         return
                     }
-                    info = WorkspaceItemInfo(pinnedShortcut, app.context)
+                    info = WorkspaceItemInfo(pinnedShortcut, context)
                     // If the pinned deep shortcut is no longer published,
                     // use the last saved icon instead of the default.
                     val csi = CacheableShortcutInfo(pinnedShortcut, appInfoWrapper)
@@ -369,7 +371,7 @@ class WorkspaceItemProcessor(
                     info,
                     activityInfo,
                     userCache.getUserInfo(c.user),
-                    ApiWrapper.INSTANCE[app.context],
+                    ApiWrapper.INSTANCE[context],
                     pmHelper,
                 )
             }
@@ -529,7 +531,7 @@ class WorkspaceItemProcessor(
                         (si == null) &&
                         (lapi == null) &&
                         !(Flags.enableSupportForArchiving() &&
-                            ApplicationInfoWrapper(app.context, component.packageName, c.user)
+                            ApplicationInfoWrapper(context, component.packageName, c.user)
                                 .isArchived())
                 ) {
                     // Restore never started
@@ -553,7 +555,7 @@ class WorkspaceItemProcessor(
                     if (si == null) 0 else (si.getProgress() * 100).toInt()
                 appWidgetInfo.pendingItemInfo =
                     WidgetsModel.newPendingItemInfo(
-                        app.context,
+                        context,
                         appWidgetInfo.providerName,
                         appWidgetInfo.user,
                     )
@@ -563,7 +565,7 @@ class WorkspaceItemProcessor(
                 WidgetSizes.updateWidgetSizeRangesAsync(
                     appWidgetInfo.appWidgetId,
                     lapi,
-                    app.context,
+                    context,
                     appWidgetInfo.spanX,
                     appWidgetInfo.spanY,
                 )
@@ -586,7 +588,7 @@ class WorkspaceItemProcessor(
                         " appWidgetId: ${c.appWidgetId}," +
                         " component=${component}",
                 )
-                logWidgetInfo(app.invariantDeviceProfile, lapi)
+                logWidgetInfo(idp, lapi)
             }
         }
         c.checkAndAddItem(appWidgetInfo, bgDataModel, memoryLogger)

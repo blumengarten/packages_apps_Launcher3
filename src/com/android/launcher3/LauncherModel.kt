@@ -28,11 +28,12 @@ import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.icons.IconCache
 import com.android.launcher3.model.AddWorkspaceItemsTask
 import com.android.launcher3.model.AllAppsList
-import com.android.launcher3.model.BaseLauncherBinder
+import com.android.launcher3.model.BaseLauncherBinder.BaseLauncherBinderFactory
 import com.android.launcher3.model.BgDataModel
 import com.android.launcher3.model.CacheDataUpdatedTask
 import com.android.launcher3.model.ItemInstallQueue
 import com.android.launcher3.model.LoaderTask
+import com.android.launcher3.model.LoaderTask.LoaderTaskFactory
 import com.android.launcher3.model.ModelDbController
 import com.android.launcher3.model.ModelDelegate
 import com.android.launcher3.model.ModelInitializer
@@ -43,6 +44,8 @@ import com.android.launcher3.model.PackageUpdatedTask
 import com.android.launcher3.model.ReloadStringCacheTask
 import com.android.launcher3.model.ShortcutsChangedTask
 import com.android.launcher3.model.UserLockStateChangedTask
+import com.android.launcher3.model.UserManagerState
+import com.android.launcher3.model.WorkspaceItemSpaceFinder
 import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.model.data.WorkspaceItemInfo
 import com.android.launcher3.pm.UserCache
@@ -70,27 +73,22 @@ class LauncherModel
 @Inject
 constructor(
     @ApplicationContext private val context: Context,
-    private val appProvider: Provider<LauncherAppState>,
+    private val taskControllerProvider: Provider<ModelTaskController>,
     private val iconCache: IconCache,
     private val prefs: LauncherPrefs,
     private val installQueue: ItemInstallQueue,
-    appFilter: AppFilter,
     @Named("ICONS_DB") dbFileName: String?,
     initializer: ModelInitializer,
     lifecycle: DaggerSingletonTracker,
     val modelDelegate: ModelDelegate,
+    private val mBgAllAppsList: AllAppsList,
+    private val mBgDataModel: BgDataModel,
+    private val loaderFactory: LoaderTaskFactory,
+    private val binderFactory: BaseLauncherBinderFactory,
+    private val spaceFinderFactory: Provider<WorkspaceItemSpaceFinder>,
 ) {
 
     private val mCallbacksList = ArrayList<BgDataModel.Callbacks>(1)
-
-    // < only access in worker thread >
-    private val mBgAllAppsList = AllAppsList(iconCache, appFilter)
-
-    /**
-     * All the static data should be accessed on the background thread, A lock should be acquired on
-     * this object when accessing any data from this model.
-     */
-    private val mBgDataModel = BgDataModel()
 
     val modelDbController = ModelDbController(context)
 
@@ -139,7 +137,7 @@ constructor(
     /** Adds the provided items to the workspace. */
     fun addAndBindAddedWorkspaceItems(itemList: List<Pair<ItemInfo?, Any?>?>) {
         callbacks.forEach { it.preAddApps() }
-        enqueueModelUpdateTask(AddWorkspaceItemsTask(itemList))
+        enqueueModelUpdateTask(AddWorkspaceItemsTask(itemList, spaceFinderFactory.get()))
     }
 
     fun getWriter(
@@ -299,13 +297,7 @@ constructor(
                 // Clear any pending bind-runnables from the synchronized load process.
                 callbacksList.forEach { MAIN_EXECUTOR.execute(it::clearPendingBinds) }
 
-                val launcherBinder =
-                    BaseLauncherBinder(
-                        appProvider.get(),
-                        mBgDataModel,
-                        mBgAllAppsList,
-                        callbacksList,
-                    )
+                val launcherBinder = binderFactory.createBinder(callbacksList)
                 if (bindDirectly) {
                     // Divide the set of loaded items into those that we are binding synchronously,
                     // and everything else that is to be bound normally (asynchronously).
@@ -317,14 +309,7 @@ constructor(
                     launcherBinder.bindWidgets()
                     return true
                 } else {
-                    val task =
-                        LoaderTask(
-                            appProvider.get(),
-                            mBgAllAppsList,
-                            mBgDataModel,
-                            this.modelDelegate,
-                            launcherBinder,
-                        )
+                    val task = loaderFactory.newLoaderTask(launcherBinder, UserManagerState())
                     mLoaderTask = task
 
                     // Always post the loader task, instead of running directly
@@ -425,7 +410,7 @@ constructor(
     /** Called when the labels for the widgets has updated in the icon cache. */
     fun onWidgetLabelsUpdated(updatedPackages: HashSet<String?>, user: UserHandle) {
         enqueueModelUpdateTask { taskController, dataModel, _ ->
-            dataModel.widgetsModel.onPackageIconsUpdated(updatedPackages, user, appProvider.get())
+            dataModel.widgetsModel.onPackageIconsUpdated(updatedPackages, user)
             taskController.bindUpdatedWidgets(dataModel)
         }
     }
@@ -439,17 +424,7 @@ constructor(
                 // Loader has not yet run.
                 return@execute
             }
-            task.execute(
-                ModelTaskController(
-                    appProvider.get(),
-                    mBgDataModel,
-                    mBgAllAppsList,
-                    this,
-                    MAIN_EXECUTOR,
-                ),
-                mBgDataModel,
-                mBgAllAppsList,
-            )
+            task.execute(taskControllerProvider.get(), mBgDataModel, mBgAllAppsList)
         }
     }
 
@@ -476,7 +451,7 @@ constructor(
 
     fun refreshAndBindWidgetsAndShortcuts(packageUser: PackageUserKey?) {
         enqueueModelUpdateTask { taskController, dataModel, _ ->
-            dataModel.widgetsModel.update(taskController.app, packageUser)
+            dataModel.widgetsModel.update(packageUser)
             taskController.bindUpdatedWidgets(dataModel)
         }
     }

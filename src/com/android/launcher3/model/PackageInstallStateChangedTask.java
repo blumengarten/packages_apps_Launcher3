@@ -52,11 +52,11 @@ public class PackageInstallStateChangedTask implements ModelUpdateTask {
             try {
                 // For instant apps we do not get package-add. Use setting events to update
                 // any pinned icons.
-                Context context = taskController.getApp().getContext();
+                Context context = taskController.getContext();
                 ApplicationInfo ai = context
                         .getPackageManager().getApplicationInfo(mInstallInfo.packageName, 0);
                 if (InstantAppResolver.newInstance(context).isInstantApp(ai)) {
-                    taskController.getApp().getModel().newModelCallbacks()
+                    taskController.getModel().newModelCallbacks()
                             .onPackageAdded(ai.packageName, mInstallInfo.user);
                 }
             } catch (PackageManager.NameNotFoundException e) {

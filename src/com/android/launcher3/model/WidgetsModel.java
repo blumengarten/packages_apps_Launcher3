@@ -27,6 +27,7 @@ import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.config.FeatureFlags;
+import com.android.launcher3.dagger.ApplicationContext;
 import com.android.launcher3.icons.IconCache;
 import com.android.launcher3.icons.cache.CachedObject;
 import com.android.launcher3.model.data.PackageItemInfo;
@@ -54,6 +55,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
+
 /**
  * Widgets data model that is used by the adapters of the widget views and controllers.
  *
@@ -67,6 +70,29 @@ public class WidgetsModel {
     /* Map of widgets and shortcuts that are tracked per package. */
     private final Map<PackageItemInfo, List<WidgetItem>> mWidgetsByPackageItem = new HashMap<>();
     @Nullable private WidgetValidityCheckForPicker mWidgetValidityCheckForPicker = null;
+
+    private final Context mContext;
+    private final InvariantDeviceProfile mIdp;
+    private final IconCache mIconCache;
+    private final AppFilter mAppFilter;
+
+    @Inject
+    public WidgetsModel(
+            @ApplicationContext Context context,
+            InvariantDeviceProfile idp,
+            IconCache iconCache,
+            AppFilter appFilter) {
+        mContext = context;
+        mIdp = idp;
+        mIconCache = iconCache;
+        mAppFilter = appFilter;
+    }
+
+    public WidgetsModel(Context context) {
+        this(context,
+                LauncherAppState.getIDP(context),
+                LauncherAppState.getInstance(context).getIconCache(), new AppFilter(context));
+    }
 
     /**
      * Returns all widgets keyed by their component key.
@@ -128,36 +154,33 @@ public class WidgetsModel {
      * @param packageUser If null, all widgets and shortcuts are updated and returned, otherwise
      *                    only widgets and shortcuts associated with the package/user are.
      */
-    public List<CachedObject> update(
-            LauncherAppState app, @Nullable PackageUserKey packageUser) {
+    public List<CachedObject> update(@Nullable PackageUserKey packageUser) {
         if (!WIDGETS_ENABLED) {
             return new ArrayList<>();
         }
         Preconditions.assertWorkerThread();
 
-        Context context = app.getContext();
         final ArrayList<WidgetItem> widgetsAndShortcuts = new ArrayList<>();
         List<CachedObject> updatedItems = new ArrayList<>();
         try {
-            InvariantDeviceProfile idp = app.getInvariantDeviceProfile();
             // Widgets
-            WidgetManagerHelper widgetManager = new WidgetManagerHelper(context);
+            WidgetManagerHelper widgetManager = new WidgetManagerHelper(mContext);
             for (AppWidgetProviderInfo widgetInfo : widgetManager.getAllProviders(packageUser)) {
                 LauncherAppWidgetProviderInfo launcherWidgetInfo =
-                        LauncherAppWidgetProviderInfo.fromProviderInfo(context, widgetInfo);
+                        LauncherAppWidgetProviderInfo.fromProviderInfo(mContext, widgetInfo);
 
                 widgetsAndShortcuts.add(new WidgetItem(
-                        launcherWidgetInfo, idp, app.getIconCache(), app.getContext()));
+                        launcherWidgetInfo, mIdp, mIconCache, mContext));
                 updatedItems.add(launcherWidgetInfo);
             }
 
             // Shortcuts
             for (ShortcutConfigActivityInfo info :
-                    queryList(context, packageUser)) {
-                widgetsAndShortcuts.add(new WidgetItem(info, app.getIconCache()));
+                    queryList(mContext, packageUser)) {
+                widgetsAndShortcuts.add(new WidgetItem(info, mIconCache));
                 updatedItems.add(info);
             }
-            setWidgetsAndShortcuts(widgetsAndShortcuts, app, packageUser);
+            setWidgetsAndShortcuts(widgetsAndShortcuts, packageUser);
         } catch (Exception e) {
             if (!FeatureFlags.IS_STUDIO_BUILD && Utilities.isBinderSizeError(e)) {
                 // the returned value may be incomplete and will not be refreshed until the next
@@ -172,14 +195,14 @@ public class WidgetsModel {
         return updatedItems;
     }
 
-    private synchronized void setWidgetsAndShortcuts(ArrayList<WidgetItem> rawWidgetsShortcuts,
-            LauncherAppState app, @Nullable PackageUserKey packageUser) {
+    private synchronized void setWidgetsAndShortcuts(
+            ArrayList<WidgetItem> rawWidgetsShortcuts, @Nullable PackageUserKey packageUser) {
         if (DEBUG) {
             Log.d(TAG, "addWidgetsAndShortcuts, widgetsShortcuts#=" + rawWidgetsShortcuts.size());
         }
 
         // Refresh the validity checker with latest app state.
-        mWidgetValidityCheckForPicker = new WidgetValidityCheckForPicker(app);
+        mWidgetValidityCheckForPicker = new WidgetValidityCheckForPicker(mIdp, mAppFilter);
 
         // Temporary cache for {@link PackageItemInfos} to avoid having to go through
         // {@link mPackageItemInfos} to locate the key to be used for {@link #mWidgetsList}
@@ -196,19 +219,17 @@ public class WidgetsModel {
         // add and update.
         mWidgetsByPackageItem.putAll(rawWidgetsShortcuts.stream()
                 .filter(new WidgetFlagCheck())
-                .flatMap(widgetItem -> getPackageUserKeys(app.getContext(), widgetItem).stream()
+                .flatMap(widgetItem -> getPackageUserKeys(mContext, widgetItem).stream()
                         .map(key -> new Pair<>(packageItemInfoCache.getOrCreate(key), widgetItem)))
                 .collect(groupingBy(pair -> pair.first, mapping(pair -> pair.second, toList()))));
 
         // Update each package entry
-        IconCache iconCache = app.getIconCache();
         for (PackageItemInfo p : packageItemInfoCache.values()) {
-            iconCache.getTitleAndIconForApp(p, DEFAULT_LOOKUP_FLAG.withUseLowRes());
+            mIconCache.getTitleAndIconForApp(p, DEFAULT_LOOKUP_FLAG.withUseLowRes());
         }
     }
 
-    public void onPackageIconsUpdated(Set<String> packageNames, UserHandle user,
-            LauncherAppState app) {
+    public void onPackageIconsUpdated(Set<String> packageNames, UserHandle user) {
         if (!WIDGETS_ENABLED) {
             return;
         }
@@ -220,11 +241,10 @@ public class WidgetsModel {
                     WidgetItem item = items.get(i);
                     if (item.user.equals(user)) {
                         if (item.activityInfo != null) {
-                            items.set(i, new WidgetItem(item.activityInfo, app.getIconCache()));
+                            items.set(i, new WidgetItem(item.activityInfo, mIconCache));
                         } else {
-                            items.set(i, new WidgetItem(item.widgetInfo,
-                                    app.getInvariantDeviceProfile(), app.getIconCache(),
-                                    app.getContext()));
+                            items.set(i, new WidgetItem(
+                                    item.widgetInfo, mIdp, mIconCache, mContext));
                         }
                     }
                 }
@@ -277,9 +297,9 @@ public class WidgetsModel {
         private final InvariantDeviceProfile mIdp;
         private final AppFilter mAppFilter;
 
-        WidgetValidityCheckForPicker(LauncherAppState app) {
-            mIdp = app.getInvariantDeviceProfile();
-            mAppFilter = new AppFilter(app.getContext());
+        WidgetValidityCheckForPicker(InvariantDeviceProfile idp, AppFilter appFilter) {
+            mIdp = idp;
+            mAppFilter = appFilter;
         }
 
         @Override

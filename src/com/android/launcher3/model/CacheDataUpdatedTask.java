@@ -59,7 +59,7 @@ public class CacheDataUpdatedTask implements ModelUpdateTask {
     @Override
     public void execute(@NonNull ModelTaskController taskController, @NonNull BgDataModel dataModel,
             @NonNull AllAppsList apps) {
-        IconCache iconCache = taskController.getApp().getIconCache();
+        IconCache iconCache = taskController.getIconCache();
         ArrayList<ItemInfo> updatedItems = new ArrayList<>();
 
         synchronized (dataModel) {

@@ -80,8 +80,10 @@ import com.android.launcher3.dagger.LauncherAppComponent;
 import com.android.launcher3.dagger.LauncherAppModule;
 import com.android.launcher3.dagger.LauncherAppSingleton;
 import com.android.launcher3.folder.FolderIcon;
+import com.android.launcher3.model.BaseLauncherBinder.BaseLauncherBinderFactory;
 import com.android.launcher3.model.BgDataModel;
 import com.android.launcher3.model.BgDataModel.FixedContainerItems;
+import com.android.launcher3.model.LoaderTask.LoaderTaskFactory;
 import com.android.launcher3.model.data.AppPairInfo;
 import com.android.launcher3.model.data.CollectionInfo;
 import com.android.launcher3.model.data.FolderInfo;
@@ -604,6 +606,10 @@ public class LauncherPreviewRenderer extends BaseContext
     @LauncherAppSingleton
     @Component(modules = LauncherAppModule.class)
     public interface PreviewAppComponent extends LauncherAppComponent {
+
+        LoaderTaskFactory getLoaderTaskFactory();
+        BaseLauncherBinderFactory getBaseLauncherBinderFactory();
+        BgDataModel getDataModel();
 
         /** Builder for NexusLauncherAppComponent. */
         @Component.Builder

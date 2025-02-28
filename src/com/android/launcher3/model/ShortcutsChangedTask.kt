@@ -40,8 +40,7 @@ class ShortcutsChangedTask(
         dataModel: BgDataModel,
         apps: AllAppsList,
     ) {
-        val app = taskController.app
-        val context = app.context
+        val context = taskController.context
         // Find WorkspaceItemInfo's that have changed on the workspace.
         val matchingWorkspaceItems = ArrayList<WorkspaceItemInfo>()
 
@@ -88,7 +87,7 @@ class ShortcutsChangedTask(
                     .filter { itemInfo: WorkspaceItemInfo -> shortcutId == itemInfo.deepShortcutId }
                     .forEach { workspaceItemInfo: WorkspaceItemInfo ->
                         workspaceItemInfo.updateFromDeepShortcutInfo(fullDetails, context)
-                        app.iconCache.getShortcutIcon(
+                        taskController.iconCache.getShortcutIcon(
                             workspaceItemInfo,
                             CacheableShortcutInfo(fullDetails, infoWrapper),
                         )
