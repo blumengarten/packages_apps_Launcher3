@@ -511,14 +511,14 @@ public class TaskbarManager {
     /**
      * Toggles All Apps for Taskbar or Launcher depending on the current state.
      */
-    public void toggleAllApps() {
+    public void toggleAllAppsSearch() {
         TaskbarActivityContext taskbar = getTaskbarForDisplay(getDefaultDisplayId());
-        if (taskbar == null || taskbar.canToggleHomeAllApps()) {
+        if (taskbar == null) {
             // Home All Apps should be toggled from this class, because the controllers are not
             // initialized when Taskbar is disabled (i.e. TaskbarActivityContext is null).
-            if (mActivity instanceof Launcher l) l.toggleAllAppsSearch();
+            if (mActivity instanceof Launcher l) l.toggleAllApps(true);
         } else {
-            taskbar.toggleAllAppsSearch();
+            taskbar.getControllers().uiController.toggleAllApps(true);
         }
     }
 

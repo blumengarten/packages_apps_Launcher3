@@ -207,9 +207,18 @@ public class TaskbarUIController implements BubbleBarController.BubbleBarLocatio
         return false;
     }
 
-    /** Returns {@code true} if Home All Apps available instead of Taskbar All Apps. */
-    protected boolean canToggleHomeAllApps() {
-        return false;
+
+    /**
+     * Toggles all apps UI. Default implementation opens Taskbar All Apps, but may be overridden to
+     * open different Alls Apps variant depending on the context.
+     * @param focusSearch indicates whether All Apps should be opened with search input focused.
+     */
+    protected void toggleAllApps(boolean focusSearch) {
+        if (focusSearch) {
+            mControllers.taskbarAllAppsController.toggleSearch();
+        } else {
+            mControllers.taskbarAllAppsController.toggle();
+        }
     }
 
     @CallSuper
