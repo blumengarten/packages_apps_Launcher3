@@ -15,6 +15,7 @@
  */
 package com.android.quickstep.fallback;
 
+import static com.android.launcher3.Flags.enableDesktopExplodedView;
 import static com.android.launcher3.Flags.enableDesktopWindowingCarouselDetach;
 import static com.android.launcher3.LauncherState.FLAG_CLOSE_POPUPS;
 import static com.android.launcher3.uioverrides.states.BackgroundAppState.getOverviewScaleAndOffsetForBackgroundState;
@@ -46,16 +47,18 @@ public class RecentsState implements BaseState<RecentsState> {
     private static final int FLAG_TASK_THUMBNAIL_SPLASH = BaseState.getFlag(8);
     private static final int FLAG_DETACH_DESKTOP_CAROUSEL = BaseState.getFlag(9);
     private static final int FLAG_ADD_DESK_BUTTON = BaseState.getFlag(10);
+    private static final int FLAG_SHOW_EXPLODED_DESKTOP_VIEW = BaseState.getFlag(11);
 
     private static final RecentsState[] sAllStates = new RecentsState[6];
 
     public static final RecentsState DEFAULT = new RecentsState(0,
             FLAG_DISABLE_RESTORE | FLAG_CLEAR_ALL_BUTTON | FLAG_OVERVIEW_ACTIONS | FLAG_SHOW_AS_GRID
                     | FLAG_SCRIM | FLAG_LIVE_TILE | FLAG_RECENTS_VIEW_VISIBLE
-                    | FLAG_ADD_DESK_BUTTON);
+                    | FLAG_ADD_DESK_BUTTON | FLAG_SHOW_EXPLODED_DESKTOP_VIEW);
     public static final RecentsState MODAL_TASK = new ModalState(1,
             FLAG_DISABLE_RESTORE | FLAG_OVERVIEW_ACTIONS | FLAG_MODAL
-                    | FLAG_SHOW_AS_GRID | FLAG_SCRIM | FLAG_LIVE_TILE | FLAG_RECENTS_VIEW_VISIBLE);
+                    | FLAG_SHOW_AS_GRID | FLAG_SCRIM | FLAG_LIVE_TILE | FLAG_RECENTS_VIEW_VISIBLE
+                    | FLAG_SHOW_EXPLODED_DESKTOP_VIEW);
     public static final RecentsState BACKGROUND_APP = new BackgroundAppState(2,
             FLAG_DISABLE_RESTORE | FLAG_NON_INTERACTIVE | FLAG_FULL_SCREEN
                     | FLAG_RECENTS_VIEW_VISIBLE | FLAG_TASK_THUMBNAIL_SPLASH
@@ -64,7 +67,7 @@ public class RecentsState implements BaseState<RecentsState> {
     public static final RecentsState BG_LAUNCHER = new LauncherState(4, 0);
     public static final RecentsState OVERVIEW_SPLIT_SELECT = new RecentsState(5,
             FLAG_SHOW_AS_GRID | FLAG_SCRIM | FLAG_RECENTS_VIEW_VISIBLE | FLAG_CLOSE_POPUPS
-                    | FLAG_DISABLE_RESTORE);
+                    | FLAG_DISABLE_RESTORE | FLAG_SHOW_EXPLODED_DESKTOP_VIEW);
 
     /** Returns the corresponding RecentsState from ordinal provided */
     public static RecentsState stateFromOrdinal(int ordinal) {
@@ -172,6 +175,11 @@ public class RecentsState implements BaseState<RecentsState> {
     @Override
     public boolean detachDesktopCarousel() {
         return hasFlag(FLAG_DETACH_DESKTOP_CAROUSEL) && enableDesktopWindowingCarouselDetach();
+    }
+
+    @Override
+    public boolean showExplodedDesktopView() {
+        return hasFlag(FLAG_SHOW_EXPLODED_DESKTOP_VIEW) && enableDesktopExplodedView();
     }
 
     /**
