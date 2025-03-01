@@ -1,5 +1,6 @@
 package com.android.quickstep
 
+import android.view.Display
 import androidx.test.annotation.UiThreadTest
 import androidx.test.filters.SmallTest
 import com.android.launcher3.dagger.LauncherComponentProvider
@@ -13,6 +14,7 @@ import com.android.launcher3.util.LauncherMultivalentJUnit
 import com.android.launcher3.util.NavigationMode
 import com.android.launcher3.util.SandboxApplication
 import com.android.quickstep.util.GestureExclusionManager
+import com.android.systemui.shared.system.QuickStepContract
 import com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_ALLOW_GESTURE_IGNORING_BAR_VISIBILITY
 import com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_DEVICE_DREAMING
 import com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_DISABLE_GESTURE_SPLIT_INVOCATION
@@ -150,7 +152,7 @@ class RecentsAnimationDeviceStateTest {
 
         allSysUiStates().forEach { state ->
             val canStartGesture = !disablingStates.contains(state)
-            underTest.setSystemUiFlags(state)
+            underTest.setSysUIStateFlagsForDisplay(state, Display.DEFAULT_DISPLAY)
             assertThat(underTest.canStartTrackpadGesture()).isEqualTo(canStartGesture)
         }
     }
@@ -166,7 +168,7 @@ class RecentsAnimationDeviceStateTest {
             )
 
         stateToExpectedResult.forEach { (state, allowed) ->
-            underTest.setSystemUiFlags(state)
+            underTest.setSysUIStateFlagsForDisplay(state, Display.DEFAULT_DISPLAY)
             assertThat(underTest.canStartTrackpadGesture()).isEqualTo(allowed)
         }
     }
@@ -177,7 +179,7 @@ class RecentsAnimationDeviceStateTest {
 
         allSysUiStates().forEach { state ->
             val canStartGesture = !disablingStates.contains(state)
-            underTest.setSystemUiFlags(state)
+            underTest.setSysUIStateFlagsForDisplay(state, Display.DEFAULT_DISPLAY)
             assertThat(underTest.canStartSystemGesture()).isEqualTo(canStartGesture)
         }
     }
@@ -197,9 +199,40 @@ class RecentsAnimationDeviceStateTest {
             )
 
         stateToExpectedResult.forEach { (state, gestureAllowed) ->
-            underTest.setSystemUiFlags(state)
+            underTest.setSysUIStateFlagsForDisplay(state, Display.DEFAULT_DISPLAY)
             assertThat(underTest.canStartSystemGesture()).isEqualTo(gestureAllowed)
         }
+    }
+
+    @Test
+    fun getSystemUiStateFlags_defaultAwake() {
+        val NOT_EXISTENT_DISPLAY = 2
+        assertThat(underTest.getSystemUiStateFlags(NOT_EXISTENT_DISPLAY))
+            .isEqualTo(QuickStepContract.SYSUI_STATE_AWAKE)
+    }
+
+    @Test
+    fun clearSysUIStateFlagsForDisplay_displayNotReturnedAnymore() {
+        underTest.setSysUIStateFlagsForDisplay(1, /* displayId= */ 1)
+
+        assertThat(underTest.displaysWithSysUIState).contains(1)
+        assertThat(underTest.getSystemUiStateFlags(1)).isEqualTo(1)
+
+        underTest.clearSysUIStateFlagsForDisplay(1)
+
+        assertThat(underTest.displaysWithSysUIState).doesNotContain(1)
+        assertThat(underTest.getSystemUiStateFlags(1))
+            .isEqualTo(QuickStepContract.SYSUI_STATE_AWAKE)
+    }
+
+    @Test
+    fun setSysUIStateFlagsForDisplay_setsCorrectly() {
+        underTest.setSysUIStateFlagsForDisplay(1, /* displayId= */ 1)
+        underTest.setSysUIStateFlagsForDisplay(2, /* displayId= */ 2)
+
+        assertThat(underTest.getSystemUiStateFlags(1)).isEqualTo(1)
+        assertThat(underTest.getSystemUiStateFlags(2)).isEqualTo(2)
+        assertThat(underTest.displaysWithSysUIState).containsAtLeast(1, 2)
     }
 
     private fun allSysUiStates(): List<Long> {
