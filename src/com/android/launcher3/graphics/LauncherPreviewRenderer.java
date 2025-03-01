@@ -94,7 +94,7 @@ import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.IntArray;
 import com.android.launcher3.util.IntSet;
-import com.android.launcher3.util.MainThreadInitializedObject.SandboxContext;
+import com.android.launcher3.util.SandboxContext;
 import com.android.launcher3.util.WindowBounds;
 import com.android.launcher3.util.window.WindowManagerProxy;
 import com.android.launcher3.views.ActivityContext;

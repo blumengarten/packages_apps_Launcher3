@@ -705,7 +705,7 @@ public class TouchInteractionService extends Service {
             public void send(int code, Intent intent, String resolvedType,
                     IBinder allowlistToken, IIntentReceiver finishedReceiver,
                     String requiredPermission, Bundle options) {
-                MAIN_EXECUTOR.execute(() -> mTaskbarManager.toggleAllApps());
+                MAIN_EXECUTOR.execute(() -> mTaskbarManager.toggleAllAppsSearch());
             }
         });
     }

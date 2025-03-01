@@ -29,6 +29,7 @@ import android.view.View.OnClickListener;
 import android.view.ViewAnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.UiThread;
 
 import com.android.launcher3.AbstractFloatingView;
@@ -129,8 +130,7 @@ public class SecondaryDisplayLauncher extends BaseActivity
         }
 
         mDragController.addDragListener(this);
-        mPopupDataProvider = new PopupDataProvider(
-                mAppsView.getAppsStore()::updateNotificationDots);
+        mPopupDataProvider = new PopupDataProvider(this);
 
         mModel.addCallbacksAndLoad(this);
     }
@@ -293,6 +293,8 @@ public class SecondaryDisplayLauncher extends BaseActivity
         mStringCache = cache;
     }
 
+    @Override
+    @NonNull
     public PopupDataProvider getPopupDataProvider() {
         return mPopupDataProvider;
     }

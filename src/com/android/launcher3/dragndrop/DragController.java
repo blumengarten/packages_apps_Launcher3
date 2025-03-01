@@ -558,7 +558,7 @@ public abstract class DragController<T extends ActivityContext>
 
             target.getHitRectRelativeToDragLayer(r);
             if (r.contains(x, y)) {
-                mActivity.getDragLayer().mapCoordInSelfToDescendant((View) target,
+                mActivity.getDragLayer().mapCoordInSelfToDescendant(target.getDropView(),
                         mCoordinatesTemp);
                 mDragObject.x = mCoordinatesTemp[0];
                 mDragObject.y = mCoordinatesTemp[1];

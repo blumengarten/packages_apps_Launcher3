@@ -97,12 +97,12 @@ import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherSettings.Favorites;
 import com.android.launcher3.R;
+import com.android.launcher3.allapps.ActivityAllAppsContainerView;
 import com.android.launcher3.anim.AnimatorPlaybackController;
 import com.android.launcher3.apppairs.AppPairIcon;
 import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.desktop.DesktopAppLaunchTransition;
 import com.android.launcher3.desktop.DesktopAppLaunchTransition.AppLaunchType;
-import com.android.launcher3.dot.DotInfo;
 import com.android.launcher3.folder.Folder;
 import com.android.launcher3.folder.FolderIcon;
 import com.android.launcher3.logger.LauncherAtom;
@@ -149,6 +149,7 @@ import com.android.launcher3.util.ApplicationInfoWrapper;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.Executors;
+import com.android.launcher3.util.LauncherBindableItemsContainer;
 import com.android.launcher3.util.MultiPropertyFactory;
 import com.android.launcher3.util.NavigationMode;
 import com.android.launcher3.util.RunnableList;
@@ -607,16 +608,6 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         mControllers.taskbarStashController.updateAndAnimateTransientTaskbar(false);
     }
 
-    /** Toggles Taskbar All Apps overlay. */
-    public void toggleAllApps() {
-        mControllers.taskbarAllAppsController.toggle();
-    }
-
-    /** Toggles Taskbar All Apps overlay with keyboard ready for search. */
-    public void toggleAllAppsSearch() {
-        mControllers.taskbarAllAppsController.toggleSearch();
-    }
-
     @Override
     public DeviceProfile getDeviceProfile() {
         return mDeviceProfile;
@@ -877,15 +868,21 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         }
     }
 
-    @Override
-    public DotInfo getDotInfoForItem(ItemInfo info) {
-        return getPopupDataProvider().getDotInfoForItem(info);
-    }
-
     @NonNull
     @Override
     public PopupDataProvider getPopupDataProvider() {
         return mControllers.taskbarPopupController.getPopupDataProvider();
+    }
+
+    @NonNull
+    @Override
+    public LauncherBindableItemsContainer getContent() {
+        return mControllers.taskbarViewController.getContent();
+    }
+
+    @Override
+    public ActivityAllAppsContainerView<?> getAppsView() {
+        return mControllers.taskbarAllAppsController.getAppsView();
     }
 
     @Override
@@ -2061,10 +2058,6 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
     /** Closes the KeyboardQuickSwitchView without an animation if open. */
     public void closeKeyboardQuickSwitchView() {
         mControllers.keyboardQuickSwitchController.closeQuickSwitchView(false);
-    }
-
-    boolean canToggleHomeAllApps() {
-        return mControllers.uiController.canToggleHomeAllApps();
     }
 
     boolean isIconAlignedWithHotseat() {

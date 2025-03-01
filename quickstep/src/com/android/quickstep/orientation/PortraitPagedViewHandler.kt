@@ -284,6 +284,14 @@ class PortraitPagedViewHandler : DefaultPagedViewHandler(), RecentsPagedOrientat
     // Ignore rtl since it only affects X value displacement, Y displacement doesn't change
     override fun getTaskDragDisplacementFactor(isRtl: Boolean): Int = 1
 
+    override fun getTaskDismissVerticalDirection(): Int = -1
+
+    override fun getTaskDismissLength(secondaryDimension: Int, taskThumbnailBounds: Rect): Int =
+        taskThumbnailBounds.bottom
+
+    override fun getTaskLaunchLength(secondaryDimension: Int, taskThumbnailBounds: Rect): Int =
+        secondaryDimension - taskThumbnailBounds.bottom
+
     /* -------------------- */
 
     override fun getDistanceToBottomOfRect(dp: DeviceProfile, rect: Rect): Int =

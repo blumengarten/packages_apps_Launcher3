@@ -947,7 +947,9 @@ public final class LauncherInstrumentation {
                     waitUntilLauncherObjectGone(WORKSPACE_RES_ID);
                     waitUntilLauncherObjectGone(WIDGETS_RES_ID);
                     waitUntilSystemLauncherObjectGone(OVERVIEW_RES_ID);
-                    waitUntilSystemLauncherObjectGone(TASKBAR_RES_ID);
+                    if (isTransientTaskbar()) {
+                        waitUntilSystemLauncherObjectGone(TASKBAR_RES_ID);
+                    }
                     waitUntilSystemLauncherObjectGone(SPLIT_PLACEHOLDER_RES_ID);
                     waitUntilLauncherObjectGone(KEYBOARD_QUICK_SWITCH_RES_ID);
 

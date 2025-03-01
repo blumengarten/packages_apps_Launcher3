@@ -83,14 +83,16 @@ import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.TaskItemInfo;
 import com.android.launcher3.taskbar.bubbles.BubbleBarController;
 import com.android.launcher3.taskbar.bubbles.BubbleControllers;
+import com.android.launcher3.taskbar.customization.TaskbarAllAppsButtonContainer;
+import com.android.launcher3.taskbar.customization.TaskbarDividerContainer;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.ItemInfoMatcher;
 import com.android.launcher3.util.LauncherBindableItemsContainer;
-import com.android.launcher3.util.MainThreadInitializedObject.SandboxContext;
 import com.android.launcher3.util.MultiPropertyFactory;
 import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
 import com.android.launcher3.util.MultiTranslateDelegate;
 import com.android.launcher3.util.MultiValueAlpha;
+import com.android.launcher3.util.SandboxContext;
 import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.SingleTask;
 import com.android.systemui.shared.recents.model.Task;
@@ -735,8 +737,19 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         for (View iconView : getIconViews()) {
             if (iconView instanceof BubbleTextView btv) {
                 btv.updateRunningState(getRunningAppState(btv));
+                if (shouldUpdateIconContentDescription(btv)) {
+                    btv.setContentDescription(
+                            btv.getContentDescription() + " " + btv.getIconStateDescription());
+                }
             }
         }
+    }
+
+    private boolean shouldUpdateIconContentDescription(BubbleTextView btv) {
+        boolean isInDesktopMode = mControllers.taskbarDesktopModeController.isInDesktopMode();
+        boolean isAllAppsButton = btv instanceof TaskbarAllAppsButtonContainer;
+        boolean isDividerButton = btv instanceof TaskbarDividerContainer;
+        return isInDesktopMode && !isAllAppsButton && !isDividerButton;
     }
 
     /**
@@ -1167,11 +1180,8 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         mTaskbarNavButtonTranslationY.updateValue(-deviceProfile.getTaskbarOffsetY());
     }
 
-    /**
-     * Maps the given operator to all the top-level children of TaskbarView.
-     */
-    public void mapOverItems(LauncherBindableItemsContainer.ItemOperator op) {
-        mTaskbarView.mapOverItems(op);
+    public LauncherBindableItemsContainer getContent() {
+        return mModelCallbacks;
     }
 
     /**
