@@ -15,14 +15,18 @@
  */
 package com.android.quickstep;
 
+import static android.app.WindowConfiguration.WINDOWING_MODE_FREEFORM;
+import static android.app.WindowConfiguration.WINDOWING_MODE_UNDEFINED;
 import static android.view.Display.DEFAULT_DISPLAY;
 
 import static androidx.test.InstrumentationRegistry.getTargetContext;
 
+import static com.android.launcher3.util.TestConstants.AppNames.TEST_APP_NAME;
 import static com.android.quickstep.TaskbarModeSwitchRule.Mode.PERSISTENT;
 import static com.android.wm.shell.shared.desktopmode.DesktopModeStatus.ENTER_DESKTOP_BY_DEFAULT_ON_FREEFORM_DISPLAY_SYS_PROP;
 
-import android.app.WindowConfiguration;
+import static com.google.common.truth.Truth.assertThat;
+
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.WindowManagerGlobal;
@@ -30,6 +34,7 @@ import android.view.WindowManagerGlobal;
 import androidx.test.filters.LargeTest;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.launcher3.tapl.HomeAllApps;
 import com.android.launcher3.ui.PortraitLandscapeRunner.PortraitLandscape;
 import com.android.launcher3.util.rule.SetPropRule;
 import com.android.quickstep.NavigationModeSwitchRule.NavigationModeSwitch;
@@ -40,6 +45,7 @@ import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExternalResource;
 import org.junit.runner.RunWith;
 
 @LargeTest
@@ -51,25 +57,40 @@ public class TaplTestsLockedTaskbar extends AbstractTaplTestsTaskbar {
     public SetPropRule mSetPropRule =
             new SetPropRule(ENTER_DESKTOP_BY_DEFAULT_ON_FREEFORM_DISPLAY_SYS_PROP, "true");
 
+    // Default-to-desktop feature requires the display to be freeform mode.
+    @Rule
+    public ExternalResource mFreeformDisplayRule = new ExternalResource() {
+        private int mOriginalWindowingMode = WINDOWING_MODE_UNDEFINED;
+
+        @Override
+        protected void before() {
+            mOriginalWindowingMode = setDisplayWindowingMode(WINDOWING_MODE_FREEFORM);
+        }
+
+        @Override
+        protected void after() {
+            if (mOriginalWindowingMode != WINDOWING_MODE_UNDEFINED) {
+                setDisplayWindowingMode(mOriginalWindowingMode);
+            }
+        }
+    };
+
     @Override
     public void setUp() throws Exception {
         Assume.assumeTrue(mLauncher.isTablet());
         Assume.assumeTrue(Flags.enterDesktopByDefaultOnFreeformDisplays());
         Assume.assumeTrue(DesktopModeStatus.canEnterDesktopMode(getTargetContext()));
         super.setUp();
-
-        // Default-to-desktop feature requires the display to be freeform mode.
-        setDisplayWindowingMode(WindowConfiguration.WINDOWING_MODE_FREEFORM);
     }
 
     @Override
-    public void tearDown() throws Exception {
-        // Reset the display windowing mode to the device default.
-        setDisplayWindowingMode(WindowConfiguration.WINDOWING_MODE_UNDEFINED);
+    protected boolean startCalendarAppDuringSetup() {
+        return false;
+    }
 
-        mLauncher.recreateTaskbar();
-
-        super.tearDown();
+    @Override
+    protected boolean expectTaskbarIconsMatchHotseat() {
+        return false;
     }
 
     @Test
@@ -87,10 +108,31 @@ public class TaplTestsLockedTaskbar extends AbstractTaplTestsTaskbar {
         mLauncher.getLaunchedAppState().assertTaskbarVisible();
     }
 
-    private void setDisplayWindowingMode(int windowingMode) {
+    @Test
+    @PortraitLandscape
+    @NavigationModeSwitch
+    @TaskbarModeSwitch(mode = PERSISTENT)
+    public void testDragFromAllAppsToWorspace() {
+        mDevice.pressHome();
+        waitForResumed("Launcher internal state is still Background");
+
+        final HomeAllApps allApps = getTaskbar().openAllAppsOnHome();
+        allApps.freeze();
         try {
+            allApps.getAppIcon(TEST_APP_NAME).dragToWorkspace(false, false);
+            assertThat(mLauncher.getWorkspace().getWorkspaceAppIcon(TEST_APP_NAME)).isNotNull();
+        } finally {
+            allApps.unfreeze();
+        }
+    }
+
+    private int setDisplayWindowingMode(int windowingMode) {
+        try {
+            int originalWindowingMode =
+                    WindowManagerGlobal.getWindowManagerService().getWindowingMode(DEFAULT_DISPLAY);
             WindowManagerGlobal.getWindowManagerService().setWindowingMode(
                     DEFAULT_DISPLAY, windowingMode);
+            return originalWindowingMode;
         } catch (RemoteException e) {
             Log.e(TAG, "error setting windowing mode", e);
             throw new RuntimeException(e);

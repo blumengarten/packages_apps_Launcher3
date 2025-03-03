@@ -125,6 +125,8 @@ public final class TestProtocol {
             "is-predictive-back-swipe-enabled";
     public static final String REQUEST_ENABLE_TASKBAR_NAVBAR_UNIFICATION =
             "enable-taskbar-navbar-unification";
+    public static final String REQUEST_TASKBAR_SHOWN_ON_HOME =
+            "taskbar-shown-on-home";
     public static final String REQUEST_NUM_ALL_APPS_COLUMNS = "num-all-apps-columns";
     public static final String REQUEST_IS_TWO_PANELS = "is-two-panel";
     public static final String REQUEST_CELL_LAYOUT_BOARDER_HEIGHT = "cell-layout-boarder-height";
