@@ -58,6 +58,8 @@ import com.android.quickstep.util.SingleTask;
 import com.android.quickstep.util.SplitTask;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.system.InteractionJankMonitorWrapper;
+import com.android.wm.shell.shared.TypefaceUtils;
+import com.android.wm.shell.shared.TypefaceUtils.FontFamily;
 
 import java.util.HashMap;
 import java.util.List;
@@ -189,10 +191,9 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
             }
         }
 
-
         TypefaceUtils.setTypeface(
                 mNoRecentItemsPane.findViewById(R.id.no_recent_items_text),
-                TypefaceUtils.FONT_FAMILY_LABEL_LARGE_BASELINE);
+                FontFamily.GSF_LABEL_LARGE);
     }
 
     private void registerOnBackInvokedCallback() {

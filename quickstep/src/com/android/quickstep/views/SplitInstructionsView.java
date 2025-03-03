@@ -39,10 +39,11 @@ import com.android.app.animation.Interpolators;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.anim.PendingAnimation;
-import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.statemanager.StateManager;
 import com.android.quickstep.util.AnimUtils;
 import com.android.quickstep.util.SplitSelectStateController;
+import com.android.wm.shell.shared.TypefaceUtils;
+import com.android.wm.shell.shared.TypefaceUtils.FontFamily;
 
 /**
  * A rounded rectangular component containing a single TextView.
@@ -129,6 +130,7 @@ public class SplitInstructionsView extends LinearLayout {
         cancelTextView.setVisibility(VISIBLE);
         cancelTextView.setOnClickListener((v) -> exitSplitSelection());
         instructionTextView.setText(R.string.toast_contextual_split_select_app);
+        TypefaceUtils.setTypeface(instructionTextView, FontFamily.GSF_BODY_MEDIUM);
 
         // After layout, expand touch target of cancel button to meet minimum a11y measurements.
         post(() -> {
