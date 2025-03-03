@@ -232,26 +232,23 @@ public class TaskbarManager {
 
         @Override
         public void onTaskMovedToFront(int taskId) {
-            if (mPerceptibleTasks.contains(taskId)) {
-                return;
-            }
-
             // This listens to any Task, so we filter them by the ones shown in the launcher.
             // For Tasks restored after startup, they will by default not be Perceptible, and no
             // need to until user interacts with it by bringing it to the foreground.
             for (int i = 0; i < mTaskbars.size(); i++) {
-                // get pinned tasks
+                // get pinned tasks - we care about all tasks, not just the one moved to the front
                 Set<Integer> taskbarPinnedTasks =
                         mTaskbars.valueAt(i).getControllers().taskbarViewController
                                 .getTaskIdsForPinnedApps();
 
-                // mark as perceptible if the foregrounded task is in the list of apps shown in
-                // the launcher.
-                if (taskbarPinnedTasks.contains(taskId)
-                        && ActivityManagerWrapper.getInstance()
-                        .setTaskIsPerceptible(taskId, true)
-                ) {
-                    mPerceptibleTasks.add(taskId);
+                // filter out tasks already marked as perceptible
+                taskbarPinnedTasks.removeAll(mPerceptibleTasks);
+
+                // add the filtered tasks as perceptible
+                for (int pinnedTaskId : taskbarPinnedTasks) {
+                    ActivityManagerWrapper.getInstance()
+                            .setTaskIsPerceptible(pinnedTaskId, true);
+                    mPerceptibleTasks.add(pinnedTaskId);
                 }
             }
         }
