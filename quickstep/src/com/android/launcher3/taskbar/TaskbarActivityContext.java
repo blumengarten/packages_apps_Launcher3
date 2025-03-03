@@ -1396,14 +1396,9 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                             AppLaunchType.UNMINIMIZE, Cuj.CUJ_DESKTOP_MODE_APP_LAUNCH_FROM_ICON)
                     : null;
 
-            TaskView taskView = null;
-            if (recents != null) {
-                taskView = recents.getTaskViewByTaskId(info.getTaskId());
-            }
 
-            if (areDesktopTasksVisible() && taskView != null
-                    && mControllers.uiController.isInOverviewUi()) {
-                RunnableList runnableList = taskView.launchWithAnimation();
+            if (areDesktopTasksVisible() && mControllers.uiController.isInOverviewUi()) {
+                RunnableList runnableList = recents.launchRunningDesktopTaskView();
                 if (runnableList != null) {
                     runnableList.add(() ->
                             // wrapped it in runnable here since we need the post for DW to be
