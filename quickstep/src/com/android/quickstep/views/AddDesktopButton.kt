@@ -84,9 +84,6 @@ class AddDesktopButton @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    fun getScrollAdjustment(showAsGrid: Boolean): Int =
-        if (showAsGrid) gridTranslationX.toInt() else 0
-
     private fun getBorderBounds(bounds: Rect) {
         bounds.set(0, 0, width, height)
         val outlinePadding =

@@ -2507,6 +2507,11 @@ public abstract class RecentsView<
         int minDistanceFromScreenStart = Integer.MAX_VALUE;
         int minDistanceFromScreenStartIndex = INVALID_PAGE;
         for (int i = 0; i < getChildCount(); ++i) {
+            // Do not set the destination page to the AddDesktopButton, which has the same page
+            // scrolls as the first [TaskView] and shouldn't be scrolled to.
+            if (getChildAt(i) instanceof AddDesktopButton) {
+                continue;
+            }
             int distanceFromScreenStart = Math.abs(mPageScrolls[i] - scaledScroll);
             if (distanceFromScreenStart < minDistanceFromScreenStart) {
                 minDistanceFromScreenStart = distanceFromScreenStart;
@@ -6215,9 +6220,7 @@ public abstract class RecentsView<
 
     private int getFirstViewIndex() {
         final View firstView;
-        if (mAddDesktopButton != null) {
-            firstView = mAddDesktopButton;
-        } else if (mShowAsGridLastOnLayout) {
+        if (mShowAsGridLastOnLayout) {
             // For grid Overview, it always start if a large tile (focused task or desktop task) if
             // they exist, otherwise it start with the first task.
             TaskView firstLargeTaskView = mUtils.getFirstLargeTaskView();
@@ -6287,13 +6290,6 @@ public abstract class RecentsView<
             outPageScrolls[clearAllIndex] = clearAllScroll;
         }
 
-        int addDesktopButtonIndex = indexOfChild(mAddDesktopButton);
-        if (addDesktopButtonIndex != -1 && addDesktopButtonIndex < outPageScrolls.length) {
-            outPageScrolls[addDesktopButtonIndex] =
-                    newPageScrolls[addDesktopButtonIndex] + mAddDesktopButton.getScrollAdjustment(
-                            showAsGrid);
-        }
-
         int lastTaskScroll = getLastTaskScroll(clearAllScroll, clearAllWidth);
         getTaskViews().forEachWithIndexInParent((index, taskView) -> {
             float scrollDiff = taskView.getScrollAdjustment(showAsGrid);
@@ -6308,6 +6304,14 @@ public abstract class RecentsView<
                         "getPageScrolls - outPageScrolls[" + index + "]: " + outPageScrolls[index]);
             }
         });
+
+        int addDesktopButtonIndex = indexOfChild(mAddDesktopButton);
+        if (addDesktopButtonIndex >= 0 && addDesktopButtonIndex < outPageScrolls.length) {
+            int firstViewIndex = getFirstViewIndex();
+            if (firstViewIndex >= 0 && firstViewIndex < outPageScrolls.length) {
+                outPageScrolls[addDesktopButtonIndex] = outPageScrolls[firstViewIndex];
+            }
+        }
         if (DEBUG) {
             Log.d(TAG, "getPageScrolls - clearAllScroll: " + clearAllScroll);
         }
