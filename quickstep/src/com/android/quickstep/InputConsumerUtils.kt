@@ -76,7 +76,12 @@ object InputConsumerUtils {
         val bubbleControllers = tac?.bubbleControllers
         if (bubbleControllers != null && BubbleBarInputConsumer.isEventOnBubbles(tac, event)) {
             val consumer: InputConsumer =
-                BubbleBarInputConsumer(context, bubbleControllers, inputMonitorCompat)
+                BubbleBarInputConsumer(
+                    context,
+                    gestureState.displayId,
+                    bubbleControllers,
+                    inputMonitorCompat,
+                )
             logInputConsumerSelectionReason(
                 consumer,
                 newCompoundString("event is on bubbles, creating new input consumer"),
@@ -285,7 +290,13 @@ object InputConsumerUtils {
                             "%ssystem dialog is showing, using SysUiOverlayInputConsumer",
                             SUBSTRING_PREFIX,
                         )
-                base = SysUiOverlayInputConsumer(context, deviceState, inputMonitorCompat)
+                base =
+                    SysUiOverlayInputConsumer(
+                        context,
+                        gestureState.displayId,
+                        deviceState,
+                        inputMonitorCompat,
+                    )
             }
 
             if (
@@ -299,7 +310,13 @@ object InputConsumerUtils {
                             "%sTrackpad 3-finger gesture, using TrackpadStatusBarInputConsumer",
                             SUBSTRING_PREFIX,
                         )
-                base = TrackpadStatusBarInputConsumer(context, base, inputMonitorCompat)
+                base =
+                    TrackpadStatusBarInputConsumer(
+                        context,
+                        gestureState.displayId,
+                        base,
+                        inputMonitorCompat,
+                    )
             }
 
             if (deviceState.isScreenPinningActive) {
@@ -322,7 +339,14 @@ object InputConsumerUtils {
                     reasonPrefix,
                     SUBSTRING_PREFIX,
                 )
-                base = OneHandedModeInputConsumer(context, deviceState, base, inputMonitorCompat)
+                base =
+                    OneHandedModeInputConsumer(
+                        context,
+                        gestureState.displayId,
+                        deviceState,
+                        base,
+                        inputMonitorCompat,
+                    )
             }
 
             if (deviceState.isAccessibilityMenuAvailable) {
@@ -332,7 +356,14 @@ object InputConsumerUtils {
                     reasonPrefix,
                     SUBSTRING_PREFIX,
                 )
-                base = AccessibilityInputConsumer(context, deviceState, base, inputMonitorCompat)
+                base =
+                    AccessibilityInputConsumer(
+                        context,
+                        gestureState.displayId,
+                        deviceState,
+                        base,
+                        inputMonitorCompat,
+                    )
             }
         } else {
             val reasonPrefix = "device is not in gesture navigation mode"
@@ -354,7 +385,14 @@ object InputConsumerUtils {
                     reasonPrefix,
                     SUBSTRING_PREFIX,
                 )
-                base = OneHandedModeInputConsumer(context, deviceState, base, inputMonitorCompat)
+                base =
+                    OneHandedModeInputConsumer(
+                        context,
+                        gestureState.displayId,
+                        deviceState,
+                        base,
+                        inputMonitorCompat,
+                    )
             }
         }
         logInputConsumerSelectionReason(base, reasonString)

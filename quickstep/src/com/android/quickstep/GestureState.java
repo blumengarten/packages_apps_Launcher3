@@ -30,6 +30,7 @@ import static com.android.quickstep.util.ActiveGestureErrorDetector.GestureEvent
 
 import android.content.Intent;
 import android.os.SystemClock;
+import android.view.Display;
 import android.view.MotionEvent;
 import android.view.RemoteAnimationTarget;
 import android.window.TransitionInfo;
@@ -158,6 +159,7 @@ public class GestureState implements RecentsAnimationCallbacks.RecentsAnimationL
     private final BaseContainerInterface mContainerInterface;
     private final MultiStateCallback mStateCallback;
     private final int mGestureId;
+    private final int mDisplayId;
 
     public enum TrackpadGestureType {
         NONE,
@@ -190,7 +192,8 @@ public class GestureState implements RecentsAnimationCallbacks.RecentsAnimationL
     private boolean mHandlingAtomicEvent;
     private boolean mIsInExtendedSlopRegion;
 
-    public GestureState(OverviewComponentObserver componentObserver, int gestureId) {
+    public GestureState(OverviewComponentObserver componentObserver, int displayId, int gestureId) {
+        mDisplayId = displayId;
         mHomeIntent = componentObserver.getHomeIntent();
         mOverviewIntent = componentObserver.getOverviewIntent();
         mContainerInterface = componentObserver.getContainerInterface();
@@ -200,6 +203,7 @@ public class GestureState implements RecentsAnimationCallbacks.RecentsAnimationL
     }
 
     public GestureState(GestureState other) {
+        mDisplayId = other.mDisplayId;
         mHomeIntent = other.mHomeIntent;
         mOverviewIntent = other.mOverviewIntent;
         mContainerInterface = other.mContainerInterface;
@@ -214,6 +218,7 @@ public class GestureState implements RecentsAnimationCallbacks.RecentsAnimationL
 
     public GestureState() {
         // Do nothing, only used for initializing the gesture state prior to user unlock
+        mDisplayId = Display.DEFAULT_DISPLAY;
         mHomeIntent = new Intent();
         mOverviewIntent = new Intent();
         mContainerInterface = null;
@@ -282,6 +287,13 @@ public class GestureState implements RecentsAnimationCallbacks.RecentsAnimationL
      */
     public int getGestureId() {
         return mGestureId;
+    }
+
+    /**
+     * @return the id for the display this particular gesture was performed on.
+     */
+    public int getDisplayId() {
+        return mDisplayId;
     }
 
     /**
@@ -545,6 +557,7 @@ public class GestureState implements RecentsAnimationCallbacks.RecentsAnimationL
 
     public void dump(String prefix, PrintWriter pw) {
         pw.println(prefix + "GestureState:");
+        pw.println(prefix + "\tdisplayID=" + mDisplayId);
         pw.println(prefix + "\tgestureID=" + mGestureId);
         pw.println(prefix + "\trunningTask=" + mRunningTask);
         pw.println(prefix + "\tendTarget=" + mEndTarget);

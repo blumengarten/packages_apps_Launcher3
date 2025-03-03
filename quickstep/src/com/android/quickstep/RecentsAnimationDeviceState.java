@@ -325,13 +325,6 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
     }
 
     /**
-     * @return the display id for the display that Launcher is running on.
-     */
-    public int getDisplayId() {
-        return DEFAULT_DISPLAY;
-    }
-
-    /**
      * @return whether the user has completed setup wizard
      */
     public boolean isUserSetupComplete() {

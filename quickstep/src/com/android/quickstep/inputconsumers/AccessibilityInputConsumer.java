@@ -56,9 +56,13 @@ public class AccessibilityInputConsumer extends DelegateInputConsumer {
     private float mDownY;
     private float mTotalY;
 
-    public AccessibilityInputConsumer(Context context, RecentsAnimationDeviceState deviceState,
-            InputConsumer delegate, InputMonitorCompat inputMonitor) {
-        super(delegate, inputMonitor);
+    public AccessibilityInputConsumer(
+            Context context,
+            int displayId,
+            RecentsAnimationDeviceState deviceState,
+            InputConsumer delegate,
+            InputMonitorCompat inputMonitor) {
+        super(displayId, delegate, inputMonitor);
         mContext = context;
         mVelocityTracker = VelocityTracker.obtain();
         mMinGestureDistance = context.getResources()

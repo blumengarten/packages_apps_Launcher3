@@ -40,6 +40,7 @@ import static com.android.systemui.shared.system.ActivityManagerWrapper.CLOSE_SY
 
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.IIntentReceiver;
 import android.content.IIntentSender;
 import android.content.Intent;
@@ -57,6 +58,7 @@ import android.view.Display;
 import android.view.InputDevice;
 import android.view.InputEvent;
 import android.view.MotionEvent;
+import android.window.DesktopModeFlags;
 
 import androidx.annotation.BinderThread;
 import androidx.annotation.NonNull;
@@ -139,6 +141,9 @@ public class TouchInteractionService extends Service {
 
     private static final ConstantItem<Boolean> HAS_ENABLED_QUICKSTEP_ONCE = backedUpItem(
             "launcher.has_enabled_quickstep_once", false, EncryptionType.ENCRYPTED);
+
+    private static final DesktopModeFlags.DesktopModeFlag ENABLE_GESTURE_NAV_ON_CONNECTED_DISPLAYS =
+            new DesktopModeFlags.DesktopModeFlag(Flags::enableGestureNavOnConnectedDisplays, false);
 
     private final TISBinder mTISBinder = new TISBinder(this);
 
@@ -555,6 +560,7 @@ public class TouchInteractionService extends Service {
     private @Nullable ResetGestureInputConsumer mResetGestureInputConsumer;
     private GestureState mGestureState = DEFAULT_STATE;
 
+    private InputMonitorDisplayModel mInputMonitorDisplayModel;
     private InputMonitorCompat mInputMonitorCompat;
     private InputEventReceiver mInputEventReceiver;
 
@@ -604,9 +610,34 @@ public class TouchInteractionService extends Service {
         ScreenOnTracker.INSTANCE.get(this).addListener(mScreenOnListener);
     }
 
+    @Nullable
+    private InputEventReceiver getInputEventReceiver(int displayId) {
+        if (ENABLE_GESTURE_NAV_ON_CONNECTED_DISPLAYS.isTrue()) {
+            InputMonitorResource inputMonitorResource = mInputMonitorDisplayModel == null
+                    ? null : mInputMonitorDisplayModel.getDisplayResource(displayId);
+            return inputMonitorResource == null ? null : inputMonitorResource.inputEventReceiver;
+        }
+        return mInputEventReceiver;
+    }
+
+    @Nullable
+    private InputMonitorCompat getInputMonitorCompat(int displayId) {
+        if (ENABLE_GESTURE_NAV_ON_CONNECTED_DISPLAYS.isTrue()) {
+            InputMonitorResource inputMonitorResource = mInputMonitorDisplayModel == null
+                    ? null : mInputMonitorDisplayModel.getDisplayResource(displayId);
+            return inputMonitorResource == null ? null : inputMonitorResource.inputMonitorCompat;
+        }
+        return mInputMonitorCompat;
+    }
+
     private void disposeEventHandlers(String reason) {
         Log.d(TAG, "disposeEventHandlers: Reason: " + reason
                 + " instance=" + System.identityHashCode(this));
+        if (ENABLE_GESTURE_NAV_ON_CONNECTED_DISPLAYS.isTrue()) {
+            if (mInputMonitorDisplayModel == null) return;
+            mInputMonitorDisplayModel.destroy();
+            return;
+        }
         if (mInputEventReceiver != null) {
             mInputEventReceiver.dispose();
             mInputEventReceiver = null;
@@ -625,10 +656,13 @@ public class TouchInteractionService extends Service {
                 && (mTrackpadsConnected.isEmpty())) {
             return;
         }
-
-        mInputMonitorCompat = new InputMonitorCompat("swipe-up", mDeviceState.getDisplayId());
-        mInputEventReceiver = mInputMonitorCompat.getInputReceiver(Looper.getMainLooper(),
-                mMainChoreographer, this::onInputEvent);
+        if (ENABLE_GESTURE_NAV_ON_CONNECTED_DISPLAYS.isTrue()) {
+            mInputMonitorDisplayModel = new InputMonitorDisplayModel(this);
+        } else {
+            mInputMonitorCompat = new InputMonitorCompat("swipe-up", Display.DEFAULT_DISPLAY);
+            mInputEventReceiver = mInputMonitorCompat.getInputReceiver(Looper.getMainLooper(),
+                    mMainChoreographer, this::onInputEvent);
+        }
 
         mRotationTouchHelper.updateGestureTouchRegions();
     }
@@ -787,8 +821,9 @@ public class TouchInteractionService extends Service {
     }
 
     private void onInputEvent(InputEvent ev) {
+        int displayId = ev.getDisplayId();
         if (!(ev instanceof MotionEvent)) {
-            ActiveGestureProtoLogProxy.logUnknownInputEvent(ev.toString());
+            ActiveGestureProtoLogProxy.logUnknownInputEvent(displayId, ev.toString());
             return;
         }
         MotionEvent event = (MotionEvent) ev;
@@ -797,19 +832,19 @@ public class TouchInteractionService extends Service {
                 TestProtocol.SEQUENCE_TIS, "TouchInteractionService.onInputEvent", event);
 
         if (!LockedUserState.get(this).isUserUnlocked()) {
-            ActiveGestureProtoLogProxy.logOnInputEventUserLocked();
+            ActiveGestureProtoLogProxy.logOnInputEventUserLocked(displayId);
             return;
         }
 
         NavigationMode currentNavMode = mDeviceState.getMode();
         if (mGestureStartNavMode != null && mGestureStartNavMode != currentNavMode) {
             ActiveGestureProtoLogProxy.logOnInputEventNavModeSwitched(
-                    mGestureStartNavMode.name(), currentNavMode.name());
+                    displayId, mGestureStartNavMode.name(), currentNavMode.name());
             event.setAction(ACTION_CANCEL);
         } else if (mDeviceState.isButtonNavMode()
                 && !mDeviceState.supportsAssistantGestureInButtonNav()
                 && !isTrackpadMotionEvent(event)) {
-            ActiveGestureProtoLogProxy.logOnInputEventThreeButtonNav();
+            ActiveGestureProtoLogProxy.logOnInputEventThreeButtonNav(displayId);
             return;
         }
 
@@ -825,11 +860,14 @@ public class TouchInteractionService extends Service {
             }
             if (mTaskAnimationManager.shouldIgnoreMotionEvents()) {
                 if (action == ACTION_DOWN || isHoverActionWithoutConsumer) {
-                    ActiveGestureProtoLogProxy.logOnInputIgnoringFollowingEvents();
+                    ActiveGestureProtoLogProxy.logOnInputIgnoringFollowingEvents(displayId);
                 }
                 return;
             }
         }
+
+        InputMonitorCompat inputMonitorCompat = getInputMonitorCompat(displayId);
+        InputEventReceiver inputEventReceiver = getInputEventReceiver(displayId);
 
         if (action == ACTION_DOWN || isHoverActionWithoutConsumer) {
             mGestureStartNavMode = currentNavMode;
@@ -857,10 +895,14 @@ public class TouchInteractionService extends Service {
                 if (mDeviceState.canTriggerAssistantAction(event)) {
                     reasonString.append(" and event can trigger assistant action, "
                             + "consuming gesture for assistant action");
-                    mGestureState =
-                            createGestureState(mGestureState, getTrackpadGestureType(event));
+                    mGestureState = createGestureState(
+                            displayId, mGestureState, getTrackpadGestureType(event));
                     mUncheckedConsumer = tryCreateAssistantInputConsumer(
-                            this, mDeviceState, mInputMonitorCompat, mGestureState, event);
+                            this,
+                            mDeviceState,
+                            inputMonitorCompat,
+                            mGestureState,
+                            event);
                 } else {
                     reasonString.append(" but event cannot trigger Assistant, "
                             + "consuming gesture as no-op");
@@ -875,8 +917,8 @@ public class TouchInteractionService extends Service {
                 // Clone the previous gesture state since onConsumerAboutToBeSwitched might trigger
                 // onConsumerInactive and wipe the previous gesture state
                 GestureState prevGestureState = new GestureState(mGestureState);
-                GestureState newGestureState = createGestureState(mGestureState,
-                        getTrackpadGestureType(event));
+                GestureState newGestureState = createGestureState(
+                        displayId, mGestureState, getTrackpadGestureType(event));
                 mConsumer.onConsumerAboutToBeSwitched();
                 mGestureState = newGestureState;
                 mConsumer = newConsumer(
@@ -887,10 +929,10 @@ public class TouchInteractionService extends Service {
                         prevGestureState,
                         mGestureState,
                         mTaskAnimationManager,
-                        mInputMonitorCompat,
+                        inputMonitorCompat,
                         getSwipeUpHandlerFactory(),
                         this::onConsumerInactive,
-                        mInputEventReceiver,
+                        inputEventReceiver,
                         mTaskbarManager,
                         mSwipeUpProxyProvider,
                         mOverviewCommandHelper,
@@ -903,18 +945,19 @@ public class TouchInteractionService extends Service {
                                 + "consuming gesture for assistant action"
                         : "event is a trackpad multi-finger swipe and event can trigger assistant "
                                 + "action, consuming gesture for assistant action");
-                mGestureState = createGestureState(mGestureState, getTrackpadGestureType(event));
+                mGestureState = createGestureState(
+                        displayId, mGestureState, getTrackpadGestureType(event));
                 // Do not change mConsumer as if there is an ongoing QuickSwitch gesture, we
                 // should not interrupt it. QuickSwitch assumes that interruption can only
                 // happen if the next gesture is also quick switch.
                 mUncheckedConsumer = tryCreateAssistantInputConsumer(
-                        this, mDeviceState, mInputMonitorCompat, mGestureState, event);
+                        this, mDeviceState, inputMonitorCompat, mGestureState, event);
             } else if (mDeviceState.canTriggerOneHandedAction(event)) {
                 reasonString.append("event can trigger one-handed action, "
                         + "consuming gesture for one-handed action");
                 // Consume gesture event for triggering one handed feature.
-                mUncheckedConsumer = new OneHandedModeInputConsumer(this, mDeviceState,
-                        InputConsumer.NO_OP, mInputMonitorCompat);
+                mUncheckedConsumer = new OneHandedModeInputConsumer(
+                        this, displayId, mDeviceState, InputConsumer.NO_OP, inputMonitorCompat);
             } else {
                 mUncheckedConsumer = InputConsumer.NO_OP;
             }
@@ -929,25 +972,28 @@ public class TouchInteractionService extends Service {
         if (mUncheckedConsumer != InputConsumer.NO_OP) {
             switch (action) {
                 case ACTION_DOWN:
-                    ActiveGestureProtoLogProxy.logOnInputEventActionDown(reasonString);
+                    ActiveGestureProtoLogProxy.logOnInputEventActionDown(displayId, reasonString);
                     // fall through
                 case ACTION_UP:
                     ActiveGestureProtoLogProxy.logOnInputEventActionUp(
                             (int) event.getRawX(),
                             (int) event.getRawY(),
                             action,
-                            MotionEvent.classificationToString(event.getClassification()));
+                            MotionEvent.classificationToString(event.getClassification()),
+                            displayId);
                     break;
                 case ACTION_MOVE:
                     ActiveGestureProtoLogProxy.logOnInputEventActionMove(
                             MotionEvent.actionToString(action),
                             MotionEvent.classificationToString(event.getClassification()),
-                            event.getPointerCount());
+                            event.getPointerCount(),
+                            displayId);
                     break;
                 default: {
                     ActiveGestureProtoLogProxy.logOnInputEventGenericAction(
                             MotionEvent.actionToString(action),
-                            MotionEvent.classificationToString(event.getClassification()));
+                            MotionEvent.classificationToString(event.getClassification()),
+                            displayId);
                 }
             }
         }
@@ -971,7 +1017,7 @@ public class TouchInteractionService extends Service {
         }
 
         if (cleanUpConsumer) {
-            reset();
+            reset(displayId);
         }
         traceToken.close();
     }
@@ -990,13 +1036,15 @@ public class TouchInteractionService extends Service {
         return event.isHoverEvent() && event.getSource() == InputDevice.SOURCE_MOUSE;
     }
 
-    public GestureState createGestureState(GestureState previousGestureState,
+    public GestureState createGestureState(
+            int displayId,
+            GestureState previousGestureState,
             GestureState.TrackpadGestureType trackpadGestureType) {
         final GestureState gestureState;
         TopTaskTracker.CachedTaskInfo taskInfo;
         if (mTaskAnimationManager.isRecentsAnimationRunning()) {
-            gestureState = new GestureState(mOverviewComponentObserver,
-                    ActiveGestureLog.INSTANCE.getLogId());
+            gestureState = new GestureState(
+                    mOverviewComponentObserver, displayId, ActiveGestureLog.INSTANCE.getLogId());
             TopTaskTracker.CachedTaskInfo previousTaskInfo = previousGestureState.getRunningTask();
             // previousTaskInfo can be null iff previousGestureState == GestureState.DEFAULT_STATE
             taskInfo = previousTaskInfo != null
@@ -1007,7 +1055,9 @@ public class TouchInteractionService extends Service {
             gestureState.updatePreviouslyAppearedTaskIds(
                     previousGestureState.getPreviouslyAppearedTaskIds());
         } else {
-            gestureState = new GestureState(mOverviewComponentObserver,
+            gestureState = new GestureState(
+                    mOverviewComponentObserver,
+                    displayId,
                     ActiveGestureLog.INSTANCE.incrementLogId());
             taskInfo = TopTaskTracker.INSTANCE.get(this).getCachedTopTask(false);
             gestureState.updateRunningTask(taskInfo);
@@ -1035,17 +1085,18 @@ public class TouchInteractionService extends Service {
      */
     private void onConsumerInactive(InputConsumer caller) {
         if (mConsumer != null && mConsumer.getActiveConsumerInHierarchy() == caller) {
-            reset();
+            reset(caller.getDisplayId());
         }
     }
 
-    private void reset() {
+    private void reset(int displayId) {
         mConsumer = mUncheckedConsumer = getDefaultInputConsumer();
         mGestureState = DEFAULT_STATE;
         // By default, use batching of the input events, but check receiver before using in the rare
         // case that the monitor was disposed before the swipe settled
-        if (mInputEventReceiver != null) {
-            mInputEventReceiver.setBatchingEnabled(true);
+        InputEventReceiver inputEventReceiver = getInputEventReceiver(displayId);
+        if (inputEventReceiver != null) {
+            inputEventReceiver.setBatchingEnabled(true);
         }
     }
 
@@ -1125,6 +1176,11 @@ public class TouchInteractionService extends Service {
         pw.println("Input state:");
         pw.println("\tmInputMonitorCompat=" + mInputMonitorCompat);
         pw.println("\tmInputEventReceiver=" + mInputEventReceiver);
+        if (mInputMonitorDisplayModel == null) {
+            pw.println("\tmInputMonitorDisplayModel=null");
+        } else {
+            mInputMonitorDisplayModel.dump("\t", pw);
+        }
         DisplayController.INSTANCE.get(this).dump(pw);
         pw.println("TouchState:");
         RecentsViewContainer createdOverviewContainer = mOverviewComponentObserver == null ? null
@@ -1170,5 +1226,54 @@ public class TouchInteractionService extends Service {
         return new RecentsWindowSwipeHandler(this, mTaskAnimationManager,
                 gestureState, touchTimeMs, mTaskAnimationManager.isRecentsAnimationRunning(),
                 mInputConsumer, MSDLPlayerWrapper.INSTANCE.get(this));
+    }
+
+    /**
+     * Helper class that keeps track of external displays and prepares input monitors for each.
+     */
+    private class InputMonitorDisplayModel extends DisplayModel<InputMonitorResource> {
+
+        private InputMonitorDisplayModel(Context context) {
+            super(context);
+            registerDisplayListener();
+        }
+
+        @NonNull
+        @Override
+        public InputMonitorResource createDisplayResource(@NonNull Display display) {
+            return new InputMonitorResource(display.getDisplayId());
+        }
+    }
+
+    private class InputMonitorResource extends DisplayModel.DisplayResource {
+
+        private final int displayId;
+
+        private final InputMonitorCompat inputMonitorCompat;
+        private final InputEventReceiver inputEventReceiver;
+
+        private InputMonitorResource(int displayId) {
+            this.displayId = displayId;
+            inputMonitorCompat = new InputMonitorCompat("swipe-up", displayId);
+            inputEventReceiver = inputMonitorCompat.getInputReceiver(
+                    Looper.getMainLooper(),
+                    TouchInteractionService.this.mMainChoreographer,
+                    TouchInteractionService.this::onInputEvent);
+        }
+
+        @Override
+        public void cleanup() {
+            inputEventReceiver.dispose();
+            inputMonitorCompat.dispose();
+        }
+
+        @Override
+        public void dump(String prefix , PrintWriter writer) {
+            writer.println(prefix + "InputMonitorResource:");
+
+            writer.println(prefix + "\tdisplayId=" + displayId);
+            writer.println(prefix + "\tinputMonitorCompat=" + inputMonitorCompat);
+            writer.println(prefix + "\tinputEventReceiver=" + inputEventReceiver);
+        }
     }
 }
