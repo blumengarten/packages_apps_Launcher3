@@ -100,7 +100,6 @@ import com.android.systemui.shared.recents.model.ThumbnailData
 import com.android.systemui.shared.system.ActivityManagerWrapper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -511,7 +510,7 @@ constructor(
 
     private var viewModel: TaskViewModel? = null
     private val dispatcherProvider: DispatcherProvider by RecentsDependencies.inject()
-    private val coroutineScope by lazy { CoroutineScope(SupervisorJob() + dispatcherProvider.main) }
+    private val coroutineScope: CoroutineScope by RecentsDependencies.inject()
     private val coroutineJobs = mutableListOf<Job>()
 
     /**
@@ -740,8 +739,9 @@ constructor(
             // The TaskView lifecycle is starts the ViewModel during onBind, and cleans it in
             // onRecycle. So it should be initialized at this point. TaskView Lifecycle:
             // `bind` -> `onBind` ->  onAttachedToWindow() -> onDetachFromWindow -> onRecycle
-            coroutineJobs +=
-                coroutineScope.launch { viewModel!!.state.collectLatest(::updateTaskViewState) }
+            coroutineJobs += coroutineScope.launch(dispatcherProvider.main) {
+                viewModel!!.state.collectLatest(::updateTaskViewState)
+            }
         }
     }
 
