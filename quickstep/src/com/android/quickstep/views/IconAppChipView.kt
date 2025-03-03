@@ -428,7 +428,6 @@ constructor(
         private const val INDEX_CONTENT_ALPHA = 0
         private const val INDEX_COLOR_FILTER_ALPHA = 1
         private const val INDEX_MODAL_ALPHA = 2
-
         /** Used to hide the app chip for 90:10 flex split. */
         private const val INDEX_MINIMUM_RATIO_ALPHA = 3
 

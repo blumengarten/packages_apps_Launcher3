@@ -309,8 +309,10 @@ constructor(
     // progress: 0 = show icon and no insets; 1 = don't show icon and show full insets.
     protected var fullscreenProgress = 0f
         set(value) {
-            field = Utilities.boundToRange(value, 0f, 1f)
-            onFullscreenProgressChanged(field)
+            if (value != field) {
+                field = Utilities.boundToRange(value, 0f, 1f)
+                onFullscreenProgressChanged(field)
+            }
         }
 
     // gridProgress 0 = carousel; 1 = 2 row grid.
@@ -490,8 +492,10 @@ constructor(
     // 1 = The TaskView is settled and no longer transitioning
     private var settledProgress = 1f
         set(value) {
-            field = value
-            onSettledProgressUpdated(field)
+            if (value != field) {
+                field = value
+                onSettledProgressUpdated(field)
+            }
         }
 
     private val settledProgressPropertyFactory =
@@ -1687,7 +1691,9 @@ constructor(
 
     protected open fun onFullscreenProgressChanged(fullscreenProgress: Float) {
         taskContainers.forEach {
-            it.iconView.setVisibility(if (fullscreenProgress < 1) VISIBLE else INVISIBLE)
+            if (!enableOverviewIconMenu()) {
+                it.iconView.setVisibility(if (fullscreenProgress < 1) VISIBLE else INVISIBLE)
+            }
             it.overlay.setFullscreenProgress(fullscreenProgress)
         }
         settledProgressFullscreen =
