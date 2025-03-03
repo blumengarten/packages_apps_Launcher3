@@ -378,6 +378,29 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
     }
 
     /**
+     * Calculates the crop rect for desktop tasks given the current matrix.
+     */
+    private void calculateDesktopTaskCropRect() {
+        // The approach here is to map a rect that represents the untransformed thumbnail position
+        // using the current matrix. This will give us a rect that can be intersected with
+        // [mFullTaskSize]. Using the intersection, we then compute how much of the task window that
+        // needs to be cropped (which will be nothing if the window is entirely within the desktop).
+        mTempRectF.set(0, 0, mThumbnailPosition.width(), mThumbnailPosition.height());
+        mMatrix.mapRect(mTempRectF);
+
+        float offsetX = mTempRectF.left;
+        float offsetY = mTempRectF.top;
+        float scale = mThumbnailPosition.width() / mTempRectF.width();
+
+        if (mTempRectF.intersect(mFullTaskSize.left, mFullTaskSize.top, mFullTaskSize.right,
+                mFullTaskSize.bottom)) {
+            mTempRectF.offset(-offsetX, -offsetY);
+            mTempRectF.scale(scale);
+            mTempRectF.round(mTmpCropRect);
+        }
+    }
+
+    /**
      * Applies the rotation on the matrix to so that it maps from launcher coordinate space to
      * window coordinate space.
      */
@@ -442,7 +465,16 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
         mMatrix.postTranslate(mTaskRect.left, mTaskRect.top);
         if (mTaskRectTransform != null) {
             mMatrix.postConcat(mTaskRectTransform);
+
+            // Calculate cropping for desktop tasks. The order is important since it uses the
+            // current matrix. Therefore we calculate it here, after applying the task rect
+            // transform, but before applying scaling/translation that affects the whole
+            // recentsview.
+            if (mIsDesktopTask) {
+                calculateDesktopTaskCropRect();
+            }
         }
+
         mOrientationState.getOrientationHandler().setPrimary(mMatrix, MATRIX_POST_TRANSLATE,
                 taskPrimaryTranslation.value);
         mOrientationState.getOrientationHandler().setSecondary(mMatrix, MATRIX_POST_TRANSLATE,
