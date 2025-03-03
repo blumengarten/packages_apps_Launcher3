@@ -1112,9 +1112,6 @@ public abstract class AbsSwipeUpHandler<
     public void onGestureEnded(float endVelocityPxPerMs, PointF velocityPxPerMs) {
         float flingThreshold = mContext.getResources()
                 .getDimension(R.dimen.quickstep_fling_threshold_speed);
-        Log.d(TAG, "onGestureEnded: mGestureStarted=" + mGestureStarted
-                + ", mIsMotionPaused=" + mIsMotionPaused
-                + ", flingThresholdPassed=" + (Math.abs(endVelocityPxPerMs) > flingThreshold));
         boolean isFling = mGestureStarted && !mIsMotionPaused
                 && Math.abs(endVelocityPxPerMs) > flingThreshold;
         mStateCallback.setStateOnUiThread(STATE_GESTURE_COMPLETED);
@@ -1263,12 +1260,12 @@ public abstract class AbsSwipeUpHandler<
                 dpiFromPx(velocityPxPerMs.x),
                 dpiFromPx(velocityPxPerMs.y),
                 Math.toDegrees(Math.atan2(-velocityPxPerMs.y, velocityPxPerMs.x)));
+
         if (mGestureState.isHandlingAtomicEvent()) {
             // Button mode, this is only used to go to recents.
             return RECENTS;
         }
 
-        Log.d(TAG, "calculateEndTarget: isCancel=" + isCancel + ", isFlingY=" + isFlingY);
         GestureEndTarget endTarget;
         if (isCancel) {
             endTarget = LAST_TASK;
@@ -1278,7 +1275,6 @@ public abstract class AbsSwipeUpHandler<
             endTarget = calculateEndTargetForNonFling(velocityPxPerMs);
         }
 
-        Log.d(TAG, "calculateEndTarget: endTarget(1)=" + endTarget);
         if (mDeviceState.isOverviewDisabled() && endTarget == RECENTS) {
             return LAST_TASK;
         }
@@ -1297,7 +1293,6 @@ public abstract class AbsSwipeUpHandler<
                 return LAST_TASK;
             }
         }
-        Log.d(TAG, "calculateEndTarget: endTarget(2)=" + endTarget);
         return endTarget;
     }
 
@@ -1306,12 +1301,9 @@ public abstract class AbsSwipeUpHandler<
         final boolean willGoToNewTask =
                 isScrollingToNewTask() && Math.abs(velocity.x) > Math.abs(endVelocity);
         final boolean isSwipeUp = endVelocity < 0;
-        Log.d(TAG, "calculateEndTargetForFlingY: willGoToNewTask=" + willGoToNewTask
-                + ", isSwipeUp=" + isSwipeUp);
         if (!isSwipeUp) {
             final boolean isCenteredOnNewTask = mRecentsView != null
                     && mRecentsView.getDestinationPage() != mRecentsView.getRunningTaskIndex();
-            Log.d(TAG, "calculateEndTargetForFlingY: isCenteredOnNewTask=" + isCenteredOnNewTask);
             return willGoToNewTask || isCenteredOnNewTask ? NEW_TASK : LAST_TASK;
         }
 
@@ -1324,9 +1316,6 @@ public abstract class AbsSwipeUpHandler<
         // Fully gestural mode.
         final boolean isFlingX = Math.abs(velocity.x) > mContext.getResources()
                 .getDimension(R.dimen.quickstep_fling_threshold_speed);
-        Log.d(TAG, "calculateEndTargetForNonFling: isScrollingToNewTask=" + isScrollingToNewTask
-                + ", isFlingX=" + isFlingX
-                + ", mIsMotionPaused=" + mIsMotionPaused);
         if (isScrollingToNewTask && isFlingX) {
             // Flinging towards new task takes precedence over mIsMotionPaused (which only
             // checks y-velocity).
@@ -1336,7 +1325,6 @@ public abstract class AbsSwipeUpHandler<
         } else if (isScrollingToNewTask) {
             return NEW_TASK;
         }
-        Log.d(TAG, "calculateEndTargetForNonFling: mCanSlowSwipeGoHome=" + mCanSlowSwipeGoHome);
         return velocity.y < 0 && mCanSlowSwipeGoHome ? HOME : LAST_TASK;
     }
 
