@@ -983,11 +983,14 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
     @Override
     public void setTextColor(ColorStateList colors) {
-        mTextColor = (shouldDrawAppContrastTile() && !TextUtils.isEmpty(getText()))
-                ? PillColorProvider.getInstance(
-                getContext()).getAppTitleTextPaint().getColor()
-                : colors.getDefaultColor();
-        mTextColorStateList = colors;
+        if (shouldDrawAppContrastTile()) {
+            mTextColor = PillColorProvider.getInstance(
+                    getContext()).getAppTitleTextPaint().getColor();
+        } else {
+            mTextColor = colors.getDefaultColor();
+            mTextColorStateList = colors;
+        }
+
         if (Float.compare(mTextAlpha, 1) == 0) {
             super.setTextColor(colors);
         } else {
