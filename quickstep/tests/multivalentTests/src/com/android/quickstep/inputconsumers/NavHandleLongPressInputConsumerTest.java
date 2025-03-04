@@ -311,6 +311,18 @@ public class NavHandleLongPressInputConsumerTest {
     }
 
     @Test
+    public void testTouchCancelWithoutTouchDown() {
+        mUnderTest.onMotionEvent(generateCenteredMotionEvent(ACTION_CANCEL));
+
+        assertThat(mUnderTest.mState).isEqualTo(DelegateInputConsumer.STATE_INACTIVE);
+        assertFalse(mLongPressTriggered.get());
+        verify(mNavHandleLongPressHandler, never()).onTouchStarted(any());
+        verify(mNavHandleLongPressHandler, times(1)).onTouchFinished(any(), any());
+        verifyNoMoreInteractions(mStatsLogger);
+        verifyNoMoreInteractions(mStatsLatencyLogger);
+    }
+
+    @Test
     public void testLongPressAbortedByTouchSlopPassedVertically() {
         mUnderTest.onMotionEvent(generateCenteredMotionEvent(ACTION_DOWN));
         sleep(MIN_TIME_TO_LOG_ABANDON_MS);

@@ -433,18 +433,17 @@ public class TaplTestsQuickstep extends AbstractQuickStepTest {
                 (Math.abs(recentsView.getTopRowTaskCountForTablet()
                         - recentsView.getBottomRowTaskCountForTablet()) <= 1)));
 
-        // TODO(b/308841019): Re-enable after fixing Overview jank when dismiss
-//        // Test dismissing more tasks.
-//        assertIsInState(
-//                "Launcher internal state didn't remain in Overview", ExpectedState.OVERVIEW);
-//        overview.getCurrentTask().dismiss();
-//        assertIsInState(
-//                "Launcher internal state didn't remain in Overview", ExpectedState.OVERVIEW);
-//        overview.getCurrentTask().dismiss();
-//        runOnRecentsView(recentsView -> assertTrue(
-//                "Grid did not rebalance after multiple dismissals",
-//                (Math.abs(recentsView.getTopRowTaskCountForTablet()
-//                        - recentsView.getBottomRowTaskCountForTablet()) <= 1)));
+        // Test dismissing more tasks.
+        assertIsInState(
+                "Launcher internal state didn't remain in Overview", ExpectedState.OVERVIEW);
+        overview.getCurrentTask().dismiss();
+        assertIsInState(
+                "Launcher internal state didn't remain in Overview", ExpectedState.OVERVIEW);
+        overview.getCurrentTask().dismiss();
+        runOnRecentsView(recentsView -> assertTrue(
+                "Grid did not rebalance after multiple dismissals",
+                (Math.abs(recentsView.getTopRowTaskCountForTablet()
+                        - recentsView.getBottomRowTaskCountForTablet()) <= 1)));
 
         // Test dismissing all tasks.
         mLauncher.goHome().switchToOverview().dismissAllTasks();

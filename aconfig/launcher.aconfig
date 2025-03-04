@@ -636,3 +636,20 @@ flag {
   description: "Enables gesture navigation handling on connected displays"
   bug: "382130680"
 }
+
+flag {
+  name: "enable_taskbar_behind_shade"
+  namespace: "lse_desktop_experience"
+  description: "Keeps taskbar behind notification shade when its pulled down"
+  bug: "343194358"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+}
+
+flag {
+  name: "enable_scalability_for_desktop_experience"
+  namespace: "launcher"
+  description: "Enable more grid scale options on the launcher for desktop experience"
+  bug: "375491272"
+}

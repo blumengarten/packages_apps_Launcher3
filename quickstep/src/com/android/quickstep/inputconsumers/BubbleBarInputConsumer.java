@@ -57,12 +57,19 @@ public class BubbleBarInputConsumer implements InputConsumer {
     private final int mTouchSlop;
     private final PointF mDownPos = new PointF();
     private final PointF mLastPos = new PointF();
+
+    private final int mDisplayId;
+
     private long mDownTime;
     private final long mTimeForLongPress;
     private int mActivePointerId = INVALID_POINTER_ID;
 
-    public BubbleBarInputConsumer(Context context, BubbleControllers bubbleControllers,
+    public BubbleBarInputConsumer(
+            Context context,
+            int displayId,
+            BubbleControllers bubbleControllers,
             InputMonitorCompat inputMonitorCompat) {
+        mDisplayId = displayId;
         mBubbleStashController = bubbleControllers.bubbleStashController;
         mBubbleBarViewController = bubbleControllers.bubbleBarViewController;
         mBubbleBarSwipeController = bubbleControllers.bubbleBarSwipeController.orElse(null);
@@ -75,6 +82,11 @@ public class BubbleBarInputConsumer implements InputConsumer {
     @Override
     public int getType() {
         return TYPE_BUBBLE_BAR;
+    }
+
+    @Override
+    public int getDisplayId() {
+        return mDisplayId;
     }
 
     @Override

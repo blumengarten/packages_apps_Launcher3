@@ -191,6 +191,8 @@ public class TaskbarLauncherStateController {
 
     private boolean mIsQsbInline;
 
+    private RecentsAnimationCallbacks mRecentsAnimationCallbacks;
+
     private final DeviceProfile.OnDeviceProfileChangeListener mOnDeviceProfileChangeListener =
             new DeviceProfile.OnDeviceProfileChangeListener() {
                 @Override
@@ -295,6 +297,11 @@ public class TaskbarLauncherStateController {
         mIsDestroyed = true;
         mCanSyncViews = false;
 
+        if (mRecentsAnimationCallbacks != null) {
+            mRecentsAnimationCallbacks.removeListener(mTaskBarRecentsAnimationListener);
+            mRecentsAnimationCallbacks = null;
+        }
+
         mIconAlignment.finishAnimation();
 
         mLauncher.getHotseat().setIconsAlpha(1f, ALPHA_CHANNEL_TASKBAR_ALIGNMENT);
@@ -315,6 +322,7 @@ public class TaskbarLauncherStateController {
         // If going to overview, stash the task bar
         // If going home, align the icons to hotseat
         AnimatorSet animatorSet = new AnimatorSet();
+        mRecentsAnimationCallbacks = callbacks;
 
         // Update stashed flags first to ensure goingToUnstashedLauncherState() returns correctly.
         TaskbarStashController stashController = mControllers.taskbarStashController;

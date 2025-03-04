@@ -100,7 +100,6 @@ import com.android.systemui.shared.recents.model.ThumbnailData
 import com.android.systemui.shared.system.ActivityManagerWrapper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -309,8 +308,10 @@ constructor(
     // progress: 0 = show icon and no insets; 1 = don't show icon and show full insets.
     protected var fullscreenProgress = 0f
         set(value) {
-            field = Utilities.boundToRange(value, 0f, 1f)
-            onFullscreenProgressChanged(field)
+            if (value != field) {
+                field = Utilities.boundToRange(value, 0f, 1f)
+                onFullscreenProgressChanged(field)
+            }
         }
 
     // gridProgress 0 = carousel; 1 = 2 row grid.
@@ -490,8 +491,10 @@ constructor(
     // 1 = The TaskView is settled and no longer transitioning
     private var settledProgress = 1f
         set(value) {
-            field = value
-            onSettledProgressUpdated(field)
+            if (value != field) {
+                field = value
+                onSettledProgressUpdated(field)
+            }
         }
 
     private val settledProgressPropertyFactory =
@@ -511,7 +514,7 @@ constructor(
 
     private var viewModel: TaskViewModel? = null
     private val dispatcherProvider: DispatcherProvider by RecentsDependencies.inject()
-    private val coroutineScope by lazy { CoroutineScope(SupervisorJob() + dispatcherProvider.main) }
+    private val coroutineScope: CoroutineScope by RecentsDependencies.inject()
     private val coroutineJobs = mutableListOf<Job>()
 
     /**
@@ -740,8 +743,9 @@ constructor(
             // The TaskView lifecycle is starts the ViewModel during onBind, and cleans it in
             // onRecycle. So it should be initialized at this point. TaskView Lifecycle:
             // `bind` -> `onBind` ->  onAttachedToWindow() -> onDetachFromWindow -> onRecycle
-            coroutineJobs +=
-                coroutineScope.launch { viewModel!!.state.collectLatest(::updateTaskViewState) }
+            coroutineJobs += coroutineScope.launch(dispatcherProvider.main) {
+                viewModel!!.state.collectLatest(::updateTaskViewState)
+            }
         }
     }
 
@@ -1687,7 +1691,9 @@ constructor(
 
     protected open fun onFullscreenProgressChanged(fullscreenProgress: Float) {
         taskContainers.forEach {
-            it.iconView.setVisibility(if (fullscreenProgress < 1) VISIBLE else INVISIBLE)
+            if (!enableOverviewIconMenu()) {
+                it.iconView.setVisibility(if (fullscreenProgress < 1) VISIBLE else INVISIBLE)
+            }
             it.overlay.setFullscreenProgress(fullscreenProgress)
         }
         settledProgressFullscreen =

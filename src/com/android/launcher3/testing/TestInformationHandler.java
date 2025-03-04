@@ -214,6 +214,10 @@ public class TestInformationHandler implements ResourceBasedOverride {
                         ENABLE_TASKBAR_NAVBAR_UNIFICATION);
                 return response;
 
+            case TestProtocol.REQUEST_TASKBAR_SHOWN_ON_HOME:
+                response.putBoolean(TEST_INFO_RESPONSE_FIELD,
+                        DisplayController.showLockedTaskbarOnHome(mContext));
+                return response;
             case TestProtocol.REQUEST_NUM_ALL_APPS_COLUMNS:
                 response.putInt(TestProtocol.TEST_INFO_RESPONSE_FIELD,
                         mDeviceProfile.numShownAllAppsColumns);
