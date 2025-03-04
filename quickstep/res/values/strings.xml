@@ -337,6 +337,13 @@
     <!-- Accessibility label for quick switch tiles showing split tasks [CHAR LIMIT=NONE] -->
     <string name="quick_switch_split_task"><xliff:g id="app_name_1" example="Chrome">%1$s</xliff:g> and <xliff:g id="app_name_2" example="Gmail">%2$s</xliff:g></string>
 
+    <!-- Accessibility label for an arrow button within quick switch UI that scrolls the quick switch content left
+        TODO(b/397975686): Make these translatable when verified by UX. -->
+    <string name="quick_switch_scroll_arrow_left" translatable="false">Scroll left</string>
+    <!-- Accessibility label for an arrow button within quick switch UI that scrolls the quick switch content right
+        TODO(b/397975686): Make these translatable when verified by UX. -->
+    <string name="quick_switch_scroll_arrow_right" translatable="false">Scroll right</string>
+
     <!-- Strings for bubble bar -->
     <!-- Fallback name for a bubble if it does have a title [CHAR_LIMIT=none] -->
     <string name="bubble_bar_bubble_fallback_description">Bubble</string>
