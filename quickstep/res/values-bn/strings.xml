@@ -139,6 +139,8 @@
     <string name="taskbar_overflow_a11y_title" msgid="7960342079198820179">"টাস্কবার ওভারফ্লো"</string>
     <string name="move_drop_target_top_or_left" msgid="2988702185049595807">"উপরে/বাঁদিকে সরান"</string>
     <string name="move_drop_target_bottom_or_right" msgid="5431393418797620162">"নিচে/ডানদিকে সরান"</string>
+    <!-- no translation found for open_app_as_a_bubble (6642626287247807473) -->
+    <skip />
     <string name="quick_switch_overflow" msgid="3679780650881041632">"{count,plural, =1{আরও অ্যাপ}one{আরও অ্যাপ}other{আরও অ্যাপ}}"</string>
     <string name="quick_switch_desktop" msgid="8393802056024499749">"ডেস্কটপ"</string>
     <string name="quick_switch_split_task" msgid="5598194724255333896">"<xliff:g id="APP_NAME_1">%1$s</xliff:g> ও <xliff:g id="APP_NAME_2">%2$s</xliff:g>"</string>
