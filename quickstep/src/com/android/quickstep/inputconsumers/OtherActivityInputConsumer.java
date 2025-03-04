@@ -483,7 +483,8 @@ public class OtherActivityInputConsumer extends ContextWrapper implements InputC
                                 : velocityYPxPerMs;
                 mInteractionHandler.updateDisplacement(getDisplacement(ev) - mStartDisplacement);
                 mInteractionHandler.onGestureEnded(velocityPxPerMs,
-                        new PointF(velocityXPxPerMs, velocityYPxPerMs));
+                        new PointF(velocityXPxPerMs, velocityYPxPerMs),
+                        Math.abs(mDownPos.x - mLastPos.x) > mTouchSlop);
             }
         } else {
             // Since we start touch tracking on DOWN, we may reach this state without actually

@@ -116,14 +116,14 @@ class LauncherSwipeHandlerV2Test {
     @Test
     fun goHomeFromAppByTrackpad_updateEduStats() {
         gestureState.setTrackpadGestureType(GestureState.TrackpadGestureType.THREE_FINGER)
-        underTest.onGestureEnded(flingSpeed, PointF())
+        underTest.onGestureEnded(flingSpeed, PointF(), /* horizontalTouchSlopPassed= */ false)
         verify(systemUiProxy)
             .updateContextualEduStats(/* isTrackpadGesture= */ eq(true), eq(GestureType.HOME))
     }
 
     @Test
     fun goHomeFromAppByTouch_updateEduStats() {
-        underTest.onGestureEnded(flingSpeed, PointF())
+        underTest.onGestureEnded(flingSpeed, PointF(), /* horizontalTouchSlopPassed= */ false)
         verify(systemUiProxy)
             .updateContextualEduStats(/* isTrackpadGesture= */ eq(false), eq(GestureType.HOME))
     }
