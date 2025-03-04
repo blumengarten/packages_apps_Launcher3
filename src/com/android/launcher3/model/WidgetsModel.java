@@ -19,8 +19,6 @@ import android.os.UserHandle;
 import android.util.Log;
 import android.util.Pair;
 
-import androidx.annotation.AnyThread;
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.collection.ArrayMap;
 
@@ -68,8 +66,6 @@ public class WidgetsModel {
 
     /* Map of widgets and shortcuts that are tracked per package. */
     private final Map<PackageItemInfo, List<WidgetItem>> mWidgetsByPackageItem = new HashMap<>();
-    @Nullable private Predicate<WidgetItem> mDefaultWidgetsFilter = null;
-    @Nullable private Predicate<WidgetItem> mPredictedWidgetsFilter = null;
     @Nullable private WidgetValidityCheckForPicker mWidgetValidityCheckForPicker = null;
 
     /**
@@ -126,37 +122,6 @@ public class WidgetsModel {
                 .entrySet().stream()
                 .filter(entry -> !entry.getValue().isEmpty())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-
-    /**
-     * Returns widget filter that can be applied to {@link WidgetItem}s to check if they can be
-     * shown in the default widgets list.
-     * <p>Returns null if filtering isn't available</p>
-     */
-    @AnyThread
-    public @Nullable Predicate<WidgetItem> getDefaultWidgetsFilter() {
-        return mDefaultWidgetsFilter;
-    }
-
-    /**
-     * Returns widget filter that can be applied to {@link WidgetItem}s to check if they can be
-     * part of widget predictions.
-     * <p>Returns null if filter isn't available</p>
-     */
-    @AnyThread
-    public @Nullable  Predicate<WidgetItem> getPredictedWidgetsFilter() {
-        return mPredictedWidgetsFilter;
-    }
-
-    /**
-     * Updates model with latest filter data in cache.
-     */
-    public void updateWidgetFilters(@NonNull WidgetsFilterDataProvider widgetsFilterDataProvider) {
-        if (!WIDGETS_ENABLED) {
-            return;
-        }
-        mDefaultWidgetsFilter = widgetsFilterDataProvider.getDefaultWidgetsFilter();
-        mPredictedWidgetsFilter = widgetsFilterDataProvider.getPredictedWidgetsFilter();
     }
 
     /**

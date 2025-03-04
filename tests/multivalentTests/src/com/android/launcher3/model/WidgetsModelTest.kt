@@ -43,7 +43,6 @@ import com.android.launcher3.widget.WidgetSections.NO_CATEGORY
 import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import java.util.function.Predicate
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
@@ -65,7 +64,6 @@ class WidgetsModelTest {
     @Mock private lateinit var appWidgetManager: AppWidgetManager
     @Mock private lateinit var app: LauncherAppState
     @Mock private lateinit var iconCacheMock: IconCache
-    @Mock private lateinit var widgetsFilterDataProvider: WidgetsFilterDataProvider
 
     private lateinit var context: Context
     private lateinit var idp: InvariantDeviceProfile
@@ -250,27 +248,6 @@ class WidgetsModelTest {
         }
 
         // No exception
-    }
-
-    @Test
-    fun updateWidgetFilters_setsFiltersCorrectly() {
-        val testDefaultWidgetFilter = Predicate<WidgetItem> { w -> w.widgetInfo != null }
-        whenever(widgetsFilterDataProvider.getDefaultWidgetsFilter())
-            .thenReturn(testDefaultWidgetFilter)
-        val testPredicatedWidgetFilter = Predicate<WidgetItem> { w -> w.widgetInfo != null }
-        whenever(widgetsFilterDataProvider.getPredictedWidgetsFilter())
-            .thenReturn(testPredicatedWidgetFilter)
-
-        underTest.updateWidgetFilters(widgetsFilterDataProvider)
-
-        assertThat(underTest.defaultWidgetsFilter).isEqualTo(testDefaultWidgetFilter)
-        assertThat(underTest.predictedWidgetsFilter).isEqualTo(testPredicatedWidgetFilter)
-    }
-
-    @Test
-    fun widgetFilters_nullInitially() {
-        assertThat(underTest.defaultWidgetsFilter).isNull()
-        assertThat(underTest.predictedWidgetsFilter).isNull()
     }
 
     private fun loadWidgets() {

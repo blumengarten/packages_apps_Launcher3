@@ -48,7 +48,6 @@ import com.google.common.truth.Truth.assertThat
 import dagger.BindsInstance
 import dagger.Component
 import java.util.concurrent.CountDownLatch
-import java.util.function.Predicate
 import junit.framework.Assert.assertEquals
 import org.junit.After
 import org.junit.Before
@@ -96,7 +95,6 @@ class LoaderTaskTest {
     @Mock private lateinit var modelDelegate: ModelDelegate
     @Mock private lateinit var launcherBinder: BaseLauncherBinder
     private lateinit var launcherModel: LauncherModel
-    @Mock private lateinit var widgetsFilterDataProvider: WidgetsFilterDataProvider
     @Mock private lateinit var transaction: LoaderTransaction
     @Mock private lateinit var iconCache: IconCache
     @Mock private lateinit var idleLock: LooperIdleLock
@@ -130,7 +128,6 @@ class LoaderTaskTest {
         `when`(launcherBinder.newIdleLock(any())).thenReturn(idleLock)
         `when`(idleLock.awaitLocked(1000)).thenReturn(false)
         `when`(iconCache.getUpdateHandler()).thenReturn(iconCacheUpdateHandler)
-        `when`(widgetsFilterDataProvider.getDefaultWidgetsFilter()).thenReturn(Predicate { true })
         context.initDaggerComponent(
             DaggerLoaderTaskTest_TestComponent.builder()
                 .bindUserCache(userCache)
@@ -160,14 +157,7 @@ class LoaderTaskTest {
             val mockUserHandles = arrayListOf<UserHandle>(MAIN_HANDLE)
             `when`(userCache.userProfiles).thenReturn(mockUserHandles)
             `when`(userCache.getUserInfo(MAIN_HANDLE)).thenReturn(UserIconInfo(MAIN_HANDLE, 1))
-            LoaderTask(
-                    app,
-                    bgAllAppsList,
-                    this,
-                    modelDelegate,
-                    launcherBinder,
-                    widgetsFilterDataProvider,
-                )
+            LoaderTask(app, bgAllAppsList, this, modelDelegate, launcherBinder)
                 .runSyncOnBackgroundThread()
             Truth.assertThat(
                     itemsIdMap
@@ -188,19 +178,11 @@ class LoaderTaskTest {
                 )
                 .isAtLeast(8)
             Truth.assertThat(itemsIdMap.size()).isAtLeast(40)
-            Truth.assertThat(widgetsModel.defaultWidgetsFilter).isNotNull()
         }
 
     @Test
     fun bindsLoadedDataCorrectly() {
-        LoaderTask(
-                app,
-                bgAllAppsList,
-                BgDataModel(),
-                modelDelegate,
-                launcherBinder,
-                widgetsFilterDataProvider,
-            )
+        LoaderTask(app, bgAllAppsList, BgDataModel(), modelDelegate, launcherBinder)
             .runSyncOnBackgroundThread()
 
         verify(launcherBinder).bindWorkspace(true, false)
@@ -209,7 +191,6 @@ class LoaderTaskTest {
         verify(launcherBinder).bindAllApps()
         verify(iconCacheUpdateHandler, times(4)).updateIcons(any(), any<CachingLogic<Any>>(), any())
         verify(launcherBinder).bindDeepShortcuts()
-        verify(widgetsFilterDataProvider).initPeriodicDataRefresh(any())
         verify(launcherBinder).bindWidgets()
         verify(modelDelegate).loadAndBindOtherItems(anyOrNull())
         verify(iconCacheUpdateHandler).finish()
@@ -227,15 +208,7 @@ class LoaderTaskTest {
             `when`(userManagerState?.isUserQuiet(MAIN_HANDLE)).thenReturn(true)
             `when`(userCache.getUserInfo(MAIN_HANDLE)).thenReturn(UserIconInfo(MAIN_HANDLE, 1))
 
-            LoaderTask(
-                    app,
-                    bgAllAppsList,
-                    this,
-                    modelDelegate,
-                    launcherBinder,
-                    widgetsFilterDataProvider,
-                    userManagerState,
-                )
+            LoaderTask(app, bgAllAppsList, this, modelDelegate, launcherBinder, userManagerState)
                 .runSyncOnBackgroundThread()
 
             verify(bgAllAppsList)
@@ -256,15 +229,7 @@ class LoaderTaskTest {
             `when`(userManagerState?.isUserQuiet(MAIN_HANDLE)).thenReturn(true)
             `when`(userCache.getUserInfo(MAIN_HANDLE)).thenReturn(UserIconInfo(MAIN_HANDLE, 3))
 
-            LoaderTask(
-                    app,
-                    bgAllAppsList,
-                    this,
-                    modelDelegate,
-                    launcherBinder,
-                    widgetsFilterDataProvider,
-                    userManagerState,
-                )
+            LoaderTask(app, bgAllAppsList, this, modelDelegate, launcherBinder, userManagerState)
                 .runSyncOnBackgroundThread()
 
             verify(bgAllAppsList)
@@ -303,14 +268,7 @@ class LoaderTaskTest {
         RestoreDbTask.setPending(spyContext)
 
         // When
-        LoaderTask(
-                app,
-                bgAllAppsList,
-                BgDataModel(),
-                modelDelegate,
-                launcherBinder,
-                widgetsFilterDataProvider,
-            )
+        LoaderTask(app, bgAllAppsList, BgDataModel(), modelDelegate, launcherBinder)
             .runSyncOnBackgroundThread()
 
         // Then
@@ -378,14 +336,7 @@ class LoaderTaskTest {
         Settings.Secure.putInt(spyContext.contentResolver, "launcher_broadcast_installed_apps", 0)
 
         // When
-        LoaderTask(
-                app,
-                bgAllAppsList,
-                BgDataModel(),
-                modelDelegate,
-                launcherBinder,
-                widgetsFilterDataProvider,
-            )
+        LoaderTask(app, bgAllAppsList, BgDataModel(), modelDelegate, launcherBinder)
             .runSyncOnBackgroundThread()
 
         // Then
@@ -424,14 +375,7 @@ class LoaderTaskTest {
         RestoreDbTask.setPending(spyContext)
 
         // When
-        LoaderTask(
-                app,
-                bgAllAppsList,
-                BgDataModel(),
-                modelDelegate,
-                launcherBinder,
-                widgetsFilterDataProvider,
-            )
+        LoaderTask(app, bgAllAppsList, BgDataModel(), modelDelegate, launcherBinder)
             .runSyncOnBackgroundThread()
 
         // Then
@@ -470,14 +414,7 @@ class LoaderTaskTest {
         RestoreDbTask.setPending(spyContext)
 
         // When
-        LoaderTask(
-                app,
-                bgAllAppsList,
-                BgDataModel(),
-                modelDelegate,
-                launcherBinder,
-                widgetsFilterDataProvider,
-            )
+        LoaderTask(app, bgAllAppsList, BgDataModel(), modelDelegate, launcherBinder)
             .runSyncOnBackgroundThread()
 
         // Then
@@ -507,15 +444,7 @@ class LoaderTaskTest {
             )
         val expectedAppInfo = AppInfo().apply { componentName = expectedComponent }
         // When
-        val loader =
-            LoaderTask(
-                app,
-                bgAllAppsList,
-                BgDataModel(),
-                modelDelegate,
-                launcherBinder,
-                widgetsFilterDataProvider,
-            )
+        val loader = LoaderTask(app, bgAllAppsList, BgDataModel(), modelDelegate, launcherBinder)
         val actualIconRequest =
             loader.getAppInfoIconRequestInfo(expectedAppInfo, activityInfo, workspaceIconRequests)
         // Then
@@ -545,15 +474,7 @@ class LoaderTaskTest {
             )
         val expectedAppInfo = AppInfo().apply { componentName = expectedComponent }
         // When
-        val loader =
-            LoaderTask(
-                app,
-                bgAllAppsList,
-                BgDataModel(),
-                modelDelegate,
-                launcherBinder,
-                widgetsFilterDataProvider,
-            )
+        val loader = LoaderTask(app, bgAllAppsList, BgDataModel(), modelDelegate, launcherBinder)
         val actualIconRequest =
             loader.getAppInfoIconRequestInfo(expectedAppInfo, activityInfo, workspaceIconRequests)
         // Then
@@ -584,15 +505,7 @@ class LoaderTaskTest {
         val expectedAppInfo =
             AppInfo().apply { componentName = ComponentName("differentPkg", "differentClass") }
         // When
-        val loader =
-            LoaderTask(
-                app,
-                bgAllAppsList,
-                BgDataModel(),
-                modelDelegate,
-                launcherBinder,
-                widgetsFilterDataProvider,
-            )
+        val loader = LoaderTask(app, bgAllAppsList, BgDataModel(), modelDelegate, launcherBinder)
         val actualIconRequest =
             loader.getAppInfoIconRequestInfo(expectedAppInfo, activityInfo, workspaceIconRequests)
         // Then
@@ -619,15 +532,7 @@ class LoaderTaskTest {
             )
         val expectedAppInfo = AppInfo()
         // When
-        val loader =
-            LoaderTask(
-                app,
-                bgAllAppsList,
-                BgDataModel(),
-                modelDelegate,
-                launcherBinder,
-                widgetsFilterDataProvider,
-            )
+        val loader = LoaderTask(app, bgAllAppsList, BgDataModel(), modelDelegate, launcherBinder)
         val actualIconRequest =
             loader.getAppInfoIconRequestInfo(expectedAppInfo, activityInfo, workspaceIconRequests)
         // Then

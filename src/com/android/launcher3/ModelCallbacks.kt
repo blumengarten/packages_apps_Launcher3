@@ -234,11 +234,8 @@ class ModelCallbacks(private var launcher: Launcher) : BgDataModel.Callbacks {
         PopupContainerWithArrow.dismissInvalidPopup(launcher)
     }
 
-    override fun bindAllWidgets(
-        allWidgets: List<WidgetsListBaseEntry>,
-        defaultWidgets: List<WidgetsListBaseEntry>,
-    ) {
-        launcher.widgetPickerDataProvider.setWidgets(allWidgets, defaultWidgets)
+    override fun bindAllWidgets(allWidgets: List<WidgetsListBaseEntry>) {
+        launcher.widgetPickerDataProvider.setWidgets(allWidgets)
     }
 
     /** Returns the ids of the workspaces to bind. */

@@ -431,9 +431,8 @@ public class BgDataModel {
         /**
          * Binds the app widgets to the providers that share widgets with the UI.
          */
-        default void bindAllWidgets(@NonNull List<WidgetsListBaseEntry> widgets,
-                @NonNull List<WidgetsListBaseEntry> defaultWidgets) {
-        }
+        default void bindAllWidgets(@NonNull List<WidgetsListBaseEntry> widgets) { }
+
         default void bindSmartspaceWidget() { }
 
         /** Called when workspace has been bound. */
