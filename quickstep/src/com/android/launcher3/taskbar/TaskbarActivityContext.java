@@ -328,9 +328,9 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                     bubbleHandleController,
                     new BubbleDragController(this),
                     new BubbleDismissController(this, mDragLayer),
-                    new BubbleBarPinController(this, mDragLayer,
+                    new BubbleBarPinController(this, bubbleBarContainer,
                             () -> DisplayController.INSTANCE.get(this).getInfo().currentSize),
-                    new BubblePinController(this, mDragLayer,
+                    new BubblePinController(this, bubbleBarContainer,
                             () -> DisplayController.INSTANCE.get(this).getInfo().currentSize),
                     bubbleBarSwipeController,
                     new BubbleCreator(this)
