@@ -10,7 +10,6 @@ import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.tapl.TestHelpers;
 import com.android.launcher3.util.rule.FailureWatcher;
-import com.android.launcher3.util.window.WindowManagerProxy;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -109,9 +108,7 @@ public class PortraitLandscapeRunner<LAUNCHER_TYPE extends Launcher> implements 
             private boolean shouldHaveFixedLandscape(Launcher launcher) {
                 return Flags.oneGridSpecs()
                         && !launcher.getDeviceProfile().isTablet
-                        && !launcher.getDeviceProfile().isMultiDisplay
-                        && WindowManagerProxy.INSTANCE.get(mTest.mTargetContext)
-                        .isTaskbarDrawnInProcess();
+                        && !launcher.getDeviceProfile().isMultiDisplay;
             }
         };
     }
