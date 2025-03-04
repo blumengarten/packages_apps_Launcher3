@@ -15,6 +15,7 @@
  */
 package com.android.quickstep;
 
+import static android.view.Display.DEFAULT_DISPLAY;
 import static android.view.MotionEvent.ACTION_CANCEL;
 import static android.view.MotionEvent.ACTION_DOWN;
 import static android.view.MotionEvent.ACTION_MOVE;
@@ -92,6 +93,7 @@ import com.android.launcher3.util.TraceHelper;
 import com.android.quickstep.OverviewCommandHelper.CommandType;
 import com.android.quickstep.OverviewComponentObserver.OverviewChangeListener;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
+import com.android.quickstep.fallback.window.RecentsDisplayModel.RecentsDisplayResource;
 import com.android.quickstep.fallback.window.RecentsWindowSwipeHandler;
 import com.android.quickstep.inputconsumers.BubbleBarInputConsumer;
 import com.android.quickstep.inputconsumers.OneHandedModeInputConsumer;
@@ -127,6 +129,7 @@ import com.android.wm.shell.startingsurface.IStartingWindow;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.lang.ref.WeakReference;
+import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -299,8 +302,9 @@ public class TouchInteractionService extends Service {
         @Override
         public void enterStageSplitFromRunningApp(boolean leftOrTop) {
             executeForTouchInteractionService(tis -> {
+                // TODO (b/397942185): support external displays
                 RecentsViewContainer container = tis.mOverviewComponentObserver
-                        .getContainerInterface().getCreatedContainer();
+                        .getContainerInterface(DEFAULT_DISPLAY).getCreatedContainer();
                 if (container != null) {
                     container.enterStageSplitFromRunningApp(leftOrTop);
                 }
@@ -575,6 +579,8 @@ public class TouchInteractionService extends Service {
 
     private DisplayController.DisplayInfoChangeListener mDisplayInfoChangeListener;
 
+    private RecentsDisplayModel mRecentsDisplayModel;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -585,6 +591,7 @@ public class TouchInteractionService extends Service {
         mMainChoreographer = Choreographer.getInstance();
         mDeviceState = RecentsAnimationDeviceState.INSTANCE.get(this);
         mRotationTouchHelper = RotationTouchHelper.INSTANCE.get(this);
+        mRecentsDisplayModel = RecentsDisplayModel.getINSTANCE().get(this);
         mAllAppsActionManager = new AllAppsActionManager(
                 this, UI_HELPER_EXECUTOR, this::createAllAppsPendingIntent);
         mTrackpadsConnected = new ActiveTrackpadList(this, () -> {
@@ -597,7 +604,7 @@ public class TouchInteractionService extends Service {
         });
 
         mTaskbarManager = new TaskbarManager(this, mAllAppsActionManager, mNavCallbacks,
-                RecentsDisplayModel.getINSTANCE().get(this));
+                mRecentsDisplayModel);
         mDesktopAppLaunchTransitionManager =
                 new DesktopAppLaunchTransitionManager(this, SystemUiProxy.INSTANCE.get(this));
         mDesktopAppLaunchTransitionManager.registerTransitions();
@@ -682,8 +689,7 @@ public class TouchInteractionService extends Service {
         mTaskAnimationManager = new TaskAnimationManager(this, mDeviceState);
         mOverviewComponentObserver = OverviewComponentObserver.INSTANCE.get(this);
         mOverviewCommandHelper = new OverviewCommandHelper(this,
-                mOverviewComponentObserver, mTaskAnimationManager,
-                RecentsDisplayModel.getINSTANCE().get(this),
+                mOverviewComponentObserver, mTaskAnimationManager, mRecentsDisplayModel,
                 SystemUiProxy.INSTANCE.get(this).getFocusState(), mTaskbarManager);
         mResetGestureInputConsumer = new ResetGestureInputConsumer(
                 mTaskAnimationManager, mTaskbarManager::getCurrentActivityContext);
@@ -728,8 +734,11 @@ public class TouchInteractionService extends Service {
 
     private void onOverviewTargetChanged(boolean isHomeAndOverviewSame) {
         mAllAppsActionManager.setHomeAndOverviewSame(isHomeAndOverviewSame);
+        // TODO (b/399089118): how will this work with per-display Taskbars? Is using the
+        //  default-display container ok?
         RecentsViewContainer newOverviewContainer =
-                mOverviewComponentObserver.getContainerInterface().getCreatedContainer();
+                mOverviewComponentObserver.getContainerInterface(
+                        DEFAULT_DISPLAY).getCreatedContainer();
         if (newOverviewContainer != null) {
             if (newOverviewContainer instanceof StatefulActivity activity) {
                 // This will also call setRecentsViewContainer() internally.
@@ -771,7 +780,8 @@ public class TouchInteractionService extends Service {
     @UiThread
     private void onAssistantVisibilityChanged() {
         if (LockedUserState.get(this).isUserUnlocked()) {
-            mOverviewComponentObserver.getContainerInterface().onAssistantVisibilityChanged(
+            mOverviewComponentObserver.getContainerInterface(
+                    DEFAULT_DISPLAY).onAssistantVisibilityChanged(
                     mDeviceState.getAssistantVisibility());
         }
     }
@@ -1128,8 +1138,10 @@ public class TouchInteractionService extends Service {
         if (!LockedUserState.get(this).isUserUnlocked()) {
             return;
         }
+        // TODO (b/399094853): handle config updates for all connected displays (relevant only for
+        // gestures on external displays)
         final BaseContainerInterface containerInterface =
-                mOverviewComponentObserver.getContainerInterface();
+                mOverviewComponentObserver.getContainerInterface(DEFAULT_DISPLAY);
         final RecentsViewContainer container = containerInterface.getCreatedContainer();
         if (container == null || container.isStarted()) {
             // We only care about the existing background activity.
@@ -1182,21 +1194,26 @@ public class TouchInteractionService extends Service {
             mInputMonitorDisplayModel.dump("\t", pw);
         }
         DisplayController.INSTANCE.get(this).dump(pw);
-        pw.println("TouchState:");
-        RecentsViewContainer createdOverviewContainer = mOverviewComponentObserver == null ? null
-                : mOverviewComponentObserver.getContainerInterface().getCreatedContainer();
-        boolean resumed = mOverviewComponentObserver != null
-                && mOverviewComponentObserver.getContainerInterface().isResumed();
-        pw.println("\tcreatedOverviewActivity=" + createdOverviewContainer);
-        pw.println("\tresumed=" + resumed);
+        for (RecentsDisplayResource resource : mRecentsDisplayModel.getActiveDisplayResources()) {
+            int displayId = resource.getDisplayId();
+            pw.println(String.format(Locale.ENGLISH, "TouchState (displayId %d):", displayId));
+            RecentsViewContainer createdOverviewContainer =
+                    mOverviewComponentObserver == null ? null
+                            : mOverviewComponentObserver.getContainerInterface(
+                                    displayId).getCreatedContainer();
+            boolean resumed = mOverviewComponentObserver != null
+                    && mOverviewComponentObserver.getContainerInterface(displayId).isResumed();
+            pw.println("\tcreatedOverviewActivity=" + createdOverviewContainer);
+            pw.println("\tresumed=" + resumed);
+            if (createdOverviewContainer != null) {
+                createdOverviewContainer.getDeviceProfile().dump(this, "", pw);
+            }
+        }
         pw.println("\tmConsumer=" + mConsumer.getName());
         ActiveGestureLog.INSTANCE.dump("", pw);
         RecentsModel.INSTANCE.get(this).dump("", pw);
         if (mTaskAnimationManager != null) {
             mTaskAnimationManager.dump("", pw);
-        }
-        if (createdOverviewContainer != null) {
-            createdOverviewContainer.getDeviceProfile().dump(this, "", pw);
         }
         mTaskbarManager.dumpLogs("", pw);
         DesktopVisibilityController.INSTANCE.get(this).dumpLogs("", pw);

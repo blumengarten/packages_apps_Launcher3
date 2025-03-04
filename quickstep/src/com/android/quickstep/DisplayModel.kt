@@ -35,7 +35,7 @@ abstract class DisplayModel<RESOURCE_TYPE : DisplayResource>(val context: Contex
     }
 
     private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-    private val displayResourceArray = SparseArray<RESOURCE_TYPE>()
+    protected val displayResourceArray = SparseArray<RESOURCE_TYPE>()
 
     private val displayListener: DisplayManager.DisplayListener =
         (object : DisplayManager.DisplayListener {
