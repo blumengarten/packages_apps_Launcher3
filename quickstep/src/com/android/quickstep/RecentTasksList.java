@@ -41,6 +41,7 @@ import com.android.launcher3.statehandlers.DesktopVisibilityController;
 import com.android.launcher3.util.LooperExecutor;
 import com.android.launcher3.util.SplitConfigurationOptions;
 import com.android.quickstep.util.DesktopTask;
+import com.android.quickstep.util.ExternalDisplaysKt;
 import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.SingleTask;
 import com.android.quickstep.util.SplitTask;
@@ -460,7 +461,8 @@ public class RecentTasksList {
             Map<Integer, List<Task>> perDisplayTasks = new HashMap<>();
             for (TaskInfo taskInfo : recentTaskInfo.getTaskInfoList()) {
                 Task task = createTask(taskInfo, minimizedTaskIds);
-                List<Task> tasks = perDisplayTasks.computeIfAbsent(taskInfo.displayId,
+                List<Task> tasks = perDisplayTasks.computeIfAbsent(
+                        ExternalDisplaysKt.getDisplayId(task),
                         k -> new ArrayList<>());
                 tasks.add(task);
             }
