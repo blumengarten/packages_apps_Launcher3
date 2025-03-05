@@ -336,7 +336,7 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
 
         if (enableRefactorTaskThumbnail()) {
             viewModel =
-                DesktopTaskViewModel(organizeDesktopTasksUseCase = RecentsDependencies.get())
+                DesktopTaskViewModel(organizeDesktopTasksUseCase = RecentsDependencies.get(context))
         }
     }
 

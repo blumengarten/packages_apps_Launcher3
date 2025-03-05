@@ -43,8 +43,9 @@ import kotlinx.coroutines.launch
  * should merge with [TaskOverlayFactory.TaskOverlay] when it's migrated to MVVM.
  */
 class TaskOverlayHelper(val task: Task, val overlay: TaskOverlayFactory.TaskOverlay<*>) {
-    private val recentsCoroutineScope: CoroutineScope = RecentsDependencies.get()
-    private val dispatcherProvider: DispatcherProvider = RecentsDependencies.get()
+    private val scope = overlay.taskView.context
+    private val recentsCoroutineScope: CoroutineScope = RecentsDependencies.get(scope)
+    private val dispatcherProvider: DispatcherProvider = RecentsDependencies.get(scope)
     private lateinit var overlayInitializedScope: CoroutineScope
     private var uiState: TaskOverlayUiState = Disabled
 
@@ -75,10 +76,10 @@ class TaskOverlayHelper(val task: Task, val overlay: TaskOverlayFactory.TaskOver
         viewModel =
             TaskOverlayViewModel(
                 task = task,
-                recentsViewData = RecentsDependencies.get(),
-                getThumbnailPositionUseCase = RecentsDependencies.get(),
-                recentTasksRepository = RecentsDependencies.get(),
-                dispatcherProvider = RecentsDependencies.get(),
+                recentsViewData = RecentsDependencies.get(scope),
+                getThumbnailPositionUseCase = RecentsDependencies.get(scope),
+                recentTasksRepository = RecentsDependencies.get(scope),
+                dispatcherProvider = RecentsDependencies.get(scope),
             )
         viewModel.overlayState
             .dropWhile { it == Disabled }
