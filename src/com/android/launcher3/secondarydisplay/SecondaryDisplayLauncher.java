@@ -94,27 +94,6 @@ public class SecondaryDisplayLauncher extends BaseActivity
         mModel = LauncherAppState.getInstance(this).getModel();
         mDragController = new SecondaryDragController(this);
         mSecondaryDisplayPredictions = SecondaryDisplayPredictions.newInstance(this);
-        if (getWindow().getDecorView().isAttachedToWindow()) {
-            initUi();
-        }
-    }
-
-    @Override
-    public void onAttachedToWindow() {
-        super.onAttachedToWindow();
-        initUi();
-    }
-
-    @Override
-    public void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        this.getDragController().removeDragListener(this);
-    }
-
-    private void initUi() {
-        if (mDragLayer != null) {
-            return;
-        }
 
         mDeviceProfile = InvariantDeviceProfile.INSTANCE.get(this)
                 .createDeviceProfileForSecondaryDisplay(this);
