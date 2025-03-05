@@ -683,6 +683,13 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
     fun showExpandedView() =
         executeWithErrorLog({ "Failed call showExpandedView" }) { bubbles?.showExpandedView() }
 
+    /** Tells SysUI to show the bubble drop target. */
+    @JvmOverloads
+    fun showBubbleDropTarget(show: Boolean, bubbleBarLocation: BubbleBarLocation? = null) =
+        executeWithErrorLog({ "Failed call showDropTarget" }) {
+            bubbles?.showDropTarget(show, bubbleBarLocation)
+        }
+
     //
     // Splitscreen
     //
