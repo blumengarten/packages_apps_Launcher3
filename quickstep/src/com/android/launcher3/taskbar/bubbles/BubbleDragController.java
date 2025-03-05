@@ -21,6 +21,8 @@ import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -28,7 +30,16 @@ import androidx.dynamicanimation.animation.FloatPropertyCompat;
 
 import com.android.launcher3.taskbar.TaskbarActivityContext;
 import com.android.wm.shell.shared.bubbles.BaseBubblePinController.LocationChangeListener;
+import com.android.wm.shell.shared.bubbles.BubbleAnythingFlagHelper;
 import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
+import com.android.wm.shell.shared.bubbles.DeviceConfig;
+import com.android.wm.shell.shared.bubbles.DragZone;
+import com.android.wm.shell.shared.bubbles.DragZoneFactory;
+import com.android.wm.shell.shared.bubbles.DragZoneFactory.DesktopWindowModeChecker;
+import com.android.wm.shell.shared.bubbles.DragZoneFactory.SplitScreenModeChecker;
+import com.android.wm.shell.shared.bubbles.DraggedObject;
+import com.android.wm.shell.shared.bubbles.DropTargetManager;
+import com.android.wm.shell.shared.bubbles.DropTargetManager.DragZoneChangedListener;
 
 /**
  * Controls bubble bar drag interactions.
@@ -76,11 +87,36 @@ public class BubbleDragController {
     private BubbleDismissController mBubbleDismissController;
     private BubbleBarPinController mBubbleBarPinController;
     private BubblePinController mBubblePinController;
+    private final DropTargetManager mDropTargetManager;
+    private final DragZoneFactory mDragZoneFactory;
+    private final BubbleDragZoneChangedListener mBubbleDragZoneChangedListener;
 
     private boolean mIsDragging;
 
-    public BubbleDragController(TaskbarActivityContext activity) {
+    public BubbleDragController(TaskbarActivityContext activity, FrameLayout dropTargetParent) {
         mActivity = activity;
+        WindowManager windowManager =
+                mActivity.getApplicationContext().getSystemService(WindowManager.class);
+        DeviceConfig deviceConfig =
+                DeviceConfig.create(mActivity.getApplicationContext(), windowManager);
+        SplitScreenModeChecker splitScreenModeChecker = new SplitScreenModeChecker() {
+            @NonNull
+            @Override
+            public SplitScreenMode getSplitScreenMode() {
+                return SplitScreenMode.NONE;
+            }
+        };
+        DesktopWindowModeChecker desktopWindowModeChecker = new DesktopWindowModeChecker() {
+            @Override
+            public boolean isSupported() {
+                return false;
+            }
+        };
+        mDragZoneFactory = new DragZoneFactory(mActivity.getApplicationContext(), deviceConfig,
+                splitScreenModeChecker, desktopWindowModeChecker);
+        mBubbleDragZoneChangedListener = new BubbleDragZoneChangedListener();
+        mDropTargetManager = new DropTargetManager(mActivity.getApplicationContext(),
+                dropTargetParent, mBubbleDragZoneChangedListener);
     }
 
     /**
@@ -130,47 +166,77 @@ public class BubbleDragController {
                         }
                     };
 
+            private BubbleBarLocation getBubbleBarLocationDuringDrag() {
+                return BubbleAnythingFlagHelper.enableBubbleToFullscreen()
+                        ? mBubbleDragZoneChangedListener.mBubbleBarLocation
+                        : mReleasedLocation;
+            }
+
             @Override
             void onDragStart() {
-                mBubblePinController.setListener(mLocationChangeListener);
                 mBubbleBarViewController.onBubbleDragStart(bubbleView);
-                mBubblePinController.onDragStart(
-                        mBubbleBarViewController.getBubbleBarLocation().isOnLeft(
-                                bubbleView.isLayoutRtl()));
+                if (BubbleAnythingFlagHelper.enableBubbleToFullscreen()) {
+                    DraggedObject.Bubble draggedBubble =
+                            new DraggedObject.Bubble(
+                                    mBubbleBarViewController.getBubbleBarLocation());
+                    mDropTargetManager.onDragStarted(draggedBubble,
+                            mDragZoneFactory.createSortedDragZones(draggedBubble));
+                } else {
+                    mBubblePinController.setListener(mLocationChangeListener);
+                    mBubblePinController.onDragStart(
+                            mBubbleBarViewController.getBubbleBarLocation().isOnLeft(
+                                    bubbleView.isLayoutRtl()));
+                }
             }
 
             @Override
             protected void onDragUpdate(float x, float y, float newTx, float newTy) {
                 bubbleView.setDragTranslationX(newTx);
                 bubbleView.setTranslationY(newTy);
-                mBubblePinController.onDragUpdate(x, y);
+                if (BubbleAnythingFlagHelper.enableBubbleToFullscreen()) {
+                    mDropTargetManager.onDragUpdated((int) x, (int) y);
+                } else {
+                    mBubblePinController.onDragUpdate(x, y);
+                }
             }
 
             @Override
             protected void onDragRelease() {
-                mBubblePinController.onDragEnd();
-                mBubbleBarViewController.onBubbleDragRelease(mReleasedLocation);
+                if (BubbleAnythingFlagHelper.enableBubbleToFullscreen()) {
+                    mDropTargetManager.onDragEnded();
+                } else {
+                    mBubblePinController.onDragEnd();
+                }
+                mBubbleBarViewController.onBubbleDragRelease(getBubbleBarLocationDuringDrag());
             }
 
             @Override
             protected void onDragDismiss() {
-                mBubblePinController.onDragEnd();
+                if (BubbleAnythingFlagHelper.enableBubbleToFullscreen()) {
+                    mDropTargetManager.onDragEnded();
+                } else {
+                    mBubblePinController.onDragEnd();
+                }
                 mBubbleBarViewController.onBubbleDismissed(bubbleView);
                 mBubbleBarViewController.onBubbleDragEnd();
             }
 
             @Override
             void onDragEnd() {
-                mBubbleBarController.updateBubbleBarLocation(mReleasedLocation,
+                mBubbleBarController.updateBubbleBarLocation(getBubbleBarLocationDuringDrag(),
                         BubbleBarLocation.UpdateSource.DRAG_BUBBLE);
                 mBubbleBarViewController.onBubbleDragEnd();
-                mBubblePinController.setListener(null);
+                if (BubbleAnythingFlagHelper.enableBubbleToFullscreen()) {
+                    mDropTargetManager.onDragEnded();
+                } else {
+                    mBubblePinController.setListener(null);
+                }
             }
 
             @Override
             protected PointF getRestingPosition() {
                 return mBubbleBarViewController.getDraggedBubbleReleaseTranslation(
-                        getInitialPosition(), mReleasedLocation);
+                        getInitialPosition(), getBubbleBarLocationDuringDrag());
             }
         });
     }
@@ -519,5 +585,35 @@ public class BubbleDragController {
             mVelocityTracker.computeCurrentVelocity(/* units = */ 1000);
             return new PointF(mVelocityTracker.getXVelocity(), mVelocityTracker.getYVelocity());
         }
+    }
+
+    private class BubbleDragZoneChangedListener implements DragZoneChangedListener {
+
+        private BubbleBarLocation mBubbleBarLocation = BubbleBarLocation.DEFAULT;
+
+        @Override
+        public void onInitialDragZoneSet(@NonNull DragZone dragZone) {
+            if (dragZone instanceof DragZone.Bubble.Left) {
+                mBubbleBarLocation = BubbleBarLocation.LEFT;
+            } else if (dragZone instanceof DragZone.Bubble.Right) {
+                mBubbleBarLocation = BubbleBarLocation.RIGHT;
+            }
+        }
+
+        @Override
+        public void onDragZoneChanged(@NonNull DragZone from, @NonNull DragZone to) {
+            if (to instanceof DragZone.Bubble.Left
+                    && mBubbleBarLocation != BubbleBarLocation.LEFT) {
+                mBubbleBarController.animateBubbleBarLocation(BubbleBarLocation.LEFT);
+                mBubbleBarLocation = BubbleBarLocation.LEFT;
+            } else if (to instanceof DragZone.Bubble.Right
+                    && mBubbleBarLocation != BubbleBarLocation.RIGHT) {
+                mBubbleBarController.animateBubbleBarLocation(BubbleBarLocation.RIGHT);
+                mBubbleBarLocation = BubbleBarLocation.RIGHT;
+            }
+        }
+
+        @Override
+        public void onDragEnded(@NonNull DragZone zone) {}
     }
 }
