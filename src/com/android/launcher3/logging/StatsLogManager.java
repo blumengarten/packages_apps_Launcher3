@@ -433,20 +433,29 @@ public class StatsLogManager implements ResourceBasedOverride {
         @UiEvent(doc = "Notification dismissed by swiping right.")
         LAUNCHER_NOTIFICATION_DISMISSED(652),
 
-        @UiEvent(doc = "Current grid size is changed to 6.")
-        LAUNCHER_GRID_SIZE_6(930),
+        @UiEvent(doc = "Current grid size is changed to 2x2")
+        LAUNCHER_GRID_SIZE_2_BY_2(2181),
 
-        @UiEvent(doc = "Current grid size is changed to 5.")
-        LAUNCHER_GRID_SIZE_5(662),
+        @UiEvent(doc = "Current grid size is changed to 3x3")
+        LAUNCHER_GRID_SIZE_3_BY_3(2182),
 
-        @UiEvent(doc = "Current grid size is changed to 4.")
-        LAUNCHER_GRID_SIZE_4(663),
+        @UiEvent(doc = "Current grid size is changed to 4x4")
+        LAUNCHER_GRID_SIZE_4_BY_4(2183),
 
-        @UiEvent(doc = "Current grid size is changed to 3.")
-        LAUNCHER_GRID_SIZE_3(664),
+        @UiEvent(doc = "Current grid size is changed to 4x5")
+        LAUNCHER_GRID_SIZE_4_BY_5(2184),
 
-        @UiEvent(doc = "Current grid size is changed to 2.")
-        LAUNCHER_GRID_SIZE_2(665),
+        @UiEvent(doc = "Current grid size is changed to 4x6")
+        LAUNCHER_GRID_SIZE_4_BY_6(2185),
+
+        @UiEvent(doc = "Current grid size is changed to 5x5")
+        LAUNCHER_GRID_SIZE_5_BY_5(2186),
+
+        @UiEvent(doc = "Current grid size is changed to 5x6")
+        LAUNCHER_GRID_SIZE_5_BY_6(2187),
+
+        @UiEvent(doc = "Current grid size is changed to 6x5")
+        LAUNCHER_GRID_SIZE_6_BY_5(2188),
 
         @UiEvent(doc = "Launcher entered into AllApps state.")
         LAUNCHER_ALLAPPS_ENTRY(692),

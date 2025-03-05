@@ -21,11 +21,6 @@ import static com.android.launcher3.LauncherPrefs.DB_FILE;
 import static com.android.launcher3.LauncherPrefs.DEVICE_TYPE;
 import static com.android.launcher3.LauncherPrefs.HOTSEAT_COUNT;
 import static com.android.launcher3.LauncherPrefs.WORKSPACE_SIZE;
-import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_GRID_SIZE_2;
-import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_GRID_SIZE_3;
-import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_GRID_SIZE_4;
-import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_GRID_SIZE_5;
-import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_GRID_SIZE_6;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -114,17 +109,23 @@ public class DeviceGridState implements Comparable<DeviceGridState> {
      */
     public LauncherEvent getWorkspaceSizeEvent() {
         if (!TextUtils.isEmpty(mGridSizeString)) {
-            switch (getColumns()) {
-                case 6:
-                    return LAUNCHER_GRID_SIZE_6;
-                case 5:
-                    return LAUNCHER_GRID_SIZE_5;
-                case 4:
-                    return LAUNCHER_GRID_SIZE_4;
-                case 3:
-                    return LAUNCHER_GRID_SIZE_3;
-                case 2:
-                    return LAUNCHER_GRID_SIZE_2;
+            switch (mGridSizeString) {
+                case "2,2":
+                    return LauncherEvent.LAUNCHER_GRID_SIZE_2_BY_2;
+                case "3,3":
+                    return LauncherEvent.LAUNCHER_GRID_SIZE_3_BY_3;
+                case "4,4":
+                    return LauncherEvent.LAUNCHER_GRID_SIZE_4_BY_4;
+                case "4,5":
+                    return LauncherEvent.LAUNCHER_GRID_SIZE_4_BY_5;
+                case "4,6":
+                    return LauncherEvent.LAUNCHER_GRID_SIZE_4_BY_6;
+                case "5,5":
+                    return LauncherEvent.LAUNCHER_GRID_SIZE_5_BY_5;
+                case "5,6":
+                    return LauncherEvent.LAUNCHER_GRID_SIZE_5_BY_6;
+                case "6,5":
+                    return LauncherEvent.LAUNCHER_GRID_SIZE_6_BY_5;
             }
         }
         return null;
