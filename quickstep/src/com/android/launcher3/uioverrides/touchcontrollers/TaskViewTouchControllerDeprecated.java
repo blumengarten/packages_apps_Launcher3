@@ -239,7 +239,7 @@ public class TaskViewTouchControllerDeprecated<
             pa = new PendingAnimation(maxDuration);
             mRecentsView.createTaskDismissAnimation(pa, mTaskBeingDragged,
                     true /* animateTaskView */, true /* removeTask */, maxDuration,
-                    false /* dismissingForSplitSelection*/);
+                    false /* dismissingForSplitSelection*/, false /* isExpressiveDismiss */);
 
             mEndDisplacement = -secondaryTaskDimension;
         } else {

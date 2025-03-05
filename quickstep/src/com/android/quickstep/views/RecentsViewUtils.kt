@@ -83,6 +83,25 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
     /** Returns a list of all large TaskView Ids from [TaskView]s */
     fun getLargeTaskViewIds(): List<Int> = taskViews.filter { it.isLargeTile }.map { it.taskViewId }
 
+    /** Returns a list of all large TaskViews [TaskView]s */
+    fun getLargeTaskViews(): List<TaskView> = taskViews.filter { it.isLargeTile }
+
+    /** Returns all the TaskViews in the top row, without the focused task */
+    fun getTopRowTaskViews(): List<TaskView> =
+        taskViews.filter { recentsView.mTopRowIdSet.contains(it.taskViewId) }
+
+    /** Returns all the task Ids in the top row, without the focused task */
+    fun getTopRowIdArray(): IntArray = getTopRowTaskViews().map { it.taskViewId }.toIntArray()
+
+    /** Returns all the TaskViews in the bottom row, without the focused task */
+    fun getBottomRowTaskViews(): List<TaskView> =
+        taskViews.filter { !recentsView.mTopRowIdSet.contains(it.taskViewId) && !it.isLargeTile }
+
+    /** Returns all the task Ids in the bottom row, without the focused task */
+    fun getBottomRowIdArray(): IntArray = getBottomRowTaskViews().map { it.taskViewId }.toIntArray()
+
+    private fun List<Int>.toIntArray() = IntArray(size).apply { this@toIntArray.forEach(::add) }
+
     /** Counts [TaskView]s that are large tiles. */
     fun getLargeTileCount(): Int = taskViews.count { it.isLargeTile }
 
@@ -266,8 +285,8 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
             return
         }
         getRowRect(getFirstLargeTaskView(), getLastLargeTaskView(), outTaskViewRowRect)
-        getRowRect(recentsView.getTopRowIdArray(), outTopRowRect)
-        getRowRect(recentsView.getBottomRowIdArray(), outBottomRowRect)
+        getRowRect(getTopRowIdArray(), outTopRowRect)
+        getRowRect(getBottomRowIdArray(), outBottomRowRect)
 
         // Expand large tile Rect to include space between top/bottom row.
         val nonEmptyRowRect =
