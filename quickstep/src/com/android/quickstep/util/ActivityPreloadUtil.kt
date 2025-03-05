@@ -19,6 +19,7 @@ package com.android.quickstep.util
 import android.content.Context
 import android.content.Intent
 import android.os.Trace
+import android.view.Display.DEFAULT_DISPLAY
 import com.android.launcher3.provider.RestoreDbTask
 import com.android.launcher3.util.Executors
 import com.android.launcher3.util.LockedUserState
@@ -59,7 +60,12 @@ object ActivityPreloadUtil {
             // The activity has been created before the initialization of overview service. It is
             // usually happens when booting or launcher is the top activity, so we should already
             // have the latest state.
-            if (fromInit && overviewCompObserver.containerInterface.createdContainer != null) return
+            if (
+                fromInit &&
+                    overviewCompObserver.getContainerInterface(DEFAULT_DISPLAY).createdContainer !=
+                        null
+            )
+                return
 
             ActiveGestureProtoLogProxy.logPreloadRecentsAnimation()
             val overviewIntent = Intent(overviewCompObserver.overviewIntentIgnoreSysUiState)

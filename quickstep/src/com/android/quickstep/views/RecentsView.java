@@ -144,7 +144,6 @@ import com.android.launcher3.BaseActivity.MultiWindowModeChangedListener;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Flags;
 import com.android.launcher3.Insettable;
-import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.PagedView;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
@@ -574,8 +573,6 @@ public abstract class RecentsView<
     // Keeps track of the previously known visible tasks for purposes of loading/unloading task data
     private final SparseBooleanArray mHasVisibleTaskData = new SparseBooleanArray();
 
-    private final InvariantDeviceProfile mIdp;
-
     /**
      * Getting views should be done via {@link #getTaskViewFromPool(int)}
      */
@@ -912,7 +909,6 @@ public abstract class RecentsView<
         mFastFlingVelocity = getResources()
                 .getDimensionPixelSize(R.dimen.recents_fast_fling_velocity);
         mModel = RecentsModel.INSTANCE.get(context);
-        mIdp = InvariantDeviceProfile.INSTANCE.get(context);
 
         mClearAllButton = (ClearAllButton) LayoutInflater.from(context)
                 .inflate(R.layout.overview_clear_all_button, this, false);
@@ -3018,9 +3014,22 @@ public abstract class RecentsView<
         startIconFadeInOnGestureComplete();
         animateActionsViewIn();
 
-        for (TaskView taskView : getTaskViews()) {
-            if (taskView instanceof DesktopTaskView desktopTaskView) {
-                desktopTaskView.setRemoteTargetHandles(mRemoteTargetHandles);
+        if (mEnableDrawingLiveTile) {
+            for (TaskView taskView : getTaskViews()) {
+                if (taskView instanceof DesktopTaskView desktopTaskView) {
+                    desktopTaskView.setRemoteTargetHandles(mRemoteTargetHandles);
+                }
+            }
+            TaskView runningTaskView = getRunningTaskView();
+            if (showAsGrid() && enableGridOnlyOverview() && runningTaskView != null) {
+                runActionOnRemoteHandles(remoteTargetHandle -> {
+                    TaskViewSimulator taskViewSimulator = remoteTargetHandle.getTaskViewSimulator();
+                    // After settling in Overview, recentsScroll will be used to adjust horizontally
+                    // location and taskGridTranslationX doesn't needs to be applied.
+                    taskViewSimulator.taskGridTranslationX.value = 0;
+                    taskViewSimulator.taskGridTranslationY.value =
+                            runningTaskView.getGridTranslationY();
+                });
             }
         }
 
@@ -3533,19 +3542,6 @@ public abstract class RecentsView<
                 translationX += largeTaskWidthAndSpacing;
             }
             mAddDesktopButton.setGridTranslationX(translationX);
-        }
-
-        final TaskView runningTask = getRunningTaskView();
-        if (showAsGrid() && enableGridOnlyOverview() && runningTask != null) {
-            runActionOnRemoteHandles(
-                    remoteTargetHandle -> {
-                        remoteTargetHandle.getTaskViewSimulator().taskGridTranslationX.value =
-                                runningTask.getGridTranslationX()
-                                        - runningTask.getNonGridTranslationX();
-                        remoteTargetHandle.getTaskViewSimulator().taskGridTranslationY.value =
-                                runningTask.getGridTranslationY();
-                    }
-            );
         }
 
         mClearAllButton.setGridTranslationPrimary(

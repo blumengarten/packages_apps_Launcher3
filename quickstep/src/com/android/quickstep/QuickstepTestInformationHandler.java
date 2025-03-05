@@ -1,5 +1,7 @@
 package com.android.quickstep;
 
+import static android.view.Display.DEFAULT_DISPLAY;
+
 import static com.android.launcher3.taskbar.TaskbarThresholdUtils.getFromNavThreshold;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 
@@ -210,8 +212,9 @@ public class QuickstepTestInformationHandler extends TestInformationHandler {
     }
 
     private RecentsViewContainer getRecentsViewContainer() {
+        // TODO (b/400647896): support per-display container in e2e tests
         return OverviewComponentObserver.INSTANCE.get(mContext)
-                .getContainerInterface().getCreatedContainer();
+                .getContainerInterface(DEFAULT_DISPLAY).getCreatedContainer();
     }
 
     @Override

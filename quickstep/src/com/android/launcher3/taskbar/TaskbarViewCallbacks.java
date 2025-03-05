@@ -16,7 +16,8 @@
 
 package com.android.launcher3.taskbar;
 
-import static com.android.launcher3.Flags.taskbarRecentsLayoutTransition;
+import static android.window.DesktopModeFlags.ENABLE_TASKBAR_RECENTS_LAYOUT_TRANSITION;
+
 import static com.android.launcher3.config.FeatureFlags.enableTaskbarPinning;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_TASKBAR_ALLAPPS_BUTTON_LONG_PRESS;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_TASKBAR_ALLAPPS_BUTTON_TAP;
@@ -123,7 +124,7 @@ public class TaskbarViewCallbacks {
 
     /** Callback invoked before Taskbar icons are laid out. */
     void onPreLayoutChildren() {
-        if (enableTaskbarPinning() && taskbarRecentsLayoutTransition()) {
+        if (enableTaskbarPinning() && ENABLE_TASKBAR_RECENTS_LAYOUT_TRANSITION.isTrue()) {
             mControllers.taskbarViewController.updateTaskbarIconTranslationXForPinning();
         }
     }

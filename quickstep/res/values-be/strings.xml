@@ -90,8 +90,8 @@
     <string name="allset_title" msgid="5021126669778966707">"Гатова!"</string>
     <string name="allset_hint" msgid="459504134589971527">"Каб перайсці на галоўны экран, правядзіце пальцам уверх"</string>
     <string name="allset_button_hint" msgid="2395219947744706291">"Каб перайсці на галоўны экран, націсніце кнопку галоўнага экрана"</string>
-    <string name="allset_description_generic" msgid="5385500062202019855">"Вы можаце пачаць карыстанне прыладай \"<xliff:g id="DEVICE">%1$s</xliff:g>\""</string>
-    <string name="default_device_name" msgid="6660656727127422487">"прылада"</string>
+    <string name="allset_description_generic" msgid="5385500062202019855">"Вы можаце пачаць карыстацца <xliff:g id="DEVICE">%1$s</xliff:g>"</string>
+    <string name="default_device_name" msgid="6660656727127422487">"прыладай"</string>
     <string name="allset_navigation_settings" msgid="4713404605961476027"><annotation id="link">"Налады навігацыі ў сістэме"</annotation></string>
     <string name="action_share" msgid="2648470652637092375">"Абагуліць"</string>
     <string name="action_screenshot" msgid="8171125848358142917">"Здымак экрана"</string>
@@ -139,6 +139,8 @@
     <string name="taskbar_overflow_a11y_title" msgid="7960342079198820179">"Меню з пашырэннем панэлі задач"</string>
     <string name="move_drop_target_top_or_left" msgid="2988702185049595807">"Перамясціць уверх/улева"</string>
     <string name="move_drop_target_bottom_or_right" msgid="5431393418797620162">"Перамясціць уніз/управа"</string>
+    <!-- no translation found for open_app_as_a_bubble (6642626287247807473) -->
+    <skip />
     <string name="quick_switch_overflow" msgid="3679780650881041632">"{count,plural, =1{даступная праграма}one{даступная праграма}few{даступныя праграмы}many{даступных праграм}other{даступнай праграмы}}"</string>
     <string name="quick_switch_desktop" msgid="8393802056024499749">"Працоўны стол"</string>
     <string name="quick_switch_split_task" msgid="5598194724255333896">"<xliff:g id="APP_NAME_1">%1$s</xliff:g> і <xliff:g id="APP_NAME_2">%2$s</xliff:g>"</string>

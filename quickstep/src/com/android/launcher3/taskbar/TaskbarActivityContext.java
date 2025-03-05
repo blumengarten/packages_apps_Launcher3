@@ -81,6 +81,7 @@ import android.widget.FrameLayout;
 import android.widget.Toast;
 import android.window.DesktopExperienceFlags;
 import android.window.DesktopModeFlags;
+import android.window.DesktopModeFlags.DesktopModeFlag;
 import android.window.RemoteTransition;
 
 import androidx.annotation.NonNull;
@@ -94,6 +95,7 @@ import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.BubbleTextView.RunningAppState;
 import com.android.launcher3.DeviceProfile;
+import com.android.launcher3.Flags;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherSettings.Favorites;
 import com.android.launcher3.R;
@@ -196,6 +198,9 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
     private static final String TAG = "TaskbarActivityContext";
 
     private static final String WINDOW_TITLE = "Taskbar";
+
+    private static final DesktopModeFlag ENABLE_TASKBAR_BEHIND_SHADE = new DesktopModeFlag(
+            Flags::enableTaskbarBehindShade, false);
 
     private final @Nullable Context mNavigationBarPanelContext;
 
@@ -328,9 +333,9 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                     bubbleHandleController,
                     new BubbleDragController(this),
                     new BubbleDismissController(this, mDragLayer),
-                    new BubbleBarPinController(this, mDragLayer,
+                    new BubbleBarPinController(this, bubbleBarContainer,
                             () -> DisplayController.INSTANCE.get(this).getInfo().currentSize),
-                    new BubblePinController(this, mDragLayer,
+                    new BubblePinController(this, bubbleBarContainer,
                             () -> DisplayController.INSTANCE.get(this).getInfo().currentSize),
                     bubbleBarSwipeController,
                     new BubbleCreator(this)

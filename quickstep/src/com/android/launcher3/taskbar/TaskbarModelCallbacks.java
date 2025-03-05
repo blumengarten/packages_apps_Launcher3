@@ -204,6 +204,7 @@ public class TaskbarModelCallbacks implements
             ItemInfo[] hotseatItemInfos, List<GroupTask> recentTasks) {
         mContainer.updateItems(hotseatItemInfos, recentTasks);
         mControllers.taskbarViewController.updateIconViewsRunningStates();
+        mControllers.taskbarPopupController.setHotseatInfosList(mHotseatItems);
     }
 
     /**

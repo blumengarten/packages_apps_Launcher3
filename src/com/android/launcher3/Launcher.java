@@ -545,7 +545,7 @@ public class Launcher extends StatefulActivity<LauncherState>
                 mFocusHandler, new CellLayout(mWorkspace.getContext(), mWorkspace));
 
         mPopupDataProvider = new PopupDataProvider(this);
-        mWidgetPickerDataProvider = new WidgetPickerDataProvider();
+        mWidgetPickerDataProvider = new WidgetPickerDataProvider(this);
         PillColorProvider.getInstance(mWorkspace.getContext()).registerObserver();
 
         boolean internalStateHandled = ACTIVITY_TRACKER.handleCreate(this);
@@ -1803,6 +1803,7 @@ public class Launcher extends StatefulActivity<LauncherState>
 
         mAppWidgetHolder.stopListening();
         mAppWidgetHolder.destroy();
+        mWidgetPickerDataProvider.destroy();
 
         TextKeyListener.getInstance().release();
         mModelCallbacks.clearPendingBinds();
@@ -2629,9 +2630,8 @@ public class Launcher extends StatefulActivity<LauncherState>
      * See {@code LauncherBindingDelegate}
      */
     @Override
-    public void bindAllWidgets(@NonNull final List<WidgetsListBaseEntry> allWidgets,
-            @NonNull final List<WidgetsListBaseEntry> defaultWidgets) {
-        mModelCallbacks.bindAllWidgets(allWidgets, defaultWidgets);
+    public void bindAllWidgets(@NonNull final List<WidgetsListBaseEntry> allWidgets) {
+        mModelCallbacks.bindAllWidgets(allWidgets);
     }
 
     @Override

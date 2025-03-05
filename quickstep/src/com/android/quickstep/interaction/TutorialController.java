@@ -109,7 +109,6 @@ abstract class TutorialController implements BackGestureAttemptCallback,
     final AnimatedTaskView mFakePreviousTaskView;
     final View mRippleView;
     final RippleDrawable mRippleDrawable;
-    final TutorialStepIndicator mTutorialStepView;
     final ImageView mFingerDotView;
     private final Rect mExitingAppRect = new Rect();
     protected View mExitingAppView;
@@ -152,8 +151,6 @@ abstract class TutorialController implements BackGestureAttemptCallback,
         mRippleView = rootView.findViewById(R.id.gesture_tutorial_ripple_view);
         mRippleDrawable = (RippleDrawable) mRippleView.getBackground();
         mDoneButton = rootView.findViewById(R.id.gesture_tutorial_fragment_action_button);
-        mTutorialStepView =
-                rootView.findViewById(R.id.gesture_tutorial_fragment_feedback_tutorial_step);
         mFingerDotView = rootView.findViewById(R.id.gesture_tutorial_finger_dot);
         mSkipTutorialDialog = createSkipTutorialDialog();
 
@@ -488,7 +485,6 @@ abstract class TutorialController implements BackGestureAttemptCallback,
     @CallSuper
     void transitToController() {
         updateCloseButton();
-        updateSubtext();
         updateDrawables();
         updateLayout();
 
@@ -603,11 +599,6 @@ abstract class TutorialController implements BackGestureAttemptCallback,
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT));
         }
-    }
-
-    private void updateSubtext() {
-        mTutorialStepView.setTutorialProgress(
-                mTutorialFragment.getCurrentStep(), mTutorialFragment.getNumSteps());
     }
 
     private void updateHotseatChildViewColor(@Nullable View child) {

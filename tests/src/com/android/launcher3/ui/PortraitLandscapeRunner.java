@@ -97,18 +97,21 @@ public class PortraitLandscapeRunner<LAUNCHER_TYPE extends Launcher> implements 
             }
 
             private void evaluateInLandscape() throws Throwable {
-                if (Flags.oneGridSpecs()
-                        && WindowManagerProxy.INSTANCE.get(mTest.mTargetContext)
-                        .isTaskbarDrawnInProcess()) {
-                    mTest.executeOnLauncher(launcher -> LauncherPrefs.get(launcher)
-                            .put(FIXED_LANDSCAPE_MODE, true)
-                    );
-                }
+                mTest.executeOnLauncher(launcher -> LauncherPrefs.get(launcher)
+                        .put(FIXED_LANDSCAPE_MODE, shouldHaveFixedLandscape(launcher)));
                 mTest.mDevice.setOrientationLeft();
                 mTest.mLauncher.setExpectedRotation(Surface.ROTATION_90);
                 AbstractLauncherUiTest.checkDetectedLeaks(mTest.mLauncher, true);
                 base.evaluate();
                 mTest.getDevice().pressHome();
+            }
+
+            private boolean shouldHaveFixedLandscape(Launcher launcher) {
+                return Flags.oneGridSpecs()
+                        && !launcher.getDeviceProfile().isTablet
+                        && !launcher.getDeviceProfile().isMultiDisplay
+                        && WindowManagerProxy.INSTANCE.get(mTest.mTargetContext)
+                        .isTaskbarDrawnInProcess();
             }
         };
     }
