@@ -32,6 +32,7 @@ import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.res.ResourcesCompat
 import com.android.app.animation.Interpolators
 import com.android.launcher3.AbstractFloatingView
 import com.android.launcher3.Flags.enableOverviewIconMenu
@@ -66,6 +67,17 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
     private lateinit var taskContainer: TaskContainer
     private var menuTranslationXBeforeOpen = 0f
     private var menuTranslationYBeforeOpen = 0f
+
+    // Spaced claimed below Overview (taskbar and insets)
+    private val taskbarTop by lazy {
+        recentsViewContainer.deviceProfile.heightPx -
+            recentsViewContainer.deviceProfile.overviewActionsClaimedSpaceBelow
+    }
+    private val minMenuTop by lazy { taskContainer.iconView.height.toFloat() }
+    // TODO(b/401476868): Replace overviewRowSpacing with correct margin to the taskbarTop.
+    private val maxMenuBottom by lazy {
+        (taskbarTop - recentsViewContainer.deviceProfile.overviewRowSpacing).toFloat()
+    }
 
     init {
         clipToOutline = true
@@ -207,6 +219,13 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
         val dividerSpacing = resources.getDimension(R.dimen.task_menu_spacing).toInt()
         optionLayout.showDividers =
             if (enableOverviewIconMenu()) SHOW_DIVIDER_NONE else SHOW_DIVIDER_MIDDLE
+
+        optionLayout.background =
+            if (enableOverviewIconMenu()) {
+                ResourcesCompat.getDrawable(resources, R.drawable.app_chip_menu_bg, context.theme)
+            } else {
+                null
+            }
 
         orientationHandler.setTaskOptionsMenuLayoutOrientation(
             deviceProfile,
@@ -362,18 +381,23 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
     private fun animateOpenOrCloseAppChip(closing: Boolean, animatorBuilder: AnimatorSet.Builder) {
         val iconAppChip = taskContainer.iconView.asView() as IconAppChipView
 
+        // Animate menu up for enough room to display full menu when task on bottom row.
         var additionalTranslationY = 0f
         if (taskView.isOnGridBottomRow()) {
-            // Animate menu up for enough room to display full menu when task on bottom row.
-            val menuBottom = height + menuTranslationYBeforeOpen
-            val taskBottom = taskView.height + taskView.persistentTranslationY
-            val taskbarTop =
-                (recentsViewContainer.deviceProfile.heightPx -
-                        recentsViewContainer.deviceProfile.overviewActionsClaimedSpaceBelow)
-                    .toFloat()
-            val midpoint = (taskBottom + taskbarTop) / 2f
-            additionalTranslationY = (-max((menuBottom - midpoint).toDouble(), 0.0)).toFloat()
+            val currentMenuBottom: Float = menuTranslationYBeforeOpen + height
+            additionalTranslationY =
+                if (currentMenuBottom < maxMenuBottom) 0f
+                // Translate menu up for enough room to display full menu when task on bottom row.
+                else maxMenuBottom - currentMenuBottom
+
+            val currentMenuTop = menuTranslationYBeforeOpen + additionalTranslationY
+            // If it translate above the min accepted, it translates to the top of the screen
+            if (currentMenuTop < minMenuTop) {
+                // It subtracts the menuTranslation to make it 0 (top of the screen) + chip size.
+                additionalTranslationY = -menuTranslationYBeforeOpen + minMenuTop
+            }
         }
+
         val translationYAnim =
             ObjectAnimator.ofFloat(
                 this,
