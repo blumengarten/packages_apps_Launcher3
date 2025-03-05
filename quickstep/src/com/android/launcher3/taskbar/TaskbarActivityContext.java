@@ -1784,7 +1784,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
             folder.animateOpen();
             getStatsLogManager().logger().withItemInfo(folder.mInfo).log(LAUNCHER_FOLDER_OPEN);
 
-            folder.iterateOverItems((itemInfo, itemView) -> {
+            folder.mapOverItems((itemInfo, itemView) -> {
                 mControllers.taskbarViewController
                         .setClickAndLongClickListenersForIcon(itemView);
                 // To play haptic when dragging, like other Taskbar items do.

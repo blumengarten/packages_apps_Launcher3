@@ -1191,8 +1191,8 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
      * 3) All Apps button
      */
     public View getFirstIconMatch(Predicate<ItemInfo> matcher) {
-        Predicate<ItemInfo> collectionMatcher = ItemInfoMatcher.forFolderMatch(matcher);
-        return mTaskbarView.getFirstMatch(matcher, collectionMatcher);
+        View icon = mModelCallbacks.getFirstMatch(matcher, ItemInfoMatcher.forFolderMatch(matcher));
+        return icon != null ? icon : mTaskbarView.getAllAppsButtonContainer();
     }
 
     /**

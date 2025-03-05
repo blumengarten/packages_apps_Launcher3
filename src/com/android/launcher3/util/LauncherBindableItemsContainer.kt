@@ -25,8 +25,10 @@ import com.android.launcher3.model.data.AppPairInfo
 import com.android.launcher3.model.data.FolderInfo
 import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.model.data.WorkspaceItemInfo
+import com.android.launcher3.util.LauncherBindableItemsContainer.ItemOperator
 import com.android.launcher3.views.ActivityContext
 import com.android.launcher3.widget.PendingAppWidgetHostView
+import java.util.function.Predicate
 
 /** Interface representing a container which can bind Launcher items with some utility methods */
 interface LauncherBindableItemsContainer {
@@ -54,11 +56,24 @@ interface LauncherBindableItemsContainer {
         }
 
         mapOverItems(op)
-        Folder.getOpen(context)?.iterateOverItems(op)
+        Folder.getOpen(context)?.mapOverItems(op)
     }
 
-    /** Map the [op] over the shortcuts and widgets. */
-    fun mapOverItems(op: ItemOperator)
+    /** Returns the first view, matching the [op] */
+    @Deprecated("Use mapOverItems instead", ReplaceWith("mapOverItems(op)"))
+    fun getFirstMatch(op: ItemOperator): View? = mapOverItems(op)
+
+    /** Finds the first icon to match one of the given matchers, from highest to lowest priority. */
+    fun getFirstMatch(vararg matchers: Predicate<ItemInfo>): View? =
+        matchers.firstNotNullOfOrNull { mapOverItems { info, _ -> info != null && it.test(info) } }
+
+    fun getViewByItemId(id: Int): View? = mapOverItems { info, _ -> info != null && info.id == id }
+
+    /**
+     * Map the [op] over the shortcuts and widgets. Once we found the first view which matches, we
+     * will stop the iteration and return that view.
+     */
+    fun mapOverItems(op: ItemOperator): View?
 
     fun interface ItemOperator {
 

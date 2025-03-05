@@ -195,7 +195,7 @@ public interface ActivityContext {
      */
     @NonNull
     default LauncherBindableItemsContainer getContent() {
-        return op -> { };
+        return op -> null;
     }
 
     /**
