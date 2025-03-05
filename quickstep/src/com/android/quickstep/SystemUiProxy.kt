@@ -690,6 +690,13 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
             bubbles?.showDropTarget(show, bubbleBarLocation)
         }
 
+    /** Tells SysUI to move the bubble to full screen. */
+    fun moveBubbleToFullscreen(key: String) {
+        executeWithErrorLog({ "Failed to call moveBubbleToFullscreen"}) {
+            bubbles?.moveBubbleToFullscreen(key)
+        }
+    }
+
     //
     // Splitscreen
     //
