@@ -435,7 +435,11 @@ constructor(
                     logShowOverviewFrom(command.type)
                     containerInterface.runOnInitBackgroundStateUI {
                         Log.d(TAG, "recents animation started - onInitBackgroundStateUI: $command")
-                        interactionHandler.onGestureEnded(0f, PointF())
+                        interactionHandler.onGestureEnded(
+                            0f,
+                            PointF(),
+                            /* horizontalTouchSlopPassed= */ false,
+                        )
                     }
                     command.removeListener(this)
                 }
