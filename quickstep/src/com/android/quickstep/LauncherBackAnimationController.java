@@ -220,7 +220,7 @@ public class LauncherBackAnimationController {
             mHandler.post(() -> {
                 LauncherBackAnimationController controller = mControllerRef.get();
                 if (controller != null) {
-                    controller.startBack(backEvent);
+                    controller.initBackMotion(backEvent);
                     mProgressAnimator.onBackStarted(backEvent, event -> {
                         float backProgress = event.getProgress();
                         controller.mBackProgress =
@@ -270,6 +270,7 @@ public class LauncherBackAnimationController {
                 }
             }
             controller.mAnimationFinishedCallback = finishedCallback;
+            controller.startBack();
         }
 
         @Override
@@ -294,34 +295,32 @@ public class LauncherBackAnimationController {
         mBackCallback = null;
     }
 
-    private void startBack(BackMotionEvent backEvent) {
+    private void initBackMotion(BackMotionEvent backEvent) {
         // in case we're still animating an onBackCancelled event, let's remove the finish-
         // callback from the progress animator to prevent calling finishAnimation() before
         // restarting a new animation
-        // Side note: startBack is never called during the post-commit phase if the back gesture
-        // was committed (not cancelled). BackAnimationController prevents that. Therefore we
-        // don't have to handle that case.
+        // Side note: initBackMotion is never called during the post-commit phase if the back
+        // gesture was committed (not cancelled). BackAnimationController prevents that. Therefore
+        // we don't have to handle that case.
         mProgressAnimator.removeOnBackCancelledFinishCallback();
 
         mBackInProgress = true;
-        RemoteAnimationTarget appTarget = backEvent.getDepartingAnimationTarget();
-
-        if (appTarget == null || appTarget.leash == null || !appTarget.leash.isValid()) {
+        mInitialTouchPos.set(backEvent.getTouchX(), backEvent.getTouchY());
+    }
+    private void startBack() {
+        if (mBackTarget == null) {
             return;
         }
 
         mTransaction
-                .show(appTarget.leash)
+                .show(mBackTarget.leash)
                 .setAnimationTransaction();
-        mBackTarget = appTarget;
-        mInitialTouchPos.set(backEvent.getTouchX(), backEvent.getTouchY());
-
-        mStartRect.set(appTarget.windowConfiguration.getMaxBounds());
+        mStartRect.set(mBackTarget.windowConfiguration.getMaxBounds());
 
         // inset bottom in case of taskbar being present
         if (!predictiveBackThreeButtonNav() || mLauncher.getDeviceProfile().isTaskbarPresent
                 || DisplayController.getNavigationMode(mLauncher) == NavigationMode.NO_BUTTON) {
-            mStartRect.inset(0, 0, 0, appTarget.contentInsets.bottom);
+            mStartRect.inset(0, 0, 0, mBackTarget.contentInsets.bottom);
         }
 
         mLauncherTargetView = mQuickstepTransitionManager.findLauncherView(
