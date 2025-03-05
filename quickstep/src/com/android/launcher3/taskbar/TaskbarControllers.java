@@ -195,8 +195,11 @@ public class TaskbarControllers {
                 voiceInteractionWindowController
         };
 
+        // TODO(b/401061748): get primary status from
+        //  TaskbarDesktopModeController/DesktopVisibilityController.
         if (taskbarDesktopModeController.isInDesktopModeAndNotInOverview(
-                taskbarActivityContext.getDisplayId())) {
+                taskbarActivityContext.getDisplayId())
+                || !taskbarActivityContext.isPrimaryDisplay()) {
             mCornerRoundness.value = taskbarDesktopModeController.getTaskbarCornerRoundness(
                     mSharedState.showCornerRadiusInDesktopMode);
         } else {
