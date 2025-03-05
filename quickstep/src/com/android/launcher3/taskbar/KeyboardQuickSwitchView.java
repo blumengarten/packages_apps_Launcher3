@@ -300,6 +300,7 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
                 continue;
             }
 
+            currentTaskView.setPositionInformation(i, tasksToDisplay);
             currentTaskView.setThumbnailsForSplitTasks(
                     task1,
                     task2,
@@ -547,6 +548,9 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
 
 
         ViewOutlineProvider outlineProvider = getOutlineProvider();
+        int defaultFocusedTaskIndex = Math.min(
+                getTaskCount() - 1,
+                currentFocusIndexOverride == -1 ? 1 : currentFocusIndexOverride);
         mOpenAnimation.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
@@ -600,9 +604,7 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
                             });
                 }
 
-                animateFocusMove(-1, Math.min(
-                        getTaskCount() - 1,
-                        currentFocusIndexOverride == -1 ? 1 : currentFocusIndexOverride));
+                animateFocusMove(-1, defaultFocusedTaskIndex);
                 displayedContent.setVisibility(VISIBLE);
                 setVisibility(VISIBLE);
                 requestFocus();
@@ -622,6 +624,11 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
                 invalidateOutline();
                 mOpenAnimation = null;
                 InteractionJankMonitorWrapper.end(Cuj.CUJ_LAUNCHER_KEYBOARD_QUICK_SWITCH_OPEN);
+
+                View focusedTask = getTaskAt(defaultFocusedTaskIndex);
+                if (focusedTask != null) {
+                    focusedTask.requestAccessibilityFocus();
+                }
             }
         });
 
