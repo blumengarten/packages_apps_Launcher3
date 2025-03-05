@@ -66,16 +66,7 @@ class TaskViewModelTest {
 
     @Before
     fun setUp() {
-        sut =
-            TaskViewModel(
-                taskViewType = TaskViewType.SINGLE,
-                recentsViewData = recentsViewData,
-                getTaskUseCase = getTaskUseCase,
-                getSysUiStatusNavFlagsUseCase = GetSysUiStatusNavFlagsUseCase(),
-                isThumbnailValidUseCase = isThumbnailValidUseCase,
-                getThumbnailPositionUseCase = getThumbnailPositionUseCase,
-                dispatcherProvider = TestDispatcherProvider(unconfinedTestDispatcher),
-            )
+        sut = createTaskViewModel(TaskViewType.SINGLE)
         whenever(getTaskUseCase.invoke(TASK_MODEL_1.id)).thenReturn(flow { emit(TASK_MODEL_1) })
         whenever(getTaskUseCase.invoke(TASK_MODEL_2.id)).thenReturn(flow { emit(TASK_MODEL_2) })
         whenever(getTaskUseCase.invoke(TASK_MODEL_3.id)).thenReturn(flow { emit(TASK_MODEL_3) })
@@ -93,6 +84,7 @@ class TaskViewModelTest {
                     isLiveTile = false,
                     hasHeader = false,
                     sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
+                    taskOverlayEnabled = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -139,6 +131,7 @@ class TaskViewModelTest {
                     isLiveTile = false,
                     hasHeader = false,
                     sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
+                    taskOverlayEnabled = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -161,6 +154,7 @@ class TaskViewModelTest {
                     isLiveTile = true,
                     hasHeader = false,
                     sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
+                    taskOverlayEnabled = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -183,6 +177,7 @@ class TaskViewModelTest {
                     isLiveTile = false,
                     hasHeader = false,
                     sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
+                    taskOverlayEnabled = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -204,6 +199,7 @@ class TaskViewModelTest {
                     isLiveTile = false,
                     hasHeader = false,
                     sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
+                    taskOverlayEnabled = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -221,6 +217,7 @@ class TaskViewModelTest {
                     isLiveTile = false,
                     hasHeader = false,
                     sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
+                    taskOverlayEnabled = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -235,8 +232,61 @@ class TaskViewModelTest {
                     isLiveTile = false,
                     hasHeader = false,
                     sysUiStatusNavFlags = FLAGS_APPEARANCE_DEFAULT,
+                    taskOverlayEnabled = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
+        }
+
+    @Test
+    fun taskOverlayEnabled_when_OverlayIsEnabledForVisibleSingleTask() =
+        testScope.runTest {
+            sut.bind(TASK_MODEL_1.id)
+            recentsViewData.overlayEnabled.value = true
+            recentsViewData.settledFullyVisibleTaskIds.value = setOf(1)
+
+            assertThat(sut.state.first().taskOverlayEnabled).isTrue()
+        }
+
+    @Test
+    fun taskOverlayDisabled_when_usingGroupedTask() =
+        testScope.runTest {
+            sut = createTaskViewModel(TaskViewType.GROUPED)
+            sut.bind(TASK_MODEL_1.id)
+            recentsViewData.overlayEnabled.value = true
+            recentsViewData.settledFullyVisibleTaskIds.value = setOf(1)
+
+            assertThat(sut.state.first().taskOverlayEnabled).isFalse()
+        }
+
+    @Test
+    fun taskOverlayDisabled_when_usingDesktopTask() =
+        testScope.runTest {
+            sut = createTaskViewModel(TaskViewType.DESKTOP)
+            sut.bind(TASK_MODEL_1.id)
+            recentsViewData.overlayEnabled.value = true
+            recentsViewData.settledFullyVisibleTaskIds.value = setOf(1)
+
+            assertThat(sut.state.first().taskOverlayEnabled).isFalse()
+        }
+
+    @Test
+    fun taskOverlayDisabled_when_OverlayIsEnabledForInvisibleTask() =
+        testScope.runTest {
+            sut.bind(TASK_MODEL_1.id)
+            recentsViewData.overlayEnabled.value = true
+            recentsViewData.settledFullyVisibleTaskIds.value = setOf(2)
+
+            assertThat(sut.state.first().taskOverlayEnabled).isFalse()
+        }
+
+    @Test
+    fun taskOverlayDisabled_when_OverlayIsDisabledForVisibleTask() =
+        testScope.runTest {
+            sut.bind(TASK_MODEL_1.id)
+            recentsViewData.overlayEnabled.value = false
+            recentsViewData.settledFullyVisibleTaskIds.value = setOf(1)
+
+            assertThat(sut.state.first().taskOverlayEnabled).isFalse()
         }
 
     @Test
@@ -254,6 +304,17 @@ class TaskViewModelTest {
             thumbnailData = thumbnail,
             backgroundColor = backgroundColor,
             isLocked = isLocked,
+        )
+
+    private fun createTaskViewModel(taskViewType: TaskViewType) =
+        TaskViewModel(
+            taskViewType = taskViewType,
+            recentsViewData = recentsViewData,
+            getTaskUseCase = getTaskUseCase,
+            getSysUiStatusNavFlagsUseCase = GetSysUiStatusNavFlagsUseCase(),
+            isThumbnailValidUseCase = isThumbnailValidUseCase,
+            getThumbnailPositionUseCase = getThumbnailPositionUseCase,
+            dispatcherProvider = TestDispatcherProvider(unconfinedTestDispatcher),
         )
 
     private companion object {

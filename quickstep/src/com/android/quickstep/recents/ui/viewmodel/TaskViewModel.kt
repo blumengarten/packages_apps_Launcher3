@@ -29,6 +29,7 @@ import com.android.quickstep.recents.domain.usecase.IsThumbnailValidUseCase
 import com.android.quickstep.recents.domain.usecase.ThumbnailPosition
 import com.android.quickstep.recents.viewmodel.RecentsViewData
 import com.android.quickstep.views.TaskViewType
+import com.android.quickstep.views.TaskViewType.SINGLE
 import com.android.systemui.shared.recents.model.ThumbnailData
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -74,8 +75,18 @@ class TaskViewModel(
             )
         }
 
+    private val overlayEnabled =
+        combine(recentsViewData.overlayEnabled, recentsViewData.settledFullyVisibleTaskIds) {
+                isOverlayEnabled,
+                settledFullyVisibleTaskIds ->
+                taskViewType == SINGLE &&
+                    isOverlayEnabled &&
+                    settledFullyVisibleTaskIds.any { it in taskIds.value }
+            }
+            .distinctUntilChanged()
+
     val state: Flow<TaskTileUiState> =
-        combine(taskData, isLiveTile) { tasks, isLiveTile -> mapToTaskTile(tasks, isLiveTile) }
+        combine(taskData, isLiveTile, overlayEnabled, ::mapToTaskTile)
             .distinctUntilChanged()
             .flowOn(dispatcherProvider.background)
 
@@ -99,13 +110,18 @@ class TaskViewModel(
             isRtl = isRtl,
         )
 
-    private fun mapToTaskTile(tasks: List<TaskData>, isLiveTile: Boolean): TaskTileUiState {
+    private fun mapToTaskTile(
+        tasks: List<TaskData>,
+        isLiveTile: Boolean,
+        overlayEnabled: Boolean,
+    ): TaskTileUiState {
         val firstThumbnailData = (tasks.firstOrNull() as? TaskData.Data)?.thumbnailData
         return TaskTileUiState(
             tasks = tasks,
             isLiveTile = isLiveTile,
             hasHeader = taskViewType == TaskViewType.DESKTOP,
             sysUiStatusNavFlags = getSysUiStatusNavFlagsUseCase(firstThumbnailData),
+            taskOverlayEnabled = overlayEnabled,
         )
     }
 
