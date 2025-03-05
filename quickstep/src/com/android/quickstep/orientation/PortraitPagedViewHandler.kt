@@ -726,7 +726,11 @@ class PortraitPagedViewHandler : DefaultPagedViewHandler(), RecentsPagedOrientat
                         val secondarySnapshotWidth = groupedTaskViewWidth - primarySnapshotWidth
                         primaryAppChipView.setSplitTranslationX(-secondarySnapshotWidth.toFloat())
                     } else {
-                        secondaryAppChipView.setSplitTranslationX(primarySnapshotWidth.toFloat())
+                        val dividerSize =
+                            Math.round(groupedTaskViewWidth * splitConfig.dividerPercent)
+                        secondaryAppChipView.setSplitTranslationX(
+                            primarySnapshotWidth.toFloat() + dividerSize
+                        )
                     }
                 } else {
                     primaryAppChipView.setSplitTranslationX(0f)
