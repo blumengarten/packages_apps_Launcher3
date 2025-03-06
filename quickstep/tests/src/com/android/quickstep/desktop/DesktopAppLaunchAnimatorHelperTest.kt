@@ -93,6 +93,21 @@ class DesktopAppLaunchAnimatorHelperTest {
     }
 
     @Test
+    fun noLaunchTransition_returnsEmptyAnimatorsList() {
+        val pipChange =
+            TransitionInfo.Change(mock(), mock()).apply {
+                mode = WindowManager.TRANSIT_PIP
+                taskInfo = TASK_INFO_FREEFORM
+            }
+        val transitionInfo = TransitionInfo(WindowManager.TRANSIT_NONE, 0)
+        transitionInfo.addChange(pipChange)
+
+        val actual = helper.createAnimators(transitionInfo, finishCallback = {})
+
+        assertThat(actual).hasSize(0)
+    }
+
+    @Test
     fun minimizeTransition_returnsLaunchAndMinimizeAnimator() {
         val openChange =
             TransitionInfo.Change(mock(), mock()).apply {
