@@ -48,7 +48,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -56,7 +55,7 @@ import java.util.stream.Collectors;
  * Works with app predictor to fetch and process widget predictions displayed in a standalone
  * widget picker activity for a UI surface.
  */
-public class WidgetPredictionsRequester {
+public class WidgetPredictionsRequester implements AppPredictor.Callback {
     private static final int NUM_OF_RECOMMENDED_WIDGETS_PREDICATION = 20;
     private static final String BUNDLE_KEY_ADDED_APP_WIDGETS = "added_app_widgets";
     // container/screenid/[positionx,positiony]/[spanx,spany]
@@ -71,6 +70,9 @@ public class WidgetPredictionsRequester {
     @NonNull
     private final String mUiSurface;
     private boolean mPredictionsAvailable;
+    @Nullable
+    private WidgetPredictionsListener mPredictionsListener = null;
+    @Nullable Predicate<WidgetItem> mFilter = null;
     @NonNull
     private final Map<ComponentKey, WidgetItem> mAllWidgets;
 
@@ -81,36 +83,49 @@ public class WidgetPredictionsRequester {
         mAllWidgets = Collections.unmodifiableMap(allWidgets);
     }
 
+    // AppPredictor.Callback -> onTargetsAvailable
+    @Override
+    @WorkerThread
+    public void onTargetsAvailable(List<AppTarget> targets) {
+        List<WidgetItem> filteredPredictions = filterPredictions(targets, mAllWidgets, mFilter);
+        List<ItemInfo> mappedPredictions = mapWidgetItemsToItemInfo(filteredPredictions);
+
+        if (!mPredictionsAvailable && mPredictionsListener != null) {
+            mPredictionsAvailable = true;
+            MAIN_EXECUTOR.execute(
+                    () -> mPredictionsListener.onPredictionsAvailable(mappedPredictions));
+        }
+    }
+
     /**
      * Requests one time predictions from the app predictions manager and invokes provided callback
-     * once predictions are available.
+     * once predictions are available. Any previous requests may be cancelled.
      *
      * @param existingWidgets widgets that are currently added to the surface;
-     * @param callback        consumer of prediction results to be called when predictions are
-     *                        available
+     * @param listener        consumer of prediction results to be called when predictions are
+     *                        available; any previous listener will no longer receive updates.
      */
+    @WorkerThread // e.g. MODEL_EXECUTOR
     public void request(List<AppWidgetProviderInfo> existingWidgets,
-            Consumer<List<ItemInfo>> callback) {
+            WidgetPredictionsListener listener) {
+        clear();
+        mPredictionsListener = listener;
+        mFilter = notOnUiSurfaceFilter(existingWidgets);
+
+        AppPredictionManager apm = mContext.getSystemService(AppPredictionManager.class);
+        if (apm == null) {
+            return;
+        }
+
         Bundle bundle = buildBundleForPredictionSession(existingWidgets);
-        Predicate<WidgetItem> filter = notOnUiSurfaceFilter(existingWidgets);
-
-        MODEL_EXECUTOR.execute(() -> {
-            clear();
-            AppPredictionManager apm = mContext.getSystemService(AppPredictionManager.class);
-            if (apm == null) {
-                return;
-            }
-
-            mAppPredictor = apm.createAppPredictionSession(
-                    new AppPredictionContext.Builder(mContext)
-                            .setUiSurface(mUiSurface)
-                            .setExtras(bundle)
-                            .setPredictedTargetCount(NUM_OF_RECOMMENDED_WIDGETS_PREDICATION)
-                            .build());
-            mAppPredictor.registerPredictionUpdates(MODEL_EXECUTOR,
-                    targets -> bindPredictions(targets, filter, callback));
-            mAppPredictor.requestPredictionUpdate();
-        });
+        mAppPredictor = apm.createAppPredictionSession(
+                new AppPredictionContext.Builder(mContext)
+                        .setUiSurface(mUiSurface)
+                        .setExtras(bundle)
+                        .setPredictedTargetCount(NUM_OF_RECOMMENDED_WIDGETS_PREDICATION)
+                        .build());
+        mAppPredictor.registerPredictionUpdates(MODEL_EXECUTOR, /*callback=*/ this);
+        mAppPredictor.requestPredictionUpdate();
     }
 
     /**
@@ -158,27 +173,14 @@ public class WidgetPredictionsRequester {
         return widgetItem -> !existingComponentKeys.contains(widgetItem);
     }
 
-    /** Provides the predictions returned by the predictor to the registered callback. */
-    @WorkerThread
-    private void bindPredictions(List<AppTarget> targets, Predicate<WidgetItem> filter,
-            Consumer<List<ItemInfo>> callback) {
-        if (!mPredictionsAvailable) {
-            mPredictionsAvailable = true;
-            List<WidgetItem> filteredPredictions = filterPredictions(targets, mAllWidgets, filter);
-            List<ItemInfo> mappedPredictions = mapWidgetItemsToItemInfo(filteredPredictions);
-
-            MAIN_EXECUTOR.execute(() -> callback.accept(mappedPredictions));
-            MODEL_EXECUTOR.execute(this::clear);
-        }
-    }
-
     /**
      * Applies the provided filter (e.g. widgets not on workspace) on the predictions returned by
      * the predictor.
      */
     @VisibleForTesting
     static List<WidgetItem> filterPredictions(List<AppTarget> predictions,
-            Map<ComponentKey, WidgetItem> allWidgets, Predicate<WidgetItem> filter) {
+            @NonNull Map<ComponentKey, WidgetItem> allWidgets,
+            @Nullable Predicate<WidgetItem> filter) {
         List<WidgetItem> servicePredictedItems = new ArrayList<>();
 
         for (AppTarget prediction : predictions) {
@@ -187,7 +189,7 @@ public class WidgetPredictionsRequester {
                 WidgetItem widgetItem = allWidgets.get(
                         new ComponentKey(new ComponentName(prediction.getPackageName(), className),
                                 prediction.getUser()));
-                if (widgetItem != null && filter.test(widgetItem)) {
+                if (widgetItem != null && (filter == null || filter.test(widgetItem))) {
                     servicePredictedItems.add(widgetItem);
                 }
             }
@@ -218,9 +220,23 @@ public class WidgetPredictionsRequester {
     /** Cleans up any open prediction sessions. */
     public void clear() {
         if (mAppPredictor != null) {
+            mAppPredictor.unregisterPredictionUpdates(this);
             mAppPredictor.destroy();
             mAppPredictor = null;
         }
+        mPredictionsListener = null;
         mPredictionsAvailable = false;
+        mFilter = null;
+    }
+
+    /**
+     * Listener class to listen to updates from the {@link WidgetPredictionsRequester}
+     */
+    public interface WidgetPredictionsListener {
+        /**
+         * Callback method that is called when the predicted widgets are available.
+         * @param predictions list of predicted widgets {@link PendingAddWidgetInfo}
+         */
+        void onPredictionsAvailable(List<ItemInfo> predictions);
     }
 }
