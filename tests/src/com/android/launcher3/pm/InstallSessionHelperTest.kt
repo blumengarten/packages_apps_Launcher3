@@ -35,7 +35,6 @@ import com.android.launcher3.util.LauncherModelHelper
 import com.android.launcher3.util.TestUtil
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.any
@@ -167,7 +166,6 @@ class InstallSessionHelperTest {
     }
 
     @Test
-    @Ignore("b/388258969")
     fun `promiseIconAddedForId returns true if there is a promiseIcon with the session id`() {
         // Given
         val expectedIdString = IntArray().apply { add(1) }.toConcatString()
