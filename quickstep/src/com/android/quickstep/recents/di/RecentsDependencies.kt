@@ -18,7 +18,6 @@ package com.android.quickstep.recents.di
 
 import android.content.Context
 import android.util.Log
-import android.view.View
 import com.android.launcher3.util.coroutines.DispatcherProvider
 import com.android.launcher3.util.coroutines.ProductionDispatchers
 import com.android.quickstep.RecentsModel
@@ -32,8 +31,6 @@ import com.android.quickstep.recents.domain.usecase.GetThumbnailPositionUseCase
 import com.android.quickstep.recents.domain.usecase.IsThumbnailValidUseCase
 import com.android.quickstep.recents.domain.usecase.OrganizeDesktopTasksUseCase
 import com.android.quickstep.recents.viewmodel.RecentsViewData
-import com.android.quickstep.task.viewmodel.TaskOverlayViewModel
-import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.utilities.PreviewPositionHelper
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -49,10 +46,12 @@ class RecentsDependencies private constructor(appContext: Context) {
     }
 
     /**
-     * This function initialised the default scope with RecentsView dependencies. These dependencies
-     * are used multiple times and should be a singleton to share across Recents classes.
+     * This function initialises the default scope with RecentsView dependencies. Some dependencies
+     * are global while others are per-RecentsView. The scope is used to differentiate between
+     * RecentsViews.
      */
     private fun startDefaultScope(appContext: Context) {
+        Log.d(TAG, "startDefaultScope")
         createScope(DEFAULT_SCOPE_ID).apply {
             set(RecentsViewData::class.java.simpleName, RecentsViewData())
             val dispatcherProvider: DispatcherProvider = ProductionDispatchers
@@ -84,6 +83,32 @@ class RecentsDependencies private constructor(appContext: Context) {
                 }
             set(RecentTasksRepository::class.java.simpleName, recentTasksRepository)
         }
+    }
+
+    /**
+     * This function initialises a scope associated with the dependencies of a single RecentsView.
+     *
+     * @param viewContext the Context associated with a RecentsView.
+     * @return the scope id associated with the new RecentsDependenciesScope.
+     */
+    fun createRecentsViewScope(viewContext: Context): String {
+        val scopeId = viewContext.hashCode().toString()
+        Log.d(TAG, "createRecentsViewScope $scopeId")
+        val scope =
+            createScope(scopeId).apply {
+                set(RecentsViewData::class.java.simpleName, RecentsViewData())
+                val dispatcherProvider: DispatcherProvider =
+                    get<DispatcherProvider>(DEFAULT_SCOPE_ID)
+                val recentsCoroutineScope =
+                    CoroutineScope(
+                        SupervisorJob() +
+                            dispatcherProvider.unconfined +
+                            CoroutineName("RecentsView$scopeId")
+                    )
+                set(CoroutineScope::class.java.simpleName, recentsCoroutineScope)
+            }
+        scope.linkTo(getScope(DEFAULT_SCOPE_ID))
+        return scopeId
     }
 
     inline fun <reified T> inject(
@@ -170,25 +195,14 @@ class RecentsDependencies private constructor(appContext: Context) {
         log("linked scopes: ${getScope(scopeId).scopeIdsLinked}")
         val instance: Any =
             when (modelClass) {
-                RecentsViewData::class.java -> RecentsViewData()
-                TaskOverlayViewModel::class.java -> {
-                    val task = extras["Task"] as Task
-                    TaskOverlayViewModel(
-                        task = task,
-                        recentsViewData = inject(),
-                        recentTasksRepository = inject(),
-                        getThumbnailPositionUseCase = inject(),
-                        dispatcherProvider = inject(),
-                    )
-                }
                 IsThumbnailValidUseCase::class.java ->
-                    IsThumbnailValidUseCase(rotationStateRepository = inject())
-                GetTaskUseCase::class.java -> GetTaskUseCase(repository = inject())
+                    IsThumbnailValidUseCase(rotationStateRepository = inject(scopeId))
+                GetTaskUseCase::class.java -> GetTaskUseCase(repository = inject(scopeId))
                 GetSysUiStatusNavFlagsUseCase::class.java -> GetSysUiStatusNavFlagsUseCase()
                 GetThumbnailPositionUseCase::class.java ->
                     GetThumbnailPositionUseCase(
-                        deviceProfileRepository = inject(),
-                        rotationStateRepository = inject(),
+                        deviceProfileRepository = inject(scopeId),
+                        rotationStateRepository = inject(scopeId),
                         previewPositionHelper = PreviewPositionHelper(),
                     )
                 OrganizeDesktopTasksUseCase::class.java -> OrganizeDesktopTasksUseCase()
@@ -222,58 +236,58 @@ class RecentsDependencies private constructor(appContext: Context) {
     }
 
     companion object {
-        private const val DEFAULT_SCOPE_ID = "RecentsDependencies::GlobalScope"
+        const val DEFAULT_SCOPE_ID = "RecentsDependencies::GlobalScope"
         private const val TAG = "RecentsDependencies"
         private const val DEBUG = false
-        private var activeRecentsCount = 0
 
-        @Volatile private lateinit var instance: RecentsDependencies
+        @Volatile private var instance: RecentsDependencies? = null
 
-        fun initialize(view: View): RecentsDependencies = initialize(view.context)
-
-        fun initialize(context: Context): RecentsDependencies {
+        private fun initialize(context: Context): RecentsDependencies {
             Log.d(TAG, "initializing")
             synchronized(this) {
-                activeRecentsCount++
-                instance = RecentsDependencies(context.applicationContext)
+                val newInstance = RecentsDependencies(context.applicationContext)
+                instance = newInstance
+                return newInstance
             }
-            return instance
+        }
+
+        fun maybeInitialize(context: Context): RecentsDependencies {
+            return instance ?: initialize(context)
         }
 
         fun getInstance(): RecentsDependencies {
-            if (!Companion::instance.isInitialized) {
-                throw UninitializedPropertyAccessException(
-                    "Recents dependencies are not initialized. " +
-                        "Call `RecentsDependencies.initialize` before using this container."
-                )
-            }
             return instance
+                ?: throw UninitializedPropertyAccessException(
+                    "Recents dependencies are not initialized. " +
+                        "Call `RecentsDependencies.maybeInitialize` before using this container."
+                )
         }
 
         @JvmStatic
-        fun destroy() {
-            // When Launcher Activity restarts, the old view's RecentsView.onDetachedFromWindow
-            // happens after the new view's creation. This means that destroy can be called after a
-            // new initialisation. This check prevents a newly initialised tree from being
-            // destroyed. Ideally we would have 1 instance of the dependency tree for each
-            // RecentsView.
-            //
-            // This check is sufficient to avoid a leak of the dependency tree after the Activity is
-            // destroyed while also allowing Launcher auto-restarts (production behaviour) to easily
-            // reinitialise the dependency tree.
-            //
-            // TODO(b/353917593): Better lifecycle decisions will be implemented in this bug or when
-            //  replacing with Dagger (b/371370483).
-            activeRecentsCount--
-            if (activeRecentsCount == 0) {
-                instance.scopes.clear()
-                Log.d(TAG, "destroyed", Exception("Printing stack trace"))
-            } else {
-                Log.d(
-                    TAG,
-                    "RecentsDependencies was not destroyed. " +
-                        "There is still an active RecentsView instance.",
-                )
+        fun destroy(viewContext: Context) {
+            synchronized(this) {
+                val localInstance = instance ?: return
+                val scopeId = viewContext.hashCode().toString()
+                val scope = localInstance.scopes[scopeId]
+                if (scope == null) {
+                    Log.e(
+                        TAG,
+                        "Trying to destroy an unknown scope. Scopes: ${localInstance.scopes.size}",
+                    )
+                    return
+                }
+                scope.close()
+                localInstance.scopes.remove(scopeId)
+                if (DEBUG) {
+                    Log.d(TAG, "destroyed $scopeId", Exception("Printing stack trace"))
+                } else {
+                    Log.d(TAG, "destroyed $scopeId")
+                }
+                if (localInstance.scopes.size == 1) {
+                    // Only the default scope left - destroy this too.
+                    instance = null
+                    Log.d(TAG, "also destroyed default scope")
+                }
             }
         }
     }

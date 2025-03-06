@@ -646,3 +646,13 @@ flag {
   description: "Enable more grid scale options on the launcher for desktop experience"
   bug: "375491272"
 }
+
+flag {
+  name: "enable_gesture_nav_horizontal_touch_slop"
+  namespace: "launcher"
+  description: "Enables horizontal touch slop checking in non-vertical fling navigation gestures"
+  bug: "394364217"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+}

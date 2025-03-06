@@ -75,7 +75,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Predicate;
 
 /**
  * Hosts the Taskbar content such as Hotseat and Recent Apps. Drawn on top of other apps.
@@ -1118,29 +1117,6 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
      */
     public int getAllAppsButtonTranslationXOffsetUsedForLayout() {
         return mAllAppsButtonTranslationOffset;
-    }
-
-    /**
-     * Finds the first icon to match one of the given matchers, from highest to lowest priority.
-     *
-     * @return The first match, or All Apps button if no match was found.
-     */
-    public View getFirstMatch(Predicate<ItemInfo>... matchers) {
-        for (Predicate<ItemInfo> matcher : matchers) {
-            for (int i = 0; i < getChildCount(); i++) {
-                View item = getChildAt(i);
-                if (!(item.getTag() instanceof ItemInfo)) {
-                    // Should only happen for All Apps button.
-                    // Will also happen for Recent/Running app icons. (Which have GroupTask as tags)
-                    continue;
-                }
-                ItemInfo info = (ItemInfo) item.getTag();
-                if (matcher.test(info)) {
-                    return item;
-                }
-            }
-        }
-        return mAllAppsButtonContainer;
     }
 
     /**

@@ -56,6 +56,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.savedstate.SavedStateRegistryOwner;
 
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.DeviceProfile;
@@ -94,7 +95,7 @@ import java.util.List;
  * An interface to be used along with a context for various activities in Launcher. This allows a
  * generic class to depend on Context subclass instead of an Activity.
  */
-public interface ActivityContext {
+public interface ActivityContext extends SavedStateRegistryOwner {
 
     String TAG = "ActivityContext";
 
@@ -195,7 +196,7 @@ public interface ActivityContext {
      */
     @NonNull
     default LauncherBindableItemsContainer getContent() {
-        return op -> { };
+        return op -> null;
     }
 
     /**
@@ -229,9 +230,7 @@ public interface ActivityContext {
         getOnDeviceProfileChangeListeners().remove(listener);
     }
 
-    default ViewCache getViewCache() {
-        return new ViewCache();
-    }
+    ViewCache getViewCache();
 
     /**
      * Controller for supporting item drag-and-drop

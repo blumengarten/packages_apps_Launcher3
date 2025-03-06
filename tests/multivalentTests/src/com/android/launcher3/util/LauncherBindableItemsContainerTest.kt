@@ -122,9 +122,10 @@ class LauncherBindableItemsContainerTest {
 
         val items = mutableMapOf<ItemInfo, View>()
 
-        override fun mapOverItems(op: ItemOperator) {
-            items.forEach { (item, view) -> if (op.evaluate(item, view)) return@forEach }
-        }
+        override fun mapOverItems(op: ItemOperator): View? =
+            items.firstNotNullOfOrNull { (item, view) ->
+                if (op.evaluate(item, view)) view else null
+            }
 
         fun addIcon(info: WorkspaceItemInfo) {
             val btv = BubbleTextView(this)

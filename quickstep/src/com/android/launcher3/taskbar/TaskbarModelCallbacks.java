@@ -18,6 +18,7 @@ package com.android.launcher3.taskbar;
 import android.util.SparseArray;
 import android.view.View;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.UiThread;
 
 import com.android.launcher3.LauncherSettings.Favorites;
@@ -120,14 +121,15 @@ public class TaskbarModelCallbacks implements
     }
 
     @Override
-    public void mapOverItems(ItemOperator op) {
+    public View mapOverItems(@NonNull ItemOperator op) {
         final int itemCount = mContainer.getChildCount();
         for (int itemIdx = 0; itemIdx < itemCount; itemIdx++) {
             View item = mContainer.getChildAt(itemIdx);
             if (item.getTag() instanceof ItemInfo itemInfo && op.evaluate(itemInfo, item)) {
-                return;
+                return item;
             }
         }
+        return null;
     }
 
     @Override

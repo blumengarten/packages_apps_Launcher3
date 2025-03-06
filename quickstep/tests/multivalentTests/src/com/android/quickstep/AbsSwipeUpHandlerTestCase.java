@@ -364,7 +364,7 @@ public abstract class AbsSwipeUpHandlerTestCase<
         float xVelocityPxPerMs = isQuickSwitch ? 100 : 0;
         float yVelocityPxPerMs = isQuickSwitch ? 0 : -100;
         swipeHandler.onGestureEnded(
-                yVelocityPxPerMs, new PointF(xVelocityPxPerMs, yVelocityPxPerMs));
+                yVelocityPxPerMs, new PointF(xVelocityPxPerMs, yVelocityPxPerMs), isQuickSwitch);
         swipeHandler.onCalculateEndTarget();
         runOnMainSync(swipeHandler::onSettledOnEndTarget);
 

@@ -477,9 +477,12 @@
 
     <!-- Label of tab to indicate personal apps -->
     <string name="all_apps_personal_tab">Personal</string>
-
     <!-- Label of tab to indicate work apps -->
     <string name="all_apps_work_tab">Work</string>
+    <!-- Content description of personal tab to indicate personal apps -->
+    <string name="all_apps_personal_tab_content_description">Personal apps tab</string>
+    <!-- Content description of work tab to indicate work apps -->
+    <string name="all_apps_work_tab_content_description">Work apps tab</string>
 
     <!-- This string is in the work profile tab when a user has All Apps open on their phone. This is a label for a toggle to turn the work profile on and off. "Work profile" means a separate profile on a user's phone that's specifically for their work apps and managed by their company. "Work" is used as an adjective.-->
     <string name="work_profile_toggle_label">Work profile</string>

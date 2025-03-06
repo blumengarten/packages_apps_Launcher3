@@ -52,6 +52,7 @@ import com.android.launcher3.util.SplitConfigurationOptions.SplitPositionOption;
 import com.android.launcher3.views.ActivityContext;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.util.LogUtils;
+import com.android.quickstep.util.SingleTask;
 import com.android.wm.shell.shared.bubbles.BubbleAnythingFlagHelper;
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 
@@ -140,22 +141,27 @@ public class TaskbarPopupController implements TaskbarControllers.LoggableTaskba
             icon.clearFocus();
             return null;
         }
-        // TODO(b/344657629) support GroupTask as well, for Taskbar Recent apps
-        if (!(icon.getTag() instanceof ItemInfo item) || !ShortcutUtil.supportsShortcuts(item)) {
+
+        ItemInfo itemInfo;
+        if (icon.getTag() instanceof ItemInfo item && ShortcutUtil.supportsShortcuts(item)) {
+            itemInfo = item;
+        } else if (icon.getTag() instanceof SingleTask task) {
+            itemInfo = SingleTask.Companion.createTaskItemInfo(task);
+        } else {
             return null;
         }
 
         PopupContainerWithArrow<BaseTaskbarContext> container;
-        int deepShortcutCount = mPopupDataProvider.getShortcutCountForItem(item);
+        int deepShortcutCount = mPopupDataProvider.getShortcutCountForItem(itemInfo);
         // TODO(b/198438631): add support for INSTALL shortcut factory
         List<SystemShortcut> systemShortcuts = getSystemShortcuts()
-                .map(s -> s.getShortcut(context, item, icon))
+                .map(s -> s.getShortcut(context, itemInfo, icon))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         // TODO(b/375648361): Revisit to see if this can be implemented within getSystemShortcuts().
         if (Flags.enablePinningAppWithContextMenu()) {
-            SystemShortcut shortcut = createPinShortcut(context, item, icon);
+            SystemShortcut shortcut = createPinShortcut(context, itemInfo, icon);
             if (shortcut != null) {
                 systemShortcuts.add(0, shortcut);
             }
@@ -163,7 +169,7 @@ public class TaskbarPopupController implements TaskbarControllers.LoggableTaskba
 
         container = (PopupContainerWithArrow) context.getLayoutInflater().inflate(
                     R.layout.popup_container, context.getDragLayer(), false);
-        container.populateAndShowRows(icon, deepShortcutCount, systemShortcuts);
+        container.populateAndShowRows(icon, itemInfo, deepShortcutCount, systemShortcuts);
 
         // TODO (b/198438631): configure for taskbar/context
         container.setPopupItemDragHandler(new TaskbarPopupItemDragHandler());

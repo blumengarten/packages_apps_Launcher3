@@ -176,6 +176,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 /**
  * Manages the opening and closing app transitions from Launcher
@@ -1342,9 +1343,9 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                 ? Collections.EMPTY_LIST
                 : runningTaskTarget.taskInfo.launchCookies;
 
-        return mLauncher.getFirstMatchForAppClose(
+        return mLauncher.getFirstVisibleElementForAppClose(
                 StableViewInfo.fromLaunchCookies(launchCookies), packageName,
-                UserHandle.of(runningTaskTarget.taskInfo.userId), true /* supportsAllAppsState */);
+                UserHandle.of(runningTaskTarget.taskInfo.userId));
     }
 
     private @NonNull RectF getDefaultWindowTargetRect() {

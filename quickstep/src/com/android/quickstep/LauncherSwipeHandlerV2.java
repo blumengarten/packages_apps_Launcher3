@@ -308,10 +308,10 @@ public class LauncherSwipeHandlerV2 extends AbsSwipeUpHandler<
             return null;
         }
 
-        return mContainer.getFirstMatchForAppClose(StableViewInfo.fromLaunchCookies(launchCookies),
+        return mContainer.getFirstHomeElementForAppClose(
+                StableViewInfo.fromLaunchCookies(launchCookies),
                 sourceTaskView.getFirstTask().key.getComponent().getPackageName(),
-                UserHandle.of(sourceTaskView.getFirstTask().key.userId),
-                false /* supportsAllAppsState */);
+                UserHandle.of(sourceTaskView.getFirstTask().key.userId));
     }
 
     @Override

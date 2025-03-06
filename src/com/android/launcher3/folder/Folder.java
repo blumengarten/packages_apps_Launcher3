@@ -101,6 +101,7 @@ import com.android.launcher3.model.data.WorkspaceItemFactory;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
 import com.android.launcher3.pageindicators.PageIndicatorDots;
 import com.android.launcher3.util.Executors;
+import com.android.launcher3.util.LauncherBindableItemsContainer;
 import com.android.launcher3.util.LauncherBindableItemsContainer.ItemOperator;
 import com.android.launcher3.util.Thunk;
 import com.android.launcher3.views.ActivityContext;
@@ -123,7 +124,8 @@ import java.util.stream.Stream;
  */
 public class Folder extends AbstractFloatingView implements ClipPathView, DragSource,
         View.OnLongClickListener, DropTarget, FolderListener, TextView.OnEditorActionListener,
-        View.OnFocusChangeListener, DragListener, ExtendedEditText.OnBackKeyListener {
+        View.OnFocusChangeListener, DragListener, ExtendedEditText.OnBackKeyListener,
+        LauncherBindableItemsContainer {
     private static final String TAG = "Launcher.Folder";
     private static final boolean DEBUG = false;
 
@@ -1513,8 +1515,10 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     /**
      * Utility methods to iterate over items of the view
      */
-    public void iterateOverItems(ItemOperator op) {
-        mContent.iterateOverItems(op);
+    @Override
+    @Nullable
+    public View mapOverItems(@NonNull ItemOperator op) {
+        return mContent.iterateOverItems(op);
     }
 
     /**

@@ -15,6 +15,9 @@
  */
 package com.android.quickstep.util
 
+import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_TASK
+import com.android.launcher3.model.data.TaskItemInfo
+import com.android.launcher3.model.data.WorkspaceItemInfo
 import com.android.launcher3.util.SplitConfigurationOptions
 import com.android.quickstep.views.TaskViewType
 import com.android.systemui.shared.recents.model.Task
@@ -67,6 +70,21 @@ class SingleTask(task: Task) : GroupTask(listOf(task), TaskViewType.SINGLE) {
         if (this === o) return true
         if (o !is SingleTask) return false
         return super.equals(o)
+    }
+
+    companion object {
+        /** Creates a [TaskItemInfo] using the information of the SingleTask */
+        fun createTaskItemInfo(task: SingleTask): TaskItemInfo {
+            // TODO: b/344657629 - Support GroupTask in addition to SingleTask.
+            val wii =
+                WorkspaceItemInfo().apply {
+                    title = task.task.title
+                    intent = task.task.key.baseIntent
+                    itemType = ITEM_TYPE_TASK
+                    contentDescription = task.task.titleDescription
+                }
+            return TaskItemInfo(task.task.key.id, wii)
+        }
     }
 }
 

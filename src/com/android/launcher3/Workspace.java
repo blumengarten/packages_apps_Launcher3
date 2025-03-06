@@ -67,6 +67,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.view.ViewCompat;
@@ -3163,7 +3164,7 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
                         + "Workspace#onDropCompleted. Please file a bug. ");
             }
         }
-        View cell = getHomescreenIconByItemId(d.originalDragInfo.id);
+        View cell = getViewByItemId(d.originalDragInfo.id);
         if (d.cancelled && cell != null) {
             cell.setVisibility(VISIBLE);
         }
@@ -3312,29 +3313,9 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         return layouts;
     }
 
-    public View getHomescreenIconByItemId(final int id) {
-        return getFirstMatch((info, v) -> info != null && info.id == id);
-    }
-
     public LauncherAppWidgetHostView getWidgetForAppWidgetId(final int appWidgetId) {
-        return (LauncherAppWidgetHostView) getFirstMatch((info, v) ->
-                (info instanceof LauncherAppWidgetInfo) &&
-                        ((LauncherAppWidgetInfo) info).appWidgetId == appWidgetId);
-    }
-
-    public View getFirstMatch(final ItemOperator operator) {
-        final View[] value = new View[1];
-        mapOverItems(new ItemOperator() {
-            @Override
-            public boolean evaluate(ItemInfo info, View v) {
-                if (operator.evaluate(info, v)) {
-                    value[0] = v;
-                    return true;
-                }
-                return false;
-            }
-        });
-        return value[0];
+        return (LauncherAppWidgetHostView) mapOverItems((info, v) ->
+                (info instanceof LauncherAppWidgetInfo lawi) && lawi.appWidgetId == appWidgetId);
     }
 
     void clearDropTargets() {
@@ -3393,31 +3374,26 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
     }
 
     @Override
-    public void mapOverItems(ItemOperator op) {
-        for (CellLayout layout : getWorkspaceAndHotseatCellLayouts()) {
-            if (mapOverCellLayout(layout, op) != null) {
-                return;
-            }
-        }
+    public View mapOverItems(@NonNull ItemOperator op) {
+        return mapOverCellLayouts(getWorkspaceAndHotseatCellLayouts(), op);
     }
 
     /**
-     * Perform {param operator} over all the items in a given {param layout}.
-     *
-     * @return The first item that satisfies the operator or null.
+     * Perform {param op} over all the items in the provided {param layouts} until a match is found
      */
-    public View mapOverCellLayout(CellLayout layout, ItemOperator operator) {
-        // TODO(b/128460496) Potential race condition where layout is not yet loaded
-        if (layout == null) {
-            return null;
-        }
-        ShortcutAndWidgetContainer container = layout.getShortcutsAndWidgets();
-        // map over all the shortcuts on the workspace
-        final int itemCount = container.getChildCount();
-        for (int itemIdx = 0; itemIdx < itemCount; itemIdx++) {
-            View item = container.getChildAt(itemIdx);
-            if (operator.evaluate((ItemInfo) item.getTag(), item)) {
-                return item;
+    public static View mapOverCellLayouts(CellLayout[] layouts, ItemOperator op) {
+        for (CellLayout layout : layouts) {
+            // TODO(b/128460496) Potential race condition where layout is not yet loaded
+            if (layout == null) continue;
+
+            ShortcutAndWidgetContainer container = layout.getShortcutsAndWidgets();
+            // map over all the shortcuts on the layout
+            final int itemCount = container.getChildCount();
+            for (int itemIdx = 0; itemIdx < itemCount; itemIdx++) {
+                View item = container.getChildAt(itemIdx);
+                if (op.evaluate((ItemInfo) item.getTag(), item)) {
+                    return item;
+                }
             }
         }
         return null;
