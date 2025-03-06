@@ -100,11 +100,9 @@ public class TaplTestsQuickstep extends AbstractQuickStepTest {
 
     @After
     public void tearDown() {
-        runOnRecentsView(recentsView -> {
-            if (recentsView != null) {
-                recentsView.getPagedViewOrientedState().forceAllowRotationForTesting(false);
-            }
-        });
+        runOnRecentsView(recentsView ->
+                recentsView.getPagedViewOrientedState().forceAllowRotationForTesting(false),
+                /* forTearDown= */ true);
     }
 
     public static void startTestApps() throws Exception {
@@ -662,18 +660,31 @@ public class TaplTestsQuickstep extends AbstractQuickStepTest {
     }
 
     private <T> T getFromRecentsView(Function<RecentsView, T> f) {
+        return getFromRecentsView(f, false);
+    }
+
+    private <T> T getFromRecentsView(Function<RecentsView, T> f, boolean forTearDown) {
         if (enableLauncherOverviewInWindow()) {
-            return getFromRecentsWindow(
-                    recentsWindowManager -> f.apply(recentsWindowManager.getOverviewPanel()));
+            return getFromRecentsWindow(recentsWindowManager ->
+                    (forTearDown && recentsWindowManager == null)
+                            ? null :  f.apply(recentsWindowManager.getOverviewPanel()));
         } else {
-            return getFromLauncher(launcher -> f.apply(launcher.getOverviewPanel()));
+            return getFromLauncher(launcher -> (forTearDown && launcher == null)
+                    ? null : f.apply(launcher.getOverviewPanel()));
         }
     }
 
     private void runOnRecentsView(Consumer<RecentsView> f) {
+        runOnRecentsView(f, false);
+    }
+
+    private void runOnRecentsView(Consumer<RecentsView> f, boolean forTearDown) {
         getFromRecentsView(recentsView -> {
+            if (forTearDown && recentsView == null) {
+                return null;
+            }
             f.accept(recentsView);
             return null;
-        });
+        }, forTearDown);
     }
 }
