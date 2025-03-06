@@ -257,6 +257,7 @@ public class TaskbarControllers {
         mAreAllControllersInitialized = false;
         mSharedState = null;
 
+        taskbarDragController.onDestroy();
         navbarButtonsViewController.onDestroy();
         uiController.onDestroy();
         rotationButtonController.onDestroy();
@@ -277,7 +278,6 @@ public class TaskbarControllers {
         taskbarStashController.onDestroy();
         bubbleControllers.ifPresent(controllers -> controllers.onDestroy());
         taskbarDesktopModeController.onDestroy();
-
         mControllersToLog = null;
         mBackgroundRendererControllers = null;
     }

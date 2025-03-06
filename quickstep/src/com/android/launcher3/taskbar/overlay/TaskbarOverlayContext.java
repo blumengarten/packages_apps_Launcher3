@@ -66,6 +66,11 @@ public class TaskbarOverlayContext extends BaseTaskbarContext {
         mUiController = controllers.uiController;
     }
 
+    /** Called when the controller is destroyed. */
+    public void onDestroy() {
+        mDragController.onDestroy();
+    }
+
     public @Nullable TaskbarSearchSessionController getSearchSessionController() {
         return mSearchSessionController;
     }

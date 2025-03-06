@@ -540,7 +540,7 @@ public abstract class DragController<T extends ActivityContext>
                 accepted = true;
             }
         }
-        final View dropTargetAsView = dropTarget instanceof View ? (View) dropTarget : null;
+        final View dropTargetAsView = dropTarget.getDropView();
         dispatchDropComplete(dropTargetAsView, accepted);
     }
 
