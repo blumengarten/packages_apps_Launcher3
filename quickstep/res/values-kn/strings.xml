@@ -139,8 +139,7 @@
     <string name="taskbar_overflow_a11y_title" msgid="7960342079198820179">"ಟಾಸ್ಕ್ ಬಾರ್ ಓವರ್‌ಫ್ಲೋ"</string>
     <string name="move_drop_target_top_or_left" msgid="2988702185049595807">"ಮೇಲಿನ/ಎಡಭಾಗಕ್ಕೆ ಸರಿಸಿ"</string>
     <string name="move_drop_target_bottom_or_right" msgid="5431393418797620162">"ಕೆಳಗಿನ/ಬಲಭಾಗಕ್ಕೆ ಸರಿಸಿ"</string>
-    <!-- no translation found for open_app_as_a_bubble (6642626287247807473) -->
-    <skip />
+    <string name="open_app_as_a_bubble" msgid="6642626287247807473">"ಆ್ಯಪ್ ಅನ್ನು ಬಬಲ್ ಆಗಿ ತೆರೆಯಿರಿ"</string>
     <string name="quick_switch_overflow" msgid="3679780650881041632">"{count,plural, =1{ಹೆಚ್ಚಿನ ಆ್ಯಪ್‌}one{ಹೆಚ್ಚಿನ ಆ್ಯಪ್‌ಗಳು}other{ಹೆಚ್ಚಿನ ಆ್ಯಪ್‌ಗಳು}}"</string>
     <string name="quick_switch_desktop" msgid="8393802056024499749">"ಡೆಸ್ಕ್‌ಟಾಪ್"</string>
     <string name="quick_switch_split_task" msgid="5598194724255333896">"<xliff:g id="APP_NAME_1">%1$s</xliff:g> ಮತ್ತು <xliff:g id="APP_NAME_2">%2$s</xliff:g>"</string>
@@ -157,4 +156,6 @@
     <string name="header_app_icon_description" msgid="2184625881433608027">"ಆ್ಯಪ್ ಐಕಾನ್"</string>
     <string name="header_default_app_title" msgid="8308052350689531566">"ಆ್ಯಪ್ ಶೀರ್ಷಿಕೆ"</string>
     <string name="header_close_icon_description" msgid="5400033616675911319">"ಮುಚ್ಚುವ ಬಟನ್"</string>
+    <string name="pin_to_taskbar" msgid="6607778046321626950">"ಟಾಸ್ಕ್‌ಬಾರ್‌ಗೆ ಪಿನ್ ಮಾಡಿ"</string>
+    <string name="unpin_from_taskbar" msgid="2178811773165572676">"ಟಾಸ್ಕ್‌ಬಾರ್‌ನಿಂದ ಅನ್‌ಪಿನ್"</string>
 </resources>

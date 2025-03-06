@@ -90,7 +90,7 @@
     <string name="allset_title" msgid="5021126669778966707">"Tout est prêt!"</string>
     <string name="allset_hint" msgid="459504134589971527">"Balayez l\'écran vers le haut pour accéder à l\'écran d\'accueil"</string>
     <string name="allset_button_hint" msgid="2395219947744706291">"Toucher le bouton d\'accueil pour passer sur votre écran d\'accueil"</string>
-    <string name="allset_description_generic" msgid="5385500062202019855">"Vous êtes maintenant prêt à utiliser votre <xliff:g id="DEVICE">%1$s</xliff:g>."</string>
+    <string name="allset_description_generic" msgid="5385500062202019855">"Vous êtes maintenant prêt à utiliser votre <xliff:g id="DEVICE">%1$s</xliff:g>"</string>
     <string name="default_device_name" msgid="6660656727127422487">"appareil"</string>
     <string name="allset_navigation_settings" msgid="4713404605961476027"><annotation id="link">"Paramètres de navigation du système"</annotation></string>
     <string name="action_share" msgid="2648470652637092375">"Partager"</string>
@@ -157,4 +157,8 @@
     <string name="header_app_icon_description" msgid="2184625881433608027">"Icône de l\'appli"</string>
     <string name="header_default_app_title" msgid="8308052350689531566">"Nom de l\'appli"</string>
     <string name="header_close_icon_description" msgid="5400033616675911319">"Bouton Fermer"</string>
+    <!-- no translation found for pin_to_taskbar (6607778046321626950) -->
+    <skip />
+    <!-- no translation found for unpin_from_taskbar (2178811773165572676) -->
+    <skip />
 </resources>
