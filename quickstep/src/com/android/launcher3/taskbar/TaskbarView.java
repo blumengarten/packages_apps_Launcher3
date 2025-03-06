@@ -478,7 +478,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         }
 
         // Recents divider takes priority.
-        if (!mAddedDividerForRecents && !mActivityContext.areDesktopTasksVisible()) {
+        if (!mAddedDividerForRecents && !mActivityContext.isInDesktopMode()) {
             updateAllAppsDivider();
         }
     }

@@ -1344,7 +1344,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         mControllers.uiController.startSplitSelection(splitSelectSource);
     }
 
-    boolean areDesktopTasksVisible() {
+    boolean isInDesktopMode() {
         return mControllers != null
                 && mControllers.taskbarDesktopModeController.isInDesktopMode(getDisplayId());
     }
@@ -1360,23 +1360,23 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         // TODO: b/316004172, b/343289567: Handle `DesktopTask` and `SplitTask`.
         if (tag instanceof SingleTask singleTask) {
             RemoteTransition remoteTransition =
-                    (areDesktopTasksVisible() && canUnminimizeDesktopTask(
+                    (isInDesktopMode() && canUnminimizeDesktopTask(
                             singleTask.getTask().key.id))
                             ? createDesktopAppLaunchRemoteTransition(AppLaunchType.UNMINIMIZE,
                             Cuj.CUJ_DESKTOP_MODE_APP_LAUNCH_FROM_ICON)
                             : null;
-            if (areDesktopTasksVisible() && mControllers.uiController.isInOverviewUi()) {
+            if (isInDesktopMode() && mControllers.uiController.isInOverviewUi()) {
                 RunnableList runnableList = recents.launchRunningDesktopTaskView();
                 // Wrapping it in runnable so we post after DW is ready for the app
                 // launch.
                 if (runnableList != null) {
                     runnableList.add(() -> UI_HELPER_EXECUTOR.execute(
                             () -> handleGroupTaskLaunch(singleTask, remoteTransition,
-                                    areDesktopTasksVisible(),
+                                    isInDesktopMode(),
                                     DesktopTaskToFrontReason.TASKBAR_TAP)));
                 }
             } else {
-                handleGroupTaskLaunch(singleTask, remoteTransition, areDesktopTasksVisible(),
+                handleGroupTaskLaunch(singleTask, remoteTransition, isInDesktopMode(),
                         DesktopTaskToFrontReason.TASKBAR_TAP);
             }
             mControllers.taskbarStashController.updateAndAnimateTransientTaskbar(true);
@@ -1402,7 +1402,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                     : null;
 
 
-            if (areDesktopTasksVisible() && mControllers.uiController.isInOverviewUi()) {
+            if (isInDesktopMode() && mControllers.uiController.isInOverviewUi()) {
                 RunnableList runnableList = recents.launchRunningDesktopTaskView();
                 if (runnableList != null) {
                     runnableList.add(() ->
@@ -1676,7 +1676,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                                                 .launchAppPair((AppPairIcon) launchingIconView,
                                                         -1 /*cuj*/)));
                     } else {
-                        if (areDesktopTasksVisible()
+                        if (isInDesktopMode()
                                 && mControllers.uiController.isInOverviewUi()) {
                             RunnableList runnableList = recents.launchRunningDesktopTaskView();
                             // Wrapping it in runnable so we post after DW is ready for the app
@@ -1722,7 +1722,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                     return;
                 }
             }
-            if (areDesktopTasksVisible()
+            if (isInDesktopMode()
                     && DesktopModeFlags.ENABLE_DESKTOP_APP_LAUNCH_TRANSITIONS_BUGFIX.isTrue()) {
                 launchDesktopApp(intent, info, displayId);
             } else {
