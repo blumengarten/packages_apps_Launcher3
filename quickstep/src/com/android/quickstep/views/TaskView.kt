@@ -85,6 +85,7 @@ import com.android.quickstep.recents.di.inject
 import com.android.quickstep.recents.ui.viewmodel.TaskData
 import com.android.quickstep.recents.ui.viewmodel.TaskTileUiState
 import com.android.quickstep.recents.ui.viewmodel.TaskViewModel
+import com.android.quickstep.task.thumbnail.TaskContentView
 import com.android.quickstep.util.ActiveGestureErrorDetector
 import com.android.quickstep.util.ActiveGestureLog
 import com.android.quickstep.util.BorderAnimator
@@ -721,13 +722,10 @@ constructor(
     }
 
     protected open fun inflateViewStubs() {
-        findViewById<ViewStub>(R.id.snapshot)
-            ?.apply {
-                layoutResource =
-                    if (enableRefactorTaskThumbnail()) R.layout.task_thumbnail
-                    else R.layout.task_thumbnail_deprecated
-            }
+        findViewById<ViewStub>(R.id.task_content_view)
+            ?.apply { layoutResource = R.layout.task_content_view }
             ?.inflate()
+
         findViewById<ViewStub>(R.id.icon)
             ?.apply {
                 layoutResource =
@@ -845,6 +843,7 @@ constructor(
             listOf(
                 createTaskContainer(
                     task,
+                    R.id.task_content_view,
                     R.id.snapshot,
                     R.id.icon,
                     R.id.show_windows,
@@ -876,8 +875,9 @@ constructor(
         taskContainers.forEach { container ->
             container.bind()
             if (enableRefactorTaskThumbnail()) {
-                container.thumbnailView.cornerRadius = thumbnailFullscreenParams.currentCornerRadius
-                container.thumbnailView.doOnSizeChange { width, height ->
+                container.taskContentView.cornerRadius =
+                    thumbnailFullscreenParams.currentCornerRadius
+                container.taskContentView.doOnSizeChange { width, height ->
                     updateThumbnailValidity(container)
                     updateThumbnailMatrix(container, width, height)
                 }
@@ -903,6 +903,7 @@ constructor(
 
     protected fun createTaskContainer(
         task: Task,
+        @IdRes taskContentViewId: Int,
         @IdRes thumbnailViewId: Int,
         @IdRes iconViewId: Int,
         @IdRes showWindowViewId: Int,
@@ -911,10 +912,12 @@ constructor(
         taskOverlayFactory: TaskOverlayFactory,
     ): TaskContainer {
         val iconView = findViewById<View>(iconViewId) as TaskViewIcon
+        val taskContentView = findViewById<TaskContentView>(taskContentViewId)
         return TaskContainer(
             this,
             task,
-            findViewById(thumbnailViewId),
+            taskContentView,
+            taskContentView.findViewById(thumbnailViewId),
             iconView,
             TransformingTouchDelegate(iconView.asView()),
             stagePosition,
@@ -1002,7 +1005,7 @@ constructor(
     protected open fun updateThumbnailSize() {
         // TODO(b/271468547), we should default to setting translations only on the snapshot instead
         //  of a hybrid of both margins and translations
-        firstTaskContainer?.snapshotView?.updateLayoutParams<LayoutParams> {
+        firstTaskContainer?.taskContentView?.updateLayoutParams<LayoutParams> {
             topMargin = container.deviceProfile.overviewTaskThumbnailTopMarginPx
         }
         taskContainers.forEach { it.digitalWellBeingToast?.setupLayout() }
@@ -1016,11 +1019,11 @@ constructor(
             val thumbnailBounds = Rect()
             if (relativeToDragLayer) {
                 container.dragLayer.getDescendantRectRelativeToSelf(
-                    it.snapshotView,
+                    it.taskContentView,
                     thumbnailBounds,
                 )
             } else {
-                thumbnailBounds.set(it.snapshotView)
+                thumbnailBounds.set(it.taskContentView)
             }
             bounds.union(thumbnailBounds)
         }
@@ -1709,7 +1712,7 @@ constructor(
         updateFullscreenParams(thumbnailFullscreenParams)
         taskContainers.forEach {
             if (enableRefactorTaskThumbnail()) {
-                it.thumbnailView.cornerRadius = thumbnailFullscreenParams.currentCornerRadius
+                it.taskContentView.cornerRadius = thumbnailFullscreenParams.currentCornerRadius
             } else {
                 it.thumbnailViewDeprecated.setFullscreenParams(thumbnailFullscreenParams)
             }

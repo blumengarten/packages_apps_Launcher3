@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 The Android Open Source Project
+ * Copyright (C) 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,17 @@
 
 package com.android.quickstep.task.thumbnail
 
-import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
-import android.view.Surface
-import androidx.annotation.ColorInt
+import android.view.View
 
-sealed class TaskThumbnailUiState {
-    data object Uninitialized : TaskThumbnailUiState()
+sealed class TaskHeaderUiState {
+    data class ShowHeader(val header: ThumbnailHeader) : TaskHeaderUiState()
 
-    data class BackgroundOnly(@ColorInt val backgroundColor: Int) : TaskThumbnailUiState()
+    data object HideHeader : TaskHeaderUiState()
 
-    data object LiveTile : TaskThumbnailUiState()
-
-    data class SnapshotSplash(val snapshot: Snapshot, val splash: Drawable?) :
-        TaskThumbnailUiState()
-
-    data class Snapshot(
-        val bitmap: Bitmap,
-        @Surface.Rotation val thumbnailRotation: Int,
-        @ColorInt val backgroundColor: Int,
+    data class ThumbnailHeader(
+        val icon: Drawable,
+        val title: String,
+        val clickCloseListener: View.OnClickListener,
     )
 }
