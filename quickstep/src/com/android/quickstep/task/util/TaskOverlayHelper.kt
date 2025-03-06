@@ -46,7 +46,7 @@ class TaskOverlayHelper(val task: Task, val overlay: TaskOverlayFactory.TaskOver
     private val recentsCoroutineScope: CoroutineScope = RecentsDependencies.get()
     private val dispatcherProvider: DispatcherProvider = RecentsDependencies.get()
     private lateinit var overlayInitializedScope: CoroutineScope
-    private var uiState: TaskOverlayUiState = Disabled
+    var uiState: TaskOverlayUiState = Disabled
 
     private lateinit var viewModel: TaskOverlayViewModel
 
@@ -60,7 +60,7 @@ class TaskOverlayHelper(val task: Task, val overlay: TaskOverlayFactory.TaskOver
 
     fun getThumbnailMatrix() = getThumbnailPositionState().matrix
 
-    private fun getThumbnailPositionState() =
+    fun getThumbnailPositionState() =
         viewModel.getThumbnailPositionState(
             overlay.snapshotView.width,
             overlay.snapshotView.height,

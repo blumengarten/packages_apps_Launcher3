@@ -42,6 +42,7 @@ import com.android.launcher3.popup.SystemShortcut;
 import com.android.launcher3.util.ResourceBasedOverride;
 import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.views.Snackbar;
+import com.android.quickstep.task.thumbnail.TaskOverlayUiState;
 import com.android.quickstep.task.util.TaskOverlayHelper;
 import com.android.quickstep.util.RecentsOrientedState;
 import com.android.quickstep.views.DesktopTaskView;
@@ -168,9 +169,32 @@ public class TaskOverlayFactory implements ResourceBasedOverride {
                     : mTaskContainer.getThumbnailViewDeprecated().getThumbnail();
         }
 
-        protected boolean isRealSnapshot() {
-            return enableRefactorTaskThumbnail() ? mHelper.getEnabledState().isRealSnapshot()
-                    : mTaskContainer.getThumbnailViewDeprecated().isRealSnapshot();
+        /**
+         * Returns whether the snapshot is real. If the device is locked for the user of the task,
+         * the snapshot used will be an app-theme generated snapshot instead of a real snapshot.
+         */
+        public boolean isRealSnapshot() {
+            if (enableRefactorTaskThumbnail()) {
+                if (mHelper.getUiState() instanceof TaskOverlayUiState.Enabled) {
+                    return mHelper.getEnabledState().isRealSnapshot();
+                } else {
+                    return false;
+                }
+            }
+
+            return mTaskContainer.getThumbnailViewDeprecated().isRealSnapshot();
+        }
+
+        /**
+         * Returns whether the snapshot is rotated compared to the current task orientation.
+         */
+        public boolean isThumbnailRotationDifferentFromTask() {
+            if (enableRefactorTaskThumbnail()) {
+                return mHelper.getThumbnailPositionState().isRotated();
+            }
+
+            return mTaskContainer.getThumbnailViewDeprecated()
+                    .isThumbnailRotationDifferentFromTask();
         }
 
         protected T getActionsView() {
@@ -359,13 +383,10 @@ public class TaskOverlayFactory implements ResourceBasedOverride {
 
         private class ScreenshotSystemShortcut extends SystemShortcut {
 
-            private final RecentsViewContainer mContainer;
-
             ScreenshotSystemShortcut(RecentsViewContainer container, ItemInfo itemInfo,
                     View originalView) {
                 super(R.drawable.ic_screenshot, R.string.action_screenshot, container, itemInfo,
                         originalView);
-                mContainer = container;
             }
 
             @Override
