@@ -36,6 +36,7 @@ import com.android.launcher3.model.data.TaskViewItemInfo
 import com.android.launcher3.util.SplitConfigurationOptions
 import com.android.launcher3.util.TransformingTouchDelegate
 import com.android.quickstep.TaskOverlayFactory.TaskOverlay
+import com.android.quickstep.task.thumbnail.TaskContentView
 import com.android.quickstep.task.thumbnail.TaskThumbnailView
 import com.android.quickstep.views.LauncherRecentsView
 import com.android.quickstep.views.RecentsViewContainer
@@ -248,6 +249,7 @@ class DesktopSystemShortcutTest {
         TaskContainer(
             taskView,
             task,
+            mock<TaskContentView>(),
             if (enableRefactorTaskThumbnail()) mock<TaskThumbnailView>()
             else mock<TaskThumbnailViewDeprecated>(),
             mock<TaskViewIcon>(),

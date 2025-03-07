@@ -192,7 +192,7 @@ class SplitAnimationController(val splitSelectStateController: SplitSelectStateC
         taskViewHeight: Int,
         isPrimaryTaskSplitting: Boolean,
     ) {
-        val snapshot = taskContainer.snapshotView
+        val taskContentView = taskContainer.taskContentView
         val iconView: View = taskContainer.iconView.asView()
         if (enableRefactorTaskThumbnail()) {
             builder.add(
@@ -241,7 +241,11 @@ class SplitAnimationController(val splitSelectStateController: SplitSelectStateC
             val centerThumbnailTranslationX: Float = (taskViewWidth - snapshotViewSize.x) / 2f
             val finalScaleX: Float = taskViewWidth.toFloat() / snapshotViewSize.x
             builder.add(
-                ObjectAnimator.ofFloat(snapshot, View.TRANSLATION_X, centerThumbnailTranslationX)
+                ObjectAnimator.ofFloat(
+                    taskContentView,
+                    View.TRANSLATION_X,
+                    centerThumbnailTranslationX,
+                )
             )
             if (!enableOverviewIconMenu()) {
                 // icons are anchored from Gravity.END, so need to use negative translation
@@ -250,15 +254,17 @@ class SplitAnimationController(val splitSelectStateController: SplitSelectStateC
                     ObjectAnimator.ofFloat(iconView, View.TRANSLATION_X, -centerIconTranslationX)
                 )
             }
-            builder.add(ObjectAnimator.ofFloat(snapshot, View.SCALE_X, finalScaleX))
+            builder.add(ObjectAnimator.ofFloat(taskContentView, View.SCALE_X, finalScaleX))
 
             // Reset other dimensions
             // TODO(b/271468547), can't set Y translate to 0, need to account for top space
-            snapshot.scaleY = 1f
+            taskContentView.scaleY = 1f
             val translateYResetVal: Float =
                 if (!isPrimaryTaskSplitting) 0f
                 else deviceProfile.overviewTaskThumbnailTopMarginPx.toFloat()
-            builder.add(ObjectAnimator.ofFloat(snapshot, View.TRANSLATION_Y, translateYResetVal))
+            builder.add(
+                ObjectAnimator.ofFloat(taskContentView, View.TRANSLATION_Y, translateYResetVal)
+            )
         } else {
             val thumbnailSize = taskViewHeight - deviceProfile.overviewTaskThumbnailTopMarginPx
             // Center view first so scaling happens uniformly, alternatively we can move pivotY to 0
@@ -281,18 +287,22 @@ class SplitAnimationController(val splitSelectStateController: SplitSelectStateC
             }
             val finalScaleY: Float = thumbnailSize.toFloat() / snapshotViewSize.y
             builder.add(
-                ObjectAnimator.ofFloat(snapshot, View.TRANSLATION_Y, centerThumbnailTranslationY)
+                ObjectAnimator.ofFloat(
+                    taskContentView,
+                    View.TRANSLATION_Y,
+                    centerThumbnailTranslationY,
+                )
             )
 
             if (!enableOverviewIconMenu()) {
                 // icons are anchored from Gravity.END, so need to use negative translation
                 builder.add(ObjectAnimator.ofFloat(iconView, View.TRANSLATION_X, 0f))
             }
-            builder.add(ObjectAnimator.ofFloat(snapshot, View.SCALE_Y, finalScaleY))
+            builder.add(ObjectAnimator.ofFloat(taskContentView, View.SCALE_Y, finalScaleY))
 
             // Reset other dimensions
-            snapshot.scaleX = 1f
-            builder.add(ObjectAnimator.ofFloat(snapshot, View.TRANSLATION_X, 0f))
+            taskContentView.scaleX = 1f
+            builder.add(ObjectAnimator.ofFloat(taskContentView, View.TRANSLATION_X, 0f))
         }
     }
 

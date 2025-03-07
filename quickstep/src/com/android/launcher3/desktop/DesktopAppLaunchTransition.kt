@@ -84,6 +84,10 @@ constructor(
             if (animators.isEmpty()) finishedCallback.run()
         }
         animators += animatorHelper.createAnimators(info, animatorFinishedCallback)
+        if (animators.isEmpty()) {
+            finishedCallback.run()
+            return
+        }
         animators.forEach { it.start() }
     }
 

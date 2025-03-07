@@ -1567,6 +1567,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
     public boolean canUnminimizeDesktopTask(int taskId) {
         BubbleTextView.RunningAppState runningAppState =
                 mControllers.taskbarRecentAppsController.getRunningAppState(taskId);
+        Log.d(TAG, "Task id=" + taskId + ", Running app state=" + runningAppState);
         return runningAppState == RunningAppState.MINIMIZED
                 && DesktopModeFlags.ENABLE_DESKTOP_APP_LAUNCH_ALTTAB_TRANSITIONS_BUGFIX.isTrue();
     }

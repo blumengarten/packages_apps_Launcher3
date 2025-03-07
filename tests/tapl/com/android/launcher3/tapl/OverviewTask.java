@@ -73,16 +73,18 @@ public final class OverviewTask {
             return getCombinedSplitTaskHeight();
         }
 
-        UiObject2 taskSnapshot1 = findObjectInTask((isDesktop() ? DESKTOP : DEFAULT).snapshotRes);
-        return taskSnapshot1.getVisibleBounds().height();
+        if (isDesktop()) {
+            return getTaskSnapshot(DESKTOP).getVisibleBounds().height();
+        }
+        return getTaskSnapshot(DEFAULT).getVisibleBounds().height();
     }
 
     /**
      * Calculates the visible height for split tasks, containing 2 snapshot tiles and a divider.
      */
     private int getCombinedSplitTaskHeight() {
-        UiObject2 taskSnapshot1 = findObjectInTask(SPLIT_TOP_OR_LEFT.snapshotRes);
-        UiObject2 taskSnapshot2 = findObjectInTask(SPLIT_BOTTOM_OR_RIGHT.snapshotRes);
+        UiObject2 taskSnapshot1 = getTaskSnapshot(SPLIT_TOP_OR_LEFT);
+        UiObject2 taskSnapshot2 = getTaskSnapshot(SPLIT_BOTTOM_OR_RIGHT);
 
         // If the split task is partly off screen, taskSnapshot1 can be invisible.
         if (taskSnapshot1 == null) {
@@ -95,34 +97,6 @@ public final class OverviewTask {
                 taskSnapshot1.getVisibleBounds().bottom, taskSnapshot2.getVisibleBounds().bottom);
 
         return bottom - top;
-    }
-
-    /**
-     * Returns the width of the visible task, or the combined width of two tasks in split with a
-     * divider between.
-     */
-    int getVisibleWidth() {
-        if (isGrouped()) {
-            return getCombinedSplitTaskWidth();
-        }
-
-        UiObject2 taskSnapshot1 = findObjectInTask(DEFAULT.snapshotRes);
-        return taskSnapshot1.getVisibleBounds().width();
-    }
-
-    /**
-     * Calculates the visible width for split tasks, containing 2 snapshot tiles and a divider.
-     */
-    private int getCombinedSplitTaskWidth() {
-        UiObject2 taskSnapshot1 = findObjectInTask(SPLIT_TOP_OR_LEFT.snapshotRes);
-        UiObject2 taskSnapshot2 = findObjectInTask(SPLIT_BOTTOM_OR_RIGHT.snapshotRes);
-
-        int left = Math.min(
-                taskSnapshot1.getVisibleBounds().left, taskSnapshot2.getVisibleBounds().left);
-        int right = Math.max(
-                taskSnapshot1.getVisibleBounds().right, taskSnapshot2.getVisibleBounds().right);
-
-        return right - left;
     }
 
     public int getTaskCenterX() {
@@ -139,6 +113,22 @@ public final class OverviewTask {
 
     UiObject2 getUiObject() {
         return mTask;
+    }
+
+    /**
+     * Returns the task snapshot (thumbnail) for the given `OverviewTaskContainer`.
+     *
+     * For some reason `BySelector` does not work with `hasChild` or `hasParent` so instead we
+     * grab all the views matching the id: "snapshot" and filter for the correct parent.
+     */
+    private UiObject2 getTaskSnapshot(OverviewTaskContainer overviewTaskContainer) {
+        BySelector snapshotSelector = mLauncher.getOverviewObjectSelector("snapshot");
+        List<UiObject2> snapshots = mTask.findObjects(snapshotSelector);
+        return snapshots.stream()
+                .filter(snapshot -> snapshot.getParent().getResourceName()
+                        .contains(overviewTaskContainer.taskContentViewRes))
+                .findFirst()
+                .orElse(snapshots.getFirst());
     }
 
     /**
@@ -304,17 +294,13 @@ public final class OverviewTask {
         }
     }
 
-    private UiObject2 findObjectInTask(String resName) {
-        return mTask.findObject(mLauncher.getOverviewObjectSelector(resName));
-    }
-
     /**
      * Returns whether the given String is contained in this Task's contentDescription. Also returns
      * true if both Strings are null.
      */
     public boolean containsContentDescription(String expected,
             OverviewTaskContainer overviewTaskContainer) {
-        String actual = findObjectInTask(overviewTaskContainer.snapshotRes).getContentDescription();
+        String actual = getTaskSnapshot(overviewTaskContainer).getContentDescription();
         if (actual == null && expected == null) {
             return true;
         }
@@ -360,19 +346,19 @@ public final class OverviewTask {
      */
     public enum OverviewTaskContainer {
         // The main task when the task is not split.
-        DEFAULT("snapshot", "icon"),
+        DEFAULT("task_content_view", "icon"),
         // The first task in split task.
-        SPLIT_TOP_OR_LEFT("snapshot", "icon"),
+        SPLIT_TOP_OR_LEFT("task_content_view", "icon"),
         // The second task in split task.
-        SPLIT_BOTTOM_OR_RIGHT("bottomright_snapshot", "bottomRight_icon"),
+        SPLIT_BOTTOM_OR_RIGHT("bottomright_task_content_view", "bottomRight_icon"),
         // The desktop task.
         DESKTOP("background", "icon");
 
-        public final String snapshotRes;
+        public final String taskContentViewRes;
         public final String iconAppRes;
 
-        OverviewTaskContainer(String snapshotRes, String iconAppRes) {
-            this.snapshotRes = snapshotRes;
+        OverviewTaskContainer(String taskContentViewRes, String iconAppRes) {
+            this.taskContentViewRes = taskContentViewRes;
             this.iconAppRes = iconAppRes;
         }
     }

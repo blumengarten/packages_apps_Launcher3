@@ -39,6 +39,7 @@ import com.android.launcher3.util.NavigationMode
 import com.android.launcher3.util.SandboxContext
 import com.android.launcher3.util.WindowBounds
 import com.android.launcher3.util.rule.TestStabilityRule
+import com.android.launcher3.util.rule.ZipFilesRule
 import com.android.launcher3.util.rule.setFlags
 import com.android.launcher3.util.window.CachedDisplayInfo
 import com.android.launcher3.util.window.WindowManagerProxy
@@ -51,6 +52,7 @@ import java.io.PrintWriter
 import java.io.StringWriter
 import kotlin.math.max
 import kotlin.math.min
+import org.junit.ClassRule
 import org.junit.Rule
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
@@ -79,6 +81,13 @@ abstract class AbstractDeviceProfileTest {
     @Rule @JvmField val testStabilityRule = TestStabilityRule()
 
     @Rule @JvmField val limitDevicesRule = LimitDevicesRule()
+
+    companion object {
+        @ClassRule
+        @JvmField
+        val resultZipRule =
+            ZipFilesRule(InstrumentationRegistry.getInstrumentation().targetContext, "DumpTest")
+    }
 
     class DeviceSpec(
         val naturalSize: Pair<Int, Int>,
@@ -364,13 +373,9 @@ abstract class AbstractDeviceProfileTest {
         context.assets.open("dumpTests/$fileName").bufferedReader().use(BufferedReader::readText)
 
     private fun writeToDevice(context: Context, fileName: String, content: String) {
-        val dir =
-            File(context.filesDir, "dumpTests").also {
-                if (!it.exists()) {
-                    it.mkdirs()
-                }
-            }
-        File(dir, fileName).writeText(content)
+        val file = File(context.getDir("dumpTests", Context.MODE_PRIVATE), fileName)
+        file.writeText(content)
+        resultZipRule.write(file)
     }
 
     protected fun Float.dpToPx(): Float {

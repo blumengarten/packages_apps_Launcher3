@@ -22,6 +22,7 @@ import static android.view.Surface.ROTATION_180;
 import static android.view.Surface.ROTATION_270;
 import static android.view.Surface.ROTATION_90;
 
+import static com.android.launcher3.Flags.enableOverviewOnConnectedDisplays;
 import static com.android.launcher3.LauncherPrefs.ALLOW_ROTATION;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 import static com.android.launcher3.util.SettingsCache.ROTATION_SETTING_URI;
@@ -53,6 +54,7 @@ import com.android.launcher3.util.SettingsCache;
 import com.android.quickstep.BaseContainerInterface;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.TaskAnimationManager;
+import com.android.quickstep.fallback.window.RecentsDisplayModel;
 import com.android.quickstep.orientation.RecentsPagedOrientationHandler;
 
 import java.lang.annotation.Retention;
@@ -571,19 +573,25 @@ public class RecentsOrientedState implements LauncherPrefChangeListener {
     /**
      * Returns the device profile based on expected launcher rotation
      */
-    public DeviceProfile getLauncherDeviceProfile() {
-        InvariantDeviceProfile idp = InvariantDeviceProfile.INSTANCE.get(mContext);
-        Point currentSize = DisplayController.INSTANCE.get(mContext).getInfo().currentSize;
-
-        int width, height;
-        if ((mRecentsActivityRotation == ROTATION_90 || mRecentsActivityRotation == ROTATION_270)) {
-            width = Math.max(currentSize.x, currentSize.y);
-            height = Math.min(currentSize.x, currentSize.y);
+    public DeviceProfile getLauncherDeviceProfile(int displayId) {
+        if (enableOverviewOnConnectedDisplays()) {
+            return RecentsDisplayModel.getINSTANCE().get(mContext).getRecentsWindowManager(
+                    displayId).getDeviceProfile();
         } else {
-            width = Math.min(currentSize.x, currentSize.y);
-            height = Math.max(currentSize.x, currentSize.y);
+            InvariantDeviceProfile idp = InvariantDeviceProfile.INSTANCE.get(mContext);
+            Point currentSize = DisplayController.INSTANCE.get(mContext).getInfo().currentSize;
+
+            int width, height;
+            if ((mRecentsActivityRotation == ROTATION_90
+                    || mRecentsActivityRotation == ROTATION_270)) {
+                width = Math.max(currentSize.x, currentSize.y);
+                height = Math.min(currentSize.x, currentSize.y);
+            } else {
+                width = Math.min(currentSize.x, currentSize.y);
+                height = Math.max(currentSize.x, currentSize.y);
+            }
+            return idp.getBestMatch(width, height, mRecentsActivityRotation);
         }
-        return idp.getBestMatch(width, height, mRecentsActivityRotation);
     }
 
     private static String nameAndAddress(Object obj) {
