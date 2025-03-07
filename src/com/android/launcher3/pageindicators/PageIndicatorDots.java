@@ -32,11 +32,13 @@ import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.drawable.VectorDrawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.FloatProperty;
 import android.util.IntProperty;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewOutlineProvider;
@@ -50,6 +52,8 @@ import com.android.launcher3.Insettable;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.util.Themes;
+
+import java.util.function.Consumer;
 
 /**
  * {@link PageIndicator} which shows dots per page. The active page is shown with the current
@@ -68,6 +72,11 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
     private static final int ENTER_ANIMATION_STAGGERED_DELAY = 150;
     private static final int ENTER_ANIMATION_DURATION = 400;
 
+    private static final int LARGE_HEIGHT_MULTIPLIER = 12;
+    private static final int SMALL_HEIGHT_MULTIPLIER = 4;
+    private static final int LARGE_WIDTH_MULTIPLIER = 5;
+    private static final int SMALL_WIDTH_MULTIPLIER = 3;
+
     private static final int PAGE_INDICATOR_ALPHA = 255;
     private static final int DOT_ALPHA = 128;
     private static final float DOT_ALPHA_FRACTION = 0.5f;
@@ -75,6 +84,7 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
     private static final int VISIBLE_ALPHA = 255;
     private static final int INVISIBLE_ALPHA = 0;
     private Paint mPaginationPaint;
+    private Consumer<Direction> mOnArrowClickListener;
 
     // This value approximately overshoots to 1.5 times the original size.
     private static final float ENTER_ANIMATION_OVERSHOOT_TENSION = 4.9f;
@@ -99,23 +109,27 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
 
     private static final IntProperty<PageIndicatorDots> PAGINATION_ALPHA =
             new IntProperty<PageIndicatorDots>("pagination_alpha") {
-        @Override
-        public Integer get(PageIndicatorDots obj) {
-            return obj.mPaginationPaint.getAlpha();
-        }
+                @Override
+                public Integer get(PageIndicatorDots obj) {
+                    return obj.mPaginationPaint.getAlpha();
+                }
 
-        @Override
-        public void setValue(PageIndicatorDots obj, int alpha) {
-            obj.mPaginationPaint.setAlpha(alpha);
-            obj.invalidate();
-        }
-    };
+                @Override
+                public void setValue(PageIndicatorDots obj, int alpha) {
+                    obj.mPaginationPaint.setAlpha(alpha);
+                    obj.invalidate();
+                }
+            };
 
     private final Handler mDelayedPaginationFadeHandler = new Handler(Looper.getMainLooper());
     private final float mDotRadius;
     private final float mGapWidth;
     private final float mCircleGap;
     private final boolean mIsRtl;
+    private final VectorDrawable mArrowEnd;
+    private final VectorDrawable mArrowStart;
+    private final Rect mArrowEndBounds = new Rect();
+    private final Rect mArrowStartBounds = new Rect();
 
     private int mNumPages;
     private int mActivePage;
@@ -167,6 +181,8 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
                 : DOT_GAP_FACTOR * mDotRadius;
         setOutlineProvider(new MyOutlineProver());
         mIsRtl = Utilities.isRtl(getResources());
+        mArrowEnd = (VectorDrawable) getResources().getDrawable(R.drawable.ic_chevron_end);
+        mArrowStart = (VectorDrawable) getResources().getDrawable(R.drawable.ic_chevron_start);
     }
 
     @Override
@@ -405,6 +421,11 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
     }
 
     @Override
+    public void setArrowClickListener(Consumer<Direction> listener) {
+        mOnArrowClickListener = listener;
+    }
+
+    @Override
     public void setPauseScroll(boolean pause, boolean isTwoPanels) {
         mIsTwoPanels = isTwoPanels;
 
@@ -419,11 +440,16 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         // TODO(b/394355070): Verify Folder Entry Animation works correctly with visual updates
-        // Add extra spacing of mDotRadius on all sides so than entry animation could be run.
+        // Add extra spacing of mDotRadius on all sides so than entry animation could be run
+        // and so the hitboxes of arrows can be clicked easier.
         int width = MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.EXACTLY ?
-                MeasureSpec.getSize(widthMeasureSpec) : (int) ((mNumPages * 3 + 2) * mDotRadius);
+                MeasureSpec.getSize(widthMeasureSpec)
+                : (int) ((mNumPages * ((enableLauncherVisualRefresh())
+                        ? LARGE_WIDTH_MULTIPLIER : SMALL_WIDTH_MULTIPLIER) + 2) * mDotRadius);
         int height = MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY
-                ? MeasureSpec.getSize(heightMeasureSpec) : (int) (4 * mDotRadius);
+                ? MeasureSpec.getSize(heightMeasureSpec)
+                : (int) (((enableLauncherVisualRefresh())
+                        ? LARGE_HEIGHT_MULTIPLIER : SMALL_HEIGHT_MULTIPLIER) * mDotRadius);
         setMeasuredDimension(width, height);
     }
 
@@ -475,6 +501,18 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
                 float bounceProgress = (posDif > 1) ? posDif - 1 : 0;
                 float bounceAdjustment = Math.abs(mCurrentPosition - boundedPosition) * diameter;
 
+                if (mOnArrowClickListener != null && boundedPosition >= 1) {
+                    // Here we draw the Left Arrow
+                    mArrowStart.setAlpha(alpha);
+                    int size = (int) (mGapWidth * 4);
+                    mArrowStartBounds.left = (int) (sTempRect.left - mGapWidth - size);
+                    mArrowStartBounds.top = (int) (y - size / 2);
+                    mArrowStartBounds.right = (int) (sTempRect.left - mGapWidth);
+                    mArrowStartBounds.bottom = (int) (y + size / 2);
+                    mArrowStart.setBounds(mArrowStartBounds);
+                    mArrowStart.draw(canvas);
+                }
+
                 // Here we draw the dots, one at a time from the left-most dot to the right-most dot
                 // 1.0 => 000000 000000111111 000000
                 // 1.3 => 000000 0000001111 11000000
@@ -520,6 +558,18 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
                     // TODO(b/394355070) Verify RTL experience works correctly with visual updates
                     sTempRect.left = sTempRect.right + mGapWidth;
                 }
+
+                if (mOnArrowClickListener != null && boundedPosition <= mNumPages - 2) {
+                    // Here we draw the Right Arrow
+                    mArrowEnd.setAlpha(alpha);
+                    int size = (int) (mGapWidth * 4);
+                    mArrowEndBounds.left = (int) sTempRect.left;
+                    mArrowEndBounds.top = (int) (y - size / 2);
+                    mArrowEndBounds.right = (int) (int) (sTempRect.left + size);
+                    mArrowEndBounds.bottom = (int) (y + size / 2);
+                    mArrowEnd.setBounds(mArrowEndBounds);
+                    mArrowEnd.draw(canvas);
+                }
             } else {
                 // Here we draw the dots
                 mPaginationPaint.setAlpha((int) (alpha * DOT_ALPHA_FRACTION));
@@ -536,6 +586,34 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
             // Reset the alpha so it doesn't become progressively more transparent each onDraw call
             mPaginationPaint.setAlpha(alpha);
         }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        if (mOnArrowClickListener == null) {
+            // No - Op. Don't care about touch events
+        } else if (withinExpandedBounds(mArrowStartBounds, ev)) {
+            mOnArrowClickListener.accept(Direction.START);
+        } else if (withinExpandedBounds(mArrowEndBounds, ev)) {
+            mOnArrowClickListener.accept(Direction.END);
+        }
+        return super.onTouchEvent(ev);
+    }
+
+    // For larger Touch box
+    private boolean withinExpandedBounds(Rect rect, MotionEvent ev) {
+        Rect scaledRect = new Rect();
+        scaledRect.set(rect);
+
+        float verticalAdjustment = (scaledRect.bottom - scaledRect.top) * 2;
+        scaledRect.top -= verticalAdjustment;
+        scaledRect.bottom += verticalAdjustment;
+
+        float horizontalAdjustment = (scaledRect.right - scaledRect.left) * 2;
+        scaledRect.left -= horizontalAdjustment;
+        scaledRect.right += horizontalAdjustment;
+
+        return scaledRect.contains((int) ev.getX(), (int) ev.getY());
     }
 
     private RectF getActiveRect() {
