@@ -110,3 +110,13 @@ flag {
     description: "Enable wallpaper background for desktop tasks in overview."
     bug: "363257721"
 }
+
+flag {
+    name: "enable_show_enabled_shortcuts_in_accessibility_menu"
+    namespace: "launcher_overview"
+    description: "Enables showing the same shortcuts in the Task menu as well as the accessibility actions menu"
+    bug: "383662632"
+    metadata {
+        purpose: PURPOSE_BUGFIX
+    }
+}

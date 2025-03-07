@@ -1587,7 +1587,10 @@ public abstract class RecentsView<
                 == getPagedOrientationHandler().getPrimaryScroll(this);
     }
 
-    private boolean isFocusedTaskInExpectedScrollPosition() {
+    /**
+     * Returns true if the focused TaskView is in expected scroll position.
+     */
+    public boolean isFocusedTaskInExpectedScrollPosition() {
         TaskView focusedTask = getFocusedTaskView();
         return focusedTask != null && isTaskInExpectedScrollPosition(focusedTask);
     }
