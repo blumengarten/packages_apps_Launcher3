@@ -235,7 +235,7 @@ flag {
 
 flag {
     name: "enable_fallback_overview_in_window"
-    namespace: "launcher"
+    namespace: "lse_desktop_experience"
     description: "Enables fallback recents opening inside of a window instead of an activity."
     bug: "292269949"
 }
@@ -450,14 +450,14 @@ flag {
 
 flag {
     name: "enable_recents_window_proto_log"
-    namespace: "launcher"
+    namespace: "lse_desktop_experience"
     description: "Enables tracking recents window logs in ProtoLog"
     bug: "292269949"
 }
 
 flag {
     name: "enable_state_manager_proto_log"
-    namespace: "launcher"
+    namespace: "lse_desktop_experience"
     description: "Enables tracking state manager logs in ProtoLog"
     bug: "292269949"
 }
@@ -488,7 +488,7 @@ flag {
 
 flag {
     name: "enable_launcher_overview_in_window"
-    namespace: "launcher"
+    namespace: "lse_desktop_experience"
     description: "Enables launcher recents opening inside of a window instead of being hosted in launcher activity."
     bug: "292269949"
 }
