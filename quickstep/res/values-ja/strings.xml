@@ -139,8 +139,7 @@
     <string name="taskbar_overflow_a11y_title" msgid="7960342079198820179">"タスクバーのオーバフロー"</string>
     <string name="move_drop_target_top_or_left" msgid="2988702185049595807">"上 / 左に移動"</string>
     <string name="move_drop_target_bottom_or_right" msgid="5431393418797620162">"下 / 右に移動"</string>
-    <!-- no translation found for open_app_as_a_bubble (6642626287247807473) -->
-    <skip />
+    <string name="open_app_as_a_bubble" msgid="6642626287247807473">"アプリをバブルとして開く"</string>
     <string name="quick_switch_overflow" msgid="3679780650881041632">"{count,plural, =1{個のその他のアプリ}other{個のその他のアプリ}}"</string>
     <string name="quick_switch_desktop" msgid="8393802056024499749">"デスクトップ"</string>
     <string name="quick_switch_split_task" msgid="5598194724255333896">"<xliff:g id="APP_NAME_1">%1$s</xliff:g> と <xliff:g id="APP_NAME_2">%2$s</xliff:g>"</string>
@@ -157,4 +156,6 @@
     <string name="header_app_icon_description" msgid="2184625881433608027">"アプリのアイコン"</string>
     <string name="header_default_app_title" msgid="8308052350689531566">"アプリのタイトル"</string>
     <string name="header_close_icon_description" msgid="5400033616675911319">"閉じるボタン"</string>
+    <string name="pin_to_taskbar" msgid="6607778046321626950">"タスクバーに固定"</string>
+    <string name="unpin_from_taskbar" msgid="2178811773165572676">"タスクバーの固定解除"</string>
 </resources>
