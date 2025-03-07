@@ -208,7 +208,7 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
                 taskContainer.stagePosition,
             )
         // Gravity set to Left instead of Start as sTempRect.left measures Left distance not Start
-        params.gravity = Gravity.START
+        params.gravity = Gravity.LEFT
         layoutParams = params
         scaleX = taskView.scaleX
         scaleY = taskView.scaleY
