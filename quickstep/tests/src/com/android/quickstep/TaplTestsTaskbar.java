@@ -24,7 +24,6 @@ import static com.android.quickstep.TaplTestsTaskbar.TaskbarMode.TRANSIENT;
 import androidx.test.filters.LargeTest;
 
 import com.android.launcher3.ui.PortraitLandscapeRunner.PortraitLandscape;
-import com.android.launcher3.util.rule.ScreenRecordRule;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -124,7 +123,6 @@ public class TaplTestsTaskbar extends AbstractTaplTestsTaskbar {
     }
 
     @Test
-    @ScreenRecordRule.ScreenRecord // b/373417111
     public void testLaunchShortcut_fromTaskbarAllApps() {
         getTaskbar().openAllApps()
                 .getAppIcon(TEST_APP_NAME)
