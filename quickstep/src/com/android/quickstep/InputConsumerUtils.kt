@@ -550,7 +550,7 @@ object InputConsumerUtils {
             (com.android.launcher3.Flags.useActivityOverlay() &&
                 runningTask != null &&
                 runningTask.isHomeTask &&
-                overviewComponentObserver.isHomeAndOverviewSame &&
+                overviewComponentObserver.isHomeAndOverviewSameActivity &&
                 !launcherResumedThroughShellTransition &&
                 !previousGestureState.isRecentsAnimationRunning)
 

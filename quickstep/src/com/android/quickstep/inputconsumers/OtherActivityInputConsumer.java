@@ -58,6 +58,7 @@ import com.android.quickstep.RecentsAnimationDeviceState;
 import com.android.quickstep.RecentsAnimationTargets;
 import com.android.quickstep.RotationTouchHelper;
 import com.android.quickstep.TaskAnimationManager;
+import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.quickstep.util.CachedEventDispatcher;
 import com.android.quickstep.util.MotionPauseDetector;
 import com.android.quickstep.util.NavBarPosition;
@@ -424,6 +425,8 @@ public class OtherActivityInputConsumer extends ContextWrapper implements InputC
         mMotionPauseDetector.setIsTrackpadGesture(mGestureState.isTrackpadGesture());
         mInteractionHandler.initWhenReady(
                 "OtherActivityInputConsumer.startTouchTrackingForWindowAnimation");
+        ActiveGestureProtoLogProxy.logGestureStartSwipeHandler(
+                mInteractionHandler.getClass().getSimpleName());
 
         if (DEBUG) {
             Log.d(TAG, "startTouchTrackingForWindowAnimation: isRecentsAnimationRunning="
