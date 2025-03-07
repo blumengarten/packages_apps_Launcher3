@@ -42,7 +42,6 @@ import android.window.TransitionInfo;
 
 import androidx.annotation.UiThread;
 
-import com.android.launcher3.Flags;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.testing.TestLogging;
@@ -59,6 +58,7 @@ import com.android.quickstep.RecentsAnimationDeviceState;
 import com.android.quickstep.RecentsAnimationTargets;
 import com.android.quickstep.RotationTouchHelper;
 import com.android.quickstep.TaskAnimationManager;
+import com.android.quickstep.fallback.window.RecentsWindowFlags;
 import com.android.quickstep.util.CachedEventDispatcher;
 import com.android.quickstep.util.MotionPauseDetector;
 import com.android.quickstep.util.NavBarPosition;
@@ -438,10 +438,8 @@ public class OtherActivityInputConsumer extends ContextWrapper implements InputC
             notifyGestureStarted(true /*isLikelyToStartNewTask*/);
         } else {
             // todo differentiate intent based on if we are on home or in app for overview in window
-            boolean useHomeIntentForWindow = Flags.enableFallbackOverviewInWindow()
-                    || Flags.enableLauncherOverviewInWindow();
-            Intent intent = new Intent(useHomeIntentForWindow ? mInteractionHandler.getHomeIntent()
-                : mInteractionHandler.getLaunchIntent());
+            Intent intent = new Intent(RecentsWindowFlags.Companion.getEnableOverviewInWindow()
+                    ? mInteractionHandler.getHomeIntent() : mInteractionHandler.getLaunchIntent());
             intent.putExtra(INTENT_EXTRA_LOG_TRACE_ID, mGestureState.getGestureId());
             mActiveCallbacks = mTaskAnimationManager.startRecentsAnimation(mGestureState, intent,
                     mInteractionHandler);

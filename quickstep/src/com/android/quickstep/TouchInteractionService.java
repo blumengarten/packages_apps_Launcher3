@@ -94,6 +94,7 @@ import com.android.quickstep.OverviewCommandHelper.CommandType;
 import com.android.quickstep.OverviewComponentObserver.OverviewChangeListener;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
 import com.android.quickstep.fallback.window.RecentsDisplayModel.RecentsDisplayResource;
+import com.android.quickstep.fallback.window.RecentsWindowFlags;
 import com.android.quickstep.fallback.window.RecentsWindowSwipeHandler;
 import com.android.quickstep.inputconsumers.BubbleBarInputConsumer;
 import com.android.quickstep.inputconsumers.OneHandedModeInputConsumer;
@@ -1081,10 +1082,9 @@ public class TouchInteractionService extends Service {
     }
 
     public AbsSwipeUpHandler.Factory getSwipeUpHandlerFactory() {
-        boolean recentsInWindow =
-                Flags.enableFallbackOverviewInWindow() || Flags.enableLauncherOverviewInWindow();
         return mOverviewComponentObserver.isHomeAndOverviewSame()
-                ? mLauncherSwipeHandlerFactory : (recentsInWindow
+                ? mLauncherSwipeHandlerFactory
+                : (RecentsWindowFlags.Companion.getEnableOverviewInWindow()
                 ? mRecentsWindowSwipeHandlerFactory : mFallbackSwipeHandlerFactory);
     }
 

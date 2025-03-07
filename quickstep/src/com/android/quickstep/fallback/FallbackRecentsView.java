@@ -30,7 +30,6 @@ import android.view.MotionEvent;
 import androidx.annotation.Nullable;
 
 import com.android.launcher3.AbstractFloatingView;
-import com.android.launcher3.Flags;
 import com.android.launcher3.anim.AnimatorPlaybackController;
 import com.android.launcher3.anim.PendingAnimation;
 import com.android.launcher3.desktop.DesktopRecentsTransitionController;
@@ -46,6 +45,7 @@ import com.android.quickstep.FallbackActivityInterface;
 import com.android.quickstep.GestureState;
 import com.android.quickstep.RemoteTargetGluer.RemoteTargetHandle;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
+import com.android.quickstep.fallback.window.RecentsWindowFlags;
 import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.SingleTask;
 import com.android.quickstep.util.SplitSelectStateController;
@@ -80,9 +80,10 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
 
     @Override
     public BaseContainerInterface<RecentsState, ?> getContainerInterface(int displayId) {
-        return (Flags.enableFallbackOverviewInWindow() || Flags.enableLauncherOverviewInWindow())
+        return RecentsWindowFlags.Companion.getEnableOverviewInWindow()
                 ? RecentsDisplayModel.getINSTANCE().get(mContext)
-                .getFallbackWindowInterface(displayId) : FallbackActivityInterface.INSTANCE;
+                        .getFallbackWindowInterface(displayId)
+                : FallbackActivityInterface.INSTANCE;
     }
 
     @Override
@@ -290,8 +291,7 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
         }
 
         // disabling this so app icons aren't drawn on top of recent tasks.
-        if (isOverlayEnabled && !(Flags.enableFallbackOverviewInWindow()
-                || Flags.enableLauncherOverviewInWindow())) {
+        if (isOverlayEnabled && !RecentsWindowFlags.Companion.getEnableOverviewInWindow()) {
             runActionOnRemoteHandles(remoteTargetHandle ->
                     remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(true));
         }
