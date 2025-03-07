@@ -16,6 +16,7 @@
 package com.android.launcher3.uioverrides.states;
 
 import static com.android.app.animation.Interpolators.DECELERATE_2;
+import static com.android.launcher3.Flags.enableDesktopExplodedView;
 import static com.android.launcher3.Flags.enableScalingRevealHomeAnimation;
 import static com.android.launcher3.logging.StatsLogManager.LAUNCHER_STATE_OVERVIEW;
 
@@ -168,6 +169,11 @@ public class OverviewState extends LauncherState {
     @Override
     public boolean detachDesktopCarousel() {
         return false;
+    }
+
+    @Override
+    public boolean showExplodedDesktopView() {
+        return enableDesktopExplodedView();
     }
 
     @Override

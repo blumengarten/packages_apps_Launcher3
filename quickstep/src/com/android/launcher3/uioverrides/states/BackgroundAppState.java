@@ -97,6 +97,11 @@ public class BackgroundAppState extends OverviewState {
     }
 
     @Override
+    public boolean showExplodedDesktopView() {
+        return false;
+    }
+
+    @Override
     protected float getDepthUnchecked(Context context) {
         if (Launcher.getLauncher(context).areDesktopTasksVisible()) {
             // Don't blur the background while desktop tasks are visible

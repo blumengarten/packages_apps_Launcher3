@@ -22,6 +22,7 @@ import static android.view.WindowManager.LayoutParams.TYPE_DOCK_DIVIDER;
 import static com.android.app.animation.Interpolators.LINEAR;
 import static com.android.app.animation.Interpolators.TOUCH_RESPONSE;
 import static com.android.app.animation.Interpolators.clampToProgress;
+import static com.android.launcher3.Flags.enableDesktopExplodedView;
 import static com.android.launcher3.Flags.enableGridOnlyOverview;
 import static com.android.launcher3.LauncherAnimUtils.VIEW_ALPHA;
 import static com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_X;
@@ -201,6 +202,9 @@ public final class TaskViewUtils {
                     recentsView.getSizeStrategy(), targets, forDesktop);
             if (forDesktop) {
                 remoteTargetHandles = gluer.assignTargetsForDesktop(targets, transitionInfo);
+                if (enableDesktopExplodedView()) {
+                    ((DesktopTaskView) taskView).setRemoteTargetHandles(remoteTargetHandles);
+                }
             } else if (taskView.containsMultipleTasks()) {
                 remoteTargetHandles = gluer.assignTargetsForSplitScreen(targets,
                         ((GroupedTaskView) taskView).getSplitBoundsConfig());
