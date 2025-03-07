@@ -115,13 +115,9 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         var heightMeasure = heightMeasureSpec
-        if (!(enableOverviewIconMenu() && taskView.isOnGridBottomRow())) {
-            // TODO(b/326952853): Cap menu height for grid bottom row in a way that doesn't break
-            // additionalTranslationY.
-            val maxMenuHeight = calculateMaxHeight()
-            if (MeasureSpec.getSize(heightMeasure) > maxMenuHeight) {
-                heightMeasure = MeasureSpec.makeMeasureSpec(maxMenuHeight, MeasureSpec.AT_MOST)
-            }
+        val maxMenuHeight = calculateMaxHeight()
+        if (MeasureSpec.getSize(heightMeasure) > maxMenuHeight) {
+            heightMeasure = MeasureSpec.makeMeasureSpec(maxMenuHeight, MeasureSpec.AT_MOST)
         }
         super.onMeasure(widthMeasureSpec, heightMeasure)
     }
@@ -364,15 +360,20 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
      * view will scroll. The maximum menu size will sit inside the task with a margin on the top and
      * bottom.
      */
-    private fun calculateMaxHeight(): Int {
-        val taskInsetMargin = resources.getDimension(R.dimen.task_card_margin)
-        return taskView.pagedOrientationHandler.getTaskMenuHeight(
-            taskInsetMargin,
-            recentsViewContainer.deviceProfile,
-            translationX,
-            translationY,
+    private fun calculateMaxHeight(): Int =
+        taskView.pagedOrientationHandler.getTaskMenuHeight(
+            taskInsetMargin = resources.getDimension(R.dimen.task_card_margin), // taskInsetMargin
+            deviceProfile = recentsViewContainer.deviceProfile,
+            taskMenuX = translationX,
+            taskMenuY =
+                when {
+                    !enableOverviewIconMenu() -> translationY
+                    // Bottom menu can translate up to show more options. So we use the min
+                    // translation allowed to calculate its max height.
+                    taskView.isOnGridBottomRow() -> minMenuTop
+                    else -> menuTranslationYBeforeOpen
+                },
         )
-    }
 
     private fun setOnClosingStartCallback(onClosingStartCallback: Runnable?) {
         this.onClosingStartCallback = onClosingStartCallback
