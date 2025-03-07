@@ -129,7 +129,9 @@ public class KeyboardQuickSwitchTaskView extends ConstraintLayout {
                         : resources.getDimensionPixelSize(
                                 R.dimen.keyboard_quick_switch_task_view_radius),
                 /* borderWidthPx= */ resources.getDimensionPixelSize(
-                                R.dimen.keyboard_quick_switch_border_width),
+                        R.dimen.keyboard_quick_switch_border_width),
+                /* borderStrokePx= */ resources.getDimensionPixelSize(
+                        R.dimen.keyboard_quick_switch_border_stroke),
                 /* boundsBuilder= */ bounds -> {
                     bounds.set(0, 0, getWidth(), getHeight());
                     return Unit.INSTANCE;
