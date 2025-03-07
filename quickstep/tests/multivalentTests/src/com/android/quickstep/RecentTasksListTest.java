@@ -19,6 +19,7 @@ package com.android.quickstep;
 import static android.view.Display.DEFAULT_DISPLAY;
 
 import static com.android.launcher3.Flags.FLAG_ENABLE_SEPARATE_EXTERNAL_DISPLAY_TASKS;
+import static com.android.window.flags.Flags.FLAG_ENABLE_MULTIPLE_DESKTOPS_BACKEND;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -201,6 +202,7 @@ public class RecentTasksListTest {
 
     @Test
     @EnableFlags(FLAG_ENABLE_SEPARATE_EXTERNAL_DISPLAY_TASKS)
+    @DisableFlags(FLAG_ENABLE_MULTIPLE_DESKTOPS_BACKEND)
     public void loadTasksInBackground_freeformTask_createsDesktopTaskPerDisplay() throws Exception {
         List<TaskInfo> tasks = Arrays.asList(
                 createRecentTaskInfo(1 /* taskId */, DEFAULT_DISPLAY),
