@@ -62,7 +62,7 @@
     <string name="widget_button_text" msgid="2880537293434387943">"微件"</string>
     <string name="widgets_full_sheet_search_bar_hint" msgid="8484659090860596457">"搜索"</string>
     <string name="widgets_full_sheet_cancel_button_description" msgid="5766167035728653605">"清除搜索框中的文字"</string>
-    <string name="no_widgets_available" msgid="4337693382501046170">"无法使用微件和快捷方式"</string>
+    <string name="no_widgets_available" msgid="4337693382501046170">"没有可用的微件和快捷方式"</string>
     <string name="no_search_results" msgid="3787956167293097509">"未找到任何微件或快捷方式"</string>
     <string name="widgets_full_sheet_personal_tab" msgid="2743540105607120182">"个人"</string>
     <string name="widgets_full_sheet_work_tab" msgid="3767150027110633765">"工作"</string>
@@ -101,7 +101,6 @@
     <string name="dismiss_prediction_label" msgid="3357562989568808658">"不要推荐此应用"</string>
     <string name="pin_prediction" msgid="4196423321649756498">"固定预测的应用"</string>
     <string name="bubble" msgid="3072951361014076670">"气泡框"</string>
-    <string name="pin_to_taskbar" msgid="1281337899690299038">"固定到任务栏"</string>
     <string name="permlab_install_shortcut" msgid="5632423390354674437">"安装快捷方式"</string>
     <string name="permdesc_install_shortcut" msgid="923466509822011139">"允许应用自行添加快捷方式。"</string>
     <string name="permlab_read_settings" msgid="5136500343007704955">"读取主屏幕设置和快捷方式"</string>
@@ -191,6 +190,10 @@
     <string name="accessibility_close" msgid="2277148124685870734">"关闭"</string>
     <string name="all_apps_personal_tab" msgid="4190252696685155002">"个人"</string>
     <string name="all_apps_work_tab" msgid="4884822796154055118">"工作"</string>
+    <!-- no translation found for all_apps_personal_tab_content_description (6286808898381807242) -->
+    <skip />
+    <!-- no translation found for all_apps_work_tab_content_description (3835637212347968316) -->
+    <skip />
     <string name="work_profile_toggle_label" msgid="3081029915775481146">"工作资料"</string>
     <string name="work_profile_edu_work_apps" msgid="7895468576497746520">"工作应用都有相应的标志，且您的 IT 管理员可以看到它们"</string>
     <string name="work_profile_edu_accept" msgid="6069788082535149071">"知道了"</string>
