@@ -101,7 +101,6 @@
     <string name="dismiss_prediction_label" msgid="3357562989568808658">"ॲप सुचवू नका"</string>
     <string name="pin_prediction" msgid="4196423321649756498">"पूर्वानुमान पिन करा"</string>
     <string name="bubble" msgid="3072951361014076670">"बबल"</string>
-    <string name="pin_to_taskbar" msgid="1281337899690299038">"टास्कबारवर पिन करा"</string>
     <string name="permlab_install_shortcut" msgid="5632423390354674437">"शॉर्टकट इंस्टॉल करा"</string>
     <string name="permdesc_install_shortcut" msgid="923466509822011139">"वापरकर्ता हस्तक्षेपाशिवाय शॉर्टकट जोडण्यास अ‍ॅप ला अनुमती देते."</string>
     <string name="permlab_read_settings" msgid="5136500343007704955">"होम सेटिंग्ज आणि शॉर्टकट वाचा"</string>
@@ -191,6 +190,10 @@
     <string name="accessibility_close" msgid="2277148124685870734">"बंद करा"</string>
     <string name="all_apps_personal_tab" msgid="4190252696685155002">"वैयक्तिक"</string>
     <string name="all_apps_work_tab" msgid="4884822796154055118">"कार्य"</string>
+    <!-- no translation found for all_apps_personal_tab_content_description (6286808898381807242) -->
+    <skip />
+    <!-- no translation found for all_apps_work_tab_content_description (3835637212347968316) -->
+    <skip />
     <string name="work_profile_toggle_label" msgid="3081029915775481146">"कार्य प्रोफाइल"</string>
     <string name="work_profile_edu_work_apps" msgid="7895468576497746520">"कार्य ॲप्स ही बॅज केलेली असून तुमच्या आयटी ॲडमिनला दृश्यमान आहेत"</string>
     <string name="work_profile_edu_accept" msgid="6069788082535149071">"समजले"</string>

@@ -132,7 +132,8 @@ public class FallbackRecentsStateController implements StateHandler<RecentsState
                     getOverviewInterpolator(state));
         }
         if (enableDesktopExplodedView()) {
-            setter.setFloat(mRecentsView, DESK_EXPLODE_PROGRESS, showAsGrid ? 1f : 0f,
+            setter.setFloat(mRecentsView, DESK_EXPLODE_PROGRESS,
+                    state.showExplodedDesktopView() ? 1f : 0f,
                     getOverviewInterpolator(state));
         }
 

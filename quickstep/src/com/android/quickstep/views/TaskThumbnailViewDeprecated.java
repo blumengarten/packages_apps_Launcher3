@@ -412,7 +412,12 @@ public class TaskThumbnailViewDeprecated extends View implements ViewPool.Reusab
                 thumbnailDataAspect, MAX_PCT_BEFORE_ASPECT_RATIOS_CONSIDERED_DIFFERENT);
     }
 
-    private boolean isThumbnailRotationDifferentFromTask() {
+    /**
+     * Returns whether or not the current thumbnail is a different orientation to the task.
+     * <p>
+     * Used to disable modal state when screenshot doesn't match the device orientation.
+     */
+    public boolean isThumbnailRotationDifferentFromTask() {
         RecentsView recents = mTaskView.getRecentsView();
         if (recents == null || mThumbnailData == null) {
             return false;

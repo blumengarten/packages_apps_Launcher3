@@ -165,7 +165,7 @@ public final class KeyboardQuickSwitchController implements
                         processLoadedTasks(tasks, taskIdsToExclude);
                         mQuickSwitchViewController.updateQuickSwitchView(
                                 mTasks,
-                                mNumHiddenTasks,
+                                wasOpenedFromTaskbar ? 0 : mNumHiddenTasks,
                                 currentFocusIndexOverride,
                                 mHasDesktopTask,
                                 mWasDesktopTaskFilteredOut);
@@ -205,7 +205,7 @@ public final class KeyboardQuickSwitchController implements
             // running. If not, focus that first task.
             mQuickSwitchViewController.openQuickSwitchView(
                     mTasks,
-                    mNumHiddenTasks,
+                    wasOpenedFromTaskbar ? 0 : mNumHiddenTasks,
                     /* updateTasks= */ false,
                     currentFocusedIndex == -1 && !mControllerCallbacks.isFirstTaskRunning()
                             ? 0 : currentFocusedIndex,
@@ -223,7 +223,7 @@ public final class KeyboardQuickSwitchController implements
             // the correct index.
             mQuickSwitchViewController.openQuickSwitchView(
                     mTasks,
-                    mNumHiddenTasks,
+                    wasOpenedFromTaskbar ? 0 : mNumHiddenTasks,
                     /* updateTasks= */ true,
                     currentFocusedIndex == -1 && !mControllerCallbacks.isFirstTaskRunning()
                             ? 0 : currentFocusedIndex,

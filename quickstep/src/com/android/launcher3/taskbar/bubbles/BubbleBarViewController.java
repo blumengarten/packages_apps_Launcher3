@@ -1361,6 +1361,19 @@ public class BubbleBarViewController {
     }
 
     /**
+     * Removes the bubble from the bubble bar and notifies sysui that the bubble should move to
+     * full screen.
+     */
+    public void moveBubbleToFullscreen(@NonNull BubbleView bubbleView) {
+        if (bubbleView.getBubble() == null) {
+            return;
+        }
+        String key = bubbleView.getBubble().getKey();
+        mSystemUiProxy.moveBubbleToFullscreen(key);
+        onBubbleDismissed(bubbleView);
+    }
+
+    /**
      * Create an animator for showing or hiding bubbles when stashed state changes
      *
      * @param isStashed {@code true} when bubble bar should be stashed to the handle

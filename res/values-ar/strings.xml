@@ -101,7 +101,6 @@
     <string name="dismiss_prediction_label" msgid="3357562989568808658">"عدم اقتراح التطبيق"</string>
     <string name="pin_prediction" msgid="4196423321649756498">"تثبيت التطبيق المتوقّع"</string>
     <string name="bubble" msgid="3072951361014076670">"فقاعة"</string>
-    <string name="pin_to_taskbar" msgid="1281337899690299038">"التثبيت على \"شريط التطبيقات\""</string>
     <string name="permlab_install_shortcut" msgid="5632423390354674437">"تثبيت اختصارات"</string>
     <string name="permdesc_install_shortcut" msgid="923466509822011139">"للسماح لتطبيق ما بإضافة اختصارات بدون تدخل المستخدم."</string>
     <string name="permlab_read_settings" msgid="5136500343007704955">"الاطلاع على الإعدادات والاختصارات على الشاشة الرئيسية"</string>
@@ -118,10 +117,8 @@
     <string name="default_scroll_format" msgid="7475544710230993317">"‏الصفحة %1$d من %2$d"</string>
     <string name="workspace_scroll_format" msgid="8458889198184077399">"‏الشاشة الرئيسية %1$d من %2$d"</string>
     <string name="workspace_new_page" msgid="257366611030256142">"صفحة الشاشة الرئيسية الجديدة"</string>
-    <!-- no translation found for app_running_state_description (5645053189564740904) -->
-    <skip />
-    <!-- no translation found for app_minimized_state_description (710740620044902509) -->
-    <skip />
+    <string name="app_running_state_description" msgid="5645053189564740904">"نشط"</string>
+    <string name="app_minimized_state_description" msgid="710740620044902509">"تم التصغير"</string>
     <string name="folder_opened" msgid="94695026776264709">"تم فتح المجلد، بمقاس <xliff:g id="WIDTH">%1$d</xliff:g> في <xliff:g id="HEIGHT">%2$d</xliff:g>"</string>
     <string name="folder_tap_to_close" msgid="4625795376335528256">"انقر لإغلاق المجلد"</string>
     <string name="folder_tap_to_rename" msgid="4017685068016979677">"انقر لحفظ الاسم الجديد"</string>
@@ -191,6 +188,10 @@
     <string name="accessibility_close" msgid="2277148124685870734">"إغلاق"</string>
     <string name="all_apps_personal_tab" msgid="4190252696685155002">"شخصية"</string>
     <string name="all_apps_work_tab" msgid="4884822796154055118">"للعمل"</string>
+    <!-- no translation found for all_apps_personal_tab_content_description (6286808898381807242) -->
+    <skip />
+    <!-- no translation found for all_apps_work_tab_content_description (3835637212347968316) -->
+    <skip />
     <string name="work_profile_toggle_label" msgid="3081029915775481146">"ملف العمل"</string>
     <string name="work_profile_edu_work_apps" msgid="7895468576497746520">"تحمل تطبيقات العمل مميّزة بشارة ومرئية لمشرف تكنولوجيا المعلومات."</string>
     <string name="work_profile_edu_accept" msgid="6069788082535149071">"حسنًا"</string>

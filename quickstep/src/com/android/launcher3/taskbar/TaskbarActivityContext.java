@@ -386,6 +386,13 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         onViewCreated();
     }
 
+    /**
+     * Returns whether this is a primary display.
+     */
+    public boolean isPrimaryDisplay() {
+        return mIsPrimaryDisplay;
+    }
+
     /** Updates {@link DeviceProfile} instances for any Taskbar windows. */
     public void updateDeviceProfile(DeviceProfile launcherDp) {
         applyDeviceProfile(launcherDp);

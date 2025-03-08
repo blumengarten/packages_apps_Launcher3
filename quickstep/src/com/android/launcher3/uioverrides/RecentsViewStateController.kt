@@ -76,10 +76,7 @@ class RecentsViewStateController(private val launcher: QuickstepLauncher) :
             if (state.displayOverviewTasksAsGrid(launcher.deviceProfile)) 1f else 0f,
         )
         if (enableDesktopExplodedView()) {
-            DESK_EXPLODE_PROGRESS.set(
-                recentsView,
-                if (state.displayOverviewTasksAsGrid(launcher.deviceProfile)) 1f else 0f,
-            )
+            DESK_EXPLODE_PROGRESS.set(recentsView, if (state.showExplodedDesktopView()) 1f else 0f)
         }
 
         TASK_THUMBNAIL_SPLASH_ALPHA.set(
@@ -168,7 +165,7 @@ class RecentsViewStateController(private val launcher: QuickstepLauncher) :
             builder.setFloat(
                 recentsView,
                 DESK_EXPLODE_PROGRESS,
-                if (toState.isRecentsViewVisible) 1f else 0f,
+                if (toState.showExplodedDesktopView()) 1f else 0f,
                 getOverviewInterpolator(fromState, toState),
             )
         }

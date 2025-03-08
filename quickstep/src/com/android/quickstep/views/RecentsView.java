@@ -1587,7 +1587,10 @@ public abstract class RecentsView<
                 == getPagedOrientationHandler().getPrimaryScroll(this);
     }
 
-    private boolean isFocusedTaskInExpectedScrollPosition() {
+    /**
+     * Returns true if the focused TaskView is in expected scroll position.
+     */
+    public boolean isFocusedTaskInExpectedScrollPosition() {
         TaskView focusedTask = getFocusedTaskView();
         return focusedTask != null && isTaskInExpectedScrollPosition(focusedTask);
     }
@@ -2925,12 +2928,15 @@ public abstract class RecentsView<
             updateGridProperties();
         }
 
+        BaseState<?> endState = mSizeStrategy.stateFromGestureEndTarget(endTarget);
+        // Starting the desk exploded animation when the gesture from an app is released.
         if (enableDesktopExplodedView()) {
             if (animatorSet == null) {
-                mUtils.setDeskExplodeProgress(1);
+                mUtils.setDeskExplodeProgress(endState.showExplodedDesktopView() ? 1f : 0f);
             } else {
                 animatorSet.play(
-                        ObjectAnimator.ofFloat(this, DESK_EXPLODE_PROGRESS, 1));
+                        ObjectAnimator.ofFloat(this, DESK_EXPLODE_PROGRESS,
+                                endState.showExplodedDesktopView() ? 1f : 0f));
             }
 
             for (TaskView taskView : getTaskViews()) {
@@ -2940,7 +2946,6 @@ public abstract class RecentsView<
             }
         }
 
-        BaseState<?> endState = mSizeStrategy.stateFromGestureEndTarget(endTarget);
         if (endState.displayOverviewTasksAsGrid(mContainer.getDeviceProfile())) {
             TaskView runningTaskView = getRunningTaskView();
             float runningTaskGridTranslationX = 0;
@@ -3014,9 +3019,11 @@ public abstract class RecentsView<
         animateActionsViewIn();
 
         if (mEnableDrawingLiveTile) {
-            for (TaskView taskView : getTaskViews()) {
-                if (taskView instanceof DesktopTaskView desktopTaskView) {
-                    desktopTaskView.setRemoteTargetHandles(mRemoteTargetHandles);
+            if (enableDesktopExplodedView()) {
+                for (TaskView taskView : getTaskViews()) {
+                    if (taskView instanceof DesktopTaskView desktopTaskView) {
+                        desktopTaskView.setRemoteTargetHandles(mRemoteTargetHandles);
+                    }
                 }
             }
             TaskView runningTaskView = getRunningTaskView();
@@ -5780,6 +5787,9 @@ public abstract class RecentsView<
         if (taskView instanceof DesktopTaskView) {
             anim.play(ObjectAnimator.ofArgb(mContainer.getScrimView(), VIEW_BACKGROUND_COLOR,
                     Color.TRANSPARENT));
+            if (enableDesktopExplodedView()) {
+                anim.play(ObjectAnimator.ofFloat(this, DESK_EXPLODE_PROGRESS, 1f, 0f));
+            }
         }
         DepthController depthController = getDepthController();
         if (depthController != null) {

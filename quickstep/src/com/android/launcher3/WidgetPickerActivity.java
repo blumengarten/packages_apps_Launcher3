@@ -68,7 +68,8 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /** An Activity that can host Launcher's widget picker. */
-public class WidgetPickerActivity extends BaseActivity {
+public class WidgetPickerActivity extends BaseActivity implements
+        WidgetPredictionsRequester.WidgetPredictionsListener {
     private static final String TAG = "WidgetPickerActivity";
     /**
      * Name of the extra that indicates that a widget being dragged.
@@ -322,7 +323,7 @@ public class WidgetPickerActivity extends BaseActivity {
             if (mUiSurface != null) {
                 mWidgetPredictionsRequester = new WidgetPredictionsRequester(app.getContext(),
                         mUiSurface, mModel.getWidgetsByComponentKeyForPicker());
-                mWidgetPredictionsRequester.request(mAddedWidgets, this::bindRecommendedWidgets);
+                mWidgetPredictionsRequester.request(mAddedWidgets, /*listener=*/ this);
             }
         });
     }
@@ -355,7 +356,8 @@ public class WidgetPickerActivity extends BaseActivity {
         });
     }
 
-    private void bindRecommendedWidgets(List<ItemInfo> recommendedWidgets) {
+    @Override
+    public void onPredictionsAvailable(List<ItemInfo> recommendedWidgets) {
         // Bind recommendations once picker has finished open animation.
         MAIN_EXECUTOR.getHandler().postDelayed(
                 () -> mWidgetPickerDataProvider.setWidgetRecommendations(recommendedWidgets),

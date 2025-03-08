@@ -157,4 +157,8 @@
     <string name="header_app_icon_description" msgid="2184625881433608027">"Alkalmazásikon"</string>
     <string name="header_default_app_title" msgid="8308052350689531566">"Alkalmazás neve"</string>
     <string name="header_close_icon_description" msgid="5400033616675911319">"Bezárás gomb"</string>
+    <!-- no translation found for pin_to_taskbar (6607778046321626950) -->
+    <skip />
+    <!-- no translation found for unpin_from_taskbar (2178811773165572676) -->
+    <skip />
 </resources>

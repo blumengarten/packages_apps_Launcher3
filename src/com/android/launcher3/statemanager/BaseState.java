@@ -69,6 +69,13 @@ public interface BaseState<T> {
     }
 
     /**
+     * For this state, whether we should show desktop exploded view in Overview.
+     */
+    default boolean showExplodedDesktopView() {
+        return false;
+    }
+
+    /**
      * For this state, whether fullscreen and desktop quickswitch carousel are detached.
      */
     default boolean detachDesktopCarousel() {

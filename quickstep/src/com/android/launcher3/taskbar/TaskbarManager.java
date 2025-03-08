@@ -178,6 +178,12 @@ public class TaskbarManager {
      */
     private final RecreationListener mRecreationListener = new RecreationListener();
 
+    // Currently, there is a duplicative call to recreate taskbars when user enter/exit Desktop
+    // Mode upon getting transition callback from shell side. So, we make sure that if taskbar is
+    // already in recreate process due to transition callback, don't recreate for
+    // DisplayInfoChangeListener.
+    private boolean mShouldIgnoreNextDesktopModeChangeFromDisplayController = false;
+
     private class RecreationListener implements DisplayController.DisplayInfoChangeListener {
         @Override
         public void onDisplayInfoChanged(Context context, DisplayController.Info info, int flags) {
@@ -206,10 +212,12 @@ public class TaskbarManager {
                 if ((flags & CHANGE_SHOW_LOCKED_TASKBAR) != 0) {
                     recreateTaskbars();
                 } else if ((flags & CHANGE_DESKTOP_MODE) != 0) {
+                    if (mShouldIgnoreNextDesktopModeChangeFromDisplayController) {
+                        mShouldIgnoreNextDesktopModeChangeFromDisplayController = false;
+                        return;
+                    }
                     // Only Handles Special Exit Cases for Desktop Mode Taskbar Recreation.
                     if (taskbarActivityContext != null
-                            && !DesktopVisibilityController.INSTANCE.get(taskbarActivityContext)
-                            .isInDesktopMode()
                             && !DisplayController.showLockedTaskbarOnHome(context)) {
                         recreateTaskbars();
                     }
@@ -292,6 +300,7 @@ public class TaskbarManager {
                                 displayId);
                         if (taskbarActivityContext != null
                                 && !taskbarActivityContext.isInOverview()) {
+                            mShouldIgnoreNextDesktopModeChangeFromDisplayController = true;
                             AnimatorSet animatorSet = taskbarActivityContext.onDestroyAnimation(
                                     TASKBAR_DESTROY_DURATION);
                             animatorSet.addListener(AnimatorListeners.forEndCallback(
@@ -308,11 +317,15 @@ public class TaskbarManager {
                         int displayId = mTaskbars.keyAt(taskbarIndex);
                         TaskbarActivityContext taskbarActivityContext = getTaskbarForDisplay(
                                 displayId);
-                        AnimatorSet animatorSet = taskbarActivityContext.onDestroyAnimation(
-                                TASKBAR_DESTROY_DURATION);
-                        animatorSet.addListener(AnimatorListeners.forEndCallback(
-                                () -> recreateTaskbarForDisplay(getDefaultDisplayId(), duration)));
-                        animatorSet.start();
+                        if (taskbarActivityContext != null) {
+                            mShouldIgnoreNextDesktopModeChangeFromDisplayController = true;
+                            AnimatorSet animatorSet = taskbarActivityContext.onDestroyAnimation(
+                                    TASKBAR_DESTROY_DURATION);
+                            animatorSet.addListener(AnimatorListeners.forEndCallback(
+                                    () -> recreateTaskbarForDisplay(getDefaultDisplayId(),
+                                            duration)));
+                            animatorSet.start();
+                        }
                     }
                 }
 
