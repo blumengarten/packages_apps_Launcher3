@@ -20,6 +20,7 @@ import static android.graphics.fonts.FontStyle.FONT_WEIGHT_BOLD;
 import static android.graphics.fonts.FontStyle.FONT_WEIGHT_NORMAL;
 import static android.text.Layout.Alignment.ALIGN_NORMAL;
 
+import static com.android.app.animation.Interpolators.EMPHASIZED;
 import static com.android.launcher3.BubbleTextView.RunningAppState.RUNNING;
 import static com.android.launcher3.BubbleTextView.RunningAppState.NOT_RUNNING;
 import static com.android.launcher3.BubbleTextView.RunningAppState.MINIMIZED;
@@ -37,6 +38,7 @@ import static com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_SHOW_DOWNLO
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.res.ColorStateList;
@@ -130,6 +132,9 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
             StringMatcherUtility.StringMatcher.getInstance();
     private static final int BOLD_TEXT_ADJUSTMENT = FONT_WEIGHT_BOLD - FONT_WEIGHT_NORMAL;
 
+    public static final int LINE_INDICATOR_ANIM_DURATION = 150;
+    private static final float MINIMIZED_APP_INDICATOR_SCALE = 0.5f;
+
     private static final int[] STATE_PRESSED = new int[]{android.R.attr.state_pressed};
 
     private float mScaleForReorderBounce = 1f;
@@ -164,6 +169,36 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
             bubbleTextView.setTextAlpha(alpha);
         }
     };
+
+    private static final Property<BubbleTextView, Integer> LINE_INDICATOR_COLOR_PROPERTY =
+            new Property<>(Integer.class, "lineIndicatorColor") {
+
+                @Override
+                public Integer get(BubbleTextView bubbleTextView) {
+                    return bubbleTextView.mLineIndicatorColor;
+                }
+
+                @Override
+                public void set(BubbleTextView bubbleTextView, Integer color) {
+                    bubbleTextView.mLineIndicatorColor = color;
+                    bubbleTextView.invalidate();
+                }
+            };
+
+    private static final Property<BubbleTextView, Float> LINE_INDICATOR_SCALE_PROPERTY =
+            new Property<>(Float.TYPE, "lineIndicatorScale") {
+
+                @Override
+                public Float get(BubbleTextView bubbleTextView) {
+                    return bubbleTextView.mLineIndicatorScale;
+                }
+
+                @Override
+                public void set(BubbleTextView bubbleTextView, Float scale) {
+                    bubbleTextView.mLineIndicatorScale = scale;
+                    bubbleTextView.invalidate();
+                }
+            };
 
     private final MultiTranslateDelegate mTranslateDelegate = new MultiTranslateDelegate(this);
     protected final ActivityContext mActivity;
@@ -202,7 +237,6 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
     // These fields, related to showing running apps, are only used for Taskbar.
     private final int mRunningAppIndicatorWidth;
-    private final int mMinimizedAppIndicatorWidth;
     private final int mRunningAppIndicatorHeight;
     private final int mRunningAppIndicatorTopMargin;
     private final Paint mRunningAppIndicatorPaint;
@@ -210,6 +244,12 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     private RunningAppState mRunningAppState;
     private final int mRunningAppIndicatorColor;
     private final int mMinimizedAppIndicatorColor;
+    @ViewDebug.ExportedProperty(category = "launcher")
+    private int mLineIndicatorColor;
+    @ViewDebug.ExportedProperty(category = "launcher")
+    private float mLineIndicatorScale;
+    private int mLineIndicatorAnimStartDelay;
+    private Animator mLineIndicatorAnim;
 
     private final String mMinimizedStateDescription;
     private final String mRunningStateDescription;
@@ -294,8 +334,6 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
         mRunningAppIndicatorWidth =
                 getResources().getDimensionPixelSize(R.dimen.taskbar_running_app_indicator_width);
-        mMinimizedAppIndicatorWidth =
-                getResources().getDimensionPixelSize(R.dimen.taskbar_minimized_app_indicator_width);
         mRunningAppIndicatorHeight =
                 getResources().getDimensionPixelSize(R.dimen.taskbar_running_app_indicator_height);
         mRunningAppIndicatorTopMargin =
@@ -343,6 +381,11 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         mDotParams.scale = 0f;
         mForceHideDot = false;
         setBackground(null);
+
+        mLineIndicatorColor = Color.TRANSPARENT;
+        mLineIndicatorScale = 0;
+        mLineIndicatorAnimStartDelay = 0;
+        cancelLineIndicatorAnim();
 
         setTag(null);
         if (mIconLoadRequest != null) {
@@ -436,9 +479,50 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
     /** Updates whether the app this view represents is currently running. */
     @UiThread
-    public void updateRunningState(RunningAppState runningAppState) {
+    public void updateRunningState(RunningAppState runningAppState, boolean animate) {
+        if (runningAppState.equals(mRunningAppState)) {
+            return;
+        }
         mRunningAppState = runningAppState;
-        invalidate();
+        cancelLineIndicatorAnim();
+
+        int color = switch (mRunningAppState) {
+            case NOT_RUNNING -> Color.TRANSPARENT;
+            case RUNNING -> mRunningAppIndicatorColor;
+            case MINIMIZED -> mMinimizedAppIndicatorColor;
+        };
+        float scale = switch (mRunningAppState) {
+            case NOT_RUNNING -> 0;
+            case RUNNING -> 1;
+            case MINIMIZED -> MINIMIZED_APP_INDICATOR_SCALE;
+        };
+
+        if (!animate) {
+            mLineIndicatorColor = color;
+            mLineIndicatorScale = scale;
+            invalidate();
+            return;
+        }
+
+        AnimatorSet lineIndicatorAnim  = new AnimatorSet();
+        mLineIndicatorAnim = lineIndicatorAnim;
+        Animator colorAnimator = ObjectAnimator.ofArgb(this, LINE_INDICATOR_COLOR_PROPERTY, color);
+        Animator scaleAnimator = ObjectAnimator.ofFloat(this, LINE_INDICATOR_SCALE_PROPERTY, scale);
+        lineIndicatorAnim.playTogether(colorAnimator, scaleAnimator);
+
+        lineIndicatorAnim.setInterpolator(EMPHASIZED);
+        lineIndicatorAnim.setStartDelay(mLineIndicatorAnimStartDelay);
+        lineIndicatorAnim.setDuration(LINE_INDICATOR_ANIM_DURATION).start();
+    }
+
+    public void setLineIndicatorAnimStartDelay(int lineIndicatorAnimStartDelay) {
+        mLineIndicatorAnimStartDelay = lineIndicatorAnimStartDelay;
+    }
+
+    private void cancelLineIndicatorAnim() {
+        if (mLineIndicatorAnim != null) {
+            mLineIndicatorAnim.cancel();
+        }
     }
 
     /**
@@ -790,19 +874,18 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
     /** Draws a line under the app icon if this is representing a running app in Desktop Mode. */
     protected void drawRunningAppIndicatorIfNecessary(Canvas canvas) {
-        if (mRunningAppState == NOT_RUNNING || mDisplay != DISPLAY_TASKBAR) {
+        if (mDisplay != DISPLAY_TASKBAR
+                || mLineIndicatorScale == 0
+                || mLineIndicatorColor == Color.TRANSPARENT) {
             return;
         }
         getIconBounds(mRunningAppIconBounds);
         Utilities.scaleRectAboutCenter(mRunningAppIconBounds, ICON_VISIBLE_AREA_FACTOR);
 
-        final boolean isMinimized = mRunningAppState == MINIMIZED;
         final int indicatorTop = mRunningAppIconBounds.bottom + mRunningAppIndicatorTopMargin;
-        final int indicatorWidth =
-                isMinimized ? mMinimizedAppIndicatorWidth : mRunningAppIndicatorWidth;
+        final float indicatorWidth = mRunningAppIndicatorWidth * mLineIndicatorScale;
         final float cornerRadius = mRunningAppIndicatorHeight / 2f;
-        mRunningAppIndicatorPaint.setColor(
-                isMinimized ? mMinimizedAppIndicatorColor : mRunningAppIndicatorColor);
+        mRunningAppIndicatorPaint.setColor(mLineIndicatorColor);
 
         canvas.drawRoundRect(
                 mRunningAppIconBounds.centerX() - indicatorWidth / 2f,

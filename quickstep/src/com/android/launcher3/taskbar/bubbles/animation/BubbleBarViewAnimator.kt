@@ -215,6 +215,7 @@ constructor(
         animator.spring(DynamicAnimation.TRANSLATION_Y, totalTranslationY, initialVelocity ?: 0f)
         animator.addUpdateListener { handle, values ->
             val ty = values[DynamicAnimation.TRANSLATION_Y]?.value ?: return@addUpdateListener
+            if (animatingBubble == null) return@addUpdateListener
             when {
                 ty >= stashedHandleTranslationYForAnimation -> {
                     // we're in the first leg of the animation. only animate the handle. the bubble

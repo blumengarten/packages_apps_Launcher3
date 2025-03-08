@@ -20,8 +20,10 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Path
 import android.graphics.PointF
+import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
@@ -35,10 +37,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.launcher3.R
+import com.android.launcher3.taskbar.TaskbarInsetsController
 import com.android.launcher3.taskbar.bubbles.BubbleBarBubble
 import com.android.launcher3.taskbar.bubbles.BubbleBarOverflow
 import com.android.launcher3.taskbar.bubbles.BubbleBarParentViewHeightUpdateNotifier
 import com.android.launcher3.taskbar.bubbles.BubbleBarView
+import com.android.launcher3.taskbar.bubbles.BubbleBarViewController
+import com.android.launcher3.taskbar.bubbles.BubbleStashedHandleViewController
 import com.android.launcher3.taskbar.bubbles.BubbleView
 import com.android.launcher3.taskbar.bubbles.flyout.BubbleBarFlyoutController
 import com.android.launcher3.taskbar.bubbles.flyout.BubbleBarFlyoutMessage
@@ -46,8 +51,10 @@ import com.android.launcher3.taskbar.bubbles.flyout.BubbleBarFlyoutPositioner
 import com.android.launcher3.taskbar.bubbles.flyout.FlyoutCallbacks
 import com.android.launcher3.taskbar.bubbles.flyout.FlyoutScheduler
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController
+import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController.BubbleLauncherState
 import com.android.wm.shell.shared.animation.PhysicsAnimator
 import com.android.wm.shell.shared.animation.PhysicsAnimatorTestUtils
+import com.android.wm.shell.shared.bubbles.BubbleBarLocation
 import com.android.wm.shell.shared.bubbles.BubbleInfo
 import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.Semaphore
@@ -56,13 +63,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.kotlin.any
-import org.mockito.kotlin.atLeastOnce
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.never
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 
 @SmallTest
 @RunWith(AndroidJUnit4::class)
@@ -78,7 +78,7 @@ class BubbleBarViewAnimatorTest {
     private lateinit var bubble: BubbleBarBubble
     private lateinit var bubbleBarView: BubbleBarView
     private lateinit var flyoutContainer: FrameLayout
-    private lateinit var bubbleStashController: BubbleStashController
+    private lateinit var bubbleStashController: FakeBubbleStashController
     private lateinit var flyoutController: BubbleBarFlyoutController
     private val emptyRunnable = Runnable {}
 
@@ -89,6 +89,7 @@ class BubbleBarViewAnimatorTest {
     fun setUp() {
         animatorScheduler = TestBubbleBarViewAnimatorScheduler()
         bubbleBarParentViewController = TestBubbleBarParentViewHeightUpdateNotifier()
+        bubbleStashController = FakeBubbleStashController()
         PhysicsAnimatorTestUtils.prepareForTest()
         setupFlyoutController()
     }
@@ -96,11 +97,10 @@ class BubbleBarViewAnimatorTest {
     @Test
     fun animateBubbleInForStashed() {
         setUpBubbleBar()
-        setUpBubbleStashController()
 
         val handle = View(context)
         val handleAnimator = PhysicsAnimator.getInstance(handle)
-        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+        bubbleStashController.handleAnimator = handleAnimator
 
         val animator =
             BubbleBarViewAnimator(
@@ -147,17 +147,16 @@ class BubbleBarViewAnimatorTest {
         assertThat(handle.translationY).isEqualTo(0)
         assertThat(bubbleBarView.alpha).isEqualTo(0)
         assertThat(animator.isAnimating).isFalse()
-        verify(bubbleStashController).stashBubbleBarImmediate()
+        assertThat(bubbleStashController.isStashed).isTrue()
     }
 
     @Test
     fun animateBubbleInForStashed_tapAnimatingBubble() {
         setUpBubbleBar()
-        setUpBubbleStashController()
 
         val handle = View(context)
         val handleAnimator = PhysicsAnimator.getInstance(handle)
-        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+        bubbleStashController.handleAnimator = handleAnimator
 
         val animator =
             BubbleBarViewAnimator(
@@ -187,7 +186,7 @@ class BubbleBarViewAnimatorTest {
         assertThat(bubbleBarView.translationY).isEqualTo(BAR_TRANSLATION_Y_FOR_TASKBAR)
         assertThat(animator.isAnimating).isTrue()
 
-        verify(bubbleStashController, atLeastOnce()).updateTaskbarTouchRegion()
+        assertThat(bubbleStashController.taskbarTouchRegionUpdated).isTrue()
         assertThat(bubbleBarParentViewController.timesInvoked).isEqualTo(1)
         waitForFlyoutToShow()
 
@@ -211,11 +210,10 @@ class BubbleBarViewAnimatorTest {
     @Test
     fun animateBubbleInForStashed_touchTaskbarArea_whileShowing() {
         setUpBubbleBar()
-        setUpBubbleStashController()
 
         val handle = View(context)
         val handleAnimator = PhysicsAnimator.getInstance(handle)
-        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+        bubbleStashController.handleAnimator = handleAnimator
 
         val animator =
             BubbleBarViewAnimator(
@@ -241,7 +239,6 @@ class BubbleBarViewAnimatorTest {
         // verify the hide bubble animation is pending
         assertThat(animatorScheduler.delayedBlock).isNotNull()
 
-        whenever(bubbleStashController.isStashed).thenReturn(true)
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             animator.onStashStateChangingWhileAnimating()
         }
@@ -255,9 +252,10 @@ class BubbleBarViewAnimatorTest {
         // verify that the hide animation was canceled
         assertThat(animatorScheduler.delayedBlock).isNull()
         assertThat(animator.isAnimating).isFalse()
+        assertThat(bubbleStashController.animationInterrupted).isTrue()
         assertThat(bubbleBarView.scaleX).isEqualTo(1)
         assertThat(bubbleBarView.scaleY).isEqualTo(1)
-        verify(bubbleStashController).onNewBubbleAnimationInterrupted(eq(true), any())
+        assertThat(bubbleStashController.isStashed).isTrue()
 
         // PhysicsAnimatorTestUtils posts the cancellation to the main thread so we need to wait
         // again
@@ -268,11 +266,10 @@ class BubbleBarViewAnimatorTest {
     @Test
     fun animateBubbleInForStashed_touchTaskbarArea_whileHiding() {
         setUpBubbleBar()
-        setUpBubbleStashController()
 
         val handle = View(context)
         val handleAnimator = PhysicsAnimator.getInstance(handle)
-        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+        bubbleStashController.handleAnimator = handleAnimator
 
         val animator =
             BubbleBarViewAnimator(
@@ -310,7 +307,7 @@ class BubbleBarViewAnimatorTest {
         }
         assertThat(bubbleBarParentViewController.timesInvoked).isEqualTo(2)
         assertThat(animator.isAnimating).isFalse()
-        verify(bubbleStashController).onNewBubbleAnimationInterrupted(any(), any())
+        assertThat(bubbleStashController.animationInterrupted).isTrue()
 
         // PhysicsAnimatorTestUtils posts the cancellation to the main thread so we need to wait
         // again
@@ -321,11 +318,10 @@ class BubbleBarViewAnimatorTest {
     @Test
     fun animateBubbleInForStashed_showAnimationCanceled() {
         setUpBubbleBar()
-        setUpBubbleStashController()
 
         val handle = View(context)
         val handleAnimator = PhysicsAnimator.getInstance(handle)
-        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+        bubbleStashController.handleAnimator = handleAnimator
 
         val animator =
             BubbleBarViewAnimator(
@@ -359,11 +355,10 @@ class BubbleBarViewAnimatorTest {
     @Test
     fun animateBubbleInForStashed_autoExpanding() {
         setUpBubbleBar()
-        setUpBubbleStashController()
 
         val handle = View(context)
         val handleAnimator = PhysicsAnimator.getInstance(handle)
-        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+        bubbleStashController.handleAnimator = handleAnimator
 
         var notifiedExpanded = false
         val onExpanded = Runnable { notifiedExpanded = true }
@@ -399,18 +394,17 @@ class BubbleBarViewAnimatorTest {
         // verify there is no hide animation
         assertThat(animatorScheduler.delayedBlock).isNull()
 
-        verify(bubbleStashController).showBubbleBarImmediate()
+        assertThat(bubbleStashController.isStashed).isFalse()
         assertThat(notifiedExpanded).isTrue()
     }
 
     @Test
     fun animateBubbleInForStashed_expandedWhileAnimatingIn() {
         setUpBubbleBar()
-        setUpBubbleStashController()
 
         val handle = View(context)
         val handleAnimator = PhysicsAnimator.getInstance(handle)
-        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+        bubbleStashController.handleAnimator = handleAnimator
 
         var notifiedExpanded = false
         val onExpanded = Runnable { notifiedExpanded = true }
@@ -459,11 +453,10 @@ class BubbleBarViewAnimatorTest {
     @Test
     fun animateBubbleInForStashed_expandedWhileFullyIn() {
         setUpBubbleBar()
-        setUpBubbleStashController()
 
         val handle = View(context)
         val handleAnimator = PhysicsAnimator.getInstance(handle)
-        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+        bubbleStashController.handleAnimator = handleAnimator
 
         var notifiedExpanded = false
         val onExpanded = Runnable { notifiedExpanded = true }
@@ -515,13 +508,11 @@ class BubbleBarViewAnimatorTest {
     @Test
     fun animateToInitialState_inApp() {
         setUpBubbleBar()
-        setUpBubbleStashController()
-        whenever(bubbleStashController.bubbleBarTranslationY)
-            .thenReturn(BAR_TRANSLATION_Y_FOR_TASKBAR)
+        bubbleStashController.launcherState = BubbleLauncherState.IN_APP
 
         val handle = View(context)
         val handleAnimator = PhysicsAnimator.getInstance(handle)
-        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+        bubbleStashController.handleAnimator = handleAnimator
 
         val barAnimator = PhysicsAnimator.getInstance(bubbleBarView)
 
@@ -570,19 +561,17 @@ class BubbleBarViewAnimatorTest {
         assertThat(bubbleBarView.visibility).isEqualTo(VISIBLE)
         assertThat(notifiedBubbleBarVisible).isTrue()
 
-        verify(bubbleStashController).stashBubbleBarImmediate()
+        assertThat(bubbleStashController.isStashed).isTrue()
     }
 
     @Test
     fun animateToInitialState_whileDragging_inApp() {
         setUpBubbleBar()
-        setUpBubbleStashController()
-        whenever(bubbleStashController.bubbleBarTranslationY)
-            .thenReturn(BAR_TRANSLATION_Y_FOR_TASKBAR)
+        bubbleStashController.launcherState = BubbleLauncherState.IN_APP
 
         val handle = View(context)
         val handleAnimator = PhysicsAnimator.getInstance(handle)
-        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+        bubbleStashController.handleAnimator = handleAnimator
 
         val barAnimator = PhysicsAnimator.getInstance(bubbleBarView)
 
@@ -634,20 +623,16 @@ class BubbleBarViewAnimatorTest {
         assertThat(handle.translationY).isEqualTo(0)
         assertThat(bubbleBarView.visibility).isEqualTo(VISIBLE)
         assertThat(notifiedBubbleBarVisible).isTrue()
-
-        verify(bubbleStashController, never()).stashBubbleBarImmediate()
     }
 
     @Test
     fun animateToInitialState_inApp_autoExpanding() {
         setUpBubbleBar()
-        setUpBubbleStashController()
-        whenever(bubbleStashController.bubbleBarTranslationY)
-            .thenReturn(BAR_TRANSLATION_Y_FOR_TASKBAR)
+        bubbleStashController.launcherState = BubbleLauncherState.IN_APP
 
         val handle = View(context)
         val handleAnimator = PhysicsAnimator.getInstance(handle)
-        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+        bubbleStashController.handleAnimator = handleAnimator
 
         val barAnimator = PhysicsAnimator.getInstance(bubbleBarView)
 
@@ -677,16 +662,14 @@ class BubbleBarViewAnimatorTest {
         assertThat(bubbleBarView.translationY).isEqualTo(BAR_TRANSLATION_Y_FOR_TASKBAR)
 
         assertThat(animatorScheduler.delayedBlock).isNull()
-        verify(bubbleStashController).showBubbleBarImmediate()
+        assertThat(bubbleStashController.isStashed).isFalse()
         assertThat(notifiedExpanded).isTrue()
     }
 
     @Test
     fun animateToInitialState_inHome() {
         setUpBubbleBar()
-        setUpBubbleStashController()
-        whenever(bubbleStashController.bubbleBarTranslationY)
-            .thenReturn(BAR_TRANSLATION_Y_FOR_HOTSEAT)
+        bubbleStashController.launcherState = BubbleLauncherState.HOME
 
         val barAnimator = PhysicsAnimator.getInstance(bubbleBarView)
 
@@ -725,15 +708,13 @@ class BubbleBarViewAnimatorTest {
         assertThat(bubbleBarView.alpha).isEqualTo(1)
         assertThat(bubbleBarView.translationY).isEqualTo(BAR_TRANSLATION_Y_FOR_HOTSEAT)
 
-        verify(bubbleStashController).showBubbleBarImmediate()
+        assertThat(bubbleStashController.isStashed).isFalse()
     }
 
     @Test
     fun animateToInitialState_expandedWhileAnimatingIn() {
         setUpBubbleBar()
-        setUpBubbleStashController()
-        whenever(bubbleStashController.bubbleBarTranslationY)
-            .thenReturn(BAR_TRANSLATION_Y_FOR_HOTSEAT)
+        bubbleStashController.launcherState = BubbleLauncherState.HOME
 
         var notifiedExpanded = false
         val onExpanded = Runnable { notifiedExpanded = true }
@@ -775,16 +756,14 @@ class BubbleBarViewAnimatorTest {
 
         verifyBubbleBarIsExpandedWithTranslation(BAR_TRANSLATION_Y_FOR_HOTSEAT)
         assertThat(animator.isAnimating).isFalse()
-        verify(bubbleStashController).showBubbleBarImmediate()
+        assertThat(bubbleStashController.isStashed).isFalse()
         assertThat(notifiedExpanded).isTrue()
     }
 
     @Test
     fun animateToInitialState_expandedWhileFullyIn() {
         setUpBubbleBar()
-        setUpBubbleStashController()
-        whenever(bubbleStashController.bubbleBarTranslationY)
-            .thenReturn(BAR_TRANSLATION_Y_FOR_HOTSEAT)
+        bubbleStashController.launcherState = BubbleLauncherState.HOME
 
         var notifiedExpanded = false
         val onExpanded = Runnable { notifiedExpanded = true }
@@ -831,9 +810,7 @@ class BubbleBarViewAnimatorTest {
     @Test
     fun animateBubbleBarForCollapsed() {
         setUpBubbleBar()
-        setUpBubbleStashController()
-        whenever(bubbleStashController.bubbleBarTranslationY)
-            .thenReturn(BAR_TRANSLATION_Y_FOR_HOTSEAT)
+        bubbleStashController.launcherState = BubbleLauncherState.HOME
 
         val barAnimator = PhysicsAnimator.getInstance(bubbleBarView)
 
@@ -877,16 +854,13 @@ class BubbleBarViewAnimatorTest {
         assertThat(bubbleBarParentViewController.timesInvoked).isEqualTo(2)
         // the bubble bar translation y should be back to its initial value
         assertThat(bubbleBarView.translationY).isEqualTo(BAR_TRANSLATION_Y_FOR_HOTSEAT)
-
-        verify(bubbleStashController).showBubbleBarImmediate()
+        assertThat(bubbleStashController.isStashed).isFalse()
     }
 
     @Test
     fun animateBubbleBarForCollapsed_autoExpanding() {
         setUpBubbleBar()
-        setUpBubbleStashController()
-        whenever(bubbleStashController.bubbleBarTranslationY)
-            .thenReturn(BAR_TRANSLATION_Y_FOR_HOTSEAT)
+        bubbleStashController.launcherState = BubbleLauncherState.HOME
 
         val semaphore = Semaphore(0)
         var notifiedExpanded = false
@@ -933,16 +907,14 @@ class BubbleBarViewAnimatorTest {
 
         assertThat(animator.isAnimating).isFalse()
         assertThat(bubbleBarView.translationY).isEqualTo(BAR_TRANSLATION_Y_FOR_HOTSEAT)
-        verify(bubbleStashController).showBubbleBarImmediate()
+        assertThat(bubbleStashController.isStashed).isFalse()
         assertThat(notifiedExpanded).isTrue()
     }
 
     @Test
     fun animateBubbleBarForCollapsed_expandingWhileAnimatingIn() {
         setUpBubbleBar()
-        setUpBubbleStashController()
-        whenever(bubbleStashController.bubbleBarTranslationY)
-            .thenReturn(BAR_TRANSLATION_Y_FOR_HOTSEAT)
+        bubbleStashController.launcherState = BubbleLauncherState.HOME
 
         val semaphore = Semaphore(0)
         var notifiedExpanded = false
@@ -1001,16 +973,14 @@ class BubbleBarViewAnimatorTest {
         assertThat(animator.isAnimating).isFalse()
         assertThat(bubbleBarView.translationY).isEqualTo(BAR_TRANSLATION_Y_FOR_HOTSEAT)
         assertThat(bubbleBarView.isExpanded).isTrue()
-        verify(bubbleStashController).showBubbleBarImmediate()
+        assertThat(bubbleStashController.isStashed).isFalse()
         assertThat(notifiedExpanded).isTrue()
     }
 
     @Test
     fun animateBubbleBarForCollapsed_expandingWhileFullyIn() {
         setUpBubbleBar()
-        setUpBubbleStashController()
-        whenever(bubbleStashController.bubbleBarTranslationY)
-            .thenReturn(BAR_TRANSLATION_Y_FOR_HOTSEAT)
+        bubbleStashController.launcherState = BubbleLauncherState.HOME
 
         val barAnimator = PhysicsAnimator.getInstance(bubbleBarView)
 
@@ -1064,18 +1034,17 @@ class BubbleBarViewAnimatorTest {
         assertThat(animator.isAnimating).isFalse()
         assertThat(bubbleBarView.translationY).isEqualTo(BAR_TRANSLATION_Y_FOR_HOTSEAT)
         assertThat(bubbleBarView.isExpanded).isTrue()
-        verify(bubbleStashController).showBubbleBarImmediate()
+        assertThat(bubbleStashController.isStashed).isFalse()
         assertThat(notifiedExpanded).isTrue()
     }
 
     @Test
     fun interruptAnimation_whileAnimatingIn() {
         setUpBubbleBar()
-        setUpBubbleStashController()
 
         val handle = View(context)
         val handleAnimator = PhysicsAnimator.getInstance(handle)
-        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+        bubbleStashController.handleAnimator = handleAnimator
 
         val animator =
             BubbleBarViewAnimator(
@@ -1136,17 +1105,16 @@ class BubbleBarViewAnimatorTest {
         assertThat(handle.translationY).isEqualTo(0)
         assertThat(bubbleBarView.alpha).isEqualTo(0)
         assertThat(animator.isAnimating).isFalse()
-        verify(bubbleStashController).stashBubbleBarImmediate()
+        assertThat(bubbleStashController.isStashed).isTrue()
     }
 
     @Test
     fun interruptAnimation_whileIn() {
         setUpBubbleBar()
-        setUpBubbleStashController()
 
         val handle = View(context)
         val handleAnimator = PhysicsAnimator.getInstance(handle)
-        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+        bubbleStashController.handleAnimator = handleAnimator
 
         val animator =
             BubbleBarViewAnimator(
@@ -1213,17 +1181,16 @@ class BubbleBarViewAnimatorTest {
         assertThat(handle.translationY).isEqualTo(0)
         assertThat(bubbleBarView.alpha).isEqualTo(0)
         assertThat(animator.isAnimating).isFalse()
-        verify(bubbleStashController).stashBubbleBarImmediate()
+        assertThat(bubbleStashController.isStashed).isTrue()
     }
 
     @Test
     fun interruptAnimation_whileAnimatingOut_whileCollapsingFlyout() {
         setUpBubbleBar()
-        setUpBubbleStashController()
 
         val handle = View(context)
         val handleAnimator = PhysicsAnimator.getInstance(handle)
-        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+        bubbleStashController.handleAnimator = handleAnimator
 
         val animator =
             BubbleBarViewAnimator(
@@ -1301,17 +1268,16 @@ class BubbleBarViewAnimatorTest {
         assertThat(handle.translationY).isEqualTo(0)
         assertThat(bubbleBarView.alpha).isEqualTo(0)
         assertThat(animator.isAnimating).isFalse()
-        verify(bubbleStashController).stashBubbleBarImmediate()
+        assertThat(bubbleStashController.isStashed).isTrue()
     }
 
     @Test
     fun interruptAnimation_whileAnimatingOut_barToHandle() {
         setUpBubbleBar()
-        setUpBubbleStashController()
 
         val handle = View(context)
         val handleAnimator = PhysicsAnimator.getInstance(handle)
-        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+        bubbleStashController.handleAnimator = handleAnimator
 
         val animator =
             BubbleBarViewAnimator(
@@ -1416,17 +1382,16 @@ class BubbleBarViewAnimatorTest {
         assertThat(handle.translationY).isEqualTo(0)
         assertThat(bubbleBarView.alpha).isEqualTo(0)
         assertThat(animator.isAnimating).isFalse()
-        verify(bubbleStashController).stashBubbleBarImmediate()
+        assertThat(bubbleStashController.isStashed).isTrue()
     }
 
     @Test
     fun interruptForIme() {
         setUpBubbleBar()
-        setUpBubbleStashController()
 
         val handle = View(context)
         val handleAnimator = PhysicsAnimator.getInstance(handle)
-        whenever(bubbleStashController.getStashedHandlePhysicsAnimator()).thenReturn(handleAnimator)
+        bubbleStashController.handleAnimator = handleAnimator
 
         val animator =
             BubbleBarViewAnimator(
@@ -1457,7 +1422,8 @@ class BubbleBarViewAnimatorTest {
         // verify that the hide animation was canceled
         assertThat(animatorScheduler.delayedBlock).isNull()
         assertThat(animator.isAnimating).isFalse()
-        verify(bubbleStashController).onNewBubbleAnimationInterrupted(eq(true), any())
+        assertThat(bubbleStashController.animationInterrupted).isTrue()
+        assertThat(bubbleStashController.isStashed).isTrue()
 
         // PhysicsAnimatorTestUtils posts the cancellation to the main thread so we need to wait
         // again
@@ -1508,17 +1474,6 @@ class BubbleBarViewAnimatorTest {
             bubbleBarView.addView(bubbleView)
         }
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-    }
-
-    private fun setUpBubbleStashController() {
-        bubbleStashController = mock<BubbleStashController>()
-        whenever(bubbleStashController.isStashed).thenReturn(true)
-        whenever(bubbleStashController.getDiffBetweenHandleAndBarCenters())
-            .thenReturn(DIFF_BETWEEN_HANDLE_AND_BAR_CENTERS)
-        whenever(bubbleStashController.getStashedHandleTranslationForNewBubbleAnimation())
-            .thenReturn(HANDLE_TRANSLATION)
-        whenever(bubbleStashController.bubbleBarTranslationYForTaskbar)
-            .thenReturn(BAR_TRANSLATION_Y_FOR_TASKBAR)
     }
 
     private fun setupFlyoutController() {
@@ -1626,6 +1581,91 @@ class BubbleBarViewAnimatorTest {
         override fun updateTopBoundary() {
             timesInvoked++
         }
+    }
+
+    private class FakeBubbleStashController : BubbleStashController {
+
+        var handleAnimator: PhysicsAnimator<View>? = null
+        var taskbarTouchRegionUpdated = false
+            private set
+
+        var animationInterrupted = false
+            private set
+
+        private var _isStashed = true
+
+        override var launcherState = BubbleLauncherState.HOME
+        override val isStashed: Boolean
+            get() = _isStashed
+
+        override var bubbleBarVerticalCenterForHome = 0
+        override var isSysuiLocked = false
+        override val isTransientTaskBar = true
+        override val hasHandleView = true
+        override val bubbleBarTranslationYForTaskbar = BAR_TRANSLATION_Y_FOR_TASKBAR
+        override val bubbleBarTranslationYForHotseat = BAR_TRANSLATION_Y_FOR_HOTSEAT
+        override var inAppDisplayOverrideProgress = 0f
+
+        override fun init(
+            taskbarInsetsController: TaskbarInsetsController,
+            bubbleBarViewController: BubbleBarViewController,
+            bubbleStashedHandleViewController: BubbleStashedHandleViewController?,
+            controllersAfterInitAction: BubbleStashController.ControllersAfterInitAction,
+        ) {}
+
+        override fun showBubbleBarImmediate() {
+            _isStashed = false
+        }
+
+        override fun showBubbleBarImmediate(bubbleBarTranslationY: Float) {
+            _isStashed = false
+        }
+
+        override fun stashBubbleBarImmediate() {
+            _isStashed = true
+        }
+
+        override fun getTouchableHeight() = 100
+
+        override fun isBubbleBarVisible() = true
+
+        override fun onNewBubbleAnimationInterrupted(
+            isStashed: Boolean,
+            bubbleBarTranslationY: Float,
+        ) {
+            _isStashed = isStashed
+            animationInterrupted = true
+        }
+
+        override fun isEventOverBubbleBarViews(ev: MotionEvent) = false
+
+        override fun setBubbleBarLocation(bubbleBarLocation: BubbleBarLocation) {}
+
+        override fun stashBubbleBar() {
+            _isStashed = true
+        }
+
+        override fun showBubbleBar(expandBubbles: Boolean, bubbleBarGesture: Boolean) {
+            _isStashed = false
+        }
+
+        override fun getDiffBetweenHandleAndBarCenters() = DIFF_BETWEEN_HANDLE_AND_BAR_CENTERS
+
+        override fun getStashedHandleTranslationForNewBubbleAnimation() = HANDLE_TRANSLATION
+
+        override fun getStashedHandlePhysicsAnimator(): PhysicsAnimator<View>? {
+            return handleAnimator
+        }
+
+        override fun updateTaskbarTouchRegion() {
+            taskbarTouchRegionUpdated = true
+        }
+
+        override fun setHandleTranslationY(translationY: Float) {}
+
+        override fun getHandleTranslationY() = 0f
+
+        override fun getHandleBounds(bounds: Rect) {}
     }
 }
 

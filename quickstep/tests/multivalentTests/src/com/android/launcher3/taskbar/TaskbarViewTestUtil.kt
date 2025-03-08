@@ -46,12 +46,14 @@ object TaskbarViewTestUtil {
 
     /** Creates an array of fake hotseat items. */
     fun createHotseatItems(size: Int): Array<ItemInfo> {
-        return Array(size) {
-            WorkspaceItemInfo(
-                    AppInfo(TEST_COMPONENT, "Test App $it", Process.myUserHandle(), Intent())
-                )
-                .apply { id = it }
-        }
+        return Array(size) { createHotseatWorkspaceItem(it) }
+    }
+
+    fun createHotseatWorkspaceItem(id: Int = 0): WorkspaceItemInfo {
+        return WorkspaceItemInfo(
+                AppInfo(TEST_COMPONENT, "Test App $id", Process.myUserHandle(), Intent())
+            )
+            .apply { this.id = id }
     }
 
     /** Creates a list of fake recent tasks. */

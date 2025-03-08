@@ -24,6 +24,7 @@ import static android.window.DesktopModeFlags.ENABLE_TASKBAR_RECENTS_LAYOUT_TRAN
 import static com.android.app.animation.Interpolators.EMPHASIZED;
 import static com.android.app.animation.Interpolators.FINAL_FRAME;
 import static com.android.app.animation.Interpolators.LINEAR;
+import static com.android.launcher3.BubbleTextView.LINE_INDICATOR_ANIM_DURATION;
 import static com.android.launcher3.Flags.enableScalingRevealHomeAnimation;
 import static com.android.launcher3.Flags.taskbarOverflow;
 import static com.android.launcher3.LauncherAnimUtils.SCALE_PROPERTY;
@@ -138,6 +139,8 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
     private static final int TRANSITION_DEFAULT_DURATION = 500;
     private static final int TRANSITION_FADE_IN_DURATION = 167;
     private static final int TRANSITION_FADE_OUT_DURATION = 83;
+    private static final int APPEARING_LINE_INDICATOR_ANIM_DELAY =
+            TRANSITION_DEFAULT_DURATION - LINE_INDICATOR_ANIM_DURATION;
 
     private final TaskbarActivityContext mActivity;
     private @Nullable TaskbarDragLayerController mDragLayerController;
@@ -736,7 +739,7 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
     public void updateIconViewsRunningStates() {
         for (View iconView : getIconViews()) {
             if (iconView instanceof BubbleTextView btv) {
-                btv.updateRunningState(getRunningAppState(btv));
+                updateRunningState(btv);
                 if (shouldUpdateIconContentDescription(btv)) {
                     btv.setContentDescription(
                             btv.getContentDescription() + " " + btv.getIconStateDescription());
@@ -768,6 +771,10 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
             }
         }
         return pinnedAppsWithTasks;
+    }
+
+    private void updateRunningState(BubbleTextView btv) {
+        btv.updateRunningState(getRunningAppState(btv), mTaskbarView.getLayoutTransition() != null);
     }
 
     private BubbleTextView.RunningAppState getRunningAppState(BubbleTextView btv) {
@@ -1225,13 +1232,22 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
                     view.setAlpha(0f);
                     view.setScaleX(0f);
                     view.setScaleY(0f);
+                    if (view instanceof BubbleTextView btv) {
+                        // Defer so that app is mostly scaled in before showing indicator.
+                        btv.setLineIndicatorAnimStartDelay(APPEARING_LINE_INDICATOR_ANIM_DELAY);
+                    }
+                } else if (type == DISAPPEARING && view instanceof BubbleTextView btv) {
+                    // Running state updates happen after removing this view, so update it here.
+                    updateRunningState(btv);
                 }
             }
 
             @Override
             public void endTransition(
                     LayoutTransition transition, ViewGroup container, View view, int type) {
-                // Do nothing.
+                if (type == APPEARING && view instanceof BubbleTextView btv) {
+                    btv.setLineIndicatorAnimStartDelay(0);
+                }
             }
         });
 
