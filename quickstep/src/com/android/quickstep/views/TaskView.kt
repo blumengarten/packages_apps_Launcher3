@@ -82,6 +82,7 @@ import com.android.quickstep.orientation.RecentsPagedOrientationHandler
 import com.android.quickstep.recents.di.RecentsDependencies
 import com.android.quickstep.recents.di.get
 import com.android.quickstep.recents.di.inject
+import com.android.quickstep.recents.domain.usecase.ThumbnailPosition
 import com.android.quickstep.recents.ui.viewmodel.TaskData
 import com.android.quickstep.recents.ui.viewmodel.TaskTileUiState
 import com.android.quickstep.recents.ui.viewmodel.TaskViewModel
@@ -775,11 +776,13 @@ constructor(
                     },
             )
             updateThumbnailValidity(container)
-            updateThumbnailMatrix(
-                container = container,
-                width = container.thumbnailView.width,
-                height = container.thumbnailView.height,
-            )
+            val thumbnailPosition =
+                updateThumbnailMatrix(
+                    container = container,
+                    width = container.thumbnailView.width,
+                    height = container.thumbnailView.height,
+                )
+            container.setOverlayEnabled(state.taskOverlayEnabled, thumbnailPosition)
 
             if (enableOverviewIconMenu()) {
                 setIconState(container, containerState)
@@ -808,11 +811,16 @@ constructor(
      * @param width The desired width of the thumbnail's container.
      * @param height The desired height of the thumbnail's container.
      */
-    private fun updateThumbnailMatrix(container: TaskContainer, width: Int, height: Int) {
+    private fun updateThumbnailMatrix(
+        container: TaskContainer,
+        width: Int,
+        height: Int,
+    ): ThumbnailPosition? {
         val thumbnailPosition =
             viewModel?.getThumbnailPosition(container.thumbnailData, width, height, isLayoutRtl)
-                ?: return
+                ?: return null
         container.updateThumbnailMatrix(thumbnailPosition.matrix)
+        return thumbnailPosition
     }
 
     override fun onDetachedFromWindow() {
@@ -877,7 +885,8 @@ constructor(
                     thumbnailFullscreenParams.currentCornerRadius
                 container.taskContentView.doOnSizeChange { width, height ->
                     updateThumbnailValidity(container)
-                    updateThumbnailMatrix(container, width, height)
+                    val thumbnailPosition = updateThumbnailMatrix(container, width, height)
+                    container.refreshOverlay(thumbnailPosition)
                 }
             }
         }
