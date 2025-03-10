@@ -49,6 +49,7 @@ constructor(base: Context, themeResId: Int, private val destroyOnDetach: Boolean
 
     private val savedStateRegistryController = SavedStateRegistryController.create(this)
     private val lifecycleRegistry = LifecycleRegistry(this)
+    private val cleanupSet = WeakCleanupSet(this)
 
     override val savedStateRegistry: SavedStateRegistry
         get() = savedStateRegistryController.savedStateRegistry
@@ -109,6 +110,8 @@ constructor(base: Context, themeResId: Int, private val destroyOnDetach: Boolean
     }
 
     override fun getViewCache() = viewCache
+
+    override fun getOwnerCleanupSet() = cleanupSet
 
     private fun updateState() {
         if (lifecycleRegistry.currentState.isAtLeast(CREATED)) {

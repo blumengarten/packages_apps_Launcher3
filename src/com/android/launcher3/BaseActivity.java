@@ -55,6 +55,7 @@ import com.android.launcher3.util.LifecycleHelper;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.SystemUiController;
 import com.android.launcher3.util.ViewCache;
+import com.android.launcher3.util.WeakCleanupSet;
 import com.android.launcher3.util.WindowBounds;
 import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.views.ScrimView;
@@ -105,6 +106,7 @@ public abstract class BaseActivity extends Activity implements ActivityContext,
     private final SavedStateRegistryController mSavedStateRegistryController =
             SavedStateRegistryController.create(this);
     private final LifecycleRegistry mLifecycleRegistry = new LifecycleRegistry(this);
+    private final WeakCleanupSet mCleanupSet = new WeakCleanupSet(this);
 
     protected DeviceProfile mDeviceProfile;
     protected SystemUiController mSystemUiController;
@@ -502,6 +504,11 @@ public abstract class BaseActivity extends Activity implements ActivityContext,
     @Override
     public Lifecycle getLifecycle() {
         return mLifecycleRegistry;
+    }
+
+    @Override
+    public WeakCleanupSet getOwnerCleanupSet() {
+        return mCleanupSet;
     }
 
     public static <T extends BaseActivity> T fromContext(Context context) {
