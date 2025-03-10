@@ -40,6 +40,8 @@ import com.android.launcher3.util.SplitConfigurationOptions.SplitBounds;
 import com.android.quickstep.util.BorderAnimator;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.recents.model.ThumbnailData;
+import com.android.wm.shell.shared.TypefaceUtils;
+import com.android.wm.shell.shared.TypefaceUtils.FontFamily;
 
 import kotlin.Unit;
 
@@ -108,11 +110,11 @@ public class KeyboardQuickSwitchTaskView extends ConstraintLayout {
 
         TypefaceUtils.setTypeface(
                 mContent.findViewById(R.id.large_text),
-                TypefaceUtils.FONT_FAMILY_HEADLINE_LARGE_EMPHASIZED
+                FontFamily.GSF_HEADLINE_LARGE_EMPHASIZED
         );
         TypefaceUtils.setTypeface(
                 mContent.findViewById(R.id.small_text),
-                TypefaceUtils.FONT_FAMILY_LABEL_LARGE_BASELINE
+                FontFamily.GSF_LABEL_LARGE
         );
 
         Resources resources = mContext.getResources();
