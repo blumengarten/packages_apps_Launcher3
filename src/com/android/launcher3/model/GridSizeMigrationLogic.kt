@@ -32,8 +32,11 @@ import com.android.launcher3.config.FeatureFlags
 import com.android.launcher3.logging.FileLog
 import com.android.launcher3.logging.StatsLogManager
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_ROW_SHIFT_GRID_MIGRATION
+import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_ROW_SHIFT_ONE_GRID_MIGRATION
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_STANDARD_GRID_MIGRATION
+import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_STANDARD_ONE_GRID_MIGRATION
 import com.android.launcher3.model.GridSizeMigrationDBController.DbReader
+import com.android.launcher3.model.GridSizeMigrationDBController.isOneGridMigration
 import com.android.launcher3.provider.LauncherDbUtils.SQLiteTransaction
 import com.android.launcher3.provider.LauncherDbUtils.copyTable
 import com.android.launcher3.provider.LauncherDbUtils.dropTable
@@ -95,7 +98,12 @@ class GridSizeMigrationLogic {
                     // Save current configuration, so that the migration does not run again.
                     destDeviceState.writeToPrefs(context)
                     t.commit()
+
+                    if (isOneGridMigration(srcDeviceState, destDeviceState)) {
+                        statsLogManager.logger().log(LAUNCHER_ROW_SHIFT_ONE_GRID_MIGRATION)
+                    }
                     statsLogManager.logger().log(LAUNCHER_ROW_SHIFT_GRID_MIGRATION)
+
                     return
                 }
 
@@ -125,6 +133,10 @@ class GridSizeMigrationLogic {
 
                 dropTable(t.db, TMP_TABLE)
                 t.commit()
+
+                if (isOneGridMigration(srcDeviceState, destDeviceState)) {
+                    statsLogManager.logger().log(LAUNCHER_STANDARD_ONE_GRID_MIGRATION)
+                }
                 statsLogManager.logger().log(LAUNCHER_STANDARD_GRID_MIGRATION)
             }
         } catch (e: Exception) {

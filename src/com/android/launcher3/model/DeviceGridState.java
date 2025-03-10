@@ -19,6 +19,7 @@ package com.android.launcher3.model;
 import static com.android.launcher3.InvariantDeviceProfile.DeviceType;
 import static com.android.launcher3.LauncherPrefs.DB_FILE;
 import static com.android.launcher3.LauncherPrefs.DEVICE_TYPE;
+import static com.android.launcher3.LauncherPrefs.GRID_TYPE;
 import static com.android.launcher3.LauncherPrefs.HOTSEAT_COUNT;
 import static com.android.launcher3.LauncherPrefs.WORKSPACE_SIZE;
 
@@ -41,17 +42,21 @@ public class DeviceGridState implements Comparable<DeviceGridState> {
     public static final String KEY_HOTSEAT_COUNT = "migration_src_hotseat_count";
     public static final String KEY_DEVICE_TYPE = "migration_src_device_type";
     public static final String KEY_DB_FILE = "migration_src_db_file";
+    public static final String KEY_GRID_TYPE = "migration_src_grid_type";
 
     private final String mGridSizeString;
     private final int mNumHotseat;
     private final @DeviceType int mDeviceType;
     private final String mDbFile;
+    private final int mGridType;
 
-    public DeviceGridState(int columns, int row, int numHotseat, int deviceType, String dbFile) {
+    public DeviceGridState(int columns, int row, int numHotseat, int deviceType, String dbFile,
+            int gridType) {
         mGridSizeString = String.format(Locale.ENGLISH, "%d,%d", columns, row);
         mNumHotseat = numHotseat;
         mDeviceType = deviceType;
         mDbFile = dbFile;
+        mGridType = gridType;
     }
 
     public DeviceGridState(InvariantDeviceProfile idp) {
@@ -59,6 +64,7 @@ public class DeviceGridState implements Comparable<DeviceGridState> {
         mNumHotseat = idp.numDatabaseHotseatIcons;
         mDeviceType = idp.deviceType;
         mDbFile = idp.dbFile;
+        mGridType = idp.gridType;
     }
 
     public DeviceGridState(Context context) {
@@ -70,6 +76,7 @@ public class DeviceGridState implements Comparable<DeviceGridState> {
         mNumHotseat = lp.get(HOTSEAT_COUNT);
         mDeviceType = lp.get(DEVICE_TYPE);
         mDbFile = lp.get(DB_FILE);
+        mGridType = lp.get(GRID_TYPE);
     }
 
     /**
@@ -94,6 +101,13 @@ public class DeviceGridState implements Comparable<DeviceGridState> {
     }
 
     /**
+     * Returns the grid type.
+     */
+    public int getGridType() {
+        return mGridType;
+    }
+
+    /**
      * Stores the device state to shared preferences
      */
     public void writeToPrefs(Context context) {
@@ -101,7 +115,9 @@ public class DeviceGridState implements Comparable<DeviceGridState> {
                 WORKSPACE_SIZE.to(mGridSizeString),
                 HOTSEAT_COUNT.to(mNumHotseat),
                 DEVICE_TYPE.to(mDeviceType),
-                DB_FILE.to(mDbFile));
+                DB_FILE.to(mDbFile),
+                GRID_TYPE.to(mGridType));
+
     }
 
     /**

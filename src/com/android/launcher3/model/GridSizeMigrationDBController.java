@@ -17,11 +17,16 @@
 package com.android.launcher3.model;
 
 import static com.android.launcher3.Flags.enableSmartspaceRemovalToggle;
+import static com.android.launcher3.GridType.GRID_TYPE_NON_ONE_GRID;
+import static com.android.launcher3.GridType.GRID_TYPE_ONE_GRID;
+import static com.android.launcher3.InvariantDeviceProfile.TYPE_TABLET;
 import static com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME;
 import static com.android.launcher3.LauncherSettings.Favorites.TMP_TABLE;
 import static com.android.launcher3.Utilities.SHOULD_SHOW_FIRST_PAGE_WIDGET;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_ROW_SHIFT_GRID_MIGRATION;
+import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_ROW_SHIFT_ONE_GRID_MIGRATION;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_STANDARD_GRID_MIGRATION;
+import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_STANDARD_ONE_GRID_MIGRATION;
 import static com.android.launcher3.model.LoaderTask.SMARTSPACE_ON_HOME_SCREEN;
 import static com.android.launcher3.provider.LauncherDbUtils.copyTable;
 import static com.android.launcher3.provider.LauncherDbUtils.dropTable;
@@ -157,6 +162,9 @@ public class GridSizeMigrationDBController {
                 // Save current configuration, so that the migration does not run again.
                 destDeviceState.writeToPrefs(context);
                 t.commit();
+                if (isOneGridMigration(srcDeviceState, destDeviceState)) {
+                    statsLogManager.logger().log(LAUNCHER_ROW_SHIFT_ONE_GRID_MIGRATION);
+                }
                 statsLogManager.logger().log(LAUNCHER_ROW_SHIFT_GRID_MIGRATION);
                 return true;
             }
@@ -169,6 +177,9 @@ public class GridSizeMigrationDBController {
                     destDeviceState.getNumHotseat(), targetSize, srcDeviceState, destDeviceState);
             dropTable(t.getDb(), TMP_TABLE);
             t.commit();
+            if (isOneGridMigration(srcDeviceState, destDeviceState)) {
+                statsLogManager.logger().log(LAUNCHER_STANDARD_ONE_GRID_MIGRATION);
+            }
             statsLogManager.logger().log(LAUNCHER_STANDARD_GRID_MIGRATION);
             return true;
         } catch (Exception e) {
@@ -291,6 +302,12 @@ public class GridSizeMigrationDBController {
         return true;
     }
 
+    protected static boolean isOneGridMigration(DeviceGridState srcDeviceState,
+            DeviceGridState destDeviceState) {
+        return srcDeviceState.getDeviceType() != TYPE_TABLET
+                && srcDeviceState.getGridType() == GRID_TYPE_NON_ONE_GRID
+                && destDeviceState.getGridType() == GRID_TYPE_ONE_GRID;
+    }
     /**
      * Calculate the differences between {@code src} (denoted by A) and {@code dest}
      * (denoted by B).
