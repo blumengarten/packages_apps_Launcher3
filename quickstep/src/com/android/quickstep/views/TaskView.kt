@@ -141,7 +141,6 @@ constructor(
         /** Returns whether the task is part of overview grid and not being focused. */
         get() = container.deviceProfile.isTablet && !isLargeTile
 
-    // TODO: b/400532675 - This will not work for empty desks until b/400532675 is fixed.
     val isRunningTask: Boolean
         get() = this === recentsView?.runningTaskView
 
