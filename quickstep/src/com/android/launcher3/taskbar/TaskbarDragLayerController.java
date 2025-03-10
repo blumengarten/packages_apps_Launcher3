@@ -34,7 +34,6 @@ import com.android.launcher3.R;
 import com.android.launcher3.anim.AnimatedFloat;
 import com.android.launcher3.anim.AnimatorListeners;
 import com.android.launcher3.util.DimensionUtils;
-import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
 import com.android.launcher3.util.TouchController;
 
@@ -108,19 +107,18 @@ public class TaskbarDragLayerController implements TaskbarControllers.LoggableTa
 
         if (startAnimation != null) {
             // set taskbar background render animation boolean
-            if (DisplayController.isTransientTaskbar(mActivity)) {
+            if (mActivity.isTransientTaskbar()) {
                 mTaskbarDragLayer.setIsAnimatingTransientTaskbarBackground(true);
             } else {
                 mTaskbarDragLayer.setIsAnimatingPersistentTaskbarBackground(true);
             }
 
-            float desiredValue = DisplayController.isTransientTaskbar(mActivity)
+            float desiredValue = mActivity.isTransientTaskbar()
                     ? PINNING_TRANSIENT
                     : PINNING_PERSISTENT;
 
-            float nonDesiredvalue = !DisplayController.isTransientTaskbar(mActivity)
-                    ? PINNING_TRANSIENT
-                    : PINNING_PERSISTENT;
+            float nonDesiredvalue =
+                    !mActivity.isTransientTaskbar() ? PINNING_TRANSIENT : PINNING_PERSISTENT;
 
             ObjectAnimator objectAnimator = mTaskbarBackgroundProgress.animateToValue(
                     nonDesiredvalue, desiredValue);
@@ -133,9 +131,8 @@ public class TaskbarDragLayerController implements TaskbarControllers.LoggableTa
             }));
 
         } else {
-            mTaskbarBackgroundProgress.updateValue(DisplayController.isTransientTaskbar(mActivity)
-                    ? PINNING_TRANSIENT
-                    : PINNING_PERSISTENT);
+            mTaskbarBackgroundProgress.updateValue(
+                    mActivity.isTransientTaskbar() ? PINNING_TRANSIENT : PINNING_PERSISTENT);
         }
 
         mBgTaskbar.value = 1;

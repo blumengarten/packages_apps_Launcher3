@@ -23,6 +23,7 @@ import android.view.LayoutInflater;
 
 import com.android.launcher3.popup.SystemShortcut;
 import com.android.launcher3.util.BaseContext;
+import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.Themes;
 import com.android.quickstep.SystemUiProxy;
 
@@ -32,10 +33,20 @@ public abstract class BaseTaskbarContext extends BaseContext
         implements SystemShortcut.BubbleActivityStarter {
 
     protected final LayoutInflater mLayoutInflater;
+    private final boolean mIsPrimaryDisplay;
 
-    public BaseTaskbarContext(Context windowContext) {
+    public BaseTaskbarContext(Context windowContext, boolean isPrimaryDisplay) {
         super(windowContext, Themes.getActivityThemeRes(windowContext));
         mLayoutInflater = LayoutInflater.from(this).cloneInContext(this);
+        mIsPrimaryDisplay = isPrimaryDisplay;
+    }
+
+    public boolean isTransientTaskbar() {
+        return DisplayController.isTransientTaskbar(this) && mIsPrimaryDisplay;
+    }
+
+    public boolean isPrimaryDisplay() {
+        return mIsPrimaryDisplay;
     }
 
     @Override

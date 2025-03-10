@@ -55,7 +55,7 @@ public class TaskbarOverlayContext extends BaseTaskbarContext {
             Context windowContext,
             TaskbarActivityContext taskbarContext,
             TaskbarControllers controllers) {
-        super(windowContext);
+        super(windowContext, taskbarContext.isPrimaryDisplay());
         mTaskbarContext = taskbarContext;
         mOverlayController = controllers.taskbarOverlayController;
         mDragController = new TaskbarDragController(this);

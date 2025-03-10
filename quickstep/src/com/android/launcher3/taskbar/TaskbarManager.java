@@ -732,8 +732,7 @@ public class TaskbarManager {
                         displayId);
                 taskbar.updateDeviceProfile(dp);
             }
-            mSharedState.startTaskbarVariantIsTransient =
-                    DisplayController.isTransientTaskbar(taskbar);
+            mSharedState.startTaskbarVariantIsTransient = taskbar.isTransientTaskbar();
             mSharedState.allAppsVisible = mSharedState.allAppsVisible && isLargeScreenTaskbar;
             taskbar.init(mSharedState, duration);
 

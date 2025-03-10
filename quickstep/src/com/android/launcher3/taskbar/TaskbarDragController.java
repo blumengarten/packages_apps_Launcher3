@@ -80,7 +80,6 @@ import com.android.launcher3.shortcuts.ShortcutDragPreviewProvider;
 import com.android.launcher3.taskbar.bubbles.BubbleBarViewController;
 import com.android.launcher3.testing.TestLogging;
 import com.android.launcher3.testing.shared.TestProtocol;
-import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.IntSet;
 import com.android.launcher3.util.ItemInfoMatcher;
 import com.android.launcher3.views.BubbleTextHolder;
@@ -463,7 +462,7 @@ public class TaskbarDragController extends DragController<BaseTaskbarContext> im
             com.android.launcher3.logging.InstanceId launcherInstanceId = instanceIds.second;
 
             intent.putExtra(ClipDescription.EXTRA_LOGGING_INSTANCE_ID, internalInstanceId);
-            if (DisplayController.isTransientTaskbar(mActivity)) {
+            if (mActivity.isTransientTaskbar()) {
                 // Tell WM Shell to ignore drag events in the provided transient taskbar region.
                 TaskbarDragLayer dragLayer = mControllers.taskbarActivityContext.getDragLayer();
                 int[] locationOnScreen = dragLayer.getLocationOnScreen();

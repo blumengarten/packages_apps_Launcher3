@@ -61,7 +61,6 @@ import com.android.launcher3.model.data.WorkspaceItemInfo;
 import com.android.launcher3.taskbar.customization.TaskbarAllAppsButtonContainer;
 import com.android.launcher3.taskbar.customization.TaskbarDividerContainer;
 import com.android.launcher3.uioverrides.PredictedAppIcon;
-import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.Themes;
 import com.android.launcher3.views.ActivityContext;
 import com.android.quickstep.util.GroupTask;
@@ -184,8 +183,9 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         setWillNotDraw(false);
 
         mAllAppsButtonContainer = new TaskbarAllAppsButtonContainer(context);
-        mAllAppsButtonTranslationOffset =  (int) getResources().getDimension(
-                mAllAppsButtonContainer.getAllAppsButtonTranslationXOffset(isTransientTaskbar()));
+        mAllAppsButtonTranslationOffset = (int) getResources().getDimension(
+                mAllAppsButtonContainer.getAllAppsButtonTranslationXOffset(
+                        mActivityContext.isTransientTaskbar()));
 
         if (enableTaskbarPinning() || enableRecentsInTaskbar()) {
             mTaskbarDividerContainer = new TaskbarDividerContainer(context);
@@ -243,7 +243,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
                 enableTaskbarPinning() && !mActivityContext.isThreeButtonNav();
         availableWidth -= iconSize - (int) getResources().getDimension(
                 mAllAppsButtonContainer.getAllAppsButtonTranslationXOffset(
-                        forceTransientTaskbarSize || isTransientTaskbar()));
+                        forceTransientTaskbarSize || mActivityContext.isTransientTaskbar()));
         ++additionalIcons;
 
         return Math.floorDiv(availableWidth, iconSize) + additionalIcons;
@@ -1099,11 +1099,6 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
     @Override
     public void setInsets(Rect insets) {
         // Ignore, we just implement Insettable to draw behind system insets.
-    }
-
-    private boolean isTransientTaskbar() {
-        return DisplayController.isTransientTaskbar(mActivityContext)
-                && !mActivityContext.isPhoneMode();
     }
 
     public boolean areIconsVisible() {
