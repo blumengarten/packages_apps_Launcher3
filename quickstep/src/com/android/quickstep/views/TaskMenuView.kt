@@ -366,13 +366,10 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
             deviceProfile = recentsViewContainer.deviceProfile,
             taskMenuX = translationX,
             taskMenuY =
-                when {
-                    !enableOverviewIconMenu() -> translationY
-                    // Bottom menu can translate up to show more options. So we use the min
-                    // translation allowed to calculate its max height.
-                    taskView.isOnGridBottomRow() -> minMenuTop
-                    else -> menuTranslationYBeforeOpen
-                },
+                // Bottom menu can translate up to show more options. So we use the min
+                // translation allowed to calculate its max height.
+                if (enableOverviewIconMenu() && taskView.isOnGridBottomRow()) minMenuTop
+                else translationY,
         )
 
     private fun setOnClosingStartCallback(onClosingStartCallback: Runnable?) {
