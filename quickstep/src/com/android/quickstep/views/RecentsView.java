@@ -211,6 +211,7 @@ import com.android.quickstep.recents.viewmodel.RecentsViewData;
 import com.android.quickstep.recents.viewmodel.RecentsViewModel;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.quickstep.util.AnimUtils;
+import com.android.quickstep.util.DesksUtils;
 import com.android.quickstep.util.DesktopTask;
 import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.LayoutUtils;
@@ -253,6 +254,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -1924,6 +1926,8 @@ public abstract class RecentsView<
             return;
         }
 
+        // TODO: b/400532675 - The use of `currentTaskIds`, `runningTaskIds`, and `focusedTaskIds`
+        // needs to be audited so that they can work with empty desks that have no tasks.
         int[] currentTaskIds;
         TaskView currentTaskView = getTaskViewAt(mCurrentPage);
         if (currentTaskView != null) {
@@ -2826,9 +2830,13 @@ public abstract class RecentsView<
     /**
      * Called when a gesture from an app is starting.
      */
+    // TODO: b/401582344 - Implement a way to exclude the `DesktopWallpaperActivity` from being
+    //  considered in Overview.
     public void onGestureAnimationStart(Task[] runningTasks) {
         Log.d(TAG, "onGestureAnimationStart - runningTasks: " + Arrays.toString(runningTasks));
         mActiveGestureRunningTasks = runningTasks;
+
+
         // This needs to be called before the other states are set since it can create the task view
         if (mOrientationState.setGestureActive(true)) {
             reapplyActiveRotation();
@@ -3062,6 +3070,21 @@ public abstract class RecentsView<
     }
 
     /**
+     * Creates a `DesktopTaskView` for the currently active desk on this display, which contains the
+     * gievn `runningTasks`.
+     */
+    private DesktopTaskView createDesktopTaskViewForActiveDesk(Task[] runningTasks) {
+        final int activeDeskId = mUtils.getActiveDeskIdOnThisDisplay();
+        final var desktopTaskView = (DesktopTaskView) getTaskViewFromPool(TaskViewType.DESKTOP);
+
+        // TODO: b/401582344 - Implement a way to exclude the `DesktopWallpaperActivity`.
+        desktopTaskView.bind(
+                new DesktopTask(activeDeskId, Arrays.asList(runningTasks)),
+                mOrientationState, mTaskOverlayFactory);
+        return desktopTaskView;
+    }
+
+    /**
      * Creates a task view (if necessary) to represent the task with the {@param runningTaskId}.
      *
      * All subsequent calls to reload will keep the task as the first item until {@link #reset()}
@@ -3075,20 +3098,14 @@ public abstract class RecentsView<
         }
 
         int runningTaskViewId = -1;
-        boolean needGroupTaskView = runningTasks.length > 1;
-        boolean needDesktopTask = hasDesktopTask(runningTasks);
         if (shouldAddStubTaskView(runningTasks)) {
             boolean wasEmpty = getChildCount() == 0;
             // Add an empty view for now until the task plan is loaded and applied
             final TaskView taskView;
+            final boolean needGroupTaskView = runningTasks.length > 1;
+            final boolean needDesktopTask = hasDesktopTask(runningTasks);
             if (needDesktopTask) {
-                final int activeDeskId =
-                        DesktopVisibilityController.INSTANCE.get(mContext).getActiveDeskId(
-                                mContainer.getDisplay().getDisplayId());
-                taskView = getTaskViewFromPool(TaskViewType.DESKTOP);
-                ((DesktopTaskView) taskView).bind(
-                        new DesktopTask(activeDeskId, Arrays.asList(runningTasks)),
-                        mOrientationState, mTaskOverlayFactory);
+                taskView = createDesktopTaskViewForActiveDesk(runningTasks);
             } else if (needGroupTaskView) {
                 taskView = getTaskViewFromPool(TaskViewType.GROUPED);
                 // When we create a placeholder task view mSplitBoundsConfig will be null, but with
@@ -3114,8 +3131,11 @@ public abstract class RecentsView<
             measure(makeMeasureSpec(getMeasuredWidth(), EXACTLY),
                     makeMeasureSpec(getMeasuredHeight(), EXACTLY));
             layout(getLeft(), getTop(), getRight(), getBottom());
-        } else if (getTaskViewByTaskId(runningTasks[0].key.id) != null) {
-            runningTaskViewId = getTaskViewByTaskId(runningTasks[0].key.id).getTaskViewId();
+        } else {
+            var runningTaskView = getTaskViewByTaskId(runningTasks[0].key.id);
+            if (runningTaskView != null) {
+                runningTaskViewId = runningTaskView.getTaskViewId();
+            }
         }
 
         boolean runningTaskTileHidden = mRunningTaskTileHidden;
@@ -3154,6 +3174,10 @@ public abstract class RecentsView<
                 return true;
             }
         }
+
+        // A running empty desk will have a single running app for the `DesktopWallpaperActivity`.
+        // TODO: b/401582344 - Implement a way to exclude the `DesktopWallpaperActivity`.
+
         return false;
     }
 
@@ -4525,24 +4549,33 @@ public abstract class RecentsView<
         return lastVisibleTaskView;
     }
 
-  private void removeTaskInternal(@NonNull TaskView dismissedTaskView) {
-    UI_HELPER_EXECUTOR
-        .getHandler()
-        .post(
-            () -> {
-              if (DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_BACK_NAVIGATION.isTrue()
-                  && dismissedTaskView instanceof DesktopTaskView) {
-                // TODO: b/362720497 - Use the api with desktop id instead.
-                SystemUiProxy.INSTANCE
+    private void removeTaskInternal(@NonNull TaskView dismissedTaskView) {
+        UI_HELPER_EXECUTOR
+                .getHandler()
+                .post(
+                        () -> {
+                            if (dismissedTaskView instanceof DesktopTaskView desktopTaskView) {
+                                removeDesktopTaskView(desktopTaskView);
+                            } else {
+                                for (int taskId : dismissedTaskView.getTaskIds()) {
+                                    ActivityManagerWrapper.getInstance().removeTask(taskId);
+                                }
+                            }
+                        });
+    }
+
+    private void removeDesktopTaskView(DesktopTaskView desktopTaskView) {
+        if (DesksUtils.areMultiDesksFlagsEnabled()) {
+            SystemUiProxy.INSTANCE
                     .get(getContext())
-                    .removeDesktop(mContainer.getDisplay().getDisplayId());
-              } else {
-                for (int taskId : dismissedTaskView.getTaskIds()) {
-                    ActivityManagerWrapper.getInstance().removeTask(taskId);
-                }
-              }
-            });
-  }
+                    .removeDesk(desktopTaskView.getDeskId());
+        } else if (DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_BACK_NAVIGATION.isTrue()) {
+            SystemUiProxy.INSTANCE
+                    .get(getContext())
+                    .removeDefaultDeskInDisplay(
+                            mContainer.getDisplay().getDisplayId());
+        }
+    }
 
     protected void onDismissAnimationEnds() {
         AccessibilityManagerCompat.sendTestProtocolEventToTest(getContext(),
@@ -4562,6 +4595,12 @@ public abstract class RecentsView<
         mPendingAnimation = anim;
         mPendingAnimation.addEndListener(isSuccess -> {
             if (isSuccess) {
+                // Remove desktops first, since desks can be empty (so they have no recent tasks),
+                // and closing all tasks on a desk doesn't always necessarily mean that the desk
+                // will be removed. So, there are no guarantees that the below call to
+                // `ActivityManagerWrapper::removeAllRecentTasks()` will be enough.
+                SystemUiProxy.INSTANCE.get(getContext()).removeAllDesks();
+
                 // Remove all the task views now
                 finishRecentsAnimation(true /* toRecents */, false /* shouldPip */, () -> {
                     UI_HELPER_EXECUTOR.getHandler().post(
@@ -4691,7 +4730,7 @@ public abstract class RecentsView<
     private void createDesk(View view) {
         SystemUiProxy.INSTANCE
                 .get(getContext())
-                .createDesktop(mContainer.getDisplay().getDisplayId());
+                .createDesk(mContainer.getDisplay().getDisplayId());
     }
 
     @Override
@@ -6922,6 +6961,58 @@ public abstract class RecentsView<
     @Override
     public void onCanCreateDesksChanged(boolean canCreateDesks) {
         // TODO: b/389209338 - update the AddDesktopButton's visibility on this.
+    }
+
+    @Override
+    public void onDeskAdded(int displayId, int deskId) {
+        // Ignore desk changes that don't belong to this display.
+        if (displayId != mContainer.getDisplay().getDisplayId()) {
+            return;
+        }
+
+        if (mUtils.getDesktopTaskViewForDeskId(deskId) != null) {
+            Log.e(TAG, "A task view for this desk has already been added.");
+            return;
+        }
+
+        // We assume that a newly added desk is always empty and gets added to the left of the
+        // `AddNewDesktopButton`.
+        DesktopTaskView desktopTaskView =
+                (DesktopTaskView) getTaskViewFromPool(TaskViewType.DESKTOP);
+        desktopTaskView.bind(new DesktopTask(deskId, new ArrayList<>()),
+                mOrientationState, mTaskOverlayFactory);
+
+        Objects.requireNonNull(mAddDesktopButton);
+        final int insertionIndex = 1 + indexOfChild(mAddDesktopButton);
+        addView(desktopTaskView, insertionIndex);
+
+        updateTaskSize();
+        updateChildTaskOrientations();
+
+        // TODO: b/401002178 - Recalculate the new current page such that the addition of the new
+        //  desk does not result in a change in the current scroll page.
+    }
+
+    @Override
+    public void onDeskRemoved(int displayId, int deskId) {
+        // Ignore desk changes that don't belong to this display.
+        if (displayId != mContainer.getDisplay().getDisplayId()) {
+            return;
+        }
+
+        // We need to distinguish between desk removals that are triggered from outside of overview
+        // vs. the ones that were initiated from overview by dismissing the corresponding desktop
+        // task view.
+        var taskView = mUtils.getDesktopTaskViewForDeskId(deskId);
+        if (taskView != null) {
+            dismissTaskView(taskView, true, true);
+        }
+    }
+
+    @Override
+    public void onActiveDeskChanged(int displayId, int newActiveDesk, int oldActiveDesk) {
+        // TODO: b/400870600 - We may need to add code here to special case when an empty desk gets
+        // activated, since `RemoteDesktopLaunchTransitionRunner` doesn't always get triggered.
     }
 
     /** Get the color used for foreground scrimming the RecentsView for sharing. */

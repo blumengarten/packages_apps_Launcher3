@@ -520,6 +520,33 @@ public class WindowManagerProxy {
          */
         default void onCanCreateDesksChanged(boolean canCreateDesks) {
         }
+
+        /**
+         * Called when a new desk is added.
+         *
+         * @param displayId The ID of the display on which the desk was added.
+         * @param deskId The ID of the newly added desk.
+         */
+        default void onDeskAdded(int displayId, int deskId) {}
+
+        /**
+         * Called when an existing desk is removed.
+         *
+         * @param displayId The ID of the display on which the desk was removed.
+         * @param deskId The ID of the desk that was removed.
+         */
+        default void onDeskRemoved(int displayId, int deskId) {}
+
+        /**
+         * Called when the active desk changes.
+         *
+         * @param displayId The ID of the display on which the desk activation change is happening.
+         * @param newActiveDesk The ID of the new active desk or -1 if no desk is active anymore
+         *                      (i.e. exit desktop mode).
+         * @param oldActiveDesk The ID of the desk that was previously active, or -1 if no desk was
+         *                      active before.
+         */
+        default void onActiveDeskChanged(int displayId, int newActiveDesk, int oldActiveDesk) {}
     }
 
 }

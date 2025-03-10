@@ -18,6 +18,7 @@ package com.android.quickstep;
 
 import androidx.annotation.Nullable;
 
+import com.android.quickstep.util.DesksUtils;
 import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.views.TaskViewType;
 import com.android.systemui.shared.recents.model.Task;
@@ -117,37 +118,43 @@ public class RecentsFilterState {
      * Returns a predicate for filtering out GroupTasks by package name.
      *
      * @param packageName package name to filter GroupTasks by
-     *                    if null, Predicate filters out desktop tasks with no non-minimized tasks.
+     *                    if null, Predicate filters out desktop tasks with no non-minimized tasks,
+     *                    unless the multiple desks feature is enabled, which allows empty desks.
      */
     public static Predicate<GroupTask> getFilter(@Nullable String packageName) {
         if (packageName == null) {
-            return getEmptyDesktopTaskFilter();
+            return getDesktopTaskFilter();
         }
 
         return (groupTask) -> (groupTask.containsPackage(packageName)
-                && !isDestopTaskWithMinimizedTasksOnly(groupTask));
+                && shouldKeepGroupTask(groupTask));
     }
 
     /**
-     * Returns a predicate that filters out desk tasks that contain no non-minimized desktop tasks.
+     * Returns a predicate that filters out desk tasks that contain no non-minimized desktop tasks,
+     * unless the multiple desks feature is enabled, which allows empty desks.
      */
-    public static Predicate<GroupTask> getEmptyDesktopTaskFilter() {
-        return (groupTask -> !isDestopTaskWithMinimizedTasksOnly(groupTask));
+    public static Predicate<GroupTask> getDesktopTaskFilter() {
+        return (groupTask -> shouldKeepGroupTask(groupTask));
     }
 
     /**
-     * Whether the provided task is a desktop task with no non-minimized tasks - returns true if the
-     * desktop task has no tasks at all.
+     * Returns true if the given `groupTask` should be kept, and false if it should be filtered out.
+     * Desks will be filtered out if they are empty unless the multiple desks feature is enabled.
      *
      * @param groupTask The group task to check.
      */
-    static boolean isDestopTaskWithMinimizedTasksOnly(GroupTask groupTask) {
+    private static boolean shouldKeepGroupTask(GroupTask groupTask) {
         if (groupTask.taskViewType != TaskViewType.DESKTOP) {
-            return false;
+            return true;
         }
+
+        if (DesksUtils.areMultiDesksFlagsEnabled()) {
+            return true;
+        }
+
         return groupTask.getTasks().stream()
-                .filter(task -> !task.isMinimized)
-                .toList().isEmpty();
+                .anyMatch(task -> !task.isMinimized);
     }
 
     /**
