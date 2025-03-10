@@ -15,7 +15,6 @@
  */
 package com.android.launcher3.widget.picker;
 
-import static com.android.launcher3.Flags.enableCategorizedWidgetSuggestions;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_WIDGETS_PREDICTION;
 import static com.android.launcher3.widget.util.WidgetSizes.getWidgetSizePx;
 import static com.android.launcher3.widget.util.WidgetsTableUtils.WIDGETS_TABLE_ROW_COUNT_COMPARATOR;
@@ -112,10 +111,8 @@ public final class WidgetsRecommendationTableLayout extends TableLayout {
                 WidgetCell widgetCell = addItemCell(tableRow);
                 widgetCell.applyFromCellItem(widgetItem);
                 widgetCell.showAppIconInWidgetTitle(true);
-                if (enableCategorizedWidgetSuggestions()) {
-                    widgetCell.showDescription(false);
-                    widgetCell.showDimensions(false);
-                }
+                widgetCell.showDescription(false);
+                widgetCell.showDimensions(false);
             }
             addView(tableRow);
         }
