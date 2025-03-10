@@ -30,9 +30,7 @@ import androidx.annotation.UiThread
 import androidx.annotation.VisibleForTesting
 import com.android.internal.jank.Cuj
 import com.android.launcher3.Flags.enableAltTabKqsOnConnectedDisplays
-import com.android.launcher3.Flags.enableFallbackOverviewInWindow
 import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
-import com.android.launcher3.Flags.enableLauncherOverviewInWindow
 import com.android.launcher3.Flags.enableOverviewCommandHelperTimeout
 import com.android.launcher3.PagedView
 import com.android.launcher3.logger.LauncherAtom
@@ -53,6 +51,7 @@ import com.android.quickstep.OverviewCommandHelper.CommandType.KEYBOARD_INPUT
 import com.android.quickstep.OverviewCommandHelper.CommandType.SHOW
 import com.android.quickstep.OverviewCommandHelper.CommandType.TOGGLE
 import com.android.quickstep.fallback.window.RecentsDisplayModel
+import com.android.quickstep.fallback.window.RecentsWindowFlags.Companion.enableOverviewInWindow
 import com.android.quickstep.util.ActiveGestureLog
 import com.android.quickstep.util.ActiveGestureProtoLogProxy
 import com.android.quickstep.views.RecentsView
@@ -299,7 +298,7 @@ constructor(
 
         val focusedDisplayId = focusState.focusedDisplayId
         val focusedDisplayUIController: TaskbarUIController? =
-            if (RecentsDisplayModel.enableOverviewInWindow()) {
+            if (enableOverviewInWindow) {
                 Log.d(
                     TAG,
                     "Querying RecentsDisplayModel for TaskbarUIController for display: $focusedDisplayId",
@@ -392,9 +391,7 @@ constructor(
             return false
         }
 
-        val recentsInWindowFlagSet =
-            enableFallbackOverviewInWindow() || enableLauncherOverviewInWindow()
-        if (!recentsInWindowFlagSet) {
+        if (!enableOverviewInWindow) {
             containerInterface.getCreatedContainer()?.rootView?.let { view ->
                 InteractionJankMonitorWrapper.begin(view, Cuj.CUJ_LAUNCHER_QUICK_SWITCH)
             }
@@ -425,7 +422,7 @@ constructor(
                     transitionInfo: TransitionInfo?,
                 ) {
                     Log.d(TAG, "recents animation started: $command")
-                    if (recentsInWindowFlagSet) {
+                    if (enableOverviewInWindow) {
                         containerInterface.getCreatedContainer()?.rootView?.let { view ->
                             InteractionJankMonitorWrapper.begin(view, Cuj.CUJ_LAUNCHER_QUICK_SWITCH)
                         }

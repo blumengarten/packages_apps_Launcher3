@@ -24,6 +24,7 @@ import static android.view.Display.DEFAULT_DISPLAY;
 import static com.android.launcher3.Flags.enableOverviewOnConnectedDisplays;
 import static com.android.launcher3.config.FeatureFlags.SEPARATE_RECENTS_ACTIVITY;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
+import static com.android.quickstep.fallback.window.RecentsWindowFlags.enableLauncherOverviewInWindow;
 import static com.android.systemui.shared.system.PackageManagerWrapper.ACTION_PREFERRED_ACTIVITY_CHANGED;
 
 import android.content.ActivityNotFoundException;
@@ -41,7 +42,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 
-import com.android.launcher3.Flags;
 import com.android.launcher3.R;
 import com.android.launcher3.dagger.ApplicationContext;
 import com.android.launcher3.dagger.LauncherAppComponent;
@@ -50,6 +50,7 @@ import com.android.launcher3.util.DaggerSingletonObject;
 import com.android.launcher3.util.DaggerSingletonTracker;
 import com.android.launcher3.util.SimpleBroadcastReceiver;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
+import com.android.quickstep.fallback.window.RecentsWindowFlags;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.systemui.shared.system.PackageManagerWrapper;
 
@@ -180,7 +181,7 @@ public final class OverviewComponentObserver {
             mDefaultDisplayContainerInterface.onAssistantVisibilityChanged(0.f);
         }
 
-        if (SEPARATE_RECENTS_ACTIVITY.get() || Flags.enableLauncherOverviewInWindow()) {
+        if (SEPARATE_RECENTS_ACTIVITY.get() || enableLauncherOverviewInWindow.isTrue()) {
             mIsDefaultHome = false;
             if (defaultHome == null) {
                 defaultHome = mMyHomeIntent.getComponent();
@@ -203,7 +204,7 @@ public final class OverviewComponentObserver {
             unregisterOtherHomeAppUpdateReceiver();
         } else {
             // The default home app is a different launcher. Use the fallback Overview instead.
-            if (Flags.enableLauncherOverviewInWindow() || Flags.enableFallbackOverviewInWindow()) {
+            if (RecentsWindowFlags.Companion.getEnableOverviewInWindow()) {
                 mDefaultDisplayContainerInterface =
                         mRecentsDisplayModel.getFallbackWindowInterface(DEFAULT_DISPLAY);
             } else {

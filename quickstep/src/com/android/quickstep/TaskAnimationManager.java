@@ -42,12 +42,12 @@ import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 
 import com.android.internal.util.ArrayUtils;
-import com.android.launcher3.Flags;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.taskbar.TaskbarUIController;
 import com.android.launcher3.util.DisplayController;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
+import com.android.quickstep.fallback.window.RecentsWindowFlags;
 import com.android.quickstep.fallback.window.RecentsWindowManager;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.quickstep.util.SystemUiFlagUtils;
@@ -63,7 +63,6 @@ import java.util.HashMap;
 public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAnimationListener {
     public static final boolean SHELL_TRANSITIONS_ROTATION =
             SystemProperties.getBoolean("persist.wm.debug.shell_transit_rotate", false);
-
     private final Context mCtx;
     private RecentsAnimationController mController;
     private RecentsAnimationCallbacks mCallbacks;
@@ -313,8 +312,7 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
         }
 
         if(containerInterface.getCreatedContainer() instanceof RecentsWindowManager
-                && (Flags.enableFallbackOverviewInWindow()
-                        || Flags.enableLauncherOverviewInWindow())) {
+                && RecentsWindowFlags.Companion.getEnableOverviewInWindow()) {
             mRecentsAnimationStartPending = getSystemUiProxy().startRecentsActivity(intent, options,
                     mCallbacks, gestureState.useSyntheticRecentsTransition());
             RecentsDisplayModel.getINSTANCE().get(mCtx)

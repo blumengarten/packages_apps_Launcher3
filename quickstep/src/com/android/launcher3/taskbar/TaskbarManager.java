@@ -15,8 +15,8 @@
  */
 package com.android.launcher3.taskbar;
 
-import static android.content.Context.RECEIVER_NOT_EXPORTED;
 import static android.content.Context.RECEIVER_EXPORTED;
+import static android.content.Context.RECEIVER_NOT_EXPORTED;
 import static android.view.WindowManager.LayoutParams.TYPE_NAVIGATION_BAR;
 import static android.view.WindowManager.LayoutParams.TYPE_NAVIGATION_BAR_PANEL;
 
@@ -25,6 +25,7 @@ import static com.android.launcher3.Flags.enableGrowthNudge;
 import static com.android.launcher3.Flags.enableUnfoldStateAnimation;
 import static com.android.launcher3.config.FeatureFlags.ENABLE_TASKBAR_NAVBAR_UNIFICATION;
 import static com.android.launcher3.config.FeatureFlags.enableTaskbarNoRecreate;
+import static com.android.launcher3.taskbar.growth.GrowthConstants.BROADCAST_SHOW_NUDGE;
 import static com.android.launcher3.util.DisplayController.CHANGE_DENSITY;
 import static com.android.launcher3.util.DisplayController.CHANGE_DESKTOP_MODE;
 import static com.android.launcher3.util.DisplayController.CHANGE_NAVIGATION_MODE;
@@ -32,7 +33,6 @@ import static com.android.launcher3.util.DisplayController.CHANGE_SHOW_LOCKED_TA
 import static com.android.launcher3.util.DisplayController.CHANGE_TASKBAR_PINNING;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 import static com.android.launcher3.util.FlagDebugUtils.formatFlagChange;
-import static com.android.launcher3.taskbar.growth.GrowthConstants.BROADCAST_SHOW_NUDGE;
 import static com.android.quickstep.util.SystemActionConstants.ACTION_SHOW_TASKBAR;
 import static com.android.quickstep.util.SystemActionConstants.SYSTEM_ACTION_ID_TASKBAR;
 
@@ -81,6 +81,7 @@ import com.android.quickstep.AllAppsActionManager;
 import com.android.quickstep.RecentsActivity;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
+import com.android.quickstep.fallback.window.RecentsWindowFlags;
 import com.android.quickstep.fallback.window.RecentsWindowManager;
 import com.android.quickstep.util.ContextualSearchInvoker;
 import com.android.quickstep.util.GroupTask;
@@ -628,7 +629,7 @@ public class TaskbarManager {
     /** Creates a {@link TaskbarUIController} to use with non default displays. */
     private TaskbarUIController createTaskbarUIControllerForNonDefaultDisplay(int displayId) {
         debugPrimaryTaskbar("createTaskbarUIControllerForNonDefaultDisplay");
-        if (RecentsDisplayModel.enableOverviewInWindow()) {
+        if (RecentsWindowFlags.Companion.getEnableOverviewInWindow()) {
             RecentsViewContainer rvc = mRecentsDisplayModel.getRecentsWindowManager(displayId);
             if (rvc != null) {
                 return createTaskbarUIControllerForRecentsViewContainer(rvc);
