@@ -16,6 +16,7 @@
 package com.android.launcher3.taskbar.bubbles;
 
 import android.annotation.SuppressLint;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
@@ -231,13 +232,14 @@ public class BubbleDragController {
             }
 
             @Override
-            void onDragEnd() {
+            void onDragEnd(float x, float y) {
                 mBubbleBarController.updateBubbleBarLocation(getBubbleBarLocationDuringDrag(),
                         BubbleBarLocation.UpdateSource.DRAG_BUBBLE);
                 if (BubbleAnythingFlagHelper.enableBubbleToFullscreen()) {
                     mDropTargetManager.onDragEnded();
                     if (mBubbleDragZoneChangedListener.isDraggedToFullscreen()) {
-                        mBubbleBarViewController.moveBubbleToFullscreen(bubbleView);
+                        mBubbleBarViewController.moveDraggedBubbleToFullscreen(
+                                bubbleView, new Point((int) x, (int) y));
                     }
                 } else {
                     mBubblePinController.setListener(null);
@@ -329,7 +331,7 @@ public class BubbleDragController {
             }
 
             @Override
-            void onDragEnd() {
+            void onDragEnd(float x, float y) {
                 // Make sure to update location as the first thing. Pivot update causes a relayout
                 mBubbleBarController.updateBubbleBarLocation(getBubbleBarLocationDuringDrag(),
                         BubbleBarLocation.UpdateSource.DRAG_BAR);
@@ -428,7 +430,7 @@ public class BubbleDragController {
         /**
          * Called when the dragging interaction has ended and all the animations have completed
          */
-        abstract void onDragEnd();
+        abstract void onDragEnd(float x, float y);
 
         /**
          * Called when the dragged bubble is released outside of the dismiss target area and will
@@ -579,7 +581,7 @@ public class BubbleDragController {
             Runnable onComplete = () -> {
                 mActivity.setTaskbarWindowFullscreen(false);
                 cleanUp(view);
-                onDragEnd();
+                onDragEnd(event.getRawX(), event.getRawY());
             };
 
             if (mBubbleDismissController.handleTouchEvent(event)) {

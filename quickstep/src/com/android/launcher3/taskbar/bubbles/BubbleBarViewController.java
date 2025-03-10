@@ -1364,12 +1364,12 @@ public class BubbleBarViewController {
      * Removes the bubble from the bubble bar and notifies sysui that the bubble should move to
      * full screen.
      */
-    public void moveBubbleToFullscreen(@NonNull BubbleView bubbleView) {
+    public void moveDraggedBubbleToFullscreen(@NonNull BubbleView bubbleView, Point dropLocation) {
         if (bubbleView.getBubble() == null) {
             return;
         }
         String key = bubbleView.getBubble().getKey();
-        mSystemUiProxy.moveBubbleToFullscreen(key);
+        mSystemUiProxy.moveDraggedBubbleToFullscreen(key, dropLocation);
         onBubbleDismissed(bubbleView);
     }
 
