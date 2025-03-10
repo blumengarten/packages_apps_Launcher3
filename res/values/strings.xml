@@ -471,6 +471,12 @@
     <!-- Accessibility action to show quick actions menu for an icon. [CHAR_LIMIT=30] -->
     <string name="action_deep_shortcut">Shortcut Menu</string>
 
+    <!-- Accessibility name for the app widget resize frame. -->
+    <string name="widget_frame_name">Widget Resize Frame for <xliff:g id="string" example="Clock">%1$s</xliff:g></string>
+
+    <!-- Accessibility action to close the widget resize frame. [CHAR_LIMIT=30] -->
+    <string name="action_close">Close</string>
+
     <!-- Accessibility action to dismiss a notification in the shortcuts menu for an icon. [CHAR_LIMIT=30] -->
     <string name="action_dismiss_notification">Dismiss</string>
 
