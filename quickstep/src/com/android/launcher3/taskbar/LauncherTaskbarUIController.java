@@ -135,11 +135,11 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
     @Override
     protected void onDestroy() {
         onLauncherVisibilityChanged(false /* isVisible */, true /* fromInitOrDestroy */);
+        mLauncher.removeOnDeviceProfileChangeListener(mOnDeviceProfileChangeListener);
         super.onDestroy();
         mTaskbarLauncherStateController.onDestroy();
 
         mLauncher.setTaskbarUIController(null);
-        mLauncher.removeOnDeviceProfileChangeListener(mOnDeviceProfileChangeListener);
         mHomeState.removeListener(mVisibilityChangeListener);
     }
 
@@ -279,7 +279,10 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
     private void postAdjustHotseatForBubbleBar() {
         Hotseat hotseat = mLauncher.getHotseat();
         if (hotseat == null || !isBubbleBarVisible()) return;
-        hotseat.post(() -> adjustHotseatForBubbleBar(isBubbleBarVisible()));
+        hotseat.post(() -> {
+            if (mControllers == null) return;
+            adjustHotseatForBubbleBar(isBubbleBarVisible());
+        });
     }
 
     private boolean isBubbleBarVisible() {
