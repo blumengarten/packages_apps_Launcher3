@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.launcher3.Flags;
+import com.android.launcher3.Utilities;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.BitmapInfo;
 import com.android.launcher3.icons.BitmapInfo.DrawableCreationFlags;
@@ -325,10 +326,12 @@ public abstract class ItemInfoWithIcon extends ItemInfo {
      * Returns a FastBitmapDrawable with the icon and context theme applied
      */
     public FastBitmapDrawable newIcon(Context context, @DrawableCreationFlags int creationFlags) {
-        if (!ThemeManager.INSTANCE.get(context).isIconThemeEnabled()) {
+        ThemeManager themeManager = ThemeManager.INSTANCE.get(context);
+        if (!themeManager.isIconThemeEnabled()) {
             creationFlags &= ~FLAG_THEMED;
         }
-        FastBitmapDrawable drawable = bitmap.newIcon(context, creationFlags);
+        FastBitmapDrawable drawable = bitmap.newIcon(
+                context, creationFlags, Utilities.getIconShapeOrNull(context));
         drawable.setIsDisabled(isDisabled());
         return drawable;
     }
