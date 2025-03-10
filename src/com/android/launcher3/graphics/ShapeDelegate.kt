@@ -203,7 +203,11 @@ interface ShapeDelegate {
                     start =
                         poly.transformed(
                             Matrix().apply {
-                                setRectToRect(RectF(0f, 0f, 100f, 100f), RectF(startRect), FILL)
+                                setRectToRect(
+                                    RectF(0f, 0f, DEFAULT_PATH_SIZE, DEFAULT_PATH_SIZE),
+                                    RectF(startRect),
+                                    FILL,
+                                )
                             }
                         ),
                     end =
@@ -281,7 +285,10 @@ interface ShapeDelegate {
                     PathParser.createPathFromPathData(shapeStr).apply {
                         transform(
                             Matrix().apply {
-                                setScale(AREA_CALC_SIZE / 100f, AREA_CALC_SIZE / 100f)
+                                setScale(
+                                    AREA_CALC_SIZE / DEFAULT_PATH_SIZE,
+                                    AREA_CALC_SIZE / DEFAULT_PATH_SIZE,
+                                )
                             }
                         )
                     }

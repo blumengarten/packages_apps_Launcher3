@@ -352,7 +352,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                 new RemoteAnimationAdapter(runner, duration, statusBarTransitionDelay),
                 new RemoteTransition(runner.toRemoteTransition(),
                         mLauncher.getIApplicationThread(), "QuickstepLaunch"));
-        IRemoteCallback endCallback = completeRunnableListCallback(onEndCallback);
+        IRemoteCallback endCallback = completeRunnableListCallback(onEndCallback, mLauncher);
         options.setOnAnimationAbortListener(endCallback);
         options.setOnAnimationFinishedListener(endCallback);
         options.setLaunchCookie(StableViewInfo.toLaunchCookie(itemInfo));

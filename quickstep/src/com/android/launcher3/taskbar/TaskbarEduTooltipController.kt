@@ -52,6 +52,8 @@ import com.android.launcher3.views.ActivityContext
 import com.android.launcher3.views.BaseDragLayer
 import com.android.quickstep.util.ContextualSearchInvoker
 import com.android.quickstep.util.LottieAnimationColorUtils
+import com.android.wm.shell.shared.TypefaceUtils
+import com.android.wm.shell.shared.TypefaceUtils.FontFamily
 import java.io.PrintWriter
 
 /** First EDU step for swiping up to show transient Taskbar. */
@@ -164,7 +166,7 @@ open class TaskbarEduTooltipController(context: Context) :
         tooltip?.run {
             TypefaceUtils.setTypeface(
                 requireViewById(R.id.taskbar_edu_title),
-                TypefaceUtils.FONT_FAMILY_HEADLINE_SMALL_EMPHASIZED,
+                FontFamily.GSF_HEADLINE_SMALL_EMPHASIZED,
             )
             val swipeAnimation = requireViewById<LottieAnimationView>(R.id.swipe_animation)
             swipeAnimation.supportLightTheme()
@@ -210,19 +212,19 @@ open class TaskbarEduTooltipController(context: Context) :
 
             TypefaceUtils.setTypeface(
                 requireViewById(R.id.taskbar_edu_title),
-                TypefaceUtils.FONT_FAMILY_HEADLINE_SMALL_EMPHASIZED,
+                FontFamily.GSF_HEADLINE_SMALL_EMPHASIZED,
             )
             TypefaceUtils.setTypeface(
                 requireViewById(R.id.splitscreen_text),
-                TypefaceUtils.FONT_FAMILY_BODY_MEDIUM_BASELINE,
+                FontFamily.GSF_BODY_MEDIUM,
             )
             TypefaceUtils.setTypeface(
                 requireViewById(R.id.suggestions_text),
-                TypefaceUtils.FONT_FAMILY_BODY_MEDIUM_BASELINE,
+                FontFamily.GSF_BODY_MEDIUM,
             )
             TypefaceUtils.setTypeface(
                 requireViewById(R.id.pinning_text),
-                TypefaceUtils.FONT_FAMILY_BODY_MEDIUM_BASELINE,
+                FontFamily.GSF_BODY_MEDIUM,
             )
 
             // Set up layout parameters.
@@ -275,11 +277,11 @@ open class TaskbarEduTooltipController(context: Context) :
             allowTouchDismissal = true
             TypefaceUtils.setTypeface(
                 requireViewById(R.id.taskbar_edu_title),
-                TypefaceUtils.FONT_FAMILY_HEADLINE_SMALL_EMPHASIZED,
+                FontFamily.GSF_HEADLINE_SMALL_EMPHASIZED,
             )
             TypefaceUtils.setTypeface(
                 requireViewById(R.id.pinning_text),
-                TypefaceUtils.FONT_FAMILY_BODY_MEDIUM_BASELINE,
+                FontFamily.GSF_BODY_MEDIUM,
             )
 
             val pinningAnim =
@@ -336,9 +338,9 @@ open class TaskbarEduTooltipController(context: Context) :
 
             TypefaceUtils.setTypeface(
                 requireViewById(R.id.taskbar_edu_title),
-                TypefaceUtils.FONT_FAMILY_HEADLINE_SMALL_EMPHASIZED,
+                FontFamily.GSF_HEADLINE_SMALL_EMPHASIZED,
             )
-            TypefaceUtils.setTypeface(eduSubtitle, TypefaceUtils.FONT_FAMILY_BODY_SMALL_BASELINE)
+            TypefaceUtils.setTypeface(eduSubtitle, FontFamily.GSF_BODY_SMALL)
 
             showDisclosureText(eduSubtitle)
             updateLayoutParams<BaseDragLayer.LayoutParams> {

@@ -18,6 +18,8 @@
     xmlns:androidprv="http://schemas.android.com/apk/prv/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/keyboard_quick_switch_view"
+    android:contentDescription="@string/quick_switch_content_description"
+    android:accessibilityPaneTitle="@string/quick_switch_pane_title"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="@dimen/keyboard_quick_switch_margin_top"

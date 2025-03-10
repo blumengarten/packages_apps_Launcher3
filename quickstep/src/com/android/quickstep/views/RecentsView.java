@@ -2908,10 +2908,10 @@ public abstract class RecentsView<
         if (!shouldRotateMenuForFakeRotation) {
             return;
         }
-        TaskMenuView tv = (TaskMenuView) getTopOpenViewWithType(mContainer, TYPE_TASK_MENU);
-        if (tv != null) {
+        AbstractFloatingView floatingView = getTopOpenViewWithType(mContainer, TYPE_TASK_MENU);
+        if (floatingView instanceof TaskMenuView taskMenuView) {
             // Rotation is supported on phone (details at b/254198019#comment4)
-            tv.onRotationChanged();
+            taskMenuView.onRotationChanged();
         }
     }
 
