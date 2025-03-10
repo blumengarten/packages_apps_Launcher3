@@ -656,3 +656,13 @@ flag {
     purpose: PURPOSE_BUGFIX
   }
 }
+
+flag {
+  name: "sync_app_launch_with_taskbar_stash"
+  namespace: "launcher"
+  description: "Syncs the two animations (app launch, taskbar stash) so they play at the same time."
+  bug: "319162553"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+}
