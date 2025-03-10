@@ -26,7 +26,6 @@ import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.LinearLayout
 import androidx.core.view.isInvisible
-import com.android.launcher3.Flags.enableDesktopExplodedView
 import com.android.launcher3.Flags.enableRefactorTaskThumbnail
 import com.android.launcher3.R
 import com.android.launcher3.util.ViewPool
@@ -65,7 +64,6 @@ class TaskContentView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     override fun onFinishInflate() {
         super.onFinishInflate()
-        maybeCreateHeader()
         createTaskThumbnailView()
     }
 
@@ -122,12 +120,12 @@ class TaskContentView @JvmOverloads constructor(context: Context, attrs: Attribu
         invalidateOutline()
     }
 
-    private fun maybeCreateHeader() {
-        if (enableDesktopExplodedView() && taskHeaderView == null) {
+    private fun createHeaderView(taskHeaderState: TaskHeaderUiState) {
+        if (taskHeaderView == null && taskHeaderState is TaskHeaderUiState.ShowHeader) {
             taskHeaderView =
                 LayoutInflater.from(context).inflate(R.layout.task_header_view, this, false)
                     as TaskHeaderView
-            addView(taskHeaderView)
+            addView(taskHeaderView, 0)
         }
     }
 
@@ -153,6 +151,7 @@ class TaskContentView @JvmOverloads constructor(context: Context, attrs: Attribu
         taskThumbnailUiState: TaskThumbnailUiState,
         taskId: Int?,
     ) {
+        createHeaderView(taskHeaderState)
         taskHeaderView?.setState(taskHeaderState)
         taskThumbnailView?.setState(taskThumbnailUiState, taskId)
     }
