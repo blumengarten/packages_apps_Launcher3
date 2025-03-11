@@ -26,19 +26,17 @@ import android.os.PersistableBundle
 import android.os.Process
 import android.os.UserManager
 import android.text.TextUtils
-import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherSettings
 import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_DESKTOP
 import com.android.launcher3.Utilities
+import com.android.launcher3.dagger.LauncherComponentProvider.appComponent
 import com.android.launcher3.icons.IconCache
-import com.android.launcher3.model.LoaderCursor
 import com.android.launcher3.model.UserManagerState
 import com.android.launcher3.pm.PinRequestHelper
 import com.android.launcher3.pm.UserCache
 import com.android.launcher3.shortcuts.ShortcutKey
 import com.android.launcher3.util.IntArray
 import com.android.launcher3.util.IntSet
-import com.android.launcher3.util.PackageManagerHelper
 
 /** A set of utility methods for Launcher DB used for DB updates and migration. */
 object LauncherDbUtils {
@@ -155,12 +153,11 @@ object LauncherDbUtils {
                 null,
                 null,
             )
-        val pmHelper = PackageManagerHelper.INSTANCE[context]
         val ums = UserManagerState()
         ums.run {
             init(UserCache.INSTANCE[context], context.getSystemService(UserManager::class.java))
         }
-        val lc = LoaderCursor(c, LauncherAppState.getInstance(context), ums, pmHelper, null)
+        val lc = context.appComponent.loaderCursorFactory.createLoaderCursor(c, ums, null)
         val deletedShortcuts = IntSet()
 
         while (lc.moveToNext()) {

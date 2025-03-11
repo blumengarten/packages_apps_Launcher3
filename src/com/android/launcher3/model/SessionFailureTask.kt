@@ -33,9 +33,9 @@ class SessionFailureTask(val packageName: String, val user: UserHandle) : ModelU
         dataModel: BgDataModel,
         apps: AllAppsList,
     ) {
-        val iconCache = taskController.app.iconCache
+        val iconCache = taskController.iconCache
         val isAppArchived =
-            ApplicationInfoWrapper(taskController.app.context, packageName, user).isArchived()
+            ApplicationInfoWrapper(taskController.context, packageName, user).isArchived()
         synchronized(dataModel) {
             if (isAppArchived) {
                 val updatedItems = mutableListOf<WorkspaceItemInfo>()

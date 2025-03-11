@@ -38,7 +38,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.android.launcher3.Flags;
-import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherModel.ModelUpdateTask;
 import com.android.launcher3.LauncherSettings.Favorites;
 import com.android.launcher3.config.FeatureFlags;
@@ -106,9 +105,8 @@ public class PackageUpdatedTask implements ModelUpdateTask {
     @Override
     public void execute(@NonNull ModelTaskController taskController, @NonNull BgDataModel dataModel,
             @NonNull AllAppsList appsList) {
-        final LauncherAppState app = taskController.getApp();
-        final Context context = app.getContext();
-        final IconCache iconCache = app.getIconCache();
+        final Context context = taskController.getContext();
+        final IconCache iconCache = taskController.getIconCache();
 
         final String[] packages = mPackages;
         final int packageCount = packages.length;
@@ -433,7 +431,7 @@ public class PackageUpdatedTask implements ModelUpdateTask {
             // Load widgets for the new package. Changes due to app updates are handled through
             // AppWidgetHost events, this is just to initialize the long-press options.
             for (int i = 0; i < packageCount; i++) {
-                dataModel.widgetsModel.update(app, new PackageUserKey(packages[i], mUser));
+                dataModel.widgetsModel.update(new PackageUserKey(packages[i], mUser));
             }
             taskController.bindUpdatedWidgets(dataModel);
         }

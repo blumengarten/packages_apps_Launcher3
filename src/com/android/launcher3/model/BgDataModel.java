@@ -46,6 +46,7 @@ import androidx.annotation.Nullable;
 import com.android.launcher3.BuildConfig;
 import com.android.launcher3.Workspace;
 import com.android.launcher3.config.FeatureFlags;
+import com.android.launcher3.dagger.LauncherAppSingleton;
 import com.android.launcher3.logging.FileLog;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.model.data.CollectionInfo;
@@ -79,9 +80,15 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
+
 /**
  * All the data stored in-memory and managed by the LauncherModel
+ *
+ * All the static data should be accessed on the background thread, A lock should be acquired on
+ * this object when accessing any data from this model.
  */
+@LauncherAppSingleton
 public class BgDataModel {
 
     private static final String TAG = "BgDataModel";
@@ -105,7 +112,7 @@ public class BgDataModel {
     /**
      * Entire list of widgets.
      */
-    public final WidgetsModel widgetsModel = new WidgetsModel();
+    public final WidgetsModel widgetsModel;
 
     /**
      * Cache for strings used in launcher
@@ -123,6 +130,11 @@ public class BgDataModel {
     public int lastLoadId = -1;
     public boolean isFirstPagePinnedItemEnabled = QSB_ON_FIRST_SCREEN
             && !enableSmartspaceRemovalToggle();
+
+    @Inject
+    public BgDataModel(WidgetsModel widgetsModel) {
+        this.widgetsModel = widgetsModel;
+    }
 
     /**
      * Clears all the data

@@ -27,8 +27,9 @@ import android.platform.test.flag.junit.SetFlagsRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.launcher3.AppFilter
 import com.android.launcher3.Flags.FLAG_ENABLE_PRIVATE_SPACE
-import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherSettings
+import com.android.launcher3.dagger.LauncherAppComponent
+import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.icons.IconCache
 import com.android.launcher3.model.PackageUpdatedTask.OP_ADD
 import com.android.launcher3.model.PackageUpdatedTask.OP_REMOVE
@@ -39,17 +40,20 @@ import com.android.launcher3.model.PackageUpdatedTask.OP_UPDATE
 import com.android.launcher3.model.PackageUpdatedTask.OP_USER_AVAILABILITY_CHANGE
 import com.android.launcher3.model.data.AppInfo
 import com.android.launcher3.model.data.WorkspaceItemInfo
+import com.android.launcher3.util.AllModulesForTest
 import com.android.launcher3.util.Executors
 import com.android.launcher3.util.LauncherModelHelper
-import com.android.launcher3.util.LauncherModelHelper.SandboxModelContext
 import com.android.launcher3.util.TestUtil
 import com.google.common.truth.Truth.assertThat
+import dagger.BindsInstance
+import dagger.Component
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.spy
 import org.mockito.kotlin.verify
@@ -61,10 +65,8 @@ class PackageUpdatedTaskTest {
     @get:Rule val setFlagsRule = SetFlagsRule()
 
     private val mUser = myUserHandle()
-    private val mDataModel: BgDataModel = BgDataModel()
     private val mLauncherModelHelper = LauncherModelHelper()
-    private val mContext: SandboxModelContext = spy(mLauncherModelHelper.sandboxContext)
-    private val mAppState: LauncherAppState = spy(LauncherAppState.getInstance(mContext))
+    private val mContext = mLauncherModelHelper.sandboxContext
 
     private val expectedPackage = "Test.Package"
     private val expectedComponent = ComponentName(expectedPackage, "TestClass")
@@ -72,22 +74,33 @@ class PackageUpdatedTaskTest {
     private val expectedWorkspaceItem = spy(WorkspaceItemInfo())
 
     private val mockIconCache: IconCache = mock()
-    private val mockTaskController: ModelTaskController = mock<ModelTaskController>()
     private val mockAppFilter: AppFilter = mock<AppFilter>()
+    private lateinit var mAllAppsList: AllAppsList
+
     private val mockApplicationInfo: ApplicationInfo = mock<ApplicationInfo>()
     private val mockActivityInfo: ActivityInfo = mock<ActivityInfo>()
 
-    private lateinit var mAllAppsList: AllAppsList
+    private lateinit var mDataModel: BgDataModel
+    private lateinit var mockTaskController: ModelTaskController
 
     @Before
     fun setup() {
         mAllAppsList = spy(AllAppsList(mockIconCache, mockAppFilter))
-        mLauncherModelHelper.sandboxContext.spyService(LauncherApps::class.java).apply {
+        mContext.initDaggerComponent(
+            DaggerPackageUpdatedTaskTest_TestComponent.builder()
+                .bindAllAppsList(mAllAppsList)
+                .bindAppFilter(mockAppFilter)
+                .bindIconCache(mockIconCache)
+        )
+
+        mContext.spyService(LauncherApps::class.java).apply {
             whenever(getActivityList(expectedPackage, mUser))
                 .thenReturn(listOf(expectedActivityInfo))
         }
-        whenever(mAppState.iconCache).thenReturn(mockIconCache)
-        whenever(mockTaskController.app).thenReturn(mAppState)
+
+        mockTaskController = spy((mContext.appComponent as TestComponent).getTaskController())
+        mDataModel = (mContext.appComponent as TestComponent).getDataModel()
+
         whenever(mockAppFilter.shouldShowApp(expectedComponent)).thenReturn(true)
         mockApplicationInfo.apply {
             uid = 1
@@ -122,7 +135,6 @@ class PackageUpdatedTaskTest {
         TestUtil.runOnExecutorSync(Executors.MODEL_EXECUTOR) {
             taskUnderTest.execute(mockTaskController, mDataModel, mAllAppsList)
         }
-        mLauncherModelHelper.loadModelSync()
         // Then
         verify(mockIconCache).updateIconsForPkg(expectedPackage, mUser)
         verify(mAllAppsList).addPackage(mContext, expectedPackage, mUser)
@@ -141,7 +153,6 @@ class PackageUpdatedTaskTest {
         TestUtil.runOnExecutorSync(Executors.MODEL_EXECUTOR) {
             taskUnderTest.execute(mockTaskController, mDataModel, mAllAppsList)
         }
-        mLauncherModelHelper.loadModelSync()
         // Then
         verify(mockIconCache).updateIconsForPkg(expectedPackage, mUser)
         verify(mAllAppsList).updatePackage(mContext, expectedPackage, mUser)
@@ -159,7 +170,6 @@ class PackageUpdatedTaskTest {
         TestUtil.runOnExecutorSync(Executors.MODEL_EXECUTOR) {
             taskUnderTest.execute(mockTaskController, mDataModel, mAllAppsList)
         }
-        mLauncherModelHelper.loadModelSync()
         // Then
         verify(mockIconCache).removeIconsForPkg(expectedPackage, mUser)
         verify(mAllAppsList).removePackage(expectedPackage, mUser)
@@ -176,7 +186,6 @@ class PackageUpdatedTaskTest {
         TestUtil.runOnExecutorSync(Executors.MODEL_EXECUTOR) {
             taskUnderTest.execute(mockTaskController, mDataModel, mAllAppsList)
         }
-        mLauncherModelHelper.loadModelSync()
         // Then
         verify(mAllAppsList).removePackage(expectedPackage, mUser)
         verify(mockTaskController).bindUpdatedWorkspaceItems(listOf(expectedWorkspaceItem))
@@ -190,10 +199,11 @@ class PackageUpdatedTaskTest {
         // When
         mDataModel.addItem(mContext, expectedWorkspaceItem, true)
         mAllAppsList.add(AppInfo(mContext, expectedActivityInfo, mUser), expectedActivityInfo)
+        mAllAppsList.getAndResetChangeFlag()
+        doAnswer {}.whenever(mockTaskController).bindApplicationsIfNeeded()
         TestUtil.runOnExecutorSync(Executors.MODEL_EXECUTOR) {
             taskUnderTest.execute(mockTaskController, mDataModel, mAllAppsList)
         }
-        mLauncherModelHelper.loadModelSync()
         // Then
         verify(mAllAppsList).updateDisabledFlags(any(), any())
         verify(mockTaskController).bindUpdatedWorkspaceItems(listOf(expectedWorkspaceItem))
@@ -206,10 +216,11 @@ class PackageUpdatedTaskTest {
         val taskUnderTest = PackageUpdatedTask(OP_UNSUSPEND, mUser, expectedPackage)
         // When
         mDataModel.addItem(mContext, expectedWorkspaceItem, true)
+        mAllAppsList.getAndResetChangeFlag()
+        doAnswer {}.whenever(mockTaskController).bindApplicationsIfNeeded()
         TestUtil.runOnExecutorSync(Executors.MODEL_EXECUTOR) {
             taskUnderTest.execute(mockTaskController, mDataModel, mAllAppsList)
         }
-        mLauncherModelHelper.loadModelSync()
         // Then
         verify(mAllAppsList).updateDisabledFlags(any(), any())
         verify(mockTaskController).bindUpdatedWorkspaceItems(emptyList())
@@ -226,10 +237,29 @@ class PackageUpdatedTaskTest {
         TestUtil.runOnExecutorSync(Executors.MODEL_EXECUTOR) {
             taskUnderTest.execute(mockTaskController, mDataModel, mAllAppsList)
         }
-        mLauncherModelHelper.loadModelSync()
         // Then
         verify(mAllAppsList).updateDisabledFlags(any(), any())
         verify(mockTaskController).bindUpdatedWorkspaceItems(emptyList())
         assertThat(mAllAppsList.data).isEmpty()
+    }
+
+    @LauncherAppSingleton
+    @Component(modules = [AllModulesForTest::class])
+    interface TestComponent : LauncherAppComponent {
+
+        fun getDataModel(): BgDataModel
+
+        fun getTaskController(): ModelTaskController
+
+        @Component.Builder
+        interface Builder : LauncherAppComponent.Builder {
+            @BindsInstance fun bindAppFilter(appFilter: AppFilter): Builder
+
+            @BindsInstance fun bindIconCache(iconCache: IconCache): Builder
+
+            @BindsInstance fun bindAllAppsList(list: AllAppsList): Builder
+
+            override fun build(): TestComponent
+        }
     }
 }

@@ -64,7 +64,7 @@ class QuickstepModelDelegateTest {
         underTest.mHotseatState.predictor = hotseatPredictor
         underTest.mWidgetsRecommendationState.predictor = widgetRecommendationPredictor
         underTest.mModel = modelHelper.model
-        underTest.mDataModel = BgDataModel()
+        underTest.mDataModel = BgDataModel(WidgetsModel(modelHelper.sandboxContext))
     }
 
     @After
