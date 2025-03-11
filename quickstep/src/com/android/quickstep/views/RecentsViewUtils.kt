@@ -25,7 +25,7 @@ import com.android.launcher3.Flags.enableSeparateExternalDisplayTasks
 import com.android.launcher3.statehandlers.DesktopVisibilityController
 import com.android.launcher3.statehandlers.DesktopVisibilityController.Companion.INACTIVE_DESK_ID
 import com.android.launcher3.util.IntArray
-import com.android.quickstep.util.DesksUtils
+import com.android.quickstep.util.DesksUtils.Companion.areMultiDesksFlagsEnabled
 import com.android.quickstep.util.DesktopTask
 import com.android.quickstep.util.GroupTask
 import com.android.quickstep.util.isExternalDisplay
@@ -57,7 +57,7 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
      */
     fun sortDesktopTasksToFront(tasks: List<GroupTask>): List<GroupTask> {
         var (desktopTasks, otherTasks) = tasks.partition { it.taskViewType == TaskViewType.DESKTOP }
-        if (DesksUtils.areMultiDesksFlagsEnabled()) {
+        if (areMultiDesksFlagsEnabled()) {
             // Desk IDs of newer desks are larger than those of older desks, hence we can use them
             // to sort desks from old to new.
             desktopTasks = desktopTasks.sortedBy { (it as DesktopTask).deskId }
@@ -165,6 +165,17 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
     private fun getDeviceProfile() = (recentsView.mContainer as RecentsViewContainer).deviceProfile
 
     fun getRunningTaskExpectedIndex(runningTaskView: TaskView): Int {
+        if (areMultiDesksFlagsEnabled() && runningTaskView is DesktopTaskView) {
+            // Use the [deskId] to keep desks in the order of their creation, as a newer desk
+            // always has a larger [deskId] than the older desks.
+            val desktopTaskView =
+                taskViews.firstOrNull {
+                    it is DesktopTaskView &&
+                        it.deskId != INACTIVE_DESK_ID &&
+                        it.deskId <= runningTaskView.deskId
+                }
+            if (desktopTaskView != null) return recentsView.indexOfChild(desktopTaskView)
+        }
         val firstTaskViewIndex = recentsView.indexOfChild(getFirstTaskView())
         return if (getDeviceProfile().isTablet) {
             var index = firstTaskViewIndex
