@@ -628,10 +628,12 @@ public class WidgetsFullSheet extends BaseWidgetSheet
         if (mIsInSearchMode) {
             return;
         }
+        boolean forceUpdate = false;
         // We avoid applying new recommendations when some are already displayed.
         if (mRecommendedWidgetsMap.isEmpty()) {
             mRecommendedWidgetsMap =
                     mActivityContext.getWidgetPickerDataProvider().get().getRecommendations();
+            forceUpdate = true;
         }
         mRecommendedWidgetsCount = mWidgetRecommendationsView.setRecommendations(
                 mRecommendedWidgetsMap,
@@ -639,7 +641,8 @@ public class WidgetsFullSheet extends BaseWidgetSheet
                 /* availableHeight= */ getMaxAvailableHeightForRecommendations(),
                 /* availableWidth= */ mMaxSpanPerRow,
                 /* cellPadding= */ mWidgetCellHorizontalPadding,
-                /* requestedPage= */ mRecommendationsCurrentPage
+                /* requestedPage= */ mRecommendationsCurrentPage,
+                /* forceUpdate= */ forceUpdate
         );
 
         mWidgetRecommendationsContainer.setVisibility(

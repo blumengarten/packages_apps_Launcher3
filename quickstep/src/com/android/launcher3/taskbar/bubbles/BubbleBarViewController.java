@@ -273,7 +273,7 @@ public class BubbleBarViewController {
                         mBoundsChangeListener.onBoundsChanged();
                     }
                 });
-        float pinningValue = DisplayController.isTransientTaskbar(mActivity)
+        float pinningValue = mActivity.isTransientTaskbar()
                 ? PINNING_TRANSIENT
                 : PINNING_PERSISTENT;
         mBubbleBarPinning.updateValue(pinningValue);

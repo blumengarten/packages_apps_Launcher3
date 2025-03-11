@@ -54,6 +54,9 @@ import com.android.launcher3.util.Themes;
 /**
  * {@link PageIndicator} which shows dots per page. The active page is shown with the current
  * accent color.
+ * <p>
+ * TODO(b/402258632): Split PageIndicatorDots into 2 different classes: FolderPageIndicator &
+ * WorkspacePageIndicator. A lot of the functionality in this class is only used by one UI purpose.
  */
 public class PageIndicatorDots extends View implements Insettable, PageIndicator {
 

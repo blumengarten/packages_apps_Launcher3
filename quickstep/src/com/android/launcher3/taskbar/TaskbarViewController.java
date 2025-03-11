@@ -267,9 +267,8 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
                 : mActivity.getDeviceProfile().taskbarHeight;
 
         mTaskbarIconScaleForStash.updateValue(1f);
-        float pinningValue = DisplayController.isTransientTaskbar(mActivity)
-                ? PINNING_TRANSIENT
-                : PINNING_PERSISTENT;
+        float pinningValue =
+                mActivity.isTransientTaskbar() ? PINNING_TRANSIENT : PINNING_PERSISTENT;
         mTaskbarIconScaleForPinning.updateValue(pinningValue);
         mTaskbarIconTranslationYForPinning.updateValue(pinningValue);
         mTaskbarIconTranslationXForPinning.updateValue(pinningValue);
@@ -936,7 +935,7 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         mOnControllerPreCreateCallback.run();
         DeviceProfile taskbarDp = mActivity.getDeviceProfile();
         Rect hotseatPadding = launcherDp.getHotseatLayoutPadding(mActivity);
-        boolean isTransientTaskbar = DisplayController.isTransientTaskbar(mActivity);
+        boolean isTransientTaskbar = mActivity.isTransientTaskbar();
 
         float scaleUp = ((float) launcherDp.iconSizePx) / taskbarDp.taskbarIconSize;
         int borderSpacing = launcherDp.hotseatBorderSpace;

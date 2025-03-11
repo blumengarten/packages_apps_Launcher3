@@ -22,7 +22,6 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Outline
 import android.graphics.Rect
-import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RectShape
 import android.util.AttributeSet
@@ -165,7 +164,18 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
             recentsViewContainer.layoutInflater.inflate(R.layout.task_view_menu_option, this, false)
                 as LinearLayout
         if (enableOverviewIconMenu()) {
-            (menuOptionView.background as GradientDrawable).cornerRadius = 0f
+            menuOptionView.background =
+                ResourcesCompat.getDrawable(
+                    resources,
+                    R.drawable.app_chip_menu_item_bg,
+                    context.theme,
+                )
+            menuOptionView.foreground =
+                ResourcesCompat.getDrawable(
+                    resources,
+                    R.drawable.app_chip_menu_item_fg,
+                    context.theme,
+                )
         }
         menuOption.setIconAndLabelFor(
             menuOptionView.findViewById(R.id.icon),
@@ -366,13 +376,10 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
             deviceProfile = recentsViewContainer.deviceProfile,
             taskMenuX = translationX,
             taskMenuY =
-                when {
-                    !enableOverviewIconMenu() -> translationY
-                    // Bottom menu can translate up to show more options. So we use the min
-                    // translation allowed to calculate its max height.
-                    taskView.isOnGridBottomRow() -> minMenuTop
-                    else -> menuTranslationYBeforeOpen
-                },
+                // Bottom menu can translate up to show more options. So we use the min
+                // translation allowed to calculate its max height.
+                if (enableOverviewIconMenu() && taskView.isOnGridBottomRow()) minMenuTop
+                else translationY,
         )
 
     private fun setOnClosingStartCallback(onClosingStartCallback: Runnable?) {

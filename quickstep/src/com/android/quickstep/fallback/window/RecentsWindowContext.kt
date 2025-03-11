@@ -18,7 +18,7 @@ package com.android.quickstep.fallback.window
 
 import android.content.Context
 import android.graphics.PixelFormat
-import android.view.Display.DEFAULT_DISPLAY
+import android.view.Display
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
@@ -53,7 +53,7 @@ abstract class RecentsWindowContext(windowContext: Context, wallpaperColorHints:
 
     fun initDeviceProfile() {
         deviceProfile =
-            if (displayId == DEFAULT_DISPLAY)
+            if (displayId == Display.DEFAULT_DISPLAY)
                 InvariantDeviceProfile.INSTANCE[this].getDeviceProfile(this)
             else InvariantDeviceProfile.INSTANCE[this].createDeviceProfileForSecondaryDisplay(this)
     }

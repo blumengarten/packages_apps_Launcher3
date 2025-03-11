@@ -22,7 +22,11 @@ import android.view.View
 import androidx.core.view.children
 import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
 import com.android.launcher3.Flags.enableSeparateExternalDisplayTasks
+import com.android.launcher3.statehandlers.DesktopVisibilityController
+import com.android.launcher3.statehandlers.DesktopVisibilityController.Companion.INACTIVE_DESK_ID
 import com.android.launcher3.util.IntArray
+import com.android.quickstep.util.DesksUtils.Companion.areMultiDesksFlagsEnabled
+import com.android.quickstep.util.DesktopTask
 import com.android.quickstep.util.GroupTask
 import com.android.quickstep.util.isExternalDisplay
 import com.android.quickstep.views.RecentsView.RUNNING_TASK_ATTACH_ALPHA
@@ -52,7 +56,12 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
      * @return Sorted list of GroupTasks to be used in the RecentsView.
      */
     fun sortDesktopTasksToFront(tasks: List<GroupTask>): List<GroupTask> {
-        val (desktopTasks, otherTasks) = tasks.partition { it.taskViewType == TaskViewType.DESKTOP }
+        var (desktopTasks, otherTasks) = tasks.partition { it.taskViewType == TaskViewType.DESKTOP }
+        if (areMultiDesksFlagsEnabled()) {
+            // Desk IDs of newer desks are larger than those of older desks, hence we can use them
+            // to sort desks from old to new.
+            desktopTasks = desktopTasks.sortedBy { (it as DesktopTask).deskId }
+        }
         return otherTasks + desktopTasks
     }
 
@@ -114,6 +123,22 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
             it.isLargeTile && !(recentsView.isSplitSelectionActive && it is DesktopTaskView)
         }
 
+    /**
+     * Returns the [DesktopTaskView] that matches the given [deskId], or null if it doesn't exist.
+     */
+    fun getDesktopTaskViewForDeskId(deskId: Int): DesktopTaskView? {
+        if (deskId == INACTIVE_DESK_ID) {
+            return null
+        }
+        return taskViews.firstOrNull { it is DesktopTaskView && it.deskId == deskId }
+            as? DesktopTaskView
+    }
+
+    /** Returns the active desk ID of the display that contains the [recentsView] instance. */
+    fun getActiveDeskIdOnThisDisplay(): Int =
+        DesktopVisibilityController.INSTANCE.get(recentsView.context)
+            .getActiveDeskId(recentsView.mContainer.display.displayId)
+
     /** Returns the expected focus task. */
     fun getFirstNonDesktopTaskView(): TaskView? =
         if (enableLargeDesktopWindowingTile()) taskViews.firstOrNull { it !is DesktopTaskView }
@@ -140,6 +165,17 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
     private fun getDeviceProfile() = (recentsView.mContainer as RecentsViewContainer).deviceProfile
 
     fun getRunningTaskExpectedIndex(runningTaskView: TaskView): Int {
+        if (areMultiDesksFlagsEnabled() && runningTaskView is DesktopTaskView) {
+            // Use the [deskId] to keep desks in the order of their creation, as a newer desk
+            // always has a larger [deskId] than the older desks.
+            val desktopTaskView =
+                taskViews.firstOrNull {
+                    it is DesktopTaskView &&
+                        it.deskId != INACTIVE_DESK_ID &&
+                        it.deskId <= runningTaskView.deskId
+                }
+            if (desktopTaskView != null) return recentsView.indexOfChild(desktopTaskView)
+        }
         val firstTaskViewIndex = recentsView.indexOfChild(getFirstTaskView())
         return if (getDeviceProfile().isTablet) {
             var index = firstTaskViewIndex

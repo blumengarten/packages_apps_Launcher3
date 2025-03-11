@@ -135,11 +135,11 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
     @Override
     protected void onDestroy() {
         onLauncherVisibilityChanged(false /* isVisible */, true /* fromInitOrDestroy */);
+        mLauncher.removeOnDeviceProfileChangeListener(mOnDeviceProfileChangeListener);
         super.onDestroy();
         mTaskbarLauncherStateController.onDestroy();
 
         mLauncher.setTaskbarUIController(null);
-        mLauncher.removeOnDeviceProfileChangeListener(mOnDeviceProfileChangeListener);
         mHomeState.removeListener(mVisibilityChangeListener);
     }
 
@@ -225,9 +225,8 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
         if (isVisible || isPinnedTaskbar) {
             return getTaskbarToHomeDuration(shouldOverrideToFastAnimation, isPinnedTaskbar);
         } else {
-            return DisplayController.isTransientTaskbar(mLauncher)
-                    ? TRANSIENT_TASKBAR_TRANSITION_DURATION
-                    : TASKBAR_TO_APP_DURATION;
+            return mControllers.taskbarActivityContext.isTransientTaskbar()
+                    ? TRANSIENT_TASKBAR_TRANSITION_DURATION : TASKBAR_TO_APP_DURATION;
         }
     }
 
@@ -279,7 +278,10 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
     private void postAdjustHotseatForBubbleBar() {
         Hotseat hotseat = mLauncher.getHotseat();
         if (hotseat == null || !isBubbleBarVisible()) return;
-        hotseat.post(() -> adjustHotseatForBubbleBar(isBubbleBarVisible()));
+        hotseat.post(() -> {
+            if (mControllers == null) return;
+            adjustHotseatForBubbleBar(isBubbleBarVisible());
+        });
     }
 
     private boolean isBubbleBarVisible() {
@@ -334,7 +336,7 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
         }
 
         // Persistent features EDU tooltip.
-        if (!DisplayController.isTransientTaskbar(mLauncher)) {
+        if (!mControllers.taskbarActivityContext.isTransientTaskbar()) {
             mControllers.taskbarEduTooltipController.maybeShowFeaturesEdu();
             return;
         }
@@ -357,7 +359,7 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
         }
 
         // Persistent features EDU tooltip.
-        if (!DisplayController.isTransientTaskbar(mLauncher)) {
+        if (!mControllers.taskbarActivityContext.isTransientTaskbar()) {
             return !OnboardingPrefs.TASKBAR_EDU_TOOLTIP_STEP.hasReachedMax(mLauncher);
         }
 

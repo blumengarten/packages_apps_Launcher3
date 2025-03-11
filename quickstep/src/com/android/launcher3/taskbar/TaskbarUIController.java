@@ -37,7 +37,6 @@ import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
 import com.android.launcher3.popup.SystemShortcut;
 import com.android.launcher3.taskbar.bubbles.BubbleBarController;
-import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.SplitConfigurationOptions;
 import com.android.quickstep.util.SplitTask;
 import com.android.quickstep.views.RecentsView;
@@ -116,9 +115,8 @@ public class TaskbarUIController implements BubbleBarController.BubbleBarLocatio
      */
     public void hideOverlayWindow() {
         mControllers.keyboardQuickSwitchController.closeQuickSwitchView();
-
-        if (!DisplayController.isTransientTaskbar(mControllers.taskbarActivityContext)
-                || mControllers.taskbarAllAppsController.isOpen()) {
+        boolean isTransientTaskbar = mControllers.taskbarActivityContext.isTransientTaskbar();
+        if (!isTransientTaskbar || mControllers.taskbarAllAppsController.isOpen()) {
             mControllers.taskbarOverlayController.hideWindow();
         }
     }

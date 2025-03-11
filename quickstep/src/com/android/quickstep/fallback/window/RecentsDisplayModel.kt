@@ -19,7 +19,6 @@ package com.android.quickstep.fallback.window
 import android.content.Context
 import android.view.Display
 import androidx.core.util.valueIterator
-import com.android.launcher3.Flags
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.util.DaggerSingletonObject
@@ -29,6 +28,7 @@ import com.android.quickstep.DisplayModel
 import com.android.quickstep.FallbackWindowInterface
 import com.android.quickstep.dagger.QuickstepBaseAppComponent
 import com.android.quickstep.fallback.window.RecentsDisplayModel.RecentsDisplayResource
+import com.android.quickstep.fallback.window.RecentsWindowFlags.Companion.enableOverviewInWindow
 import java.io.PrintWriter
 import javax.inject.Inject
 
@@ -50,14 +50,10 @@ constructor(
             DaggerSingletonObject<RecentsDisplayModel>(
                 QuickstepBaseAppComponent::getRecentsDisplayModel
             )
-
-        @JvmStatic
-        fun enableOverviewInWindow() =
-            Flags.enableFallbackOverviewInWindow() || Flags.enableLauncherOverviewInWindow()
     }
 
     init {
-        if (enableOverviewInWindow()) {
+        if (enableOverviewInWindow) {
             registerDisplayListener()
             tracker.addCloseable { destroy() }
         }

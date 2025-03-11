@@ -170,7 +170,7 @@ public final class KeyboardQuickSwitchController implements
                                 mHasDesktopTask,
                                 mWasDesktopTaskFilteredOut);
                     }, shouldShowDesktopTasks ? RecentsFilterState.EMPTY_FILTER
-                            : RecentsFilterState.getEmptyDesktopTaskFilter());
+                            : RecentsFilterState.getDesktopTaskFilter());
                 }
 
                 mQuickSwitchViewController.updateLayoutForSurface(wasOpenedFromTaskbar,
@@ -232,7 +232,7 @@ public final class KeyboardQuickSwitchController implements
                     mWasDesktopTaskFilteredOut,
                     wasOpenedFromTaskbar);
         }, shouldShowDesktopTasks ? RecentsFilterState.EMPTY_FILTER
-                : RecentsFilterState.getEmptyDesktopTaskFilter());
+                : RecentsFilterState.getDesktopTaskFilter());
     }
 
     private boolean shouldExcludeTask(GroupTask task, Set<Integer> taskIdsToExclude) {

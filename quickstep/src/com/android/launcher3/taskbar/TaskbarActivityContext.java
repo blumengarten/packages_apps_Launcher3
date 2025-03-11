@@ -99,6 +99,7 @@ import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherSettings.Favorites;
 import com.android.launcher3.R;
 import com.android.launcher3.allapps.ActivityAllAppsContainerView;
+import com.android.launcher3.anim.AnimatorListeners;
 import com.android.launcher3.anim.AnimatorPlaybackController;
 import com.android.launcher3.apppairs.AppPairIcon;
 import com.android.launcher3.config.FeatureFlags;
@@ -255,7 +256,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
             TaskbarNavButtonController buttonController,
             ScopedUnfoldTransitionProgressProvider unfoldTransitionProgressProvider,
             boolean isPrimaryDisplay, SystemUiProxy sysUiProxy) {
-        super(windowContext);
+        super(windowContext, isPrimaryDisplay);
         mIsPrimaryDisplay = isPrimaryDisplay;
         mNavigationBarPanelContext = navigationBarPanelContext;
         mSysUiProxy = sysUiProxy;
@@ -386,13 +387,6 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         onViewCreated();
     }
 
-    /**
-     * Returns whether this is a primary display.
-     */
-    public boolean isPrimaryDisplay() {
-        return mIsPrimaryDisplay;
-    }
-
     /** Updates {@link DeviceProfile} instances for any Taskbar windows. */
     public void updateDeviceProfile(DeviceProfile launcherDp) {
         applyDeviceProfile(launcherDp);
@@ -411,7 +405,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
 
     /** Returns whether current taskbar is transient. */
     public boolean isTransientTaskbar() {
-        return DisplayController.isTransientTaskbar(this) && !isPhoneMode();
+        return super.isTransientTaskbar() && !isPhoneMode();
     }
 
     /**
@@ -432,7 +426,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         mDeviceProfile = originDeviceProfile.toBuilder(this)
                 .withDimensionsOverride(overrideProvider).build();
 
-        if (DisplayController.isTransientTaskbar(this)) {
+        if (isTransientTaskbar()) {
             mTransientTaskbarDeviceProfile = mDeviceProfile;
             mPersistentTaskbarDeviceProfile = mDeviceProfile
                     .toBuilder(this)
@@ -450,7 +444,6 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         mNavMode = (DesktopExperienceFlags.ENABLE_TASKBAR_CONNECTED_DISPLAYS.isTrue()
                 && !mIsPrimaryDisplay) ? NavigationMode.THREE_BUTTONS
                 : DisplayController.getNavigationMode(this);
-
     }
 
     /** Called when the visibility of the bubble bar changed. */
@@ -661,8 +654,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         int windowFlags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                 | WindowManager.LayoutParams.FLAG_SLIPPERY
                 | WindowManager.LayoutParams.FLAG_SPLIT_TOUCH;
-        boolean watchOutside = DisplayController.isTransientTaskbar(this)
-                || isThreeButtonNav();
+        boolean watchOutside = isTransientTaskbar() || isThreeButtonNav();
         if (watchOutside && !isRunningInTestHarness()) {
             windowFlags |= WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                     | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
@@ -1223,8 +1215,8 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                 bubbleControllers.bubbleBarViewController.getBubbleBarWithFlyoutMaximumHeight()
         ).orElse(0);
         int taskbarWindowSize;
-        boolean shouldTreatAsTransient = DisplayController.isTransientTaskbar(this)
-                || (enableTaskbarPinning() && !isThreeButtonNav());
+        boolean shouldTreatAsTransient =
+                isTransientTaskbar() || (enableTaskbarPinning() && !isThreeButtonNav());
 
         int extraHeightForTaskbarTooltips = enableCursorHoverStates()
                 ? resources.getDimensionPixelSize(R.dimen.arrow_toast_arrow_height)
@@ -1297,7 +1289,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
      * Applies forcibly show flag to taskbar window iff transient taskbar is unstashed.
      */
     public void applyForciblyShownFlagWhileTransientTaskbarUnstashed(boolean shouldForceShow) {
-        if (!DisplayController.isTransientTaskbar(this) || isPhoneMode()) {
+        if (!isTransientTaskbar() || isPhoneMode()) {
             return;
         }
         if (shouldForceShow) {
@@ -1887,7 +1879,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
      */
     @VisibleForTesting
     public void unstashTaskbarIfStashed() {
-        if (DisplayController.isTransientTaskbar(this)) {
+        if (isTransientTaskbar()) {
             mControllers.taskbarStashController.updateAndAnimateTransientTaskbar(false);
         }
     }
@@ -1950,6 +1942,8 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                 // Override the alpha updates in the icon alignment animation.
                 allAppsButton.setAlpha(0);
             });
+            alphaOverride.addListener(AnimatorListeners.forSuccessCallback(
+                    () -> allAppsButton.setAlpha(1f)));
             fullAnimation.play(alphaOverride);
         }
 

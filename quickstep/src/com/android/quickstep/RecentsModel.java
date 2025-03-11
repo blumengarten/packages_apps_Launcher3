@@ -43,6 +43,7 @@ import com.android.launcher3.dagger.LauncherAppSingleton;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.graphics.ThemeManager.ThemeChangeListener;
 import com.android.launcher3.icons.IconProvider;
+import com.android.launcher3.statehandlers.DesktopVisibilityController;
 import com.android.launcher3.util.DaggerSingletonObject;
 import com.android.launcher3.util.DaggerSingletonTracker;
 import com.android.launcher3.util.DisplayController;
@@ -61,6 +62,8 @@ import com.android.systemui.shared.system.ActivityManagerWrapper;
 import com.android.systemui.shared.system.TaskStackChangeListener;
 import com.android.systemui.shared.system.TaskStackChangeListeners;
 
+import dagger.Lazy;
+
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,8 +74,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
-
-import dagger.Lazy;
 
 /**
  * Singleton class to load and manage recents model.
@@ -104,12 +105,14 @@ public class RecentsModel implements RecentTasksDataSource, TaskStackChangeListe
             DisplayController displayController,
             LockedUserState lockedUserState,
             Lazy<ThemeManager> themeManagerLazy,
+            DesktopVisibilityController desktopVisibilityController,
             DaggerSingletonTracker tracker
             ) {
         // Lazily inject the ThemeManager and access themeManager once the device is
         // unlocked. See b/393248495 for details.
         this(context, new IconProvider(context), systemUiProxy, topTaskTracker,
-                displayController, lockedUserState,themeManagerLazy, tracker);
+                displayController, lockedUserState, themeManagerLazy, desktopVisibilityController,
+                tracker);
     }
 
     @SuppressLint("VisibleForTests")
@@ -120,6 +123,7 @@ public class RecentsModel implements RecentTasksDataSource, TaskStackChangeListe
             DisplayController displayController,
             LockedUserState lockedUserState,
             Lazy<ThemeManager> themeManagerLazy,
+            DesktopVisibilityController desktopVisibilityController,
             DaggerSingletonTracker tracker) {
         this(context,
                 new RecentTasksList(
@@ -127,7 +131,7 @@ public class RecentsModel implements RecentTasksDataSource, TaskStackChangeListe
                         MAIN_EXECUTOR,
                         context.getSystemService(KeyguardManager.class),
                         systemUiProxy,
-                        topTaskTracker),
+                        topTaskTracker, desktopVisibilityController, tracker),
                 new TaskIconCache(context, RECENTS_MODEL_EXECUTOR, iconProvider, displayController),
                 new TaskThumbnailCache(context, RECENTS_MODEL_EXECUTOR),
                 iconProvider,
@@ -205,7 +209,7 @@ public class RecentsModel implements RecentTasksDataSource, TaskStackChangeListe
     @Override
     public int getTasks(@Nullable Consumer<List<GroupTask>> callback) {
         return mTaskList.getTasks(false /* loadKeysOnly */, callback,
-                RecentsFilterState.getEmptyDesktopTaskFilter());
+                RecentsFilterState.getDesktopTaskFilter());
     }
 
     /**

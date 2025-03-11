@@ -35,6 +35,7 @@ import com.android.launcher3.Flags.enableDesktopExplodedView
 import com.android.launcher3.Flags.enableOverviewIconMenu
 import com.android.launcher3.Flags.enableRefactorTaskThumbnail
 import com.android.launcher3.R
+import com.android.launcher3.statehandlers.DesktopVisibilityController
 import com.android.launcher3.testing.TestLogging
 import com.android.launcher3.testing.shared.TestProtocol
 import com.android.launcher3.util.RunnableList
@@ -68,6 +69,8 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         type = TaskViewType.DESKTOP,
         thumbnailFullscreenParams = DesktopFullscreenDrawParams(context),
     ) {
+    var deskId = DesktopVisibilityController.INACTIVE_DESK_ID
+
     private val contentViewFullscreenParams = FullscreenDrawParams(context)
 
     private val taskContentViewPool =
@@ -281,6 +284,7 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         orientedState: RecentsOrientedState,
         taskOverlayFactory: TaskOverlayFactory,
     ) {
+        deskId = desktopTask.deskId
         // TODO(b/370495260): Minimized tasks should not be filtered with desktop exploded view
         // support.
         // Minimized tasks should not be shown in Overview.
@@ -332,10 +336,16 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     override fun onRecycle() {
         super.onRecycle()
+        deskId = DesktopVisibilityController.INACTIVE_DESK_ID
         explodeProgress = 0.0f
         viewModel = null
         visibility = VISIBLE
         taskContainers.forEach { removeAndRecycleThumbnailView(it) }
+    }
+
+    override fun setOrientationState(orientationState: RecentsOrientedState) {
+        super.setOrientationState(orientationState)
+        iconView.setIconOrientation(orientationState, isGridTask)
     }
 
     @SuppressLint("RtlHardcoded")

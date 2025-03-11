@@ -346,7 +346,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
                 StashedHandleViewController.ALPHA_INDEX_STASHED);
         mTaskbarStashedHandleHintScale = stashedHandleController.getStashedHandleHintScale();
 
-        boolean isTransientTaskbar = DisplayController.isTransientTaskbar(mActivity);
+        boolean isTransientTaskbar = mActivity.isTransientTaskbar();
         boolean isInSetup = !mActivity.isUserSetupComplete() || setupUIVisible;
         boolean isStashedInAppAuto =
                 isTransientTaskbar && !mTaskbarSharedState.getTaskbarWasPinned();
@@ -367,9 +367,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
 
         // Hide the background while stashed so it doesn't show on fast swipes home
         boolean shouldHideTaskbarBackground = mActivity.isPhoneMode() ||
-                (enableScalingRevealHomeAnimation()
-                        && DisplayController.isTransientTaskbar(mActivity)
-                        && isStashed());
+                (enableScalingRevealHomeAnimation() && isTransientTaskbar && isStashed());
 
         mTaskbarBackgroundAlphaForStash.setValue(shouldHideTaskbarBackground ? 0 : 1);
 
@@ -414,8 +412,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         if (DisplayController.isPinnedTaskbar(mActivity)) {
             return PINNED_TASKBAR_TRANSITION_DURATION;
         }
-        return DisplayController.isTransientTaskbar(mActivity)
-                ? TRANSIENT_TASKBAR_STASH_DURATION
+        return mActivity.isTransientTaskbar() ? TRANSIENT_TASKBAR_STASH_DURATION
                 : TASKBAR_STASH_DURATION;
     }
 
@@ -509,8 +506,8 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
      * @see android.view.WindowInsets.Type#systemBars()
      */
     public int getContentHeightToReportToApps() {
-        if (mActivity.isUserSetupComplete() && (mActivity.isPhoneGestureNavMode()
-                || DisplayController.isTransientTaskbar(mActivity))) {
+        boolean isTransient = mActivity.isTransientTaskbar();
+        if (mActivity.isUserSetupComplete() && (mActivity.isPhoneGestureNavMode() || isTransient)) {
             return getStashedHeight();
         }
 
@@ -577,8 +574,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
      */
     public void updateAndAnimateTransientTaskbar(boolean stash, boolean shouldBubblesFollow,
             boolean delayTaskbarBackground) {
-        if (!DisplayController.isTransientTaskbar(mActivity)
-                || mActivity.isBubbleBarOnPhone()) {
+        if (!mActivity.isTransientTaskbar() || mActivity.isBubbleBarOnPhone()) {
             return;
         }
 
@@ -646,7 +642,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
 
     /** Toggles the Taskbar's stash state. */
     public void toggleTaskbarStash() {
-        if (!DisplayController.isTransientTaskbar(mActivity) || !hasAnyFlag(FLAGS_IN_APP)) return;
+        if (!mActivity.isTransientTaskbar() || !hasAnyFlag(FLAGS_IN_APP)) return;
         updateAndAnimateTransientTaskbar(!hasAnyFlag(FLAG_STASHED_IN_APP_AUTO));
     }
 
@@ -697,8 +693,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         mAnimator = new AnimatorSet();
         addJankMonitorListener(
                 mAnimator, /* expanding= */ !isStashed, /* tag= */ jankTag);
-        boolean isTransientTaskbar = DisplayController.isTransientTaskbar(mActivity);
-        final float stashTranslation = mActivity.isPhoneMode() || isTransientTaskbar
+        final float stashTranslation = mActivity.isPhoneMode() || mActivity.isTransientTaskbar()
                 ? 0
                 : (mUnstashedHeight - mStashedHeight);
 
@@ -722,7 +717,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
             return;
         }
 
-        if (isTransientTaskbar) {
+        if (mActivity.isTransientTaskbar()) {
             createTransientAnimToIsStashed(mAnimator, isStashed, duration,
                     shouldDelayBackground, animationType);
         } else {
@@ -1144,7 +1139,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
 
         boolean stashForBubbles = hasAnyFlag(FLAG_IN_OVERVIEW)
                 && hasAnyFlag(systemUiStateFlags, SYSUI_STATE_BUBBLES_EXPANDED)
-                && DisplayController.isTransientTaskbar(mActivity);
+                && mActivity.isTransientTaskbar();
         updateStateForFlag(FLAG_STASHED_SYSUI,
                 hasAnyFlag(systemUiStateFlags, SYSUI_STATE_SCREEN_PINNING) || stashForBubbles);
         updateStateForFlag(FLAG_STASHED_DEVICE_LOCKED,
@@ -1174,7 +1169,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
      * <p>Do not stash if a system gesture is started.
      */
     private boolean shouldStashForIme() {
-        if (DisplayController.isTransientTaskbar(mActivity)) {
+        if (mActivity.isTransientTaskbar()) {
             return false;
         }
         // Do not stash if in small screen, with 3 button nav, and in landscape.
@@ -1270,7 +1265,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
      */
     public void setUpTaskbarSystemAction(boolean visible) {
         UI_HELPER_EXECUTOR.execute(() -> {
-            if (!visible || !DisplayController.isTransientTaskbar(mActivity)
+            if (!visible || !mActivity.isTransientTaskbar()
                     || mActivity.isPhoneMode()) {
                 mAccessibilityManager.unregisterSystemAction(SYSTEM_ACTION_ID_TASKBAR);
                 mIsTaskbarSystemActionRegistered = false;
@@ -1321,7 +1316,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
      *                            If false, attempts to re/start the timeout
      */
     public void updateTaskbarTimeout(boolean isAutohideSuspended) {
-        if (!DisplayController.isTransientTaskbar(mActivity)) {
+        if (!mActivity.isTransientTaskbar()) {
             return;
         }
         if (isAutohideSuspended) {
@@ -1335,9 +1330,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
      * Attempts to start timer to auto hide the taskbar based on time.
      */
     private void tryStartTaskbarTimeout() {
-        if (!DisplayController.isTransientTaskbar(mActivity)
-                || mIsStashed
-                || mEnableBlockingTimeoutDuringTests) {
+        if (!mActivity.isTransientTaskbar() || mIsStashed || mEnableBlockingTimeoutDuringTests) {
             return;
         }
 

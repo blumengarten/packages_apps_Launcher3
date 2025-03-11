@@ -155,7 +155,7 @@ open class TaskbarEduTooltipController(context: Context) :
     fun maybeShowSwipeEdu() {
         if (
             !isTooltipEnabled ||
-                !DisplayController.isTransientTaskbar(activityContext) ||
+                !activityContext.isTransientTaskbar ||
                 tooltipStep > TOOLTIP_STEP_SWIPE
         ) {
             return
@@ -200,7 +200,7 @@ open class TaskbarEduTooltipController(context: Context) :
             suggestionsAnim.supportLightTheme()
             pinningAnim.supportLightTheme()
             handleEduAnimations(listOf(splitscreenAnim, suggestionsAnim, pinningAnim))
-            if (DisplayController.isTransientTaskbar(activityContext)) {
+            if (activityContext.isTransientTaskbar) {
                 splitscreenAnim.setAnimation(R.raw.taskbar_edu_splitscreen_transient)
                 suggestionsAnim.setAnimation(R.raw.taskbar_edu_suggestions_transient)
                 pinningEdu.visibility = if (enableTaskbarPinning()) VISIBLE else GONE
@@ -230,7 +230,7 @@ open class TaskbarEduTooltipController(context: Context) :
             // Set up layout parameters.
             content.updateLayoutParams { width = MATCH_PARENT }
             updateLayoutParams<MarginLayoutParams> {
-                if (DisplayController.isTransientTaskbar(activityContext)) {
+                if (activityContext.isTransientTaskbar) {
                     width =
                         resources.getDimensionPixelSize(
                             if (enableTaskbarPinning())
@@ -263,7 +263,7 @@ open class TaskbarEduTooltipController(context: Context) :
         // for the original 2 edu steps) as a proxy to needing to show the separate pinning edu
         if (
             !enableTaskbarPinning() ||
-                !DisplayController.isTransientTaskbar(activityContext) ||
+                !activityContext.isTransientTaskbar ||
                 !isTooltipEnabled ||
                 tooltipStep > TOOLTIP_STEP_PINNING ||
                 tooltipStep < TOOLTIP_STEP_FEATURES
@@ -289,7 +289,7 @@ open class TaskbarEduTooltipController(context: Context) :
             pinningAnim.supportLightTheme()
             handleEduAnimations(listOf(pinningAnim))
             updateLayoutParams<BaseDragLayer.LayoutParams> {
-                if (DisplayController.isTransientTaskbar(activityContext)) {
+                if (activityContext.isTransientTaskbar) {
                     bottomMargin += activityContext.deviceProfile.taskbarHeight
                 }
                 // Unlike other tooltips, we want to align with taskbar divider rather than center.
@@ -344,7 +344,7 @@ open class TaskbarEduTooltipController(context: Context) :
 
             showDisclosureText(eduSubtitle)
             updateLayoutParams<BaseDragLayer.LayoutParams> {
-                if (DisplayController.isTransientTaskbar(activityContext)) {
+                if (activityContext.isTransientTaskbar) {
                     bottomMargin += activityContext.deviceProfile.taskbarHeight
                 }
                 // Unlike other tooltips, we want to align with the all apps button rather than

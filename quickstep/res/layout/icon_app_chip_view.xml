@@ -26,6 +26,7 @@
     android:importantForAccessibility="no"
     android:autoMirrored="true"
     android:elevation="@dimen/task_thumbnail_icon_menu_elevation"
+    android:foreground="@drawable/app_chip_fg"
     android:background="@color/materialColorSurfaceBright">
 
     <!-- ignoring warning because the user of the anchor is a Rect where RTL is not needed -->
@@ -77,4 +78,5 @@
         android:background="@drawable/icon_menu_arrow_background"
         android:src="@drawable/ic_chevron_down"
         android:importantForAccessibility="no" />
+
 </com.android.quickstep.views.IconAppChipView>
