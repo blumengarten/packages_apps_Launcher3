@@ -311,6 +311,13 @@ flag {
 }
 
 flag {
+    name: "all_apps_blur"
+    namespace: "launcher"
+    description: "Content behind the all apps panel in Launcher will be blurred."
+    bug: "400827727"
+}
+
+flag {
     name: "multiline_search_bar"
     namespace: "launcher"
     description: "Search bar can wrap to multi-line"

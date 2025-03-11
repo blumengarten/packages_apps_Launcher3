@@ -1318,7 +1318,6 @@ public class TaskbarManager {
                         }
                     }
                 } else {
-
                     getCurrentActivityContext().onConfigurationChanged(configDiff);
                 }
                 mOldConfig = new Configuration(newConfig);
