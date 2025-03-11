@@ -21,7 +21,6 @@ import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT
 import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APPLICATION;
 import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APP_PAIR;
 import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT;
-import static com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME;
 import static com.android.launcher3.Utilities.SHOULD_SHOW_FIRST_PAGE_WIDGET;
 import static com.android.launcher3.icons.cache.CacheLookupFlag.DEFAULT_LOOKUP_FLAG;
 import static com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_ARCHIVED;
@@ -466,7 +465,7 @@ public class LoaderCursor extends CursorWrapper {
     public boolean commitDeleted() {
         if (mItemsToRemove.size() > 0) {
             // Remove dead items
-            mModel.getModelDbController().delete(TABLE_NAME,
+            mModel.getModelDbController().delete(
                     Utilities.createDbSelectionQuery(Favorites._ID, mItemsToRemove), null);
             return true;
         }
@@ -492,7 +491,7 @@ public class LoaderCursor extends CursorWrapper {
             // Update restored items that no longer require special handling
             ContentValues values = new ContentValues();
             values.put(Favorites.RESTORED, 0);
-            mModel.getModelDbController().update(TABLE_NAME, values,
+            mModel.getModelDbController().update(values,
                     Utilities.createDbSelectionQuery(Favorites._ID, mRestoredRows), null);
         }
         if (mRestoreEventLogger != null) {

@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherActivityInfo
+import android.database.sqlite.SQLiteDatabase
 import android.os.Process
 import android.os.UserHandle
 import android.platform.test.annotations.DisableFlags
@@ -25,6 +26,7 @@ import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_DESKTOP
 import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT
 import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APP_PAIR
 import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_FOLDER
+import com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME
 import com.android.launcher3.dagger.LauncherAppComponent
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.icons.IconCache
@@ -41,6 +43,7 @@ import com.android.launcher3.util.AllModulesForTest
 import com.android.launcher3.util.Executors.MODEL_EXECUTOR
 import com.android.launcher3.util.LauncherModelHelper.SandboxModelContext
 import com.android.launcher3.util.LooperIdleLock
+import com.android.launcher3.util.ModelTestExtensions
 import com.android.launcher3.util.TestUtil
 import com.android.launcher3.util.UserIconInfo
 import com.google.common.truth.Truth.assertThat
@@ -63,6 +66,7 @@ import org.mockito.MockitoSession
 import org.mockito.Spy
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -94,6 +98,7 @@ class LoaderTaskTest {
     @Mock private lateinit var launcherModel: LauncherModel
     @Mock private lateinit var iconCache: IconCache
     @Mock private lateinit var userCache: UserCache
+    @Mock private lateinit var modelDbController: ModelDbController
 
     @Mock private lateinit var launcherBinder: BaseLauncherBinder
     @Mock private lateinit var transaction: LoaderTransaction
@@ -110,6 +115,10 @@ class LoaderTaskTest {
     private val bgDataModel: BgDataModel
         get() = testComponent.getDataModel()
 
+    private val inMemoryDb: SQLiteDatabase by lazy {
+        ModelTestExtensions.createInMemoryDb(INSERTION_STATEMENT_FILE)
+    }
+
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
@@ -123,8 +132,23 @@ class LoaderTaskTest {
             .getAppWidgetInfo(any())
 
         `when`(launcherModel.beginLoader(any())).thenReturn(transaction)
-        `when`(launcherModel.modelDbController)
-            .thenReturn(FactitiousDbController(context, INSERTION_STATEMENT_FILE))
+
+        `when`(launcherModel.modelDbController).thenReturn(modelDbController)
+        doAnswer {}.whenever(modelDbController).loadDefaultFavoritesIfNecessary()
+        doAnswer { i ->
+                inMemoryDb.query(
+                    TABLE_NAME,
+                    i.getArgument(0),
+                    i.getArgument(1),
+                    i.getArgument(2),
+                    null,
+                    null,
+                    i.getArgument(3),
+                )
+            }
+            .whenever(modelDbController)
+            .query(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())
+
         `when`(launcherModel.modelDelegate).thenReturn(modelDelegate)
         `when`(launcherBinder.newIdleLock(any())).thenReturn(idleLock)
         `when`(idleLock.awaitLocked(1000)).thenReturn(false)
@@ -149,6 +173,7 @@ class LoaderTaskTest {
     fun tearDown() {
         LauncherPrefs.get(context).removeSync(RESTORE_DEVICE)
         LauncherPrefs.get(context).putSync(IS_FIRST_LOAD_AFTER_RESTORE.to(false))
+        inMemoryDb.close()
         context.onDestroy()
         mockitoSession.finishMocking()
     }

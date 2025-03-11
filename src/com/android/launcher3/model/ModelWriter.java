@@ -16,7 +16,6 @@
 
 package com.android.launcher3.model;
 
-import static com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME;
 import static com.android.launcher3.provider.LauncherDbUtils.itemIdMatch;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
 
@@ -253,7 +252,7 @@ public class ModelWriter {
             item.onAddToDatabase(writer);
             writer.put(Favorites._ID, item.id);
 
-            mModel.getModelDbController().insert(Favorites.TABLE_NAME, writer.getValues(mContext));
+            mModel.getModelDbController().insert(writer.getValues(mContext));
             synchronized (mBgDataModel) {
                 checkItemInfoLocked(item.id, item, stackTrace);
                 mBgDataModel.addItem(mContext, item, true);
@@ -292,7 +291,7 @@ public class ModelWriter {
         notifyDelete(items);
         enqueueDeleteRunnable(newModelTask(() -> {
             for (ItemInfo item : items) {
-                mModel.getModelDbController().delete(TABLE_NAME, itemIdMatch(item.id), null);
+                mModel.getModelDbController().delete(itemIdMatch(item.id), null);
                 mBgDataModel.removeItem(mContext, item);
                 verifier.verifyModel();
             }
@@ -307,12 +306,12 @@ public class ModelWriter {
         notifyDelete(Collections.singleton(info));
 
         enqueueDeleteRunnable(newModelTask(() -> {
-            mModel.getModelDbController().delete(Favorites.TABLE_NAME,
+            mModel.getModelDbController().delete(
                     Favorites.CONTAINER + "=" + info.id, null);
             mBgDataModel.removeItem(mContext, info.getContents());
             info.getContents().clear();
 
-            mModel.getModelDbController().delete(Favorites.TABLE_NAME,
+            mModel.getModelDbController().delete(
                     Favorites._ID + "=" + info.id, null);
             mBgDataModel.removeItem(mContext, info);
             verifier.verifyModel();
@@ -411,7 +410,7 @@ public class ModelWriter {
         @Override
         public void runImpl() {
             mModel.getModelDbController().update(
-                    TABLE_NAME, mWriter.get().getValues(mContext), itemIdMatch(mItemId), null);
+                    mWriter.get().getValues(mContext), itemIdMatch(mItemId), null);
             updateItemArrays(mItem, mItemId);
         }
     }
@@ -433,7 +432,7 @@ public class ModelWriter {
                     ItemInfo item = mItems.get(i);
                     final int itemId = item.id;
                     mModel.getModelDbController().update(
-                            TABLE_NAME, mValues.get(i), itemIdMatch(itemId), null);
+                            mValues.get(i), itemIdMatch(itemId), null);
                     updateItemArrays(item, itemId);
                 }
                 t.commit();

@@ -26,13 +26,13 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Process;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.Pair;
 
 import com.android.launcher3.LauncherSettings.Favorites;
 import com.android.launcher3.model.ModelDbController;
@@ -74,24 +74,20 @@ public class LauncherProvider extends ContentProvider {
 
     @Override
     public String getType(Uri uri) {
-        SqlArguments args = new SqlArguments(uri, null, null);
-        if (TextUtils.isEmpty(args.where)) {
-            return "vnd.android.cursor.dir/" + args.table;
+        if (TextUtils.isEmpty(parseUri(uri, null, null).first)) {
+            return "vnd.android.cursor.dir/" + Favorites.TABLE_NAME;
         } else {
-            return "vnd.android.cursor.item/" + args.table;
+            return "vnd.android.cursor.item/" + Favorites.TABLE_NAME;
         }
     }
 
     @Override
     public Cursor query(Uri uri, String[] projection, String selection,
             String[] selectionArgs, String sortOrder) {
-        SqlArguments args = new SqlArguments(uri, selection, selectionArgs);
-        SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
-        qb.setTables(args.table);
-
+        Pair<String, String[]> args = parseUri(uri, selection, selectionArgs);
         Cursor[] result = new Cursor[1];
         executeControllerTask(controller -> {
-            result[0] = controller.query(args.table, projection, args.where, args.args, sortOrder);
+            result[0] = controller.query(projection, args.first, args.second, sortOrder);
             return 0;
         });
         return result[0];
@@ -108,7 +104,7 @@ public class LauncherProvider extends ContentProvider {
             // attempt allocate and bind the widget.
             Integer itemType = values.getAsInteger(Favorites.ITEM_TYPE);
             if (itemType != null
-                    && itemType.intValue() == Favorites.ITEM_TYPE_APPWIDGET
+                    && itemType == Favorites.ITEM_TYPE_APPWIDGET
                     && !values.containsKey(Favorites.APPWIDGET_ID)) {
 
                 ComponentName cn = ComponentName.unflattenFromString(
@@ -135,8 +131,7 @@ public class LauncherProvider extends ContentProvider {
                 }
             }
 
-            SqlArguments args = new SqlArguments(uri);
-            return controller.insert(args.table, values);
+            return controller.insert(values);
         });
 
         return rowId < 0 ? null : ContentUris.withAppendedId(uri, rowId);
@@ -144,14 +139,14 @@ public class LauncherProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        SqlArguments args = new SqlArguments(uri, selection, selectionArgs);
-        return executeControllerTask(c -> c.delete(args.table, args.where, args.args));
+        Pair<String, String[]> args = parseUri(uri, selection, selectionArgs);
+        return executeControllerTask(c -> c.delete(args.first, args.second));
     }
 
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-        SqlArguments args = new SqlArguments(uri, selection, selectionArgs);
-        return executeControllerTask(c -> c.update(args.table, values, args.where, args.args));
+        Pair<String, String[]> args = parseUri(uri, selection, selectionArgs);
+        return executeControllerTask(c -> c.update(values, args.first, args.second));
     }
 
     @Override
@@ -209,35 +204,24 @@ public class LauncherProvider extends ContentProvider {
         }
     }
 
-    static class SqlArguments {
-        public final String table;
-        public final String where;
-        public final String[] args;
-
-        SqlArguments(Uri url, String where, String[] args) {
-            if (url.getPathSegments().size() == 1) {
-                this.table = url.getPathSegments().get(0);
-                this.where = where;
-                this.args = args;
-            } else if (url.getPathSegments().size() != 2) {
-                throw new IllegalArgumentException("Invalid URI: " + url);
-            } else if (!TextUtils.isEmpty(where)) {
-                throw new UnsupportedOperationException("WHERE clause not supported: " + url);
-            } else {
-                this.table = url.getPathSegments().get(0);
-                this.where = "_id=" + ContentUris.parseId(url);
-                this.args = null;
+    /**
+     * Parses the uri and returns the where and arg clause.
+     *
+     * Note: This should be called on the binder thread (before posting on any executor) so that
+     * any parsing error gets propagated to the caller.
+     */
+    private static Pair<String, String[]> parseUri(Uri url, String where, String[] args) {
+        switch (url.getPathSegments().size()) {
+            case 1 -> {
+                return Pair.create(where, args);
             }
-        }
-
-        SqlArguments(Uri url) {
-            if (url.getPathSegments().size() == 1) {
-                table = url.getPathSegments().get(0);
-                where = null;
-                args = null;
-            } else {
-                throw new IllegalArgumentException("Invalid URI: " + url);
+            case 2 -> {
+                if (!TextUtils.isEmpty(where)) {
+                    throw new UnsupportedOperationException("WHERE clause not supported: " + url);
+                }
+                return Pair.create("_id=" + ContentUris.parseId(url), null);
             }
+            default -> throw new IllegalArgumentException("Invalid URI: " + url);
         }
     }
 }

@@ -1,10 +1,11 @@
 package com.android.launcher3.util
 
 import android.content.ContentValues
+import android.database.sqlite.SQLiteDatabase
 import android.os.Process
+import androidx.test.platform.app.InstrumentationRegistry
 import com.android.launcher3.Flags
 import com.android.launcher3.LauncherModel
-import com.android.launcher3.LauncherSettings.Favorites
 import com.android.launcher3.LauncherSettings.Favorites.APPWIDGET_ID
 import com.android.launcher3.LauncherSettings.Favorites.APPWIDGET_PROVIDER
 import com.android.launcher3.LauncherSettings.Favorites.APPWIDGET_SOURCE
@@ -24,6 +25,8 @@ import com.android.launcher3.LauncherSettings.Favorites.TITLE
 import com.android.launcher3.LauncherSettings.Favorites._ID
 import com.android.launcher3.model.BgDataModel
 import com.android.launcher3.model.ModelDbController
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 object ModelTestExtensions {
     /** Clears and reloads Launcher db to cleanup the workspace */
@@ -68,7 +71,6 @@ object ModelTestExtensions {
         spanY: Int = 1,
         id: Int = 0,
         profileId: Int = Process.myUserHandle().identifier,
-        tableName: String = Favorites.TABLE_NAME,
         appWidgetId: Int = -1,
         appWidgetSource: Int = -1,
         appWidgetProvider: String? = null,
@@ -97,9 +99,21 @@ object ModelTestExtensions {
                         values[APPWIDGET_PROVIDER] = appWidgetProvider
                     }
                 // Migrate any previous data so that the DB state is correct
-                controller.insert(tableName, values)
+                controller.insert(values)
                 transaction.commit()
             }
         }
     }
+
+    /** Creates an in-memory sqlite DB and initializes with the data in [insertFile] */
+    fun createInMemoryDb(insertFile: String): SQLiteDatabase =
+        SQLiteDatabase.createInMemory(SQLiteDatabase.OpenParams.Builder().build()).also { db ->
+            BufferedReader(
+                    InputStreamReader(
+                        InstrumentationRegistry.getInstrumentation().context.assets.open(insertFile)
+                    )
+                )
+                .lines()
+                .forEach { sqlStatement -> db.execSQL(sqlStatement) }
+        }
 }

@@ -86,11 +86,10 @@ constructor(
     private val loaderFactory: LoaderTaskFactory,
     private val binderFactory: BaseLauncherBinderFactory,
     private val spaceFinderFactory: Provider<WorkspaceItemSpaceFinder>,
+    val modelDbController: ModelDbController,
 ) {
 
     private val mCallbacksList = ArrayList<BgDataModel.Callbacks>(1)
-
-    val modelDbController = ModelDbController(context)
 
     private val mLock = Any()
 
