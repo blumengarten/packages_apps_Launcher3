@@ -494,12 +494,19 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
                 sTempRect.bottom = y + mDotRadius;
                 sTempRect.left = x - diameter;
 
-                float posDif = Math.abs(mLastPosition - mCurrentPosition);
+                float currentPosition = mCurrentPosition;
+                float lastPosition = mLastPosition;
+
+                if (mIsRtl) {
+                    currentPosition = mNumPages - currentPosition - 1;
+                    lastPosition = mNumPages - lastPosition - 1;
+                }
+                float posDif = Math.abs(lastPosition - currentPosition);
                 float boundedPosition = (posDif > 1)
-                        ? Math.round(mCurrentPosition)
-                        : mCurrentPosition;
+                        ? Math.round(currentPosition)
+                        : currentPosition;
                 float bounceProgress = (posDif > 1) ? posDif - 1 : 0;
-                float bounceAdjustment = Math.abs(mCurrentPosition - boundedPosition) * diameter;
+                float bounceAdjustment = Math.abs(currentPosition - boundedPosition) * diameter;
 
                 if (mOnArrowClickListener != null && boundedPosition >= 1) {
                     // Here we draw the Left Arrow
@@ -533,10 +540,10 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
                         // While the animation is shifting the active pagination dots size from
                         // the previously active one, to the newly active dot, there is no bounce
                         // adjustment. The bounce happens in the "Overshoot" phase of the animation.
-                        // mLastPosition is used to determine when the currentPosition is just
+                        // lastPosition is used to determine when the currentPosition is just
                         // leaving the page, or if it is in the overshoot phase.
                         if (boundedPosition == i && bounceProgress != 0) {
-                            if (mLastPosition < mCurrentPosition) {
+                            if (lastPosition < currentPosition) {
                                 sTempRect.left -= bounceAdjustment;
                             } else {
                                 sTempRect.right += bounceAdjustment;
@@ -545,8 +552,8 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
                     } else {
                         sTempRect.right = sTempRect.left + diameter;
 
-                        if (mLastPosition == i && bounceProgress != 0) {
-                            if (mLastPosition > mCurrentPosition) {
+                        if (lastPosition == i && bounceProgress != 0) {
+                            if (lastPosition > currentPosition) {
                                 sTempRect.left += bounceAdjustment;
                             } else {
                                 sTempRect.right -= bounceAdjustment;
