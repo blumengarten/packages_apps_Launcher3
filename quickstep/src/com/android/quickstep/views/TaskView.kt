@@ -146,7 +146,7 @@ constructor(
     val isRunningTask: Boolean
         get() = this === recentsView?.runningTaskView
 
-    val displayId: Int
+    open val displayId: Int
         get() = taskContainers.firstOrNull()?.task.displayId
 
     val isExternalDisplay: Boolean
@@ -1484,10 +1484,11 @@ constructor(
     }
 
     private fun closeTaskMenu(): Boolean {
-        val floatingView: AbstractFloatingView? = AbstractFloatingView.getTopOpenViewWithType(
-            container,
-            AbstractFloatingView.TYPE_TASK_MENU
-        )
+        val floatingView: AbstractFloatingView? =
+            AbstractFloatingView.getTopOpenViewWithType(
+                container,
+                AbstractFloatingView.TYPE_TASK_MENU,
+            )
         if (floatingView?.isOpen == true) {
             floatingView.close(true)
             return true

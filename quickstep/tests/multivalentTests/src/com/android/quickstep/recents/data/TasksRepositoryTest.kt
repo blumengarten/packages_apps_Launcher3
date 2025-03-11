@@ -21,6 +21,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
+import android.view.Display.DEFAULT_DISPLAY
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.launcher3.util.SplitConfigurationOptions
 import com.android.launcher3.util.TestDispatcherProvider
@@ -64,7 +65,7 @@ class TasksRepositoryTest {
                     /* snapPosition = */ SNAP_TO_2_50_50,
                 ),
             ),
-            DesktopTask(deskId = 0, tasks.subList(3, 6)),
+            DesktopTask(deskId = 0, DEFAULT_DISPLAY, tasks.subList(3, 6)),
         )
     private val recentsModel = FakeRecentTasksDataSource()
     private val taskThumbnailDataSource = FakeTaskThumbnailDataSource()

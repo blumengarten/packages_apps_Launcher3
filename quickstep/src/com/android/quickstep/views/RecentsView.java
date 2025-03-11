@@ -142,7 +142,6 @@ import androidx.annotation.UiThread;
 import androidx.core.graphics.ColorUtils;
 import androidx.dynamicanimation.animation.SpringAnimation;
 
-import com.android.app.tracing.TraceUtilsKt;
 import com.android.internal.jank.Cuj;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.BaseActivity.MultiWindowModeChangedListener;
@@ -3121,7 +3120,8 @@ public abstract class RecentsView<
 
         // TODO: b/401582344 - Implement a way to exclude the `DesktopWallpaperActivity`.
         desktopTaskView.bind(
-                new DesktopTask(activeDeskId, Arrays.asList(runningTasks)),
+                new DesktopTask(activeDeskId, mContainer.getDisplayId(),
+                        Arrays.asList(runningTasks)),
                 mOrientationState, mTaskOverlayFactory);
         return desktopTaskView;
     }
@@ -7026,7 +7026,7 @@ public abstract class RecentsView<
         // `AddNewDesktopButton`.
         DesktopTaskView desktopTaskView =
                 (DesktopTaskView) getTaskViewFromPool(TaskViewType.DESKTOP);
-        desktopTaskView.bind(new DesktopTask(deskId, new ArrayList<>()),
+        desktopTaskView.bind(new DesktopTask(deskId, displayId, new ArrayList<>()),
                 mOrientationState, mTaskOverlayFactory);
 
         Objects.requireNonNull(mAddDesktopButton);
