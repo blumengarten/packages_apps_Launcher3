@@ -302,6 +302,7 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
         if (enabled) {
             RecentsState state = mContainer.getStateManager().getState();
             setDisallowScrollToClearAll(!state.hasClearAllButton());
+            setDisallowScrollToAddDesk(!state.hasAddDeskButton());
         }
     }
 

@@ -19,6 +19,7 @@ import static android.app.ActivityTaskManager.INVALID_TASK_ID;
 import static android.window.DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY;
 
 import static com.android.launcher3.LauncherState.CLEAR_ALL_BUTTON;
+import static com.android.launcher3.LauncherState.ADD_DESK_BUTTON;
 import static com.android.launcher3.LauncherState.NORMAL;
 import static com.android.launcher3.LauncherState.OVERVIEW;
 import static com.android.launcher3.LauncherState.OVERVIEW_MODAL_TASK;
@@ -198,7 +199,10 @@ public class LauncherRecentsView extends RecentsView<QuickstepLauncher, Launcher
             LauncherState state = getStateManager().getState();
             boolean hasClearAllButton = (state.getVisibleElements(mContainer)
                     & CLEAR_ALL_BUTTON) != 0;
+            boolean hasAddDeskButton = (state.getVisibleElements(mContainer)
+                    & ADD_DESK_BUTTON) != 0;
             setDisallowScrollToClearAll(!hasClearAllButton);
+            setDisallowScrollToAddDesk(!hasAddDeskButton);
         }
     }
 
