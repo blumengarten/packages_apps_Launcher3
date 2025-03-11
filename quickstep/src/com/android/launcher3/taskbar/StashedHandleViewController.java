@@ -36,7 +36,6 @@ import com.android.launcher3.R;
 import com.android.launcher3.anim.AnimatedFloat;
 import com.android.launcher3.anim.RevealOutlineAnimation;
 import com.android.launcher3.anim.RoundedRectRevealOutlineProvider;
-import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.Executors;
 import com.android.launcher3.util.MultiPropertyFactory;
 import com.android.launcher3.util.MultiValueAlpha;
@@ -217,7 +216,7 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
                 .getTransientTaskbarIconLayoutBounds();
         float startRadius = mStashedHandleRadius;
 
-        if (DisplayController.isTransientTaskbar(mActivity)) {
+        if (mActivity.isTransientTaskbar()) {
             // Account for the full visual height of the transient taskbar.
             int heightDiff = (mTaskbarSize - visualBounds.height()) / 2;
             visualBounds.top -= heightDiff;

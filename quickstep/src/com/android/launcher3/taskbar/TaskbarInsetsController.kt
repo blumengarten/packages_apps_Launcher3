@@ -235,8 +235,7 @@ class TaskbarInsetsController(val context: TaskbarActivityContext) : LoggableTas
                         context.resources,
                     )
                 val isPinnedTaskbar =
-                    context.deviceProfile.isTaskbarPresent &&
-                        !context.deviceProfile.isTransientTaskbar
+                    context.deviceProfile.isTaskbarPresent && !context.isTransientTaskbar
                 val mandatoryGestureHeight = if (isPinnedTaskbar) contentHeight else gestureHeight
                 provider.insetsSize =
                     getInsetsForGravityWithCutout(mandatoryGestureHeight, gravity, endRotation)
@@ -388,10 +387,7 @@ class TaskbarInsetsController(val context: TaskbarActivityContext) : LoggableTas
                 bubbleBarVisible
         ) {
             // Taskbar has some touchable elements, take over the full taskbar area
-            if (
-                controllers.uiController.isInOverviewUi &&
-                    DisplayController.isTransientTaskbar(context)
-            ) {
+            if (controllers.uiController.isInOverviewUi && context.isTransientTaskbar) {
                 val region =
                     controllers.taskbarActivityContext.dragLayer.lastDrawnTransientRect.toRegion()
                 val bubbleBarBounds =
