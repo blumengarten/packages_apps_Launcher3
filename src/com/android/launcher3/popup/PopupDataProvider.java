@@ -26,7 +26,6 @@ import androidx.annotation.Nullable;
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.allapps.ActivityAllAppsContainerView;
 import com.android.launcher3.dot.DotInfo;
-import com.android.launcher3.dot.FolderDotInfo;
 import com.android.launcher3.folder.Folder;
 import com.android.launcher3.folder.FolderIcon;
 import com.android.launcher3.model.data.FolderInfo;
@@ -76,11 +75,7 @@ public class PopupDataProvider implements NotificationListener.NotificationsChan
                 ((BubbleTextView) v).applyDotState(info, true /* animate */);
             } else if (v instanceof FolderIcon icon
                     && info instanceof FolderInfo fi && fi.anyMatch(matcher)) {
-                FolderDotInfo folderDotInfo = new FolderDotInfo();
-                for (ItemInfo si : fi.getContents()) {
-                    folderDotInfo.addDotInfo(getDotInfoForItem(si));
-                }
-                icon.setDotInfo(folderDotInfo);
+                icon.updateDotInfo();
             }
 
             // process all the shortcuts

@@ -229,7 +229,7 @@ public class ModelWriter {
         }).executeOnModelThread();
     }
 
-    private void notifyItemModified(ItemInfo item) {
+    public void notifyItemModified(ItemInfo item) {
         notifyOtherCallbacks(c -> c.bindItemsModified(Collections.singletonList(item)));
     }
 
