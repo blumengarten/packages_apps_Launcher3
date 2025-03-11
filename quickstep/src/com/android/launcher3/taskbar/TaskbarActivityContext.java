@@ -99,6 +99,7 @@ import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherSettings.Favorites;
 import com.android.launcher3.R;
 import com.android.launcher3.allapps.ActivityAllAppsContainerView;
+import com.android.launcher3.anim.AnimatorListeners;
 import com.android.launcher3.anim.AnimatorPlaybackController;
 import com.android.launcher3.apppairs.AppPairIcon;
 import com.android.launcher3.config.FeatureFlags;
@@ -1950,6 +1951,8 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                 // Override the alpha updates in the icon alignment animation.
                 allAppsButton.setAlpha(0);
             });
+            alphaOverride.addListener(AnimatorListeners.forSuccessCallback(
+                    () -> allAppsButton.setAlpha(1f)));
             fullAnimation.play(alphaOverride);
         }
 
