@@ -30,9 +30,6 @@ class TaskbarDesktopModeController(
     private lateinit var taskbarControllers: TaskbarControllers
     private lateinit var taskbarSharedState: TaskbarSharedState
 
-    val isInDesktopMode: Boolean
-        get() = desktopVisibilityController.isInDesktopMode
-
     fun init(controllers: TaskbarControllers, sharedState: TaskbarSharedState) {
         taskbarControllers = controllers
         taskbarSharedState = sharedState

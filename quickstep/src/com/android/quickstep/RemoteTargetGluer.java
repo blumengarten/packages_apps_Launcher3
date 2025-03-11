@@ -68,8 +68,10 @@ public class RemoteTargetGluer {
      * running tasks
      */
     public RemoteTargetGluer(Context context, BaseContainerInterface sizingStrategy) {
+        // TODO: b/403344864 Make sure init with correct number of RemoteTargetHandle with
+        //  multi-desks feature enabled as well.
         int visibleTasksCount = DesktopVisibilityController.INSTANCE.get(context)
-                .getVisibleDesktopTasksCount();
+                .getVisibleDesktopTasksCountDeprecated();
         if (visibleTasksCount > 0) {
             // Allocate +1 to account for a new task added to the desktop mode
             int numHandles = visibleTasksCount + 1;

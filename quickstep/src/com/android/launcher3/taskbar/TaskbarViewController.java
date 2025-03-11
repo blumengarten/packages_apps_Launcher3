@@ -19,6 +19,7 @@ import static android.animation.LayoutTransition.APPEARING;
 import static android.animation.LayoutTransition.CHANGE_APPEARING;
 import static android.animation.LayoutTransition.CHANGE_DISAPPEARING;
 import static android.animation.LayoutTransition.DISAPPEARING;
+import static android.view.Display.DEFAULT_DISPLAY;
 import static android.window.DesktopModeFlags.ENABLE_TASKBAR_RECENTS_LAYOUT_TRANSITION;
 
 import static com.android.app.animation.Interpolators.EMPHASIZED;
@@ -747,7 +748,8 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
     }
 
     private boolean shouldUpdateIconContentDescription(BubbleTextView btv) {
-        boolean isInDesktopMode = mControllers.taskbarDesktopModeController.isInDesktopMode();
+        boolean isInDesktopMode = mControllers.taskbarDesktopModeController.isInDesktopMode(
+                DEFAULT_DISPLAY);
         boolean isAllAppsButton = btv instanceof TaskbarAllAppsButtonContainer;
         boolean isDividerButton = btv instanceof TaskbarDividerContainer;
         return isInDesktopMode && !isAllAppsButton && !isDividerButton;
