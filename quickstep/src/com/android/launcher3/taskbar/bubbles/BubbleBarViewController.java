@@ -193,6 +193,7 @@ public class BubbleBarViewController {
     private boolean mShouldShowEducation;
     public boolean mOverflowAdded;
     private boolean mIsLocationUpdatedForDropTarget = false;
+    private boolean mWasStashedBeforeEnteringBubbleDragZone = false;
 
     private BubbleBarViewAnimator mBubbleBarViewAnimator;
     private final FrameLayout mBubbleBarContainer;
@@ -617,14 +618,30 @@ public class BubbleBarViewController {
      * updated.
      */
     public void onDragItemOverBubbleBarDragZone(@NonNull BubbleBarLocation bubbleBarLocation) {
+        Log.w("BBAnimation", "onDragItemOverBubbleBarDragZone()");
         mBarView.showDropTarget(/* isDropTarget = */ true);
         boolean isRtl = mBarView.isLayoutRtl();
         mIsLocationUpdatedForDropTarget = getBubbleBarLocation().isOnLeft(isRtl)
                 != bubbleBarLocation.isOnLeft(isRtl);
-        if (mIsLocationUpdatedForDropTarget) {
-            animateBubbleBarLocation(bubbleBarLocation);
-        }
-        if (!hasBubbles()) {
+        mWasStashedBeforeEnteringBubbleDragZone = hasBubbles()
+            && mBubbleStashController.isStashed();
+        if (mWasStashedBeforeEnteringBubbleDragZone) {
+            if (mIsLocationUpdatedForDropTarget) {
+                // bubble bar is stashed an location updated
+                //TODO(b/399678274) add animation
+                mBubbleStashController.showBubbleBarImmediate();
+                animateBubbleBarLocation(bubbleBarLocation);
+            } else {
+                // bubble bar is stashed and location the same - just un-stash
+                mBubbleStashController.showBubbleBar(/* expandBubbles = */ false);
+            }
+        } else if (hasBubbles()) {
+            if (mIsLocationUpdatedForDropTarget) {
+                // bubble bar has bubbles and location is changed - animate bar to the opposite side
+                animateBubbleBarLocation(bubbleBarLocation);
+            }
+        } else {
+            // bubble bar has no bubbles flow just show the empty drop target
             mBubbleBarPinController.showDropTarget(bubbleBarLocation);
         }
     }
@@ -644,12 +661,27 @@ public class BubbleBarViewController {
      * mode and reset the value returned from {@link #isLocationUpdatedForDropTarget()} to false.
      */
     public void onItemDraggedOutsideBubbleBarDropZone() {
+        Log.w("BBAnimation", "onItemDraggedOutsideBubbleBarDropZone()");
         mBarView.showDropTarget(/* isDropTarget = */ false);
-        if (mIsLocationUpdatedForDropTarget) {
-            animateBubbleBarLocation(getBubbleBarLocation());
+        if (mWasStashedBeforeEnteringBubbleDragZone) {
+            if (mIsLocationUpdatedForDropTarget) {
+                // bubble bar was stashed and location updated
+                //TODO(b/399678274) add animation
+                animateBubbleBarLocation(getBubbleBarLocation());
+                mBubbleStashController.stashBubbleBarImmediate();
+            } else {
+                // bubble bar was stashed and location the same - just stash it back
+                mBubbleStashController.stashBubbleBar();
+            }
+        } else if (hasBubbles()) {
+            if (mIsLocationUpdatedForDropTarget) {
+                // bubble bar has bubbles and location was changed - return to the original location
+                animateBubbleBarLocation(getBubbleBarLocation());
+            }
         }
         mBubbleBarPinController.hideDropTarget();
         mIsLocationUpdatedForDropTarget = false;
+        mWasStashedBeforeEnteringBubbleDragZone = false;
     }
 
     /**
@@ -657,9 +689,11 @@ public class BubbleBarViewController {
      * The controller will hide the drop target if there are no bubbles and exit drop target mode.
      */
     public void onItemDroppedInBubbleBarDragZone() {
+        Log.w("BBAnimation", "onItemDroppedInBubbleBarDragZone()");
         mBarView.showDropTarget(/* isDropTarget = */ false);
         mBubbleBarPinController.hideDropTarget();
         mIsLocationUpdatedForDropTarget = false;
+        mWasStashedBeforeEnteringBubbleDragZone = false;
     }
 
     /**
