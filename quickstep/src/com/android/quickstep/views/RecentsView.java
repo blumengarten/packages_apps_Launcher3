@@ -56,6 +56,7 @@ import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCH
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_TASK_CLEAR_ALL;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_TASK_DISMISS_SWIPE_UP;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_TASK_LAUNCH_SWIPE_DOWN;
+import static com.android.launcher3.statehandlers.DesktopVisibilityController.INACTIVE_DESK_ID;
 import static com.android.launcher3.testing.shared.TestProtocol.DISMISS_ANIMATION_ENDS_MESSAGE;
 import static com.android.launcher3.touch.PagedOrientationHandler.CANVAS_TRANSLATE;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
@@ -64,6 +65,7 @@ import static com.android.launcher3.util.MultiPropertyFactory.MULTI_PROPERTY_VAL
 import static com.android.launcher3.util.SystemUiController.UI_STATE_FULLSCREEN_TASK;
 import static com.android.quickstep.BaseContainerInterface.getTaskDimension;
 import static com.android.quickstep.TaskUtils.checkCurrentOrManagedUserId;
+import static com.android.quickstep.util.DesksUtils.areMultiDesksFlagsEnabled;
 import static com.android.quickstep.util.LogUtils.splitFailureMessage;
 import static com.android.quickstep.views.ClearAllButton.DISMISS_ALPHA;
 import static com.android.quickstep.views.OverviewActionsView.HIDDEN_ACTIONS_IN_MENU;
@@ -212,7 +214,6 @@ import com.android.quickstep.recents.viewmodel.RecentsViewData;
 import com.android.quickstep.recents.viewmodel.RecentsViewModel;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.quickstep.util.AnimUtils;
-import com.android.quickstep.util.DesksUtils;
 import com.android.quickstep.util.DesktopTask;
 import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.LayoutUtils;
@@ -1926,14 +1927,16 @@ public abstract class RecentsView<
             return;
         }
 
-        // TODO: b/400532675 - The use of `currentTaskIds`, `runningTaskIds`, and `focusedTaskIds`
-        // needs to be audited so that they can work with empty desks that have no tasks.
-        int[] currentTaskIds;
         TaskView currentTaskView = getTaskViewAt(mCurrentPage);
-        if (currentTaskView != null) {
+        int[] currentTaskIds = null;
+        // Track the current DesktopTaskView through [deskId] as a desk can be empty without any
+        // tasks.
+        int currentTaskViewDeskId = INACTIVE_DESK_ID;
+        if (areMultiDesksFlagsEnabled()
+                && currentTaskView instanceof DesktopTaskView desktopTaskView) {
+            currentTaskViewDeskId = desktopTaskView.getDeskId();
+        } else if (currentTaskView != null) {
             currentTaskIds = currentTaskView.getTaskIds();
-        } else {
-            currentTaskIds = new int[0];
         }
 
         // Unload existing visible task data
@@ -1945,9 +1948,19 @@ public abstract class RecentsView<
 
         // Save running task ID if it exists before rebinding all taskViews, otherwise the task from
         // the runningTaskView currently bound could get assigned to another TaskView
-        int[] runningTaskIds = getTaskIdsForTaskViewId(mRunningTaskViewId);
-        int[] focusedTaskIds = getTaskIdsForTaskViewId(mFocusedTaskViewId);
+        TaskView runningTaskView = getRunningTaskView();
+        int[] runningTaskIds = null;
 
+        // Track the running TaskView through [deskId] as a desk can be empty without any tasks.
+        int runningTaskViewDeskId = INACTIVE_DESK_ID;
+        if (areMultiDesksFlagsEnabled()
+                && runningTaskView instanceof DesktopTaskView desktopTaskView) {
+            runningTaskViewDeskId = desktopTaskView.getDeskId();
+        } else if (runningTaskView != null) {
+            runningTaskIds = runningTaskView.getTaskIds();
+        }
+
+        int[] focusedTaskIds = getTaskIdsForTaskViewId(mFocusedTaskViewId);
         // Reset the focused task to avoiding initializing TaskViews layout as focused task during
         // binding. The focused task view will be updated after all the TaskViews are bound.
         setFocusedTaskViewId(INVALID_TASK_ID);
@@ -2054,24 +2067,24 @@ public abstract class RecentsView<
         updateTaskSize();
         updateChildTaskOrientations();
 
-        TaskView newRunningTaskView = null;
-        if (hasAllValidTaskIds(runningTaskIds)) {
+        TaskView newRunningTaskView = mUtils.getDesktopTaskViewForDeskId(runningTaskViewDeskId);
+        if (newRunningTaskView == null) {
             // Update mRunningTaskViewId to be the new TaskView that was assigned by binding
             // the full list of tasks to taskViews
             newRunningTaskView = getTaskViewByTaskIds(runningTaskIds);
-            if (newRunningTaskView != null) {
-                setRunningTaskViewId(newRunningTaskView.getTaskViewId());
+        }
+        if (newRunningTaskView != null) {
+            setRunningTaskViewId(newRunningTaskView.getTaskViewId());
+        } else {
+            if (mActiveGestureRunningTasks != null) {
+                // This will update mRunningTaskViewId and create a stub view if necessary.
+                // We try to avoid this because it can cause a scroll jump, but it is needed
+                // for cases where the running task isn't included in this load plan (e.g. if
+                // the current running task is excludedFromRecents.)
+                showCurrentTask(mActiveGestureRunningTasks, "applyLoadPlan");
+                newRunningTaskView = getRunningTaskView();
             } else {
-                if (mActiveGestureRunningTasks != null) {
-                    // This will update mRunningTaskViewId and create a stub view if necessary.
-                    // We try to avoid this because it can cause a scroll jump, but it is needed
-                    // for cases where the running task isn't included in this load plan (e.g. if
-                    // the current running task is excludedFromRecents.)
-                    showCurrentTask(mActiveGestureRunningTasks, "applyLoadPlan");
-                    newRunningTaskView = getRunningTaskView();
-                } else {
-                    setRunningTaskViewId(INVALID_TASK_ID);
-                }
+                setRunningTaskViewId(INVALID_TASK_ID);
             }
         }
 
@@ -2079,11 +2092,12 @@ public abstract class RecentsView<
         if (mNextPage != INVALID_PAGE) {
             // Restore mCurrentPage but don't call setCurrentPage() as that clobbers the scroll.
             mCurrentPage = previousCurrentPage;
-            if (hasAllValidTaskIds(currentTaskIds)) {
+            currentTaskView = mUtils.getDesktopTaskViewForDeskId(currentTaskViewDeskId);
+            if (currentTaskView == null) {
                 currentTaskView = getTaskViewByTaskIds(currentTaskIds);
-                if (currentTaskView != null) {
-                    targetPage = indexOfChild(currentTaskView);
-                }
+            }
+            if (currentTaskView != null) {
+                targetPage = indexOfChild(currentTaskView);
             }
         } else if (previousFocusedPage != INVALID_PAGE) {
             targetPage = previousFocusedPage;
@@ -4565,7 +4579,7 @@ public abstract class RecentsView<
     }
 
     private void removeDesktopTaskView(DesktopTaskView desktopTaskView) {
-        if (DesksUtils.areMultiDesksFlagsEnabled()) {
+        if (areMultiDesksFlagsEnabled()) {
             SystemUiProxy.INSTANCE
                     .get(getContext())
                     .removeDesk(desktopTaskView.getDeskId());
