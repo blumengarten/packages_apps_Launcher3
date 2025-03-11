@@ -46,6 +46,7 @@ import com.android.launcher3.util.SplitConfigurationOptions.StagePosition;
 import com.android.launcher3.util.SplitConfigurationOptions.StageType;
 import com.android.launcher3.util.TraceHelper;
 import com.android.quickstep.dagger.QuickstepBaseAppComponent;
+import com.android.quickstep.util.DesksUtils;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.recents.model.Task.TaskKey;
 import com.android.systemui.shared.system.ActivityManagerWrapper;
@@ -341,7 +342,8 @@ public class TopTaskTracker extends ISplitScreenListener.Stub implements TaskSta
 
             ArrayList<TaskInfo> tasks = new ArrayList<>(mOrderedTaskList);
             // Strip the pinned task and recents task
-            tasks.removeIf(t -> t.taskId == mPinnedTaskId || isRecentsTask(t));
+            tasks.removeIf(t -> t.taskId == mPinnedTaskId || isRecentsTask(t)
+                    ||  DesksUtils.isDesktopWallpaperTask(t));
             return new CachedTaskInfo(tasks);
         }
     }
