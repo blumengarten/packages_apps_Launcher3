@@ -870,6 +870,9 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         if (predictiveBackThreeButtonNav() && buttonType == BUTTON_BACK) {
             // set up special touch listener for back button to support predictive back
             setBackButtonTouchListener(buttonView, navButtonController);
+            // Set this View clickable, so that NearestTouchFrame.java forwards closeby touches to
+            // this View
+            buttonView.setClickable(true);
         } else {
             buttonView.setOnClickListener(view ->
                     navButtonController.onButtonClick(buttonType, view));
