@@ -141,7 +141,7 @@ public class GridCustomizationsProxy implements ProxyProvider {
     private final InvariantDeviceProfile mIdp;
 
     @Inject
-    GridCustomizationsProxy(
+    protected GridCustomizationsProxy(
             @ApplicationContext Context context,
             ThemeManager themeManager,
             LauncherPrefs prefs,
