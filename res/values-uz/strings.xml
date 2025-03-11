@@ -117,10 +117,8 @@
     <string name="default_scroll_format" msgid="7475544710230993317">"%2$ddan %1$d ta sahifa"</string>
     <string name="workspace_scroll_format" msgid="8458889198184077399">"Uy ekrani %2$ddan %1$d"</string>
     <string name="workspace_new_page" msgid="257366611030256142">"Yangi bosh ekran sahifasi"</string>
-    <!-- no translation found for app_running_state_description (5645053189564740904) -->
-    <skip />
-    <!-- no translation found for app_minimized_state_description (710740620044902509) -->
-    <skip />
+    <string name="app_running_state_description" msgid="5645053189564740904">"Faol"</string>
+    <string name="app_minimized_state_description" msgid="710740620044902509">"Yigʻilgan"</string>
     <string name="folder_opened" msgid="94695026776264709">"Jild ochildi, <xliff:g id="WIDTH">%1$d</xliff:g> ga <xliff:g id="HEIGHT">%2$d</xliff:g>"</string>
     <string name="folder_tap_to_close" msgid="4625795376335528256">"Jildni yopish uchun ustiga bosing"</string>
     <string name="folder_tap_to_rename" msgid="4017685068016979677">"O‘zgarishni saqlash uchun ustiga bosing"</string>

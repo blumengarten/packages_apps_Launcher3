@@ -117,10 +117,8 @@
     <string name="default_scroll_format" msgid="7475544710230993317">"Σελίδα %1$d από %2$d"</string>
     <string name="workspace_scroll_format" msgid="8458889198184077399">"Αρχική οθόνη %1$d από %2$d"</string>
     <string name="workspace_new_page" msgid="257366611030256142">"Νέα σελίδα αρχικής οθόνης"</string>
-    <!-- no translation found for app_running_state_description (5645053189564740904) -->
-    <skip />
-    <!-- no translation found for app_minimized_state_description (710740620044902509) -->
-    <skip />
+    <string name="app_running_state_description" msgid="5645053189564740904">"Ενεργό"</string>
+    <string name="app_minimized_state_description" msgid="710740620044902509">"Ελαχιστοποιήθηκε"</string>
     <string name="folder_opened" msgid="94695026776264709">"Άνοιγμα φακέλου, <xliff:g id="WIDTH">%1$d</xliff:g> επί <xliff:g id="HEIGHT">%2$d</xliff:g>"</string>
     <string name="folder_tap_to_close" msgid="4625795376335528256">"Πατήστε για να κλείσετε το φάκελο"</string>
     <string name="folder_tap_to_rename" msgid="4017685068016979677">"Πατήστε για να αποθηκεύσετε τη νέα ονομασία"</string>
