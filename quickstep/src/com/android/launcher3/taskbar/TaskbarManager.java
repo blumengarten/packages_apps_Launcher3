@@ -1168,7 +1168,7 @@ public class TaskbarManager {
      * @return The {@link TaskbarActivityContext} for the specified display, or
      * {@code null} if no taskbar is associated with that display.
      */
-    private TaskbarActivityContext getTaskbarForDisplay(int displayId) {
+    public TaskbarActivityContext getTaskbarForDisplay(int displayId) {
         return mTaskbars.get(displayId);
     }
 
