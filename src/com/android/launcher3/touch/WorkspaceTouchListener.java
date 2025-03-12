@@ -131,7 +131,7 @@ public class WorkspaceTouchListener extends GestureDetector.SimpleOnGestureListe
         }
 
         boolean isInAllAppsBottomSheet = mLauncher.isInState(ALL_APPS)
-                && mLauncher.getDeviceProfile().isTablet;
+                && mLauncher.getDeviceProfile().shouldShowAllAppsOnSheet();
 
         final boolean result;
         if (mLongPressState == STATE_COMPLETED) {

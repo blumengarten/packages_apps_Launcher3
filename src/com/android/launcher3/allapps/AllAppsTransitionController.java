@@ -290,7 +290,8 @@ public class AllAppsTransitionController
     private void onScaleProgressChanged() {
         final float scaleProgress = mAllAppScale.value;
         SCALE_PROPERTY.set(mLauncher.getAppsView(), scaleProgress);
-        if (!mLauncher.getAppsView().isSearching() || !mLauncher.getDeviceProfile().isTablet) {
+        if (!mLauncher.getAppsView().isSearching()
+                || !mLauncher.getDeviceProfile().shouldShowAllAppsOnSheet()) {
             mLauncher.getScrimView().setScrimHeaderScale(scaleProgress);
         }
 
