@@ -16,28 +16,34 @@
 
 package com.android.quickstep.util
 
-import android.content.Context
+import android.app.TaskInfo
+import android.content.ComponentName
+import android.content.res.Resources
 import android.window.DesktopExperienceFlags
 import com.android.systemui.shared.recents.model.Task
 
 class DesksUtils {
     companion object {
+        val sysUiPackage =
+            Resources.getSystem().getString(com.android.internal.R.string.config_systemUi)
+
         @JvmStatic
         fun areMultiDesksFlagsEnabled() =
-            DesktopExperienceFlags.ENABLE_MULTIPLE_DESKTOPS_BACKEND.isTrue() &&
-                DesktopExperienceFlags.ENABLE_MULTIPLE_DESKTOPS_FRONTEND.isTrue()
+            DesktopExperienceFlags.ENABLE_MULTIPLE_DESKTOPS_BACKEND.isTrue &&
+                DesktopExperienceFlags.ENABLE_MULTIPLE_DESKTOPS_FRONTEND.isTrue
 
         /** Returns true if this [task] contains the [DesktopWallpaperActivity]. */
         @JvmStatic
-        fun isDesktopWallpaperTask(context: Context, task: Task): Boolean {
-            val sysUiPackage =
-                context.getResources().getString(com.android.internal.R.string.config_systemUi)
-            val component = task.key.component
-            if (component != null) {
-                return component.className.contains("DesktopWallpaperActivity") &&
-                    component.packageName.contains(sysUiPackage)
-            }
-            return false
-        }
+        fun isDesktopWallpaperTask(task: Task) =
+            task.key.component?.let(::isDesktopWallpaperComponent) == true
+
+        @JvmStatic
+        fun isDesktopWallpaperTask(taskInfo: TaskInfo) =
+            taskInfo.baseIntent.component?.let(::isDesktopWallpaperComponent) == true
+
+        @JvmStatic
+        fun isDesktopWallpaperComponent(component: ComponentName) =
+            component.className.contains("DesktopWallpaperActivity") &&
+                component.packageName.contains(sysUiPackage)
     }
 }
