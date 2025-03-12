@@ -26,6 +26,7 @@
         android:layout_height="@dimen/work_scheduler_size"
         android:layout_marginBottom="@dimen/work_scheduler_bottom_margin"
         android:contentDescription="@string/work_scheduler_button_content_description"
+        android:elevation="@dimen/work_fab_elevation"
         android:src="@drawable/ic_schedule"
         android:layout_gravity="end"
         android:background="@drawable/work_scheduler_background" />
