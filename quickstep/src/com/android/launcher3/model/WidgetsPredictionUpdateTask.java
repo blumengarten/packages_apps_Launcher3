@@ -82,7 +82,7 @@ public final class WidgetsPredictionUpdateTask implements ModelUpdateTask {
                                 && !widgetsInWorkspace.contains(entry.getValue())
                         ).collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        Context context = taskController.getApp().getContext();
+        Context context = taskController.getContext();
 
         List<WidgetItem> servicePredictedItems = new ArrayList<>();
         List<String> addedWidgetApps = new ArrayList<>();

@@ -691,8 +691,11 @@ constructor(
                         "duration= " +
                         transitionDuration),
                 )
-                controller.get()?.isInDesktopMode = true
-                controller.get()?.notifyTaskbarDesktopModeListenersForEntry(transitionDuration)
+                val controller = controller.get()
+                if (controller != null && !controller.isInDesktopMode) {
+                    controller.isInDesktopMode = true
+                    controller.notifyTaskbarDesktopModeListenersForEntry(transitionDuration)
+                }
             }
         }
 
@@ -704,8 +707,11 @@ constructor(
                         "duration= " +
                         transitionDuration),
                 )
-                controller.get()?.isInDesktopMode = false
-                controller.get()?.notifyTaskbarDesktopModeListenersForExit(transitionDuration)
+                val controller = controller.get()
+                if (controller != null && controller.isInDesktopMode) {
+                    controller.isInDesktopMode = false
+                    controller.notifyTaskbarDesktopModeListenersForExit(transitionDuration)
+                }
             }
         }
 

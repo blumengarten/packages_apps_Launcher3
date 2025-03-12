@@ -19,7 +19,9 @@ package com.android.quickstep.recents.ui.mapper
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
+import android.platform.test.annotations.DisableFlags
 import android.platform.test.annotations.EnableFlags
+import android.platform.test.flag.junit.SetFlagsRule
 import android.view.Surface
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -31,11 +33,14 @@ import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.LiveTile
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.Snapshot
 import com.android.systemui.shared.recents.model.ThumbnailData
 import com.google.common.truth.Truth.assertThat
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class TaskUiStateMapperTest {
+
+    @get:Rule val mSetFlagsRule = SetFlagsRule()
 
     /** TaskHeaderUiState */
     @Test
@@ -47,6 +52,29 @@ class TaskUiStateMapperTest {
                 clickCloseListener = null,
             )
         assertThat(result).isEqualTo(TaskHeaderUiState.HideHeader)
+    }
+
+    @DisableFlags(Flags.FLAG_ENABLE_DESKTOP_EXPLODED_VIEW)
+    @Test
+    fun explodedFlagDisabled_returnsHideHeader() {
+        val inputs =
+            listOf(
+                TASK_DATA,
+                TASK_DATA.copy(thumbnailData = null),
+                TASK_DATA.copy(isLocked = true),
+                TASK_DATA.copy(title = null),
+            )
+        val closeCallback = View.OnClickListener {}
+        val expected = TaskHeaderUiState.HideHeader
+        inputs.forEach { taskData ->
+            val result =
+                TaskUiStateMapper.toTaskHeaderState(
+                    taskData = taskData,
+                    hasHeader = true,
+                    clickCloseListener = closeCallback,
+                )
+            assertThat(result).isEqualTo(expected)
+        }
     }
 
     @EnableFlags(Flags.FLAG_ENABLE_DESKTOP_EXPLODED_VIEW)

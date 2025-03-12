@@ -28,6 +28,7 @@ import android.window.TransitionInfo
 import androidx.annotation.BinderThread
 import androidx.annotation.UiThread
 import androidx.annotation.VisibleForTesting
+import com.android.app.tracing.traceSection
 import com.android.internal.jank.Cuj
 import com.android.launcher3.Flags.enableAltTabKqsOnConnectedDisplays
 import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
@@ -143,35 +144,38 @@ constructor(
      * completion (returns false).
      */
     @UiThread
-    private fun processNextCommand() {
-        val command: CommandInfo =
-            commandQueue.firstOrNull()
-                ?: run {
-                    Log.d(TAG, "no pending commands to be executed.")
-                    return
-                }
-
-        command.status = CommandStatus.PROCESSING
-        Log.d(TAG, "executing command: $command")
-
-        if (enableOverviewCommandHelperTimeout()) {
-            coroutineScope.launch(dispatcherProvider.main) {
-                withTimeout(QUEUE_WAIT_DURATION_IN_MS) {
-                    executeCommandSuspended(command)
-                    ensureActive()
-                    onCommandFinished(command)
-                }
+    private fun processNextCommand() =
+        traceSection("OverviewCommandHelper.processNextCommand") {
+            val command: CommandInfo? = commandQueue.firstOrNull()
+            if (command == null) {
+                Log.d(TAG, "no pending commands to be executed.")
+                return@traceSection
             }
-        } else {
-            val result = executeCommand(command, onCallbackResult = { onCommandFinished(command) })
-            Log.d(TAG, "command executed: $command with result: $result")
-            if (result) {
-                onCommandFinished(command)
+
+            command.status = CommandStatus.PROCESSING
+            Log.d(TAG, "executing command: $command")
+
+            if (enableOverviewCommandHelperTimeout()) {
+                coroutineScope.launch(dispatcherProvider.main) {
+                    traceSection("OverviewCommandHelper.executeCommandWithTimeout") {
+                        withTimeout(QUEUE_WAIT_DURATION_IN_MS) {
+                            executeCommandSuspended(command)
+                            ensureActive()
+                            onCommandFinished(command)
+                        }
+                    }
+                }
             } else {
-                Log.d(TAG, "waiting for command callback: $command")
+                val result =
+                    executeCommand(command, onCallbackResult = { onCommandFinished(command) })
+                Log.d(TAG, "command executed: $command with result: $result")
+                if (result) {
+                    onCommandFinished(command)
+                } else {
+                    Log.d(TAG, "waiting for command callback: $command")
+                }
             }
         }
-    }
 
     /**
      * Executes the task and returns true if next task can be executed. If false, then the next task

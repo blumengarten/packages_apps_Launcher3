@@ -127,6 +127,29 @@ class SimpleBroadcastReceiverTest {
     }
 
     @Test
+    fun sync_register_withCompletionRunnable_and_permission_and_flag() {
+        underTest =
+            SimpleBroadcastReceiver(context, Handler(Looper.getMainLooper()), intentConsumer)
+
+        underTest.register(completionRunnable, "permission", 1, "test_action_1", "test_action_2")
+        getInstrumentation().waitForIdleSync()
+
+        verify(context)
+            .registerReceiver(
+                same(underTest),
+                intentFilterCaptor.capture(),
+                eq("permission"),
+                eq(null),
+                eq(1),
+            )
+        verify(completionRunnable).run()
+        val intentFilter = intentFilterCaptor.value
+        assertThat(intentFilter.countActions()).isEqualTo(2)
+        assertThat(intentFilter.getAction(0)).isEqualTo("test_action_1")
+        assertThat(intentFilter.getAction(1)).isEqualTo("test_action_2")
+    }
+
+    @Test
     fun async_unregister() {
         underTest.unregisterReceiverSafely()
 

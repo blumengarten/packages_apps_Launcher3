@@ -60,8 +60,6 @@ class BubbleBarLocationDropTarget(
 
     override fun onDrop(dragObject: DropTarget.DragObject, options: DragOptions) {
         val itemInfo = dragObject.dragInfo ?: return
-        // TODO(b/397459664) : fix task bar icon animation after drop
-        // TODO(b/397459664) : update bubble bar location
         bubbleBarDragListener.onLauncherItemDroppedOverBubbleBarDragZone(
             bubbleBarLocation,
             itemInfo,
@@ -77,8 +75,6 @@ class BubbleBarLocationDropTarget(
     }
 
     override fun onDragExit(dragObject: DropTarget.DragObject) {
-        // TODO(b/397459664) : fix the issue for no bubbles, when moving task bar icon out of
-        // the bubble bar drag zone drag ends and swipes gesture swipes the overview
         if (!isShowingDropTarget) return
         isShowingDropTarget = false
         bubbleBarDragListener.onLauncherItemDraggedOutsideBubbleBarDropZone()

@@ -28,6 +28,7 @@ import com.android.launcher3.graphics.GridCustomizationsProxy;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.LauncherIcons.IconPool;
 import com.android.launcher3.model.ItemInstallQueue;
+import com.android.launcher3.model.LoaderCursor.LoaderCursorFactory;
 import com.android.launcher3.model.WidgetsFilterDataProvider;
 import com.android.launcher3.pm.InstallSessionHelper;
 import com.android.launcher3.pm.UserCache;
@@ -86,6 +87,8 @@ public interface LauncherBaseAppComponent {
     LauncherAppState getLauncherAppState();
     GridCustomizationsProxy getGridCustomizationsProxy();
     WidgetsFilterDataProvider getWidgetsFilterDataProvider();
+
+    LoaderCursorFactory getLoaderCursorFactory();
 
     /** Builder for LauncherBaseAppComponent. */
     interface Builder {

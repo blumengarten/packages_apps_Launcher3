@@ -323,6 +323,8 @@
     <string name="edit_home_screen">Edit Home Screen</string>
     <!-- Text for settings button [CHAR LIMIT=20]-->
     <string name="settings_button_text">Home settings</string>
+    <!-- Text for app menu button [CHAR LIMIT=30]-->
+    <string name="all_apps_home_screen">Apps</string>
     <!-- Message shown when a feature is disabled by the administrator -->
     <string name="msg_disabled_by_admin">Disabled by your admin</string>
 
@@ -468,6 +470,12 @@
 
     <!-- Accessibility action to show quick actions menu for an icon. [CHAR_LIMIT=30] -->
     <string name="action_deep_shortcut">Shortcut Menu</string>
+
+    <!-- Accessibility name for the app widget resize frame. -->
+    <string name="widget_frame_name">Widget Resize Frame for <xliff:g id="string" example="Clock">%1$s</xliff:g></string>
+
+    <!-- Accessibility action to close the widget resize frame. [CHAR_LIMIT=30] -->
+    <string name="action_close">Close</string>
 
     <!-- Accessibility action to dismiss a notification in the shortcuts menu for an icon. [CHAR_LIMIT=30] -->
     <string name="action_dismiss_notification">Dismiss</string>

@@ -16,6 +16,7 @@
 
 package com.android.launcher3.dragndrop;
 
+import static com.android.launcher3.Flags.removeAppsRefreshOnRightClick;
 import static com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_NOT_PINNABLE;
 
 import android.graphics.Point;
@@ -521,17 +522,21 @@ public abstract class DragController<T extends ActivityContext>
 
         mDragObject.dragComplete = true;
         if (mIsInPreDrag) {
-            if (dropTarget != null) {
-                dropTarget.onDragExit(mDragObject);
+            if (removeAppsRefreshOnRightClick()) {
+                mDragObject.cancelled = true;
+            } else {
+                if (dropTarget != null) {
+                    dropTarget.onDragExit(mDragObject);
+                }
+                return;
             }
-            return;
         }
 
         // Drop onto the target.
         boolean accepted = false;
         if (dropTarget != null) {
             dropTarget.onDragExit(mDragObject);
-            if (dropTarget.acceptDrop(mDragObject)) {
+            if (!mIsInPreDrag && dropTarget.acceptDrop(mDragObject)) {
                 if (flingAnimation != null) {
                     flingAnimation.run();
                 } else {
@@ -540,7 +545,7 @@ public abstract class DragController<T extends ActivityContext>
                 accepted = true;
             }
         }
-        final View dropTargetAsView = dropTarget instanceof View ? (View) dropTarget : null;
+        final View dropTargetAsView = dropTarget.getDropView();
         dispatchDropComplete(dropTargetAsView, accepted);
     }
 

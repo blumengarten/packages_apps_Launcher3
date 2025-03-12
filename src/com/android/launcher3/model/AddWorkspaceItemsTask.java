@@ -66,13 +66,6 @@ public class AddWorkspaceItemsTask implements ModelUpdateTask {
 
     /**
      * @param itemList items to add on the workspace
-     */
-    public AddWorkspaceItemsTask(@NonNull final List<Pair<ItemInfo, Object>> itemList) {
-        this(itemList, new WorkspaceItemSpaceFinder());
-    }
-
-    /**
-     * @param itemList items to add on the workspace
      * @param itemSpaceFinder inject WorkspaceItemSpaceFinder dependency for testing
      */
     public AddWorkspaceItemsTask(@NonNull final List<Pair<ItemInfo, Object>> itemList,
@@ -91,7 +84,7 @@ public class AddWorkspaceItemsTask implements ModelUpdateTask {
 
         final ArrayList<ItemInfo> addedItemsFinal = new ArrayList<>();
         final IntArray addedWorkspaceScreensFinal = new IntArray();
-        final Context context = taskController.getApp().getContext();
+        final Context context = taskController.getContext();
 
         synchronized (dataModel) {
             IntArray workspaceScreens = dataModel.collectWorkspaceScreens();
@@ -133,7 +126,7 @@ public class AddWorkspaceItemsTask implements ModelUpdateTask {
 
             for (ItemInfo item : filteredItems) {
                 // Find appropriate space for the item.
-                int[] coords = mItemSpaceFinder.findSpaceForItem(taskController.getApp(), dataModel,
+                int[] coords = mItemSpaceFinder.findSpaceForItem(
                         workspaceScreens, addedWorkspaceScreensFinal, item.spanX, item.spanY);
                 int screenId = coords[0];
 
@@ -192,7 +185,7 @@ public class AddWorkspaceItemsTask implements ModelUpdateTask {
                             continue;
                         }
 
-                        IconCache cache = taskController.getApp().getIconCache();
+                        IconCache cache = taskController.getIconCache();
                         WorkspaceItemInfo wii = (WorkspaceItemInfo) itemInfo;
                         wii.title = "";
                         wii.bitmap = cache.getDefaultIcon(item.user);

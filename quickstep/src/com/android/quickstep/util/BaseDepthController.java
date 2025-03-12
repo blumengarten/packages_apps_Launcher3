@@ -24,6 +24,7 @@ import android.util.Log;
 import android.view.AttachedSurfaceControl;
 import android.view.SurfaceControl;
 
+import com.android.launcher3.Flags;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
@@ -101,7 +102,12 @@ public class BaseDepthController {
 
     public BaseDepthController(Launcher activity) {
         mLauncher = activity;
-        mMaxBlurRadius = activity.getResources().getInteger(R.integer.max_depth_blur_radius);
+        if (Flags.allAppsBlur()) {
+            mMaxBlurRadius = activity.getResources().getDimensionPixelSize(
+                    R.dimen.max_depth_blur_radius_enhanced);
+        } else {
+            mMaxBlurRadius = activity.getResources().getInteger(R.integer.max_depth_blur_radius);
+        }
         mWallpaperManager = activity.getSystemService(WallpaperManager.class);
 
         MultiPropertyFactory<BaseDepthController> depthProperty =

@@ -122,6 +122,9 @@ constructor(
             field = max(value, minMaxWidth)
         }
 
+    var isExpanded: Boolean = false
+        private set
+
     override fun onFinishInflate() {
         super.onFinishInflate()
         iconView = findViewById(R.id.icon_view)
@@ -356,6 +359,7 @@ constructor(
                 ObjectAnimator.ofFloat(iconArrowView, SCALE_Y, -1f),
             )
             animator!!.setDuration(MENU_BACKGROUND_REVEAL_DURATION.toLong())
+            isExpanded = true
         } else {
             // Clip expanded text with reveal animation so it doesn't go beyond the edge of the menu
             val expandedTextClipAnim =
@@ -390,6 +394,7 @@ constructor(
                 ObjectAnimator.ofFloat(iconArrowView, SCALE_Y, 1f),
             )
             animator!!.setDuration(MENU_BACKGROUND_HIDE_DURATION.toLong())
+            isExpanded = false
         }
 
         if (!animated) animator!!.duration = 0
@@ -413,6 +418,17 @@ constructor(
         if (animator != null && animator!!.isStarted) {
             animator!!.cancel()
             animator = null
+        }
+    }
+
+    override fun focusSearch(direction: Int): View? {
+        if (mParent == null) return null
+        return when (direction) {
+            FOCUS_RIGHT,
+            FOCUS_DOWN -> mParent.focusSearch(this, View.FOCUS_FORWARD)
+            FOCUS_UP,
+            FOCUS_LEFT -> mParent.focusSearch(this, View.FOCUS_BACKWARD)
+            else -> super.focusSearch(direction)
         }
     }
 

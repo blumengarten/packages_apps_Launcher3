@@ -166,7 +166,7 @@ public class WidgetPickerActivity extends BaseActivity implements
         mApp = LauncherAppState.getInstance(this);
         InvariantDeviceProfile idp = mApp.getInvariantDeviceProfile();
         mDeviceProfile = idp.getDeviceProfile(this);
-        mModel = new WidgetsModel();
+        mModel = new WidgetsModel(mApp.getContext());
         mWidgetPickerDataProvider = new WidgetPickerDataProvider(this);
 
         setContentView(R.layout.widget_picker_activity);
@@ -309,8 +309,7 @@ public class WidgetPickerActivity extends BaseActivity implements
      */
     private void refreshAndBindWidgets() {
         MODEL_EXECUTOR.execute(() -> {
-            LauncherAppState app = LauncherAppState.getInstance(this);
-            mModel.update(app, null);
+            mModel.update(null);
 
             StringCache stringCache = new StringCache();
             stringCache.loadStrings(this);
@@ -321,9 +320,10 @@ public class WidgetPickerActivity extends BaseActivity implements
             // animation.
             openWidgetsSheet();
             if (mUiSurface != null) {
-                mWidgetPredictionsRequester = new WidgetPredictionsRequester(app.getContext(),
-                        mUiSurface, mModel.getWidgetsByComponentKeyForPicker());
-                mWidgetPredictionsRequester.request(mAddedWidgets, /*listener=*/ this);
+                mWidgetPredictionsRequester = new WidgetPredictionsRequester(
+                        getApplicationContext(), mUiSurface,
+                        mModel.getWidgetsByComponentKeyForPicker());
+                mWidgetPredictionsRequester.request(mAddedWidgets, this);
             }
         });
     }

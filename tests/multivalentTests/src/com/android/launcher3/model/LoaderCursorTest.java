@@ -55,7 +55,6 @@ import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.database.MatrixCursor;
 import android.graphics.Bitmap;
@@ -76,6 +75,7 @@ import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
 import com.android.launcher3.util.Executors;
 import com.android.launcher3.util.LauncherModelHelper;
+import com.android.launcher3.util.LauncherModelHelper.SandboxModelContext;
 import com.android.launcher3.util.PackageManagerHelper;
 
 import org.junit.After;
@@ -96,11 +96,10 @@ public class LoaderCursorTest {
 
     private LauncherModelHelper mModelHelper;
     private LauncherAppState mApp;
-    private PackageManagerHelper mPmHelper;
 
     private MatrixCursor mCursor;
     private InvariantDeviceProfile mIDP;
-    private Context mContext;
+    private SandboxModelContext mContext;
 
     private LoaderCursor mLoaderCursor;
 
@@ -116,7 +115,6 @@ public class LoaderCursorTest {
         mContext = mModelHelper.sandboxContext;
         mIDP = InvariantDeviceProfile.INSTANCE.get(mContext);
         mApp = LauncherAppState.getInstance(mContext);
-        mPmHelper = PackageManagerHelper.INSTANCE.get(mContext);
 
         mCursor = new MatrixCursor(new String[] {
                 ICON, TITLE, _ID, CONTAINER, ITEM_TYPE,
@@ -126,7 +124,8 @@ public class LoaderCursorTest {
         });
 
         UserManagerState ums = new UserManagerState();
-        mLoaderCursor = new LoaderCursor(mCursor, mApp, ums, mPmHelper, null);
+        mLoaderCursor = mContext.getAppComponent().getLoaderCursorFactory()
+                .createLoaderCursor(mCursor, ums, null);
         ums.allUsers.put(0, Process.myUserHandle());
     }
 

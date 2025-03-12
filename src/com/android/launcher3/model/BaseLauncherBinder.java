@@ -26,6 +26,7 @@ import static com.android.launcher3.model.ModelUtils.currentScreenContentFilter;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
 
+import android.content.Context;
 import android.os.Trace;
 import android.util.Log;
 import android.util.Pair;
@@ -34,11 +35,12 @@ import android.view.View;
 import androidx.annotation.NonNull;
 
 import com.android.launcher3.InvariantDeviceProfile;
-import com.android.launcher3.LauncherAppState;
+import com.android.launcher3.LauncherModel;
 import com.android.launcher3.LauncherModel.CallbackTask;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.celllayout.CellPosMapper;
 import com.android.launcher3.config.FeatureFlags;
+import com.android.launcher3.dagger.ApplicationContext;
 import com.android.launcher3.model.BgDataModel.Callbacks;
 import com.android.launcher3.model.BgDataModel.FixedContainerItems;
 import com.android.launcher3.model.data.AppInfo;
@@ -54,6 +56,10 @@ import com.android.launcher3.util.PackageUserKey;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.widget.model.WidgetsListBaseEntriesBuilder;
 import com.android.launcher3.widget.model.WidgetsListBaseEntry;
+
+import dagger.assisted.Assisted;
+import dagger.assisted.AssistedFactory;
+import dagger.assisted.AssistedInject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,7 +82,9 @@ public class BaseLauncherBinder {
 
     protected final LooperExecutor mUiExecutor;
 
-    protected final LauncherAppState mApp;
+    private final Context mContext;
+    private final InvariantDeviceProfile mIDP;
+    private final LauncherModel mModel;
     protected final BgDataModel mBgDataModel;
     private final AllAppsList mBgAllAppsList;
 
@@ -84,10 +92,18 @@ public class BaseLauncherBinder {
 
     private int mMyBindingId;
 
-    public BaseLauncherBinder(LauncherAppState app, BgDataModel dataModel,
-            AllAppsList allAppsList, Callbacks[] callbacksList) {
+    @AssistedInject
+    public BaseLauncherBinder(
+            @ApplicationContext Context context,
+            InvariantDeviceProfile idp,
+            LauncherModel model,
+            BgDataModel dataModel,
+            AllAppsList allAppsList,
+            @Assisted Callbacks[] callbacksList) {
         mUiExecutor = MAIN_EXECUTOR;
-        mApp = app;
+        mContext = context;
+        mIDP = idp;
+        mModel = model;
         mBgDataModel = dataModel;
         mBgAllAppsList = allAppsList;
         mCallbacksList = callbacksList;
@@ -110,15 +126,14 @@ public class BaseLauncherBinder {
                 mBgDataModel.extraItems.forEach(extraItems::add);
                 if (incrementBindId) {
                     mBgDataModel.lastBindId++;
-                    mBgDataModel.lastLoadId = mApp.getModel().getLastLoadId();
+                    mBgDataModel.lastLoadId = mModel.getLastLoadId();
                 }
                 mMyBindingId = mBgDataModel.lastBindId;
                 workspaceItemCount = mBgDataModel.itemsIdMap.size();
             }
 
             for (Callbacks cb : mCallbacksList) {
-                new UnifiedWorkspaceBinder(cb, mUiExecutor, mApp, mBgDataModel, mMyBindingId,
-                        itemsIdMap, extraItems, orderedScreenIds)
+                new UnifiedWorkspaceBinder(cb, itemsIdMap, extraItems, orderedScreenIds)
                         .bind(isBindSync, workspaceItemCount);
             }
         } finally {
@@ -162,9 +177,8 @@ public class BaseLauncherBinder {
         if (!WIDGETS_ENABLED) {
             return;
         }
-        List<WidgetsListBaseEntry> widgets = new WidgetsListBaseEntriesBuilder(mApp.getContext())
+        List<WidgetsListBaseEntry> widgets = new WidgetsListBaseEntriesBuilder(mContext)
                 .build(mBgDataModel.widgetsModel.getWidgetsByPackageItemForPicker());
-
         executeCallbacksTask(c -> c.bindAllWidgets(widgets), mUiExecutor);
     }
 
@@ -181,10 +195,9 @@ public class BaseLauncherBinder {
     /**
      * Sorts the set of items by hotseat, workspace (spatially from top to bottom, left to right)
      */
-    protected void sortWorkspaceItemsSpatially(InvariantDeviceProfile profile,
-            ArrayList<ItemInfo> workspaceItems) {
-        final int screenCols = profile.numColumns;
-        final int screenCellCount = profile.numColumns * profile.numRows;
+    protected void sortWorkspaceItemsSpatially(ArrayList<ItemInfo> workspaceItems) {
+        final int screenCols = mIDP.numColumns;
+        final int screenCellCount = mIDP.numColumns * mIDP.numRows;
         Collections.sort(workspaceItems, (lhs, rhs) -> {
             if (lhs.container == rhs.container) {
                 // Within containers, order by their spatial position in that container
@@ -240,30 +253,18 @@ public class BaseLauncherBinder {
 
     private class UnifiedWorkspaceBinder {
 
-        private final Executor mUiExecutor;
         private final Callbacks mCallbacks;
 
-        private final LauncherAppState mApp;
-        private final BgDataModel mBgDataModel;
-
-        private final int mMyBindingId;
         private final IntSparseArrayMap<ItemInfo> mItemIdMap;
         private final IntArray mOrderedScreenIds;
         private final ArrayList<FixedContainerItems> mExtraItems;
 
-        UnifiedWorkspaceBinder(Callbacks callbacks,
-                Executor uiExecutor,
-                LauncherAppState app,
-                BgDataModel bgDataModel,
-                int myBindingId,
+        UnifiedWorkspaceBinder(
+                Callbacks callbacks,
                 IntSparseArrayMap<ItemInfo> itemIdMap,
                 ArrayList<FixedContainerItems> extraItems,
                 IntArray orderedScreenIds) {
             mCallbacks = callbacks;
-            mUiExecutor = uiExecutor;
-            mApp = app;
-            mBgDataModel = bgDataModel;
-            mMyBindingId = myBindingId;
             mItemIdMap = itemIdMap;
             mExtraItems = extraItems;
             mOrderedScreenIds = orderedScreenIds;
@@ -289,9 +290,8 @@ public class BaseLauncherBinder {
                     (WIDGET_FILTER.test(item) ? otherAppWidgets : otherWorkspaceItems).add(item);
                 }
             });
-            final InvariantDeviceProfile idp = mApp.getInvariantDeviceProfile();
-            sortWorkspaceItemsSpatially(idp, currentWorkspaceItems);
-            sortWorkspaceItemsSpatially(idp, otherWorkspaceItems);
+            sortWorkspaceItemsSpatially(currentWorkspaceItems);
+            sortWorkspaceItemsSpatially(otherWorkspaceItems);
 
             // Tell the workspace that we're about to start binding items
             executeCallbacksTask(c -> {
@@ -352,7 +352,7 @@ public class BaseLauncherBinder {
             executeCallbacksTask(c -> c.bindStringCache(cacheClone), pendingExecutor);
 
             executeCallbacksTask(c -> c.finishBindingItems(currentScreenIds), pendingExecutor);
-            pendingExecutor.execute(() -> ItemInstallQueue.INSTANCE.get(mApp.getContext())
+            pendingExecutor.execute(() -> ItemInstallQueue.INSTANCE.get(mContext)
                     .resumeModelPush(FLAG_LOADER_RUNNING));
         }
 
@@ -367,8 +367,8 @@ public class BaseLauncherBinder {
                 return;
             }
 
-            ModelWriter writer = mApp.getModel()
-                    .getWriter(false /* verifyChanges */, CellPosMapper.DEFAULT, null);
+            ModelWriter writer = mModel.getWriter(
+                    false /* verifyChanges */, CellPosMapper.DEFAULT, null);
             List<Pair<ItemInfo, View>> bindItems = items.stream()
                     .map(i -> Pair.create(i, inflater.inflateItem(i, writer, null)))
                     .collect(Collectors.toList());
@@ -397,5 +397,10 @@ public class BaseLauncherBinder {
                 task.execute(mCallbacks);
             });
         }
+    }
+
+    @AssistedFactory
+    public interface BaseLauncherBinderFactory {
+        BaseLauncherBinder createBinder(Callbacks[] callbacks);
     }
 }

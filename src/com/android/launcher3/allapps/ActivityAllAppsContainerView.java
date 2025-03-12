@@ -181,6 +181,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     private ScrimView mScrimView;
     private int mHeaderColor;
     private int mBottomSheetBackgroundColor;
+    private float mBottomSheetBackgroundAlpha = 1f;
     private int mTabsProtectionAlpha;
     @Nullable private AllAppsTransitionController mAllAppsTransitionController;
 
@@ -311,7 +312,17 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
                 0,
                 0 // Bottom left
         };
-        mBottomSheetBackgroundColor = getContext().getColor(R.color.materialColorSurfaceDim);
+        if (Flags.allAppsBlur()) {
+            int resId = Utilities.isDarkTheme(getContext())
+                    ? android.R.color.system_accent1_800 : android.R.color.system_accent1_100;
+            int layerAbove = ColorUtils.setAlphaComponent(getResources().getColor(resId, null),
+                    (int) (0.4f * 255));
+            int layerBelow = ColorUtils.setAlphaComponent(Color.WHITE, (int) (0.1f * 255));
+            mBottomSheetBackgroundColor = ColorUtils.compositeColors(layerAbove, layerBelow);
+        } else {
+            mBottomSheetBackgroundColor = getContext().getColor(R.color.materialColorSurfaceDim);
+        }
+        mBottomSheetBackgroundAlpha = Color.alpha(mBottomSheetBackgroundColor) / 255.0f;
         updateBackgroundVisibility(mActivityContext.getDeviceProfile());
         mSearchUiManager.initializeSearch(this);
     }
@@ -1152,7 +1163,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
 
         if (!grid.isVerticalBarLayout() || FeatureFlags.enableResponsiveWorkspace()) {
             int topPadding = grid.allAppsPadding.top;
-            if (isSearchBarFloating() && !grid.isTablet) {
+            if (isSearchBarFloating() && !grid.shouldShowAllAppsOnSheet()) {
                 topPadding += getResources().getDimensionPixelSize(
                         R.dimen.all_apps_additional_top_padding_floating_search);
             }
@@ -1401,7 +1412,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         // Draw full background panel for tablets.
         if (hasBottomSheet) {
             mHeaderPaint.setColor(mBottomSheetBackgroundColor);
-            mHeaderPaint.setAlpha(255);
+            mHeaderPaint.setAlpha((int) (mBottomSheetBackgroundAlpha * 255));
 
             mTmpRectF.set(
                     leftWithScale,
@@ -1422,6 +1433,10 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         }
         if (mHeaderPaint.getColor() == mScrimColor || mHeaderPaint.getColor() == 0) {
             return;
+        }
+
+        if (hasBottomSheet) {
+            mHeaderPaint.setAlpha((int) (mHeaderPaint.getAlpha() * mBottomSheetBackgroundAlpha));
         }
 
         // Draw header on background panel
@@ -1455,7 +1470,11 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
                 mHeaderPaint.setColor(Color.BLUE);
                 mHeaderPaint.setAlpha(255);
             } else {
-                mHeaderPaint.setAlpha((int) (getAlpha() * mTabsProtectionAlpha));
+                float tabAlpha = getAlpha() * mTabsProtectionAlpha;
+                if (hasBottomSheet) {
+                    tabAlpha *= mBottomSheetBackgroundAlpha;
+                }
+                mHeaderPaint.setAlpha((int) tabAlpha);
             }
             float left = 0f;
             float right = canvas.getWidth();
@@ -1507,7 +1526,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     public int getHeaderBottom() {
         int bottom = (int) getTranslationY() + mHeader.getClipTop();
         if (isSearchBarFloating()) {
-            if (mActivityContext.getDeviceProfile().isTablet) {
+            if (mActivityContext.getDeviceProfile().shouldShowAllAppsOnSheet()) {
                 return bottom + mBottomSheetBackground.getTop();
             }
             return bottom;

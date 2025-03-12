@@ -42,8 +42,8 @@ import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_A
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_BACK_DISABLED;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_BACK_DISMISS_IME;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_HOME_DISABLED;
-import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_VISIBLE;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_SWITCHER_BUTTON_VISIBLE;
+import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_IME_VISIBLE;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_NAV_BAR_HIDDEN;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_NOTIFICATION_PANEL_EXPANDED;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_OVERVIEW_DISABLED;
@@ -487,8 +487,17 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         mPropertyHolders.add(
                 new StatePropertyHolder(mHomeButtonAlpha.get(
                         ALPHA_INDEX_KEYGUARD_OR_DISABLE),
-                        flags -> (flags & FLAG_KEYGUARD_VISIBLE) == 0
-                                && (flags & FLAG_DISABLE_HOME) == 0 && !mContext.isGestureNav()));
+                        flags -> {
+                            /* when the keyguard is visible hide home button. Anytime we are
+                             * occluded we want to show the home button for apps over keyguard.
+                             * however we don't want to show when not occluded/visible.
+                             * (visible false || occluded true) && disable false && not gnav
+                             */
+                            return ((flags & FLAG_KEYGUARD_VISIBLE) == 0
+                                    || (flags & FLAG_KEYGUARD_OCCLUDED) != 0)
+                                    && (flags & FLAG_DISABLE_HOME) == 0
+                                    && !mContext.isGestureNav();
+                        }));
 
         // Recents button
         mRecentsButton = addButton(R.drawable.ic_sysbar_recent, BUTTON_RECENTS,

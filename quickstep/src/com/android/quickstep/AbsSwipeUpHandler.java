@@ -136,6 +136,7 @@ import com.android.launcher3.util.VibratorWrapper;
 import com.android.launcher3.util.WindowBounds;
 import com.android.quickstep.GestureState.GestureEndTarget;
 import com.android.quickstep.RemoteTargetGluer.RemoteTargetHandle;
+import com.android.quickstep.fallback.window.RecentsWindowFlags;
 import com.android.quickstep.util.ActiveGestureErrorDetector;
 import com.android.quickstep.util.ActiveGestureLog;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
@@ -903,7 +904,9 @@ public abstract class AbsSwipeUpHandler<
     }
 
     public Intent getLaunchIntent() {
-        return mGestureState.getOverviewIntent();
+        // todo differentiate intent based on if we are on home or in app for overview in window
+        boolean useHomeIntentForWindow = RecentsWindowFlags.getEnableOverviewInWindow();
+        return useHomeIntentForWindow ? getHomeIntent() : mGestureState.getOverviewIntent();
     }
     /**
      * Called when the value of {@link #mCurrentShift} changes

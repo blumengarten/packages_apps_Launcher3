@@ -101,7 +101,7 @@ class TaskbarBackgroundRenderer(private val context: TaskbarActivityContext) {
 
         fullCornerRadius = context.cornerRadius.toFloat()
         cornerRadius = fullCornerRadius
-        if (!context.areDesktopTasksVisible()) {
+        if (!context.isInDesktopMode()) {
             setCornerRoundness(MAX_ROUNDNESS)
         }
     }

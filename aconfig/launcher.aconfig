@@ -311,6 +311,13 @@ flag {
 }
 
 flag {
+    name: "all_apps_blur"
+    namespace: "launcher"
+    description: "Content behind the all apps panel in Launcher will be blurred."
+    bug: "400827727"
+}
+
+flag {
     name: "multiline_search_bar"
     namespace: "launcher"
     description: "Search bar can wrap to multi-line"
@@ -662,6 +669,16 @@ flag {
   namespace: "launcher"
   description: "Syncs the two animations (app launch, taskbar stash) so they play at the same time."
   bug: "319162553"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+}
+
+flag {
+  name: "remove_apps_refresh_on_right_click"
+  namespace: "launcher"
+  description: "Remove predicted apps refresh on right click"
+  bug: "343650193"
   metadata {
     purpose: PURPOSE_BUGFIX
   }

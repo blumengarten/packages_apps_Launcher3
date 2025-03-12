@@ -53,7 +53,7 @@ DeviceProfile:
 	bottomSheetTopPadding: 114.0px (43.42857dp)
 	bottomSheetOpenDuration: 267
 	bottomSheetCloseDuration: 267
-	bottomSheetWorkspaceScale: 1.0
+	bottomSheetWorkspaceScale: 0.97
 	bottomSheetDepth: 0.0
 	allAppsShiftRange: 1080.0px (411.42856dp)
 	allAppsOpenDuration: 600

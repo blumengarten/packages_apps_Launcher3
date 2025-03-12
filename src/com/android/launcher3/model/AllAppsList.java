@@ -34,6 +34,7 @@ import androidx.annotation.Nullable;
 
 import com.android.launcher3.AppFilter;
 import com.android.launcher3.compat.AlphabeticIndexCompat;
+import com.android.launcher3.dagger.LauncherAppSingleton;
 import com.android.launcher3.icons.IconCache;
 import com.android.launcher3.model.BgDataModel.Callbacks;
 import com.android.launcher3.model.data.AppInfo;
@@ -53,11 +54,13 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import javax.inject.Inject;
+
 
 /**
  * Stores the list of all applications for the all apps view.
  */
-@SuppressWarnings("NewApi")
+@LauncherAppSingleton
 public class AllAppsList {
 
     private static final String TAG = "AllAppsList";
@@ -70,10 +73,10 @@ public class AllAppsList {
     public final ArrayList<AppInfo> data = new ArrayList<>(DEFAULT_APPLICATIONS_NUMBER);
 
     @NonNull
-    private IconCache mIconCache;
+    private final IconCache mIconCache;
 
     @NonNull
-    private AppFilter mAppFilter;
+    private final AppFilter mAppFilter;
 
     private boolean mDataChanged = false;
     private Consumer<AppInfo> mRemoveListener = NO_OP_CONSUMER;
@@ -92,6 +95,7 @@ public class AllAppsList {
     /**
      * Boring constructor.
      */
+    @Inject
     public AllAppsList(IconCache iconCache, AppFilter appFilter) {
         mIconCache = iconCache;
         mAppFilter = appFilter;
