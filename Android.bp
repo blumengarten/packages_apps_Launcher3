@@ -408,6 +408,9 @@ android_library {
     lint: {
         baseline_filename: "lint-baseline.xml",
     },
+    flags_packages: [
+        "com_android_launcher3_flags",
+    ],
 }
 
 //
