@@ -82,9 +82,9 @@
     <dimen name="task_thumbnail_icon_menu_drawable_touch_size">44dp</dimen>
     <dimen name="task_thumbnail_icon_menu_elevation">4dp</dimen>
     <!--  The size of the task thumbnail header  -->
-    <dimen name="task_thumbnail_header_height">30dp</dimen>
-    <dimen name="task_thumbnail_header_margin_edge">18dp</dimen>
-    <dimen name="task_thumbnail_header_margin_between_views">9dp</dimen>
+    <dimen name="task_thumbnail_header_padding_top_bottom">6dp</dimen>
+    <dimen name="task_thumbnail_header_padding_start_end">12dp</dimen>
+    <dimen name="task_thumbnail_header_margin_between_views">8dp</dimen>
     <dimen name="task_thumbnail_header_icon_size">18dp</dimen>
     <dimen name="task_thumbnail_header_round_corner_radius">16dp</dimen>
 
