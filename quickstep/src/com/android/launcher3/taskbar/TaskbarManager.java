@@ -26,6 +26,7 @@ import static com.android.launcher3.Flags.enableUnfoldStateAnimation;
 import static com.android.launcher3.config.FeatureFlags.ENABLE_TASKBAR_NAVBAR_UNIFICATION;
 import static com.android.launcher3.config.FeatureFlags.enableTaskbarNoRecreate;
 import static com.android.launcher3.taskbar.growth.GrowthConstants.BROADCAST_SHOW_NUDGE;
+import static com.android.launcher3.taskbar.growth.GrowthConstants.GROWTH_NUDGE_PERMISSION;
 import static com.android.launcher3.util.DisplayController.CHANGE_DENSITY;
 import static com.android.launcher3.util.DisplayController.CHANGE_DESKTOP_MODE;
 import static com.android.launcher3.util.DisplayController.CHANGE_NAVIGATION_MODE;
@@ -442,7 +443,7 @@ public class TaskbarManager {
             mGrowthBroadcastReceiver =
                     new SimpleBroadcastReceiver(
                             mPrimaryWindowContext, UI_HELPER_EXECUTOR, this::showGrowthNudge);
-            mGrowthBroadcastReceiver.register(RECEIVER_EXPORTED,
+            mGrowthBroadcastReceiver.register(null, GROWTH_NUDGE_PERMISSION, RECEIVER_EXPORTED,
                     BROADCAST_SHOW_NUDGE);
         } else {
             mGrowthBroadcastReceiver = null;
@@ -504,7 +505,7 @@ public class TaskbarManager {
         debugPrimaryTaskbar("destroyTaskbarForDisplay");
         // TODO: make this code displayId specific
         TaskbarActivityContext taskbar = getTaskbarForDisplay(getDefaultDisplayId());
-        if (ACTION_SHOW_TASKBAR.equals(intent.getAction())) {
+        if (ACTION_SHOW_TASKBAR.equals(intent.getAction()) && taskbar != null) {
             taskbar.showTaskbarFromBroadcast();
         }
     }

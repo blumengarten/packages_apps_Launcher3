@@ -123,6 +123,32 @@ public class SimpleBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
+    /**
+     * Same as {@link #register(Runnable, int, String...)} above but with additional permission
+     * params utilizine the original {@link Context}.
+     */
+    @AnyThread
+    public void register(@Nullable Runnable completionCallback,
+                         String broadcastPermission, int flags, String... actions) {
+        if (Looper.myLooper() == mHandler.getLooper()) {
+            registerInternal(mContext, completionCallback, broadcastPermission, flags, actions);
+        } else {
+            mHandler.post(() -> registerInternal(mContext, completionCallback, broadcastPermission,
+                    flags, actions));
+        }
+    }
+
+    /** Register broadcast receiver with permission and run completion callback if passed. */
+    @AnyThread
+    private void registerInternal(
+            @NonNull Context context, @Nullable Runnable completionCallback,
+            String broadcastPermission, int flags, String... actions) {
+        context.registerReceiver(this, getFilter(actions), broadcastPermission, null, flags);
+        if (completionCallback != null) {
+            completionCallback.run();
+        }
+    }
+
     /** Same as {@link #register(Runnable, String...)} above but with pkg name. */
     @AnyThread
     public void registerPkgActions(@Nullable String pkg, String... actions) {
