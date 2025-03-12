@@ -84,6 +84,7 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
 
     // This is used to optimize the onDraw method by not constructing a new RectF each draw.
     private static final RectF sTempRect = new RectF();
+    private static final RectF sLastActiveRect = new RectF();
 
     private static final FloatProperty<PageIndicatorDots> CURRENT_POSITION =
             new FloatProperty<PageIndicatorDots>("current_position") {
@@ -518,6 +519,9 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
                             }
                         }
                     }
+                    if (Math.round(mCurrentPosition) == i) {
+                        sLastActiveRect.set(sTempRect);
+                    }
                     canvas.drawRoundRect(sTempRect, mDotRadius, mDotRadius, mPaginationPaint);
 
                     // TODO(b/394355070) Verify RTL experience works correctly with visual updates
@@ -593,8 +597,8 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
         @Override
         public void getOutline(View view, Outline outline) {
             if (mEntryAnimationRadiusFactors == null) {
-                // TODO(b/394355070): Verify Outline works correctly with visual updates
-                RectF activeRect = getActiveRect();
+                RectF activeRect = enableLauncherVisualRefresh()
+                        ? sLastActiveRect : getActiveRect();
                 outline.setRoundRect(
                         (int) activeRect.left,
                         (int) activeRect.top,
