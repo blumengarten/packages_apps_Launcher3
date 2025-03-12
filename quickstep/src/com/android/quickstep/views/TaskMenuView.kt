@@ -26,6 +26,7 @@ import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RectShape
 import android.util.AttributeSet
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewOutlineProvider
@@ -463,6 +464,24 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
             )
         menuTranslationXAnim.interpolator = Interpolators.EMPHASIZED
         animatorBuilder.with(menuTranslationXAnim)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (enableOverviewIconMenu()) {
+            if (event.action != KeyEvent.ACTION_DOWN) return super.dispatchKeyEvent(event)
+
+            val isFirstMenuOptionFocused = optionLayout.indexOfChild(optionLayout.focusedChild) == 0
+            val isLastMenuOptionFocused =
+                optionLayout.indexOfChild(optionLayout.focusedChild) == optionLayout.childCount - 1
+            if (
+                (isLastMenuOptionFocused && event.keyCode == KeyEvent.KEYCODE_DPAD_DOWN)
+                || (isFirstMenuOptionFocused && event.keyCode == KeyEvent.KEYCODE_DPAD_UP)
+            ) {
+                iconView.requestFocus()
+                return true
+            }
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     companion object {

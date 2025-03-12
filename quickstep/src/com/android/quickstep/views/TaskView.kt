@@ -43,6 +43,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.view.updateLayoutParams
 import com.android.app.animation.Interpolators
 import com.android.app.tracing.traceSection
+import com.android.launcher3.AbstractFloatingView
 import com.android.launcher3.Flags.enableCursorHoverStates
 import com.android.launcher3.Flags.enableDesktopExplodedView
 import com.android.launcher3.Flags.enableGridOnlyOverview
@@ -1482,6 +1483,19 @@ constructor(
         return showTaskMenuWithContainer(menuContainer)
     }
 
+    private fun closeTaskMenu(): Boolean {
+        val floatingView: AbstractFloatingView? = AbstractFloatingView.getTopOpenViewWithType(
+            container,
+            AbstractFloatingView.TYPE_TASK_MENU
+        )
+        if (floatingView?.isOpen == true) {
+            floatingView.close(true)
+            return true
+        } else {
+            return false
+        }
+    }
+
     private fun showTaskMenuWithContainer(menuContainer: TaskContainer): Boolean {
         val recentsView = recentsView ?: return false
         if (enableHoverOfChildElementsInTaskview()) {
@@ -1489,12 +1503,16 @@ constructor(
             recentsView.setTaskBorderEnabled(false)
         }
         return if (enableOverviewIconMenu() && menuContainer.iconView is IconAppChipView) {
-            menuContainer.iconView.revealAnim(/* isRevealing= */ true)
-            TaskMenuView.showForTask(menuContainer) {
-                val isAnimated = !recentsView.isSplitSelectionActive
-                menuContainer.iconView.revealAnim(/* isRevealing= */ false, isAnimated)
-                if (enableHoverOfChildElementsInTaskview()) {
-                    recentsView.setTaskBorderEnabled(true)
+            if (menuContainer.iconView.isExpanded) {
+                closeTaskMenu()
+            } else {
+                menuContainer.iconView.revealAnim(/* isRevealing= */ true)
+                TaskMenuView.showForTask(menuContainer) {
+                    val isAnimated = !recentsView.isSplitSelectionActive
+                    menuContainer.iconView.revealAnim(/* isRevealing= */ false, isAnimated)
+                    if (enableHoverOfChildElementsInTaskview()) {
+                        recentsView.setTaskBorderEnabled(true)
+                    }
                 }
             }
         } else if (container.deviceProfile.isTablet) {

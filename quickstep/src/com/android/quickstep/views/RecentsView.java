@@ -4780,6 +4780,11 @@ public abstract class RecentsView<
         if (isHandlingTouch() || event.getAction() != KeyEvent.ACTION_DOWN) {
             return super.dispatchKeyEvent(event);
         }
+
+        if (mUtils.shouldInterceptKeyEvent(event)) {
+            return super.dispatchKeyEvent(event);
+        }
+
         switch (event.getKeyCode()) {
             case KeyEvent.KEYCODE_TAB:
                 return snapToPageRelative(event.isShiftPressed() ? -1 : 1, true /* cycle */,
