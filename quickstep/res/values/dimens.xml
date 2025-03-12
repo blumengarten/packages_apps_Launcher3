@@ -510,7 +510,8 @@
     <dimen name="starting_surface_exit_animation_window_shift_length">20dp</dimen>
 
     <!-- Keyboard Quick Switch -->
-    <dimen name="keyboard_quick_switch_border_width">4dp</dimen>
+    <dimen name="keyboard_quick_switch_border_width">5dp</dimen>
+    <dimen name="keyboard_quick_switch_border_stroke">3dp</dimen>
     <dimen name="keyboard_quick_switch_taskview_width">104dp</dimen>
     <dimen name="keyboard_quick_switch_taskview_height">136dp</dimen>
     <dimen name="keyboard_quick_switch_taskview_icon_size">52dp</dimen>
