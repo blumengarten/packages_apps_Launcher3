@@ -150,9 +150,13 @@ public final class TaskbarOverlayController {
     /** Destroys the controller and any overlay window if present. */
     public void onDestroy() {
         TaskStackChangeListeners.getInstance().unregisterTaskStackListener(mTaskStackListener);
-        Optional.ofNullable(mOverlayContext)
-                .map(c -> c.getSystemService(WindowManager.class))
-                .ifPresent(m -> m.removeViewImmediate(mOverlayContext.getDragLayer()));
+        Optional.ofNullable(mOverlayContext).ifPresent(c -> {
+            c.onDestroy();
+            WindowManager wm = c.getSystemService(WindowManager.class);
+            if (wm != null) {
+                wm.removeViewImmediate(mOverlayContext.getDragLayer());
+            }
+        });
         mOverlayContext = null;
     }
 
