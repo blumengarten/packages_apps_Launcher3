@@ -102,7 +102,6 @@ import com.android.launcher3.model.data.WorkspaceItemInfo;
 import com.android.launcher3.pageindicators.PageIndicatorDots;
 import com.android.launcher3.util.Executors;
 import com.android.launcher3.util.LauncherBindableItemsContainer;
-import com.android.launcher3.util.LauncherBindableItemsContainer.ItemOperator;
 import com.android.launcher3.util.Thunk;
 import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.views.BaseDragLayer;
@@ -1116,13 +1115,15 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
             View icon = (mCurrentDragView != null && mCurrentDragView.getTag() == info)
                     ? mCurrentDragView : mContent.createNewView(info);
             ArrayList<View> views = getIconsInReadingOrder();
-            info.rank = Utilities.boundToRange(info.rank, 0, views.size());
-            views.add(info.rank, icon);
-            mContent.arrangeChildren(views);
-            mItemsInvalidated = true;
+            if (!views.contains(icon)) {
+                info.rank = Utilities.boundToRange(info.rank, 0, views.size());
+                views.add(info.rank, icon);
+                mContent.arrangeChildren(views);
+                mItemsInvalidated = true;
 
-            try (SuppressInfoChanges s = new SuppressInfoChanges()) {
-                mFolderIcon.onDrop(d, true /* itemReturnedOnFailedDrop */);
+                try (SuppressInfoChanges s = new SuppressInfoChanges()) {
+                    mFolderIcon.onDrop(d, true /* itemReturnedOnFailedDrop */);
+                }
             }
         }
 
