@@ -129,7 +129,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
 
     private final int mAllAppsButtonTranslationOffset;
 
-    private final int mNumStaticViews;
+    private int mNumStaticViews;
 
     private Set<GroupTask> mPrevRecentTasks = Collections.emptySet();
     private Set<GroupTask> mPrevOverflowTasks = Collections.emptySet();
@@ -199,8 +199,6 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
 
         // TODO: Disable touch events on QSB otherwise it can crash.
         mQsb = LayoutInflater.from(context).inflate(R.layout.search_container_hotseat, this, false);
-
-        mNumStaticViews = ENABLE_TASKBAR_RECENTS_LAYOUT_TRANSITION.isTrue() ? addStaticViews() : 0;
     }
 
     /**
@@ -447,6 +445,10 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
 
     private void updateItemsWithLayoutTransition(
             ItemInfo[] hotseatItemInfos, List<GroupTask> recentTasks) {
+
+        if (mNumStaticViews == 0) {
+            mNumStaticViews = addStaticViews();
+        }
 
         // Skip static views and potential All Apps divider, if they are on the left.
         mNextViewIndex = mIsRtl ? 0 : mNumStaticViews;
