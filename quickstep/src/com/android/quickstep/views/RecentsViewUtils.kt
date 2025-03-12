@@ -18,8 +18,11 @@ package com.android.quickstep.views
 
 import android.graphics.Rect
 import android.util.FloatProperty
+import android.view.KeyEvent
 import android.view.View
 import androidx.core.view.children
+import com.android.launcher3.AbstractFloatingView
+import com.android.launcher3.Flags
 import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
 import com.android.launcher3.Flags.enableSeparateExternalDisplayTasks
 import com.android.launcher3.statehandlers.DesktopVisibilityController
@@ -352,6 +355,18 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
                 outBottomRowRect.top = outTopRowRect.bottom
             }
         }
+    }
+
+    fun shouldInterceptKeyEvent(event: KeyEvent): Boolean {
+        if (Flags.enableOverviewIconMenu()) {
+            val floatingView: AbstractFloatingView? = AbstractFloatingView.getTopOpenViewWithType(
+                recentsView.mContainer as RecentsViewContainer,
+                AbstractFloatingView.TYPE_TASK_MENU
+            )
+            val isMenuOpen = floatingView?.isOpen
+            return isMenuOpen == true || event.keyCode == KeyEvent.KEYCODE_TAB
+        }
+        return false
     }
 
     var deskExplodeProgress: Float = 0f
