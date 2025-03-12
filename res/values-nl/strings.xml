@@ -135,7 +135,7 @@
     <string name="allow_rotation_title" msgid="7222049633713050106">"Draaien van startscherm toestaan"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"Als de telefoon gedraaid is"</string>
     <string name="landscape_mode_title" msgid="5138814555934843926">"Liggende modus"</string>
-    <string name="landscape_mode_desc" msgid="7372569859592816793">"Telefoon instellen op liggende modus"</string>
+    <string name="landscape_mode_desc" msgid="7372569859592816793">"Stel telefoon in op liggende modus"</string>
     <string name="notification_dots_title" msgid="9062440428204120317">"Meldingsstipjes"</string>
     <string name="notification_dots_desc_on" msgid="1679848116452218908">"Aan"</string>
     <string name="notification_dots_desc_off" msgid="1760796511504341095">"Uit"</string>
