@@ -17,12 +17,14 @@ package com.android.launcher3.taskbar;
 
 import static android.window.DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY;
 
+import static com.android.launcher3.Flags.syncAppLaunchWithTaskbarStash;
 import static com.android.launcher3.QuickstepTransitionManager.TASKBAR_TO_APP_DURATION;
 import static com.android.launcher3.QuickstepTransitionManager.TRANSIENT_TASKBAR_TRANSITION_DURATION;
 import static com.android.launcher3.QuickstepTransitionManager.getTaskbarToHomeDuration;
 import static com.android.launcher3.statemanager.BaseState.FLAG_NON_INTERACTIVE;
 import static com.android.launcher3.taskbar.TaskbarEduTooltipControllerKt.TOOLTIP_STEP_FEATURES;
 import static com.android.launcher3.taskbar.TaskbarLauncherStateController.FLAG_VISIBLE;
+import static com.android.launcher3.taskbar.TaskbarStashController.FLAG_IGNORE_IN_APP;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
@@ -299,6 +301,29 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
     public Animator createAnimToLauncher(@NonNull LauncherState toState,
             @NonNull RecentsAnimationCallbacks callbacks, long duration) {
         return mTaskbarLauncherStateController.createAnimToLauncher(toState, callbacks, duration);
+    }
+
+    /**
+     * Create Taskbar animation to be played alongside the Launcher app launch animation.
+     */
+    public @Nullable Animator createAnimToApp() {
+        if (!syncAppLaunchWithTaskbarStash()) {
+            return null;
+        }
+        TaskbarStashController stashController = mControllers.taskbarStashController;
+        stashController.updateStateForFlag(TaskbarStashController.FLAG_IN_APP, true);
+        return stashController.createApplyStateAnimator(stashController.getStashDuration());
+    }
+
+    /**
+     * Temporarily ignore FLAG_IN_APP for app launches to prevent premature taskbar stashing.
+     * This is needed because taskbar gets a signal to stash before we actually start the
+     * app launch animation.
+     */
+    public void setIgnoreInAppFlagForSync(boolean enabled) {
+        if (syncAppLaunchWithTaskbarStash()) {
+            mControllers.taskbarStashController.updateStateForFlag(FLAG_IGNORE_IN_APP, enabled);
+        }
     }
 
     public void updateTaskbarLauncherStateGoingHome() {

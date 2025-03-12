@@ -40,12 +40,14 @@ import static com.android.app.animation.Interpolators.DECELERATE_1_5;
 import static com.android.app.animation.Interpolators.DECELERATE_1_7;
 import static com.android.app.animation.Interpolators.EXAGGERATED_EASE;
 import static com.android.app.animation.Interpolators.LINEAR;
+import static com.android.launcher3.BaseActivity.EVENT_DESTROYED;
 import static com.android.launcher3.BaseActivity.INVISIBLE_ALL;
 import static com.android.launcher3.BaseActivity.INVISIBLE_BY_APP_TRANSITIONS;
 import static com.android.launcher3.BaseActivity.INVISIBLE_BY_PENDING_FLAGS;
 import static com.android.launcher3.BaseActivity.PENDING_INVISIBLE_BY_WALLPAPER_ANIMATION;
 import static com.android.launcher3.Flags.enableContainerReturnAnimations;
 import static com.android.launcher3.Flags.enableScalingRevealHomeAnimation;
+import static com.android.launcher3.Flags.syncAppLaunchWithTaskbarStash;
 import static com.android.launcher3.LauncherAnimUtils.SCALE_PROPERTY;
 import static com.android.launcher3.LauncherState.ALL_APPS;
 import static com.android.launcher3.LauncherState.BACKGROUND_APP;
@@ -356,6 +358,20 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         options.setOnAnimationAbortListener(endCallback);
         options.setOnAnimationFinishedListener(endCallback);
         options.setLaunchCookie(StableViewInfo.toLaunchCookie(itemInfo));
+
+        // Prepare taskbar for animation synchronization. This needs to happen here before any
+        // app transition is created.
+        LauncherTaskbarUIController taskbarController = mLauncher.getTaskbarUIController();
+        if (syncAppLaunchWithTaskbarStash()
+                && enableScalingRevealHomeAnimation()
+                && taskbarController != null) {
+            taskbarController.setIgnoreInAppFlagForSync(true);
+            mLauncher.addEventCallback(EVENT_DESTROYED, onEndCallback::executeAllAndDestroy);
+            onEndCallback.add(() -> {
+                taskbarController.setIgnoreInAppFlagForSync(false);
+            });
+        }
+
         return new ActivityOptionsWrapper(options, onEndCallback);
     }
 
@@ -1901,6 +1917,21 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
             if (launcherClosing) {
                 anim.addListener(mForceInvisibleListener);
+            }
+
+            // Syncs the app launch animation and taskbar stash animation (if exists).
+            if (syncAppLaunchWithTaskbarStash() && enableScalingRevealHomeAnimation()) {
+                LauncherTaskbarUIController taskbarController = mLauncher.getTaskbarUIController();
+                if (taskbarController != null) {
+                    taskbarController.setIgnoreInAppFlagForSync(false);
+
+                    if (launcherClosing) {
+                        Animator taskbar = taskbarController.createAnimToApp();
+                        if (taskbar != null) {
+                            anim.play(taskbar);
+                        }
+                    }
+                }
             }
 
             result.setAnimation(anim, mLauncher, mOnEndCallback::executeAllAndDestroy,
