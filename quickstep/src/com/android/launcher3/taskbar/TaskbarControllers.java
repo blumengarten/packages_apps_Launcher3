@@ -25,6 +25,7 @@ import androidx.annotation.VisibleForTesting;
 import com.android.launcher3.anim.AnimatedFloat;
 import com.android.launcher3.taskbar.allapps.TaskbarAllAppsController;
 import com.android.launcher3.taskbar.bubbles.BubbleControllers;
+import com.android.launcher3.taskbar.growth.NudgeController;
 import com.android.launcher3.taskbar.overlay.TaskbarOverlayController;
 import com.android.systemui.shared.rotation.RotationButtonController;
 import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
@@ -67,6 +68,7 @@ public class TaskbarControllers {
     public final TaskbarPinningController taskbarPinningController;
     public final Optional<BubbleControllers> bubbleControllers;
     public final TaskbarDesktopModeController taskbarDesktopModeController;
+    public final NudgeController nudgeController;
 
     @Nullable private LoggableTaskbarController[] mControllersToLog = null;
     @Nullable private BackgroundRendererController[] mBackgroundRendererControllers = null;
@@ -115,7 +117,8 @@ public class TaskbarControllers {
             KeyboardQuickSwitchController keyboardQuickSwitchController,
             TaskbarPinningController taskbarPinningController,
             Optional<BubbleControllers> bubbleControllers,
-            TaskbarDesktopModeController taskbarDesktopModeController) {
+            TaskbarDesktopModeController taskbarDesktopModeController,
+            NudgeController nudgeController) {
         this.taskbarActivityContext = taskbarActivityContext;
         this.taskbarDragController = taskbarDragController;
         this.navButtonController = navButtonController;
@@ -143,6 +146,7 @@ public class TaskbarControllers {
         this.taskbarPinningController = taskbarPinningController;
         this.bubbleControllers = bubbleControllers;
         this.taskbarDesktopModeController = taskbarDesktopModeController;
+        this.nudgeController = nudgeController;
     }
 
     /**
@@ -179,6 +183,7 @@ public class TaskbarControllers {
         keyboardQuickSwitchController.init(this);
         taskbarPinningController.init(this, mSharedState);
         taskbarDesktopModeController.init(this, mSharedState);
+        nudgeController.init(this);
 
         mControllersToLog = new LoggableTaskbarController[] {
                 taskbarDragController, navButtonController, navbarButtonsViewController,
@@ -189,6 +194,7 @@ public class TaskbarControllers {
                 voiceInteractionWindowController, taskbarRecentAppsController,
                 taskbarTranslationController, taskbarEduTooltipController,
                 keyboardQuickSwitchController, taskbarPinningController,
+                nudgeController
         };
         mBackgroundRendererControllers = new BackgroundRendererController[] {
                 taskbarDragLayerController, taskbarScrimViewController,
@@ -344,7 +350,7 @@ public class TaskbarControllers {
         return taskbarActivityContext;
     }
 
-    protected interface LoggableTaskbarController {
+    public interface LoggableTaskbarController {
         void dumpLogs(String prefix, PrintWriter pw);
     }
 
