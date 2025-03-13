@@ -17,6 +17,8 @@ package com.android.launcher3.taskbar;
 
 import static android.content.Context.RECEIVER_EXPORTED;
 import static android.content.Context.RECEIVER_NOT_EXPORTED;
+import static android.content.pm.PackageManager.FEATURE_PC;
+import static android.content.pm.PackageManager.FEATURE_FREEFORM_WINDOW_MANAGEMENT;
 import static android.view.WindowManager.LayoutParams.TYPE_NAVIGATION_BAR;
 import static android.view.WindowManager.LayoutParams.TYPE_NAVIGATION_BAR_PANEL;
 
@@ -87,6 +89,7 @@ import com.android.quickstep.fallback.window.RecentsWindowManager;
 import com.android.quickstep.util.ContextualSearchInvoker;
 import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.views.RecentsViewContainer;
+import com.android.server.am.Flags;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.statusbar.phone.BarTransitions;
 import com.android.systemui.shared.system.ActivityManagerWrapper;
@@ -167,6 +170,10 @@ public class TaskbarManager {
     private final SparseArray<DeviceProfile> mExternalDeviceProfiles = new SparseArray<>();
     private StatefulActivity mActivity;
     private RecentsViewContainer mRecentsViewContainer;
+    /** Whether this device is a desktop android device **/
+    private boolean mIsAndroidPC;
+    /** Whether this device supports freeform windows management. Can change dynamically **/
+    private boolean mSupportsFreeformWindowsManagement;
 
     /**
      * Cache a copy here so we can initialize state whenever taskbar is recreated, since
@@ -200,6 +207,7 @@ public class TaskbarManager {
             if ((flags & CHANGE_DESKTOP_MODE) != 0) {
                 debugTaskbarManager("onDisplayInfoChanged: Desktop mode changed",
                         context.getDisplayId());
+                handleDisplayUpdatesForPerceptibleTasks();
             }
             if ((flags & CHANGE_TASKBAR_PINNING) != 0) {
                 debugTaskbarManager("onDisplayInfoChanged: Taskbar pinning changed",
@@ -235,7 +243,7 @@ public class TaskbarManager {
         recreateTaskbars();
     };
 
-    private final PerceptibleTaskListener mTaskStackListener;
+    private PerceptibleTaskListener mTaskStackListener;
 
     private class PerceptibleTaskListener implements TaskStackChangeListener {
         private ArraySet<Integer> mPerceptibleTasks = new ArraySet<Integer>();
@@ -289,6 +297,14 @@ public class TaskbarManager {
         public void onTaskRemoved(int taskId) {
             mPerceptibleTasks.remove(taskId);
         }
+
+        public void unregisterListener() {
+            for (Integer taskId : mPerceptibleTasks) {
+                ActivityManagerWrapper.getInstance().setTaskIsPerceptible(taskId, false);
+            }
+            TaskStackChangeListeners.getInstance().unregisterTaskStackListener(
+                    mTaskStackListener);
+        }
     }
 
     private final DesktopVisibilityController.TaskbarDesktopModeListener
@@ -337,7 +353,6 @@ public class TaskbarManager {
                     //NO-OP
                 }
             };
-
 
     private boolean mUserUnlocked = false;
 
@@ -458,7 +473,10 @@ public class TaskbarManager {
             mTaskbarBroadcastReceiver.register(RECEIVER_NOT_EXPORTED, ACTION_SHOW_TASKBAR);
         });
 
-        if (ActivityManagerWrapper.usePerceptibleTasks(getPrimaryWindowContext())) {
+        mIsAndroidPC = getPrimaryWindowContext().getPackageManager().hasSystemFeature(FEATURE_PC);
+        mSupportsFreeformWindowsManagement = getFreeformWindowsManagementInfo();
+
+        if (eligibleForPerceptibleTasks()) {
             mTaskStackListener = new PerceptibleTaskListener();
             TaskStackChangeListeners.getInstance().registerTaskStackListener(mTaskStackListener);
         } else {
@@ -466,6 +484,30 @@ public class TaskbarManager {
         }
         recreateTaskbars();
         debugPrimaryTaskbar("TaskbarManager created");
+    }
+
+    private void handleDisplayUpdatesForPerceptibleTasks() {
+        // 1. When desktop mode changes, detect eligibility for perceptible tasks.
+        // 2. When no longer eligible for perceptible tasks, turn off and clean up.
+        mSupportsFreeformWindowsManagement = getFreeformWindowsManagementInfo();
+        if (eligibleForPerceptibleTasks()) {
+            if (mTaskStackListener == null) {
+                mTaskStackListener = new PerceptibleTaskListener();
+                TaskStackChangeListeners.getInstance()
+                        .registerTaskStackListener(mTaskStackListener);
+            }
+        } else {
+            // not eligible for perceptible tasks, so we should unregister the listener
+            if (mTaskStackListener != null) {
+                mTaskStackListener.unregisterListener();
+                mTaskStackListener = null;
+            }
+        }
+    }
+
+    private boolean getFreeformWindowsManagementInfo() {
+        return getPrimaryWindowContext().getPackageManager().hasSystemFeature(
+                FEATURE_FREEFORM_WINDOW_MANAGEMENT);
     }
 
     private void destroyAllTaskbars() {
@@ -1052,15 +1094,24 @@ public class TaskbarManager {
         debugPrimaryTaskbar("destroy: unregistering component callbacks");
         removeAndUnregisterComponentCallbacks(getDefaultDisplayId());
         mShutdownReceiver.unregisterReceiverSafely();
-        if (ActivityManagerWrapper.usePerceptibleTasks(getPrimaryWindowContext())) {
-            for (Integer taskId : mTaskStackListener.mPerceptibleTasks) {
-                ActivityManagerWrapper.getInstance().setTaskIsPerceptible(taskId, false);
-            }
+        if (mTaskStackListener != null) {
+            mTaskStackListener.unregisterListener();
         }
-        TaskStackChangeListeners.getInstance().unregisterTaskStackListener(mTaskStackListener);
+
         debugPrimaryTaskbar("destroy: destroying all taskbars!");
         destroyAllTaskbars();
         debugPrimaryTaskbar("destroy: finished!");
+    }
+
+    private boolean eligibleForPerceptibleTasks() {
+        // Perceptible tasks feature (oom boosting) is eligible for android PC devices, and
+        // other android devices that supports free form windows
+        //
+        // - isAndroidPC is set per device (in this case, desktop devices)
+        // - supportsFreeformWindowsManagement is dynamic, and is to be used for the use-case where
+        // user plugs in their device to external displays
+        return Flags.perceptibleTasks()
+                && (mIsAndroidPC || mSupportsFreeformWindowsManagement);
     }
 
     public @Nullable TaskbarActivityContext getCurrentActivityContext() {
