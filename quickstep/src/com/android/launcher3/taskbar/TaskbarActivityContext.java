@@ -308,6 +308,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         if (BubbleBarController.isBubbleBarEnabled()
                 && deviceBubbleBarEnabled
                 && bubbleBarView != null
+                && isPrimaryDisplay
         ) {
             Optional<BubbleStashedHandleViewController> bubbleHandleController = Optional.empty();
             Optional<BubbleBarSwipeController> bubbleBarSwipeController = Optional.empty();
