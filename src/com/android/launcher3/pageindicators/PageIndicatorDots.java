@@ -79,6 +79,7 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
     private static final int SMALL_HEIGHT_MULTIPLIER = 4;
     private static final int LARGE_WIDTH_MULTIPLIER = 5;
     private static final int SMALL_WIDTH_MULTIPLIER = 3;
+    private static final float ARROW_TOUCH_BOX_FACTOR = 5f;
 
     private static final int PAGE_INDICATOR_ALPHA = 255;
     private static final int DOT_ALPHA = 128;
@@ -473,18 +474,51 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
         float y = getHeight() / 2;
 
         if (mEntryAnimationRadiusFactors != null) {
-            // During entry animation, only draw the circles
-            // TODO(b/394355070): Verify Folder Entry Animation works correctly - visual updates
+            if (enableLauncherVisualRefresh()) {
+                x -= mDotRadius;
+                if (mIsRtl) {
+                    x = getWidth() - x;
+                    circleGap = -circleGap;
+                }
+                sTempRect.top = y - mDotRadius;
+                sTempRect.bottom = y + mDotRadius;
 
-            if (mIsRtl) {
-                x = getWidth() - x;
-                circleGap = -circleGap;
-            }
-            for (int i = 0; i < mEntryAnimationRadiusFactors.length; i++) {
-                mPaginationPaint.setAlpha(i == mActivePage ? PAGE_INDICATOR_ALPHA : DOT_ALPHA);
-                canvas.drawCircle(x, y, mDotRadius * mEntryAnimationRadiusFactors[i],
-                        mPaginationPaint);
-                x += circleGap;
+                for (int i = 0; i < mEntryAnimationRadiusFactors.length; i++) {
+                    if (i == mActivePage) {
+                        if (mIsRtl) {
+                            sTempRect.left = x - (mDotRadius * 3);
+                            sTempRect.right = x + mDotRadius;
+                            x += circleGap - (mDotRadius * 2);
+                        } else {
+                            sTempRect.left = x - mDotRadius;
+                            sTempRect.right = x + (mDotRadius * 3);
+                            x += circleGap + (mDotRadius * 2);
+                        }
+                        scale(sTempRect, mEntryAnimationRadiusFactors[i]);
+                        float scaledRadius = mDotRadius * mEntryAnimationRadiusFactors[i];
+                        mPaginationPaint.setAlpha(PAGE_INDICATOR_ALPHA);
+                        canvas.drawRoundRect(sTempRect, scaledRadius, scaledRadius,
+                                mPaginationPaint);
+                    } else {
+                        mPaginationPaint.setAlpha(DOT_ALPHA);
+                        canvas.drawCircle(x, y, mDotRadius * mEntryAnimationRadiusFactors[i],
+                                mPaginationPaint);
+                        x += circleGap;
+                    }
+                }
+            } else {
+                // During entry animation, only draw the circles
+
+                if (mIsRtl) {
+                    x = getWidth() - x;
+                    circleGap = -circleGap;
+                }
+                for (int i = 0; i < mEntryAnimationRadiusFactors.length; i++) {
+                    mPaginationPaint.setAlpha(i == mActivePage ? PAGE_INDICATOR_ALPHA : DOT_ALPHA);
+                    canvas.drawCircle(x, y, mDotRadius * mEntryAnimationRadiusFactors[i],
+                            mPaginationPaint);
+                    x += circleGap;
+                }
             }
         } else {
             // Save the current alpha value, so we can reset to it again after drawing the dots
@@ -618,18 +652,20 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
 
     // For larger Touch box
     private boolean withinExpandedBounds(Rect rect, MotionEvent ev) {
-        Rect scaledRect = new Rect();
-        scaledRect.set(rect);
+        RectF scaledRect = new RectF(rect);
+        scale(scaledRect, ARROW_TOUCH_BOX_FACTOR);
+        return scaledRect.contains(ev.getX(), ev.getY());
+    }
 
-        float verticalAdjustment = (scaledRect.bottom - scaledRect.top) * 2;
-        scaledRect.top -= verticalAdjustment;
-        scaledRect.bottom += verticalAdjustment;
+    private static void scale(RectF rect, float factor) {
+        float horizontalAdjustment = rect.width() * (factor - 1) / 2;
+        float verticalAdjustment = rect.height() * (factor - 1) / 2;
 
-        float horizontalAdjustment = (scaledRect.right - scaledRect.left) * 2;
-        scaledRect.left -= horizontalAdjustment;
-        scaledRect.right += horizontalAdjustment;
+        rect.top -= verticalAdjustment;
+        rect.bottom += verticalAdjustment;
 
-        return scaledRect.contains((int) ev.getX(), (int) ev.getY());
+        rect.left -= horizontalAdjustment;
+        rect.right += horizontalAdjustment;
     }
 
     private RectF getActiveRect() {
