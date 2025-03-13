@@ -22,7 +22,6 @@ import android.util.Log
 import android.util.SparseArray
 import android.view.Display
 import androidx.core.util.valueIterator
-import com.android.launcher3.util.Executors
 import com.android.quickstep.DisplayModel.DisplayResource
 import java.io.PrintWriter
 
@@ -37,29 +36,24 @@ abstract class DisplayModel<RESOURCE_TYPE : DisplayResource>(val context: Contex
     private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
     protected val displayResourceArray = SparseArray<RESOURCE_TYPE>()
 
-    private val displayListener: DisplayManager.DisplayListener =
-        (object : DisplayManager.DisplayListener {
-            override fun onDisplayAdded(displayId: Int) {
-                if (DEBUG) Log.d(TAG, "onDisplayAdded: displayId=$displayId")
-                storeDisplayResource(displayId)
-            }
+    fun onDisplayAddSystemDecorations(displayId: Int) {
+        if (DEBUG) Log.d(TAG, "onDisplayAdded: displayId=$displayId")
+        storeDisplayResource(displayId)
+    }
 
-            override fun onDisplayRemoved(displayId: Int) {
-                if (DEBUG) Log.d(TAG, "onDisplayRemoved: displayId=$displayId")
-                deleteDisplayResource(displayId)
-            }
+    fun onDisplayRemoved(displayId: Int) {
+        if (DEBUG) Log.d(TAG, "onDisplayRemoved: displayId=$displayId")
+        deleteDisplayResource(displayId)
+    }
 
-            override fun onDisplayChanged(displayId: Int) {
-                if (DEBUG) Log.d(TAG, "onDisplayChanged: displayId=$displayId")
-            }
-        })
+    fun onDisplayRemoveSystemDecorations(displayId: Int) {
+        if (DEBUG) Log.d(TAG, "onDisplayRemoveSystemDecorations: displayId=$displayId")
+        deleteDisplayResource(displayId)
+    }
 
     protected abstract fun createDisplayResource(display: Display): RESOURCE_TYPE
 
-    protected fun registerDisplayListener() {
-        displayManager.registerDisplayListener(displayListener, Executors.MAIN_EXECUTOR.handler)
-        // In the scenario where displays were added before this display listener was
-        // registered, we should store the DisplayResources for those displays directly.
+    protected fun initializeDisplays() {
         displayManager.displays
             .filter { getDisplayResource(it.displayId) == null }
             .forEach { storeDisplayResource(it.displayId) }
@@ -70,18 +64,19 @@ abstract class DisplayModel<RESOURCE_TYPE : DisplayResource>(val context: Contex
             displayResource.cleanup()
         }
         displayResourceArray.clear()
-        displayManager.unregisterDisplayListener(displayListener)
     }
 
     fun getDisplayResource(displayId: Int): RESOURCE_TYPE? {
-        if (DEBUG) Log.d(TAG, "get: displayId=$displayId")
+        if (DEBUG) Log.d(TAG, Log.getStackTraceString(Throwable("get: displayId=$displayId")))
         return displayResourceArray[displayId]
     }
 
     fun deleteDisplayResource(displayId: Int) {
         if (DEBUG) Log.d(TAG, "delete: displayId=$displayId")
-        getDisplayResource(displayId)?.cleanup()
-        displayResourceArray.remove(displayId)
+        getDisplayResource(displayId)?.let {
+            it.cleanup()
+            displayResourceArray.remove(displayId)
+        }
     }
 
     fun storeDisplayResource(displayId: Int) {
