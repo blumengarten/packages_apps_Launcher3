@@ -137,7 +137,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * The workspace is a wide area with a wallpaper and a finite number of pages.
@@ -659,7 +658,6 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         }
 
         // Remove the pages and clear the screen models
-        removeFolderListeners();
         removeAllViews();
         mScreenOrder.clear();
         mWorkspaceScreens.clear();
@@ -1914,7 +1912,7 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
 
         boolean aboveShortcut = Folder.willAccept(dropOverView.getTag())
                 && ((ItemInfo) dropOverView.getTag()).container != CONTAINER_HOTSEAT_PREDICTION;
-        boolean willBecomeShortcut = Folder.willAcceptItemType(info.itemType);
+        boolean willBecomeShortcut = FolderInfo.willAcceptItemType(info.itemType);
 
         return (aboveShortcut && willBecomeShortcut);
     }
@@ -1994,8 +1992,8 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
                 fi.performCreateAnimation(destInfo, v, sourceInfo, d, folderLocation, scale);
             } else {
                 fi.prepareCreateAnimation(v);
-                fi.addItem(destInfo);
-                fi.addItem(sourceInfo);
+                fi.getFolder().addFolderContent(destInfo);
+                fi.getFolder().addFolderContent(sourceInfo);
             }
             return true;
         }
@@ -3209,21 +3207,6 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         });
     }
 
-    /**
-     * Removes all folder listeners
-     */
-    public void removeFolderListeners() {
-        mapOverItems(new ItemOperator() {
-            @Override
-            public boolean evaluate(ItemInfo info, View view) {
-                if (view instanceof FolderIcon) {
-                    ((FolderIcon) view).removeListeners();
-                }
-                return false;
-            }
-        });
-    }
-
     public boolean isDropEnabled() {
         return true;
     }
@@ -3349,15 +3332,15 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
                     if (child instanceof DropTarget) {
                         mDragController.removeDropTarget((DropTarget) child);
                     }
-                } else if (child instanceof FolderIcon) {
+                } else if (child instanceof FolderIcon folderIcon) {
                     FolderInfo folderInfo = (FolderInfo) info;
-                    List<ItemInfo> matches = folderInfo.getContents().stream()
+                    ItemInfo[] matches = folderInfo.getContents().stream()
                             .filter(matcher)
-                            .collect(Collectors.toList());
-                    if (!matches.isEmpty()) {
-                        folderInfo.removeAll(matches, false);
-                        if (((FolderIcon) child).getFolder().isOpen()) {
-                            ((FolderIcon) child).getFolder().close(false /* animate */);
+                            .toArray(ItemInfo[]::new);
+                    if (matches.length > 0) {
+                        folderIcon.getFolder().removeFolderContent(false, matches);
+                        if (folderIcon.getFolder().isOpen()) {
+                            folderIcon.getFolder().close(false /* animate */);
                         }
                     }
                 } else if (info instanceof AppPairInfo api) {

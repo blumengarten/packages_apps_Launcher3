@@ -519,7 +519,7 @@ public class LauncherAccessibilityDelegate extends BaseAccessibilityDelegate<Lau
         Folder folder = Folder.getOpen(mContext);
         folder.close(true);
         WorkspaceItemInfo info = (WorkspaceItemInfo) item;
-        folder.getInfo().remove(info, false);
+        folder.removeFolderContent(false, info);
 
         final int[] coordinates = new int[2];
         final int screenId = findSpaceOnWorkspace(item, coordinates);

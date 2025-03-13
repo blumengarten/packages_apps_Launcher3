@@ -61,7 +61,6 @@ import com.android.launcher3.logger.LauncherAtom.ShortcutsContainer;
 import com.android.launcher3.logger.LauncherAtom.TaskSwitcherContainer;
 import com.android.launcher3.logger.LauncherAtom.WallpapersContainer;
 import com.android.launcher3.logger.LauncherAtomExtensions.ExtendedContainers;
-import com.android.launcher3.model.ModelWriter;
 import com.android.launcher3.pm.UserCache;
 import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.ContentWriter;
@@ -533,14 +532,6 @@ public class ItemInfo {
         ItemInfo itemInfo = new ItemInfo();
         itemInfo.copyFrom(this);
         return itemInfo;
-    }
-
-    /**
-     * Sets the title of the item and writes to DB model if needed.
-     */
-    public void setTitle(@Nullable final CharSequence title,
-            @Nullable final ModelWriter modelWriter) {
-        this.title = title;
     }
 
     /**
