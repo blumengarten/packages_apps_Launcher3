@@ -204,7 +204,7 @@ public class BubbleBarView extends FrameLayout {
         mExpandedBarIconsSpacing = getResources().getDimensionPixelSize(
                 R.dimen.bubblebar_expanded_icon_spacing);
         mBubbleElevation = getResources().getDimensionPixelSize(R.dimen.bubblebar_icon_elevation);
-        mDragElevation = getResources().getDimensionPixelSize(R.dimen.bubblebar_drag_elevation);
+        mDragElevation = getResources().getDimensionPixelSize(R.dimen.dragged_bubble_elevation);
         mPointerSize = getResources()
                 .getDimensionPixelSize(R.dimen.bubblebar_pointer_visible_size);
 

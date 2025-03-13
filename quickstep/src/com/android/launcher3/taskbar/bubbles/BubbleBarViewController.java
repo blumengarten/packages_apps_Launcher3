@@ -222,7 +222,7 @@ public class BubbleBarViewController {
         mIconSize = res.getDimensionPixelSize(R.dimen.bubblebar_icon_size);
         mBubbleBarTaskbarMinDistance = res.getDimensionPixelSize(
                 R.dimen.bubblebar_transient_taskbar_min_distance);
-        mDragElevation = res.getDimensionPixelSize(R.dimen.bubblebar_drag_elevation);
+        mDragElevation = res.getDimensionPixelSize(R.dimen.dragged_bubble_elevation);
         mTaskbarTranslationDelta = getBubbleBarTranslationDeltaForTaskbar(activity);
         if (DeviceConfig.isSmallTablet(mActivity)) {
             mBubbleBarDropTargetSize = res.getDimensionPixelSize(R.dimen.drag_zone_bubble_fold);

@@ -459,7 +459,8 @@
     <!-- Container size with pointer included: bubblebar_size + bubblebar_pointer_size -->
     <dimen name="bubblebar_size_with_pointer">80dp</dimen>
     <dimen name="bubblebar_elevation">1dp</dimen>
-    <dimen name="bubblebar_drag_elevation">2dp</dimen>
+    <!-- TODO b/396539130: used wmshared value once resources are fixed -->
+    <dimen name="dragged_bubble_elevation">3dp</dimen>
     <dimen name="bubblebar_hotseat_adjustment_threshold">90dp</dimen>
     <dimen name="bubblebar_bounce_distance">20dp</dimen>
 
