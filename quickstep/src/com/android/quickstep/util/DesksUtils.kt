@@ -19,6 +19,7 @@ package com.android.quickstep.util
 import android.app.TaskInfo
 import android.content.ComponentName
 import android.content.res.Resources
+import android.util.Log
 import android.window.DesktopExperienceFlags
 import com.android.systemui.shared.recents.model.Task
 
@@ -38,8 +39,10 @@ class DesksUtils {
             task.key.component?.let(::isDesktopWallpaperComponent) == true
 
         @JvmStatic
-        fun isDesktopWallpaperTask(taskInfo: TaskInfo) =
-            taskInfo.baseIntent.component?.let(::isDesktopWallpaperComponent) == true
+        fun isDesktopWallpaperTask(taskInfo: TaskInfo): Boolean {
+            Log.d("b/403118101", "isDesktopWallpaperTask: $taskInfo")
+            return taskInfo.baseIntent.component?.let(::isDesktopWallpaperComponent) == true
+        }
 
         @JvmStatic
         fun isDesktopWallpaperComponent(component: ComponentName) =
