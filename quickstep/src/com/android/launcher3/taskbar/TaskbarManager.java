@@ -988,11 +988,11 @@ public class TaskbarManager {
                     displayId);
             removeAndUnregisterComponentCallbacks(displayId);
 
-            debugTaskbarManager("onDisplayRemoved: destroying Taskbar!", displayId);
-            destroyTaskbarForDisplay(displayId);
-
             debugTaskbarManager("onDisplayRemoved: removing DeviceProfile from map!", displayId);
             removeDeviceProfileFromMap(displayId);
+
+            debugTaskbarManager("onDisplayRemoved: destroying Taskbar!", displayId);
+            destroyTaskbarForDisplay(displayId);
 
             debugTaskbarManager("onDisplayRemoved: removing WindowContext from map!", displayId);
             removeWindowContextFromMap(displayId);
