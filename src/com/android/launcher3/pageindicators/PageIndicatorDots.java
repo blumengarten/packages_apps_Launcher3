@@ -130,10 +130,10 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
     private final float mGapWidth;
     private final float mCircleGap;
     private final boolean mIsRtl;
-    private final VectorDrawable mArrowEnd;
-    private final VectorDrawable mArrowStart;
-    private final Rect mArrowEndBounds = new Rect();
-    private final Rect mArrowStartBounds = new Rect();
+    private final VectorDrawable mArrowRight;
+    private final VectorDrawable mArrowLeft;
+    private final Rect mArrowRightBounds = new Rect();
+    private final Rect mArrowLeftBounds = new Rect();
 
     private int mNumPages;
     private int mActivePage;
@@ -185,8 +185,8 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
                 : DOT_GAP_FACTOR * mDotRadius;
         setOutlineProvider(new MyOutlineProver());
         mIsRtl = Utilities.isRtl(getResources());
-        mArrowEnd = (VectorDrawable) getResources().getDrawable(R.drawable.ic_chevron_end);
-        mArrowStart = (VectorDrawable) getResources().getDrawable(R.drawable.ic_chevron_start);
+        mArrowRight = (VectorDrawable) getResources().getDrawable(R.drawable.ic_chevron_end);
+        mArrowLeft = (VectorDrawable) getResources().getDrawable(R.drawable.ic_chevron_start);
     }
 
     @Override
@@ -514,14 +514,14 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
 
                 if (mOnArrowClickListener != null && boundedPosition >= 1) {
                     // Here we draw the Left Arrow
-                    mArrowStart.setAlpha(alpha);
+                    mArrowLeft.setAlpha(alpha);
                     int size = (int) (mGapWidth * 4);
-                    mArrowStartBounds.left = (int) (sTempRect.left - mGapWidth - size);
-                    mArrowStartBounds.top = (int) (y - size / 2);
-                    mArrowStartBounds.right = (int) (sTempRect.left - mGapWidth);
-                    mArrowStartBounds.bottom = (int) (y + size / 2);
-                    mArrowStart.setBounds(mArrowStartBounds);
-                    mArrowStart.draw(canvas);
+                    mArrowLeftBounds.left = (int) (sTempRect.left - mGapWidth - size);
+                    mArrowLeftBounds.top = (int) (y - size / 2);
+                    mArrowLeftBounds.right = (int) (sTempRect.left - mGapWidth);
+                    mArrowLeftBounds.bottom = (int) (y + size / 2);
+                    mArrowLeft.setBounds(mArrowLeftBounds);
+                    mArrowLeft.draw(canvas);
                 }
 
                 // Here we draw the dots, one at a time from the left-most dot to the right-most dot
@@ -575,14 +575,14 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
 
                 if (mOnArrowClickListener != null && boundedPosition <= mNumPages - 2) {
                     // Here we draw the Right Arrow
-                    mArrowEnd.setAlpha(alpha);
+                    mArrowRight.setAlpha(alpha);
                     int size = (int) (mGapWidth * 4);
-                    mArrowEndBounds.left = (int) sTempRect.left;
-                    mArrowEndBounds.top = (int) (y - size / 2);
-                    mArrowEndBounds.right = (int) (int) (sTempRect.left + size);
-                    mArrowEndBounds.bottom = (int) (y + size / 2);
-                    mArrowEnd.setBounds(mArrowEndBounds);
-                    mArrowEnd.draw(canvas);
+                    mArrowRightBounds.left = (int) sTempRect.left;
+                    mArrowRightBounds.top = (int) (y - size / 2);
+                    mArrowRightBounds.right = (int) (int) (sTempRect.left + size);
+                    mArrowRightBounds.bottom = (int) (y + size / 2);
+                    mArrowRight.setBounds(mArrowRightBounds);
+                    mArrowRight.draw(canvas);
                 }
             } else {
                 // Here we draw the dots
@@ -606,9 +606,11 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
     public boolean onTouchEvent(MotionEvent ev) {
         if (mOnArrowClickListener == null) {
             // No - Op. Don't care about touch events
-        } else if (withinExpandedBounds(mArrowStartBounds, ev)) {
+        } else if ((mIsRtl && withinExpandedBounds(mArrowRightBounds, ev))
+                || (!mIsRtl && withinExpandedBounds(mArrowLeftBounds, ev))) {
             mOnArrowClickListener.accept(Direction.START);
-        } else if (withinExpandedBounds(mArrowEndBounds, ev)) {
+        } else if ((mIsRtl && withinExpandedBounds(mArrowLeftBounds, ev))
+                || (!mIsRtl && withinExpandedBounds(mArrowRightBounds, ev))) {
             mOnArrowClickListener.accept(Direction.END);
         }
         return super.onTouchEvent(ev);
