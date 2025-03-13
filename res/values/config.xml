@@ -224,4 +224,7 @@
          of the same name in SystemUI. -->
     <string-array name="config_appsSupportMultiInstancesSplit">
     </string-array>
+
+    <!-- Used to differentiate between desktop and non-desktop devices. -->
+    <bool name="desktop_form_factor">false</bool>
 </resources>
