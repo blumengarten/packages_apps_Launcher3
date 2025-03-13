@@ -92,6 +92,7 @@ import android.os.Looper;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.provider.Settings;
+import android.util.Log;
 import android.util.Pair;
 import android.util.Size;
 import android.view.CrossWindowBlurListeners;
@@ -182,6 +183,7 @@ import java.util.Map.Entry;
  * Manages the opening and closing app transitions from Launcher
  */
 public class QuickstepTransitionManager implements OnDeviceProfileChangeListener {
+    private static final String TAG = "QuickstepTransitionManager";
 
     private static final boolean ENABLE_SHELL_STARTING_SURFACE =
             SystemProperties.getBoolean("persist.debug.shell_starting_surface", true);
@@ -1207,7 +1209,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         mLauncher.removeOnDeviceProfileChangeListener(this);
         SystemUiProxy.INSTANCE.get(mLauncher).setStartingWindowListener(null);
         if (BuildConfig.IS_STUDIO_BUILD && !mRegisteredTaskStackChangeListener.isEmpty()) {
-            throw new IllegalStateException("Failed to run onEndCallback created from"
+            Log.e(TAG, "IllegalState: Failed to run onEndCallback created from"
                     + " getActivityLaunchOptions()");
         }
         mRegisteredTaskStackChangeListener.forEach(TaskRestartedDuringLaunchListener::unregister);
