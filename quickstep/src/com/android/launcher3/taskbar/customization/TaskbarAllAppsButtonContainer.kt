@@ -68,7 +68,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
             )
         backgroundTintList = ColorStateList.valueOf(TRANSPARENT)
         setIconDrawable(drawable)
-        if (activityContext.isTransientTaskbar) {
+        if (!activityContext.isTransientTaskbar) {
             setPadding(dpToPx(activityContext.taskbarSpecsEvaluator.taskbarIconPadding.toFloat()))
         }
         setForegroundTint(activityContext.getColor(R.color.all_apps_button_color))
@@ -105,7 +105,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 
     @DimenRes
     fun getAllAppsButtonTranslationXOffset(isTransientTaskbar: Boolean): Int {
-        return if (isTransientTaskbar && activityContext.isTransientTaskbar) {
+        return if (isTransientTaskbar) {
             R.dimen.transient_taskbar_all_apps_button_translation_x_offset
         } else {
             R.dimen.taskbar_all_apps_search_button_translation_x_offset

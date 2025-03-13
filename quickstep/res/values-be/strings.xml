@@ -139,11 +139,16 @@
     <string name="taskbar_overflow_a11y_title" msgid="7960342079198820179">"Меню з пашырэннем панэлі задач"</string>
     <string name="move_drop_target_top_or_left" msgid="2988702185049595807">"Перамясціць уверх/улева"</string>
     <string name="move_drop_target_bottom_or_right" msgid="5431393418797620162">"Перамясціць уніз/управа"</string>
-    <!-- no translation found for open_app_as_a_bubble (6642626287247807473) -->
+    <string name="open_app_as_a_bubble" msgid="6642626287247807473">"Адкрыць праграму ва ўсплывальным акне"</string>
+    <!-- no translation found for quick_switch_pane_title (4677158207760585812) -->
+    <skip />
+    <!-- no translation found for quick_switch_content_description (2851244536728720005) -->
     <skip />
     <string name="quick_switch_overflow" msgid="3679780650881041632">"{count,plural, =1{даступная праграма}one{даступная праграма}few{даступныя праграмы}many{даступных праграм}other{даступнай праграмы}}"</string>
     <string name="quick_switch_desktop" msgid="8393802056024499749">"Працоўны стол"</string>
     <string name="quick_switch_split_task" msgid="5598194724255333896">"<xliff:g id="APP_NAME_1">%1$s</xliff:g> і <xliff:g id="APP_NAME_2">%2$s</xliff:g>"</string>
+    <!-- no translation found for quick_switch_task_with_position_in_parent (4968670948331508951) -->
+    <skip />
     <string name="bubble_bar_bubble_fallback_description" msgid="7811684548953452009">"Бурбалкі"</string>
     <string name="bubble_bar_overflow_description" msgid="8617628132733151708">"Меню з пашырэннем"</string>
     <string name="bubble_bar_bubble_description" msgid="1882466152448446446">"<xliff:g id="NOTIFICATION_TITLE">%1$s</xliff:g>, крыніца: <xliff:g id="APP_NAME">%2$s</xliff:g>"</string>
@@ -157,8 +162,6 @@
     <string name="header_app_icon_description" msgid="2184625881433608027">"Значок праграмы"</string>
     <string name="header_default_app_title" msgid="8308052350689531566">"Назва праграмы"</string>
     <string name="header_close_icon_description" msgid="5400033616675911319">"Кнопка \"Закрыць\""</string>
-    <!-- no translation found for pin_to_taskbar (6607778046321626950) -->
-    <skip />
-    <!-- no translation found for unpin_from_taskbar (2178811773165572676) -->
-    <skip />
+    <string name="pin_to_taskbar" msgid="6607778046321626950">"Замацаваць на панэлі"</string>
+    <string name="unpin_from_taskbar" msgid="2178811773165572676">"Адмацаваць ад панэлі"</string>
 </resources>

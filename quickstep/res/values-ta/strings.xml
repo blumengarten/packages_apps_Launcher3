@@ -139,11 +139,16 @@
     <string name="taskbar_overflow_a11y_title" msgid="7960342079198820179">"செயல் பட்டிக்கான கூடுதல் விருப்பங்கள்"</string>
     <string name="move_drop_target_top_or_left" msgid="2988702185049595807">"மேலே/இடதுபுறம் நகர்த்தும்"</string>
     <string name="move_drop_target_bottom_or_right" msgid="5431393418797620162">"கீழே/வலதுபுறம் நகர்த்தும்"</string>
-    <!-- no translation found for open_app_as_a_bubble (6642626287247807473) -->
+    <string name="open_app_as_a_bubble" msgid="6642626287247807473">"ஆப்ஸைக் குமிழாகத் திற"</string>
+    <!-- no translation found for quick_switch_pane_title (4677158207760585812) -->
+    <skip />
+    <!-- no translation found for quick_switch_content_description (2851244536728720005) -->
     <skip />
     <string name="quick_switch_overflow" msgid="3679780650881041632">"{count,plural, =1{கூடுதல் ஆப்ஸ்}other{கூடுதல் ஆப்ஸ்}}"</string>
     <string name="quick_switch_desktop" msgid="8393802056024499749">"டெஸ்க்டாப்"</string>
     <string name="quick_switch_split_task" msgid="5598194724255333896">"<xliff:g id="APP_NAME_1">%1$s</xliff:g> மற்றும் <xliff:g id="APP_NAME_2">%2$s</xliff:g>"</string>
+    <!-- no translation found for quick_switch_task_with_position_in_parent (4968670948331508951) -->
+    <skip />
     <string name="bubble_bar_bubble_fallback_description" msgid="7811684548953452009">"குமிழ்"</string>
     <string name="bubble_bar_overflow_description" msgid="8617628132733151708">"கூடுதல் விருப்பங்களைக் காட்டும்"</string>
     <string name="bubble_bar_bubble_description" msgid="1882466152448446446">"<xliff:g id="APP_NAME">%2$s</xliff:g> வழங்கும் <xliff:g id="NOTIFICATION_TITLE">%1$s</xliff:g>"</string>
@@ -157,8 +162,6 @@
     <string name="header_app_icon_description" msgid="2184625881433608027">"ஆப்ஸ் ஐகான்"</string>
     <string name="header_default_app_title" msgid="8308052350689531566">"ஆப்ஸ் தலைப்பு"</string>
     <string name="header_close_icon_description" msgid="5400033616675911319">"மூடுவதற்கான பட்டன்"</string>
-    <!-- no translation found for pin_to_taskbar (6607778046321626950) -->
-    <skip />
-    <!-- no translation found for unpin_from_taskbar (2178811773165572676) -->
-    <skip />
+    <string name="pin_to_taskbar" msgid="6607778046321626950">"செயல்பட்டியில் பின் செய்"</string>
+    <string name="unpin_from_taskbar" msgid="2178811773165572676">"செயல்பட்டியிலிருந்து அகற்று"</string>
 </resources>

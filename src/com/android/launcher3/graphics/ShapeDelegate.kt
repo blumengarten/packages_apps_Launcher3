@@ -18,6 +18,7 @@ package com.android.launcher3.graphics
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
+import android.animation.ValueAnimator.AnimatorUpdateListener
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
@@ -41,7 +42,6 @@ import androidx.graphics.shapes.SvgPathParser
 import androidx.graphics.shapes.rectangle
 import androidx.graphics.shapes.toPath
 import androidx.graphics.shapes.transformed
-import com.android.launcher3.anim.RoundedRectRevealOutlineProvider
 import com.android.launcher3.icons.GraphicsUtils
 import com.android.launcher3.views.ClipPathView
 
@@ -127,16 +127,20 @@ interface ShapeDelegate {
             endRadius: Float,
             isReversed: Boolean,
         ): ValueAnimator where T : View, T : ClipPathView {
-            return object :
-                    RoundedRectRevealOutlineProvider(
-                        (startRect.width() / 2f) * radiusRatio,
-                        endRadius,
-                        startRect,
-                        endRect,
-                    ) {
-                    override fun shouldRemoveElevationDuringAnimation() = true
-                }
-                .createRevealAnimator(target, isReversed)
+            val startRadius = (startRect.width() / 2f) * radiusRatio
+            return ClipAnimBuilder(target) { progress, path ->
+                val radius = (1 - progress) * startRadius + progress * endRadius
+                path.addRoundRect(
+                    (1 - progress) * startRect.left + progress * endRect.left,
+                    (1 - progress) * startRect.top + progress * endRect.top,
+                    (1 - progress) * startRect.right + progress * endRect.right,
+                    (1 - progress) * startRect.bottom + progress * endRect.bottom,
+                    radius,
+                    radius,
+                    Path.Direction.CW,
+                )
+            }
+                .toAnim(isReversed)
         }
 
         override fun equals(other: Any?) =
@@ -220,38 +224,44 @@ interface ShapeDelegate {
                         ),
                 )
 
-            val va =
-                if (isReversed) ValueAnimator.ofFloat(1f, 0f) else ValueAnimator.ofFloat(0f, 1f)
-            va.addListener(
-                object : AnimatorListenerAdapter() {
-                    private var oldOutlineProvider: ViewOutlineProvider? = null
-
-                    override fun onAnimationStart(animation: Animator) {
-                        target.apply {
-                            oldOutlineProvider = outlineProvider
-                            outlineProvider = null
-                            translationZ = -target.elevation
-                        }
-                    }
-
-                    override fun onAnimationEnd(animation: Animator) {
-                        target.apply {
-                            translationZ = 0f
-                            setClipPath(null)
-                            outlineProvider = oldOutlineProvider
-                        }
-                    }
-                }
-            )
-
-            val path = Path()
-            va.addUpdateListener { anim: ValueAnimator ->
-                path.reset()
-                morph.toPath(anim.animatedValue as Float, path)
-                target.setClipPath(path)
-            }
-            return va
+            return ClipAnimBuilder(target, morph::toPath).toAnim(isReversed)
         }
+    }
+
+    private class ClipAnimBuilder<T>(val target: T, val pathProvider: (Float, Path) -> Unit) :
+        AnimatorListenerAdapter(), AnimatorUpdateListener where T : View, T : ClipPathView {
+
+        private var oldOutlineProvider: ViewOutlineProvider? = null
+        val path = Path()
+
+        override fun onAnimationStart(animation: Animator) {
+            target.apply {
+                oldOutlineProvider = outlineProvider
+                outlineProvider = null
+                translationZ = -target.elevation
+            }
+        }
+
+        override fun onAnimationEnd(animation: Animator) {
+            target.apply {
+                translationZ = 0f
+                setClipPath(null)
+                outlineProvider = oldOutlineProvider
+            }
+        }
+
+        override fun onAnimationUpdate(anim: ValueAnimator) {
+            path.reset()
+            pathProvider.invoke(anim.animatedValue as Float, path)
+            target.setClipPath(path)
+        }
+
+        fun toAnim(isReversed: Boolean) =
+            (if (isReversed) ValueAnimator.ofFloat(1f, 0f) else ValueAnimator.ofFloat(0f, 1f))
+                .also {
+                    it.addListener(this)
+                    it.addUpdateListener(this)
+                }
     }
 
     companion object {

@@ -429,8 +429,8 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
                 else -> 1f
             } * (if (recentsView.isRtl) 1f else -1f)
 
-        return (dismissedTaskView.layoutParams.width + recentsView.pageSpacing) *
-            dismissHorizontalFactor
+        return (recentsView.pagedOrientationHandler.getPrimarySize(dismissedTaskView) +
+            recentsView.pageSpacing) * dismissHorizontalFactor
     }
 
     private fun getTasksToReflow(

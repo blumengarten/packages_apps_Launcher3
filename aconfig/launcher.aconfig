@@ -566,6 +566,14 @@ flag {
 }
 
 flag {
+  name: "google_sans_flex_font"
+  namespace: "launcher"
+  description: "Adds refresh for font family. Needs to be fixed to be used in resources."
+  bug: "395145453"
+  is_fixed_read_only: true
+}
+
+flag {
   name: "restore_archived_shortcuts"
   namespace: "launcher"
   description: "Makes sure pre-archived pinned shortcuts also get restored"
