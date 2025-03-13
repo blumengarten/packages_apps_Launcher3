@@ -615,6 +615,16 @@ constructor(
         super.draw(canvas)
     }
 
+    override fun setLayoutDirection(layoutDirection: Int) {
+        super.setLayoutDirection(layoutDirection)
+        if (enableOverviewIconMenu()) {
+            val deviceLayoutDirection = resources.configuration.layoutDirection
+            taskContainers.forEach {
+                (it.iconView as IconAppChipView).layoutDirection = deviceLayoutDirection
+            }
+        }
+    }
+
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
         val thumbnailTopMargin = container.deviceProfile.overviewTaskThumbnailTopMarginPx
@@ -1484,10 +1494,11 @@ constructor(
     }
 
     private fun closeTaskMenu(): Boolean {
-        val floatingView: AbstractFloatingView? = AbstractFloatingView.getTopOpenViewWithType(
-            container,
-            AbstractFloatingView.TYPE_TASK_MENU
-        )
+        val floatingView: AbstractFloatingView? =
+            AbstractFloatingView.getTopOpenViewWithType(
+                container,
+                AbstractFloatingView.TYPE_TASK_MENU,
+            )
         if (floatingView?.isOpen == true) {
             floatingView.close(true)
             return true
