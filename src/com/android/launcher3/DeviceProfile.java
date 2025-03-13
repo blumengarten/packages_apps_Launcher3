@@ -30,8 +30,8 @@ import static com.android.launcher3.testing.shared.ResourceUtils.INVALID_RESOURC
 import static com.android.launcher3.testing.shared.ResourceUtils.pxFromDp;
 import static com.android.launcher3.testing.shared.ResourceUtils.roundPxValueFromFloat;
 import static com.android.wm.shell.Flags.enableBubbleBar;
-import static com.android.wm.shell.Flags.enableTinyTaskbar;
 import static com.android.wm.shell.Flags.enableBubbleBarOnPhones;
+import static com.android.wm.shell.Flags.enableTinyTaskbar;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -1832,10 +1832,17 @@ public class DeviceProfile {
                         workspacePageIndicatorHeight - mWorkspacePageIndicatorOverlapWorkspace;
             }
             int paddingTop = workspaceTopPadding + (mIsScalableGrid ? 0 : edgeMarginPx);
-            // On isFixedLandscapeMode on phones we already have padding because of the camera hole
-            int paddingSide = inv.isFixedLandscape ? 0 : desiredWorkspaceHorizontalMarginPx;
+            int paddingLeft = desiredWorkspaceHorizontalMarginPx;
+            int paddingRight = desiredWorkspaceHorizontalMarginPx;
 
-            padding.set(paddingSide, paddingTop, paddingSide, paddingBottom);
+            // In fixed Landscape we don't need padding on the side next to the cutout because
+            // the cutout is already adding padding to all of Launcher, we only need on the other
+            // side
+            if (inv.isFixedLandscape) {
+                paddingLeft = isSeascape() ? desiredWorkspaceHorizontalMarginPx : 0;
+                paddingRight = isSeascape() ? 0 : desiredWorkspaceHorizontalMarginPx;
+            }
+            padding.set(paddingLeft, paddingTop, paddingRight, paddingBottom);
         }
         insetPadding(workspacePadding, cellLayoutPaddingPx);
     }
@@ -1933,7 +1940,24 @@ public class DeviceProfile {
                 hotseatBarPadding.set(mHotseatBarWorkspaceSpacePx, paddingTop,
                         mInsets.right + mHotseatBarEdgePaddingPx, paddingBottom);
             }
-        } else if (isTaskbarPresent || inv.isFixedLandscape) {
+        } else if (inv.isFixedLandscape) {
+            // Center the QSB vertically with hotseat
+            int hotseatBarBottomPadding = getHotseatBarBottomPadding();
+            int hotseatPlusQSBWidth = getHotseatRequiredWidth();
+            int qsbWidth = getAdditionalQsbSpace();
+            int availableWidthPxForHotseat = availableWidthPx - Math.abs(workspacePadding.width())
+                    - Math.abs(cellLayoutPaddingPx.width());
+            int remainingSpaceOnSide = (availableWidthPxForHotseat - hotseatPlusQSBWidth) / 2;
+
+            hotseatBarPadding.set(
+                    (remainingSpaceOnSide + qsbWidth) + mInsets.left + workspacePadding.left
+                            + cellLayoutPaddingPx.left,
+                    hotseatBarSizePx - hotseatBarBottomPadding - hotseatCellHeightPx,
+                    remainingSpaceOnSide + mInsets.right + workspacePadding.right
+                            + cellLayoutPaddingPx.right,
+                    hotseatBarBottomPadding
+            );
+        } else if (isTaskbarPresent) {
             // Center the QSB vertically with hotseat
             int hotseatBarBottomPadding = getHotseatBarBottomPadding();
             int hotseatBarTopPadding =
@@ -1951,11 +1975,6 @@ public class DeviceProfile {
                 endSpacing = startSpacing;
             }
             startSpacing += getAdditionalQsbSpace();
-
-            if (inv.isFixedLandscape) {
-                endSpacing += mInsets.right;
-                startSpacing +=  mInsets.left;
-            }
 
             hotseatBarPadding.top = hotseatBarTopPadding;
             hotseatBarPadding.bottom = hotseatBarBottomPadding;
@@ -2166,7 +2185,8 @@ public class DeviceProfile {
     }
 
     public boolean isSeascape() {
-        return rotationHint == Surface.ROTATION_270 && isVerticalBarLayout();
+        return rotationHint == Surface.ROTATION_270
+                && (isVerticalBarLayout() || inv.isFixedLandscape);
     }
 
     public boolean shouldFadeAdjacentWorkspaceScreens() {
