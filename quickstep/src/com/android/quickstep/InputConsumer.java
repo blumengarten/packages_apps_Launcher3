@@ -63,13 +63,25 @@ public interface InputConsumer {
             "TYPE_BUBBLE_BAR",              // 16
     };
 
-    InputConsumer NO_OP = () -> TYPE_NO_OP;
+    InputConsumer DEFAULT_NO_OP = createNoOpInputConsumer(Display.DEFAULT_DISPLAY);
+
+    static InputConsumer createNoOpInputConsumer(int displayId) {
+        return new InputConsumer() {
+            @Override
+            public int getType() {
+                return TYPE_NO_OP;
+            }
+
+            @Override
+            public int getDisplayId() {
+                return displayId;
+            }
+        };
+    }
 
     int getType();
 
-    default int getDisplayId() {
-        return Display.DEFAULT_DISPLAY;
-    }
+    int getDisplayId();
 
     /**
      * Returns true if the user has crossed the threshold for it to be an explicit action.

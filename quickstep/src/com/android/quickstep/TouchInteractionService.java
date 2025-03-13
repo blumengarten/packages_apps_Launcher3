@@ -35,6 +35,7 @@ import static com.android.launcher3.util.window.WindowManagerProxy.MIN_TABLET_WI
 import static com.android.quickstep.GestureState.DEFAULT_STATE;
 import static com.android.quickstep.GestureState.TrackpadGestureType.getTrackpadGestureType;
 import static com.android.quickstep.InputConsumer.TYPE_CURSOR_HOVER;
+import static com.android.quickstep.InputConsumer.createNoOpInputConsumer;
 import static com.android.quickstep.InputConsumerUtils.newConsumer;
 import static com.android.quickstep.InputConsumerUtils.tryCreateAssistantInputConsumer;
 import static com.android.systemui.shared.system.ActivityManagerWrapper.CLOSE_SYSTEM_WINDOWS_REASON_RECENTS;
@@ -98,7 +99,6 @@ import com.android.quickstep.fallback.window.RecentsWindowFlags;
 import com.android.quickstep.fallback.window.RecentsWindowSwipeHandler;
 import com.android.quickstep.inputconsumers.BubbleBarInputConsumer;
 import com.android.quickstep.inputconsumers.OneHandedModeInputConsumer;
-import com.android.quickstep.inputconsumers.ResetGestureInputConsumer;
 import com.android.quickstep.util.ActiveGestureLog;
 import com.android.quickstep.util.ActiveGestureLog.CompoundString;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
@@ -559,10 +559,10 @@ public class TouchInteractionService extends Service {
     private RecentsAnimationDeviceState mDeviceState;
     private TaskAnimationManager mTaskAnimationManager;
 
-    private @NonNull InputConsumer mUncheckedConsumer = InputConsumer.NO_OP;
-    private @NonNull InputConsumer mConsumer = InputConsumer.NO_OP;
+    private @NonNull InputConsumer mUncheckedConsumer = InputConsumer.DEFAULT_NO_OP;
+    private @NonNull InputConsumer mConsumer = InputConsumer.DEFAULT_NO_OP;
     private Choreographer mMainChoreographer;
-    private @Nullable ResetGestureInputConsumer mResetGestureInputConsumer;
+    private boolean mUserUnlocked = false;
     private GestureState mGestureState = DEFAULT_STATE;
 
     private InputMonitorDisplayModel mInputMonitorDisplayModel;
@@ -692,8 +692,7 @@ public class TouchInteractionService extends Service {
         mOverviewCommandHelper = new OverviewCommandHelper(this,
                 mOverviewComponentObserver, mTaskAnimationManager, mRecentsDisplayModel,
                 SystemUiProxy.INSTANCE.get(this).getFocusState(), mTaskbarManager);
-        mResetGestureInputConsumer = new ResetGestureInputConsumer(
-                mTaskAnimationManager, mTaskbarManager::getCurrentActivityContext);
+        mUserUnlocked = true;
         mInputConsumer.registerInputConsumer();
         for (int displayId : mDeviceState.getDisplaysWithSysUIState()) {
             onSystemUiFlagsChanged(mDeviceState.getSystemUiStateFlags(displayId), displayId);
@@ -917,7 +916,7 @@ public class TouchInteractionService extends Service {
                 } else {
                     reasonString.append(" but event cannot trigger Assistant, "
                             + "consuming gesture as no-op");
-                    mUncheckedConsumer = InputConsumer.NO_OP;
+                    mUncheckedConsumer = createNoOpInputConsumer(displayId);
                 }
             } else if ((!isOneHandedModeActive && isInSwipeUpTouchRegion)
                     || isHoverActionWithoutConsumer || isOnBubbles) {
@@ -934,7 +933,7 @@ public class TouchInteractionService extends Service {
                 mGestureState = newGestureState;
                 mConsumer = newConsumer(
                         this,
-                        mResetGestureInputConsumer,
+                        mUserUnlocked,
                         mOverviewComponentObserver,
                         mDeviceState,
                         prevGestureState,
@@ -968,19 +967,22 @@ public class TouchInteractionService extends Service {
                         + "consuming gesture for one-handed action");
                 // Consume gesture event for triggering one handed feature.
                 mUncheckedConsumer = new OneHandedModeInputConsumer(
-                        this, displayId, mDeviceState, InputConsumer.NO_OP, inputMonitorCompat);
+                        this,
+                        displayId,
+                        mDeviceState,
+                        InputConsumer.createNoOpInputConsumer(displayId), inputMonitorCompat);
             } else {
-                mUncheckedConsumer = InputConsumer.NO_OP;
+                mUncheckedConsumer = InputConsumer.createNoOpInputConsumer(displayId);
             }
         } else {
             // Other events
-            if (mUncheckedConsumer != InputConsumer.NO_OP) {
+            if (mUncheckedConsumer.getType() != InputConsumer.TYPE_NO_OP) {
                 // Only transform the event if we are handling it in a proper consumer
                 mRotationTouchHelper.setOrientationTransformIfNeeded(event);
             }
         }
 
-        if (mUncheckedConsumer != InputConsumer.NO_OP) {
+        if (mUncheckedConsumer.getType() != InputConsumer.TYPE_NO_OP) {
             switch (action) {
                 case ACTION_DOWN:
                     ActiveGestureProtoLogProxy.logOnInputEventActionDown(displayId, reasonString);
@@ -1100,36 +1102,18 @@ public class TouchInteractionService extends Service {
     }
 
     private void reset(int displayId) {
-        mConsumer = mUncheckedConsumer = getDefaultInputConsumer();
+        mConsumer = mUncheckedConsumer = InputConsumerUtils.getDefaultInputConsumer(
+                displayId,
+                mUserUnlocked,
+                mTaskAnimationManager,
+                mTaskbarManager,
+                CompoundString.NO_OP);
         mGestureState = DEFAULT_STATE;
         // By default, use batching of the input events, but check receiver before using in the rare
         // case that the monitor was disposed before the swipe settled
         InputEventReceiver inputEventReceiver = getInputEventReceiver(displayId);
         if (inputEventReceiver != null) {
             inputEventReceiver.setBatchingEnabled(true);
-        }
-    }
-
-    private @NonNull InputConsumer getDefaultInputConsumer() {
-        return getDefaultInputConsumer(CompoundString.NO_OP);
-    }
-
-    /**
-     * Returns the {@link ResetGestureInputConsumer} if user is unlocked, else NO_OP.
-     */
-    private @NonNull InputConsumer getDefaultInputConsumer(@NonNull CompoundString reasonString) {
-        if (mResetGestureInputConsumer != null) {
-            reasonString.append(
-                    "%smResetGestureInputConsumer initialized, using ResetGestureInputConsumer",
-                    SUBSTRING_PREFIX);
-            return mResetGestureInputConsumer;
-        } else {
-            reasonString.append(
-                    "%smResetGestureInputConsumer not initialized, using no-op input consumer",
-                    SUBSTRING_PREFIX);
-            // mResetGestureInputConsumer isn't initialized until onUserUnlocked(), so reset to
-            // NO_OP until then (we never want these to be null).
-            return InputConsumer.NO_OP;
         }
     }
 
