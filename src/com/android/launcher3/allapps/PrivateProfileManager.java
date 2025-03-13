@@ -190,15 +190,11 @@ public class PrivateProfileManager extends UserProfileManager {
     /** Adds Private Space install app button to the layout. */
     public void addPrivateSpaceInstallAppButton(List<BaseAllAppsAdapter.AdapterItem> adapterItems) {
         Context context = mAllApps.getContext();
-        // Prepare bitmapInfo
-        Intent.ShortcutIconResource shortcut = Intent.ShortcutIconResource.fromContext(
-                context, com.android.launcher3.R.drawable.private_space_install_app_icon);
-        BitmapInfo bitmapInfo = LauncherIcons.obtain(context).createIconBitmap(shortcut);
 
         PrivateSpaceInstallAppButtonInfo itemInfo = new PrivateSpaceInstallAppButtonInfo();
         itemInfo.title = context.getResources().getString(R.string.ps_add_button_label);
         itemInfo.intent = mAppInstallerIntent;
-        itemInfo.bitmap = bitmapInfo;
+        itemInfo.bitmap = preparePSBitmapInfo();
         itemInfo.contentDescription = context.getResources().getString(
                 com.android.launcher3.R.string.ps_add_button_content_description);
         itemInfo.runtimeStatusFlags |= FLAG_NOT_PINNABLE;
@@ -216,6 +212,13 @@ public class PrivateProfileManager extends UserProfileManager {
     public boolean isPrivateSpaceHidden() {
         return getCurrentState() == STATE_DISABLED && SettingsCache.INSTANCE
                     .get(mAllApps.getContext()).getValue(PRIVATE_SPACE_HIDE_WHEN_LOCKED_URI, 0);
+    }
+
+    BitmapInfo preparePSBitmapInfo() {
+        Context context = mAllApps.getContext();
+        Intent.ShortcutIconResource shortcut = Intent.ShortcutIconResource.fromContext(
+                context, com.android.launcher3.R.drawable.private_space_install_app_icon);
+        return LauncherIcons.obtain(context).createIconBitmap(shortcut);
     }
 
     /**
