@@ -189,29 +189,28 @@ public class TaskbarManager {
     private class RecreationListener implements DisplayController.DisplayInfoChangeListener {
         @Override
         public void onDisplayInfoChanged(Context context, DisplayController.Info info, int flags) {
+            int displayId = context.getDisplayId();
             if ((flags & CHANGE_DENSITY) != 0) {
-                debugTaskbarManager("onDisplayInfoChanged: Display density changed",
-                        context.getDisplayId());
+                debugTaskbarManager("onDisplayInfoChanged: Display density changed", displayId);
             }
             if ((flags & CHANGE_NAVIGATION_MODE) != 0) {
-                debugTaskbarManager("onDisplayInfoChanged: Navigation mode changed",
-                        context.getDisplayId());
+                debugTaskbarManager("onDisplayInfoChanged: Navigation mode changed", displayId);
             }
             if ((flags & CHANGE_DESKTOP_MODE) != 0) {
                 debugTaskbarManager("onDisplayInfoChanged: Desktop mode changed",
                         context.getDisplayId());
             }
             if ((flags & CHANGE_TASKBAR_PINNING) != 0) {
-                debugTaskbarManager("onDisplayInfoChanged: Taskbar pinning changed",
-                        context.getDisplayId());
+                debugTaskbarManager("onDisplayInfoChanged: Taskbar pinning changed", displayId);
             }
 
             if ((flags & (CHANGE_DENSITY | CHANGE_NAVIGATION_MODE | CHANGE_DESKTOP_MODE
                     | CHANGE_TASKBAR_PINNING | CHANGE_SHOW_LOCKED_TASKBAR)) != 0) {
-                debugTaskbarManager("onDisplayInfoChanged: Recreating Taskbar!",
-                        context.getDisplayId());
+
                 TaskbarActivityContext taskbarActivityContext = getCurrentActivityContext();
                 if ((flags & CHANGE_SHOW_LOCKED_TASKBAR) != 0) {
+                    debugTaskbarManager("onDisplayInfoChanged: show locked taskbar changed!",
+                            displayId);
                     recreateTaskbars();
                 } else if ((flags & CHANGE_DESKTOP_MODE) != 0) {
                     if (mShouldIgnoreNextDesktopModeChangeFromDisplayController) {
@@ -298,6 +297,11 @@ public class TaskbarManager {
                 public void onExitDesktopMode(int duration) {
                     for (int taskbarIndex = 0; taskbarIndex < mTaskbars.size(); taskbarIndex++) {
                         int displayId = mTaskbars.keyAt(taskbarIndex);
+                        if (DesktopExperienceFlags.ENABLE_TASKBAR_CONNECTED_DISPLAYS.isTrue()
+                                && !isDefaultDisplay(displayId)) {
+                            continue;
+                        }
+
                         TaskbarActivityContext taskbarActivityContext = getTaskbarForDisplay(
                                 displayId);
                         if (taskbarActivityContext != null
@@ -317,6 +321,11 @@ public class TaskbarManager {
                 public void onEnterDesktopMode(int duration) {
                     for (int taskbarIndex = 0; taskbarIndex < mTaskbars.size(); taskbarIndex++) {
                         int displayId = mTaskbars.keyAt(taskbarIndex);
+                        if (DesktopExperienceFlags.ENABLE_TASKBAR_CONNECTED_DISPLAYS.isTrue()
+                                && !isDefaultDisplay(displayId)) {
+                            continue;
+                        }
+
                         TaskbarActivityContext taskbarActivityContext = getTaskbarForDisplay(
                                 displayId);
                         if (taskbarActivityContext != null) {
