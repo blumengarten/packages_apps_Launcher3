@@ -32,7 +32,9 @@ import android.util.DisplayMetrics
 import android.view.SurfaceControl
 import android.view.WindowManager
 import android.window.TransitionInfo
+import android.window.TransitionInfo.Change
 import androidx.core.util.Supplier
+import androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiThread
 import com.android.app.animation.Interpolators
 import com.android.internal.jank.Cuj
 import com.android.launcher3.desktop.DesktopAppLaunchAnimatorHelper
@@ -45,6 +47,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 class DesktopAppLaunchAnimatorHelperTest {
@@ -70,6 +73,10 @@ class DesktopAppLaunchAnimatorHelperTest {
         whenever(transactionSupplier.get()).thenReturn(transaction)
         whenever(transaction.setCrop(any(), any())).thenReturn(transaction)
         whenever(transaction.setCornerRadius(any(), any())).thenReturn(transaction)
+        whenever(transaction.setScale(any(), any(), any())).thenReturn(transaction)
+        whenever(transaction.setPosition(any(), any(), any())).thenReturn(transaction)
+        whenever(transaction.setAlpha(any(), any())).thenReturn(transaction)
+        whenever(transaction.setFrameTimeline(any())).thenReturn(transaction)
 
         whenever(context.resources).thenReturn(resources)
         whenever(resources.displayMetrics).thenReturn(DisplayMetrics())
@@ -77,14 +84,8 @@ class DesktopAppLaunchAnimatorHelperTest {
     }
 
     @Test
-    fun launchTransition_returnsLaunchAnimator() {
-        val openChange =
-            TransitionInfo.Change(mock(), mock()).apply {
-                mode = WindowManager.TRANSIT_OPEN
-                taskInfo = TASK_INFO_FREEFORM
-            }
-        val transitionInfo = TransitionInfo(WindowManager.TRANSIT_NONE, 0)
-        transitionInfo.addChange(openChange)
+    fun launchTransition_returnsLaunchAnimator() = runOnUiThread {
+        val transitionInfo = createTransitionInfo(listOf(OPEN_CHANGE))
 
         val actual = helper.createAnimators(transitionInfo, finishCallback = {})
 
@@ -93,14 +94,27 @@ class DesktopAppLaunchAnimatorHelperTest {
     }
 
     @Test
-    fun noLaunchTransition_returnsEmptyAnimatorsList() {
+    fun launchTransition_callsAnimationEndListener() = runOnUiThread {
+        val finishCallback = mock<Function1<Animator, Unit>>()
+        val transitionInfo = createTransitionInfo(listOf(OPEN_CHANGE))
+
+        val animators = helper.createAnimators(transitionInfo, finishCallback = finishCallback)
+
+        animators.forEach { animator ->
+            animator.start()
+            animator.end()
+            verify(finishCallback).invoke(animator)
+        }
+    }
+
+    @Test
+    fun noLaunchTransition_returnsEmptyAnimatorsList() = runOnUiThread {
         val pipChange =
             TransitionInfo.Change(mock(), mock()).apply {
                 mode = WindowManager.TRANSIT_PIP
                 taskInfo = TASK_INFO_FREEFORM
             }
-        val transitionInfo = TransitionInfo(WindowManager.TRANSIT_NONE, 0)
-        transitionInfo.addChange(pipChange)
+        val transitionInfo = createTransitionInfo(listOf(pipChange))
 
         val actual = helper.createAnimators(transitionInfo, finishCallback = {})
 
@@ -108,20 +122,8 @@ class DesktopAppLaunchAnimatorHelperTest {
     }
 
     @Test
-    fun minimizeTransition_returnsLaunchAndMinimizeAnimator() {
-        val openChange =
-            TransitionInfo.Change(mock(), mock()).apply {
-                mode = WindowManager.TRANSIT_OPEN
-                taskInfo = TASK_INFO_FREEFORM
-            }
-        val minimizeChange =
-            TransitionInfo.Change(mock(), mock()).apply {
-                mode = WindowManager.TRANSIT_TO_BACK
-                taskInfo = TASK_INFO_FREEFORM
-            }
-        val transitionInfo = TransitionInfo(WindowManager.TRANSIT_NONE, 0)
-        transitionInfo.addChange(openChange)
-        transitionInfo.addChange(minimizeChange)
+    fun minimizeTransition_returnsLaunchAndMinimizeAnimator() = runOnUiThread {
+        val transitionInfo = createTransitionInfo(listOf(OPEN_CHANGE, MINIMIZE_CHANGE))
 
         val actual = helper.createAnimators(transitionInfo, finishCallback = {})
 
@@ -131,21 +133,23 @@ class DesktopAppLaunchAnimatorHelperTest {
     }
 
     @Test
+    fun minimizeTransition_callsAnimationEndListener() = runOnUiThread {
+        val finishCallback = mock<Function1<Animator, Unit>>()
+        val transitionInfo = createTransitionInfo(listOf(OPEN_CHANGE, MINIMIZE_CHANGE))
+
+        val animators = helper.createAnimators(transitionInfo, finishCallback = finishCallback)
+
+        animators.forEach { animator ->
+            animator.start()
+            animator.end()
+            verify(finishCallback).invoke(animator)
+        }
+    }
+
+    @Test
     @EnableFlags(Flags.FLAG_ENABLE_DESKTOP_TRAMPOLINE_CLOSE_ANIMATION_BUGFIX)
-    fun trampolineTransition_flagEnabled_returnsLaunchAndCloseAnimator() {
-        val openChange =
-            TransitionInfo.Change(mock(), mock()).apply {
-                mode = WindowManager.TRANSIT_OPEN
-                taskInfo = TASK_INFO_FREEFORM
-            }
-        val closeChange =
-            TransitionInfo.Change(mock(), mock()).apply {
-                mode = WindowManager.TRANSIT_CLOSE
-                taskInfo = TASK_INFO_FREEFORM
-            }
-        val transitionInfo = TransitionInfo(WindowManager.TRANSIT_NONE, 0)
-        transitionInfo.addChange(openChange)
-        transitionInfo.addChange(closeChange)
+    fun trampolineTransition_flagEnabled_returnsLaunchAndCloseAnimator() = runOnUiThread {
+        val transitionInfo = createTransitionInfo(listOf(OPEN_CHANGE, CLOSE_CHANGE))
 
         val actual = helper.createAnimators(transitionInfo, finishCallback = {})
 
@@ -155,21 +159,24 @@ class DesktopAppLaunchAnimatorHelperTest {
     }
 
     @Test
+    @EnableFlags(Flags.FLAG_ENABLE_DESKTOP_TRAMPOLINE_CLOSE_ANIMATION_BUGFIX)
+    fun trampolineTransition_flagEnabled_callsAnimationEndListener() = runOnUiThread {
+        val finishCallback = mock<Function1<Animator, Unit>>()
+        val transitionInfo = createTransitionInfo(listOf(OPEN_CHANGE, CLOSE_CHANGE))
+
+        val animators = helper.createAnimators(transitionInfo, finishCallback = finishCallback)
+
+        animators.forEach { animator ->
+            animator.start()
+            animator.end()
+            verify(finishCallback).invoke(animator)
+        }
+    }
+
+    @Test
     @DisableFlags(Flags.FLAG_ENABLE_DESKTOP_TRAMPOLINE_CLOSE_ANIMATION_BUGFIX)
-    fun trampolineTransition_flagDisabled_returnsLaunchAnimator() {
-        val openChange =
-            TransitionInfo.Change(mock(), mock()).apply {
-                mode = WindowManager.TRANSIT_OPEN
-                taskInfo = TASK_INFO_FREEFORM
-            }
-        val closeChange =
-            TransitionInfo.Change(mock(), mock()).apply {
-                mode = WindowManager.TRANSIT_CLOSE
-                taskInfo = TASK_INFO_FREEFORM
-            }
-        val transitionInfo = TransitionInfo(WindowManager.TRANSIT_NONE, 0)
-        transitionInfo.addChange(openChange)
-        transitionInfo.addChange(closeChange)
+    fun trampolineTransition_flagDisabled_returnsLaunchAnimator() = runOnUiThread {
+        val transitionInfo = createTransitionInfo(listOf(OPEN_CHANGE, CLOSE_CHANGE))
 
         val actual = helper.createAnimators(transitionInfo, finishCallback = {})
 
@@ -179,26 +186,9 @@ class DesktopAppLaunchAnimatorHelperTest {
 
     @Test
     @EnableFlags(Flags.FLAG_ENABLE_DESKTOP_TRAMPOLINE_CLOSE_ANIMATION_BUGFIX)
-    fun trampolineTransition_flagEnabled_hitDesktopWindowLimit_returnsLaunchMinimizeCloseAnimator() {
-        val openChange =
-            TransitionInfo.Change(mock(), mock()).apply {
-                mode = WindowManager.TRANSIT_OPEN
-                taskInfo = TASK_INFO_FREEFORM
-            }
-        val minimizeChange =
-            TransitionInfo.Change(mock(), mock()).apply {
-                mode = WindowManager.TRANSIT_TO_BACK
-                taskInfo = TASK_INFO_FREEFORM
-            }
-        val closeChange =
-            TransitionInfo.Change(mock(), mock()).apply {
-                mode = WindowManager.TRANSIT_CLOSE
-                taskInfo = TASK_INFO_FREEFORM
-            }
-        val transitionInfo = TransitionInfo(WindowManager.TRANSIT_NONE, 0)
-        transitionInfo.addChange(openChange)
-        transitionInfo.addChange(minimizeChange)
-        transitionInfo.addChange(closeChange)
+    fun trampolineTransition_flagEnabled_hitDesktopWindowLimit_returnsLaunchMinimizeCloseAnimator() = runOnUiThread {
+        val transitionInfo = createTransitionInfo(
+            listOf(OPEN_CHANGE, MINIMIZE_CHANGE, CLOSE_CHANGE))
 
         val actual = helper.createAnimators(transitionInfo, finishCallback = {})
 
@@ -210,26 +200,9 @@ class DesktopAppLaunchAnimatorHelperTest {
 
     @Test
     @DisableFlags(Flags.FLAG_ENABLE_DESKTOP_TRAMPOLINE_CLOSE_ANIMATION_BUGFIX)
-    fun trampolineTransition_flagDisabled_hitDesktopWindowLimit_returnsLaunchMinimizeAnimator() {
-        val openChange =
-            TransitionInfo.Change(mock(), mock()).apply {
-                mode = WindowManager.TRANSIT_OPEN
-                taskInfo = TASK_INFO_FREEFORM
-            }
-        val minimizeChange =
-            TransitionInfo.Change(mock(), mock()).apply {
-                mode = WindowManager.TRANSIT_TO_BACK
-                taskInfo = TASK_INFO_FREEFORM
-            }
-        val closeChange =
-            TransitionInfo.Change(mock(), mock()).apply {
-                mode = WindowManager.TRANSIT_CLOSE
-                taskInfo = TASK_INFO_FREEFORM
-            }
-        val transitionInfo = TransitionInfo(WindowManager.TRANSIT_NONE, 0)
-        transitionInfo.addChange(openChange)
-        transitionInfo.addChange(minimizeChange)
-        transitionInfo.addChange(closeChange)
+    fun trampolineTransition_flagDisabled_hitDesktopWindowLimit_returnsLaunchMinimizeAnimator() = runOnUiThread {
+        val transitionInfo = createTransitionInfo(
+            listOf(OPEN_CHANGE, MINIMIZE_CHANGE, CLOSE_CHANGE))
 
         val actual = helper.createAnimators(transitionInfo, finishCallback = {})
 
@@ -280,6 +253,12 @@ class DesktopAppLaunchAnimatorHelperTest {
         assertThat(animator.duration).isEqualTo(100)
     }
 
+    private fun createTransitionInfo(changes: List<Change>): TransitionInfo {
+        val transitionInfo = TransitionInfo(WindowManager.TRANSIT_NONE, 0)
+        changes.forEach { transitionInfo.addChange(it) }
+        return transitionInfo
+    }
+
     private companion object {
         val TASK_INFO_FREEFORM =
             ActivityManager.RunningTaskInfo().apply {
@@ -289,6 +268,24 @@ class DesktopAppLaunchAnimatorHelperTest {
                     }
                 configuration.windowConfiguration.windowingMode =
                     WindowConfiguration.WINDOWING_MODE_FREEFORM
+            }
+
+        val OPEN_CHANGE =
+            TransitionInfo.Change(mock(), mock()).apply {
+                mode = WindowManager.TRANSIT_OPEN
+                taskInfo = TASK_INFO_FREEFORM
+            }
+
+        val CLOSE_CHANGE =
+            TransitionInfo.Change(mock(), mock()).apply {
+                mode = WindowManager.TRANSIT_CLOSE
+                taskInfo = TASK_INFO_FREEFORM
+            }
+
+        val MINIMIZE_CHANGE =
+            TransitionInfo.Change(mock(), mock()).apply {
+                mode = WindowManager.TRANSIT_TO_BACK
+                taskInfo = TASK_INFO_FREEFORM
             }
     }
 }

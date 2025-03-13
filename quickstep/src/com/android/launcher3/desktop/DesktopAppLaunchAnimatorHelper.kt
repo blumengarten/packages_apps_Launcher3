@@ -93,7 +93,7 @@ class DesktopAppLaunchAnimatorHelper(
         }
         if (trampolineCloseChange != null) {
             val trampolineCloseAnimator =
-                createTrampolineCloseAnimator(trampolineCloseChange, transaction)
+                createTrampolineCloseAnimator(trampolineCloseChange, transaction, finishCallback)
             animatorsList.add(trampolineCloseAnimator)
         }
         return animatorsList
@@ -112,7 +112,7 @@ class DesktopAppLaunchAnimatorHelper(
     private fun getTrampolineCloseChange(info: TransitionInfo): Change? {
         if (
             info.changes.size < 2 ||
-                !DesktopModeFlags.ENABLE_DESKTOP_TRAMPOLINE_CLOSE_ANIMATION_BUGFIX.isTrue
+            !DesktopModeFlags.ENABLE_DESKTOP_TRAMPOLINE_CLOSE_ANIMATION_BUGFIX.isTrue
         ) {
             return null
         }
@@ -194,13 +194,22 @@ class DesktopAppLaunchAnimatorHelper(
         )
     }
 
-    private fun createTrampolineCloseAnimator(change: Change, transaction: Transaction): Animator {
+    private fun createTrampolineCloseAnimator(
+        change: Change,
+        transaction: Transaction,
+        onAnimFinish: (Animator) -> Unit,
+    ): Animator {
         return ValueAnimator.ofFloat(1f, 0f).apply {
             duration = 100L
             interpolator = Interpolators.LINEAR
             addUpdateListener { animation ->
                 transaction.setAlpha(change.leash, animation.animatedValue as Float).apply()
             }
+            addListener(
+                onEnd = { animation ->
+                    onAnimFinish(animation)
+                }
+            )
         }
     }
 
