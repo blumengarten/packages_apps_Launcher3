@@ -34,8 +34,6 @@ import static com.android.app.animation.Interpolators.FINAL_FRAME;
 import static com.android.app.animation.Interpolators.LINEAR;
 import static com.android.app.animation.Interpolators.clampToProgress;
 import static com.android.launcher3.AbstractFloatingView.TYPE_REBIND_SAFE;
-import static com.android.launcher3.AbstractFloatingView.TYPE_TASK_MENU;
-import static com.android.launcher3.AbstractFloatingView.getTopOpenViewWithType;
 import static com.android.launcher3.BaseActivity.STATE_HANDLER_INVISIBILITY_FLAGS;
 import static com.android.launcher3.Flags.enableAdditionalHomeAnimations;
 import static com.android.launcher3.Flags.enableDesktopExplodedView;
@@ -834,7 +832,7 @@ public abstract class RecentsView<
                     mOrientationState.setMultiWindowMode(inMultiWindowMode);
                     setLayoutRotation(mOrientationState.getTouchRotation(),
                             mOrientationState.getDisplayRotation());
-                    updateChildTaskOrientations();
+                    mUtils.updateChildTaskOrientations();
                     if (!inMultiWindowMode && mOverviewStateEnabled) {
                         // TODO: Re-enable layout transitions for addition of the unpinned task
                         reloadIfNeeded();
@@ -2092,7 +2090,7 @@ public abstract class RecentsView<
 
         traceBegin(Trace.TRACE_TAG_APP, "RecentsView.applyLoadPlan.layouts");
         updateTaskSize();
-        updateChildTaskOrientations();
+        mUtils.updateChildTaskOrientations();
         traceEnd(Trace.TRACE_TAG_APP);
 
         TaskView newRunningTaskView = mUtils.getDesktopTaskViewForDeskId(runningTaskViewDeskId);
@@ -2344,7 +2342,7 @@ public abstract class RecentsView<
         updateSizeAndPadding();
 
         // Update TaskView's DeviceProfile dependent layout.
-        updateChildTaskOrientations();
+        mUtils.updateChildTaskOrientations();
 
         requestLayout();
         // Reapply the current page to update page scrolls.
@@ -2952,22 +2950,6 @@ public abstract class RecentsView<
         return as;
     }
 
-    private void updateChildTaskOrientations() {
-        for (TaskView taskView : getTaskViews()) {
-            taskView.setOrientationState(mOrientationState);
-        }
-        boolean shouldRotateMenuForFakeRotation =
-                !mOrientationState.isRecentsActivityRotationAllowed();
-        if (!shouldRotateMenuForFakeRotation) {
-            return;
-        }
-        AbstractFloatingView floatingView = getTopOpenViewWithType(mContainer, TYPE_TASK_MENU);
-        if (floatingView instanceof TaskMenuView taskMenuView) {
-            // Rotation is supported on phone (details at b/254198019#comment4)
-            taskMenuView.onRotationChanged();
-        }
-    }
-
     /**
      * Called when a gesture from an app has finished, and an end target has been determined.
      */
@@ -3205,7 +3187,7 @@ public abstract class RecentsView<
         setRunningTaskHidden(runningTaskTileHidden);
         // Update task size after setting current task.
         updateTaskSize();
-        updateChildTaskOrientations();
+        mUtils.updateChildTaskOrientations();
 
         // Reload the task list
         reloadIfNeeded();
@@ -4358,7 +4340,7 @@ public abstract class RecentsView<
                             finalNextFocusedTaskView.getDismissIconFadeInAnimator().start();
                         }
                         updateTaskSize();
-                        updateChildTaskOrientations();
+                        mUtils.updateChildTaskOrientations();
                         // Update scroll and snap to page.
                         updateScrollSynchronously();
 
@@ -7062,7 +7044,7 @@ public abstract class RecentsView<
         addView(desktopTaskView, insertionIndex);
 
         updateTaskSize();
-        updateChildTaskOrientations();
+        mUtils.updateChildTaskOrientations();
 
         // TODO: b/401002178 - Recalculate the new current page such that the addition of the new
         //  desk does not result in a change in the current scroll page.

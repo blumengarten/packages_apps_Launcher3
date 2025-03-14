@@ -182,7 +182,6 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         val splitBoundsConfig = splitBoundsConfig ?: return
         val deviceProfile = container.deviceProfile
         val taskIconHeight = deviceProfile.overviewTaskIconSizePx
-        val isRtl = layoutDirection == LAYOUT_DIRECTION_RTL
         val inSplitSelection = getThisTaskCurrentlyInSplitSelection() != INVALID_TASK_ID
         var oneIconHiddenDueToSmallWidth = false
 
@@ -211,6 +210,7 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         }
 
         if (enableOverviewIconMenu()) {
+            val isDeviceRtl = Utilities.isRtl(resources)
             val groupedTaskViewSizes =
                 pagedOrientationHandler.getGroupedTaskViewSizes(
                     deviceProfile,
@@ -226,7 +226,7 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
                 groupedTaskViewSizes.first.y,
                 layoutParams.height,
                 layoutParams.width,
-                isRtl,
+                isDeviceRtl,
                 deviceProfile,
                 splitBoundsConfig,
                 inSplitSelection,
@@ -241,7 +241,7 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
                 leftTopTaskContainer.taskContentView.measuredHeight,
                 measuredHeight,
                 measuredWidth,
-                isRtl,
+                isLayoutRtl,
                 deviceProfile,
                 splitBoundsConfig,
                 inSplitSelection,

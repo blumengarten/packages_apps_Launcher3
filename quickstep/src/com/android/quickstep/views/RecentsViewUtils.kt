@@ -20,10 +20,13 @@ import android.graphics.Rect
 import android.util.FloatProperty
 import android.view.KeyEvent
 import android.view.View
+import android.view.View.LAYOUT_DIRECTION_LTR
+import android.view.View.LAYOUT_DIRECTION_RTL
 import androidx.core.view.children
-import com.android.launcher3.AbstractFloatingView
-import com.android.launcher3.Flags
+import com.android.launcher3.AbstractFloatingView.TYPE_TASK_MENU
+import com.android.launcher3.AbstractFloatingView.getTopOpenViewWithType
 import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
+import com.android.launcher3.Flags.enableOverviewIconMenu
 import com.android.launcher3.Flags.enableSeparateExternalDisplayTasks
 import com.android.launcher3.statehandlers.DesktopVisibilityController
 import com.android.launcher3.statehandlers.DesktopVisibilityController.Companion.INACTIVE_DESK_ID
@@ -357,16 +360,31 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
         }
     }
 
+    private fun getTaskMenu(): TaskMenuView? =
+        getTopOpenViewWithType(recentsView.mContainer, TYPE_TASK_MENU) as? TaskMenuView
+
     fun shouldInterceptKeyEvent(event: KeyEvent): Boolean {
-        if (Flags.enableOverviewIconMenu()) {
-            val floatingView: AbstractFloatingView? = AbstractFloatingView.getTopOpenViewWithType(
-                recentsView.mContainer as RecentsViewContainer,
-                AbstractFloatingView.TYPE_TASK_MENU
-            )
-            val isMenuOpen = floatingView?.isOpen
-            return isMenuOpen == true || event.keyCode == KeyEvent.KEYCODE_TAB
+        if (enableOverviewIconMenu()) {
+            return getTaskMenu()?.isOpen == true || event.keyCode == KeyEvent.KEYCODE_TAB
         }
         return false
+    }
+
+    fun updateChildTaskOrientations() {
+        with(recentsView) {
+            taskViews.forEach { it.setOrientationState(mOrientationState) }
+            if (enableOverviewIconMenu()) {
+                children.forEach {
+                    it.layoutDirection = if (isRtl) LAYOUT_DIRECTION_LTR else LAYOUT_DIRECTION_RTL
+                }
+            }
+
+            // Return when it's not fake landscape
+            if (mOrientationState.isRecentsActivityRotationAllowed) return@with
+
+            // Rotation is supported on phone (details at b/254198019#comment4)
+            getTaskMenu()?.onRotationChanged()
+        }
     }
 
     var deskExplodeProgress: Float = 0f

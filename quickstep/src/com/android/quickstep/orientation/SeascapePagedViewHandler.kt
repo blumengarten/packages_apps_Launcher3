@@ -248,14 +248,14 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
         val iconCenter = iconAppChipView.getHeight() / 2f
 
         if (isRtl) {
-            iconMenuParams.gravity = Gravity.TOP or Gravity.END
+            iconMenuParams.gravity = Gravity.TOP or Gravity.START
             iconMenuParams.topMargin = iconMenuMargin
             iconMenuParams.marginEnd = thumbnailTopMargin
             // Use half menu height to place the pivot within the X/Y center of icon in the menu.
             iconAppChipView.pivotX = iconMenuParams.width / 2f
             iconAppChipView.pivotY = iconMenuParams.width / 2f
         } else {
-            iconMenuParams.gravity = Gravity.BOTTOM or Gravity.START
+            iconMenuParams.gravity = Gravity.BOTTOM or Gravity.END
             iconMenuParams.topMargin = 0
             iconMenuParams.marginEnd = 0
             iconAppChipView.pivotX = iconCenter
@@ -409,7 +409,7 @@ class SeascapePagedViewHandler : LandscapePagedViewHandler() {
         if (Flags.enableOverviewIconMenu()) {
             val appChipView = iconView as IconAppChipView
             layoutParams.gravity =
-                if (isRtl) Gravity.TOP or Gravity.END else Gravity.BOTTOM or Gravity.START
+                if (isRtl) Gravity.TOP or Gravity.START else Gravity.BOTTOM or Gravity.END
             appChipView.layoutParams = layoutParams
             appChipView.setSplitTranslationX(0f)
             appChipView.setSplitTranslationY(translationY.toFloat())
