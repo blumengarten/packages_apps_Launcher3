@@ -17,6 +17,7 @@ package com.android.quickstep.fallback;
 
 import static com.android.launcher3.Flags.enableDesktopExplodedView;
 import static com.android.launcher3.Flags.enableDesktopWindowingCarouselDetach;
+import static com.android.launcher3.Flags.enableGridOnlyOverview;
 import static com.android.launcher3.LauncherState.FLAG_CLOSE_POPUPS;
 import static com.android.launcher3.uioverrides.states.BackgroundAppState.getOverviewScaleAndOffsetForBackgroundState;
 import static com.android.launcher3.uioverrides.states.OverviewModalTaskState.getOverviewScaleAndOffsetForModalState;
@@ -197,6 +198,9 @@ public class RecentsState implements BaseState<RecentsState> {
 
         @Override
         public float[] getOverviewScaleAndOffset(RecentsViewContainer container) {
+            if (enableGridOnlyOverview()) {
+                return super.getOverviewScaleAndOffset(container);
+            }
             return getOverviewScaleAndOffsetForModalState(container.getOverviewPanel());
         }
     }

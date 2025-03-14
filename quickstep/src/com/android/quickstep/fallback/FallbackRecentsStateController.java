@@ -19,6 +19,7 @@ import static com.android.app.animation.Interpolators.FINAL_FRAME;
 import static com.android.app.animation.Interpolators.INSTANT;
 import static com.android.app.animation.Interpolators.LINEAR;
 import static com.android.launcher3.Flags.enableDesktopExplodedView;
+import static com.android.launcher3.Flags.enableGridOnlyOverview;
 import static com.android.launcher3.Flags.enableLargeDesktopWindowingTile;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_MODAL;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_OVERVIEW_SCALE;
@@ -118,7 +119,9 @@ public class FallbackRecentsStateController implements StateHandler<RecentsState
                 config.getInterpolator(ANIM_OVERVIEW_TRANSLATE_Y, LINEAR));
 
         setter.setFloat(mRecentsView, TASK_MODALNESS, state.getOverviewModalness(),
-                config.getInterpolator(ANIM_OVERVIEW_MODAL, LINEAR));
+                config.getInterpolator(ANIM_OVERVIEW_MODAL,
+                        enableGridOnlyOverview() && !state.isRecentsViewVisible() ? FINAL_FRAME
+                                : LINEAR));
         setter.setFloat(mRecentsView, FULLSCREEN_PROGRESS, state.isFullScreen() ? 1 : 0, LINEAR);
         boolean showAsGrid =
                 state.displayOverviewTasksAsGrid(mRecentsViewContainer.getDeviceProfile());

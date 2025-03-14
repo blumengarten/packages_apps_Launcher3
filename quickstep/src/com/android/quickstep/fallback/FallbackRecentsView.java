@@ -17,6 +17,7 @@ package com.android.quickstep.fallback;
 
 import static android.app.ActivityTaskManager.INVALID_TASK_ID;
 
+import static com.android.launcher3.Flags.enableGridOnlyOverview;
 import static com.android.quickstep.GestureState.GestureEndTarget.RECENTS;
 import static com.android.quickstep.fallback.RecentsState.DEFAULT;
 import static com.android.quickstep.fallback.RecentsState.MODAL_TASK;
@@ -252,7 +253,14 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
     @Override
     public void onStateTransitionStart(RecentsState toState) {
         setOverviewStateEnabled(true);
-        setOverviewGridEnabled(toState.displayOverviewTasksAsGrid(mContainer.getDeviceProfile()));
+        if (enableGridOnlyOverview()) {
+            if (toState.displayOverviewTasksAsGrid(mContainer.getDeviceProfile())) {
+                setOverviewGridEnabled(true);
+            }
+        } else {
+            setOverviewGridEnabled(
+                    toState.displayOverviewTasksAsGrid(mContainer.getDeviceProfile()));
+        }
         setOverviewFullscreenEnabled(toState.isFullScreen());
         if (toState == MODAL_TASK) {
             setOverviewSelectEnabled(true);
@@ -271,6 +279,11 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
     @Override
     public void onStateTransitionComplete(RecentsState finalState) {
         DesktopVisibilityController.INSTANCE.get(mContainer).onLauncherStateChanged(finalState);
+        if (enableGridOnlyOverview()) {
+            if (!finalState.displayOverviewTasksAsGrid(mContainer.getDeviceProfile())) {
+                setOverviewGridEnabled(false);
+            }
+        }
         if (!finalState.isRecentsViewVisible()) {
             // Clean-up logic that occurs when recents is no longer in use/visible.
             reset();

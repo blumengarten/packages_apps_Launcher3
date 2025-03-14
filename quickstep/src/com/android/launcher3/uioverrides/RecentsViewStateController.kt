@@ -21,6 +21,7 @@ import com.android.app.animation.Interpolators.FINAL_FRAME
 import com.android.app.animation.Interpolators.INSTANT
 import com.android.app.animation.Interpolators.LINEAR
 import com.android.launcher3.Flags.enableDesktopExplodedView
+import com.android.launcher3.Flags.enableGridOnlyOverview
 import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
 import com.android.launcher3.LauncherState
 import com.android.launcher3.anim.AnimatedFloat
@@ -143,7 +144,11 @@ class RecentsViewStateController(private val launcher: QuickstepLauncher) :
             recentsView,
             TASK_MODALNESS,
             toState.overviewModalness,
-            config.getInterpolator(ANIM_OVERVIEW_MODAL, LINEAR),
+            config.getInterpolator(
+                ANIM_OVERVIEW_MODAL,
+                if (enableGridOnlyOverview() && !toState.isRecentsViewVisible) FINAL_FRAME
+                else LINEAR,
+            ),
         )
 
         val fromState = launcher.stateManager.state

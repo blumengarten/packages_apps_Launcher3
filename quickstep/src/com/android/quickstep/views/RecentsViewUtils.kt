@@ -16,6 +16,7 @@
 
 package com.android.quickstep.views
 
+import android.graphics.PointF
 import android.graphics.Rect
 import android.util.FloatProperty
 import android.view.KeyEvent
@@ -25,9 +26,11 @@ import android.view.View.LAYOUT_DIRECTION_RTL
 import androidx.core.view.children
 import com.android.launcher3.AbstractFloatingView.TYPE_TASK_MENU
 import com.android.launcher3.AbstractFloatingView.getTopOpenViewWithType
+import com.android.launcher3.Flags.enableGridOnlyOverview
 import com.android.launcher3.Flags.enableLargeDesktopWindowingTile
 import com.android.launcher3.Flags.enableOverviewIconMenu
 import com.android.launcher3.Flags.enableSeparateExternalDisplayTasks
+import com.android.launcher3.Utilities.getPivotsForScalingRectToRect
 import com.android.launcher3.statehandlers.DesktopVisibilityController
 import com.android.launcher3.statehandlers.DesktopVisibilityController.Companion.INACTIVE_DESK_ID
 import com.android.launcher3.util.IntArray
@@ -38,6 +41,7 @@ import com.android.quickstep.util.isExternalDisplay
 import com.android.quickstep.views.RecentsView.RUNNING_TASK_ATTACH_ALPHA
 import com.android.systemui.shared.recents.model.ThumbnailData
 import java.util.function.BiConsumer
+import kotlin.math.min
 import kotlin.reflect.KMutableProperty1
 
 /**
@@ -392,6 +396,47 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
             field = value
             taskViews.filterIsInstance<DesktopTaskView>().forEach { it.explodeProgress = field }
         }
+
+    var selectedTaskView: TaskView? = null
+        set(newValue) {
+            val oldValue = field
+            field = newValue
+            if (oldValue != newValue) {
+                onSelectedTaskViewUpdated(oldValue, newValue)
+            }
+        }
+
+    private fun onSelectedTaskViewUpdated(
+        oldSelectedTaskView: TaskView?,
+        newSelectedTaskView: TaskView?,
+    ) {
+        if (!enableGridOnlyOverview()) return
+        with(recentsView) {
+            oldSelectedTaskView?.modalScale = 1f
+            oldSelectedTaskView?.modalPivot = null
+
+            if (newSelectedTaskView == null) return
+
+            val modalTaskBounds = mTempRect
+            getModalTaskSize(modalTaskBounds)
+            val selectedTaskBounds = getTaskBounds(newSelectedTaskView)
+
+            // Map bounds to selectedTaskView's coordinate system.
+            modalTaskBounds.offset(-selectedTaskBounds.left, -selectedTaskBounds.top)
+            selectedTaskBounds.offset(-selectedTaskBounds.left, -selectedTaskBounds.top)
+
+            val modalScale =
+                min(
+                    (modalTaskBounds.height().toFloat() / selectedTaskBounds.height()),
+                    (modalTaskBounds.width().toFloat() / selectedTaskBounds.width()),
+                )
+            val modalPivot = PointF()
+            getPivotsForScalingRectToRect(modalTaskBounds, selectedTaskBounds, modalPivot)
+
+            newSelectedTaskView.modalScale = modalScale
+            newSelectedTaskView.modalPivot = modalPivot
+        }
+    }
 
     companion object {
         class RecentsViewFloatProperty(
