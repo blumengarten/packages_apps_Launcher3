@@ -883,6 +883,13 @@ public class StatsLogManager implements ResourceBasedOverride {
 
         @UiEvent(doc = "Work utility view shrink animation ended")
         LAUNCHER_WORK_UTILITY_VIEW_SHRINK_ANIMATION_END(2078),
+
+        @UiEvent(doc = "Standard grid migration occurred")
+        LAUNCHER_STANDARD_GRID_MIGRATION(2200),
+
+        @UiEvent(doc = "Row shift grid migration occurred")
+        LAUNCHER_ROW_SHIFT_GRID_MIGRATION(2201),
+
         // ADD MORE
         ;
 
