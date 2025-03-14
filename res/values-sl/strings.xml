@@ -131,6 +131,8 @@
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"Zaslonsko ozadje in slog"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"Urejanje začetnega zaslona"</string>
     <string name="settings_button_text" msgid="8873672322605444408">"Začetni zaslon"</string>
+    <!-- no translation found for all_apps_home_screen (8658178652647896497) -->
+    <skip />
     <string name="msg_disabled_by_admin" msgid="6898038085516271325">"Onemogočil skrbnik."</string>
     <string name="allow_rotation_title" msgid="7222049633713050106">"Dovoli sukanje začetnega zaslona"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"Ko se telefon zasuka"</string>
@@ -184,14 +186,16 @@
     <string name="action_decrease_height" msgid="282377193880900022">"Zmanjšanje višine"</string>
     <string name="widget_resized" msgid="9130327887929620">"Velikost pripomočka je bila spremenjena na <xliff:g id="NUMBER_0">%1$s</xliff:g> širine in <xliff:g id="NUMBER_1">%2$s</xliff:g> višine"</string>
     <string name="action_deep_shortcut" msgid="4766835855579976045">"Meni z bližnjicami"</string>
+    <!-- no translation found for widget_frame_name (8782828448471444270) -->
+    <skip />
+    <!-- no translation found for action_close (1077760267194136901) -->
+    <skip />
     <string name="action_dismiss_notification" msgid="5909461085055959187">"Opusti"</string>
     <string name="accessibility_close" msgid="2277148124685870734">"Zapri"</string>
     <string name="all_apps_personal_tab" msgid="4190252696685155002">"Osebno"</string>
     <string name="all_apps_work_tab" msgid="4884822796154055118">"Delo"</string>
-    <!-- no translation found for all_apps_personal_tab_content_description (6286808898381807242) -->
-    <skip />
-    <!-- no translation found for all_apps_work_tab_content_description (3835637212347968316) -->
-    <skip />
+    <string name="all_apps_personal_tab_content_description" msgid="6286808898381807242">"Zavihek z osebnimi aplikacijami"</string>
+    <string name="all_apps_work_tab_content_description" msgid="3835637212347968316">"Zavihek z delovnimi aplikacijami"</string>
     <string name="work_profile_toggle_label" msgid="3081029915775481146">"Delovni profil"</string>
     <string name="work_profile_edu_work_apps" msgid="7895468576497746520">"Delovne aplikacije so označene z značko in vidne skrbniku za IT."</string>
     <string name="work_profile_edu_accept" msgid="6069788082535149071">"Razumem"</string>
@@ -216,4 +220,6 @@
     <string name="ps_container_transition" msgid="8667331812048014412">"Preklapljanje zasebnega prostora"</string>
     <string name="ps_add_button_label" msgid="8127988716897128773">"Namestitev"</string>
     <string name="ps_add_button_content_description" msgid="3254274107740952556">"Nameščanje aplikacij v zasebni prostor"</string>
+    <!-- no translation found for ps_app_content_description (1129133475892816226) -->
+    <skip />
 </resources>
