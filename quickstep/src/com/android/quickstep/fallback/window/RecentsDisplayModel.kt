@@ -17,6 +17,7 @@
 package com.android.quickstep.fallback.window
 
 import android.content.Context
+import android.util.Log
 import android.view.Display
 import android.view.Display.DEFAULT_DISPLAY
 import androidx.core.util.valueIterator
@@ -57,7 +58,7 @@ constructor(
 
     init {
         if (enableOverviewInWindow) {
-            registerDisplayListener()
+            initializeDisplays()
         } else {
             // Always create resource for default display
             storeDisplayResource(DEFAULT_DISPLAY)
@@ -74,10 +75,12 @@ constructor(
     }
 
     fun getRecentsWindowManager(displayId: Int): RecentsWindowManager? {
+        if (DEBUG) Log.d(TAG, "getRecentsWindowManager for display $displayId")
         return getDisplayResource(displayId)?.recentsWindowManager
     }
 
     fun getFallbackWindowInterface(displayId: Int): FallbackWindowInterface? {
+        if (DEBUG) Log.d(TAG, "getFallbackWindowInterface for display $displayId")
         return getDisplayResource(displayId)?.fallbackWindowInterface
     }
 
