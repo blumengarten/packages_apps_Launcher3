@@ -19,7 +19,6 @@ package com.android.quickstep.util
 import android.app.TaskInfo
 import android.content.ComponentName
 import android.content.res.Resources
-import android.util.Log
 import android.window.DesktopExperienceFlags
 import com.android.systemui.shared.recents.model.Task
 
@@ -40,7 +39,9 @@ class DesksUtils {
 
         @JvmStatic
         fun isDesktopWallpaperTask(taskInfo: TaskInfo): Boolean {
-            Log.d("b/403118101", "isDesktopWallpaperTask: $taskInfo")
+            // TODO: b/403118101 - In some launcher tests, there is a task with baseIntent set to
+            // null. Remove this check after finding out how that task is created.
+            if (taskInfo.baseIntent == null) return false
             return taskInfo.baseIntent.component?.let(::isDesktopWallpaperComponent) == true
         }
 
