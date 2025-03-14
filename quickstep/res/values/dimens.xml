@@ -532,8 +532,8 @@
     <dimen name="keyboard_quick_switch_text_button_fade_edge_length">20dp</dimen>
     <dimen name="keyboard_quick_switch_scroll_button_width">36dp</dimen>
     <dimen name="keyboard_quick_switch_scroll_button_height">56dp</dimen>
-    <dimen name="keyboard_quick_switch_scroll_button_horizontal_padding">12dp</dimen>
-    <dimen name="keyboard_quick_switch_scroll_button_vertical_padding">32dp</dimen>
+    <dimen name="keyboard_quick_switch_scroll_button_horizontal_padding">6dp</dimen>
+    <dimen name="keyboard_quick_switch_scroll_button_vertical_padding">16dp</dimen>
     <dimen name="keyboard_quick_switch_scroll_button_corner_radius">18dp</dimen>
 
     <!-- Digital Wellbeing -->
