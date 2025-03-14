@@ -23,7 +23,7 @@ import android.view.LayoutInflater;
 
 import com.android.launcher3.popup.SystemShortcut;
 import com.android.launcher3.util.BaseContext;
-import com.android.launcher3.util.DisplayController;
+import com.android.launcher3.util.NavigationMode;
 import com.android.launcher3.util.Themes;
 import com.android.quickstep.SystemUiProxy;
 
@@ -33,21 +33,49 @@ public abstract class BaseTaskbarContext extends BaseContext
         implements SystemShortcut.BubbleActivityStarter {
 
     protected final LayoutInflater mLayoutInflater;
-    private final boolean mIsPrimaryDisplay;
 
     public BaseTaskbarContext(Context windowContext, boolean isPrimaryDisplay) {
         super(windowContext, Themes.getActivityThemeRes(windowContext));
         mLayoutInflater = LayoutInflater.from(this).cloneInContext(this);
-        mIsPrimaryDisplay = isPrimaryDisplay;
     }
 
-    public boolean isTransientTaskbar() {
-        return DisplayController.isTransientTaskbar(this) && mIsPrimaryDisplay;
-    }
+    /**
+     * Returns whether taskbar is transient or persistent. External displays will be persistent.
+     *
+     * @return {@code true} if transient, {@code false} if persistent.
+     */
+    public abstract boolean isTransientTaskbar();
 
-    public boolean isPrimaryDisplay() {
-        return mIsPrimaryDisplay;
-    }
+    /**
+     * Returns whether the taskbar is pinned in gesture navigation mode.
+     */
+    public abstract boolean isPinnedTaskbar();
+
+    /**
+     * Returns the current navigation mode. External displays will be in THREE_BUTTONS mode.
+     */
+    public abstract NavigationMode getNavigationMode();
+
+    /**
+     * Returns whether the taskbar is in desktop mode.
+     */
+    public abstract boolean isInDesktopMode();
+
+    /**
+     * Returns whether the taskbar is forced to be pinned when home is visible.
+     */
+    public abstract  boolean showLockedTaskbarOnHome();
+
+    /**
+     * Returns whether desktop taskbar (pinned taskbar that shows desktop tasks) is to be used on
+     * the display because the display is a freeform display.
+     */
+    public abstract  boolean showDesktopTaskbarForFreeformDisplay();
+
+    /**
+     * Returns whether the taskbar is displayed on primary or external display.
+     */
+    public abstract boolean isPrimaryDisplay();
 
     @Override
     public final LayoutInflater getLayoutInflater() {

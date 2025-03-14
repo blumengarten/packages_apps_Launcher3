@@ -227,7 +227,7 @@ public class TaskbarManager {
                     }
                     // Only Handles Special Exit Cases for Desktop Mode Taskbar Recreation.
                     if (taskbarActivityContext != null
-                            && !DisplayController.showLockedTaskbarOnHome(context)) {
+                            && !taskbarActivityContext.showLockedTaskbarOnHome()) {
                         recreateTaskbars();
                     }
                 } else {

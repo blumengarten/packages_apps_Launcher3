@@ -44,7 +44,6 @@ import com.android.launcher3.Utilities
 import com.android.launcher3.config.FeatureFlags.enableTaskbarPinning
 import com.android.launcher3.taskbar.TaskbarAutohideSuspendController.FLAG_AUTOHIDE_SUSPEND_EDU_OPEN
 import com.android.launcher3.taskbar.TaskbarControllers.LoggableTaskbarController
-import com.android.launcher3.util.DisplayController
 import com.android.launcher3.util.OnboardingPrefs.TASKBAR_EDU_TOOLTIP_STEP
 import com.android.launcher3.util.OnboardingPrefs.TASKBAR_SEARCH_EDU_SEEN
 import com.android.launcher3.util.ResourceBasedOverride
@@ -319,7 +318,7 @@ open class TaskbarEduTooltipController(context: Context) :
     fun maybeShowSearchEdu() {
         if (
             !enableTaskbarPinning() ||
-                !DisplayController.isPinnedTaskbar(activityContext) ||
+                !activityContext.isPinnedTaskbar ||
                 !isTooltipEnabled ||
                 !shouldShowSearchEdu ||
                 userHasSeenSearchEdu ||

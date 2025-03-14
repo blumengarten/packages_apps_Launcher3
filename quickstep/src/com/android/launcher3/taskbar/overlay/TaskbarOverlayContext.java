@@ -31,6 +31,7 @@ import com.android.launcher3.taskbar.TaskbarDragController;
 import com.android.launcher3.taskbar.TaskbarUIController;
 import com.android.launcher3.taskbar.allapps.TaskbarAllAppsContainerView;
 import com.android.launcher3.taskbar.allapps.TaskbarSearchSessionController;
+import com.android.launcher3.util.NavigationMode;
 import com.android.launcher3.util.SplitConfigurationOptions.SplitSelectSource;
 
 /**
@@ -139,6 +140,41 @@ public class TaskbarOverlayContext extends BaseTaskbarContext {
     @Override
     public void startSplitSelection(SplitSelectSource splitSelectSource) {
         mUiController.startSplitSelection(splitSelectSource);
+    }
+
+    @Override
+    public boolean isTransientTaskbar() {
+        return mTaskbarContext.isTransientTaskbar();
+    }
+
+    @Override
+    public boolean isPinnedTaskbar() {
+        return mTaskbarContext.isPinnedTaskbar();
+    }
+
+    @Override
+    public NavigationMode getNavigationMode() {
+        return mTaskbarContext.getNavigationMode();
+    }
+
+    @Override
+    public boolean isInDesktopMode() {
+        return mTaskbarContext.isInDesktopMode();
+    }
+
+    @Override
+    public boolean showLockedTaskbarOnHome() {
+        return mTaskbarContext.showLockedTaskbarOnHome();
+    }
+
+    @Override
+    public boolean showDesktopTaskbarForFreeformDisplay() {
+        return mTaskbarContext.showDesktopTaskbarForFreeformDisplay();
+    }
+
+    @Override
+    public boolean isPrimaryDisplay() {
+        return mTaskbarContext.isPrimaryDisplay();
     }
 
     @Override

@@ -405,9 +405,41 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         dispatchDeviceProfileChanged();
     }
 
-    /** Returns whether current taskbar is transient. */
+    @Override
     public boolean isTransientTaskbar() {
-        return super.isTransientTaskbar() && !isPhoneMode();
+        return DisplayController.isTransientTaskbar(this) && mIsPrimaryDisplay && !isPhoneMode();
+    }
+
+    @Override
+    public boolean isPinnedTaskbar() {
+        return DisplayController.isPinnedTaskbar(this);
+    }
+
+    @Override
+    public NavigationMode getNavigationMode() {
+        return isPrimaryDisplay() ? DisplayController.getNavigationMode(this)
+                : NavigationMode.THREE_BUTTONS;
+    }
+
+    @Override
+    public boolean isInDesktopMode() {
+        return mControllers != null
+                && mControllers.taskbarDesktopModeController.isInDesktopMode(getDisplayId());
+    }
+
+    @Override
+    public boolean showLockedTaskbarOnHome() {
+        return DisplayController.showLockedTaskbarOnHome(this);
+    }
+
+    @Override
+    public boolean showDesktopTaskbarForFreeformDisplay() {
+        return DisplayController.showDesktopTaskbarForFreeformDisplay(this);
+    }
+
+    @Override
+    public boolean isPrimaryDisplay() {
+        return mIsPrimaryDisplay;
     }
 
     /**
@@ -443,9 +475,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
                     .setIsTransientTaskbar(true)
                     .build();
         }
-        mNavMode = (DesktopExperienceFlags.ENABLE_TASKBAR_CONNECTED_DISPLAYS.isTrue()
-                && !mIsPrimaryDisplay) ? NavigationMode.THREE_BUTTONS
-                : DisplayController.getNavigationMode(this);
+        mNavMode = getNavigationMode();
     }
 
     /** Called when the visibility of the bubble bar changed. */
@@ -1336,11 +1366,6 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
     @Override
     public void startSplitSelection(SplitSelectSource splitSelectSource) {
         mControllers.uiController.startSplitSelection(splitSelectSource);
-    }
-
-    boolean isInDesktopMode() {
-        return mControllers != null
-                && mControllers.taskbarDesktopModeController.isInDesktopMode(getDisplayId());
     }
 
     protected void onTaskbarIconClicked(View view) {
