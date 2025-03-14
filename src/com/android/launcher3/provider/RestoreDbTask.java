@@ -80,6 +80,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -206,7 +207,8 @@ public class RestoreDbTask {
             LauncherRestoreEventLogger restoreEventLogger =
                     LauncherRestoreEventLogger.Companion.newInstance(context);
             task.sanitizeDB(context, controller, db, backupManager, restoreEventLogger);
-            task.restoreAppWidgetIdsIfExists(context, controller, restoreEventLogger);
+            task.restoreAppWidgetIdsIfExists(context, controller, restoreEventLogger,
+                    () -> new AppWidgetHost(context, APPWIDGET_HOST_ID));
             t.commit();
             return true;
         } catch (Exception e) {
@@ -438,14 +440,13 @@ public class RestoreDbTask {
     @WorkerThread
     @VisibleForTesting
     void restoreAppWidgetIdsIfExists(Context context, ModelDbController controller,
-            LauncherRestoreEventLogger restoreEventLogger) {
+            LauncherRestoreEventLogger restoreEventLogger, Supplier<AppWidgetHost> hostSupplier) {
         LauncherPrefs lp = LauncherPrefs.get(context);
         if (lp.has(APP_WIDGET_IDS, OLD_APP_WIDGET_IDS)) {
-            AppWidgetHost host = new AppWidgetHost(context, APPWIDGET_HOST_ID);
             restoreAppWidgetIds(context, controller, restoreEventLogger,
                     IntArray.fromConcatString(lp.get(OLD_APP_WIDGET_IDS)).toArray(),
                     IntArray.fromConcatString(lp.get(APP_WIDGET_IDS)).toArray(),
-                    host);
+                    hostSupplier.get());
         } else {
             FileLog.d(TAG, "Did not receive new app widget id map during Launcher restore");
         }
