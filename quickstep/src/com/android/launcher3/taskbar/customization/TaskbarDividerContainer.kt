@@ -20,6 +20,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color.TRANSPARENT
+import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.core.view.setPadding
 import com.android.launcher3.R
@@ -28,6 +29,7 @@ import com.android.launcher3.taskbar.TaskbarActivityContext
 import com.android.launcher3.taskbar.TaskbarViewCallbacks
 import com.android.launcher3.views.ActivityContext
 import com.android.launcher3.views.IconButtonView
+import com.android.wm.shell.Flags
 
 /** Taskbar divider view container for customizable taskbar. */
 class TaskbarDividerContainer
@@ -46,13 +48,21 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         setUpIcon()
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
     fun setUpIcon() {
         backgroundTintList = ColorStateList.valueOf(TRANSPARENT)
-        val drawable = resources.getDrawable(R.drawable.taskbar_divider_button)
+        val drawable = getTaskbarDividerIcon()
         setIconDrawable(drawable)
         if (!activityContext.isTransientTaskbar) {
             setPadding(dpToPx(activityContext.taskbarSpecsEvaluator.taskbarIconPadding.toFloat()))
+        }
+    }
+
+    @SuppressLint("UseCompatLoadingForDrawables")
+    fun getTaskbarDividerIcon(): Drawable {
+        return if (Flags.enableGsf()) {
+            resources.getDrawable(R.drawable.taskbar_divider_button_expressive_theme)
+        } else {
+            resources.getDrawable(R.drawable.taskbar_divider_button)
         }
     }
 
