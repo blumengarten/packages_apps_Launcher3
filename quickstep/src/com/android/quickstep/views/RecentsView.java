@@ -142,7 +142,6 @@ import androidx.annotation.UiThread;
 import androidx.core.graphics.ColorUtils;
 import androidx.dynamicanimation.animation.SpringAnimation;
 
-import com.android.app.tracing.TraceUtilsKt;
 import com.android.internal.jank.Cuj;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.BaseActivity.MultiWindowModeChangedListener;
@@ -4748,11 +4747,12 @@ public abstract class RecentsView<
         runDismissAnimation(pa);
     }
 
-    protected void expressiveDismissTaskView(TaskView taskView) {
+    protected void expressiveDismissTaskView(TaskView taskView, Function0<Unit> onEndRunnable) {
         PendingAnimation pa = new PendingAnimation(DISMISS_TASK_DURATION);
         createTaskDismissAnimation(pa, taskView, false /* animateTaskView */, true /* removeTask */,
                 DISMISS_TASK_DURATION, false /* dismissingForSplitSelection*/,
                 true /* isExpressiveDismiss */);
+        pa.addEndListener((success) -> onEndRunnable.invoke());
         runDismissAnimation(pa);
     }
 

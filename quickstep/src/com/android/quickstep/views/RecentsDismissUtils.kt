@@ -82,6 +82,7 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
                             runTaskGridReflowSpringAnimation(
                                 draggedTaskView,
                                 getDismissedTaskGapForReflow(draggedTaskView),
+                                onEndRunnable,
                             )
                         } else {
                             recentsView.dismissTaskView(
@@ -89,11 +90,12 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
                                 /* animateTaskView = */ false,
                                 /* removeTask = */ true,
                             )
+                            onEndRunnable()
                         }
                     } else {
                         recentsView.onDismissAnimationEnds()
+                        onEndRunnable()
                     }
-                    onEndRunnable()
                 }
         if (!isDismissing) {
             addNeighboringSpringAnimationsForDismissCancel(
@@ -312,6 +314,7 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
     private fun runTaskGridReflowSpringAnimation(
         dismissedTaskView: TaskView,
         dismissedTaskGap: Float,
+        onEndRunnable: () -> Unit,
     ) {
         // Empty spring animation exists for conditional start, and to drive neighboring springs.
         val springAnimationDriver =
@@ -384,7 +387,7 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
         // Start animations and remove the dismissed task at the end, dismiss immediately if no
         // neighboring tasks exist.
         val runGridEndAnimationAndRelayout = {
-            recentsView.expressiveDismissTaskView(dismissedTaskView)
+            recentsView.expressiveDismissTaskView(dismissedTaskView, onEndRunnable)
         }
         springAnimationDriver?.apply {
             addEndListener { _, _, _, _ -> runGridEndAnimationAndRelayout() }
