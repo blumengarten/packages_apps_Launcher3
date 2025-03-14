@@ -149,6 +149,10 @@
     <string name="quick_switch_split_task" msgid="5598194724255333896">"<xliff:g id="APP_NAME_1">%1$s</xliff:g> en <xliff:g id="APP_NAME_2">%2$s</xliff:g>"</string>
     <!-- no translation found for quick_switch_task_with_position_in_parent (4968670948331508951) -->
     <skip />
+    <!-- no translation found for quick_switch_scroll_arrow_left (6527033155534184309) -->
+    <skip />
+    <!-- no translation found for quick_switch_scroll_arrow_right (7319779291086916348) -->
+    <skip />
     <string name="bubble_bar_bubble_fallback_description" msgid="7811684548953452009">"Bubbel"</string>
     <string name="bubble_bar_overflow_description" msgid="8617628132733151708">"Overloop"</string>
     <string name="bubble_bar_bubble_description" msgid="1882466152448446446">"<xliff:g id="NOTIFICATION_TITLE">%1$s</xliff:g> van <xliff:g id="APP_NAME">%2$s</xliff:g>"</string>
