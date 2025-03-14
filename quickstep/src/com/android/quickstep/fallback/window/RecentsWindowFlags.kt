@@ -29,8 +29,15 @@ class RecentsWindowFlags {
         val enableFallbackOverviewInWindow: DesktopModeFlag =
             DesktopModeFlag(Flags::enableFallbackOverviewInWindow, false)
 
+        @JvmField
+        val enableOverviewOnConnectedDisplays: DesktopModeFlag =
+            DesktopModeFlag(Flags::enableOverviewOnConnectedDisplays, false)
+
         @JvmStatic
         val enableOverviewInWindow
-            get() = enableLauncherOverviewInWindow.isTrue || enableFallbackOverviewInWindow.isTrue
+            get() =
+                enableLauncherOverviewInWindow.isTrue ||
+                    enableFallbackOverviewInWindow.isTrue ||
+                    enableOverviewOnConnectedDisplays.isTrue
     }
 }

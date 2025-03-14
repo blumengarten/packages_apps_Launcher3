@@ -77,6 +77,7 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
 
     private boolean mRecentsAnimationStartPending = false;
     private boolean mShouldIgnoreMotionEvents = false;
+    private final int mDisplayId;
 
     private final TaskStackChangeListener mLiveTileRestartListener = new TaskStackChangeListener() {
         @Override
@@ -101,10 +102,13 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
         }
     };
 
-    TaskAnimationManager(Context ctx, RecentsAnimationDeviceState deviceState) {
+    public TaskAnimationManager(Context ctx, RecentsAnimationDeviceState deviceState,
+            int displayId) {
         mCtx = ctx;
         mDeviceState = deviceState;
+        mDisplayId = displayId;
     }
+
     SystemUiProxy getSystemUiProxy() {
         return SystemUiProxy.INSTANCE.get(mCtx);
     }
@@ -489,6 +493,7 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
 
     public void dump(String prefix, PrintWriter pw) {
         pw.println(prefix + "TaskAnimationManager:");
+        pw.println(prefix + "\tmDisplayId=" + mDisplayId);
 
         if (enableHandleDelayedGestureCallbacks()) {
             pw.println(prefix + "\tmRecentsAnimationStartPending=" + mRecentsAnimationStartPending);

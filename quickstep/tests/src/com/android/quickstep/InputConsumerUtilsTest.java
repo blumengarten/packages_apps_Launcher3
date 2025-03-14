@@ -126,8 +126,7 @@ public class InputConsumerUtilsTest {
 
     @Before
     public void setupTaskAnimationManager() {
-        mTaskAnimationManager = new TaskAnimationManager(
-                mContext, mDeviceState);
+        mTaskAnimationManager = new TaskAnimationManager(mContext, mDeviceState, mDisplayId);
     }
 
     @Before
