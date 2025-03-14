@@ -147,7 +147,7 @@ constructor(
     val isRunningTask: Boolean
         get() = this === recentsView?.runningTaskView
 
-    val displayId: Int
+    open val displayId: Int
         get() = taskContainers.firstOrNull()?.task.displayId
 
     val isExternalDisplay: Boolean

@@ -3124,7 +3124,8 @@ public abstract class RecentsView<
 
         // TODO: b/401582344 - Implement a way to exclude the `DesktopWallpaperActivity`.
         desktopTaskView.bind(
-                new DesktopTask(activeDeskId, Arrays.asList(runningTasks)),
+                new DesktopTask(activeDeskId, mContainer.getDisplayId(),
+                        Arrays.asList(runningTasks)),
                 mOrientationState, mTaskOverlayFactory);
         return desktopTaskView;
     }
@@ -7053,7 +7054,7 @@ public abstract class RecentsView<
         // `AddNewDesktopButton`.
         DesktopTaskView desktopTaskView =
                 (DesktopTaskView) getTaskViewFromPool(TaskViewType.DESKTOP);
-        desktopTaskView.bind(new DesktopTask(deskId, new ArrayList<>()),
+        desktopTaskView.bind(new DesktopTask(deskId, displayId, new ArrayList<>()),
                 mOrientationState, mTaskOverlayFactory);
 
         Objects.requireNonNull(mAddDesktopButton);

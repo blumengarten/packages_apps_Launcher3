@@ -17,22 +17,27 @@ package com.android.quickstep.util
 
 import com.android.quickstep.views.TaskViewType
 import com.android.systemui.shared.recents.model.Task
+import java.util.Objects
 
 /**
  * A [Task] container that can contain N number of tasks that are part of the desktop in recent
- * tasks list. Note that desktops can be empty with no tasks in them. The [deskId] makes sense only
- * when the multiple desks feature is enabled.
+ * tasks list. Note that desktops can be empty with no tasks in them. The [deskId], [displayId]
+ * makes sense only when the multiple desks feature is enabled.
  */
-class DesktopTask(val deskId: Int, tasks: List<Task>) : GroupTask(tasks, TaskViewType.DESKTOP) {
+class DesktopTask(val deskId: Int, val displayId: Int, tasks: List<Task>) :
+    GroupTask(tasks, TaskViewType.DESKTOP) {
 
-    override fun copy() = DesktopTask(deskId, tasks)
+    override fun copy() = DesktopTask(deskId, displayId, tasks)
 
-    override fun toString() = "type=$taskViewType deskId=$deskId tasks=$tasks"
+    override fun toString() = "type=$taskViewType deskId=$deskId displayId=$displayId tasks=$tasks"
 
     override fun equals(o: Any?): Boolean {
         if (this === o) return true
         if (o !is DesktopTask) return false
         if (deskId != o.deskId) return false
+        if (displayId != o.displayId) return false
         return super.equals(o)
     }
+
+    override fun hashCode() = Objects.hash(super.hashCode(), deskId, displayId)
 }

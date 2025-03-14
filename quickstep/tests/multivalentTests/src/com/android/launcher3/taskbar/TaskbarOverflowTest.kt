@@ -23,6 +23,7 @@ import android.os.Process
 import android.platform.test.annotations.DisableFlags
 import android.platform.test.annotations.EnableFlags
 import android.platform.test.flag.junit.SetFlagsRule
+import android.view.Display.DEFAULT_DISPLAY
 import androidx.test.core.app.ApplicationProvider
 import com.android.launcher3.Flags.FLAG_ENABLE_MULTI_INSTANCE_MENU_TASKBAR
 import com.android.launcher3.Flags.FLAG_TASKBAR_OVERFLOW
@@ -446,7 +447,7 @@ class TaskbarOverflowTest {
                 )
             })
 
-        recentsModel.updateRecentTasks(listOf(DesktopTask(deskId = 0, tasks)))
+        recentsModel.updateRecentTasks(listOf(DesktopTask(deskId = 0, DEFAULT_DISPLAY, tasks)))
         for (task in 1..tasks.size) {
             desktopTaskListener?.onTasksVisibilityChanged(
                 context.virtualDisplay.display.displayId,
