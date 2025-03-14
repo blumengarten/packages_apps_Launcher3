@@ -46,6 +46,7 @@ import com.android.launcher3.util.VibratorWrapper;
 import com.android.launcher3.util.WallpaperColorHints;
 import com.android.launcher3.util.window.RefreshRateTracker;
 import com.android.launcher3.util.window.WindowManagerProxy;
+import com.android.launcher3.widget.LauncherWidgetHolder.WidgetHolderFactory;
 import com.android.launcher3.widget.custom.CustomWidgetManager;
 
 import dagger.BindsInstance;
@@ -89,6 +90,7 @@ public interface LauncherBaseAppComponent {
     WidgetsFilterDataProvider getWidgetsFilterDataProvider();
 
     LoaderCursorFactory getLoaderCursorFactory();
+    WidgetHolderFactory getWidgetHolderFactory();
 
     /** Builder for LauncherBaseAppComponent. */
     interface Builder {

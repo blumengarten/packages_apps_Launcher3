@@ -16,6 +16,9 @@
 
 package com.android.launcher3.dagger
 
+import com.android.launcher3.widget.LauncherWidgetHolder.WidgetHolderFactory
+import com.android.launcher3.widget.LauncherWidgetHolder.WidgetHolderFactoryImpl
+import dagger.Binds
 import dagger.Module
 
 private object Modules {}
@@ -23,6 +26,12 @@ private object Modules {}
 @Module abstract class WindowManagerProxyModule {}
 
 @Module abstract class ApiWrapperModule {}
+
+@Module
+abstract class WidgetModule {
+    @Binds
+    abstract fun bindWidgetHolderFactory(factor: WidgetHolderFactoryImpl): WidgetHolderFactory
+}
 
 @Module abstract class PluginManagerWrapperModule {}
 

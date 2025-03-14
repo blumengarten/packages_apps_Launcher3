@@ -532,11 +532,14 @@ public class Launcher extends StatefulActivity<LauncherState>
         mAllAppsController = new AllAppsTransitionController(this);
         mStateManager = new StateManager<>(this, NORMAL);
 
+        mAppWidgetManager = new WidgetManagerHelper(this);
+        mAppWidgetHolder = LauncherWidgetHolder.newInstance(this);
+        mAppWidgetHolder.setAppWidgetRemovedCallback(
+                appWidgetId -> getWorkspace().removeWidget(appWidgetId));
+
         setupViews();
         updateDisallowBack();
 
-        mAppWidgetManager = new WidgetManagerHelper(this);
-        mAppWidgetHolder = createAppWidgetHolder();
         mAppWidgetHolder.startListening();
         mAppWidgetHolder.addProviderChangeListener(() -> refreshAndBindWidgetsForPackageUser(null));
         mItemInflater = new ItemInflater<>(this, mAppWidgetHolder, getItemOnClickListener(),
@@ -1612,11 +1615,6 @@ public class Launcher extends StatefulActivity<LauncherState>
         NonConfigInstance instance = new NonConfigInstance();
         instance.config = new Configuration(mOldConfig);
         return instance;
-    }
-
-    protected LauncherWidgetHolder createAppWidgetHolder() {
-        return LauncherWidgetHolder.HolderFactory.newFactory(this).newInstance(
-                this, appWidgetId -> getWorkspace().removeWidget(appWidgetId));
     }
 
     @Override
