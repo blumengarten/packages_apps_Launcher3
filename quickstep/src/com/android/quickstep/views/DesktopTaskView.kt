@@ -73,14 +73,27 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     private val contentViewFullscreenParams = FullscreenDrawParams(context)
 
+    private val taskThumbnailViewDeprecatedPool =
+        if (!enableRefactorTaskThumbnail()) {
+            ViewPool<TaskThumbnailViewDeprecated>(
+                context,
+                this,
+                R.layout.task_thumbnail_deprecated,
+                VIEW_POOL_MAX_SIZE,
+                VIEW_POOL_INITIAL_SIZE,
+            )
+        } else null
+
     private val taskContentViewPool =
-        ViewPool<TaskContentView>(
-            context,
-            this,
-            R.layout.task_content_view,
-            VIEW_POOL_MAX_SIZE,
-            VIEW_POOL_INITIAL_SIZE,
-        )
+        if (enableRefactorTaskThumbnail()) {
+            ViewPool<TaskContentView>(
+                context,
+                this,
+                R.layout.task_content_view,
+                VIEW_POOL_MAX_SIZE,
+                VIEW_POOL_INITIAL_SIZE,
+            )
+        } else null
 
     private val tempPointF = PointF()
     private val lastComputedTaskSize = Rect()
@@ -249,7 +262,7 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
                 if (
                     enableDesktopRecentsTransitionsCornersBugfix() && enableRefactorTaskThumbnail()
                 ) {
-                    it.taskContentView?.outlineBounds =
+                    (it.taskContentView as TaskContentView).outlineBounds =
                         if (intersects(overviewTaskPosition, screenRect))
                             Rect(overviewTaskPosition).apply {
                                 intersectUnchecked(screenRect)
@@ -300,13 +313,15 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         val backgroundViewIndex = contentView.indexOfChild(backgroundView)
         taskContainers =
             tasks.map { task ->
-                val taskContentView = taskContentViewPool.view
+                val taskContentView =
+                    if (enableRefactorTaskThumbnail()) taskContentViewPool!!.view
+                    else taskThumbnailViewDeprecatedPool!!.view
                 contentView.addView(taskContentView, backgroundViewIndex + 1)
                 val snapshotView =
                     if (enableRefactorTaskThumbnail()) {
                         taskContentView.findViewById<TaskThumbnailView>(R.id.snapshot)
                     } else {
-                        taskContentView.findViewById<TaskThumbnailViewDeprecated>(R.id.snapshot)
+                        taskContentView
                     }
 
                 TaskContainer(
@@ -466,7 +481,11 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     private fun removeAndRecycleThumbnailView(taskContainer: TaskContainer) {
         contentView.removeView(taskContainer.taskContentView)
-        taskContentViewPool.recycle(taskContainer.taskContentView)
+        if (enableRefactorTaskThumbnail()) {
+            taskContentViewPool!!.recycle(taskContainer.taskContentView as TaskContentView)
+        } else {
+            taskThumbnailViewDeprecatedPool!!.recycle(taskContainer.thumbnailViewDeprecated)
+        }
     }
 
     private fun updateTaskPositions() {
