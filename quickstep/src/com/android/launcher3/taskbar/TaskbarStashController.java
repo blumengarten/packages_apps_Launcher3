@@ -23,6 +23,7 @@ import static com.android.app.animation.Interpolators.INSTANT;
 import static com.android.app.animation.Interpolators.LINEAR;
 import static com.android.internal.jank.InteractionJankMonitor.Configuration;
 import static com.android.launcher3.Flags.enableScalingRevealHomeAnimation;
+import static com.android.launcher3.Flags.syncAppLaunchWithTaskbarStash;
 import static com.android.launcher3.QuickstepTransitionManager.PINNED_TASKBAR_TRANSITION_DURATION;
 import static com.android.launcher3.config.FeatureFlags.ENABLE_TASKBAR_NAVBAR_UNIFICATION;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_TRANSIENT_TASKBAR_HIDE;
@@ -106,6 +107,8 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
     public static final int FLAG_TASKBAR_HIDDEN = 1 << 14; // taskbar hidden during dream, etc...
     // taskbar should always be stashed for bubble bar on phone
     public static final int FLAG_STASHED_BUBBLE_BAR_ON_PHONE = 1 << 15;
+
+    public static final int FLAG_IGNORE_IN_APP = 1 << 16; // used to sync with app launch animation
 
     // If any of these flags are enabled, isInApp should return true.
     private static final int FLAGS_IN_APP = FLAG_IN_APP | FLAG_IN_SETUP;
@@ -1412,6 +1415,13 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
          */
         @Nullable
         public Animator createSetStateAnimator(long flags, long duration) {
+            // We do this when we want to synchronize the app launch and taskbar stash animations.
+            if (syncAppLaunchWithTaskbarStash()
+                    && hasAnyFlag(FLAG_IGNORE_IN_APP)
+                    && hasAnyFlag(flags, FLAG_IN_APP)) {
+                flags = flags & ~FLAG_IN_APP;
+            }
+
             boolean isStashed = mStashCondition.test(flags);
 
             if (DEBUG) {
