@@ -316,7 +316,10 @@ public class TouchInteractionService extends Service {
         @Override
         public void onDisplayAddSystemDecorations(int displayId) {
             executeForTaskbarManager(taskbarManager ->
-                            taskbarManager.onDisplayAddSystemDecorations(displayId));
+                    taskbarManager.onDisplayAddSystemDecorations(displayId));
+
+            executeForRecentsDisplayModel(displayModel ->
+                    displayModel.onDisplayAddSystemDecorations(displayId));
         }
 
         @BinderThread
@@ -327,6 +330,8 @@ public class TouchInteractionService extends Service {
             executeForTouchInteractionService(tis -> {
                 tis.mDeviceState.clearSysUIStateFlagsForDisplay(displayId);
             });
+            executeForRecentsDisplayModel(displayModel ->
+                    displayModel.onDisplayRemoved(displayId));
         }
 
         @BinderThread
@@ -334,6 +339,8 @@ public class TouchInteractionService extends Service {
         public void onDisplayRemoveSystemDecorations(int displayId) {
             executeForTaskbarManager(taskbarManager ->
                     taskbarManager.onDisplayRemoveSystemDecorations(displayId));
+            executeForRecentsDisplayModel(displayModel ->
+                    displayModel.onDisplayRemoveSystemDecorations(displayId));
         }
 
         @BinderThread
@@ -442,6 +449,15 @@ public class TouchInteractionService extends Service {
                 TaskbarManager taskbarManager = tis.mTaskbarManager;
                 if (taskbarManager == null) return;
                 taskbarManagerConsumer.accept(taskbarManager);
+            }));
+        }
+
+        private void executeForRecentsDisplayModel(
+                @NonNull Consumer<RecentsDisplayModel> recentsDisplayModelConsumer) {
+            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(tis -> {
+                RecentsDisplayModel recentsDisplayModel = tis.mRecentsDisplayModel;
+                if (recentsDisplayModel == null) return;
+                recentsDisplayModelConsumer.accept(recentsDisplayModel);
             }));
         }
 
@@ -1251,7 +1267,7 @@ public class TouchInteractionService extends Service {
 
         private InputMonitorDisplayModel(Context context) {
             super(context);
-            registerDisplayListener();
+            initializeDisplays();
         }
 
         @NonNull
