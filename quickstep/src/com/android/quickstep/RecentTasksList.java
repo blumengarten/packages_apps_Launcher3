@@ -511,13 +511,14 @@ public class RecentTasksList implements WindowManagerProxy.DesktopVisibilityList
             // When the multiple desktop feature is disabled, there can only be up to a single desk
             // on each display, The desk ID doesn't matter and should not be used.
             return MapsKt.map(perDisplayTasks,
-                    it -> new DesktopTask(DesktopVisibilityController.INACTIVE_DESK_ID,
+                    it -> new DesktopTask(DesktopVisibilityController.INACTIVE_DESK_ID, it.getKey(),
                             it.getValue()));
         } else {
             final int deskId = recentTaskInfo.getDeskId();
+            final int displayId = recentTaskInfo.getDeskDisplayId();
             List<Task> tasks = CollectionsKt.map(recentTaskInfo.getTaskInfoList(),
                     it -> createTask(it, minimizedTaskIds));
-            return List.of(new DesktopTask(deskId, tasks));
+            return List.of(new DesktopTask(deskId, displayId, tasks));
         }
     }
 

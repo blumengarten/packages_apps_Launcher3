@@ -77,6 +77,7 @@ import com.android.launcher3.util.rects.set
 import com.android.quickstep.FullscreenDrawParams
 import com.android.quickstep.RecentsModel
 import com.android.quickstep.RemoteAnimationTargets
+import com.android.quickstep.RemoteTargetGluer.RemoteTargetHandle
 import com.android.quickstep.TaskOverlayFactory
 import com.android.quickstep.TaskViewUtils
 import com.android.quickstep.orientation.RecentsPagedOrientationHandler
@@ -146,7 +147,7 @@ constructor(
     val isRunningTask: Boolean
         get() = this === recentsView?.runningTaskView
 
-    val displayId: Int
+    open val displayId: Int
         get() = taskContainers.firstOrNull()?.task.displayId
 
     val isExternalDisplay: Boolean
@@ -613,6 +614,16 @@ constructor(
         focusBorderAnimator?.drawBorder(canvas)
         hoverBorderAnimator?.drawBorder(canvas)
         super.draw(canvas)
+    }
+
+    override fun setLayoutDirection(layoutDirection: Int) {
+        super.setLayoutDirection(layoutDirection)
+        if (enableOverviewIconMenu()) {
+            val deviceLayoutDirection = resources.configuration.layoutDirection
+            taskContainers.forEach {
+                (it.iconView as IconAppChipView).layoutDirection = deviceLayoutDirection
+            }
+        }
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
@@ -1210,15 +1221,14 @@ constructor(
     /** Launch of the current task (both live and inactive tasks) with an animation. */
     fun launchWithAnimation(): RunnableList? {
         return if (isRunningTask && recentsView?.remoteTargetHandles != null) {
-            launchAsLiveTile()
+            launchAsLiveTile(recentsView?.remoteTargetHandles!!)
         } else {
             launchAsStaticTile()
         }
     }
 
-    private fun launchAsLiveTile(): RunnableList? {
+    private fun launchAsLiveTile(remoteTargetHandles: Array<RemoteTargetHandle>): RunnableList? {
         val recentsView = recentsView ?: return null
-        val remoteTargetHandles = recentsView.remoteTargetHandles
         if (!isClickableAsLiveTile) {
             Log.e(
                 TAG,
@@ -1228,21 +1238,27 @@ constructor(
         }
         isClickableAsLiveTile = false
         val targets =
-            if (remoteTargetHandles.size == 1) {
-                remoteTargetHandles[0].transformParams.targetSet
+            if (remoteTargetHandles.isNotEmpty()) {
+                if (remoteTargetHandles.size == 1) {
+                    remoteTargetHandles[0].transformParams.targetSet
+                } else {
+                    val apps =
+                        remoteTargetHandles.flatMap {
+                            it.transformParams.targetSet.apps.asIterable()
+                        }
+                    val wallpapers =
+                        remoteTargetHandles.flatMap {
+                            it.transformParams.targetSet.wallpapers.asIterable()
+                        }
+                    RemoteAnimationTargets(
+                        apps.toTypedArray(),
+                        wallpapers.toTypedArray(),
+                        remoteTargetHandles[0].transformParams.targetSet.nonApps,
+                        remoteTargetHandles[0].transformParams.targetSet.targetMode,
+                    )
+                }
             } else {
-                val apps =
-                    remoteTargetHandles.flatMap { it.transformParams.targetSet.apps.asIterable() }
-                val wallpapers =
-                    remoteTargetHandles.flatMap {
-                        it.transformParams.targetSet.wallpapers.asIterable()
-                    }
-                RemoteAnimationTargets(
-                    apps.toTypedArray(),
-                    wallpapers.toTypedArray(),
-                    remoteTargetHandles[0].transformParams.targetSet.nonApps,
-                    remoteTargetHandles[0].transformParams.targetSet.targetMode,
-                )
+                null
             }
         if (targets == null) {
             // If the recents animation is cancelled somehow between the parent if block and
@@ -1484,10 +1500,11 @@ constructor(
     }
 
     private fun closeTaskMenu(): Boolean {
-        val floatingView: AbstractFloatingView? = AbstractFloatingView.getTopOpenViewWithType(
-            container,
-            AbstractFloatingView.TYPE_TASK_MENU
-        )
+        val floatingView: AbstractFloatingView? =
+            AbstractFloatingView.getTopOpenViewWithType(
+                container,
+                AbstractFloatingView.TYPE_TASK_MENU,
+            )
         if (floatingView?.isOpen == true) {
             floatingView.close(true)
             return true

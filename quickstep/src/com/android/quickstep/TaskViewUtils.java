@@ -433,9 +433,7 @@ public final class TaskViewUtils {
         out.addListener(new AnimationSuccessListener() {
             @Override
             public void onAnimationStart(Animator animation) {
-                for (RemoteTargetHandle remoteTargetHandle : remoteTargetHandles) {
-                    remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(false);
-                }
+                recentsView.setDrawBelowRecents(false, remoteTargetHandles);
             }
 
             @Override

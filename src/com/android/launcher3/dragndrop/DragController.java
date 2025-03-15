@@ -544,9 +544,10 @@ public abstract class DragController<T extends ActivityContext>
                 }
                 accepted = true;
             }
+
+            final View dropTargetAsView = dropTarget.getDropView();
+            dispatchDropComplete(dropTargetAsView, accepted);
         }
-        final View dropTargetAsView = dropTarget.getDropView();
-        dispatchDropComplete(dropTargetAsView, accepted);
     }
 
     private DropTarget findDropTarget(final int x, final int y) {

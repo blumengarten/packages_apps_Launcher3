@@ -436,6 +436,8 @@ public class AlphabeticalAppsList<T extends Context & ActivityContext> implement
                 if (currentItem.itemInfo != null && Objects.equals(
                         currentItem.itemInfo.getTargetPackage(), PRIVATE_SPACE_PACKAGE)) {
                     currentItem.itemInfo.bitmap.creationFlags |= FLAG_NO_BADGE;
+                    currentItem.itemInfo.contentDescription =
+                            mPrivateProviderManager.getPsAppContentDesc();
                     privateSpaceAppIndex = i;
                 }
             }

@@ -298,12 +298,13 @@ class FolderTest {
         val dragObject = DragObject(context)
         dragObject.dragInfo = Mockito.mock(ItemInfo::class.java)
         folder.mContent = Mockito.mock(FolderPagedView::class.java)
+        folder.mFolderIcon = Mockito.mock(FolderIcon::class.java)
         dragObject.dragSource = folder
 
         folder.onDragStart(dragObject, DragOptions())
 
         verify(folder.mContent, times(1)).removeItem(folder.currentDragView)
-        verify(folder.mInfo, times(1)).remove(dragObject.dragInfo, true)
+        verify(folder, times(1)).removeFolderContent(true, dragObject.dragInfo)
         assertTrue(folder.itemsInvalidated)
         assertTrue(folder.isDragInProgress)
         assertFalse(folder.itemAddedBackToSelfViaIcon)
@@ -827,19 +828,19 @@ class FolderTest {
 
     @Test
     fun `onRemove should call removeItem with the correct views`() {
+        val folderInfo =
+            workspaceBuilder.createFolderInCell(FolderPoint(Point(1, 0), TWO_ICON_FOLDER_TYPE), 0)
+        val items = folderInfo.getContents().toTypedArray()
+        folder.mInfo = folderInfo
+        folder.mFolderIcon = Mockito.mock(FolderIcon::class.java)
         folder.mContent = Mockito.mock(FolderPagedView::class.java)
-        val items =
-            arrayListOf<ItemInfo>(
-                Mockito.mock(ItemInfo::class.java),
-                Mockito.mock(ItemInfo::class.java),
-            )
         val view1 = Mockito.mock(View::class.java)
         val view2 = Mockito.mock(View::class.java)
         doReturn(view1).whenever(folder).getViewForInfo(items[0])
         doReturn(view2).whenever(folder).getViewForInfo(items[1])
         doReturn(2).whenever(folder).itemCount
 
-        folder.onRemove(items)
+        folder.removeFolderContent(false, *items)
 
         verify(folder.mContent, times(1)).removeItem(view1)
         verify(folder.mContent, times(1)).removeItem(view2)
@@ -847,20 +848,20 @@ class FolderTest {
 
     @Test
     fun `onRemove should set mRearrangeOnClose to true and not call rearrangeChildren if animating`() {
+        val folderInfo =
+            workspaceBuilder.createFolderInCell(FolderPoint(Point(1, 0), TWO_ICON_FOLDER_TYPE), 0)
+        val items = folderInfo.getContents().toTypedArray()
+        folder.mInfo = folderInfo
+        folder.mFolderIcon = Mockito.mock(FolderIcon::class.java)
         folder.mContent = Mockito.mock(FolderPagedView::class.java)
         folder.state = STATE_ANIMATING
-        val items =
-            arrayListOf<ItemInfo>(
-                Mockito.mock(ItemInfo::class.java),
-                Mockito.mock(ItemInfo::class.java),
-            )
         val view1 = Mockito.mock(View::class.java)
         val view2 = Mockito.mock(View::class.java)
         doReturn(view1).whenever(folder).getViewForInfo(items[0])
         doReturn(view2).whenever(folder).getViewForInfo(items[1])
         doReturn(2).whenever(folder).itemCount
 
-        folder.onRemove(items)
+        folder.removeFolderContent(true, *items)
 
         assertTrue(folder.rearrangeOnClose)
         verify(folder, times(0)).rearrangeChildren()
@@ -868,21 +869,21 @@ class FolderTest {
 
     @Test
     fun `onRemove should set not change mRearrangeOnClose and not call rearrangeChildren if not animating`() {
+        val folderInfo =
+            workspaceBuilder.createFolderInCell(FolderPoint(Point(1, 0), TWO_ICON_FOLDER_TYPE), 0)
+        val items = folderInfo.getContents().toTypedArray()
+        folder.mInfo = folderInfo
+        folder.mFolderIcon = Mockito.mock(FolderIcon::class.java)
         folder.mContent = Mockito.mock(FolderPagedView::class.java)
         folder.state = STATE_CLOSED
         folder.rearrangeOnClose = false
-        val items =
-            arrayListOf<ItemInfo>(
-                Mockito.mock(ItemInfo::class.java),
-                Mockito.mock(ItemInfo::class.java),
-            )
         val view1 = Mockito.mock(View::class.java)
         val view2 = Mockito.mock(View::class.java)
         doReturn(view1).whenever(folder).getViewForInfo(items[0])
         doReturn(view2).whenever(folder).getViewForInfo(items[1])
         doReturn(2).whenever(folder).itemCount
 
-        folder.onRemove(items)
+        folder.removeFolderContent(false, *items)
 
         assertFalse(folder.rearrangeOnClose)
         verify(folder, times(1)).rearrangeChildren()
@@ -890,12 +891,12 @@ class FolderTest {
 
     @Test
     fun `onRemove should call close if mIsOpen is true and item count is less than or equal to one`() {
+        val folderInfo =
+            workspaceBuilder.createFolderInCell(FolderPoint(Point(1, 0), TWO_ICON_FOLDER_TYPE), 0)
+        val items = folderInfo.getContents().toTypedArray()
+        folder.mInfo = folderInfo
+        folder.mFolderIcon = Mockito.mock(FolderIcon::class.java)
         folder.mContent = Mockito.mock(FolderPagedView::class.java)
-        val items =
-            arrayListOf<ItemInfo>(
-                Mockito.mock(ItemInfo::class.java),
-                Mockito.mock(ItemInfo::class.java),
-            )
         val view1 = Mockito.mock(View::class.java)
         val view2 = Mockito.mock(View::class.java)
         doReturn(view1).whenever(folder).getViewForInfo(items[0])
@@ -904,19 +905,19 @@ class FolderTest {
         folder.setIsOpen(true)
         doNothing().`when`(folder).close(true)
 
-        folder.onRemove(items)
+        folder.removeFolderContent(false, *items)
 
         verify(folder, times(1)).close(true)
     }
 
     @Test
     fun `onRemove should call replaceFolderWithFinalItem if mIsOpen is false and item count is less than or equal to one`() {
+        val folderInfo =
+            workspaceBuilder.createFolderInCell(FolderPoint(Point(1, 0), TWO_ICON_FOLDER_TYPE), 0)
+        val items = folderInfo.getContents().toTypedArray()
+        folder.mInfo = folderInfo
+        folder.mFolderIcon = Mockito.mock(FolderIcon::class.java)
         folder.mContent = Mockito.mock(FolderPagedView::class.java)
-        val items =
-            arrayListOf<ItemInfo>(
-                Mockito.mock(ItemInfo::class.java),
-                Mockito.mock(ItemInfo::class.java),
-            )
         val view1 = Mockito.mock(View::class.java)
         val view2 = Mockito.mock(View::class.java)
         doReturn(view1).whenever(folder).getViewForInfo(items[0])
@@ -924,7 +925,7 @@ class FolderTest {
         doReturn(1).whenever(folder).itemCount
         folder.setIsOpen(false)
 
-        folder.onRemove(items)
+        folder.removeFolderContent(false, *items)
 
         verify(folder, times(1)).replaceFolderWithFinalItem()
     }

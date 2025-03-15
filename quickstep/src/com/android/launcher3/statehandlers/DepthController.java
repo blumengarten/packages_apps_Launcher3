@@ -65,7 +65,7 @@ public class DepthController extends BaseDepthController implements StateHandler
     private void onLauncherDraw() {
         View view = mLauncher.getDragLayer();
         ViewRootImpl viewRootImpl = view.getViewRootImpl();
-        setSurface(viewRootImpl != null ? viewRootImpl.getSurfaceControl() : null);
+        setBaseSurface(viewRootImpl != null ? viewRootImpl.getSurfaceControl() : null);
         view.post(() -> view.getViewTreeObserver().removeOnDrawListener(mOnDrawListener));
     }
 
@@ -127,7 +127,7 @@ public class DepthController extends BaseDepthController implements StateHandler
             mLauncher.getDragLayer().getViewTreeObserver().addOnDrawListener(mOnDrawListener);
         } else {
             mLauncher.getDragLayer().getViewTreeObserver().removeOnDrawListener(mOnDrawListener);
-            setSurface(null);
+            setBaseSurface(null);
         }
     }
 
@@ -189,7 +189,8 @@ public class DepthController extends BaseDepthController implements StateHandler
         writer.println(prefix + "DepthController");
         writer.println(prefix + "\tmMaxBlurRadius=" + mMaxBlurRadius);
         writer.println(prefix + "\tmCrossWindowBlursEnabled=" + mCrossWindowBlursEnabled);
-        writer.println(prefix + "\tmSurface=" + mSurface);
+        writer.println(prefix + "\tmBaseSurface=" + mBaseSurface);
+        writer.println(prefix + "\tmBaseSurfaceOverride=" + mBaseSurfaceOverride);
         writer.println(prefix + "\tmStateDepth=" + stateDepth.getValue());
         writer.println(prefix + "\tmWidgetDepth=" + widgetDepth.getValue());
         writer.println(prefix + "\tmCurrentBlur=" + mCurrentBlur);

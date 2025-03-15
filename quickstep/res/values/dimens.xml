@@ -363,6 +363,7 @@
     <dimen name="taskbar_home_button_left_margin_kids">48dp</dimen>
     <dimen name="taskbar_icon_size_kids">32dp</dimen>
     <dimen name="taskbar_all_apps_search_button_translation_x_offset">6dp</dimen>
+    <dimen name="taskbar_all_apps_search_button_translation_x_offset_for_expressive_theme">5.5dp</dimen>
     <dimen name="taskbar_contextual_button_suw_margin">64dp</dimen>
     <dimen name="taskbar_contextual_button_suw_height">64dp</dimen>
     <dimen name="taskbar_back_button_suw_start_margin">48dp</dimen>
@@ -381,6 +382,7 @@
     <dimen name="transient_taskbar_key_shadow_distance">10dp</dimen>
     <dimen name="transient_taskbar_stashed_height">32dp</dimen>
     <dimen name="transient_taskbar_all_apps_button_translation_x_offset">8dp</dimen>
+    <dimen name="transient_taskbar_all_apps_button_translation_x_offset_for_expressive_theme">8dp</dimen>
     <dimen name="transient_taskbar_stash_spring_velocity_dp_per_s">400dp</dimen>
     <dimen name="taskbar_tooltip_vertical_padding">8dp</dimen>
     <dimen name="taskbar_tooltip_horizontal_padding">16dp</dimen>
@@ -532,8 +534,8 @@
     <dimen name="keyboard_quick_switch_text_button_fade_edge_length">20dp</dimen>
     <dimen name="keyboard_quick_switch_scroll_button_width">36dp</dimen>
     <dimen name="keyboard_quick_switch_scroll_button_height">56dp</dimen>
-    <dimen name="keyboard_quick_switch_scroll_button_horizontal_padding">12dp</dimen>
-    <dimen name="keyboard_quick_switch_scroll_button_vertical_padding">32dp</dimen>
+    <dimen name="keyboard_quick_switch_scroll_button_horizontal_padding">6dp</dimen>
+    <dimen name="keyboard_quick_switch_scroll_button_vertical_padding">16dp</dimen>
     <dimen name="keyboard_quick_switch_scroll_button_corner_radius">18dp</dimen>
 
     <!-- Digital Wellbeing -->

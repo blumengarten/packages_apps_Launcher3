@@ -15,7 +15,6 @@
  */
 package com.android.launcher3.taskbar;
 
-import static android.view.KeyEvent.ACTION_UP;
 import static android.view.View.AccessibilityDelegate;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewTreeObserver.InternalInsetsInfo.TOUCHABLE_INSETS_REGION;
@@ -121,6 +120,7 @@ import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.StringJoiner;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntPredicate;
 
 /**
@@ -174,6 +174,7 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
     private static final int NUM_ALPHA_CHANNELS = 3;
 
     private static final long AUTODIM_TIMEOUT_MS = 2250;
+    private static final long PREDICTIVE_BACK_TIMEOUT_MS = 200;
 
     private final ArrayList<StatePropertyHolder> mPropertyHolders = new ArrayList<>();
     private final ArrayList<ImageView> mAllButtons = new ArrayList<>();
@@ -894,23 +895,36 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
     private void setBackButtonTouchListener(View buttonView,
             TaskbarNavButtonController navButtonController) {
         final RectF rect = new RectF();
+        final AtomicBoolean hasSentDownEvent = new AtomicBoolean(false);
+        final Runnable longPressTimeout = () -> {
+            navButtonController.sendBackKeyEvent(KeyEvent.ACTION_DOWN, /*cancelled*/ false);
+            hasSentDownEvent.set(true);
+        };
         buttonView.setOnTouchListener((v, event) -> {
             int motionEventAction = event.getAction();
             if (motionEventAction == MotionEvent.ACTION_DOWN) {
+                hasSentDownEvent.set(false);
+                mHandler.postDelayed(longPressTimeout, PREDICTIVE_BACK_TIMEOUT_MS);
                 rect.set(0, 0, v.getWidth(), v.getHeight());
             }
             boolean isCancelled = motionEventAction == MotionEvent.ACTION_CANCEL
                     || (!rect.contains(event.getX(), event.getY())
                     && (motionEventAction == MotionEvent.ACTION_MOVE
                     || motionEventAction == MotionEvent.ACTION_UP));
-            if (motionEventAction != MotionEvent.ACTION_DOWN
-                    && motionEventAction != MotionEvent.ACTION_UP && !isCancelled) {
-                // return early. we don't care about any other cases than DOWN, UP and CANCEL
+            if (motionEventAction != MotionEvent.ACTION_UP && !isCancelled) {
+                // return early. we don't care about any other cases than UP or CANCEL from here on
                 return false;
             }
-            int keyEventAction = motionEventAction == MotionEvent.ACTION_DOWN
-                    ? KeyEvent.ACTION_DOWN : ACTION_UP;
-            navButtonController.sendBackKeyEvent(keyEventAction, isCancelled);
+            mHandler.removeCallbacks(longPressTimeout);
+            if (!hasSentDownEvent.get()) {
+                if (isCancelled) {
+                    // if it is cancelled and ACTION_DOWN has not been sent yet, return early and
+                    // don't send anything to sysui.
+                    return false;
+                }
+                navButtonController.sendBackKeyEvent(KeyEvent.ACTION_DOWN, isCancelled);
+            }
+            navButtonController.sendBackKeyEvent(KeyEvent.ACTION_UP, isCancelled);
             if (motionEventAction == MotionEvent.ACTION_UP && !isCancelled) {
                 buttonView.performClick();
                 buttonView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);

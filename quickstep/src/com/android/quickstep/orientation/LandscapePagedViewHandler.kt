@@ -661,7 +661,7 @@ open class LandscapePagedViewHandler : RecentsPagedOrientationHandler {
     ): SplitIconPositions {
         return if (Flags.enableOverviewIconMenu()) {
             if (isRtl) {
-                SplitIconPositions(0, -(totalThumbnailHeight - primarySnapshotHeight))
+                SplitIconPositions(-(totalThumbnailHeight - primarySnapshotHeight), 0)
             } else {
                 SplitIconPositions(0, primarySnapshotHeight + dividerSize)
             }

@@ -25,6 +25,7 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.util.Log
 import android.util.Size
+import android.view.Display.INVALID_DISPLAY
 import android.view.Gravity
 import android.view.View
 import android.view.ViewStub
@@ -59,6 +60,7 @@ import com.android.quickstep.task.thumbnail.TaskContentView
 import com.android.quickstep.task.thumbnail.TaskThumbnailView
 import com.android.quickstep.util.DesktopTask
 import com.android.quickstep.util.RecentsOrientedState
+import com.android.wm.shell.shared.desktopmode.DesktopModeStatus.enableMultipleDesktops
 import kotlin.math.roundToInt
 
 /** TaskView that contains all tasks that are part of the desktop. */
@@ -69,7 +71,10 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         type = TaskViewType.DESKTOP,
         thumbnailFullscreenParams = DesktopFullscreenDrawParams(context),
     ) {
-    var deskId = DesktopVisibilityController.INACTIVE_DESK_ID
+    val deskId
+        get() = desktopTask?.deskId ?: DesktopVisibilityController.INACTIVE_DESK_ID
+
+    private var desktopTask: DesktopTask? = null
 
     private val contentViewFullscreenParams = FullscreenDrawParams(context)
 
@@ -111,6 +116,14 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
             field = value
             positionTaskWindows()
         }
+
+    override val displayId: Int
+        get() =
+            if (enableMultipleDesktops(context)) {
+                desktopTask?.displayId ?: INVALID_DISPLAY
+            } else {
+                super.displayId
+            }
 
     private fun getRemoteTargetHandle(taskId: Int): RemoteTargetHandle? =
         remoteTargetHandles?.firstOrNull {
@@ -284,7 +297,7 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         orientedState: RecentsOrientedState,
         taskOverlayFactory: TaskOverlayFactory,
     ) {
-        deskId = desktopTask.deskId
+        this.desktopTask = desktopTask
         // TODO(b/370495260): Minimized tasks should not be filtered with desktop exploded view
         // support.
         // Minimized tasks should not be shown in Overview.
@@ -336,7 +349,7 @@ class DesktopTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     override fun onRecycle() {
         super.onRecycle()
-        deskId = DesktopVisibilityController.INACTIVE_DESK_ID
+        desktopTask = null
         explodeProgress = 0.0f
         viewModel = null
         visibility = VISIBLE

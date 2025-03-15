@@ -1472,8 +1472,7 @@ public class Launcher extends StatefulActivity<LauncherState>
             // Adding a shortcut to a Folder.
             FolderIcon folderIcon = findFolderIcon(container);
             if (folderIcon != null) {
-                FolderInfo folderInfo = (FolderInfo) folderIcon.getTag();
-                folderInfo.add(info, args.rank, false);
+                folderIcon.getFolder().addFolderContent(info, args.rank, false);
             } else {
                 Log.e(TAG, "Could not find folder with id " + container + " to add shortcut.");
             }
@@ -1792,7 +1791,6 @@ public class Launcher extends StatefulActivity<LauncherState>
         SettingsCache.INSTANCE.get(this).unregister(TOUCHPAD_NATURAL_SCROLLING,
                 mNaturalScrollingChangedListener);
         ScreenOnTracker.INSTANCE.get(this).removeListener(mScreenOnListener);
-        mWorkspace.removeFolderListeners();
         PluginManagerWrapper.INSTANCE.get(this).removePluginListener(this);
 
         mModel.removeCallbacks(this);
@@ -2053,9 +2051,10 @@ public class Launcher extends StatefulActivity<LauncherState>
             @Nullable final String reason) {
         if (itemInfo instanceof WorkspaceItemInfo) {
             View collectionIcon = mWorkspace.getViewByItemId(itemInfo.container);
-            if (collectionIcon instanceof FolderIcon) {
+            if (collectionIcon instanceof FolderIcon folderIcon) {
                 // Remove the shortcut from the folder before removing it from launcher
-                ((FolderInfo) collectionIcon.getTag()).remove((WorkspaceItemInfo) itemInfo, true);
+                Folder folder = folderIcon.getFolder();
+                folder.removeFolderContent(true, itemInfo);
             } else if (collectionIcon instanceof AppPairIcon appPairIcon) {
                 removeItem(appPairIcon, appPairIcon.getInfo(), deleteFromDb,
                         "removing app pair because one of its member apps was removed");
@@ -2066,9 +2065,6 @@ public class Launcher extends StatefulActivity<LauncherState>
                 getModelWriter().deleteItemFromDatabase(itemInfo, reason);
             }
         } else if (itemInfo instanceof CollectionInfo ci) {
-            if (v instanceof FolderIcon) {
-                ((FolderIcon) v).removeListeners();
-            }
             mWorkspace.removeWorkspaceItem(v);
             if (deleteFromDb) {
                 getModelWriter().deleteCollectionAndContentsFromDatabase(ci);

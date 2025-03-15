@@ -292,8 +292,7 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
 
         // disabling this so app icons aren't drawn on top of recent tasks.
         if (isOverlayEnabled && !RecentsWindowFlags.Companion.getEnableOverviewInWindow()) {
-            runActionOnRemoteHandles(remoteTargetHandle ->
-                    remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(true));
+            mBlurUtils.setDrawLiveTileBelowRecents(true);
         }
     }
 
@@ -303,6 +302,7 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
         if (enabled) {
             RecentsState state = mContainer.getStateManager().getState();
             setDisallowScrollToClearAll(!state.hasClearAllButton());
+            setDisallowScrollToAddDesk(!state.hasAddDeskButton());
         }
     }
 

@@ -30,6 +30,9 @@ import com.android.launcher3.LauncherSettings.Favorites.TMP_TABLE
 import com.android.launcher3.Utilities
 import com.android.launcher3.config.FeatureFlags
 import com.android.launcher3.logging.FileLog
+import com.android.launcher3.logging.StatsLogManager
+import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_ROW_SHIFT_GRID_MIGRATION
+import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_STANDARD_GRID_MIGRATION
 import com.android.launcher3.model.GridSizeMigrationDBController.DbReader
 import com.android.launcher3.provider.LauncherDbUtils.SQLiteTransaction
 import com.android.launcher3.provider.LauncherDbUtils.copyTable
@@ -57,6 +60,8 @@ class GridSizeMigrationLogic {
         if (!GridSizeMigrationDBController.needsToMigrate(srcDeviceState, destDeviceState)) {
             return
         }
+
+        val statsLogManager: StatsLogManager = StatsLogManager.newInstance(context)
 
         val isAfterRestore = get(context).get(LauncherPrefs.IS_FIRST_LOAD_AFTER_RESTORE)
         FileLog.d(
@@ -90,6 +95,7 @@ class GridSizeMigrationLogic {
                     // Save current configuration, so that the migration does not run again.
                     destDeviceState.writeToPrefs(context)
                     t.commit()
+                    statsLogManager.logger().log(LAUNCHER_ROW_SHIFT_GRID_MIGRATION)
                     return
                 }
 
@@ -119,6 +125,7 @@ class GridSizeMigrationLogic {
 
                 dropTable(t.db, TMP_TABLE)
                 t.commit()
+                statsLogManager.logger().log(LAUNCHER_STANDARD_GRID_MIGRATION)
             }
         } catch (e: Exception) {
             FileLog.e(TAG, "Error during grid migration", e)

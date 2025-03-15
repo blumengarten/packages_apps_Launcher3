@@ -34,14 +34,13 @@ import static com.android.app.animation.Interpolators.FINAL_FRAME;
 import static com.android.app.animation.Interpolators.LINEAR;
 import static com.android.app.animation.Interpolators.clampToProgress;
 import static com.android.launcher3.AbstractFloatingView.TYPE_REBIND_SAFE;
-import static com.android.launcher3.AbstractFloatingView.TYPE_TASK_MENU;
-import static com.android.launcher3.AbstractFloatingView.getTopOpenViewWithType;
 import static com.android.launcher3.BaseActivity.STATE_HANDLER_INVISIBILITY_FLAGS;
 import static com.android.launcher3.Flags.enableAdditionalHomeAnimations;
 import static com.android.launcher3.Flags.enableDesktopExplodedView;
 import static com.android.launcher3.Flags.enableDesktopTaskAlphaAnimation;
 import static com.android.launcher3.Flags.enableGridOnlyOverview;
 import static com.android.launcher3.Flags.enableLargeDesktopWindowingTile;
+import static com.android.launcher3.Flags.enableOverviewBackgroundWallpaperBlur;
 import static com.android.launcher3.Flags.enableRefactorTaskThumbnail;
 import static com.android.launcher3.Flags.enableSeparateExternalDisplayTasks;
 import static com.android.launcher3.LauncherAnimUtils.SUCCESS_TRANSITION_PROGRESS;
@@ -142,7 +141,6 @@ import androidx.annotation.UiThread;
 import androidx.core.graphics.ColorUtils;
 import androidx.dynamicanimation.animation.SpringAnimation;
 
-import com.android.app.tracing.TraceUtilsKt;
 import com.android.internal.jank.Cuj;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.BaseActivity.MultiWindowModeChangedListener;
@@ -589,6 +587,8 @@ public abstract class RecentsView<
     private final TaskOverlayFactory mTaskOverlayFactory;
 
     protected boolean mDisallowScrollToClearAll;
+    // True if it is not allowed to scroll to [AddDesktopButton].
+    protected boolean mDisallowScrollToAddDesk;
     private boolean mOverlayEnabled;
     protected boolean mFreezeViewVisibility;
     private boolean mOverviewGridEnabled;
@@ -832,7 +832,7 @@ public abstract class RecentsView<
                     mOrientationState.setMultiWindowMode(inMultiWindowMode);
                     setLayoutRotation(mOrientationState.getTouchRotation(),
                             mOrientationState.getDisplayRotation());
-                    updateChildTaskOrientations();
+                    mUtils.updateChildTaskOrientations();
                     if (!inMultiWindowMode && mOverviewStateEnabled) {
                         // TODO: Re-enable layout transitions for addition of the unpinned task
                         reloadIfNeeded();
@@ -868,6 +868,9 @@ public abstract class RecentsView<
     private final Matrix mTmpMatrix = new Matrix();
 
     private int mTaskViewCount = 0;
+
+    protected final BlurUtils mBlurUtils = new BlurUtils(this);
+
     @Nullable
     public TaskView getFirstTaskView() {
         return mUtils.getFirstTaskView();
@@ -2087,7 +2090,7 @@ public abstract class RecentsView<
 
         traceBegin(Trace.TRACE_TAG_APP, "RecentsView.applyLoadPlan.layouts");
         updateTaskSize();
-        updateChildTaskOrientations();
+        mUtils.updateChildTaskOrientations();
         traceEnd(Trace.TRACE_TAG_APP);
 
         TaskView newRunningTaskView = mUtils.getDesktopTaskViewForDeskId(runningTaskViewDeskId);
@@ -2339,7 +2342,7 @@ public abstract class RecentsView<
         updateSizeAndPadding();
 
         // Update TaskView's DeviceProfile dependent layout.
-        updateChildTaskOrientations();
+        mUtils.updateChildTaskOrientations();
 
         requestLayout();
         // Reapply the current page to update page scrolls.
@@ -2747,9 +2750,7 @@ public abstract class RecentsView<
             }
             setEnableDrawingLiveTile(false);
         }
-        runActionOnRemoteHandles(remoteTargetHandle ->
-                remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(false));
-
+        mBlurUtils.setDrawLiveTileBelowRecents(false);
         // These are relatively expensive and don't need to be done this frame (RecentsView isn't
         // visible anyway), so defer by a frame to get off the critical path, e.g. app to home.
         post(this::onReset);
@@ -2949,22 +2950,6 @@ public abstract class RecentsView<
         return as;
     }
 
-    private void updateChildTaskOrientations() {
-        for (TaskView taskView : getTaskViews()) {
-            taskView.setOrientationState(mOrientationState);
-        }
-        boolean shouldRotateMenuForFakeRotation =
-                !mOrientationState.isRecentsActivityRotationAllowed();
-        if (!shouldRotateMenuForFakeRotation) {
-            return;
-        }
-        AbstractFloatingView floatingView = getTopOpenViewWithType(mContainer, TYPE_TASK_MENU);
-        if (floatingView instanceof TaskMenuView taskMenuView) {
-            // Rotation is supported on phone (details at b/254198019#comment4)
-            taskMenuView.onRotationChanged();
-        }
-    }
-
     /**
      * Called when a gesture from an app has finished, and an end target has been determined.
      */
@@ -3121,7 +3106,8 @@ public abstract class RecentsView<
 
         // TODO: b/401582344 - Implement a way to exclude the `DesktopWallpaperActivity`.
         desktopTaskView.bind(
-                new DesktopTask(activeDeskId, Arrays.asList(runningTasks)),
+                new DesktopTask(activeDeskId, mContainer.getDisplayId(),
+                        Arrays.asList(runningTasks)),
                 mOrientationState, mTaskOverlayFactory);
         return desktopTaskView;
     }
@@ -3201,7 +3187,7 @@ public abstract class RecentsView<
         setRunningTaskHidden(runningTaskTileHidden);
         // Update task size after setting current task.
         updateTaskSize();
-        updateChildTaskOrientations();
+        mUtils.updateChildTaskOrientations();
 
         // Reload the task list
         reloadIfNeeded();
@@ -4354,7 +4340,7 @@ public abstract class RecentsView<
                             finalNextFocusedTaskView.getDismissIconFadeInAnimator().start();
                         }
                         updateTaskSize();
-                        updateChildTaskOrientations();
+                        mUtils.updateChildTaskOrientations();
                         // Update scroll and snap to page.
                         updateScrollSynchronously();
 
@@ -5819,12 +5805,10 @@ public abstract class RecentsView<
                     // above RecentsView to avoid wallpaper blur from being applied to it.
                     if (!taskView.isRunningTask()) {
                         runActionOnRemoteHandles(
-                                remoteTargetHandle -> {
-                                    remoteTargetHandle.getTaskViewSimulator().setPivotOverride(
-                                            mTempPointF);
-                                    remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(
-                                            false);
-                                });
+                                remoteTargetHandle ->
+                                        remoteTargetHandle.getTaskViewSimulator()
+                                                .setPivotOverride(mTempPointF));
+                        mBlurUtils.setDrawLiveTileBelowRecents(false);
                     }
                 }
 
@@ -5959,8 +5943,7 @@ public abstract class RecentsView<
         mPendingAnimation.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
-                runActionOnRemoteHandles(remoteTargetHandle ->
-                        remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(false));
+                mBlurUtils.setDrawLiveTileBelowRecents(false);
             }
         });
         mPendingAnimation.addEndListener(isSuccess -> {
@@ -5998,8 +5981,7 @@ public abstract class RecentsView<
             // If launch animation didn't complete i.e. user dragged live tile down and then
             // back up and returned to Overview, then we need to ensure we reset the
             // view to draw below recents so that it can't be interacted with.
-            runActionOnRemoteHandles(remoteTargetHandle ->
-                    remoteTargetHandle.getTaskViewSimulator().setDrawsBelowRecents(true));
+            mBlurUtils.setDrawLiveTileBelowRecents(true);
             redrawLiveTile();
         }
         return Unit.INSTANCE;
@@ -6078,6 +6060,7 @@ public abstract class RecentsView<
         });
     }
 
+    @Nullable
     public RemoteTargetHandle[] getRemoteTargetHandles() {
         return mRemoteTargetHandles;
     }
@@ -6231,6 +6214,9 @@ public abstract class RecentsView<
         mRecentsAnimationController = null;
         mSplitSelectStateController.setRecentsAnimationRunning(false);
         executeSideTaskLaunchCallback();
+        if (enableOverviewBackgroundWallpaperBlur()) {
+            mBlurUtils.setDrawLiveTileBelowRecents(false);
+        }
     }
 
     public void setDisallowScrollToClearAll(boolean disallowScrollToClearAll) {
@@ -6239,6 +6225,17 @@ public abstract class RecentsView<
             updateMinAndMaxScrollX();
         }
     }
+    /**
+     * Update the value of [mDisallowScrollToAddDesk]
+     */
+    public void setDisallowScrollToAddDesk(boolean disallowScrollToAddDesk) {
+        if (mDisallowScrollToAddDesk != disallowScrollToAddDesk) {
+            mDisallowScrollToAddDesk = disallowScrollToAddDesk;
+            updateMinAndMaxScrollX();
+        }
+    }
+
+
 
     /**
      * Updates page scroll synchronously after measure and layout child views.
@@ -6384,7 +6381,20 @@ public abstract class RecentsView<
         if (addDesktopButtonIndex >= 0 && addDesktopButtonIndex < outPageScrolls.length) {
             int firstViewIndex = getFirstViewIndex();
             if (firstViewIndex >= 0 && firstViewIndex < outPageScrolls.length) {
-                outPageScrolls[addDesktopButtonIndex] = outPageScrolls[firstViewIndex];
+                // If we can scroll to [AddDesktopButton], make its page scroll equal to
+                // the first [TaskView]. Otherwise, make its page scroll out of range of
+                // [minScroll, maxScroll].
+                if (!mDisallowScrollToAddDesk) {
+                    outPageScrolls[addDesktopButtonIndex] = outPageScrolls[firstViewIndex];
+                } else {
+                    outPageScrolls[addDesktopButtonIndex] =
+                            outPageScrolls[firstViewIndex] + (mIsRtl ? 1 : -1);
+                }
+            }
+
+            if (DEBUG) {
+                Log.d(TAG, "getPageScrolls - addDesktopButtonScroll: "
+                        + outPageScrolls[addDesktopButtonIndex]);
             }
         }
         if (DEBUG) {
@@ -7026,7 +7036,7 @@ public abstract class RecentsView<
         // `AddNewDesktopButton`.
         DesktopTaskView desktopTaskView =
                 (DesktopTaskView) getTaskViewFromPool(TaskViewType.DESKTOP);
-        desktopTaskView.bind(new DesktopTask(deskId, new ArrayList<>()),
+        desktopTaskView.bind(new DesktopTask(deskId, displayId, new ArrayList<>()),
                 mOrientationState, mTaskOverlayFactory);
 
         Objects.requireNonNull(mAddDesktopButton);
@@ -7034,7 +7044,7 @@ public abstract class RecentsView<
         addView(desktopTaskView, insertionIndex);
 
         updateTaskSize();
-        updateChildTaskOrientations();
+        mUtils.updateChildTaskOrientations();
 
         // TODO: b/401002178 - Recalculate the new current page such that the addition of the new
         //  desk does not result in a change in the current scroll page.
@@ -7185,5 +7195,16 @@ public abstract class RecentsView<
 
     public interface TaskLaunchListener {
         void onTaskLaunched();
+    }
+
+    /**
+     * Sets whether the remote animation targets should draw below the recents view.
+     *
+     * @param drawBelowRecents  whether the surface should draw below Recents.
+     * @param remoteTargetHandles collection of remoteTargetHandles in Recents.
+     */
+    public void setDrawBelowRecents(boolean drawBelowRecents,
+            RemoteTargetHandle[] remoteTargetHandles) {
+        mBlurUtils.setDrawBelowRecents(drawBelowRecents, remoteTargetHandles);
     }
 }

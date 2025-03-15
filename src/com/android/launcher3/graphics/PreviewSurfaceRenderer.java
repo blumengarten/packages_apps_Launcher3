@@ -21,7 +21,6 @@ import static android.content.res.Configuration.UI_MODE_NIGHT_YES;
 import static android.view.Display.DEFAULT_DISPLAY;
 
 import static com.android.launcher3.LauncherPrefs.GRID_NAME;
-import static com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME;
 import static com.android.launcher3.graphics.ThemeManager.PREF_ICON_SHAPE;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
@@ -179,7 +178,7 @@ public class PreviewSurfaceRenderer {
 
         ModelDbController mainController =
                 LauncherAppState.getInstance(mContext).getModel().getModelDbController();
-        try (Cursor c = mainController.query(TABLE_NAME,
+        try (Cursor c = mainController.query(
                 new String[] {
                         LauncherSettings.Favorites.APPWIDGET_ID,
                         LauncherSettings.Favorites.SPANX,

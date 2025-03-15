@@ -75,7 +75,6 @@ class OverviewCommandHelper
 constructor(
     private val touchInteractionService: TouchInteractionService,
     private val overviewComponentObserver: OverviewComponentObserver,
-    private val taskAnimationManager: TaskAnimationManager,
     private val dispatcherProvider: DispatcherProvider = ProductionDispatchers,
     private val recentsDisplayModel: RecentsDisplayModel,
     private val focusState: FocusState,
@@ -92,27 +91,33 @@ constructor(
      */
     private var keyboardTaskFocusIndex = -1
 
-    // TODO (b/397942185): get per-display interface
-    private val containerInterface: BaseContainerInterface<*, *>
-        get() = overviewComponentObserver.getContainerInterface(DEFAULT_DISPLAY)
+    private fun getContainerInterface(displayId: Int) =
+        overviewComponentObserver.getContainerInterface(displayId)
 
-    // TODO (b/397942185): get per-display RecentsView
-    private val visibleRecentsView: RecentsView<*, *>?
-        get() = containerInterface.getVisibleRecentsView<RecentsView<*, *>>()
+    private fun getVisibleRecentsView(displayId: Int) =
+        getContainerInterface(displayId).getVisibleRecentsView<RecentsView<*, *>>()
 
     /**
      * Adds a command to be executed next, after all pending tasks are completed. Max commands that
      * can be queued is [.MAX_QUEUE_SIZE]. Requests after reaching that limit will be silently
      * dropped.
+     *
+     * @param type The type of the command
+     * @param onDisplays The display to run the command on
      */
     @BinderThread
-    fun addCommand(type: CommandType): CommandInfo? {
+    @JvmOverloads
+    fun addCommand(
+        type: CommandType,
+        displayId: Int = DEFAULT_DISPLAY,
+        isLastOfBatch: Boolean = true,
+    ): CommandInfo? {
         if (commandQueue.size >= MAX_QUEUE_SIZE) {
             Log.d(TAG, "command not added: $type - queue is full ($commandQueue).")
             return null
         }
 
-        val command = CommandInfo(type)
+        val command = CommandInfo(type, displayId = displayId, isLastOfBatch = isLastOfBatch)
         commandQueue.add(command)
         Log.d(TAG, "command added: $command")
 
@@ -130,6 +135,35 @@ constructor(
         return command
     }
 
+    @BinderThread
+    fun addCommandsForDisplays(type: CommandType, displayIds: IntArray): CommandInfo? {
+        if (displayIds.isEmpty()) return null
+        var lastCommand: CommandInfo? = null
+        displayIds.forEachIndexed({ i, displayId ->
+            lastCommand = addCommand(type, displayId, i == displayIds.size - 1)
+        })
+        return lastCommand
+    }
+
+    @BinderThread
+    fun addCommandsForAllDisplays(type: CommandType) =
+        addCommandsForDisplays(
+            type,
+            recentsDisplayModel.activeDisplayResources
+                .map { resource -> resource.displayId }
+                .toIntArray(),
+        )
+
+    @BinderThread
+    fun addCommandsForDisplaysExcept(type: CommandType, excludedDisplayId: Int) =
+        addCommandsForDisplays(
+            type,
+            recentsDisplayModel.activeDisplayResources
+                .map { resource -> resource.displayId }
+                .filter { displayId -> displayId != excludedDisplayId }
+                .toIntArray(),
+        )
+
     fun canStartHomeSafely(): Boolean = commandQueue.isEmpty() || commandQueue.first().type == HOME
 
     /** Clear pending or completed commands from the queue */
@@ -144,7 +178,7 @@ constructor(
      * completion (returns false).
      */
     @UiThread
-    private fun processNextCommand() =
+    private fun processNextCommand(): Unit =
         traceSection("OverviewCommandHelper.processNextCommand") {
             val command: CommandInfo? = commandQueue.firstOrNull()
             if (command == null) {
@@ -183,7 +217,7 @@ constructor(
      */
     @VisibleForTesting
     fun executeCommand(command: CommandInfo, onCallbackResult: () -> Unit): Boolean {
-        val recentsView = visibleRecentsView
+        val recentsView = getVisibleRecentsView(command.displayId)
         Log.d(TAG, "executeCommand: $command - visibleRecentsView: $recentsView")
         return if (recentsView != null) {
             executeWhenRecentsIsVisible(command, recentsView, onCallbackResult)
@@ -231,6 +265,7 @@ constructor(
                     launchTask(recentsView, taskView, command, onCallbackResult)
                 }
             }
+
             TOGGLE -> {
                 launchTask(
                     recentsView,
@@ -239,6 +274,7 @@ constructor(
                     onCallbackResult,
                 )
             }
+
             HOME -> {
                 recentsView.startHome()
                 true
@@ -295,6 +331,7 @@ constructor(
         command: CommandInfo,
         onCallbackResult: () -> Unit,
     ): Boolean {
+        val containerInterface = getContainerInterface(command.displayId)
         val recentsViewContainer = containerInterface.getCreatedContainer()
         val recentsView: RecentsView<*, *>? = recentsViewContainer?.getOverviewPanel()
         val deviceProfile = recentsViewContainer?.getDeviceProfile()
@@ -336,6 +373,7 @@ constructor(
 
                 if (keyboardTaskFocusIndex == -1) return true
             }
+
             KEYBOARD_INPUT ->
                 if (uiController != null && deviceProfile?.isTablet == true) {
                     if (
@@ -349,6 +387,7 @@ constructor(
                 } else {
                     keyboardTaskFocusIndex = 0
                 }
+
             HOME -> {
                 ActiveGestureProtoLogProxy.logExecuteHomeCommand()
                 // Although IActivityTaskManager$Stub$Proxy.startActivity is a slow binder call,
@@ -358,12 +397,14 @@ constructor(
                 touchInteractionService.startActivity(overviewComponentObserver.homeIntent)
                 return true
             }
+
             SHOW ->
                 // When Recents is not currently visible, the command's type is SHOW
                 // when overview is triggered via the keyboard overview button or Action+Tab
                 // keys (Not Alt+Tab which is KQS). The overview button on-screen in 3-button
                 // nav is TYPE_TOGGLE.
                 keyboardTaskFocusIndex = 0
+
             TOGGLE -> {}
         }
 
@@ -379,7 +420,7 @@ constructor(
                     Log.d(TAG, "switching to Overview state - onAnimationStart: $command")
                     super.onAnimationStart(animation)
                     updateRecentsViewFocus(command)
-                    logShowOverviewFrom(command.type)
+                    logShowOverviewFrom(command)
                 }
 
                 override fun onAnimationEnd(animation: Animator) {
@@ -403,7 +444,7 @@ constructor(
 
         val gestureState =
             touchInteractionService.createGestureState(
-                focusedDisplayId,
+                command.displayId,
                 GestureState.DEFAULT_STATE,
                 GestureState.TrackpadGestureType.NONE,
             )
@@ -433,7 +474,7 @@ constructor(
                     }
 
                     updateRecentsViewFocus(command)
-                    logShowOverviewFrom(command.type)
+                    logShowOverviewFrom(command)
                     containerInterface.runOnInitBackgroundStateUI {
                         Log.d(TAG, "recents animation started - onInitBackgroundStateUI: $command")
                         interactionHandler.onGestureEnded(
@@ -457,6 +498,15 @@ constructor(
                 }
             }
 
+        val taskAnimationManager =
+            recentsDisplayModel.getTaskAnimationManager(command.displayId)
+                ?: run {
+                    Log.e(TAG, "No TaskAnimationManager found for display ${command.displayId}")
+                    ActiveGestureProtoLogProxy.logOnTaskAnimationManagerNotAvailable(
+                        command.displayId
+                    )
+                    return false
+                }
         if (taskAnimationManager.isRecentsAnimationRunning) {
             command.setAnimationCallbacks(
                 taskAnimationManager.continueRecentsAnimation(gestureState)
@@ -519,8 +569,13 @@ constructor(
     }
 
     private fun updateRecentsViewFocus(command: CommandInfo) {
-        val recentsView: RecentsView<*, *> = visibleRecentsView ?: return
-        if (command.type != KEYBOARD_INPUT && command.type != HIDE && command.type != SHOW) {
+        val recentsView: RecentsView<*, *> = getVisibleRecentsView(command.displayId) ?: return
+        if (
+            command.type != KEYBOARD_INPUT &&
+                command.type != HIDE &&
+                command.type != SHOW &&
+                command.type != TOGGLE
+        ) {
             return
         }
 
@@ -540,7 +595,7 @@ constructor(
     }
 
     private fun onRecentsViewFocusUpdated(command: CommandInfo) {
-        val recentsView: RecentsView<*, *> = visibleRecentsView ?: return
+        val recentsView: RecentsView<*, *> = getVisibleRecentsView(command.displayId) ?: return
         if (command.type != HIDE || keyboardTaskFocusIndex == PagedView.INVALID_PAGE) {
             return
         }
@@ -558,10 +613,11 @@ constructor(
         return true
     }
 
-    private fun logShowOverviewFrom(commandType: CommandType) {
+    private fun logShowOverviewFrom(command: CommandInfo) {
+        val containerInterface = getContainerInterface(command.displayId)
         val container = containerInterface.getCreatedContainer() ?: return
         val event =
-            when (commandType) {
+            when (command.type) {
                 SHOW -> LAUNCHER_OVERVIEW_SHOW_OVERVIEW_FROM_KEYBOARD_SHORTCUT
                 HIDE -> LAUNCHER_OVERVIEW_SHOW_OVERVIEW_FROM_KEYBOARD_QUICK_SWITCH
                 TOGGLE -> LAUNCHER_OVERVIEW_SHOW_OVERVIEW_FROM_3_BUTTON
@@ -594,6 +650,8 @@ constructor(
         var status: CommandStatus = CommandStatus.IDLE,
         val createTime: Long = SystemClock.elapsedRealtime(),
         private var animationCallbacks: RecentsAnimationCallbacks? = null,
+        val displayId: Int = DEFAULT_DISPLAY,
+        val isLastOfBatch: Boolean = true,
     ) {
         fun setAnimationCallbacks(recentsAnimationCallbacks: RecentsAnimationCallbacks) {
             this.animationCallbacks = recentsAnimationCallbacks

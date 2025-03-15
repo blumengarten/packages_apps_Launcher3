@@ -25,6 +25,7 @@ import android.graphics.Rect
 import android.os.Process
 import android.os.UserHandle
 import android.platform.test.annotations.EnableFlags
+import android.view.Display.DEFAULT_DISPLAY
 import androidx.test.annotation.UiThreadTest
 import com.android.internal.R
 import com.android.launcher3.BubbleTextView.RunningAppState
@@ -877,7 +878,7 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
         val allTasks =
             ArrayList<GroupTask>().apply {
                 if (!runningTasks.isEmpty()) {
-                    add(DesktopTask(deskId = 0, ArrayList(runningTasks)))
+                    add(DesktopTask(deskId = 0, DEFAULT_DISPLAY, ArrayList(runningTasks)))
                 }
                 addAll(recentTasks)
             }

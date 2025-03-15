@@ -19,6 +19,7 @@ package com.android.quickstep.util
 import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Rect
+import android.view.Display.DEFAULT_DISPLAY
 import com.android.launcher3.util.LauncherMultivalentJUnit
 import com.android.launcher3.util.SplitConfigurationOptions
 import com.android.systemui.shared.recents.model.Task
@@ -98,7 +99,7 @@ class GroupTaskTest {
     @Test
     fun testGroupTask_differentType_isNotEqual() {
         val task1 = SingleTask(createTask(1))
-        val task2 = DesktopTask(deskId = 0, listOf(createTask(1)))
+        val task2 = DesktopTask(deskId = 0, DEFAULT_DISPLAY, listOf(createTask(1)))
         assertThat(task1).isNotEqualTo(task2)
     }
 

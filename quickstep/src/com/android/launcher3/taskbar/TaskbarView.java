@@ -368,21 +368,7 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
         if (!(view.getTag() instanceof CollectionInfo)) {
             mActivityContext.getViewCache().recycleView(view.getSourceLayoutResId(), view);
         }
-        if (view instanceof FolderIcon fi) {
-            // We should clear FolderInfo's Folder and FolderIcon to avoid memory leak.
-            fi.removeListeners();
-        }
         view.setTag(null);
-    }
-
-    /** Loop through all {@link FolderIcon} as child views and clear listeners to avoid leak. */
-    public void removeFolderIconListeners() {
-        final int childCount = getChildCount();
-        for (int i = 0; i < childCount; i++) {
-            if (getChildAt(i) instanceof FolderIcon fi) {
-                fi.removeListeners();
-            }
-        }
     }
 
     /** Inflates/binds the hotseat items and recent tasks to the view. */
@@ -445,7 +431,6 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
 
     private void updateItemsWithLayoutTransition(
             ItemInfo[] hotseatItemInfos, List<GroupTask> recentTasks) {
-
         if (mNumStaticViews == 0) {
             mNumStaticViews = addStaticViews();
         }
@@ -579,6 +564,9 @@ public class TaskbarView extends FrameLayout implements FolderIcon.FolderIconPar
                 LayoutParams lp = new LayoutParams(mIconTouchSize, mIconTouchSize);
                 hotseatView.setPadding(mItemPadding, mItemPadding, mItemPadding, mItemPadding);
                 addView(hotseatView, mNextViewIndex, lp);
+            } else if (hotseatView instanceof FolderIcon fi) {
+                fi.onItemsChanged(false);
+                fi.getFolder().reapplyItemInfo();
             }
 
             // Apply the Hotseat ItemInfos, or hide the view if there is none for a given index.

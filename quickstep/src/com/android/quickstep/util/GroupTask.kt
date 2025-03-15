@@ -86,6 +86,8 @@ class SingleTask(task: Task) : GroupTask(listOf(task), TaskViewType.SINGLE) {
             return TaskItemInfo(task.task.key.id, wii)
         }
     }
+
+    override fun hashCode() = super.hashCode()
 }
 
 /**

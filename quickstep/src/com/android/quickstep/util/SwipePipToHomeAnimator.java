@@ -137,7 +137,8 @@ public class SwipePipToHomeAnimator extends RectFSpringAnim {
         mDestinationBoundsTransformed.set(destinationBoundsTransformed);
         mSurfaceTransactionHelper = new PipSurfaceTransactionHelper(cornerRadius, shadowRadius);
 
-        final float aspectRatio = destinationBounds.width() / (float) destinationBounds.height();
+        final Rational aspectRatio = new Rational(
+                destinationBounds.width(), destinationBounds.height());
         String reasonForCreateOverlay = null; // For debugging purpose.
 
         // Slightly larger app bounds to allow for off by 1 pixel source-rect-hint errors.
@@ -158,16 +159,22 @@ public class SwipePipToHomeAnimator extends RectFSpringAnim {
             // not a valid rectangle to use for cropping app surface
             reasonForCreateOverlay = "Source rect hint exceeds display bounds " + sourceRectHint;
             sourceRectHint.setEmpty();
-        } else if (!PictureInPictureParams.isSameAspectRatio(sourceRectHint,
-                new Rational(destinationBounds.width(), destinationBounds.height()))) {
-            // The source rect hint does not aspect ratio
-            reasonForCreateOverlay = "Source rect hint does not match aspect ratio "
-                    + sourceRectHint + " aspect ratio " + aspectRatio;
-            sourceRectHint.setEmpty();
+        } else {
+            final Rational srcAspectRatio = new Rational(
+                    sourceRectHint.width(), sourceRectHint.height());
+            if (!PictureInPictureParams.isSameAspectRatio(destinationBounds, srcAspectRatio)) {
+                // The aspect ratio of destination bounds does not match source rect hint.
+                // We use the aspect ratio of source rect hint to check against destination bounds
+                // here to avoid upscaling error.
+                reasonForCreateOverlay = "Source rect hint:" + sourceRectHint
+                        + " does not match destination bounds:" + destinationBounds;
+                sourceRectHint.setEmpty();
+            }
         }
 
         if (sourceRectHint.isEmpty()) {
-            mSourceRectHint.set(getEnterPipWithOverlaySrcRectHint(appBounds, aspectRatio));
+            mSourceRectHint.set(
+                    getEnterPipWithOverlaySrcRectHint(appBounds, aspectRatio.floatValue()));
             mPipContentOverlay = new PipContentOverlay.PipAppIconOverlay(view.getContext(),
                     mAppBounds, mDestinationBounds,
                     new IconProvider(context).getIcon(mActivityInfo), appIconSizePx);

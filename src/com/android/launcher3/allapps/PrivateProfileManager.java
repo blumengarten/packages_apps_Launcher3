@@ -142,6 +142,7 @@ public class PrivateProfileManager extends UserProfileManager {
     private PrivateSpaceSettingsButton mPrivateSpaceSettingsButton;
     @Nullable
     private ConstraintLayout mFloatingMaskView;
+    private final String mPrivateSpaceAppContentDesc;
     private final String mLockedStateContentDesc;
     private final String mUnLockedStateContentDesc;
 
@@ -157,6 +158,8 @@ public class PrivateProfileManager extends UserProfileManager {
         UI_HELPER_EXECUTOR.post(() -> initializeInBackgroundThread(appContext));
         mPsHeaderHeight = mAllApps.getContext().getResources().getDimensionPixelSize(
                 R.dimen.ps_header_height);
+        mPrivateSpaceAppContentDesc = mAllApps.getContext()
+                .getString(R.string.ps_app_content_description);
         mLockedStateContentDesc = mAllApps.getContext()
                 .getString(R.string.ps_container_lock_button_content_description);
         mUnLockedStateContentDesc = mAllApps.getContext()
@@ -927,6 +930,10 @@ public class PrivateProfileManager extends UserProfileManager {
 
     int getPsHeaderHeight() {
         return mPsHeaderHeight;
+    }
+
+    String getPsAppContentDesc() {
+        return mPrivateSpaceAppContentDesc;
     }
 
     boolean isPrivateSpaceItem(BaseAllAppsAdapter.AdapterItem item) {
