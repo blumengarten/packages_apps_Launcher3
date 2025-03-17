@@ -212,10 +212,6 @@ CONTAINER : RecentsViewContainer {
 
         val currentDisplacement =
             taskBeingDragged.secondaryDismissTranslationProperty.get(taskBeingDragged)
-        if (currentDisplacement == 0f) {
-            clearState()
-            return
-        }
         val isBeyondDismissThreshold =
             abs(currentDisplacement) > abs(DISMISS_THRESHOLD_FRACTION * dismissLength)
         val velocityIsGoingUp = recentsView.pagedOrientationHandler.isGoingUp(velocity, isRtl)
@@ -229,7 +225,6 @@ CONTAINER : RecentsViewContainer {
                     taskBeingDragged,
                     velocity,
                     isDismissing,
-                    detector,
                     dismissLength,
                     this::clearState,
                 )
