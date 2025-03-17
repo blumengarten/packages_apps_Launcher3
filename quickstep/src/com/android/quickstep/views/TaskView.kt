@@ -33,6 +33,7 @@ import android.util.Log
 import android.view.Display
 import android.view.MotionEvent
 import android.view.View
+import android.view.View.OnClickListener
 import android.view.ViewGroup
 import android.view.ViewStub
 import android.view.accessibility.AccessibilityNodeInfo
@@ -146,6 +147,9 @@ constructor(
 
     val isRunningTask: Boolean
         get() = this === recentsView?.runningTaskView
+
+    private val isSelectedTask: Boolean
+        get() = this === recentsView?.selectedTaskView
 
     open val displayId: Int
         get() = taskContainers.firstOrNull()?.task.displayId
@@ -337,6 +341,12 @@ constructor(
             onModalnessUpdated(field)
         }
 
+    var modalPivot: PointF? = null
+        set(value) {
+            field = value
+            updatePivots()
+        }
+
     var splitSplashAlpha = 0f
         set(value) {
             field = value
@@ -356,6 +366,12 @@ constructor(
         }
 
     private var dismissScale = 1f
+        set(value) {
+            field = value
+            applyScale()
+        }
+
+    var modalScale = 1f
         set(value) {
             field = value
             applyScale()
@@ -446,9 +462,10 @@ constructor(
         }
 
     private val taskViewAlpha = MultiValueAlpha(this, Alpha.entries.size)
-    protected var stableAlpha by MultiPropertyDelegate(taskViewAlpha, Alpha.STABLE)
-    var attachAlpha by MultiPropertyDelegate(taskViewAlpha, Alpha.ATTACH)
-    var splitAlpha by MultiPropertyDelegate(taskViewAlpha, Alpha.SPLIT)
+    protected var stableAlpha by MultiPropertyDelegate(taskViewAlpha, Alpha.Stable)
+    var attachAlpha by MultiPropertyDelegate(taskViewAlpha, Alpha.Attach)
+    var splitAlpha by MultiPropertyDelegate(taskViewAlpha, Alpha.Split)
+    private var modalAlpha by MultiPropertyDelegate(taskViewAlpha, Alpha.Modal)
 
     protected var shouldShowScreenshot = false
         get() = !isRunningTask || field
@@ -628,14 +645,7 @@ constructor(
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
-        val thumbnailTopMargin = container.deviceProfile.overviewTaskThumbnailTopMarginPx
-        if (container.deviceProfile.isTablet) {
-            pivotX = (if (layoutDirection == LAYOUT_DIRECTION_RTL) 0 else right - left).toFloat()
-            pivotY = thumbnailTopMargin.toFloat()
-        } else {
-            pivotX = (right - left) * 0.5f
-            pivotY = thumbnailTopMargin + (height - thumbnailTopMargin) * 0.5f
-        }
+        updatePivots()
         systemGestureExclusionRects =
             SYSTEM_GESTURE_EXCLUSION_RECT.onEach {
                 it.right = width
@@ -646,6 +656,24 @@ constructor(
         }
     }
 
+    private fun updatePivots() {
+        val modalPivot = modalPivot
+        if (modalPivot != null) {
+            pivotX = modalPivot.x
+            pivotY = modalPivot.y
+        } else {
+            val thumbnailTopMargin = container.deviceProfile.overviewTaskThumbnailTopMarginPx
+            if (container.deviceProfile.isTablet) {
+                pivotX =
+                    (if (layoutDirection == LAYOUT_DIRECTION_RTL) 0 else right - left).toFloat()
+                pivotY = thumbnailTopMargin.toFloat()
+            } else {
+                pivotX = (right - left) * 0.5f
+                pivotY = thumbnailTopMargin + (height - thumbnailTopMargin) * 0.5f
+            }
+        }
+    }
+
     override fun onRecycle() {
         resetPersistentViewTransforms()
 
@@ -653,6 +681,9 @@ constructor(
         attachAlpha = 1f
         splitAlpha = 1f
         splitSplashAlpha = 0f
+        modalAlpha = 1f
+        modalScale = 1f
+        modalPivot = null
         taskThumbnailSplashAlpha = 0f
         // Clear any references to the thumbnail (it will be re-read either from the cache or the
         // system on next bind)
@@ -1286,7 +1317,7 @@ constructor(
                 targets.apps,
                 targets.wallpapers,
                 targets.nonApps,
-                true /* launcherClosing */,
+                true, /* launcherClosing */
                 recentsView.stateManager,
                 recentsView,
                 recentsView.depthController,
@@ -1722,7 +1753,7 @@ constructor(
     fun getSizeAdjustment(fullscreenEnabled: Boolean) = if (fullscreenEnabled) nonGridScale else 1f
 
     private fun applyScale() {
-        val scale = persistentScale * dismissScale
+        val scale = persistentScale * dismissScale * Utilities.mapRange(modalness, 1f, modalScale)
         scaleX = scale
         scaleY = scale
         updateFullscreenParams()
@@ -1784,8 +1815,12 @@ constructor(
     private fun onModalnessUpdated(modalness: Float) {
         isClickable = modalness == 0f
         taskContainers.forEach {
-            it.iconView.setModalAlpha(1 - modalness)
+            it.iconView.setModalAlpha(1f - modalness)
             it.digitalWellBeingToast?.bannerOffsetPercentage = modalness
+        }
+        if (enableGridOnlyOverview()) {
+            modalAlpha = if (isSelectedTask) 1f else (1f - modalness)
+            applyScale()
         }
     }
 
@@ -1842,9 +1877,10 @@ constructor(
         private const val TAG = "TaskView"
 
         private enum class Alpha {
-            STABLE,
-            ATTACH,
-            SPLIT,
+            Stable,
+            Attach,
+            Split,
+            Modal,
         }
 
         private enum class SettledProgress {
