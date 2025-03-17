@@ -36,7 +36,6 @@ import androidx.annotation.Nullable;
 
 import com.android.internal.jank.Cuj;
 import com.android.launcher3.taskbar.bubbles.BubbleBarViewController;
-import com.android.launcher3.util.DisplayController;
 import com.android.systemui.shared.system.InteractionJankMonitorWrapper;
 import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
 
@@ -67,8 +66,8 @@ public class TaskbarViewCallbacks {
         InteractionJankMonitorWrapper.begin(v, Cuj.CUJ_LAUNCHER_OPEN_ALL_APPS,
                 /* tag= */ "TASKBAR_BUTTON");
         mActivity.getStatsLogManager().logger().log(LAUNCHER_TASKBAR_ALLAPPS_BUTTON_TAP);
-        if (DisplayController.showLockedTaskbarOnHome(mActivity)
-                || DisplayController.showDesktopTaskbarForFreeformDisplay(mActivity)) {
+        if (mActivity.showLockedTaskbarOnHome()
+                || mActivity.showDesktopTaskbarForFreeformDisplay()) {
             // If the taskbar can be shown on the home screen, use mAllAppsToggler to toggle all
             // apps, which will toggle the launcher activity all apps when on home screen.
             // TODO(b/395913143): Reconsider this if a gap in taskbar all apps functionality that
@@ -248,8 +247,7 @@ public class TaskbarViewCallbacks {
 
         /** Returns true if the taskbar pinning popup view was shown for {@code event}. */
         private boolean maybeShowPinningView(@NonNull MotionEvent event) {
-            if (!DisplayController.isPinnedTaskbar(mActivity) || mTaskbarView.isEventOverAnyItem(
-                    event)) {
+            if (!mActivity.isPinnedTaskbar() || mTaskbarView.isEventOverAnyItem(event)) {
                 return false;
             }
             mControllers.taskbarPinningController.showPinningView(mTaskbarView, event.getRawX());

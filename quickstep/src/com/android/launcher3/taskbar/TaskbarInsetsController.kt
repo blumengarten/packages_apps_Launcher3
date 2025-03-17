@@ -51,7 +51,6 @@ import com.android.launcher3.config.FeatureFlags.ENABLE_TASKBAR_NAVBAR_UNIFICATI
 import com.android.launcher3.config.FeatureFlags.enableTaskbarNoRecreate
 import com.android.launcher3.taskbar.TaskbarControllers.LoggableTaskbarController
 import com.android.launcher3.testing.shared.ResourceUtils
-import com.android.launcher3.util.DisplayController
 import com.android.launcher3.util.Executors
 import java.io.PrintWriter
 import kotlin.jvm.optionals.getOrNull
@@ -150,7 +149,7 @@ class TaskbarInsetsController(val context: TaskbarActivityContext) : LoggableTas
         if (
             taskbarStashController.isInApp ||
                 controllers.uiController.isInOverviewUi ||
-                DisplayController.showLockedTaskbarOnHome(context)
+                context.showLockedTaskbarOnHome()
         ) {
             // only add the taskbar touch region if not on home
             val bottom = windowLayoutParams.height
