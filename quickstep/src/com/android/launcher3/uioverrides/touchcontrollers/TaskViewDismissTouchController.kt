@@ -25,6 +25,7 @@ import com.android.launcher3.AbstractFloatingView
 import com.android.launcher3.R
 import com.android.launcher3.Utilities.EDGE_NAV_BAR
 import com.android.launcher3.Utilities.boundToRange
+import com.android.launcher3.Utilities.debugLog
 import com.android.launcher3.Utilities.isRtl
 import com.android.launcher3.Utilities.mapToRange
 import com.android.launcher3.touch.SingleAxisSwipeDetector
@@ -69,6 +70,7 @@ CONTAINER : RecentsViewContainer {
             // Don't intercept swipes on the nav bar, as user might be trying to go home during a
             // task dismiss animation.
             (ev.edgeFlags and EDGE_NAV_BAR) != 0 -> {
+                debugLog(TAG, "Not intercepting edge swipe on nav bar.")
                 false
             }
 
@@ -76,14 +78,23 @@ CONTAINER : RecentsViewContainer {
             AbstractFloatingView.getTopOpenViewWithType(
                 container,
                 AbstractFloatingView.TYPE_TOUCH_CONTROLLER_NO_INTERCEPT,
-            ) != null -> false
-
-            // Disable swiping if the task overlay is modal.
-            taskViewRecentsTouchContext.isRecentsModal -> {
+            ) != null -> {
+                debugLog(TAG, "Not intercepting, open floating view blocking touch.")
                 false
             }
 
-            else -> taskViewRecentsTouchContext.isRecentsInteractive
+            // Disable swiping if the task overlay is modal.
+            taskViewRecentsTouchContext.isRecentsModal -> {
+                debugLog(TAG, "Not intercepting touch in modal overlay.")
+                false
+            }
+
+            else ->
+                taskViewRecentsTouchContext.isRecentsInteractive.also { isRecentsInteractive ->
+                    if (!isRecentsInteractive) {
+                        debugLog(TAG, "Not intercepting touch, recents not interactive.")
+                    }
+                }
         }
 
     override fun onControllerInterceptTouchEvent(ev: MotionEvent): Boolean {
@@ -138,6 +149,7 @@ CONTAINER : RecentsViewContainer {
 
     override fun onDragStart(start: Boolean, startDisplacement: Float) {
         val taskBeingDragged = taskBeingDragged ?: return
+        debugLog(TAG, "Handling touch event.")
 
         initialDisplacement =
             taskBeingDragged.secondaryDismissTranslationProperty.get(taskBeingDragged)
@@ -288,6 +300,8 @@ CONTAINER : RecentsViewContainer {
     }
 
     companion object {
+        private const val TAG = "TaskViewDismissTouchController"
+
         private const val DISMISS_THRESHOLD_FRACTION = 0.5f
         private const val DISMISS_THRESHOLD_HAPTIC_RANGE = 10f
 
