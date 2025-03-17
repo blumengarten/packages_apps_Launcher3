@@ -402,16 +402,16 @@ public class PredictedAppIcon extends DoubleShadowBubbleTextView {
             canvas.scale(
                     mRingScale * (1f - RING_EFFECT_RATIO),
                     mRingScale * (1f - RING_EFFECT_RATIO),
-                    canvas.getWidth() / 2f,
-                    canvas.getHeight() / 2f);
+                    getWidth() / 2f,
+                    getHeight() / 2f);
         } else if (Float.compare(1, mRingScale) != 0) {
-            canvas.scale(mRingScale, mRingScale, canvas.getWidth() / 2f, canvas.getHeight() / 2f);
+            canvas.scale(mRingScale, mRingScale, getWidth() / 2f, getHeight() / 2f);
         }
         // Draw ring shadow around canvas.
         canvas.drawPath(mRingPath, mIconRingPaint);
         mIconRingPaint.setColor(mPlateColor.currentColor);
         if (Flags.enableLauncherIconShapes()) {
-            mIconRingPaint.setStrokeWidth(canvas.getWidth() * RING_EFFECT_RATIO);
+            mIconRingPaint.setStrokeWidth(getWidth() * RING_EFFECT_RATIO);
             // Using FILL_AND_STROKE as there is still some gap to fill,
             // between inner curve of ring / outer curve of icon.
             mIconRingPaint.setStyle(Paint.Style.FILL_AND_STROKE);

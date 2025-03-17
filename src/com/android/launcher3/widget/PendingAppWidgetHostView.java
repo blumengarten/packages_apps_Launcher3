@@ -66,7 +66,7 @@ import com.android.launcher3.model.data.PackageItemInfo;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.SafeCloseable;
 import com.android.launcher3.util.Themes;
-import com.android.launcher3.widget.LauncherWidgetHolder.ProviderChangedListener;
+import com.android.launcher3.widget.ListenableAppWidgetHost.ProviderChangedListener;
 
 import java.util.List;
 
