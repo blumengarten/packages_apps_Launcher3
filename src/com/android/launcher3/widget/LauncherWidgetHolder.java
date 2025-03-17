@@ -107,7 +107,11 @@ public class LauncherWidgetHolder {
 
     @AssistedInject
     protected LauncherWidgetHolder(@Assisted("UI_CONTEXT") @NonNull Context context) {
-        this(context, new LauncherAppWidgetHost(context, APPWIDGET_HOST_ID));
+        this(context, APPWIDGET_HOST_ID);
+    }
+
+    public LauncherWidgetHolder(@NonNull Context context, int hostId) {
+        this(context, new LauncherAppWidgetHost(context, hostId));
     }
 
     protected LauncherWidgetHolder(

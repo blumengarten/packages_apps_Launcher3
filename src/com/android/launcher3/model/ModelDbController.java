@@ -16,10 +16,7 @@
 package com.android.launcher3.model;
 
 import static android.provider.BaseColumns._ID;
-import static android.util.Base64.NO_PADDING;
-import static android.util.Base64.NO_WRAP;
 
-import static com.android.launcher3.DefaultLayoutParser.RES_PARTNER_DEFAULT_LAYOUT;
 import static com.android.launcher3.LauncherPrefs.DB_FILE;
 import static com.android.launcher3.LauncherPrefs.NO_DB_FILES_RESTORED;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER;
@@ -27,40 +24,25 @@ import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE;
 import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APP_PAIR;
 import static com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME;
 import static com.android.launcher3.LauncherSettings.Favorites.addTableToDb;
-import static com.android.launcher3.LauncherSettings.Settings.BLOB_KEY_PREFIX;
-import static com.android.launcher3.LauncherSettings.Settings.LAYOUT_DIGEST_LABEL;
-import static com.android.launcher3.LauncherSettings.Settings.LAYOUT_DIGEST_TAG;
-import static com.android.launcher3.LauncherSettings.Settings.LAYOUT_PROVIDER_KEY;
 import static com.android.launcher3.provider.LauncherDbUtils.tableExists;
 
-import android.app.blob.BlobHandle;
-import android.app.blob.BlobStoreManager;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.content.pm.ProviderInfo;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.UserHandle;
 import android.os.UserManager;
-import android.provider.Settings;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
-import android.util.Xml;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.android.launcher3.AutoInstallsLayout;
-import com.android.launcher3.AutoInstallsLayout.SourceResources;
 import com.android.launcher3.ConstantItem;
 import com.android.launcher3.DefaultLayoutParser;
 import com.android.launcher3.EncryptionType;
@@ -80,16 +62,10 @@ import com.android.launcher3.pm.UserCache;
 import com.android.launcher3.provider.LauncherDbUtils;
 import com.android.launcher3.provider.LauncherDbUtils.SQLiteTransaction;
 import com.android.launcher3.provider.RestoreDbTask;
-import com.android.launcher3.util.IOUtils;
 import com.android.launcher3.util.IntArray;
-import com.android.launcher3.util.Partner;
 import com.android.launcher3.widget.LauncherWidgetHolder;
 
-import org.xmlpull.v1.XmlPullParser;
-
 import java.io.File;
-import java.io.InputStream;
-import java.io.StringReader;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -113,17 +89,20 @@ public class ModelDbController {
     private final InvariantDeviceProfile mIdp;
     private final LauncherPrefs mPrefs;
     private final UserCache mUserCache;
+    private final LayoutParserFactory mLayoutParserFactory;
 
     @Inject
     ModelDbController(
             @ApplicationContext Context context,
             InvariantDeviceProfile idp,
             LauncherPrefs prefs,
-            UserCache userCache) {
+            UserCache userCache,
+            LayoutParserFactory layoutParserFactory) {
         mContext = context;
         mIdp = idp;
         mPrefs = prefs;
         mUserCache = userCache;
+        mLayoutParserFactory = layoutParserFactory;
     }
 
     private void printDBs(String prefix) {
@@ -368,7 +347,6 @@ public class ModelDbController {
     public void attemptMigrateDb(LauncherRestoreEventLogger restoreEventLogger,
             ModelDelegate modelDelegate) throws Exception {
         createDbIfNotExists();
-
         if (shouldResetDb()) {
             resetLauncherDb(restoreEventLogger);
             return;
@@ -634,20 +612,8 @@ public class ModelDbController {
 
             LauncherWidgetHolder widgetHolder = mOpenHelper.newLauncherWidgetHolder();
             try {
-                AutoInstallsLayout loader = createWorkspaceLoaderFromAppRestriction(widgetHolder);
-                if (loader == null) {
-                    loader = AutoInstallsLayout.get(mContext, widgetHolder, mOpenHelper);
-                }
-                if (loader == null) {
-                    final Partner partner = Partner.get(mContext.getPackageManager());
-                    if (partner != null) {
-                        int workspaceResId = partner.getXmlResId(RES_PARTNER_DEFAULT_LAYOUT);
-                        if (workspaceResId != 0) {
-                            loader = new DefaultLayoutParser(mContext, widgetHolder,
-                                    mOpenHelper, partner.getResources(), workspaceResId);
-                        }
-                    }
-                }
+                AutoInstallsLayout loader =
+                        mLayoutParserFactory.createExternalLayoutParser(widgetHolder, mOpenHelper);
 
                 final boolean usingExternallyProvidedLayout = loader != null;
                 if (loader == null) {
@@ -670,64 +636,6 @@ public class ModelDbController {
                 widgetHolder.destroy();
             }
         }
-    }
-
-    /**
-     * Creates workspace loader from an XML resource listed in the app restrictions.
-     *
-     * @return the loader if the restrictions are set and the resource exists; null otherwise.
-     */
-    private AutoInstallsLayout createWorkspaceLoaderFromAppRestriction(
-            LauncherWidgetHolder widgetHolder) {
-        ContentResolver cr = mContext.getContentResolver();
-        String systemLayoutProvider = Settings.Secure.getString(cr, LAYOUT_PROVIDER_KEY);
-        if (TextUtils.isEmpty(systemLayoutProvider)) {
-            return null;
-        }
-
-        // Try the blob store first
-        if (systemLayoutProvider.startsWith(BLOB_KEY_PREFIX)) {
-            BlobStoreManager blobManager = mContext.getSystemService(BlobStoreManager.class);
-            String blobHandlerDigest = systemLayoutProvider.substring(BLOB_KEY_PREFIX.length());
-            try (InputStream in = new ParcelFileDescriptor.AutoCloseInputStream(
-                    blobManager.openBlob(BlobHandle.createWithSha256(
-                            Base64.decode(blobHandlerDigest, NO_WRAP | NO_PADDING),
-                            LAYOUT_DIGEST_LABEL, 0, LAYOUT_DIGEST_TAG)))) {
-                return getAutoInstallsLayoutFromIS(in, widgetHolder, new SourceResources() { });
-            } catch (Exception e) {
-                Log.e(TAG, "Error getting layout from blob handle" , e);
-                return null;
-            }
-        }
-
-        // Try contentProvider based provider
-        PackageManager pm = mContext.getPackageManager();
-        ProviderInfo pi = pm.resolveContentProvider(systemLayoutProvider, 0);
-        if (pi == null) {
-            Log.e(TAG, "No provider found for authority " + systemLayoutProvider);
-            return null;
-        }
-        Uri uri = getLayoutUri(systemLayoutProvider, mContext);
-        try (InputStream in = cr.openInputStream(uri)) {
-            Log.d(TAG, "Loading layout from " + systemLayoutProvider);
-
-            Resources res = pm.getResourcesForApplication(pi.applicationInfo);
-            return getAutoInstallsLayoutFromIS(in, widgetHolder, SourceResources.wrap(res));
-        } catch (Exception e) {
-            Log.e(TAG, "Error getting layout stream from: " + systemLayoutProvider , e);
-            return null;
-        }
-    }
-
-    private AutoInstallsLayout getAutoInstallsLayoutFromIS(InputStream in,
-            LauncherWidgetHolder widgetHolder, SourceResources res) throws Exception {
-        // Read the full xml so that we fail early in case of any IO error.
-        String layout = new String(IOUtils.toByteArray(in));
-        XmlPullParser parser = Xml.newPullParser();
-        parser.setInput(new StringReader(layout));
-
-        return new AutoInstallsLayout(mContext, widgetHolder, mOpenHelper, res,
-                () -> parser, AutoInstallsLayout.TAG_WORKSPACE);
     }
 
     public static Uri getLayoutUri(String authority, Context ctx) {

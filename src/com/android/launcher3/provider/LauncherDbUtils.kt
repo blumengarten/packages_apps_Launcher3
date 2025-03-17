@@ -27,7 +27,13 @@ import android.os.Process
 import android.os.UserManager
 import android.text.TextUtils
 import com.android.launcher3.LauncherSettings
+import com.android.launcher3.LauncherSettings.Favorites
+import com.android.launcher3.LauncherSettings.Favorites.CONTAINER
 import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_DESKTOP
+import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT
+import com.android.launcher3.LauncherSettings.Favorites.SCREEN
+import com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME
+import com.android.launcher3.LauncherSettings.Favorites._ID
 import com.android.launcher3.Utilities
 import com.android.launcher3.dagger.LauncherComponentProvider.appComponent
 import com.android.launcher3.icons.IconCache
@@ -44,6 +50,14 @@ object LauncherDbUtils {
      * Returns a string which can be used as a where clause for DB query to match the given itemId
      */
     @JvmStatic fun itemIdMatch(itemId: Int): String = "_id=$itemId"
+
+    /**
+     * Returns a string which can be used as a where clause for DB query to match the given
+     * workspace screens or hotseat or a collection in workspace screens or hotseat
+     */
+    @JvmStatic
+    fun selectionForWorkspaceScreen(vararg screens: Int) =
+        "$SCREEN in (${screens.joinToString()}) or $CONTAINER = $CONTAINER_HOTSEAT or $CONTAINER in (select $_ID from $TABLE_NAME where $SCREEN in (${screens.joinToString()}) or $CONTAINER = $CONTAINER_HOTSEAT)"
 
     @JvmStatic
     fun queryIntArray(
