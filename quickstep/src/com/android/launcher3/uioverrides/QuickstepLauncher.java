@@ -143,7 +143,6 @@ import com.android.launcher3.taskbar.TaskbarManager;
 import com.android.launcher3.taskbar.TaskbarUIController;
 import com.android.launcher3.testing.TestLogging;
 import com.android.launcher3.testing.shared.TestProtocol;
-import com.android.launcher3.uioverrides.QuickstepWidgetHolder.QuickstepHolderFactory;
 import com.android.launcher3.uioverrides.states.QuickstepAtomicAnimationFactory;
 import com.android.launcher3.uioverrides.touchcontrollers.NavBarToHomeTouchController;
 import com.android.launcher3.uioverrides.touchcontrollers.NoButtonNavbarToOverviewTouchController;
@@ -172,7 +171,6 @@ import com.android.launcher3.util.StableViewInfo;
 import com.android.launcher3.util.StartActivityParams;
 import com.android.launcher3.util.TouchController;
 import com.android.launcher3.views.FloatingIconView;
-import com.android.launcher3.widget.LauncherWidgetHolder;
 import com.android.quickstep.OverviewCommandHelper;
 import com.android.quickstep.OverviewComponentObserver;
 import com.android.quickstep.OverviewComponentObserver.OverviewChangeListener;
@@ -298,6 +296,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
     @Override
     protected void setupViews() {
+        getAppWidgetHolder().setOnViewCreationCallback(new QuickstepInteractionHandler(this));
         super.setupViews();
 
         mActionsView = findViewById(R.id.overview_actions_view);
@@ -723,15 +722,6 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     @Override
     public AtomicAnimationFactory createAtomicAnimationFactory() {
         return new QuickstepAtomicAnimationFactory(this);
-    }
-
-    @Override
-    protected LauncherWidgetHolder createAppWidgetHolder() {
-        final QuickstepHolderFactory factory =
-                (QuickstepHolderFactory) LauncherWidgetHolder.HolderFactory.newFactory(this);
-        return factory.newInstance(this,
-                appWidgetId -> getWorkspace().removeWidget(appWidgetId),
-                new QuickstepInteractionHandler(this));
     }
 
     @Override

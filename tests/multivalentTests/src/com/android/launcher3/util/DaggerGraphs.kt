@@ -21,6 +21,7 @@ import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.dagger.ApiWrapperModule
 import com.android.launcher3.dagger.AppModule
 import com.android.launcher3.dagger.StaticObjectModule
+import com.android.launcher3.dagger.WidgetModule
 import com.android.launcher3.dagger.WindowManagerProxyModule
 import dagger.Binds
 import dagger.Module
@@ -39,15 +40,27 @@ abstract class FakePrefsModule {
             ApiWrapperModule::class,
             WindowManagerProxyModule::class,
             StaticObjectModule::class,
+            WidgetModule::class,
             AppModule::class,
         ]
 )
 class AllModulesForTest
 
 /** All modules except the WMProxy */
-@Module(includes = [ApiWrapperModule::class, StaticObjectModule::class, AppModule::class])
+@Module(
+    includes =
+        [ApiWrapperModule::class, StaticObjectModule::class, AppModule::class, WidgetModule::class]
+)
 class AllModulesMinusWMProxy
 
 /** All modules except the ApiWrapper */
-@Module(includes = [WindowManagerProxyModule::class, StaticObjectModule::class, AppModule::class])
+@Module(
+    includes =
+        [
+            WindowManagerProxyModule::class,
+            StaticObjectModule::class,
+            AppModule::class,
+            WidgetModule::class,
+        ]
+)
 class AllModulesMinusApiWrapper

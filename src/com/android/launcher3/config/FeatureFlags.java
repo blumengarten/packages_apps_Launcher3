@@ -163,11 +163,6 @@ public final class FeatureFlags {
             "ENABLE_WIDGET_TRANSITION_FOR_RESIZING", DISABLED,
             "Enable widget transition animation when resizing the widgets");
 
-    // TODO(Block 25): Clean up flags
-    public static final BooleanFlag ENABLE_WIDGET_HOST_IN_BACKGROUND = getDebugFlag(270394384,
-            "ENABLE_WIDGET_HOST_IN_BACKGROUND", ENABLED,
-            "Enable background widget updates listening for widget holder");
-
     // TODO(Block 27): Clean up flags
     public static final BooleanFlag ENABLE_OVERLAY_CONNECTION_OPTIM = getDebugFlag(270392629,
             "ENABLE_OVERLAY_CONNECTION_OPTIM", DISABLED,
