@@ -31,7 +31,7 @@ import com.android.quickstep.recents.domain.usecase.GetThumbnailPositionUseCase
 import com.android.quickstep.recents.domain.usecase.IsThumbnailValidUseCase
 import com.android.quickstep.recents.domain.usecase.OrganizeDesktopTasksUseCase
 import com.android.quickstep.recents.viewmodel.RecentsViewData
-import com.android.systemui.shared.recents.utilities.PreviewPositionHelper
+import com.android.systemui.shared.recents.utilities.PreviewPositionHelper.PreviewPositionHelperFactory
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -203,7 +203,7 @@ class RecentsDependencies private constructor(appContext: Context) {
                     GetThumbnailPositionUseCase(
                         deviceProfileRepository = inject(scopeId),
                         rotationStateRepository = inject(scopeId),
-                        previewPositionHelper = PreviewPositionHelper(),
+                        previewPositionHelperFactory = PreviewPositionHelperFactory(),
                     )
                 OrganizeDesktopTasksUseCase::class.java -> OrganizeDesktopTasksUseCase()
                 else -> {
