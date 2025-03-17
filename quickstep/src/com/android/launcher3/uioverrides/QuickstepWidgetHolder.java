@@ -30,7 +30,6 @@ import android.widget.RemoteViews;
 import androidx.annotation.AnyThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.UiThread;
 
 import com.android.launcher3.util.IntSet;
 import com.android.launcher3.util.SafeCloseable;
@@ -167,7 +166,7 @@ public final class QuickstepWidgetHolder extends LauncherWidgetHolder {
         };
         QuickstepWidgetHolderListener holderListener = getHolderListener(appWidgetId);
         holderListener.addHolder(handler);
-        return () -> holderListener.mListeningHolders.remove(handler);
+        return () -> holderListener.removeHolder(handler);
     }
 
     /**
@@ -211,7 +210,7 @@ public final class QuickstepWidgetHolder extends LauncherWidgetHolder {
     public void clearViews() {
         mViews.clear();
         for (int i = sListeners.size() - 1; i >= 0; i--) {
-            sListeners.valueAt(i).mListeningHolders.remove(mUpdateHandler);
+            sListeners.valueAt(i).removeHolder(mUpdateHandler);
         }
     }
 
@@ -238,11 +237,13 @@ public final class QuickstepWidgetHolder extends LauncherWidgetHolder {
             mWidgetId = widgetId;
         }
 
-        @UiThread
-        @Nullable
         public RemoteViews addHolder(@NonNull UpdateHandler holder) {
-            mListeningHolders.add(holder);
+            MAIN_EXECUTOR.execute(() -> mListeningHolders.add(holder));
             return mRemoteViews;
+        }
+
+        public void removeHolder(@NonNull UpdateHandler holder) {
+            MAIN_EXECUTOR.execute(() -> mListeningHolders.remove(holder));
         }
 
         @Override
