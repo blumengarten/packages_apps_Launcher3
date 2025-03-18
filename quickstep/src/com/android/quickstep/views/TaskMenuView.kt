@@ -251,6 +251,7 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
         rotation = orientationHandler.degreesRotated
 
         if (enableOverviewIconMenu()) {
+            elevation = resources.getDimension(R.dimen.task_thumbnail_icon_menu_elevation)
             translationX = thumbnailAlignedX
             translationY = thumbnailAlignedY
         } else {
@@ -474,8 +475,8 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
             val isLastMenuOptionFocused =
                 optionLayout.indexOfChild(optionLayout.focusedChild) == optionLayout.childCount - 1
             if (
-                (isLastMenuOptionFocused && event.keyCode == KeyEvent.KEYCODE_DPAD_DOWN)
-                || (isFirstMenuOptionFocused && event.keyCode == KeyEvent.KEYCODE_DPAD_UP)
+                (isLastMenuOptionFocused && event.keyCode == KeyEvent.KEYCODE_DPAD_DOWN) ||
+                    (isFirstMenuOptionFocused && event.keyCode == KeyEvent.KEYCODE_DPAD_UP)
             ) {
                 iconView.requestFocus()
                 return true
