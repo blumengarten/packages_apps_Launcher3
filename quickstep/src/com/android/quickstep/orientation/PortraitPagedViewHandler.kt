@@ -255,7 +255,8 @@ class PortraitPagedViewHandler : DefaultPagedViewHandler(), RecentsPagedOrientat
                 }
             } else {
                 if (desiredTaskId == splitBounds.leftTopTaskId) {
-                    val snapshotParams = thumbnailViews[0].layoutParams as LinearLayout.LayoutParams
+                    val snapshotParams =
+                        thumbnailViews[0].layoutParams as ViewGroup.MarginLayoutParams
                     val bottomRightTaskPlusDividerPercent =
                         (splitBounds.rightBottomTaskPercent + splitBounds.dividerPercent)
                     translationY =
