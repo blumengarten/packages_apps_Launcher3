@@ -315,32 +315,25 @@ public class TouchInteractionService extends Service {
         @BinderThread
         @Override
         public void onDisplayAddSystemDecorations(int displayId) {
-            executeForTaskbarManager(taskbarManager ->
-                    taskbarManager.onDisplayAddSystemDecorations(displayId));
-
-            executeForRecentsDisplayModel(displayModel ->
-                    displayModel.onDisplayAddSystemDecorations(displayId));
+            executeForTouchInteractionService(tis ->
+                    tis.mSystemDecorationChangeObserver.notifyAddSystemDecorations(displayId));
         }
 
         @BinderThread
         @Override
         public void onDisplayRemoved(int displayId) {
-            executeForTaskbarManager(taskbarManager ->
-                    taskbarManager.onDisplayRemoved(displayId));
             executeForTouchInteractionService(tis -> {
+                tis.mSystemDecorationChangeObserver.notifyOnDisplayRemoved(displayId);
                 tis.mDeviceState.clearSysUIStateFlagsForDisplay(displayId);
             });
-            executeForRecentsDisplayModel(displayModel ->
-                    displayModel.onDisplayRemoved(displayId));
         }
 
         @BinderThread
         @Override
         public void onDisplayRemoveSystemDecorations(int displayId) {
-            executeForTaskbarManager(taskbarManager ->
-                    taskbarManager.onDisplayRemoveSystemDecorations(displayId));
-            executeForRecentsDisplayModel(displayModel ->
-                    displayModel.onDisplayRemoveSystemDecorations(displayId));
+            executeForTouchInteractionService(tis -> {
+                tis.mSystemDecorationChangeObserver.notifyDisplayRemoveSystemDecorations(displayId);
+            });
         }
 
         @BinderThread
@@ -449,15 +442,6 @@ public class TouchInteractionService extends Service {
                 TaskbarManager taskbarManager = tis.mTaskbarManager;
                 if (taskbarManager == null) return;
                 taskbarManagerConsumer.accept(taskbarManager);
-            }));
-        }
-
-        private void executeForRecentsDisplayModel(
-                @NonNull Consumer<RecentsDisplayModel> recentsDisplayModelConsumer) {
-            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(tis -> {
-                RecentsDisplayModel recentsDisplayModel = tis.mRecentsDisplayModel;
-                if (recentsDisplayModel == null) return;
-                recentsDisplayModelConsumer.accept(recentsDisplayModel);
             }));
         }
 
@@ -597,6 +581,8 @@ public class TouchInteractionService extends Service {
 
     private RecentsDisplayModel mRecentsDisplayModel;
 
+    private SystemDecorationChangeObserver mSystemDecorationChangeObserver;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -608,6 +594,7 @@ public class TouchInteractionService extends Service {
         mDeviceState = RecentsAnimationDeviceState.INSTANCE.get(this);
         mRotationTouchHelper = RotationTouchHelper.INSTANCE.get(this);
         mRecentsDisplayModel = RecentsDisplayModel.getINSTANCE().get(this);
+        mSystemDecorationChangeObserver = SystemDecorationChangeObserver.getINSTANCE().get(this);
         mAllAppsActionManager = new AllAppsActionManager(
                 this, UI_HELPER_EXECUTOR, this::createAllAppsPendingIntent);
         mTrackpadsConnected = new ActiveTrackpadList(this, () -> {

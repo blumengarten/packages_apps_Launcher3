@@ -17,8 +17,8 @@ package com.android.launcher3.taskbar;
 
 import static android.content.Context.RECEIVER_EXPORTED;
 import static android.content.Context.RECEIVER_NOT_EXPORTED;
-import static android.content.pm.PackageManager.FEATURE_PC;
 import static android.content.pm.PackageManager.FEATURE_FREEFORM_WINDOW_MANAGEMENT;
+import static android.content.pm.PackageManager.FEATURE_PC;
 import static android.view.WindowManager.LayoutParams.TYPE_NAVIGATION_BAR;
 import static android.view.WindowManager.LayoutParams.TYPE_NAVIGATION_BAR_PANEL;
 
@@ -82,6 +82,8 @@ import com.android.launcher3.util.SettingsCache;
 import com.android.launcher3.util.SimpleBroadcastReceiver;
 import com.android.quickstep.AllAppsActionManager;
 import com.android.quickstep.RecentsActivity;
+import com.android.quickstep.SystemDecorationChangeObserver;
+import com.android.quickstep.SystemDecorationChangeObserver.DisplayDecorationListener;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
 import com.android.quickstep.fallback.window.RecentsWindowFlags;
@@ -107,7 +109,7 @@ import java.util.StringJoiner;
 /**
  * Class to manage taskbar lifecycle
  */
-public class TaskbarManager {
+public class TaskbarManager implements DisplayDecorationListener {
     private static final String TAG = "TaskbarManager";
     private static final boolean DEBUG = false;
     private static final int TASKBAR_DESTROY_DURATION = 100;
@@ -454,6 +456,8 @@ public class TaskbarManager {
                 .register(USER_SETUP_COMPLETE_URI, mOnSettingsChangeListener);
         SettingsCache.INSTANCE.get(mPrimaryWindowContext)
                 .register(NAV_BAR_KIDS_MODE, mOnSettingsChangeListener);
+        SystemDecorationChangeObserver.getINSTANCE().get(mPrimaryWindowContext)
+                .registerDisplayDecorationListener(this);
         mShutdownReceiver =
                 new SimpleBroadcastReceiver(
                         mPrimaryWindowContext, UI_HELPER_EXECUTOR, i -> destroyAllTaskbars());
@@ -955,6 +959,7 @@ public class TaskbarManager {
      * Signal from SysUI indicating that a non-mirroring display was just connected to the
      * primary device or a previously mirroring display is switched to extended mode.
      */
+    @Override
     public void onDisplayAddSystemDecorations(int displayId) {
         debugTaskbarManager("onDisplayAddSystemDecorations: ", displayId);
         Display display = getDisplay(displayId);
@@ -1018,6 +1023,7 @@ public class TaskbarManager {
      * Signal from SysUI indicating that a previously connected non-mirroring display was just
      * removed from the primary device.
      */
+    @Override
     public void onDisplayRemoved(int displayId) {
         debugTaskbarManager("onDisplayRemoved: ", displayId);
         if (!DesktopExperienceFlags.ENABLE_TASKBAR_CONNECTED_DISPLAYS.isTrue() || isDefaultDisplay(
@@ -1057,6 +1063,7 @@ public class TaskbarManager {
     /**
      * Signal from SysUI indicating that system decorations should be removed from the display.
      */
+    @Override
     public void onDisplayRemoveSystemDecorations(int displayId) {
         // The display mirroring starts. The handling logic is the same as when removing a
         // display.
@@ -1100,6 +1107,8 @@ public class TaskbarManager {
                 .unregister(USER_SETUP_COMPLETE_URI, mOnSettingsChangeListener);
         SettingsCache.INSTANCE.get(mPrimaryWindowContext)
                 .unregister(NAV_BAR_KIDS_MODE, mOnSettingsChangeListener);
+        SystemDecorationChangeObserver.getINSTANCE().get(mPrimaryWindowContext)
+                .unregisterDisplayDecorationListener(this);
         debugPrimaryTaskbar("destroy: unregistering component callbacks");
         removeAndUnregisterComponentCallbacks(getDefaultDisplayId());
         mShutdownReceiver.unregisterReceiverSafely();
