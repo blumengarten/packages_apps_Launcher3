@@ -960,7 +960,7 @@ class TaskbarRecentAppsControllerTest : TaskbarBaseTestCase() {
     private fun setInDesktopMode(inDesktopMode: Boolean) {
         whenever(taskbarControllers.taskbarDesktopModeController.shouldShowDesktopTasksInTaskbar())
             .thenReturn(inDesktopMode)
-        whenever(taskbarControllers.taskbarDesktopModeController.isInDesktopMode)
+        whenever(taskbarControllers.taskbarDesktopModeController.isInDesktopMode(DEFAULT_DISPLAY))
             .thenReturn(inDesktopMode)
     }
 
