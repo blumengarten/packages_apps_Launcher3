@@ -131,8 +131,7 @@
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"વૉલપેપર અને સ્ટાઇલ"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"હોમ સ્ક્રીનમાં ફેરફાર કરો"</string>
     <string name="settings_button_text" msgid="8873672322605444408">"હોમ સેટિંગ"</string>
-    <!-- no translation found for all_apps_home_screen (8658178652647896497) -->
-    <skip />
+    <string name="all_apps_home_screen" msgid="8658178652647896497">"ઍપ"</string>
     <string name="msg_disabled_by_admin" msgid="6898038085516271325">"તમારા વ્યવસ્થાપક દ્વારા અક્ષમ કરેલ"</string>
     <string name="allow_rotation_title" msgid="7222049633713050106">"હોમ સ્ક્રીનને ફેરવવાની મંજૂરી આપો"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"જ્યારે ફોન ફેરવવામાં આવે ત્યારે"</string>
@@ -186,18 +185,14 @@
     <string name="action_decrease_height" msgid="282377193880900022">"ઊંચાઈ ઘટાડો"</string>
     <string name="widget_resized" msgid="9130327887929620">"વિજેટનો આકાર બદલીને <xliff:g id="NUMBER_0">%1$s</xliff:g> પહોળાઈ <xliff:g id="NUMBER_1">%2$s</xliff:g> ઊંચાઈ કર્યો"</string>
     <string name="action_deep_shortcut" msgid="4766835855579976045">"શૉર્ટકટ મેનૂ"</string>
-    <!-- no translation found for widget_frame_name (8782828448471444270) -->
-    <skip />
-    <!-- no translation found for action_close (1077760267194136901) -->
-    <skip />
+    <string name="widget_frame_name" msgid="8782828448471444270">"<xliff:g id="STRING">%1$s</xliff:g> માટે વિજેટનું કદ બદલવાની ફ્રેમ"</string>
+    <string name="action_close" msgid="1077760267194136901">"બંધ કરો"</string>
     <string name="action_dismiss_notification" msgid="5909461085055959187">"છોડી દો"</string>
     <string name="accessibility_close" msgid="2277148124685870734">"બંધ કરો"</string>
     <string name="all_apps_personal_tab" msgid="4190252696685155002">"વ્યક્તિગત ઍપ"</string>
     <string name="all_apps_work_tab" msgid="4884822796154055118">"ઑફિસની ઍપ"</string>
-    <!-- no translation found for all_apps_personal_tab_content_description (6286808898381807242) -->
-    <skip />
-    <!-- no translation found for all_apps_work_tab_content_description (3835637212347968316) -->
-    <skip />
+    <string name="all_apps_personal_tab_content_description" msgid="6286808898381807242">"વ્યક્તિગત ઍપનું ટૅબ"</string>
+    <string name="all_apps_work_tab_content_description" msgid="3835637212347968316">"ઑફિસ માટેની ઍપનું ટૅબ"</string>
     <string name="work_profile_toggle_label" msgid="3081029915775481146">"ઑફિસની પ્રોફાઇલ"</string>
     <string name="work_profile_edu_work_apps" msgid="7895468576497746520">"ઑફિસની ઍપને બૅજ આપેલા હોય છે અને તમારા IT ઍડમિન તેમને જોઈ શકે છે"</string>
     <string name="work_profile_edu_accept" msgid="6069788082535149071">"સમજાઈ ગયું"</string>

@@ -131,8 +131,7 @@
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"Háttérkép és stílus"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"Kezdőképernyő szerkesztése"</string>
     <string name="settings_button_text" msgid="8873672322605444408">"Kezdőképernyő beállításai"</string>
-    <!-- no translation found for all_apps_home_screen (8658178652647896497) -->
-    <skip />
+    <string name="all_apps_home_screen" msgid="8658178652647896497">"Alkalmazások"</string>
     <string name="msg_disabled_by_admin" msgid="6898038085516271325">"A rendszergazda letiltotta"</string>
     <string name="allow_rotation_title" msgid="7222049633713050106">"A kezdőképernyő elforgatásának engedélyezése"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"A telefon elforgatásakor"</string>
@@ -186,10 +185,8 @@
     <string name="action_decrease_height" msgid="282377193880900022">"Magasság csökkentése"</string>
     <string name="widget_resized" msgid="9130327887929620">"Modul átméretezve <xliff:g id="NUMBER_0">%1$s</xliff:g> szélességre és <xliff:g id="NUMBER_1">%2$s</xliff:g> magasságra"</string>
     <string name="action_deep_shortcut" msgid="4766835855579976045">"Gyorsparancsok menüje"</string>
-    <!-- no translation found for widget_frame_name (8782828448471444270) -->
-    <skip />
-    <!-- no translation found for action_close (1077760267194136901) -->
-    <skip />
+    <string name="widget_frame_name" msgid="8782828448471444270">"<xliff:g id="STRING">%1$s</xliff:g> modul átméretezési kerete"</string>
+    <string name="action_close" msgid="1077760267194136901">"Bezárás"</string>
     <string name="action_dismiss_notification" msgid="5909461085055959187">"Elvetés"</string>
     <string name="accessibility_close" msgid="2277148124685870734">"Bezárás"</string>
     <string name="all_apps_personal_tab" msgid="4190252696685155002">"Személyes"</string>
