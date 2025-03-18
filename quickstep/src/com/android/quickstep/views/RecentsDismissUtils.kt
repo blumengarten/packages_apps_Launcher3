@@ -297,7 +297,7 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
         val maxDismissSettlingVelocity =
             recentsView.pagedOrientationHandler.getSecondaryDimension(recentsView)
         MSDLPlayerWrapper.INSTANCE.get(recentsView.context)
-            .playToken(
+            ?.playToken(
                 MSDLToken.CANCEL,
                 InteractionProperties.DynamicVibrationScale(
                     boundToRange(abs(velocity) / maxDismissSettlingVelocity, 0f, 1f),
@@ -430,6 +430,11 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
                 driverProgressThreshold = dismissedTaskGap,
                 isSpringDirectionVertical = false,
             )
+        } else {
+            springAnimationDriver.addEndListener { _, _, _, _ ->
+                // Play the same haptic as when neighbors spring into place.
+                MSDLPlayerWrapper.INSTANCE.get(recentsView.context)?.playToken(MSDLToken.CANCEL)
+            }
         }
 
         // Start animations and remove the dismissed task at the end, dismiss immediately if no
