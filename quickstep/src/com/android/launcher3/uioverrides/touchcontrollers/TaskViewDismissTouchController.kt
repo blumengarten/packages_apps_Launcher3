@@ -63,6 +63,7 @@ CONTAINER : RecentsViewContainer {
     private var hasDismissThresholdHapticRun = false
     private var initialDisplacement: Float = 0f
     private var recentsScaleAnimation: SpringAnimation? = null
+    private var isBlockedDuringDismissal = false
 
     private fun canInterceptTouch(ev: MotionEvent): Boolean =
         when {
@@ -137,6 +138,7 @@ CONTAINER : RecentsViewContainer {
     }
 
     override fun onDragStart(start: Boolean, startDisplacement: Float) {
+        if (isBlockedDuringDismissal) return
         val taskBeingDragged = taskBeingDragged ?: return
 
         initialDisplacement =
@@ -149,6 +151,7 @@ CONTAINER : RecentsViewContainer {
     }
 
     override fun onDrag(displacement: Float): Boolean {
+        if (isBlockedDuringDismissal) return true
         val taskBeingDragged = taskBeingDragged ?: return false
         val currentDisplacement = displacement + initialDisplacement
         val boundedDisplacement =
@@ -204,6 +207,7 @@ CONTAINER : RecentsViewContainer {
     }
 
     override fun onDragEnd(velocity: Float) {
+        if (isBlockedDuringDismissal) return
         val taskBeingDragged = taskBeingDragged ?: return
 
         val currentDisplacement =
@@ -234,6 +238,7 @@ CONTAINER : RecentsViewContainer {
                         if (isDismissing) (dismissLength * verticalFactor).toFloat() else 0f
                     )
                 }
+        isBlockedDuringDismissal = true
         recentsScaleAnimation =
             recentsView.animateRecentsScale(RECENTS_SCALE_DEFAULT).addEndListener { _, _, _, _ ->
                 recentsScaleAnimation = null
@@ -246,6 +251,7 @@ CONTAINER : RecentsViewContainer {
         taskBeingDragged?.translationZ = 0f
         taskBeingDragged = null
         springAnimation = null
+        isBlockedDuringDismissal = false
     }
 
     private fun getRecentsScale(dismissFraction: Float): Float {
