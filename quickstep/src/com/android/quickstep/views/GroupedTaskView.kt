@@ -24,7 +24,6 @@ import android.view.View
 import android.view.ViewStub
 import com.android.internal.jank.Cuj
 import com.android.launcher3.Flags.enableOverviewIconMenu
-import com.android.launcher3.Flags.enableRefactorTaskThumbnail
 import com.android.launcher3.R
 import com.android.launcher3.Utilities
 import com.android.launcher3.util.RunnableList
@@ -95,11 +94,8 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     override fun inflateViewStubs() {
         super.inflateViewStubs()
-        val taskContentViewLayoutId =
-            if (enableRefactorTaskThumbnail()) R.layout.task_content_view
-            else R.layout.task_thumbnail_deprecated
         findViewById<ViewStub>(R.id.bottomright_task_content_view)
-            ?.apply { layoutResource = taskContentViewLayoutId }
+            ?.apply { layoutResource = R.layout.task_content_view }
             ?.inflate()
         findViewById<ViewStub>(R.id.bottomRight_icon)
             ?.apply {
