@@ -3937,7 +3937,7 @@ public abstract class RecentsView<
                 newClearAllShortTotalWidthTranslation = expectedFirstTaskStart - firstTaskStart;
             }
         }
-        if (lastGridTaskView != null && (lastGridTaskView.isVisibleToUser() || (
+        if (lastGridTaskView != null && (isTaskViewVisible(lastGridTaskView) || (
                 isExpressiveDismiss && lastGridTaskView == dismissedTaskView))) {
             // After dismissal, animate translation of the remaining tasks to fill any gap left
             // between the end of the grid and the clear all button. Only animate if the clear
