@@ -91,6 +91,7 @@ public interface LauncherBaseAppComponent {
 
     LoaderCursorFactory getLoaderCursorFactory();
     WidgetHolderFactory getWidgetHolderFactory();
+    RefreshRateTracker getFrameRateProvider();
 
     /** Builder for LauncherBaseAppComponent. */
     interface Builder {

@@ -16,6 +16,8 @@
 
 package com.android.launcher3.dagger
 
+import com.android.launcher3.util.window.RefreshRateTracker
+import com.android.launcher3.util.window.RefreshRateTracker.RefreshRateTrackerImpl
 import com.android.launcher3.widget.LauncherWidgetHolder.WidgetHolderFactory
 import com.android.launcher3.widget.LauncherWidgetHolder.WidgetHolderFactoryImpl
 import dagger.Binds
@@ -35,7 +37,10 @@ abstract class WidgetModule {
 
 @Module abstract class PluginManagerWrapperModule {}
 
-@Module object StaticObjectModule {}
+@Module
+abstract class StaticObjectModule {
+    @Binds abstract fun bindRefreshRateTracker(tracker: RefreshRateTrackerImpl): RefreshRateTracker
+}
 
 // Module containing bindings for the final derivative app
 @Module abstract class AppModule {}
