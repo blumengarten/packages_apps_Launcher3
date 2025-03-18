@@ -428,9 +428,7 @@ constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int = 0) :
 
         var additionalTranslationX = 0f
         if (
-            recentsViewContainer.deviceProfile.isLandscape &&
-                taskContainer.stagePosition ==
-                    SplitConfigurationOptions.STAGE_POSITION_BOTTOM_OR_RIGHT
+            taskContainer.stagePosition == SplitConfigurationOptions.STAGE_POSITION_BOTTOM_OR_RIGHT
         ) {
             // Animate menu and icon when split task would display off the side of the screen.
             additionalTranslationX =
