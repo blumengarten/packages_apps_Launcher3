@@ -1089,7 +1089,7 @@ public class TouchInteractionService extends Service {
             // previousTaskInfo can be null iff previousGestureState == GestureState.DEFAULT_STATE
             taskInfo = previousTaskInfo != null
                     ? previousTaskInfo
-                    : TopTaskTracker.INSTANCE.get(this).getCachedTopTask(false);
+                    : TopTaskTracker.INSTANCE.get(this).getCachedTopTask(false, displayId);
             gestureState.updateRunningTask(taskInfo);
             gestureState.updateLastStartedTaskIds(previousGestureState.getLastStartedTaskIds());
             gestureState.updatePreviouslyAppearedTaskIds(
@@ -1099,7 +1099,7 @@ public class TouchInteractionService extends Service {
                     mOverviewComponentObserver,
                     displayId,
                     ActiveGestureLog.INSTANCE.incrementLogId());
-            taskInfo = TopTaskTracker.INSTANCE.get(this).getCachedTopTask(false);
+            taskInfo = TopTaskTracker.INSTANCE.get(this).getCachedTopTask(false, displayId);
             gestureState.updateRunningTask(taskInfo);
         }
         gestureState.setTrackpadGestureType(trackpadGestureType);

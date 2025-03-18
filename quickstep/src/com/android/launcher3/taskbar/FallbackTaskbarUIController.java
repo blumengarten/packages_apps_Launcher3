@@ -134,7 +134,8 @@ public class FallbackTaskbarUIController
 
     private boolean isIn3pHomeOrRecents() {
         TopTaskTracker.CachedTaskInfo topTask = TopTaskTracker.INSTANCE
-                .get(mControllers.taskbarActivityContext).getCachedTopTask(true);
+                .get(mControllers.taskbarActivityContext).getCachedTopTask(true,
+                        mRecentsContainer.asContext().getDisplayId());
         return topTask.isHomeTask() || topTask.isRecentsTask();
     }
 

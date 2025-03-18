@@ -18,6 +18,7 @@ package com.android.quickstep.util;
 import static android.app.contextualsearch.ContextualSearchManager.ACTION_LAUNCH_CONTEXTUAL_SEARCH;
 import static android.app.contextualsearch.ContextualSearchManager.ENTRYPOINT_SYSTEM_ACTION;
 import static android.app.contextualsearch.ContextualSearchManager.FEATURE_CONTEXTUAL_SEARCH;
+import static android.view.Display.DEFAULT_DISPLAY;
 
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_LAUNCH_OMNI_SUCCESSFUL_SYSTEM_ACTION;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
@@ -244,7 +245,8 @@ public class ContextualSearchStateManager  {
                                             ENTRYPOINT_SYSTEM_ACTION);
                             if (contextualSearchInvoked) {
                                 String runningPackage = mTopTaskTracker.getCachedTopTask(
-                                        /* filterOnlyVisibleRecents */ true).getPackageName();
+                                        /* filterOnlyVisibleRecents */ true,
+                                        DEFAULT_DISPLAY).getPackageName();
                                 StatsLogManager.newInstance(mContext).logger()
                                         .withPackageName(runningPackage)
                                         .log(LAUNCHER_LAUNCH_OMNI_SUCCESSFUL_SYSTEM_ACTION);

@@ -261,7 +261,8 @@ public final class LauncherActivityInterface extends
         return launcher != null
                 && launcher.getStateManager().getState() == OVERVIEW
                 && launcher.isStarted()
-                && TopTaskTracker.INSTANCE.get(launcher).getCachedTopTask(false).isHomeTask();
+                && TopTaskTracker.INSTANCE.get(launcher).getCachedTopTask(false,
+                launcher.getDisplayId()).isHomeTask();
     }
 
     private boolean isInMinusOne() {
@@ -270,7 +271,8 @@ public final class LauncherActivityInterface extends
         return launcher != null
                 && launcher.getStateManager().getState() == NORMAL
                 && !launcher.isStarted()
-                && TopTaskTracker.INSTANCE.get(launcher).getCachedTopTask(false).isHomeTask();
+                && TopTaskTracker.INSTANCE.get(launcher).getCachedTopTask(false,
+                launcher.getDisplayId()).isHomeTask();
     }
 
     @Override

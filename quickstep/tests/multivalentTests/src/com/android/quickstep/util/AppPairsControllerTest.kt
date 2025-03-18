@@ -17,8 +17,9 @@
 package com.android.quickstep.util
 
 import android.app.WindowConfiguration.WINDOWING_MODE_FREEFORM
-import android.content.Context
 import android.content.res.Resources
+import android.view.Display
+import android.view.Display.DEFAULT_DISPLAY
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.launcher3.apppairs.AppPairIcon
 import com.android.launcher3.logging.StatsLogManager
@@ -26,6 +27,7 @@ import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.taskbar.TaskbarActivityContext
 import com.android.launcher3.util.SplitConfigurationOptions.STAGE_POSITION_BOTTOM_OR_RIGHT
 import com.android.launcher3.util.SplitConfigurationOptions.STAGE_POSITION_TOP_OR_LEFT
+import com.android.launcher3.views.ActivityContext
 import com.android.quickstep.TopTaskTracker
 import com.android.quickstep.TopTaskTracker.CachedTaskInfo
 import com.android.systemui.shared.recents.model.Task
@@ -56,7 +58,7 @@ import org.mockito.kotlin.whenever
 
 @RunWith(AndroidJUnit4::class)
 class AppPairsControllerTest {
-    @Mock lateinit var context: Context
+    @Mock lateinit var context: ActivityContext
     @Mock lateinit var resources: Resources
     @Mock lateinit var splitSelectStateController: SplitSelectStateController
     @Mock lateinit var statsLogManager: StatsLogManager
@@ -83,6 +85,7 @@ class AppPairsControllerTest {
     }
 
     @Mock lateinit var mockAppPairIcon: AppPairIcon
+    @Mock lateinit var mockDisplay: Display
     @Mock lateinit var mockTaskbarActivityContext: TaskbarActivityContext
     @Mock lateinit var mockTopTaskTracker: TopTaskTracker
     @Mock lateinit var mockCachedTaskInfo: CachedTaskInfo
@@ -105,8 +108,10 @@ class AppPairsControllerTest {
         // Stub methods on appPairsController so that they return mocks
         spyAppPairsController = spy(appPairsController)
         whenever(mockAppPairIcon.context).thenReturn(mockTaskbarActivityContext)
+        whenever(mockAppPairIcon.display).thenReturn(mockDisplay)
+        whenever(mockDisplay.displayId).thenReturn(DEFAULT_DISPLAY)
         doReturn(mockTopTaskTracker).whenever(spyAppPairsController).topTaskTracker
-        whenever(mockTopTaskTracker.getCachedTopTask(any())).thenReturn(mockCachedTaskInfo)
+        whenever(mockTopTaskTracker.getCachedTopTask(any(), any())).thenReturn(mockCachedTaskInfo)
         whenever(mockTask1.getKey()).thenReturn(mockTaskKey1)
         whenever(mockTask2.getKey()).thenReturn(mockTaskKey2)
         doNothing().whenever(spyAppPairsController).launchAppPair(any(), any())
