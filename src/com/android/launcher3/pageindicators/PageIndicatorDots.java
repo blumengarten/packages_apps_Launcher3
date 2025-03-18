@@ -566,6 +566,13 @@ public class PageIndicatorDots extends View implements Insettable, PageIndicator
                     }
                     if (Math.round(mCurrentPosition) == i) {
                         sLastActiveRect.set(sTempRect);
+                        if (mCurrentPosition == 0) {
+                            // The outline is calculated before onDraw is called. If the user has
+                            // paginated, closed the folder, and opened the folder again, the
+                            // first drawn outline will use stale bounds.
+                            // Invalidation is cheap, and is only needed when scroll is 0.
+                            invalidateOutline();
+                        }
                     }
                     canvas.drawRoundRect(sTempRect, mDotRadius, mDotRadius, mPaginationPaint);
 
