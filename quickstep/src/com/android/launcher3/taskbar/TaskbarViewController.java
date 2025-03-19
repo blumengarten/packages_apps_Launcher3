@@ -951,7 +951,7 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
         // or fade in while already in in-app state.
         Interpolator interpolator = mIsHotseatIconOnTopWhenAligned ? LINEAR : FINAL_FRAME;
 
-        int offsetY = launcherDp.getTaskbarOffsetY();
+        int offsetY = taskbarDp.getTaskbarOffsetY();
         setter.setFloat(mTaskbarIconTranslationYForHome, VALUE, -offsetY, interpolator);
         setter.setFloat(mTaskbarNavButtonTranslationY, VALUE, -offsetY, interpolator);
         setter.setFloat(mTaskbarNavButtonTranslationYForInAppDisplay, VALUE, offsetY, interpolator);
