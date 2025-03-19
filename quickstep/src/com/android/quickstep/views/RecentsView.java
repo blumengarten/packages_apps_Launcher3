@@ -275,7 +275,7 @@ public abstract class RecentsView<
         HighResLoadingState.HighResLoadingStateChangedCallback,
         TaskVisualsChangeListener, DesktopVisibilityListener {
 
-    private static final String TAG = "RecentsView";
+    protected static final String TAG = "RecentsView";
     private static final boolean DEBUG = false;
 
     public static final FloatProperty<RecentsView<?, ?>> CONTENT_ALPHA =
@@ -534,7 +534,6 @@ public abstract class RecentsView<
     protected final Rect mLastComputedTaskSize = new Rect();
     protected final Rect mLastComputedGridSize = new Rect();
     protected final Rect mLastComputedGridTaskSize = new Rect();
-    private TaskView mSelectedTask = null;
     // How much a task that is directly offscreen will be pushed out due to RecentsView scale/pivot.
     @Nullable
     protected Float mLastComputedTaskStartPushOutDistance = null;
@@ -2418,21 +2417,28 @@ public abstract class RecentsView<
     }
 
     /**
-     * Sets the last TaskView selected.
+     * Returns the currently selected TaskView in Select mode.
+     */
+    @Nullable
+    public TaskView getSelectedTaskView() {
+        return mUtils.getSelectedTaskView();
+    }
+
+    /**
+     * Sets the selected TaskView in Select mode.
      */
     public void setSelectedTask(int lastSelectedTaskId) {
-        mSelectedTask = getTaskViewByTaskId(lastSelectedTaskId);
+        mUtils.setSelectedTaskView(getTaskViewByTaskId(lastSelectedTaskId));
     }
 
     /**
      * Returns the bounds of the task selected to enter modal state.
      */
     public Rect getSelectedTaskBounds() {
-        if (mSelectedTask == null) {
-            return enableGridOnlyOverview() && mContainer.getDeviceProfile().isTablet
-                    ? mLastComputedGridTaskSize : mLastComputedTaskSize;
+        if (getSelectedTaskView() == null) {
+            return mLastComputedTaskSize;
         }
-        return getTaskBounds(mSelectedTask);
+        return getTaskBounds(getSelectedTaskView());
     }
 
     /**
@@ -2448,7 +2454,7 @@ public abstract class RecentsView<
         return deviceProfile.overviewTaskThumbnailTopMarginPx / 2.0f;
     }
 
-    private Rect getTaskBounds(TaskView taskView) {
+    protected Rect getTaskBounds(TaskView taskView) {
         int selectedPage = indexOfChild(taskView);
         int primaryScroll = getPagedOrientationHandler().getPrimaryScroll(this);
         int selectedPageScroll = getScrollForPage(selectedPage);
@@ -3937,7 +3943,7 @@ public abstract class RecentsView<
                 newClearAllShortTotalWidthTranslation = expectedFirstTaskStart - firstTaskStart;
             }
         }
-        if (lastGridTaskView != null && (lastGridTaskView.isVisibleToUser() || (
+        if (lastGridTaskView != null && (isTaskViewVisible(lastGridTaskView) || (
                 isExpressiveDismiss && lastGridTaskView == dismissedTaskView))) {
             // After dismissal, animate translation of the remaining tasks to fill any gap left
             // between the end of the grid and the clear all button. Only animate if the clear
@@ -4734,11 +4740,12 @@ public abstract class RecentsView<
         runDismissAnimation(pa);
     }
 
-    protected void expressiveDismissTaskView(TaskView taskView) {
+    protected void expressiveDismissTaskView(TaskView taskView, Function0<Unit> onEndRunnable) {
         PendingAnimation pa = new PendingAnimation(DISMISS_TASK_DURATION);
         createTaskDismissAnimation(pa, taskView, false /* animateTaskView */, true /* removeTask */,
                 DISMISS_TASK_DURATION, false /* dismissingForSplitSelection*/,
                 true /* isExpressiveDismiss */);
+        pa.addEndListener((success) -> onEndRunnable.invoke());
         runDismissAnimation(pa);
     }
 
@@ -5011,15 +5018,8 @@ public abstract class RecentsView<
     }
 
     private void updatePivots() {
-        if (mOverviewSelectEnabled) {
-            if (enableGridOnlyOverview()) {
-                getModalTaskSize(mTempRect);
-                Rect selectedTaskPosition = getSelectedTaskBounds();
-                Utilities.getPivotsForScalingRectToRect(mTempRect, selectedTaskPosition,
-                        mTempPointF);
-            } else {
-                mTempPointF.set(mLastComputedTaskSize.centerX(), mLastComputedTaskSize.bottom);
-            }
+        if (mOverviewSelectEnabled && !enableGridOnlyOverview()) {
+            mTempPointF.set(mLastComputedTaskSize.centerX(), mLastComputedTaskSize.bottom);
         } else {
             mTempRect.set(mLastComputedTaskSize);
             getPagedViewOrientedState().getFullScreenScaleAndPivot(mTempRect,
@@ -5065,7 +5065,7 @@ public abstract class RecentsView<
                 && (enableGridOnlyOverview() || enableLargeDesktopWindowingTile())
                 && mTaskModalness > 0;
         if (shouldCalculateOffsetForAllTasks) {
-            modalMidpoint = indexOfChild(mSelectedTask);
+            modalMidpoint = indexOfChild(getSelectedTaskView());
         }
 
         float midpointOffsetSize = 0;
@@ -5273,7 +5273,7 @@ public abstract class RecentsView<
      */
     private float getVerticalOffsetSize(TaskView taskView, float offsetProgress) {
         if (offsetProgress == 0 || !(showAsGrid() && enableGridOnlyOverview())
-                || mSelectedTask == null) {
+                || getSelectedTaskView() == null) {
             // Don't bother calculating everything below if we won't offset vertically.
             return 0;
         }
@@ -5281,7 +5281,7 @@ public abstract class RecentsView<
         // First, get the position of the task relative to the top row.
         Rect taskPosition = getTaskBounds(taskView);
 
-        boolean isSelectedTaskTopRow = mTopRowIdSet.contains(mSelectedTask.getTaskViewId());
+        boolean isSelectedTaskTopRow = mTopRowIdSet.contains(getSelectedTaskView().getTaskViewId());
         boolean isChildTopRow = mTopRowIdSet.contains(taskView.getTaskViewId());
         // Whether the task should be shifted to the top.
         boolean isTopShift = !isSelectedTaskTopRow && isChildTopRow;
@@ -5335,8 +5335,8 @@ public abstract class RecentsView<
      * Resets the visuals when exit modal state.
      */
     public void resetModalVisuals() {
-        if (mSelectedTask != null) {
-            mSelectedTask.taskContainers.forEach(
+        if (getSelectedTaskView() != null) {
+            getSelectedTaskView().taskContainers.forEach(
                     taskContainer -> taskContainer.getOverlay().resetModalVisuals());
         }
     }
@@ -6717,8 +6717,14 @@ public abstract class RecentsView<
     private void setTaskModalness(float modalness) {
         mTaskModalness = modalness;
         updatePageOffsets();
-        if (mSelectedTask != null) {
-            mSelectedTask.setModalness(modalness);
+        if (getSelectedTaskView() != null) {
+            if (enableGridOnlyOverview()) {
+                for (TaskView taskView : getTaskViews()) {
+                    taskView.setModalness(modalness);
+                }
+            } else {
+                getSelectedTaskView().setModalness(modalness);
+            }
         } else if (getCurrentPageTaskView() != null) {
             getCurrentPageTaskView().setModalness(modalness);
         }

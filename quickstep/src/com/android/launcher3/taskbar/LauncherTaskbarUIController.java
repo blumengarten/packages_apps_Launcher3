@@ -223,7 +223,8 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
         if (!Flags.predictiveBackToHomePolish()) {
             shouldOverrideToFastAnimation |= mLauncher.getPredictiveBackToHomeInProgress();
         }
-        boolean isPinnedTaskbar = DisplayController.isPinnedTaskbar(mLauncher);
+        boolean isPinnedTaskbar =
+                mControllers.taskbarActivityContext.isPinnedTaskbar();
         if (isVisible || isPinnedTaskbar) {
             return getTaskbarToHomeDuration(shouldOverrideToFastAnimation, isPinnedTaskbar);
         } else {

@@ -27,7 +27,7 @@ import com.android.systemui.shared.recents.utilities.PreviewPositionHelper
 class GetThumbnailPositionUseCase(
     private val deviceProfileRepository: RecentsDeviceProfileRepository,
     private val rotationStateRepository: RecentsRotationStateRepository,
-    private val previewPositionHelper: PreviewPositionHelper,
+    private val previewPositionHelperFactory: PreviewPositionHelper.PreviewPositionHelperFactory,
 ) {
     operator fun invoke(
         thumbnailData: ThumbnailData?,
@@ -38,6 +38,7 @@ class GetThumbnailPositionUseCase(
         val thumbnail =
             thumbnailData?.thumbnail ?: return ThumbnailPosition(Matrix.IDENTITY_MATRIX, false)
 
+        val previewPositionHelper = previewPositionHelperFactory.create()
         previewPositionHelper.updateThumbnailMatrix(
             Rect(0, 0, thumbnail.width, thumbnail.height),
             thumbnailData,

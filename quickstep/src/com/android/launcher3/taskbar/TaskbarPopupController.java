@@ -83,7 +83,7 @@ public class TaskbarPopupController implements TaskbarControllers.LoggableTaskba
     // Initialized in init.
     private TaskbarControllers mControllers;
     private boolean mAllowInitialSplitSelection;
-    private AppInfo[] mAppInfosList;
+    private AppInfo[] mAppInfosList = AppInfo.EMPTY_ARRAY;
     // Saves the ItemInfos in the hotseat without the predicted items.
     private SparseArray<ItemInfo> mHotseatInfosList;
     private ManageWindowsTaskbarShortcut<BaseTaskbarContext> mManageWindowsTaskbarShortcut;

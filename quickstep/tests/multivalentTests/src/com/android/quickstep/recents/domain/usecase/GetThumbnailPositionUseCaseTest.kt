@@ -25,11 +25,14 @@ import com.android.quickstep.recents.data.FakeRecentsDeviceProfileRepository
 import com.android.quickstep.recents.data.FakeRecentsRotationStateRepository
 import com.android.systemui.shared.recents.model.ThumbnailData
 import com.android.systemui.shared.recents.utilities.PreviewPositionHelper
+import com.android.systemui.shared.recents.utilities.PreviewPositionHelper.PreviewPositionHelperFactory
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -38,14 +41,20 @@ import org.mockito.kotlin.whenever
 class GetThumbnailPositionUseCaseTest {
     private val deviceProfileRepository = FakeRecentsDeviceProfileRepository()
     private val rotationStateRepository = FakeRecentsRotationStateRepository()
+    private val previewPositionHelperFactoryMock = mock<PreviewPositionHelperFactory>()
     private val previewPositionHelper = mock<PreviewPositionHelper>()
 
     private val systemUnderTest =
         GetThumbnailPositionUseCase(
-            deviceProfileRepository,
-            rotationStateRepository,
-            previewPositionHelper,
+            deviceProfileRepository = deviceProfileRepository,
+            rotationStateRepository = rotationStateRepository,
+            previewPositionHelperFactory = previewPositionHelperFactoryMock,
         )
+
+    @Before
+    fun setUp() {
+        whenever(previewPositionHelperFactoryMock.create()).thenReturn(previewPositionHelper)
+    }
 
     @Test
     fun nullThumbnailData_returnsIdentityMatrix() = runTest {
@@ -94,6 +103,25 @@ class GetThumbnailPositionUseCaseTest {
                 activityRotation,
                 isRtl,
             )
+    }
+
+    @Test
+    fun multipleInvocations_usesPreviewPositionHelperFactoryEachTime() = runTest {
+        whenever(previewPositionHelper.matrix).thenReturn(MATRIX)
+
+        val sut =
+            GetThumbnailPositionUseCase(
+                deviceProfileRepository = deviceProfileRepository,
+                rotationStateRepository = rotationStateRepository,
+                previewPositionHelperFactory = previewPositionHelperFactoryMock,
+            )
+        verify(previewPositionHelperFactoryMock, times(0)).create()
+
+        sut.invoke(THUMBNAIL_DATA, CANVAS_WIDTH, CANVAS_HEIGHT, /* isRtl= */ true)
+        sut.invoke(THUMBNAIL_DATA, CANVAS_WIDTH, CANVAS_HEIGHT, /* isRtl= */ false)
+
+        // Each invocation of use case should use a fresh position helper acquired by the factory.
+        verify(previewPositionHelperFactoryMock, times(2)).create()
     }
 
     private companion object {

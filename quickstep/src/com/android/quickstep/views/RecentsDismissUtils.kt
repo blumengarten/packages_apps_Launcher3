@@ -82,6 +82,7 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
                             runTaskGridReflowSpringAnimation(
                                 draggedTaskView,
                                 getDismissedTaskGapForReflow(draggedTaskView),
+                                onEndRunnable,
                             )
                         } else {
                             recentsView.dismissTaskView(
@@ -89,11 +90,12 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
                                 /* animateTaskView = */ false,
                                 /* removeTask = */ true,
                             )
+                            onEndRunnable()
                         }
                     } else {
                         recentsView.onDismissAnimationEnds()
+                        onEndRunnable()
                     }
-                    onEndRunnable()
                 }
         if (!isDismissing) {
             addNeighborSettlingSpringAnimations(
@@ -295,7 +297,7 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
         val maxDismissSettlingVelocity =
             recentsView.pagedOrientationHandler.getSecondaryDimension(recentsView)
         MSDLPlayerWrapper.INSTANCE.get(recentsView.context)
-            .playToken(
+            ?.playToken(
                 MSDLToken.CANCEL,
                 InteractionProperties.DynamicVibrationScale(
                     boundToRange(abs(velocity) / maxDismissSettlingVelocity, 0f, 1f),
@@ -339,6 +341,7 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
     private fun runTaskGridReflowSpringAnimation(
         dismissedTaskView: TaskView,
         dismissedTaskGap: Float,
+        onEndRunnable: () -> Unit,
     ) {
         // Empty spring animation exists for conditional start, and to drive neighboring springs.
         val springAnimationDriver =
@@ -427,12 +430,17 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
                 driverProgressThreshold = dismissedTaskGap,
                 isSpringDirectionVertical = false,
             )
+        } else {
+            springAnimationDriver.addEndListener { _, _, _, _ ->
+                // Play the same haptic as when neighbors spring into place.
+                MSDLPlayerWrapper.INSTANCE.get(recentsView.context)?.playToken(MSDLToken.CANCEL)
+            }
         }
 
         // Start animations and remove the dismissed task at the end, dismiss immediately if no
         // neighboring tasks exist.
         val runGridEndAnimationAndRelayout = {
-            recentsView.expressiveDismissTaskView(dismissedTaskView)
+            recentsView.expressiveDismissTaskView(dismissedTaskView, onEndRunnable)
         }
         springAnimationDriver?.apply {
             addEndListener { _, _, _, _ -> runGridEndAnimationAndRelayout() }

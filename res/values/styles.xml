@@ -373,7 +373,9 @@
         <item name="android:background">@drawable/drop_target_background</item>
     </style>
 
-    <style name="DropTargetButton" parent="DropTargetButtonBase" />
+    <style name="DropTargetButton" parent="DropTargetButtonBase">
+        <item name="android:fontFamily" android:featureFlag="com.android.launcher3.gsf_res">variable-title-medium</item>
+    </style>
 
     <style name="TextHeadline" parent="@android:style/TextAppearance.DeviceDefault.DialogWindowTitle" />
 

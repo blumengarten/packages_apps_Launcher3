@@ -66,7 +66,6 @@ import com.android.launcher3.R;
 import com.android.launcher3.anim.AnimatedFloat;
 import com.android.launcher3.anim.AnimationSuccessListener;
 import com.android.launcher3.anim.AnimatorListeners;
-import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.util.SystemUiFlagUtils;
@@ -307,8 +306,8 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         // TODO(b/390665752): Feature to "lock" pinned taskbar to home screen will be superseded by
         //     pinning, in other launcher states, at which point this variable can be removed.
         mInAppStateAffectsDesktopTasksVisibilityInTaskbar =
-                !DisplayController.showDesktopTaskbarForFreeformDisplay(mActivity)
-                        && DisplayController.showLockedTaskbarOnHome(mActivity);
+                !mActivity.showDesktopTaskbarForFreeformDisplay()
+                        && mActivity.showLockedTaskbarOnHome();
 
         mTaskbarBackgroundDuration = activity.getResources().getInteger(
                 R.integer.taskbar_background_duration);
@@ -413,7 +412,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
      * Returns how long the stash/unstash animation should play.
      */
     public long getStashDuration() {
-        if (DisplayController.isPinnedTaskbar(mActivity)) {
+        if (mActivity.isPinnedTaskbar()) {
             return PINNED_TASKBAR_TRANSITION_DURATION;
         }
         return mActivity.isTransientTaskbar() ? TRANSIENT_TASKBAR_STASH_DURATION
@@ -1186,7 +1185,7 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         }
 
         // Do not stash if pinned taskbar, hardware keyboard is attached and no IME is docked
-        if (mActivity.isHardwareKeyboard() && DisplayController.isPinnedTaskbar(mActivity)
+        if (mActivity.isHardwareKeyboard() && mActivity.isPinnedTaskbar()
                 && !mActivity.isImeDocked()) {
             return false;
         }

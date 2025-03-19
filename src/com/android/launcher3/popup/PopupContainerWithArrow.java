@@ -24,7 +24,9 @@ import static com.android.launcher3.Utilities.squaredTouchSlop;
 import static com.android.launcher3.allapps.AlphabeticalAppsList.PRIVATE_SPACE_PACKAGE;
 import static com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_NOT_PINNABLE;
 import static com.android.launcher3.popup.PopupPopulator.MAX_SHORTCUTS;
+import static com.android.launcher3.shortcuts.DeepShortcutTextView.GOOGLE_SANS_FLEX_LABEL_LARGE;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
+import static com.android.wm.shell.Flags.enableGsf;
 
 import android.animation.AnimatorSet;
 import android.animation.LayoutTransition;
@@ -32,6 +34,7 @@ import android.content.Context;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
@@ -479,6 +482,10 @@ public class PopupContainerWithArrow<T extends Context & ActivityContext>
         if (view instanceof DeepShortcutView) {
             // System shortcut takes entire row with icon and text
             final DeepShortcutView shortcutView = (DeepShortcutView) view;
+            if (enableGsf()) {
+                shortcutView.getBubbleText().setTypeface(
+                        Typeface.create(GOOGLE_SANS_FLEX_LABEL_LARGE, Typeface.NORMAL));
+            }
             info.setIconAndLabelFor(shortcutView.getIconView(), shortcutView.getBubbleText());
         } else if (view instanceof ImageView) {
             // System shortcut is just an icon

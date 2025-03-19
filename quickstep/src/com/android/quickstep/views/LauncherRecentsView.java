@@ -18,6 +18,7 @@ package com.android.quickstep.views;
 import static android.app.ActivityTaskManager.INVALID_TASK_ID;
 import static android.window.DesktopModeFlags.ENABLE_DESKTOP_WINDOWING_WALLPAPER_ACTIVITY;
 
+import static com.android.launcher3.Flags.enableGridOnlyOverview;
 import static com.android.launcher3.LauncherState.CLEAR_ALL_BUTTON;
 import static com.android.launcher3.LauncherState.ADD_DESK_BUTTON;
 import static com.android.launcher3.LauncherState.NORMAL;
@@ -151,7 +152,14 @@ public class LauncherRecentsView extends RecentsView<QuickstepLauncher, Launcher
     public void onStateTransitionStart(LauncherState toState) {
         setOverviewStateEnabled(toState.isRecentsViewVisible);
 
-        setOverviewGridEnabled(toState.displayOverviewTasksAsGrid(mContainer.getDeviceProfile()));
+        if (enableGridOnlyOverview()) {
+            if (toState.displayOverviewTasksAsGrid(mContainer.getDeviceProfile())) {
+                setOverviewGridEnabled(true);
+            }
+        } else {
+            setOverviewGridEnabled(
+                    toState.displayOverviewTasksAsGrid(mContainer.getDeviceProfile()));
+        }
         setOverviewFullscreenEnabled(toState.getOverviewFullscreenProgress() == 1);
         if (toState == OVERVIEW_MODAL_TASK) {
             setOverviewSelectEnabled(true);
@@ -170,6 +178,11 @@ public class LauncherRecentsView extends RecentsView<QuickstepLauncher, Launcher
     @Override
     public void onStateTransitionComplete(LauncherState finalState) {
         DesktopVisibilityController.INSTANCE.get(mContainer).onLauncherStateChanged(finalState);
+        if (enableGridOnlyOverview()) {
+            if (!finalState.displayOverviewTasksAsGrid(mContainer.getDeviceProfile())) {
+                setOverviewGridEnabled(false);
+            }
+        }
 
         if (!finalState.isRecentsViewVisible) {
             // Clean-up logic that occurs when recents is no longer in use/visible.

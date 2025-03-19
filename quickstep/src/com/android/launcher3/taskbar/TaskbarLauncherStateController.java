@@ -40,7 +40,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
-import android.content.Context;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.animation.Interpolator;
@@ -61,7 +60,6 @@ import com.android.launcher3.anim.AnimatorListeners;
 import com.android.launcher3.statemanager.StateManager;
 import com.android.launcher3.taskbar.bubbles.stashing.BubbleStashController.BubbleLauncherState;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
-import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
 import com.android.quickstep.RecentsAnimationCallbacks;
 import com.android.quickstep.RecentsAnimationController;
@@ -225,11 +223,9 @@ public class TaskbarLauncherStateController {
                     updateStateForFlag(FLAG_LAUNCHER_IN_STATE_TRANSITION, true);
                     if (!mShouldDelayLauncherStateAnim) {
                         if (toState == LauncherState.NORMAL) {
+                            TaskbarActivityContext activity = mControllers.taskbarActivityContext;
                             boolean isPinnedTaskbarAndNotInDesktopMode =
-                                    DisplayController.isPinnedTaskbar(
-                                            mControllers.taskbarActivityContext)
-                                            && !DisplayController.isInDesktopMode(
-                                            mControllers.taskbarActivityContext);
+                                    !activity.isInDesktopMode() && activity.isPinnedTaskbar();
                             applyState(QuickstepTransitionManager.getTaskbarToHomeDuration(
                                     isPinnedTaskbarAndNotInDesktopMode));
                         } else {
@@ -475,8 +471,8 @@ public class TaskbarLauncherStateController {
         final boolean isIconAlignedWithHotseat = isIconAlignedWithHotseat();
         final float toAlignment = isIconAlignedWithHotseat ? 1 : 0;
         boolean handleOpenFloatingViews = false;
-        boolean isPinnedTaskbar = DisplayController.isPinnedTaskbar(
-                mControllers.taskbarActivityContext);
+        boolean isPinnedTaskbar =
+                mControllers.taskbarActivityContext.isPinnedTaskbar();
         if (DEBUG) {
             Log.d(TAG, "onStateChangeApplied - isInLauncher: " + isInLauncher
                     + ", mLauncherState: " + mLauncherState
@@ -590,7 +586,8 @@ public class TaskbarLauncherStateController {
         float backgroundAlpha = isInLauncher && isTaskbarAlignedWithHotseat() ? 0 : 1;
         AnimatedFloat taskbarBgOffset =
                 mControllers.taskbarDragLayerController.getTaskbarBackgroundOffset();
-        boolean showTaskbar = shouldShowTaskbar(mLauncher, isInLauncher, isInOverview);
+        boolean showTaskbar = shouldShowTaskbar(mControllers.taskbarActivityContext, isInLauncher,
+                isInOverview);
         float taskbarBgOffsetEnd = showTaskbar ? 0f : 1f;
         float taskbarBgOffsetStart = showTaskbar ? 1f : 0f;
 
@@ -727,13 +724,13 @@ public class TaskbarLauncherStateController {
         return animatorSet;
     }
 
-    private static boolean shouldShowTaskbar(Context context, boolean isInLauncher,
-            boolean isInOverview) {
-        if (DisplayController.showDesktopTaskbarForFreeformDisplay(context)) {
+    private static boolean shouldShowTaskbar(TaskbarActivityContext activityContext,
+            boolean isInLauncher, boolean isInOverview) {
+        if (activityContext.showDesktopTaskbarForFreeformDisplay()) {
             return true;
         }
 
-        if (DisplayController.showLockedTaskbarOnHome(context) && isInLauncher) {
+        if (activityContext.showLockedTaskbarOnHome() && isInLauncher) {
             return true;
         }
         return !isInLauncher || isInOverview;
@@ -788,11 +785,11 @@ public class TaskbarLauncherStateController {
      * This refers to the intended state - a transition to this state might be in progress.
      */
     public boolean isTaskbarAlignedWithHotseat() {
-        if (DisplayController.showDesktopTaskbarForFreeformDisplay(mLauncher)) {
+        if (mControllers.taskbarActivityContext.showDesktopTaskbarForFreeformDisplay()) {
             return false;
         }
 
-        if (DisplayController.showLockedTaskbarOnHome(mLauncher) && isInLauncher()) {
+        if (mControllers.taskbarActivityContext.showLockedTaskbarOnHome() && isInLauncher()) {
             return false;
         }
 
