@@ -72,6 +72,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PaintDrawable;
 import android.graphics.drawable.RotateDrawable;
 import android.inputmethodservice.InputMethodService;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemProperties;
 import android.util.Property;
@@ -84,6 +85,7 @@ import android.view.View.OnAttachStateChangeListener;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.inputmethod.Flags;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -682,12 +684,16 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
 
     /**
      * Sets the AccessibilityDelegate for the back button.
+     *
+     * When setting a back button accessibility delegate, make sure to not dispatch any duplicate
+     * click events. Click events get injected in the internal accessibility delegate in
+     * {@link #setupBackButtonAccessibility(View, AccessibilityDelegate)}.
      */
     public void setBackButtonAccessibilityDelegate(AccessibilityDelegate accessibilityDelegate) {
         if (mBackButton == null) {
             return;
         }
-        mBackButton.setAccessibilityDelegate(accessibilityDelegate);
+        setupBackButtonAccessibility(mBackButton, accessibilityDelegate);
     }
 
     public void setWallpaperVisible(boolean isVisible) {
@@ -879,6 +885,7 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
                 navButtonController.getButtonContentDescription(buttonType)));
         if (predictiveBackThreeButtonNav() && buttonType == BUTTON_BACK) {
             // set up special touch listener for back button to support predictive back
+            setupBackButtonAccessibility(buttonView, null);
             setBackButtonTouchListener(buttonView, navButtonController);
             // Set this View clickable, so that NearestTouchFrame.java forwards closeby touches to
             // this View
@@ -890,6 +897,28 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
                     navButtonController.onButtonLongClick(buttonType, view));
         }
         return buttonView;
+    }
+
+    private void setupBackButtonAccessibility(View backButton,
+            AccessibilityDelegate accessibilityDelegate) {
+        View.AccessibilityDelegate backButtonAccessibilityDelegate =
+                new View.AccessibilityDelegate() {
+                    @Override
+                    public boolean performAccessibilityAction(View host, int action, Bundle args) {
+                        if (accessibilityDelegate != null) {
+                            accessibilityDelegate.performAccessibilityAction(host, action, args);
+                        }
+                        if (action == AccessibilityNodeInfo.ACTION_CLICK) {
+                            mControllers.navButtonController.sendBackKeyEvent(KeyEvent.ACTION_DOWN,
+                                    /*cancelled*/ false);
+                            mControllers.navButtonController.sendBackKeyEvent(KeyEvent.ACTION_UP,
+                                    /*cancelled*/ false);
+                            return true;
+                        }
+                        return super.performAccessibilityAction(host, action, args);
+                    }
+                };
+        backButton.setAccessibilityDelegate(backButtonAccessibilityDelegate);
     }
 
     private void setBackButtonTouchListener(View buttonView,
