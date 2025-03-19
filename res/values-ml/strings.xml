@@ -131,8 +131,7 @@
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"വാൾപേപ്പറും സ്‌റ്റൈലും"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"ഹോം സ്‌ക്രീൻ എഡിറ്റ് ചെയ്യുക"</string>
     <string name="settings_button_text" msgid="8873672322605444408">"ഹോം ക്രമീകരണം"</string>
-    <!-- no translation found for all_apps_home_screen (8658178652647896497) -->
-    <skip />
+    <string name="all_apps_home_screen" msgid="8658178652647896497">"ആപ്പുകൾ"</string>
     <string name="msg_disabled_by_admin" msgid="6898038085516271325">"അഡ്മിൻ പ്രവർത്തനരഹിതമാക്കിയിരിക്കുന്നു"</string>
     <string name="allow_rotation_title" msgid="7222049633713050106">"ഹോം സ്ക്രീൻ റൊട്ടേഷൻ അനുവദിക്കുക"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"ഫോൺ തിരിച്ച നിലയിലായിരിക്കുമ്പോൾ"</string>
@@ -186,10 +185,8 @@
     <string name="action_decrease_height" msgid="282377193880900022">"ഉയരം കുറയ്‌ക്കുക"</string>
     <string name="widget_resized" msgid="9130327887929620">"വീതി <xliff:g id="NUMBER_0">%1$s</xliff:g> ഉയരം <xliff:g id="NUMBER_1">%2$s</xliff:g>-ലേക്ക് വിഡ്‌ജെറ്റിന്റെ വലുപ്പം മാറ്റി"</string>
     <string name="action_deep_shortcut" msgid="4766835855579976045">"കുറുക്കുവഴി മെനു"</string>
-    <!-- no translation found for widget_frame_name (8782828448471444270) -->
-    <skip />
-    <!-- no translation found for action_close (1077760267194136901) -->
-    <skip />
+    <string name="widget_frame_name" msgid="8782828448471444270">"<xliff:g id="STRING">%1$s</xliff:g> എന്നതിനുള്ള വിജറ്റിന്റെ വലുപ്പം മാറ്റുന്നതിനുള്ള ഫ്രെയിം"</string>
+    <string name="action_close" msgid="1077760267194136901">"അടയ്‌ക്കുക"</string>
     <string name="action_dismiss_notification" msgid="5909461085055959187">"നിരസിക്കുക"</string>
     <string name="accessibility_close" msgid="2277148124685870734">"അടയ്ക്കൂ"</string>
     <string name="all_apps_personal_tab" msgid="4190252696685155002">"വ്യക്തിപരം"</string>
@@ -220,6 +217,5 @@
     <string name="ps_container_transition" msgid="8667331812048014412">"പ്രൈവറ്റ് സ്‌പേസ് ട്രാൻസിഷനിംഗ്"</string>
     <string name="ps_add_button_label" msgid="8127988716897128773">"ഇൻസ്റ്റാൾ ചെയ്യുക"</string>
     <string name="ps_add_button_content_description" msgid="3254274107740952556">"സ്വകാര്യ സ്പേസിലേക്ക് ആപ്പുകൾ ഇൻസ്റ്റാൾ ചെയ്യുക"</string>
-    <!-- no translation found for ps_app_content_description (1129133475892816226) -->
-    <skip />
+    <string name="ps_app_content_description" msgid="1129133475892816226">"സ്വകാര്യ സ്‌പേസിലേക്ക് ഫയലുകളും മറ്റും ചേർക്കുക"</string>
 </resources>

@@ -33,7 +33,7 @@
     <string name="split_app_usage_settings" msgid="7214375263347964093">"Configuración del uso de %1$s"</string>
     <string name="new_window_option_taskbar" msgid="6448780542727767211">"Ventana nueva"</string>
     <string name="manage_windows_option_taskbar" msgid="2294109489960654212">"Administrar ventanas"</string>
-    <string name="save_app_pair" msgid="5647523853662686243">"Guardar vinculación"</string>
+    <string name="save_app_pair" msgid="5647523853662686243">"Guardar grupo de apps"</string>
     <string name="app_pair_default_title" msgid="4045241727446873529">"<xliff:g id="APP1">%1$s</xliff:g> | <xliff:g id="APP2">%2$s</xliff:g>"</string>
     <string name="app_pair_unlaunchable_at_screen_size" msgid="3446551575502685376">"No se admite esta vinculación de apps en este dispositivo"</string>
     <string name="app_pair_needs_unfold" msgid="4588897528143807002">"Abre el dispositivo para usar esta vinculación de apps"</string>
@@ -131,8 +131,7 @@
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"Fondo de pantalla y estilo"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"Editar pantalla principal"</string>
     <string name="settings_button_text" msgid="8873672322605444408">"Configuración de pantalla principal"</string>
-    <!-- no translation found for all_apps_home_screen (8658178652647896497) -->
-    <skip />
+    <string name="all_apps_home_screen" msgid="8658178652647896497">"Apps"</string>
     <string name="msg_disabled_by_admin" msgid="6898038085516271325">"El administrador inhabilitó esta función"</string>
     <string name="allow_rotation_title" msgid="7222049633713050106">"Permitir la rotación de la pantalla principal"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"Al girar el teléfono"</string>
@@ -186,10 +185,8 @@
     <string name="action_decrease_height" msgid="282377193880900022">"Reducir la altura"</string>
     <string name="widget_resized" msgid="9130327887929620">"Se cambió la dimensión del widget a <xliff:g id="NUMBER_0">%1$s</xliff:g> de ancho y <xliff:g id="NUMBER_1">%2$s</xliff:g> de alto."</string>
     <string name="action_deep_shortcut" msgid="4766835855579976045">"Menú de accesos directos"</string>
-    <!-- no translation found for widget_frame_name (8782828448471444270) -->
-    <skip />
-    <!-- no translation found for action_close (1077760267194136901) -->
-    <skip />
+    <string name="widget_frame_name" msgid="8782828448471444270">"Marco de cambio de tamaño del widget para <xliff:g id="STRING">%1$s</xliff:g>"</string>
+    <string name="action_close" msgid="1077760267194136901">"Cerrar"</string>
     <string name="action_dismiss_notification" msgid="5909461085055959187">"Descartar"</string>
     <string name="accessibility_close" msgid="2277148124685870734">"Cerrar"</string>
     <string name="all_apps_personal_tab" msgid="4190252696685155002">"Personal"</string>

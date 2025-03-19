@@ -131,8 +131,7 @@
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"Taustakuva ja tyyli"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"Muokkaa aloitusnäyttöä"</string>
     <string name="settings_button_text" msgid="8873672322605444408">"Aloitusnäyttö"</string>
-    <!-- no translation found for all_apps_home_screen (8658178652647896497) -->
-    <skip />
+    <string name="all_apps_home_screen" msgid="8658178652647896497">"Sovellukset"</string>
     <string name="msg_disabled_by_admin" msgid="6898038085516271325">"Järjestelmänvalvoja on poistanut toiminnon käytöstä."</string>
     <string name="allow_rotation_title" msgid="7222049633713050106">"Salli aloitusnäytön kiertäminen"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"Kun puhelinta kierretään"</string>
@@ -186,10 +185,8 @@
     <string name="action_decrease_height" msgid="282377193880900022">"Vähennä korkeutta"</string>
     <string name="widget_resized" msgid="9130327887929620">"Widgetin kokoa muutettiin. Sen leveys on nyt <xliff:g id="NUMBER_0">%1$s</xliff:g> ja korkeus <xliff:g id="NUMBER_1">%2$s</xliff:g>."</string>
     <string name="action_deep_shortcut" msgid="4766835855579976045">"Pikanäppäinvalikko"</string>
-    <!-- no translation found for widget_frame_name (8782828448471444270) -->
-    <skip />
-    <!-- no translation found for action_close (1077760267194136901) -->
-    <skip />
+    <string name="widget_frame_name" msgid="8782828448471444270">"Widgetin koon muuttaminen (<xliff:g id="STRING">%1$s</xliff:g>)"</string>
+    <string name="action_close" msgid="1077760267194136901">"Sulje"</string>
     <string name="action_dismiss_notification" msgid="5909461085055959187">"Hylkää"</string>
     <string name="accessibility_close" msgid="2277148124685870734">"Sulje"</string>
     <string name="all_apps_personal_tab" msgid="4190252696685155002">"Henkilökohtaiset"</string>

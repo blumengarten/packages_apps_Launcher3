@@ -131,8 +131,7 @@
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"کاغذدیواری و سبک"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"ویرایش «صفحه اصلی»"</string>
     <string name="settings_button_text" msgid="8873672322605444408">"تنظیمات صفحه اصلی"</string>
-    <!-- no translation found for all_apps_home_screen (8658178652647896497) -->
-    <skip />
+    <string name="all_apps_home_screen" msgid="8658178652647896497">"برنامه‌ها"</string>
     <string name="msg_disabled_by_admin" msgid="6898038085516271325">"توسط سرپرست سیستم غیرفعال شده است"</string>
     <string name="allow_rotation_title" msgid="7222049633713050106">"مجاز کردن چرخش صفحه اصلی"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"وقتی تلفن چرخانده می‌شود"</string>
@@ -186,10 +185,8 @@
     <string name="action_decrease_height" msgid="282377193880900022">"کاهش ارتفاع"</string>
     <string name="widget_resized" msgid="9130327887929620">"اندازه ابزاره به عرض <xliff:g id="NUMBER_0">%1$s</xliff:g> ارتفاع <xliff:g id="NUMBER_1">%2$s</xliff:g> تغییر کرد"</string>
     <string name="action_deep_shortcut" msgid="4766835855579976045">"منو میان‌بر"</string>
-    <!-- no translation found for widget_frame_name (8782828448471444270) -->
-    <skip />
-    <!-- no translation found for action_close (1077760267194136901) -->
-    <skip />
+    <string name="widget_frame_name" msgid="8782828448471444270">"قاب تغییر اندازه ابزاره برای <xliff:g id="STRING">%1$s</xliff:g>"</string>
+    <string name="action_close" msgid="1077760267194136901">"بستن"</string>
     <string name="action_dismiss_notification" msgid="5909461085055959187">"رد کردن"</string>
     <string name="accessibility_close" msgid="2277148124685870734">"بستن"</string>
     <string name="all_apps_personal_tab" msgid="4190252696685155002">"شخصی"</string>
@@ -220,6 +217,5 @@
     <string name="ps_container_transition" msgid="8667331812048014412">"انتقال «فضای خصوصی»"</string>
     <string name="ps_add_button_label" msgid="8127988716897128773">"نصب"</string>
     <string name="ps_add_button_content_description" msgid="3254274107740952556">"نصب برنامه‌ها در «فضای خصوصی»"</string>
-    <!-- no translation found for ps_app_content_description (1129133475892816226) -->
-    <skip />
+    <string name="ps_app_content_description" msgid="1129133475892816226">"افزودن فایل‌ها و موارد دیگر به «فضای خصوصی»"</string>
 </resources>

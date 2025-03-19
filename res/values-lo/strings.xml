@@ -131,8 +131,7 @@
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"ຮູບພື້ນຫຼັງ ແລະ ຮູບແບບ"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"ແກ້ໄຂໂຮມສະກຣີນ"</string>
     <string name="settings_button_text" msgid="8873672322605444408">"ການຕັ້ງຄ່າໜ້າຫຼັກ"</string>
-    <!-- no translation found for all_apps_home_screen (8658178652647896497) -->
-    <skip />
+    <string name="all_apps_home_screen" msgid="8658178652647896497">"ແອັບ"</string>
     <string name="msg_disabled_by_admin" msgid="6898038085516271325">"ຖືກປິດການນຳໃຊ້ໂດຍຜູ້ເບິ່ງແຍງລະບົບຂອງທ່ານ"</string>
     <string name="allow_rotation_title" msgid="7222049633713050106">"ອະນຸຍາດໃຫ້ໝຸນໜ້າຈໍຢູ່ໂຮມສະກຣີນໄດ້"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"ເມື່ອໝຸນໂທລະສັບ"</string>
@@ -186,10 +185,8 @@
     <string name="action_decrease_height" msgid="282377193880900022">"ຫຼຸດ​ລວງ​ສູງ​ລົງ"</string>
     <string name="widget_resized" msgid="9130327887929620">"ປ່ຽນ​ຂະ​ໜາດ​ວິດ​ເຈັດ​ເປັນ​ລວງ​ກ້​ວາງ <xliff:g id="NUMBER_0">%1$s</xliff:g> ລວງ​ສູງ <xliff:g id="NUMBER_1">%2$s</xliff:g> ແລ້ວ"</string>
     <string name="action_deep_shortcut" msgid="4766835855579976045">"ເມນູທາງລັດ"</string>
-    <!-- no translation found for widget_frame_name (8782828448471444270) -->
-    <skip />
-    <!-- no translation found for action_close (1077760267194136901) -->
-    <skip />
+    <string name="widget_frame_name" msgid="8782828448471444270">"ປັບຂະໜາດກອບວິດເຈັດສຳລັບ <xliff:g id="STRING">%1$s</xliff:g>"</string>
+    <string name="action_close" msgid="1077760267194136901">"ປິດ"</string>
     <string name="action_dismiss_notification" msgid="5909461085055959187">"ປິດໄວ້"</string>
     <string name="accessibility_close" msgid="2277148124685870734">"ປິດ"</string>
     <string name="all_apps_personal_tab" msgid="4190252696685155002">"ສ່ວນຕົວ"</string>
@@ -220,6 +217,5 @@
     <string name="ps_container_transition" msgid="8667331812048014412">"ການປ່ຽນແປງພື້ນທີ່ສ່ວນຕົວ"</string>
     <string name="ps_add_button_label" msgid="8127988716897128773">"ຕິດຕັ້ງ"</string>
     <string name="ps_add_button_content_description" msgid="3254274107740952556">"ຕິດຕັ້ງແອັບໄປໃສ່ພື້ນທີ່ສ່ວນບຸກຄົນ"</string>
-    <!-- no translation found for ps_app_content_description (1129133475892816226) -->
-    <skip />
+    <string name="ps_app_content_description" msgid="1129133475892816226">"ເພີ່ມໄຟລ໌ ແລະ ອື່ນໆໃສ່ພື້ນທີ່ສ່ວນບຸກຄົນ"</string>
 </resources>
