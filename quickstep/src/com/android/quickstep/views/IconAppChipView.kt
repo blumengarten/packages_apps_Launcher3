@@ -122,7 +122,7 @@ constructor(
             field = max(value, minMaxWidth)
         }
 
-    var isExpanded: Boolean = false
+    var status: AppChipStatus = AppChipStatus.Collapsed
         private set
 
     override fun onFinishInflate() {
@@ -358,8 +358,8 @@ constructor(
                 ObjectAnimator.ofFloat(iconArrowView, TRANSLATION_X, arrowTranslationWithRtl),
                 ObjectAnimator.ofFloat(iconArrowView, SCALE_Y, -1f),
             )
-            animator!!.setDuration(MENU_BACKGROUND_REVEAL_DURATION.toLong())
-            isExpanded = true
+            animator!!.duration = MENU_BACKGROUND_REVEAL_DURATION.toLong()
+            status = AppChipStatus.Expanded
         } else {
             // Clip expanded text with reveal animation so it doesn't go beyond the edge of the menu
             val expandedTextClipAnim =
@@ -393,8 +393,8 @@ constructor(
                 ObjectAnimator.ofFloat(iconArrowView, TRANSLATION_X, 0f),
                 ObjectAnimator.ofFloat(iconArrowView, SCALE_Y, 1f),
             )
-            animator!!.setDuration(MENU_BACKGROUND_HIDE_DURATION.toLong())
-            isExpanded = false
+            animator!!.duration = MENU_BACKGROUND_HIDE_DURATION.toLong()
+            status = AppChipStatus.Collapsed
         }
 
         if (!animated) animator!!.duration = 0
@@ -433,6 +433,11 @@ constructor(
     }
 
     override fun asView(): View = this
+
+    enum class AppChipStatus {
+        Expanded,
+        Collapsed,
+    }
 
     private companion object {
         private val SUM_AGGREGATOR = FloatBiFunction { a: Float, b: Float -> a + b }

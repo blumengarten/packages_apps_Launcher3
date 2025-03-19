@@ -99,6 +99,7 @@ import com.android.quickstep.util.TaskCornerRadius
 import com.android.quickstep.util.TaskRemovedDuringLaunchListener
 import com.android.quickstep.util.displayId
 import com.android.quickstep.util.isExternalDisplay
+import com.android.quickstep.views.IconAppChipView.AppChipStatus
 import com.android.quickstep.views.RecentsView.UNBOUND_TASK_VIEW_ID
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.ThumbnailData
@@ -1551,7 +1552,7 @@ constructor(
             recentsView.setTaskBorderEnabled(false)
         }
         return if (enableOverviewIconMenu() && menuContainer.iconView is IconAppChipView) {
-            if (menuContainer.iconView.isExpanded) {
+            if (menuContainer.iconView.status == AppChipStatus.Expanded) {
                 closeTaskMenu()
             } else {
                 menuContainer.iconView.revealAnim(/* isRevealing= */ true)
