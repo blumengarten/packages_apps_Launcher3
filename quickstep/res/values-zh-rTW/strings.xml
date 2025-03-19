@@ -140,15 +140,12 @@
     <string name="move_drop_target_top_or_left" msgid="2988702185049595807">"移到上方/左側"</string>
     <string name="move_drop_target_bottom_or_right" msgid="5431393418797620162">"移到底部/右側"</string>
     <string name="open_app_as_a_bubble" msgid="6642626287247807473">"以泡泡形式開啟應用程式"</string>
-    <!-- no translation found for quick_switch_pane_title (4677158207760585812) -->
-    <skip />
-    <!-- no translation found for quick_switch_content_description (2851244536728720005) -->
-    <skip />
+    <string name="quick_switch_pane_title" msgid="4677158207760585812">"最近開啟的應用程式"</string>
+    <string name="quick_switch_content_description" msgid="2851244536728720005">"「最近開啟的應用程式」清單"</string>
     <string name="quick_switch_overflow" msgid="3679780650881041632">"{count,plural, =1{個其他應用程式}other{個其他應用程式}}"</string>
     <string name="quick_switch_desktop" msgid="8393802056024499749">"電腦模式"</string>
     <string name="quick_switch_split_task" msgid="5598194724255333896">"「<xliff:g id="APP_NAME_1">%1$s</xliff:g>」和「<xliff:g id="APP_NAME_2">%2$s</xliff:g>」"</string>
-    <!-- no translation found for quick_switch_task_with_position_in_parent (4968670948331508951) -->
-    <skip />
+    <string name="quick_switch_task_with_position_in_parent" msgid="4968670948331508951">"<xliff:g id="TASK_DESCRIPTION">%1$s</xliff:g>，第 <xliff:g id="INDEX_IN_PARENT">%2$d</xliff:g> 個項目，共 <xliff:g id="TOTAL_TASKS">%3$d</xliff:g> 項"</string>
     <!-- no translation found for quick_switch_scroll_arrow_left (6527033155534184309) -->
     <skip />
     <!-- no translation found for quick_switch_scroll_arrow_right (7319779291086916348) -->
