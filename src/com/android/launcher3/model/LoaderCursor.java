@@ -326,6 +326,7 @@ public class LoaderCursor extends CursorWrapper {
 
         // the fallback icon
         if (!loadIconFromDb(info)) {
+            FileLog.d(TAG, "loadIconFromDb failed, getting from cache - intent=" + intent);
             mIconCache.getTitleAndIcon(info, DEFAULT_LOOKUP_FLAG);
         }
 

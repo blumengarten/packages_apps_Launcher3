@@ -159,9 +159,15 @@ public class IconCache extends BaseIconCache {
      */
     public synchronized void updateIconsForPkg(@NonNull final String packageName,
             @NonNull final UserHandle user) {
+        List<LauncherActivityInfo> apps = mLauncherApps.getActivityList(packageName, user);
+        if (Flags.restoreArchivedAppIconsFromDb()
+                && apps.stream().anyMatch(app -> app.getApplicationInfo().isArchived)) {
+            // When archiving app icon, don't delete old icon so it can be re-used.
+            return;
+        }
         removeIconsForPkg(packageName, user);
         long userSerial = mUserManager.getSerialNumberForUser(user);
-        for (LauncherActivityInfo app : mLauncherApps.getActivityList(packageName, user)) {
+        for (LauncherActivityInfo app : apps) {
             addIconToDBAndMemCache(app, LauncherActivityCachingLogic.INSTANCE, userSerial);
         }
     }
