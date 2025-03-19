@@ -1950,13 +1950,18 @@ public class DeviceProfile {
             int remainingSpaceOnSide = (availableWidthPxForHotseat - hotseatPlusQSBWidth) / 2;
 
             hotseatBarPadding.set(
-                    (remainingSpaceOnSide + qsbWidth) + mInsets.left + workspacePadding.left
+                    remainingSpaceOnSide + mInsets.left + workspacePadding.left
                             + cellLayoutPaddingPx.left,
                     hotseatBarSizePx - hotseatBarBottomPadding - hotseatCellHeightPx,
                     remainingSpaceOnSide + mInsets.right + workspacePadding.right
                             + cellLayoutPaddingPx.right,
                     hotseatBarBottomPadding
             );
+            if (Utilities.isRtl(context.getResources())) {
+                hotseatBarPadding.right += qsbWidth;
+            } else {
+                hotseatBarPadding.left += qsbWidth;
+            }
         } else if (isTaskbarPresent) {
             // Center the QSB vertically with hotseat
             int hotseatBarBottomPadding = getHotseatBarBottomPadding();
