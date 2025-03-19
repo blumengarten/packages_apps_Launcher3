@@ -765,16 +765,8 @@ constructor(
     }
 
     protected open fun inflateViewStubs() {
-        val taskContentViewLayoutId =
-            if (enableRefactorTaskThumbnail()) R.layout.task_content_view
-            else R.layout.task_thumbnail_deprecated
-
         findViewById<ViewStub>(R.id.task_content_view)
-            ?.apply {
-                inflatedId =
-                    if (enableRefactorTaskThumbnail()) R.id.task_content_view else R.id.snapshot
-                layoutResource = taskContentViewLayoutId
-            }
+            ?.apply { layoutResource = R.layout.task_content_view }
             ?.inflate()
 
         findViewById<ViewStub>(R.id.icon)
@@ -944,7 +936,7 @@ constructor(
             taskContainers.forEach { container ->
                 container.bind()
                 if (enableRefactorTaskThumbnail()) {
-                    (container.taskContentView as TaskContentView).cornerRadius =
+                    container.taskContentView.cornerRadius =
                         thumbnailFullscreenParams.currentCornerRadius
                     container.taskContentView.doOnSizeChange { width, height ->
                         updateThumbnailValidity(container)
@@ -983,17 +975,12 @@ constructor(
     ): TaskContainer =
         traceSection("TaskView.createTaskContainer") {
             val iconView = findViewById<View>(iconViewId) as TaskViewIcon
-            val taskContentView =
-                if (enableRefactorTaskThumbnail()) findViewById<View>(taskContentViewId)
-                else findViewById(thumbnailViewId)
-            val snapshotView =
-                if (enableRefactorTaskThumbnail()) taskContentView.findViewById(thumbnailViewId)
-                else taskContentView
+            val taskContentView = findViewById<TaskContentView>(taskContentViewId)
             return TaskContainer(
                 this,
                 task,
                 taskContentView,
-                snapshotView,
+                taskContentView.findViewById(thumbnailViewId),
                 iconView,
                 TransformingTouchDelegate(iconView.asView()),
                 stagePosition,
@@ -1814,8 +1801,7 @@ constructor(
         updateFullscreenParams(thumbnailFullscreenParams)
         taskContainers.forEach {
             if (enableRefactorTaskThumbnail()) {
-                (it.taskContentView as TaskContentView).cornerRadius =
-                    thumbnailFullscreenParams.currentCornerRadius
+                it.taskContentView.cornerRadius = thumbnailFullscreenParams.currentCornerRadius
             } else {
                 it.thumbnailViewDeprecated.setFullscreenParams(thumbnailFullscreenParams)
             }
