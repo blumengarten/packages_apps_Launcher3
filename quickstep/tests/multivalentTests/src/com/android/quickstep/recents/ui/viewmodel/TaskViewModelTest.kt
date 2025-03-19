@@ -85,6 +85,7 @@ class TaskViewModelTest {
                     hasHeader = false,
                     sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
                     taskOverlayEnabled = false,
+                    isCentralTask = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -132,6 +133,7 @@ class TaskViewModelTest {
                     hasHeader = false,
                     sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
                     taskOverlayEnabled = false,
+                    isCentralTask = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -155,6 +157,7 @@ class TaskViewModelTest {
                     hasHeader = false,
                     sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
                     taskOverlayEnabled = false,
+                    isCentralTask = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -178,6 +181,7 @@ class TaskViewModelTest {
                     hasHeader = false,
                     sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
                     taskOverlayEnabled = false,
+                    isCentralTask = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -200,6 +204,7 @@ class TaskViewModelTest {
                     hasHeader = false,
                     sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
                     taskOverlayEnabled = false,
+                    isCentralTask = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -218,6 +223,7 @@ class TaskViewModelTest {
                     hasHeader = false,
                     sysUiStatusNavFlags = FLAGS_APPEARANCE_LIGHT_THEME,
                     taskOverlayEnabled = false,
+                    isCentralTask = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -233,6 +239,7 @@ class TaskViewModelTest {
                     hasHeader = false,
                     sysUiStatusNavFlags = FLAGS_APPEARANCE_DEFAULT,
                     taskOverlayEnabled = false,
+                    isCentralTask = false,
                 )
             assertThat(sut.state.first()).isEqualTo(expectedResult)
         }
@@ -245,28 +252,6 @@ class TaskViewModelTest {
             recentsViewData.settledFullyVisibleTaskIds.value = setOf(1)
 
             assertThat(sut.state.first().taskOverlayEnabled).isTrue()
-        }
-
-    @Test
-    fun taskOverlayDisabled_when_usingGroupedTask() =
-        testScope.runTest {
-            sut = createTaskViewModel(TaskViewType.GROUPED)
-            sut.bind(TASK_MODEL_1.id)
-            recentsViewData.overlayEnabled.value = true
-            recentsViewData.settledFullyVisibleTaskIds.value = setOf(1)
-
-            assertThat(sut.state.first().taskOverlayEnabled).isFalse()
-        }
-
-    @Test
-    fun taskOverlayDisabled_when_usingDesktopTask() =
-        testScope.runTest {
-            sut = createTaskViewModel(TaskViewType.DESKTOP)
-            sut.bind(TASK_MODEL_1.id)
-            recentsViewData.overlayEnabled.value = true
-            recentsViewData.settledFullyVisibleTaskIds.value = setOf(1)
-
-            assertThat(sut.state.first().taskOverlayEnabled).isFalse()
         }
 
     @Test
@@ -287,6 +272,24 @@ class TaskViewModelTest {
             recentsViewData.settledFullyVisibleTaskIds.value = setOf(1)
 
             assertThat(sut.state.first().taskOverlayEnabled).isFalse()
+        }
+
+    @Test
+    fun isCentralTask_when_CentralTaskIdsMatchTaskIds() =
+        testScope.runTest {
+            sut.bind(TASK_MODEL_1.id, TASK_MODEL_2.id)
+            recentsViewData.centralTaskIds.value = setOf(TASK_MODEL_1.id, TASK_MODEL_2.id)
+
+            assertThat(sut.state.first().isCentralTask).isTrue()
+        }
+
+    @Test
+    fun isNotCentralTask_when_CentralTaskIdsDoMatchTaskIds() =
+        testScope.runTest {
+            sut.bind(TASK_MODEL_1.id, TASK_MODEL_2.id)
+            recentsViewData.centralTaskIds.value = setOf(TASK_MODEL_3.id)
+
+            assertThat(sut.state.first().isCentralTask).isFalse()
         }
 
     @Test

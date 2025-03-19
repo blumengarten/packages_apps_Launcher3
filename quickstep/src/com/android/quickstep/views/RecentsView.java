@@ -859,7 +859,7 @@ public abstract class RecentsView<
      */
     private boolean mAnyTaskHasBeenDismissed;
 
-    private final RecentsViewModel mRecentsViewModel;
+    protected final RecentsViewModel mRecentsViewModel;
     private final RecentsViewModelHelper mHelper;
     protected final RecentsViewUtils mUtils = new RecentsViewUtils(this);
     protected final RecentsDismissUtils mDismissUtils = new RecentsDismissUtils(this);
@@ -1595,7 +1595,7 @@ public abstract class RecentsView<
     /**
      * Returns true if the given TaskView is in expected scroll position.
      */
-    public boolean isTaskInExpectedScrollPosition(TaskView taskView) {
+    public boolean isTaskInExpectedScrollPosition(@NonNull TaskView taskView) {
         return getScrollForPage(indexOfChild(taskView))
                 == getPagedOrientationHandler().getPrimaryScroll(this);
     }
@@ -5993,6 +5993,9 @@ public abstract class RecentsView<
         updateCurrentTaskActionsVisibility();
         loadVisibleTaskData(TaskView.FLAG_UPDATE_ALL);
         updateEnabledOverlays();
+        if (enableRefactorTaskThumbnail()) {
+            mUtils.updateCentralTask();
+        }
     }
 
     @Override

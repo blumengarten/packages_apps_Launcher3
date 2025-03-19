@@ -29,7 +29,6 @@ import com.android.quickstep.recents.domain.usecase.IsThumbnailValidUseCase
 import com.android.quickstep.recents.domain.usecase.ThumbnailPosition
 import com.android.quickstep.recents.viewmodel.RecentsViewData
 import com.android.quickstep.views.TaskViewType
-import com.android.quickstep.views.TaskViewType.SINGLE
 import com.android.systemui.shared.recents.model.ThumbnailData
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -66,6 +65,12 @@ class TaskViewModel(
             }
             .distinctUntilChanged()
 
+    private val isCentralTask =
+        combine(taskIds, recentsViewData.centralTaskIds) { taskIds, centralTaskIds ->
+                taskIds == centralTaskIds
+            }
+            .distinctUntilChanged()
+
     private val taskData =
         taskIds.flatMapLatest { ids ->
             // Combine Tasks requests
@@ -79,14 +84,12 @@ class TaskViewModel(
         combine(recentsViewData.overlayEnabled, recentsViewData.settledFullyVisibleTaskIds) {
                 isOverlayEnabled,
                 settledFullyVisibleTaskIds ->
-                taskViewType == SINGLE &&
-                    isOverlayEnabled &&
-                    settledFullyVisibleTaskIds.any { it in taskIds.value }
+                isOverlayEnabled && settledFullyVisibleTaskIds.any { it in taskIds.value }
             }
             .distinctUntilChanged()
 
     val state: Flow<TaskTileUiState> =
-        combine(taskData, isLiveTile, overlayEnabled, ::mapToTaskTile)
+        combine(taskData, isLiveTile, overlayEnabled, isCentralTask, ::mapToTaskTile)
             .distinctUntilChanged()
             .flowOn(dispatcherProvider.background)
 
@@ -114,6 +117,7 @@ class TaskViewModel(
         tasks: List<TaskData>,
         isLiveTile: Boolean,
         overlayEnabled: Boolean,
+        isCentralTask: Boolean,
     ): TaskTileUiState {
         val firstThumbnailData = (tasks.firstOrNull() as? TaskData.Data)?.thumbnailData
         return TaskTileUiState(
@@ -122,6 +126,7 @@ class TaskViewModel(
             hasHeader = taskViewType == TaskViewType.DESKTOP,
             sysUiStatusNavFlags = getSysUiStatusNavFlagsUseCase(firstThumbnailData),
             taskOverlayEnabled = overlayEnabled,
+            isCentralTask = isCentralTask,
         )
     }
 
