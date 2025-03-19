@@ -24,6 +24,7 @@ import android.view.View
 import android.view.ViewStub
 import com.android.internal.jank.Cuj
 import com.android.launcher3.Flags.enableOverviewIconMenu
+import com.android.launcher3.Flags.enableRefactorTaskThumbnail
 import com.android.launcher3.R
 import com.android.launcher3.Utilities
 import com.android.launcher3.util.RunnableList
@@ -94,8 +95,16 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     override fun inflateViewStubs() {
         super.inflateViewStubs()
+        val taskContentViewLayoutId =
+            if (enableRefactorTaskThumbnail()) R.layout.task_content_view
+            else R.layout.task_thumbnail_deprecated
         findViewById<ViewStub>(R.id.bottomright_task_content_view)
-            ?.apply { layoutResource = R.layout.task_content_view }
+            ?.apply {
+                inflatedId =
+                    if (enableRefactorTaskThumbnail()) R.id.bottomright_task_content_view
+                    else R.id.bottomright_snapshot
+                layoutResource = taskContentViewLayoutId
+            }
             ?.inflate()
         findViewById<ViewStub>(R.id.bottomRight_icon)
             ?.apply {
@@ -134,7 +143,7 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
                 createTaskContainer(
                     secondaryTask,
                     R.id.bottomright_task_content_view,
-                    R.id.snapshot,
+                    if (enableRefactorTaskThumbnail()) R.id.snapshot else R.id.bottomright_snapshot,
                     R.id.bottomRight_icon,
                     R.id.show_windows_right,
                     R.id.bottomRight_digital_wellbeing_toast,

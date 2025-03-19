@@ -99,6 +99,7 @@ import com.android.quickstep.util.TaskCornerRadius
 import com.android.quickstep.util.TaskRemovedDuringLaunchListener
 import com.android.quickstep.util.displayId
 import com.android.quickstep.util.isExternalDisplay
+import com.android.quickstep.views.IconAppChipView.AppChipStatus
 import com.android.quickstep.views.RecentsView.UNBOUND_TASK_VIEW_ID
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.ThumbnailData
@@ -764,8 +765,16 @@ constructor(
     }
 
     protected open fun inflateViewStubs() {
+        val taskContentViewLayoutId =
+            if (enableRefactorTaskThumbnail()) R.layout.task_content_view
+            else R.layout.task_thumbnail_deprecated
+
         findViewById<ViewStub>(R.id.task_content_view)
-            ?.apply { layoutResource = R.layout.task_content_view }
+            ?.apply {
+                inflatedId =
+                    if (enableRefactorTaskThumbnail()) R.id.task_content_view else R.id.snapshot
+                layoutResource = taskContentViewLayoutId
+            }
             ?.inflate()
 
         findViewById<ViewStub>(R.id.icon)
@@ -935,7 +944,7 @@ constructor(
             taskContainers.forEach { container ->
                 container.bind()
                 if (enableRefactorTaskThumbnail()) {
-                    container.taskContentView.cornerRadius =
+                    (container.taskContentView as TaskContentView).cornerRadius =
                         thumbnailFullscreenParams.currentCornerRadius
                     container.taskContentView.doOnSizeChange { width, height ->
                         updateThumbnailValidity(container)
@@ -974,12 +983,17 @@ constructor(
     ): TaskContainer =
         traceSection("TaskView.createTaskContainer") {
             val iconView = findViewById<View>(iconViewId) as TaskViewIcon
-            val taskContentView = findViewById<TaskContentView>(taskContentViewId)
+            val taskContentView =
+                if (enableRefactorTaskThumbnail()) findViewById<View>(taskContentViewId)
+                else findViewById(thumbnailViewId)
+            val snapshotView =
+                if (enableRefactorTaskThumbnail()) taskContentView.findViewById(thumbnailViewId)
+                else taskContentView
             return TaskContainer(
                 this,
                 task,
                 taskContentView,
-                taskContentView.findViewById(thumbnailViewId),
+                snapshotView,
                 iconView,
                 TransformingTouchDelegate(iconView.asView()),
                 stagePosition,
@@ -1551,7 +1565,7 @@ constructor(
             recentsView.setTaskBorderEnabled(false)
         }
         return if (enableOverviewIconMenu() && menuContainer.iconView is IconAppChipView) {
-            if (menuContainer.iconView.isExpanded) {
+            if (menuContainer.iconView.status == AppChipStatus.Expanded) {
                 closeTaskMenu()
             } else {
                 menuContainer.iconView.revealAnim(/* isRevealing= */ true)
@@ -1800,7 +1814,8 @@ constructor(
         updateFullscreenParams(thumbnailFullscreenParams)
         taskContainers.forEach {
             if (enableRefactorTaskThumbnail()) {
-                it.taskContentView.cornerRadius = thumbnailFullscreenParams.currentCornerRadius
+                (it.taskContentView as TaskContentView).cornerRadius =
+                    thumbnailFullscreenParams.currentCornerRadius
             } else {
                 it.thumbnailViewDeprecated.setFullscreenParams(thumbnailFullscreenParams)
             }
