@@ -3367,8 +3367,8 @@ public abstract class RecentsView<
         int snappedPage = isKeyboardTaskFocusPending() ? mKeyboardTaskFocusIndex : getNextPage();
         TaskView snappedTaskView = getTaskViewAt(snappedPage);
         TaskView homeTaskView = getHomeTaskView();
-        TaskView expectedCurrentTaskView = mUtils.getExpectedCurrentTask(getFocusedTaskView(),
-                getRunningTaskView());
+        TaskView expectedCurrentTaskView = mUtils.getExpectedCurrentTask(getRunningTaskView(),
+                getFocusedTaskView());
         TaskView nextFocusedTaskView = null;
 
         // Don't clear the top row, if the user has dismissed a task, to maintain the task order.
