@@ -18,6 +18,7 @@ package com.android.launcher3.taskbar.bubbles;
 import static com.android.launcher3.LauncherAnimUtils.VIEW_ALPHA;
 
 import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.annotation.NonNull;
@@ -560,28 +561,50 @@ public class BubbleBarView extends FrameLayout {
         // First animator hides the bar.
         // After it completes, bubble positions in the bar and arrow position is updated.
         // Second animator is started to show the bar.
-        ObjectAnimator alphaOutAnim = ObjectAnimator.ofFloat(
-                this, getLocationAnimAlphaProperty(), 0f);
-        mBubbleBarLocationAnimator = BarsLocationAnimatorHelper.getBubbleBarLocationOutAnimator(
-                this,
-                bubbleBarLocation,
-                alphaOutAnim);
+        mBubbleBarLocationAnimator = animateToBubbleBarLocationOut(bubbleBarLocation);
         mBubbleBarLocationAnimator.addListener(AnimatorListeners.forEndCallback(() -> {
-            updateBubblesLayoutProperties(bubbleBarLocation);
-            mBubbleBarBackground.setAnchorLeft(bubbleBarLocation.isOnLeft(isLayoutRtl()));
-            ObjectAnimator alphaInAnim = ObjectAnimator.ofFloat(BubbleBarView.this,
-                    getLocationAnimAlphaProperty(), 1f);
-
             // Animate it in
-            mBubbleBarLocationAnimator = BarsLocationAnimatorHelper.getBubbleBarLocationInAnimator(
-                    bubbleBarLocation,
-                    mBubbleBarLocation,
-                    getDistanceFromOtherSide(),
-                    alphaInAnim,
-                    BubbleBarView.this);
+            mBubbleBarLocationAnimator = animateToBubbleBarLocationIn(mBubbleBarLocation,
+                    bubbleBarLocation);
             mBubbleBarLocationAnimator.start();
         }));
         mBubbleBarLocationAnimator.start();
+    }
+
+    /** Creates animator for animating bubble bar in. */
+    public Animator animateToBubbleBarLocationIn(BubbleBarLocation fromLocation,
+            BubbleBarLocation toLocation) {
+        updateBubblesLayoutProperties(toLocation);
+        mBubbleBarBackground.setAnchorLeft(toLocation.isOnLeft(isLayoutRtl()));
+        ObjectAnimator alphaInAnim = ObjectAnimator.ofFloat(BubbleBarView.this,
+                getLocationAnimAlphaProperty(), 1f);
+        return BarsLocationAnimatorHelper.getBubbleBarLocationInAnimator(toLocation, fromLocation,
+                getDistanceFromOtherSide(), alphaInAnim, this);
+    }
+
+    /**
+     * Creates animator for animating bubble bar out.
+     *
+     * @param targetLocation the location bubble br should animate to.
+     */
+    public Animator animateToBubbleBarLocationOut(BubbleBarLocation targetLocation) {
+        ObjectAnimator alphaOutAnim = ObjectAnimator.ofFloat(
+                this, getLocationAnimAlphaProperty(), 0f);
+        Animator outAnimation = BarsLocationAnimatorHelper.getBubbleBarLocationOutAnimator(
+                this,
+                targetLocation,
+                alphaOutAnim);
+        outAnimation.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(@NonNull Animator animation, boolean isReverse) {
+                // need to restore the original bar view state in case icon is dropped to the bubble
+                // bar original location
+                updateBubblesLayoutProperties(targetLocation);
+                mBubbleBarBackground.setAnchorLeft(targetLocation.isOnLeft(isLayoutRtl()));
+                setTranslationX(0f);
+            }
+        });
+        return outAnimation;
     }
 
     /**
