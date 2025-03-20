@@ -100,6 +100,8 @@ import com.android.quickstep.util.TaskRemovedDuringLaunchListener
 import com.android.quickstep.util.displayId
 import com.android.quickstep.util.isExternalDisplay
 import com.android.quickstep.views.IconAppChipView.AppChipStatus
+import com.android.quickstep.views.OverviewActionsView.DISABLED_NO_THUMBNAIL
+import com.android.quickstep.views.OverviewActionsView.DISABLED_ROTATED
 import com.android.quickstep.views.RecentsView.UNBOUND_TASK_VIEW_ID
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.ThumbnailData
@@ -829,6 +831,20 @@ constructor(
                         height = container.thumbnailView.height,
                     )
                 container.setOverlayEnabled(state.taskOverlayEnabled, thumbnailPosition)
+                if (state.isCentralTask) {
+                    this.container.actionsView.let {
+                        it.updateDisabledFlags(
+                            DISABLED_ROTATED,
+                            thumbnailPosition?.isRotated ?: false,
+                        )
+                        it.updateDisabledFlags(
+                            DISABLED_NO_THUMBNAIL,
+                            state.tasks.any { taskData ->
+                                (taskData as? TaskData.Data)?.thumbnailData?.thumbnail == null
+                            },
+                        )
+                    }
+                }
 
                 if (enableOverviewIconMenu()) {
                     setIconState(container, containerState)

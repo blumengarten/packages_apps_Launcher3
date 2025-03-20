@@ -391,6 +391,27 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
         }
     }
 
+    fun updateCentralTask() {
+        val isTablet: Boolean = getDeviceProfile().isTablet
+        val actionsViewCanRelateToTaskView = !(isTablet && enableGridOnlyOverview())
+        val focusedTaskView = recentsView.focusedTaskView
+        val currentPageTaskView = recentsView.currentPageTaskView
+
+        fun isInExpectedScrollPosition(taskView: TaskView?) =
+            taskView?.let { recentsView.isTaskInExpectedScrollPosition(it) } ?: false
+
+        val centralTaskIds: Set<Int> =
+            when {
+                !actionsViewCanRelateToTaskView -> emptySet()
+                isTablet && isInExpectedScrollPosition(focusedTaskView) ->
+                    focusedTaskView!!.taskIdSet
+                isInExpectedScrollPosition(currentPageTaskView) -> currentPageTaskView!!.taskIdSet
+                else -> emptySet()
+            }
+
+        recentsView.mRecentsViewModel.updateCentralTaskIds(centralTaskIds)
+    }
+
     var deskExplodeProgress: Float = 0f
         set(value) {
             field = value

@@ -37,6 +37,7 @@ data class TaskTileUiState(
     val hasHeader: Boolean,
     val sysUiStatusNavFlags: Int,
     val taskOverlayEnabled: Boolean,
+    val isCentralTask: Boolean,
 )
 
 sealed class TaskData {

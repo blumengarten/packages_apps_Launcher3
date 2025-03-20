@@ -202,10 +202,14 @@ public class TaskOverlayFactory implements ResourceBasedOverride {
          */
         public void initOverlay(Task task, @Nullable Bitmap thumbnail, Matrix matrix,
                 boolean rotated) {
-            getActionsView().updateDisabledFlags(DISABLED_NO_THUMBNAIL, thumbnail == null);
+            if (!enableRefactorTaskThumbnail()) {
+                getActionsView().updateDisabledFlags(DISABLED_NO_THUMBNAIL, thumbnail == null);
+            }
 
             if (thumbnail != null) {
-                getActionsView().updateDisabledFlags(DISABLED_ROTATED, rotated);
+                if (!enableRefactorTaskThumbnail()) {
+                    getActionsView().updateDisabledFlags(DISABLED_ROTATED, rotated);
+                }
                 getActionsView().setCallbacks(new OverlayUICallbacksImpl(isRealSnapshot(), task));
             }
         }

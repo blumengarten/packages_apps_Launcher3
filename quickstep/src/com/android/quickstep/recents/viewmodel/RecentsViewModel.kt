@@ -38,6 +38,10 @@ class RecentsViewModel(
         recentsViewData.settledFullyVisibleTaskIds.value = taskIds
     }
 
+    fun updateCentralTaskIds(taskIds: Set<Int>) {
+        recentsViewData.centralTaskIds.value = taskIds
+    }
+
     fun setOverlayEnabled(isOverlayEnabled: Boolean) {
         recentsViewData.overlayEnabled.value = isOverlayEnabled
     }
