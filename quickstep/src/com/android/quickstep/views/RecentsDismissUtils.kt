@@ -24,7 +24,6 @@ import androidx.dynamicanimation.animation.SpringForce
 import com.android.launcher3.Flags.enableGridOnlyOverview
 import com.android.launcher3.R
 import com.android.launcher3.Utilities.boundToRange
-import com.android.launcher3.touch.SingleAxisSwipeDetector
 import com.android.launcher3.util.DynamicResource
 import com.android.launcher3.util.MSDLPlayerWrapper
 import com.android.quickstep.util.TaskGridNavHelper
@@ -33,6 +32,7 @@ import com.google.android.msdl.data.model.MSDLToken
 import com.google.android.msdl.domain.InteractionProperties
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlin.math.sign
 
 /**
  * Helper class for [RecentsView]. This util class contains refactored and extracted functions from
@@ -51,7 +51,6 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
         draggedTaskView: TaskView?,
         velocity: Float,
         isDismissing: Boolean,
-        detector: SingleAxisSwipeDetector,
         dismissLength: Int,
         onEndRunnable: () -> Unit,
     ): SpringAnimation? {
@@ -60,11 +59,14 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
             FloatPropertyCompat.createFloatPropertyCompat(
                 draggedTaskView.secondaryDismissTranslationProperty
             )
+        val minVelocity =
+            recentsView.pagedOrientationHandler.getSecondaryDimension(draggedTaskView).toFloat()
+        val startVelocity = abs(velocity).coerceAtLeast(minVelocity) * velocity.sign
         // Animate dragged task towards dismissal or rest state.
         val draggedTaskViewSpringAnimation =
             SpringAnimation(draggedTaskView, taskDismissFloatProperty)
                 .setSpring(createExpressiveDismissSpringForce())
-                .setStartVelocity(if (detector.isFling(velocity)) velocity else 0f)
+                .setStartVelocity(startVelocity)
                 .addUpdateListener { animation, value, _ ->
                     if (isDismissing && abs(value) >= abs(dismissLength)) {
                         animation.cancel()
@@ -103,6 +105,7 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
                 draggedTaskViewSpringAnimation,
                 driverProgressThreshold = 0f,
                 isSpringDirectionVertical = true,
+                minVelocity = startVelocity,
             )
         }
         return draggedTaskViewSpringAnimation
@@ -114,15 +117,11 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
         tasksToExclude: List<TaskView> = emptyList(),
         driverProgressThreshold: Float,
         isSpringDirectionVertical: Boolean,
+        minVelocity: Float,
     ) {
         // Empty spring animation exists for conditional start, and to drive neighboring springs.
         val neighborsToSettle =
             SpringAnimation(FloatValueHolder()).setSpring(createExpressiveDismissSpringForce())
-        addThresholdSpringAnimationTrigger(
-            springAnimationDriver,
-            progressThreshold = driverProgressThreshold,
-            neighborsToSettle,
-        )
 
         // Add tasks before dragged index, fanning out from the dragged task.
         // The order they are added matters, as each spring drives the next.
@@ -152,6 +151,19 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
                         isSpringDirectionVertical,
                     )
             }
+
+        val isCurrentDisplacementAboveOrigin =
+            recentsView.pagedOrientationHandler.isGoingUp(
+                draggedTaskView.secondaryDismissTranslationProperty.get(draggedTaskView),
+                recentsView.isRtl,
+            )
+        addThresholdSpringAnimationTrigger(
+            springAnimationDriver,
+            progressThreshold = driverProgressThreshold,
+            neighborsToSettle,
+            isCurrentDisplacementAboveOrigin,
+            minVelocity,
+        )
     }
 
     /** As spring passes threshold for the first time, run conditional spring with velocity. */
@@ -159,25 +171,35 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
         springAnimationDriver: SpringAnimation,
         progressThreshold: Float,
         conditionalSpring: SpringAnimation,
+        isCurrentDisplacementAboveOrigin: Boolean,
+        minVelocity: Float,
     ) {
-        var lastPosition = 0f
-        var startSettling = false
-        springAnimationDriver.addUpdateListener { _, value, velocity ->
-            // We do not compare to the threshold directly, as the update listener
-            // does not necessarily hit every value. Do not check again once it has started
-            // settling, as a spring can bounce past the end value multiple times.
-            if (startSettling) return@addUpdateListener
-            if (
-                lastPosition < progressThreshold && value >= progressThreshold ||
-                    lastPosition > progressThreshold && value <= progressThreshold
-            ) {
-                startSettling = true
+        val runSettlingAtVelocity = { velocity: Float ->
+            conditionalSpring.setStartVelocity(velocity).animateToFinalPosition(0f)
+            playDismissSettlingHaptic(velocity)
+        }
+        if (isCurrentDisplacementAboveOrigin) {
+            var lastPosition = 0f
+            var startSettling = false
+            springAnimationDriver.addUpdateListener { _, value, velocity ->
+                // We do not compare to the threshold directly, as the update listener
+                // does not necessarily hit every value. Do not check again once it has started
+                // settling, as a spring can bounce past the end value multiple times.
+                if (startSettling) return@addUpdateListener
+                if (
+                    lastPosition < progressThreshold && value >= progressThreshold ||
+                        lastPosition > progressThreshold && value <= progressThreshold
+                ) {
+                    startSettling = true
+                }
+                lastPosition = value
+                if (startSettling) {
+                    runSettlingAtVelocity(velocity)
+                }
             }
-            lastPosition = value
-            if (startSettling) {
-                conditionalSpring.setStartVelocity(velocity).animateToFinalPosition(0f)
-                playDismissSettlingHaptic(velocity)
-            }
+        } else {
+            // Run settling animations immediately when displacement is already below settled state.
+            runSettlingAtVelocity(minVelocity)
         }
     }
 
@@ -429,6 +451,7 @@ class RecentsDismissUtils(private val recentsView: RecentsView<*, *>) {
                 tasksToExclude = tasksToReflow,
                 driverProgressThreshold = dismissedTaskGap,
                 isSpringDirectionVertical = false,
+                minVelocity = 0f,
             )
         } else {
             springAnimationDriver.addEndListener { _, _, _, _ ->

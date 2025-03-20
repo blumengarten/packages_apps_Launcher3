@@ -1593,8 +1593,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         } else if (tag instanceof AppInfo) {
             // Tapping an item in AllApps
             AppInfo info = (AppInfo) tag;
-            if (recents != null
-                    && taskbarUIController.getRecentsView().isSplitSelectionActive()) {
+            if (recents != null && recents.isSplitSelectionActive()) {
                 // If we are selecting a second app for split, launch the split tasks
                 taskbarUIController.triggerSecondAppForSplit(info, info.intent, view);
             } else {

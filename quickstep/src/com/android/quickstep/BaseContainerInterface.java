@@ -182,7 +182,7 @@ public abstract class BaseContainerInterface<STATE_TYPE extends BaseState<STATE_
      * Called when the gesture ends and the animation starts towards the given target. Used to add
      * an optional additional animation with the same duration.
      */
-    public @Nullable Animator getParallelAnimationToLauncher(
+    public @Nullable Animator getParallelAnimationToGestureEndTarget(
             GestureState.GestureEndTarget endTarget, long duration,
             RecentsAnimationCallbacks callbacks) {
         if (endTarget == RECENTS) {

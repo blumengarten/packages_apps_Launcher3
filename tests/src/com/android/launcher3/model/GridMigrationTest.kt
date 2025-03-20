@@ -22,6 +22,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.launcher3.Flags
+import com.android.launcher3.GridType.Companion.GRID_TYPE_ANY
 import com.android.launcher3.InvariantDeviceProfile.TYPE_PHONE
 import com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME
 import com.android.launcher3.celllayout.board.CellLayoutBoard
@@ -192,15 +193,22 @@ class GridMigrationTest {
     @Test
     fun `5x5 to 3x3`() =
         runTest(
-            src = GridMigrationData(DB_FILE, DeviceGridState(5, 5, 5, TYPE_PHONE, DB_FILE)),
+            src =
+                GridMigrationData(
+                    DB_FILE,
+                    DeviceGridState(5, 5, 5, TYPE_PHONE, DB_FILE, GRID_TYPE_ANY),
+                ),
             dst =
                 GridMigrationData(
                     null, // in memory db, to download a new db change null for
                     // the filename of the db name to store it. Do not use existing names.
-                    DeviceGridState(3, 3, 3, TYPE_PHONE, ""),
+                    DeviceGridState(3, 3, 3, TYPE_PHONE, "", GRID_TYPE_ANY),
                 ),
             target =
-                GridMigrationData("result5x5to3x3.db", DeviceGridState(3, 3, 3, TYPE_PHONE, "")),
+                GridMigrationData(
+                    "result5x5to3x3.db",
+                    DeviceGridState(3, 3, 3, TYPE_PHONE, "", GRID_TYPE_ANY),
+                ),
         )
 
     @JvmField
@@ -215,15 +223,22 @@ class GridMigrationTest {
     @Test
     fun `5x5 to 4x7`() =
         runTest(
-            src = GridMigrationData(DB_FILE, DeviceGridState(5, 5, 5, TYPE_PHONE, DB_FILE)),
+            src =
+                GridMigrationData(
+                    DB_FILE,
+                    DeviceGridState(5, 5, 5, TYPE_PHONE, DB_FILE, GRID_TYPE_ANY),
+                ),
             dst =
                 GridMigrationData(
                     null, // in memory db, to download a new db change null for
                     // the filename of the db name to store it. Do not use existing names.
-                    DeviceGridState(4, 7, 4, TYPE_PHONE, ""),
+                    DeviceGridState(4, 7, 4, TYPE_PHONE, "", GRID_TYPE_ANY),
                 ),
             target =
-                GridMigrationData("result5x5to4x7.db", DeviceGridState(4, 7, 4, TYPE_PHONE, "")),
+                GridMigrationData(
+                    "result5x5to4x7.db",
+                    DeviceGridState(4, 7, 4, TYPE_PHONE, "", GRID_TYPE_ANY),
+                ),
         )
 
     @JvmField
@@ -238,16 +253,23 @@ class GridMigrationTest {
     @Test
     fun `5x5 to 5x8`() =
         runTest(
-            src = GridMigrationData(DB_FILE, DeviceGridState(5, 5, 5, TYPE_PHONE, DB_FILE)),
+            src =
+                GridMigrationData(
+                    DB_FILE,
+                    DeviceGridState(5, 5, 5, TYPE_PHONE, DB_FILE, GRID_TYPE_ANY),
+                ),
             dst =
                 GridMigrationData(
                     null, // in memory db, to download a new db change null
                     // for
                     // the filename of the db name to store it. Do not use existing names.
-                    DeviceGridState(5, 8, 5, TYPE_PHONE, ""),
+                    DeviceGridState(5, 8, 5, TYPE_PHONE, "", GRID_TYPE_ANY),
                 ),
             target =
-                GridMigrationData("result5x5to5x8.db", DeviceGridState(5, 8, 5, TYPE_PHONE, "")),
+                GridMigrationData(
+                    "result5x5to5x8.db",
+                    DeviceGridState(5, 8, 5, TYPE_PHONE, "", GRID_TYPE_ANY),
+                ),
         )
 
     companion object {

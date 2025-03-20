@@ -890,6 +890,12 @@ public class StatsLogManager implements ResourceBasedOverride {
         @UiEvent(doc = "Row shift grid migration occurred")
         LAUNCHER_ROW_SHIFT_GRID_MIGRATION(2201),
 
+        @UiEvent(doc = "Do standard migration when upgrading to one grid")
+        LAUNCHER_STANDARD_ONE_GRID_MIGRATION(2205),
+
+        @UiEvent(doc = "Do row shift migration when upgrading to one grid")
+        LAUNCHER_ROW_SHIFT_ONE_GRID_MIGRATION(2206),
+
         // ADD MORE
         ;
 

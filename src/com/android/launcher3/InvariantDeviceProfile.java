@@ -16,6 +16,9 @@
 
 package com.android.launcher3;
 
+import static com.android.launcher3.GridType.GRID_TYPE_ANY;
+import static com.android.launcher3.GridType.GRID_TYPE_NON_ONE_GRID;
+import static com.android.launcher3.GridType.GRID_TYPE_ONE_GRID;
 import static com.android.launcher3.LauncherPrefs.DB_FILE;
 import static com.android.launcher3.LauncherPrefs.ENABLE_TWOLINE_ALLAPPS_TOGGLE;
 import static com.android.launcher3.LauncherPrefs.FIXED_LANDSCAPE_MODE;
@@ -241,6 +244,8 @@ public class InvariantDeviceProfile {
      */
     public boolean isFixedLandscape = false;
 
+    @GridType
+    public int gridType;
     public String dbFile;
     public int defaultLayoutId;
     public int demoModeLayoutId;
@@ -369,6 +374,7 @@ public class InvariantDeviceProfile {
         numColumns = closestProfile.numColumns;
         numSearchContainerColumns = closestProfile.numSearchContainerColumns;
         dbFile = closestProfile.dbFile;
+        gridType = closestProfile.gridType;
         defaultLayoutId = closestProfile.defaultLayoutId;
         demoModeLayoutId = closestProfile.demoModeLayoutId;
 
@@ -936,10 +942,7 @@ public class InvariantDeviceProfile {
         private static final int DEVICE_CATEGORY_PHONE = 1 << 0;
         private static final int DEVICE_CATEGORY_TABLET = 1 << 1;
         private static final int DEVICE_CATEGORY_MULTI_DISPLAY = 1 << 2;
-        private static final int GRID_TYPE_ONE_GRID = 1 << 0;
-        private static final int GRID_TYPE_NON_ONE_GRID = 1 << 1;
-        private static final int GRID_TYPE_ALL = 1 << 2;
-        private static final int DEVICE_CATEGORY_ALL =
+        private static final int DEVICE_CATEGORY_ANY =
                 DEVICE_CATEGORY_PHONE | DEVICE_CATEGORY_TABLET | DEVICE_CATEGORY_MULTI_DISPLAY;
 
         private static final int INLINE_QSB_FOR_PORTRAIT = 1 << 0;
@@ -955,6 +958,7 @@ public class InvariantDeviceProfile {
         public final int numColumns;
         public final int numSearchContainerColumns;
         public final int deviceCategory;
+        @GridType
         public final int gridType;
 
         private final int[] numFolderRows = new int[COUNT_SIZES];
@@ -1003,7 +1007,7 @@ public class InvariantDeviceProfile {
             gridIconId = a.getResourceId(
                     R.styleable.GridDisplayOption_gridIconId, INVALID_RESOURCE_HANDLE);
             deviceCategory = a.getInt(R.styleable.GridDisplayOption_deviceCategory,
-                    DEVICE_CATEGORY_ALL);
+                    DEVICE_CATEGORY_ANY);
             mGridSizeSpecsId = a.getResourceId(
                     R.styleable.GridDisplayOption_gridSizeSpecsId, INVALID_RESOURCE_HANDLE);
             mIsDualGrid = a.getBoolean(R.styleable.GridDisplayOption_isDualGrid, false);
@@ -1141,7 +1145,7 @@ public class InvariantDeviceProfile {
             }
 
             mIsFixedLandscape = a.getBoolean(R.styleable.GridDisplayOption_isFixedLandscape, false);
-            gridType = a.getInt(R.styleable.GridDisplayOption_gridType, GRID_TYPE_ALL);
+            gridType = a.getInt(R.styleable.GridDisplayOption_gridType, GRID_TYPE_ANY);
 
             int inlineForRotation = a.getInt(R.styleable.GridDisplayOption_inlineQsb,
                     DONT_INLINE_QSB);

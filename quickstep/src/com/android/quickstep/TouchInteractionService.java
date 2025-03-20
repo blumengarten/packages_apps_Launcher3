@@ -95,7 +95,6 @@ import com.android.quickstep.OverviewCommandHelper.CommandType;
 import com.android.quickstep.OverviewComponentObserver.OverviewChangeListener;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
 import com.android.quickstep.fallback.window.RecentsDisplayModel.RecentsDisplayResource;
-import com.android.quickstep.fallback.window.RecentsWindowFlags;
 import com.android.quickstep.fallback.window.RecentsWindowSwipeHandler;
 import com.android.quickstep.inputconsumers.BubbleBarInputConsumer;
 import com.android.quickstep.inputconsumers.OneHandedModeInputConsumer;
@@ -965,7 +964,7 @@ public class TouchInteractionService extends Service {
                         mGestureState,
                         taskAnimationManager,
                         inputMonitorCompat,
-                        getSwipeUpHandlerFactory(),
+                        getSwipeUpHandlerFactory(displayId),
                         this::onConsumerInactive,
                         inputEventReceiver,
                         mTaskbarManager,
@@ -1110,11 +1109,20 @@ public class TouchInteractionService extends Service {
         return gestureState;
     }
 
-    public AbsSwipeUpHandler.Factory getSwipeUpHandlerFactory() {
-        return mOverviewComponentObserver.isHomeAndOverviewSame()
-                ? mLauncherSwipeHandlerFactory
-                : (RecentsWindowFlags.Companion.getEnableOverviewInWindow()
-                ? mRecentsWindowSwipeHandlerFactory : mFallbackSwipeHandlerFactory);
+    /**
+     * Returns a AbsSwipeUpHandler.Factory, used to instantiate AbsSwipeUpHandler later.
+     * @param displayId The displayId of the display this handler will be used on.
+     */
+    public AbsSwipeUpHandler.Factory getSwipeUpHandlerFactory(int displayId) {
+        BaseContainerInterface<?, ?> containerInterface =
+                mOverviewComponentObserver.getContainerInterface(displayId);
+        if (containerInterface instanceof FallbackWindowInterface) {
+            return mRecentsWindowSwipeHandlerFactory;
+        } else if (containerInterface instanceof LauncherActivityInterface) {
+            return mLauncherSwipeHandlerFactory;
+        } else {
+            return mFallbackSwipeHandlerFactory;
+        }
     }
 
     /**

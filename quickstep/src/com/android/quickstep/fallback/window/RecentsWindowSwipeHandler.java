@@ -222,6 +222,7 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
     @Override
     protected void finishRecentsControllerToHome(Runnable callback) {
         final Runnable recentsCallback;
+        // TODO(b/404866791): check if this is actually necessary for this recents-in-window class
         if (mAppCanEnterPip) {
             // Make sure Launcher is resumed after auto-enter-pip transition to actually trigger
             // the PiP task appearing.
@@ -238,7 +239,7 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
         }
         mRecentsView.cleanupRemoteTargets();
         mRecentsAnimationController.finish(
-                mAppCanEnterPip /* toRecents */, recentsCallback, true /* sendUserLeaveHint */);
+                true /* toRecents */, recentsCallback, true /* sendUserLeaveHint */);
     }
 
     @Override

@@ -762,7 +762,7 @@ public class LoaderTask implements Runnable {
                 }
 
                 IconRequestInfo<AppInfo> iconRequestInfo = getAppInfoIconRequestInfo(
-                        appInfo, app, mWorkspaceIconRequestInfos);
+                        appInfo, app, mWorkspaceIconRequestInfos, mIsRestoreFromBackup);
                 allAppsItemRequestInfos.add(iconRequestInfo);
                 mBgAllAppsList.add(appInfo, app, false);
             }
@@ -831,9 +831,10 @@ public class LoaderTask implements Runnable {
     IconRequestInfo<AppInfo> getAppInfoIconRequestInfo(
             AppInfo appInfo,
             LauncherActivityInfo activityInfo,
-            List<IconRequestInfo<WorkspaceItemInfo>> workspaceRequestInfos
+            List<IconRequestInfo<WorkspaceItemInfo>> workspaceRequestInfos,
+            boolean isRestoreFromBackup
     ) {
-        if (Flags.restoreArchivedAppIconsFromDb()) {
+        if (Flags.restoreArchivedAppIconsFromDb() && isRestoreFromBackup) {
             Optional<IconRequestInfo<WorkspaceItemInfo>> workspaceIconRequest =
                     workspaceRequestInfos.stream()
                             .filter(request -> appInfo.getTargetComponent().equals(

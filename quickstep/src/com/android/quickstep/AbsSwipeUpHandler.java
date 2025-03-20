@@ -1614,7 +1614,7 @@ public abstract class AbsSwipeUpHandler<
             TaskStackChangeListeners.getInstance().registerTaskStackListener(
                     mActivityRestartListener);
 
-            mParallelRunningAnim = mContainerInterface.getParallelAnimationToLauncher(
+            mParallelRunningAnim = mContainerInterface.getParallelAnimationToGestureEndTarget(
                     mGestureState.getEndTarget(), duration,
                     mTaskAnimationManager.getCurrentCallbacks());
             if (mParallelRunningAnim != null) {

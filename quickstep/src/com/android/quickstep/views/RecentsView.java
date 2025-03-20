@@ -169,7 +169,6 @@ import com.android.launcher3.statemanager.StatefulContainer;
 import com.android.launcher3.testing.TestLogging;
 import com.android.launcher3.testing.shared.TestProtocol;
 import com.android.launcher3.touch.OverScroll;
-import com.android.launcher3.touch.SingleAxisSwipeDetector;
 import com.android.launcher3.util.CancellableTask;
 import com.android.launcher3.util.DynamicResource;
 import com.android.launcher3.util.IntArray;
@@ -859,7 +858,7 @@ public abstract class RecentsView<
      */
     private boolean mAnyTaskHasBeenDismissed;
 
-    private final RecentsViewModel mRecentsViewModel;
+    protected final RecentsViewModel mRecentsViewModel;
     private final RecentsViewModelHelper mHelper;
     protected final RecentsViewUtils mUtils = new RecentsViewUtils(this);
     protected final RecentsDismissUtils mDismissUtils = new RecentsDismissUtils(this);
@@ -1595,7 +1594,7 @@ public abstract class RecentsView<
     /**
      * Returns true if the given TaskView is in expected scroll position.
      */
-    public boolean isTaskInExpectedScrollPosition(TaskView taskView) {
+    public boolean isTaskInExpectedScrollPosition(@NonNull TaskView taskView) {
         return getScrollForPage(indexOfChild(taskView))
                 == getPagedOrientationHandler().getPrimaryScroll(this);
     }
@@ -3943,8 +3942,10 @@ public abstract class RecentsView<
                 newClearAllShortTotalWidthTranslation = expectedFirstTaskStart - firstTaskStart;
             }
         }
-        if (lastGridTaskView != null && (isTaskViewVisible(lastGridTaskView) || (
-                isExpressiveDismiss && lastGridTaskView == dismissedTaskView))) {
+        if (lastGridTaskView != null && (
+                (!isExpressiveDismiss && lastGridTaskView.isVisibleToUser()) || (isExpressiveDismiss
+                        && (isTaskViewVisible(lastGridTaskView)
+                        || lastGridTaskView == dismissedTaskView)))) {
             // After dismissal, animate translation of the remaining tasks to fill any gap left
             // between the end of the grid and the clear all button. Only animate if the clear
             // all button is visible or would become visible after dismissal.
@@ -5993,6 +5994,9 @@ public abstract class RecentsView<
         updateCurrentTaskActionsVisibility();
         loadVisibleTaskData(TaskView.FLAG_UPDATE_ALL);
         updateEnabledOverlays();
+        if (enableRefactorTaskThumbnail()) {
+            mUtils.updateCentralTask();
+        }
     }
 
     @Override
@@ -7186,10 +7190,10 @@ public abstract class RecentsView<
      * spring in response to the perceived impact of the settling task.
      */
     public SpringAnimation createTaskDismissSettlingSpringAnimation(TaskView draggedTaskView,
-            float velocity, boolean isDismissing, SingleAxisSwipeDetector detector,
-            int dismissLength, Function0<Unit> onEndRunnable) {
+            float velocity, boolean isDismissing, int dismissLength,
+            Function0<Unit> onEndRunnable) {
         return mDismissUtils.createTaskDismissSettlingSpringAnimation(draggedTaskView, velocity,
-                isDismissing, detector, dismissLength, onEndRunnable);
+                isDismissing, dismissLength, onEndRunnable);
     }
 
     /**

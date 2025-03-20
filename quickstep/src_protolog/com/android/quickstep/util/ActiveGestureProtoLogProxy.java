@@ -544,7 +544,7 @@ public class ActiveGestureProtoLogProxy {
             @NonNull Point displaySize, @NonNull RectF swipeRegion, @NonNull RectF ohmRegion,
             int gesturalHeight, int largerGesturalHeight, @NonNull String reason) {
         if (!enableActiveGestureProtoLog() || !isProtoLogInitialized()) return;
-        ProtoLog.d(ACTIVE_GESTURE_LOG, 
+        ProtoLog.d(ACTIVE_GESTURE_LOG,
                 "OrientationTouchTransformer.createRegionForDisplay: "
                         + "dispRot=%d, dispSize=%s, swipeRegion=%s, ohmRegion=%s, "
                         + "gesturalHeight=%d, largerGesturalHeight=%d, reason=%s",
@@ -559,5 +559,15 @@ public class ActiveGestureProtoLogProxy {
         if (!enableActiveGestureProtoLog() || !isProtoLogInitialized()) return;
         ProtoLog.d(ACTIVE_GESTURE_LOG, "TaskAnimationManager not available for displayId=%d",
                 displayId);
+    }
+
+    public static void logGestureStartSwipeHandler(@NonNull String interactionHandler) {
+        ActiveGestureLog.INSTANCE.addLog(new ActiveGestureLog.CompoundString(
+                "OtherActivityInputConsumer.startTouchTrackingForWindowAnimation: "
+                        + "interactionHandler=%s", interactionHandler));
+        if (!enableActiveGestureProtoLog() || !isProtoLogInitialized()) return;
+        ProtoLog.d(ACTIVE_GESTURE_LOG,
+                "OtherActivityInputConsumer.startTouchTrackingForWindowAnimation: "
+                        + "interactionHandler=%s", interactionHandler);
     }
 }

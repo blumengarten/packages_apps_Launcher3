@@ -524,15 +524,14 @@ class WorkspaceItemProcessor(
             WidgetInflater.TYPE_PENDING -> {
                 tempPackageKey.update(component.packageName, c.user)
                 val si = installingPkgs[tempPackageKey]
-
+                val isArchived =
+                    ApplicationInfoWrapper(context, component.packageName, c.user).isArchived()
                 if (
                     !c.hasRestoreFlag(LauncherAppWidgetInfo.FLAG_RESTORE_STARTED) &&
                         !isSafeMode &&
                         (si == null) &&
                         (lapi == null) &&
-                        !(Flags.enableSupportForArchiving() &&
-                            ApplicationInfoWrapper(context, component.packageName, c.user)
-                                .isArchived())
+                        !isArchived
                 ) {
                     // Restore never started
                     c.markDeleted(
@@ -559,7 +558,13 @@ class WorkspaceItemProcessor(
                         appWidgetInfo.providerName,
                         appWidgetInfo.user,
                     )
-                iconCache.getTitleAndIconForApp(appWidgetInfo.pendingItemInfo, DEFAULT_LOOKUP_FLAG)
+                val iconLookupFlag =
+                    if (isArchived && Flags.restoreArchivedAppIconsFromDb()) {
+                        DEFAULT_LOOKUP_FLAG.withSkipAddToMemCache()
+                    } else {
+                        DEFAULT_LOOKUP_FLAG
+                    }
+                iconCache.getTitleAndIconForApp(appWidgetInfo.pendingItemInfo, iconLookupFlag)
             }
             WidgetInflater.TYPE_REAL ->
                 WidgetSizes.updateWidgetSizeRangesAsync(

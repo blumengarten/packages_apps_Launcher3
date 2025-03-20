@@ -18,6 +18,7 @@ package com.android.launcher3.folder;
 
 import static android.text.TextUtils.isEmpty;
 
+import static com.android.launcher3.Flags.enableLauncherVisualRefresh;
 import static com.android.launcher3.LauncherAnimUtils.SPRING_LOADED_EXIT_DELAY;
 import static com.android.launcher3.LauncherState.EDIT_MODE;
 import static com.android.launcher3.LauncherState.NORMAL;
@@ -299,6 +300,13 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         mContent.setFolder(this);
 
         mPageIndicator = findViewById(R.id.folder_page_indicator);
+        if (enableLauncherVisualRefresh()) {
+            MarginLayoutParams params = ((MarginLayoutParams) mPageIndicator.getLayoutParams());
+            int horizontalMargin = getContext().getResources()
+                    .getDimensionPixelSize(R.dimen.folder_footer_horiz_padding);
+            params.setMarginStart(horizontalMargin);
+            params.setMarginEnd(horizontalMargin);
+        }
         mFooter = findViewById(R.id.folder_footer);
         mFooterHeight = dp.folderFooterHeightPx;
         mFolderName = findViewById(R.id.folder_name);
@@ -311,7 +319,6 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
                 | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
                 | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
         mFolderName.forceDisableSuggestions(true);
-
 
         mKeyboardInsetAnimationCallback = new KeyboardInsetAnimationCallback(this);
         setWindowInsetsAnimationCallback(mKeyboardInsetAnimationCallback);
@@ -1267,6 +1274,23 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         int folderWidth = getPaddingLeft() + getPaddingRight() + contentWidth;
         int folderHeight = getFolderHeight(contentHeight);
         setMeasuredDimension(folderWidth, folderHeight);
+    }
+
+    /**
+     * If the Folder Title has less than 100dp of available width, we hide it. The reason we do this
+     * calculation in onSizeChange is because this callback is called 1x when the folder is opened.
+     * <p>
+     * The PageIndicator and the Folder Title share the same horizontal linear layout, but both
+     * are dynamically sized. Therefore, we are setting visibility of the folder title AFTER the
+     * layout is measured.
+     */
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        int minTitleWidth = getResources().getDimensionPixelSize(R.dimen.folder_title_min_width);
+        if (enableLauncherVisualRefresh() && mFolderName.getMeasuredWidth() < minTitleWidth) {
+            mFolderName.setVisibility(View.GONE);
+        }
     }
 
     /**

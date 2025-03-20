@@ -450,10 +450,10 @@ constructor(
             )
         gestureState.isHandlingAtomicEvent = true
         val interactionHandler =
-            touchInteractionService.swipeUpHandlerFactory.newHandler(
-                gestureState,
-                command.createTime,
-            )
+            touchInteractionService
+                // TODO(b/404757863): use command.displayId instead of focusedDisplayId.
+                .getSwipeUpHandlerFactory(focusedDisplayId)
+                .newHandler(gestureState, command.createTime)
         interactionHandler.setGestureEndCallback {
             onTransitionComplete(command, interactionHandler, onCallbackResult)
         }
@@ -570,12 +570,7 @@ constructor(
 
     private fun updateRecentsViewFocus(command: CommandInfo) {
         val recentsView: RecentsView<*, *> = getVisibleRecentsView(command.displayId) ?: return
-        if (
-            command.type != KEYBOARD_INPUT &&
-                command.type != HIDE &&
-                command.type != SHOW &&
-                command.type != TOGGLE
-        ) {
+        if (command.type != KEYBOARD_INPUT && command.type != HIDE && command.type != SHOW) {
             return
         }
 

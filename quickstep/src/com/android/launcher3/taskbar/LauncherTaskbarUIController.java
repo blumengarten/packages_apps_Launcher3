@@ -48,11 +48,16 @@ import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.MultiPropertyFactory;
 import com.android.launcher3.util.OnboardingPrefs;
+import com.android.quickstep.GestureState;
 import com.android.quickstep.HomeVisibilityState;
+import com.android.quickstep.LauncherActivityInterface;
 import com.android.quickstep.RecentsAnimationCallbacks;
 import com.android.quickstep.SystemUiProxy;
+import com.android.quickstep.fallback.window.RecentsDisplayModel;
+import com.android.quickstep.fallback.window.RecentsWindowFlags;
 import com.android.quickstep.util.SplitTask;
 import com.android.quickstep.views.RecentsView;
+import com.android.quickstep.views.RecentsViewContainer;
 import com.android.systemui.shared.system.QuickStepContract.SystemUiStateFlags;
 import com.android.wm.shell.shared.bubbles.BubbleBarLocation;
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
@@ -100,6 +105,8 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
     // Initialized in init.
     private final TaskbarLauncherStateController
             mTaskbarLauncherStateController = new TaskbarLauncherStateController();
+    // When overview-in-a-window is enabled, that window is the container, else it is mLauncher.
+    private RecentsViewContainer mRecentsViewContainer;
 
     public LauncherTaskbarUIController(QuickstepLauncher launcher) {
         mLauncher = launcher;
@@ -112,8 +119,19 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
 
         mTaskbarLauncherStateController.init(mControllers, mLauncher,
                 mControllers.getSharedState().sysuiStateFlags);
-
+        final TaskbarActivityContext taskbarContext = mControllers.taskbarActivityContext;
+        if (RecentsWindowFlags.getEnableOverviewInWindow()) {
+            mRecentsViewContainer = RecentsDisplayModel.getINSTANCE()
+                    .get(taskbarContext).getRecentsWindowManager(taskbarContext.getDisplayId());
+        }
+        if (mRecentsViewContainer == null) {
+            mRecentsViewContainer = mLauncher;
+        }
         mLauncher.setTaskbarUIController(this);
+        if (mRecentsViewContainer != mLauncher) {
+            mRecentsViewContainer.setTaskbarUIController(this);
+        }
+
         mHomeState.addListener(mVisibilityChangeListener);
         onLauncherVisibilityChanged(
                 Flags.useActivityOverlay()
@@ -142,6 +160,9 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
         mTaskbarLauncherStateController.onDestroy();
 
         mLauncher.setTaskbarUIController(null);
+        if (mRecentsViewContainer != mLauncher) {
+            mRecentsViewContainer.setTaskbarUIController(null);
+        }
         mHomeState.removeListener(mVisibilityChangeListener);
     }
 
@@ -203,13 +224,18 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
      */
     @Override
     public void onLauncherVisibilityChanged(boolean isVisible) {
-        if (DesktopModeStatus.enterDesktopByDefaultOnFreeformDisplay(mLauncher)) {
+        if (DesktopModeStatus.enterDesktopByDefaultOnFreeformDisplay(mLauncher)
+                && mControllers.taskbarActivityContext.isPrimaryDisplay()) {
             DisplayController.INSTANCE.get(mLauncher).notifyConfigChange();
         }
+
         onLauncherVisibilityChanged(isVisible, false /* fromInit */);
     }
 
     private void onLauncherVisibilityChanged(boolean isVisible, boolean fromInitOrDestroy) {
+        if (mControllers == null) {
+            return;
+        }
         onLauncherVisibilityChanged(
                 isVisible,
                 fromInitOrDestroy,
@@ -223,12 +249,12 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
         if (!Flags.predictiveBackToHomePolish()) {
             shouldOverrideToFastAnimation |= mLauncher.getPredictiveBackToHomeInProgress();
         }
-        boolean isPinnedTaskbar =
-                mControllers.taskbarActivityContext.isPinnedTaskbar();
-        if (isVisible || isPinnedTaskbar) {
-            return getTaskbarToHomeDuration(shouldOverrideToFastAnimation, isPinnedTaskbar);
+
+        boolean isPinned = mControllers.taskbarActivityContext.isPinnedTaskbar();
+        if (isVisible || isPinned) {
+            return getTaskbarToHomeDuration(shouldOverrideToFastAnimation, isPinned);
         } else {
-            return mControllers.taskbarActivityContext.isTransientTaskbar()
+            return (mControllers.taskbarActivityContext.isTransientTaskbar())
                     ? TRANSIENT_TASKBAR_TRANSITION_DURATION : TASKBAR_TO_APP_DURATION;
         }
     }
@@ -239,7 +265,7 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
         // Launcher is resumed during the swipe-to-overview gesture under shell-transitions, so
         // avoid updating taskbar state in that situation (when it's non-interactive -- or
         // "background") to avoid premature animations.
-        LauncherState state = mLauncher.getStateManager().getState();
+        LauncherState state = mTaskbarLauncherStateController.getLauncherState();
         boolean nonInteractiveState = state.hasFlag(FLAG_NON_INTERACTIVE)
                 && !state.isTaskbarAlignedWithHotseat(mLauncher);
         if (isVisible && (nonInteractiveState || mSkipLauncherVisibilityChange)) {
@@ -295,13 +321,16 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
 
     /**
      * Create Taskbar animation when going from an app to Launcher as part of recents transition.
-     * @param toState If known, the state we will end up in when reaching Launcher.
-     * @param callbacks callbacks to track the recents animation lifecycle. The state change is
-     *                 automatically reset once the recents animation finishes
+     * {@inheritDoc}
      */
-    public Animator createAnimToLauncher(@NonNull LauncherState toState,
-            @NonNull RecentsAnimationCallbacks callbacks, long duration) {
-        return mTaskbarLauncherStateController.createAnimToLauncher(toState, callbacks, duration);
+    @Override
+    public Animator getParallelAnimationToGestureEndTarget(
+            GestureState.GestureEndTarget gestureEndTarget, long duration,
+            RecentsAnimationCallbacks callbacks) {
+        return mTaskbarLauncherStateController.createAnimToLauncher(
+                LauncherActivityInterface.INSTANCE.stateFromGestureEndTarget(gestureEndTarget),
+                callbacks,
+                duration);
     }
 
     /**
@@ -508,7 +537,7 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
 
     @Override
     public RecentsView getRecentsView() {
-        return mLauncher.getOverviewPanel();
+        return mRecentsViewContainer.getOverviewPanel();
     }
 
     @Override
@@ -537,6 +566,7 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
                 "WIDGETS_PAGE_PROGRESS_INDEX",
                 "SYSUI_SURFACE_PROGRESS_INDEX",
                 "LAUNCHER_PAUSE_PROGRESS_INDEX");
+        pw.println(String.format("%s\tmRecentsWindowContainer=%s", prefix, mRecentsViewContainer));
 
         mTaskbarLauncherStateController.dumpLogs(prefix + "\t", pw);
     }

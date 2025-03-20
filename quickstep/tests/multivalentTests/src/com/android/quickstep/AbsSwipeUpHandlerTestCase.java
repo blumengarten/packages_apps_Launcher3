@@ -292,7 +292,7 @@ public abstract class AbsSwipeUpHandlerTestCase<
     public void testHomeGesture_invalidatesHandlerAfterParallelAnim() {
         ValueAnimator parallelAnim = new ValueAnimator();
         parallelAnim.setRepeatCount(ValueAnimator.INFINITE);
-        when(mActivityInterface.getParallelAnimationToLauncher(any(), anyLong(), any()))
+        when(mActivityInterface.getParallelAnimationToGestureEndTarget(any(), anyLong(), any()))
                 .thenReturn(parallelAnim);
         SWIPE_HANDLER handler = createSwipeUpHandlerForGesture(GestureState.GestureEndTarget.HOME);
         runOnMainSync(() -> {
@@ -306,7 +306,7 @@ public abstract class AbsSwipeUpHandlerTestCase<
 
     @Test
     public void testHomeGesture_invalidatesHandlerIfNoParallelAnim() {
-        when(mActivityInterface.getParallelAnimationToLauncher(any(), anyLong(), any()))
+        when(mActivityInterface.getParallelAnimationToGestureEndTarget(any(), anyLong(), any()))
                 .thenReturn(null);
         SWIPE_HANDLER handler = createSwipeUpHandlerForGesture(GestureState.GestureEndTarget.HOME);
         runOnMainSync(() -> {

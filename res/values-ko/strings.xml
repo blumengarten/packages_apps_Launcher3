@@ -131,8 +131,7 @@
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"배경화면 및 스타일"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"홈 화면 수정"</string>
     <string name="settings_button_text" msgid="8873672322605444408">"홈 설정"</string>
-    <!-- no translation found for all_apps_home_screen (8658178652647896497) -->
-    <skip />
+    <string name="all_apps_home_screen" msgid="8658178652647896497">"앱"</string>
     <string name="msg_disabled_by_admin" msgid="6898038085516271325">"관리자가 사용 중지함"</string>
     <string name="allow_rotation_title" msgid="7222049633713050106">"홈 화면 회전 허용"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"휴대전화 회전 시"</string>
@@ -186,10 +185,8 @@
     <string name="action_decrease_height" msgid="282377193880900022">"높이 줄이기"</string>
     <string name="widget_resized" msgid="9130327887929620">"폭 <xliff:g id="NUMBER_0">%1$s</xliff:g>, 높이 <xliff:g id="NUMBER_1">%2$s</xliff:g>로 위젯 크기 조정됨"</string>
     <string name="action_deep_shortcut" msgid="4766835855579976045">"바로가기 메뉴"</string>
-    <!-- no translation found for widget_frame_name (8782828448471444270) -->
-    <skip />
-    <!-- no translation found for action_close (1077760267194136901) -->
-    <skip />
+    <string name="widget_frame_name" msgid="8782828448471444270">"<xliff:g id="STRING">%1$s</xliff:g>의 위젯 크기 조절 프레임"</string>
+    <string name="action_close" msgid="1077760267194136901">"닫기"</string>
     <string name="action_dismiss_notification" msgid="5909461085055959187">"닫기"</string>
     <string name="accessibility_close" msgid="2277148124685870734">"닫기"</string>
     <string name="all_apps_personal_tab" msgid="4190252696685155002">"개인"</string>
