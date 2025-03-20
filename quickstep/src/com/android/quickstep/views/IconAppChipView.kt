@@ -432,6 +432,11 @@ constructor(
         }
     }
 
+    fun reset() {
+        setText(null)
+        setDrawable(null)
+    }
+
     override fun asView(): View = this
 
     enum class AppChipStatus {
