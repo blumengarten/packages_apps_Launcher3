@@ -218,7 +218,8 @@ public class FallbackSwipeHandler extends
         if (mRunningOverHome) {
             if (DisplayController.getNavigationMode(mContext).hasGestures) {
                 mRecentsView.onGestureAnimationStartOnHome(
-                        mGestureState.getRunningTask().getPlaceholderTasks());
+                        mGestureState.getRunningTask().getPlaceholderGroupedTaskInfo(
+                                /* splitTaskIds = */ null));
             }
         } else {
             super.notifyGestureAnimationStartToRecents();

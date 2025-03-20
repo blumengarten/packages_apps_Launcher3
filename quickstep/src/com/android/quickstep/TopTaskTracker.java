@@ -55,8 +55,6 @@ import com.android.launcher3.util.TraceHelper;
 import com.android.quickstep.dagger.QuickstepBaseAppComponent;
 import com.android.quickstep.util.DesksUtils;
 import com.android.quickstep.util.ExternalDisplaysKt;
-import com.android.systemui.shared.recents.model.Task;
-import com.android.systemui.shared.recents.model.Task.TaskKey;
 import com.android.systemui.shared.system.ActivityManagerWrapper;
 import com.android.systemui.shared.system.TaskStackChangeListener;
 import com.android.systemui.shared.system.TaskStackChangeListeners;
@@ -528,63 +526,25 @@ public class TopTaskTracker extends ISplitScreenListener.Stub implements TaskSta
         }
 
         /**
-         * Returns {@link Task} array which can be used as a placeholder until the true object
-         * is loaded by the model
-         */
-        public Task[] getPlaceholderTasks() {
-            final TaskInfo baseTask = getLegacyBaseTask();
-            // TODO(346588978): Update this to return more than a single task once the callers
-            //  are refactored
-            return baseTask == null
-                    ? new Task[0]
-                    : new Task[]{Task.from(new TaskKey(baseTask), baseTask, false)};
-        }
-
-        /**
          * Returns {@link TaskInfo} array corresponding to the provided task ids which can be
-         * used as a placeholder until the true object is loaded by the model. Returns null
-         * directly when [enableShellTopTaskTracking] is true, as it will be a no-op when the
-         * flag is enabled.
+         * used as a placeholder until the true object is loaded by the model. Only used when
+         * enableShellTopTaskTracking() is disabled.
          */
         private TaskInfo[] getSplitPlaceholderTasksInfo(int[] splitTaskIds) {
-            if (enableShellTopTaskTracking()) {
-                return null;
-            } else {
-                if (mTopTask == null) {
-                    return new TaskInfo[0];
-                }
-                TaskInfo[] result = new TaskInfo[splitTaskIds.length];
-                for (int i = 0; i < splitTaskIds.length; i++) {
-                    final int index = i;
-                    int taskId = splitTaskIds[i];
-                    mAllCachedTasks.forEach(rti -> {
-                        if (rti.taskId == taskId) {
-                            result[index] = rti;
-                        }
-                    });
-                }
-                return result;
+            if (mTopTask == null) {
+                return new TaskInfo[0];
             }
-        }
-
-        /**
-         * Returns {@link Task} array corresponding to the provided task ids which can be
-         * used as a placeholder until the true object is loaded by the model. Returns null
-         * directly when [enableShellTopTaskTracking] is true, as it will be a no-op when the
-         * flag is enabled.
-         */
-        public Task[] getSplitPlaceholderTasks(int[] splitTaskIds) {
-            if (enableShellTopTaskTracking()) {
-                return null;
-            } else {
-                TaskInfo[] tasksInfo = getSplitPlaceholderTasksInfo(splitTaskIds);
-                Task[] tasks = new Task[tasksInfo.length];
-                for (int i = 0; i < tasksInfo.length; i++) {
-                    tasks[i] = Task.from(new TaskKey(tasksInfo[i]), tasksInfo[i], /* isLocked = */
-                            false);
-                }
-                return tasks;
+            TaskInfo[] result = new TaskInfo[splitTaskIds.length];
+            for (int i = 0; i < splitTaskIds.length; i++) {
+                final int index = i;
+                int taskId = splitTaskIds[i];
+                mAllCachedTasks.forEach(rti -> {
+                    if (rti.taskId == taskId) {
+                        result[index] = rti;
+                    }
+                });
             }
+            return result;
         }
 
         private boolean isDesktopTask(TaskInfo taskInfo) {
@@ -616,6 +576,9 @@ public class TopTaskTracker extends ISplitScreenListener.Stub implements TaskSta
                 }
                 if (splitTaskIds != null && splitTaskIds.length >= 2) {
                     TaskInfo[] splitTasksInfo = getSplitPlaceholderTasksInfo(splitTaskIds);
+                    if (splitTasksInfo[0] == null || splitTasksInfo[1] == null) {
+                        return null;
+                    }
                     return GroupedTaskInfo.forSplitTasks(splitTasksInfo[0],
                             splitTasksInfo[1], /* splitBounds = */ null);
                 } else if (isDesktopTask(baseTaskInfo)) {
