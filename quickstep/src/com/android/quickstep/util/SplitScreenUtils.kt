@@ -46,8 +46,8 @@ class SplitScreenUtils {
          * Given a TransitionInfo, generates the tree structure for those changes and extracts out
          * the top most root and it's two immediate children. Changes can be provided in any order.
          *
-         * @return null if no root is found, otherwise a [Pair] where first -> top most split root,
-         *         second -> [List] of 2, leftTop/bottomRight stage roots
+         * @return a [Pair] where first -> top most split root, second -> [List] of 2,
+         *   leftTop/bottomRight stage roots
          */
         fun extractTopParentAndChildren(
             transitionInfo: TransitionInfo

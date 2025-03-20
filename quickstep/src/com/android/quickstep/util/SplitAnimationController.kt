@@ -65,7 +65,6 @@ import com.android.launcher3.util.MultiPropertyFactory.MULTI_PROPERTY_VALUE
 import com.android.launcher3.util.SplitConfigurationOptions.SplitSelectSource
 import com.android.launcher3.views.BaseDragLayer
 import com.android.quickstep.TaskViewUtils
-import com.android.quickstep.util.SplitScreenUtils.Companion.extractTopParentAndChildren
 import com.android.quickstep.views.FloatingAppPairView
 import com.android.quickstep.views.FloatingTaskView
 import com.android.quickstep.views.GroupedTaskView
@@ -992,9 +991,35 @@ class SplitAnimationController(val splitSelectStateController: SplitSelectStateC
         progressUpdater.setDuration(QuickstepTransitionManager.APP_LAUNCH_DURATION)
         progressUpdater.interpolator = Interpolators.EMPHASIZED
 
-        val splitTree: Pair<Change, List<Change>>? = extractTopParentAndChildren(transitionInfo)
-        check(splitTree != null) { "Could not find a split root candidate" }
-        val rootCandidate = splitTree.first
+        var rootCandidate: Change? = null
+
+        for (change in transitionInfo.changes) {
+            val taskInfo: RunningTaskInfo = change.taskInfo ?: continue
+
+            // TODO (b/316490565): Replace this logic when SplitBounds is available to
+            //  startAnimation() and we can know the precise taskIds of launching tasks.
+            if (
+                taskInfo.windowingMode == windowingMode &&
+                    (change.mode == TRANSIT_OPEN || change.mode == TRANSIT_TO_FRONT)
+            ) {
+                // Found one!
+                rootCandidate = change
+                break
+            }
+        }
+
+        // If we could not find a proper root candidate, something went wrong.
+        check(rootCandidate != null) { "Could not find a split root candidate" }
+
+        // Recurse up the tree until parent is null, then we've found our root.
+        var parentToken: WindowContainerToken? = rootCandidate.parent
+        while (parentToken != null) {
+            rootCandidate = transitionInfo.getChange(parentToken) ?: break
+            parentToken = rootCandidate.parent
+        }
+
+        // Make sure nothing weird happened, like getChange() returning null.
+        check(rootCandidate != null) { "Failed to find a root leash" }
 
         // Starting position is a 34% size tile centered in the middle of the screen.
         // Ending position is the full device screen.
