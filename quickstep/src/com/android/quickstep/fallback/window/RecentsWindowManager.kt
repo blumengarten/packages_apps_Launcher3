@@ -44,9 +44,6 @@ import com.android.launcher3.statemanager.StateManager.AtomicAnimationFactory
 import com.android.launcher3.statemanager.StatefulContainer
 import com.android.launcher3.taskbar.TaskbarUIController
 import com.android.launcher3.testing.TestLogging
-import com.android.launcher3.testing.shared.TestProtocol.NORMAL_STATE_ORDINAL
-import com.android.launcher3.testing.shared.TestProtocol.OVERVIEW_SPLIT_SELECT_ORDINAL
-import com.android.launcher3.testing.shared.TestProtocol.OVERVIEW_STATE_ORDINAL
 import com.android.launcher3.testing.shared.TestProtocol.SEQUENCE_MAIN
 import com.android.launcher3.util.ContextTracker
 import com.android.launcher3.util.DisplayController
@@ -70,8 +67,7 @@ import com.android.quickstep.fallback.RecentsState.BACKGROUND_APP
 import com.android.quickstep.fallback.RecentsState.BG_LAUNCHER
 import com.android.quickstep.fallback.RecentsState.DEFAULT
 import com.android.quickstep.fallback.RecentsState.HOME
-import com.android.quickstep.fallback.RecentsState.MODAL_TASK
-import com.android.quickstep.fallback.RecentsState.OVERVIEW_SPLIT_SELECT
+import com.android.quickstep.fallback.toLauncherStateOrdinal
 import com.android.quickstep.util.RecentsAtomicAnimationFactory
 import com.android.quickstep.util.RecentsWindowProtoLogProxy
 import com.android.quickstep.util.SplitSelectStateController
@@ -355,40 +351,16 @@ class RecentsWindowManager(context: Context, wallpaperColorHints: Int) :
 
     override fun onStateSetStart(state: RecentsState) {
         super.onStateSetStart(state)
-        RecentsWindowProtoLogProxy.logOnStateSetStart(getStateName(state))
+        RecentsWindowProtoLogProxy.logOnStateSetStart(state.toString())
     }
 
     override fun onStateSetEnd(state: RecentsState) {
         super.onStateSetEnd(state)
-        RecentsWindowProtoLogProxy.logOnStateSetEnd(getStateName(state))
+        RecentsWindowProtoLogProxy.logOnStateSetEnd(state.toString())
         if (state == HOME || state == BG_LAUNCHER) {
             cleanupRecentsWindow()
         }
-        when (state) {
-            HOME,
-            BG_LAUNCHER ->
-                AccessibilityManagerCompat.sendStateEventToTest(baseContext, NORMAL_STATE_ORDINAL)
-            DEFAULT ->
-                AccessibilityManagerCompat.sendStateEventToTest(baseContext, OVERVIEW_STATE_ORDINAL)
-            OVERVIEW_SPLIT_SELECT ->
-                AccessibilityManagerCompat.sendStateEventToTest(
-                    baseContext,
-                    OVERVIEW_SPLIT_SELECT_ORDINAL,
-                )
-        }
-    }
-
-    private fun getStateName(state: RecentsState?): String {
-        return when (state) {
-            null -> "NULL"
-            DEFAULT -> "DEFAULT"
-            MODAL_TASK -> "MODAL_TASK"
-            BACKGROUND_APP -> "BACKGROUND_APP"
-            HOME -> "HOME"
-            BG_LAUNCHER -> "BG_LAUNCHER"
-            OVERVIEW_SPLIT_SELECT -> "OVERVIEW_SPLIT_SELECT"
-            else -> "ordinal=" + state.ordinal
-        }
+        AccessibilityManagerCompat.sendStateEventToTest(baseContext, state.toLauncherStateOrdinal())
     }
 
     override fun getSystemUiController(): SystemUiController? {

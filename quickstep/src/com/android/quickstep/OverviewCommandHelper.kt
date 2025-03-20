@@ -450,10 +450,10 @@ constructor(
             )
         gestureState.isHandlingAtomicEvent = true
         val interactionHandler =
-            touchInteractionService.swipeUpHandlerFactory.newHandler(
-                gestureState,
-                command.createTime,
-            )
+            touchInteractionService
+                // TODO(b/404757863): use command.displayId instead of focusedDisplayId.
+                .getSwipeUpHandlerFactory(focusedDisplayId)
+                .newHandler(gestureState, command.createTime)
         interactionHandler.setGestureEndCallback {
             onTransitionComplete(command, interactionHandler, onCallbackResult)
         }

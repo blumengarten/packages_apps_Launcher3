@@ -697,7 +697,9 @@ public class TaskbarManager {
     private TaskbarUIController createTaskbarUIControllerForRecentsViewContainer(
             RecentsViewContainer container) {
         debugPrimaryTaskbar("createTaskbarUIControllerForRecentsViewContainer");
-        if (container instanceof QuickstepLauncher quickstepLauncher) {
+        if (mActivity instanceof QuickstepLauncher quickstepLauncher) {
+            // If 1P Launcher is default, always use LauncherTaskbarUIController, regardless of
+            // whether the recents container is NexusLauncherActivity or RecentsWindowManager.
             return new LauncherTaskbarUIController(quickstepLauncher);
         }
         // If a 3P Launcher is default, always use FallbackTaskbarUIController regardless of

@@ -50,23 +50,31 @@ public class RecentsState implements BaseState<RecentsState> {
     private static final int FLAG_ADD_DESK_BUTTON = BaseState.getFlag(10);
     private static final int FLAG_SHOW_EXPLODED_DESKTOP_VIEW = BaseState.getFlag(11);
 
+    public static final int DEFAULT_STATE_ORDINAL = 0;
+    public static final int MODAL_TASK_ORDINAL = 1;
+    public static final int BACKGROUND_APP_ORDINAL = 2;
+    public static final int HOME_STATE_ORDINAL = 3;
+    public static final int BG_LAUNCHER_ORDINAL = 4;
+    public static final int OVERVIEW_SPLIT_SELECT_ORDINAL = 5;
+
     private static final RecentsState[] sAllStates = new RecentsState[6];
 
-    public static final RecentsState DEFAULT = new RecentsState(0,
+    public static final RecentsState DEFAULT = new RecentsState(DEFAULT_STATE_ORDINAL,
             FLAG_DISABLE_RESTORE | FLAG_CLEAR_ALL_BUTTON | FLAG_OVERVIEW_ACTIONS | FLAG_SHOW_AS_GRID
                     | FLAG_SCRIM | FLAG_LIVE_TILE | FLAG_RECENTS_VIEW_VISIBLE
                     | FLAG_ADD_DESK_BUTTON | FLAG_SHOW_EXPLODED_DESKTOP_VIEW);
-    public static final RecentsState MODAL_TASK = new ModalState(1,
+    public static final RecentsState MODAL_TASK = new ModalState(MODAL_TASK_ORDINAL,
             FLAG_DISABLE_RESTORE | FLAG_OVERVIEW_ACTIONS | FLAG_MODAL
                     | FLAG_SHOW_AS_GRID | FLAG_SCRIM | FLAG_LIVE_TILE | FLAG_RECENTS_VIEW_VISIBLE
                     | FLAG_SHOW_EXPLODED_DESKTOP_VIEW);
-    public static final RecentsState BACKGROUND_APP = new BackgroundAppState(2,
+    public static final RecentsState BACKGROUND_APP = new BackgroundAppState(BACKGROUND_APP_ORDINAL,
             FLAG_DISABLE_RESTORE | FLAG_NON_INTERACTIVE | FLAG_FULL_SCREEN
                     | FLAG_RECENTS_VIEW_VISIBLE | FLAG_TASK_THUMBNAIL_SPLASH
                     | FLAG_DETACH_DESKTOP_CAROUSEL);
-    public static final RecentsState HOME = new RecentsState(3, 0);
-    public static final RecentsState BG_LAUNCHER = new LauncherState(4, 0);
-    public static final RecentsState OVERVIEW_SPLIT_SELECT = new RecentsState(5,
+    public static final RecentsState HOME = new RecentsState(HOME_STATE_ORDINAL, 0);
+    public static final RecentsState BG_LAUNCHER = new LauncherState(BG_LAUNCHER_ORDINAL, 0);
+    public static final RecentsState OVERVIEW_SPLIT_SELECT = new RecentsState(
+            OVERVIEW_SPLIT_SELECT_ORDINAL,
             FLAG_SHOW_AS_GRID | FLAG_SCRIM | FLAG_RECENTS_VIEW_VISIBLE | FLAG_CLOSE_POPUPS
                     | FLAG_DISABLE_RESTORE | FLAG_SHOW_EXPLODED_DESKTOP_VIEW);
 
@@ -90,7 +98,15 @@ public class RecentsState implements BaseState<RecentsState> {
 
     @Override
     public String toString() {
-        return "Ordinal-" + ordinal;
+        return switch (ordinal) {
+            case DEFAULT_STATE_ORDINAL -> "DEFAULT";
+            case MODAL_TASK_ORDINAL -> "MODAL_TASK";
+            case BACKGROUND_APP_ORDINAL -> "BACKGROUND_APP";
+            case HOME_STATE_ORDINAL -> "HOME";
+            case BG_LAUNCHER_ORDINAL -> "BG_LAUNCHER";
+            case OVERVIEW_SPLIT_SELECT_ORDINAL -> "SPLIT_SELECT";
+            default -> "Unknown Ordinal-" + ordinal;
+        };
     }
 
     @Override
