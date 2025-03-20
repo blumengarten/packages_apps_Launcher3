@@ -17,7 +17,6 @@
 package com.android.quickstep.recents.ui.mapper
 
 import android.view.View.OnClickListener
-import com.android.launcher3.Flags.enableDesktopExplodedView
 import com.android.quickstep.recents.ui.viewmodel.TaskData
 import com.android.quickstep.task.thumbnail.TaskHeaderUiState
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState
@@ -100,8 +99,7 @@ object TaskUiStateMapper {
         hasHeader: Boolean,
         clickCloseListener: OnClickListener?,
     ) =
-        enableDesktopExplodedView() &&
-            hasHeader &&
+        hasHeader &&
             taskData.icon != null &&
             taskData.titleDescription != null &&
             clickCloseListener != null

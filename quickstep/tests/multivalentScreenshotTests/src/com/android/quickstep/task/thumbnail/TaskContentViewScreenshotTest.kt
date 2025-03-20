@@ -18,15 +18,11 @@ package com.android.quickstep.task.thumbnail
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
-import android.platform.test.flag.junit.SetFlagsRule
 import android.view.LayoutInflater
-import com.android.launcher3.Flags
 import com.android.launcher3.R
-import com.android.launcher3.util.rule.setFlags
 import com.android.quickstep.task.thumbnail.SplashHelper.createSplash
 import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.BackgroundOnly
 import com.google.android.apps.nexuslauncher.imagecomparison.goldenpathmanager.ViewScreenshotGoldenPathManager
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -41,19 +37,12 @@ import platform.test.screenshot.getEmulatedDevicePathConfig
 @RunWith(ParameterizedAndroidJunit4::class)
 class TaskContentViewScreenshotTest(emulationSpec: DeviceEmulationSpec) {
 
-    @get:Rule(order = 0) val setFlagsRule = SetFlagsRule()
-
-    @get:Rule(order = 1)
+    @get:Rule
     val screenshotRule =
         ViewScreenshotTestRule(
             emulationSpec,
             ViewScreenshotGoldenPathManager(getEmulatedDevicePathConfig(emulationSpec)),
         )
-
-    @Before
-    fun setUp() {
-        setFlagsRule.setFlags(true, Flags.FLAG_ENABLE_REFACTOR_TASK_THUMBNAIL)
-    }
 
     @Test
     fun taskContentView_recyclesToUninitialized() {
