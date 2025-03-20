@@ -31,7 +31,6 @@ import com.android.quickstep.ViewUtils.addAccessibleChildToList
 import com.android.quickstep.recents.domain.usecase.ThumbnailPosition
 import com.android.quickstep.recents.ui.mapper.TaskUiStateMapper
 import com.android.quickstep.recents.ui.viewmodel.TaskData
-import com.android.quickstep.task.thumbnail.TaskContentView
 import com.android.quickstep.task.thumbnail.TaskThumbnailView
 import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.ThumbnailData
@@ -40,7 +39,6 @@ import com.android.systemui.shared.recents.model.ThumbnailData
 class TaskContainer(
     val taskView: TaskView,
     val task: Task,
-    val taskContentView: TaskContentView,
     val snapshotView: View,
     val iconView: TaskViewIcon,
     /**
@@ -112,8 +110,8 @@ class TaskContainer(
     fun destroy() =
         traceSection("TaskContainer.destroy") {
             digitalWellBeingToast?.destroy()
-            taskContentView.scaleX = 1f
-            taskContentView.scaleY = 1f
+            snapshotView.scaleX = 1f
+            snapshotView.scaleY = 1f
             overlay.reset()
             if (enableRefactorTaskThumbnail()) {
                 isThumbnailValid = false
@@ -174,9 +172,13 @@ class TaskContainer(
         clickCloseListener: OnClickListener?,
     ) =
         traceSection("TaskContainer.setState") {
-            taskContentView.setState(
-                TaskUiStateMapper.toTaskHeaderState(state, hasHeader, clickCloseListener),
-                TaskUiStateMapper.toTaskThumbnailUiState(state, liveTile),
+            thumbnailView.setState(
+                TaskUiStateMapper.toTaskThumbnailUiState(
+                    state,
+                    liveTile,
+                    hasHeader,
+                    clickCloseListener,
+                ),
                 state?.taskId,
             )
             thumbnailData = if (state is TaskData.Data) state.thumbnailData else null
