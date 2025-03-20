@@ -693,7 +693,11 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         if (mBackButton == null) {
             return;
         }
-        setupBackButtonAccessibility(mBackButton, accessibilityDelegate);
+        if (predictiveBackThreeButtonNav()) {
+            setupBackButtonAccessibility(mBackButton, accessibilityDelegate);
+        } else {
+            mBackButton.setAccessibilityDelegate(accessibilityDelegate);
+        }
     }
 
     public void setWallpaperVisible(boolean isVisible) {
