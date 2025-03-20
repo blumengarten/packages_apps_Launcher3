@@ -203,13 +203,18 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
      */
     @Override
     public void onLauncherVisibilityChanged(boolean isVisible) {
-        if (DesktopModeStatus.enterDesktopByDefaultOnFreeformDisplay(mLauncher)) {
+        if (DesktopModeStatus.enterDesktopByDefaultOnFreeformDisplay(mLauncher)
+                && mControllers.taskbarActivityContext.isPrimaryDisplay()) {
             DisplayController.INSTANCE.get(mLauncher).notifyConfigChange();
         }
+
         onLauncherVisibilityChanged(isVisible, false /* fromInit */);
     }
 
     private void onLauncherVisibilityChanged(boolean isVisible, boolean fromInitOrDestroy) {
+        if (mControllers == null) {
+            return;
+        }
         onLauncherVisibilityChanged(
                 isVisible,
                 fromInitOrDestroy,
@@ -223,12 +228,12 @@ public class LauncherTaskbarUIController extends TaskbarUIController {
         if (!Flags.predictiveBackToHomePolish()) {
             shouldOverrideToFastAnimation |= mLauncher.getPredictiveBackToHomeInProgress();
         }
-        boolean isPinnedTaskbar =
-                mControllers.taskbarActivityContext.isPinnedTaskbar();
-        if (isVisible || isPinnedTaskbar) {
-            return getTaskbarToHomeDuration(shouldOverrideToFastAnimation, isPinnedTaskbar);
+
+        boolean isPinned = mControllers.taskbarActivityContext.isPinnedTaskbar();
+        if (isVisible || isPinned) {
+            return getTaskbarToHomeDuration(shouldOverrideToFastAnimation, isPinned);
         } else {
-            return mControllers.taskbarActivityContext.isTransientTaskbar()
+            return (mControllers.taskbarActivityContext.isTransientTaskbar())
                     ? TRANSIENT_TASKBAR_TRANSITION_DURATION : TASKBAR_TO_APP_DURATION;
         }
     }
