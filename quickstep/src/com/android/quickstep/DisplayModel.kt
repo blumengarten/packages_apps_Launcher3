@@ -23,10 +23,13 @@ import android.util.SparseArray
 import android.view.Display
 import androidx.core.util.valueIterator
 import com.android.quickstep.DisplayModel.DisplayResource
+import com.android.quickstep.SystemDecorationChangeObserver.Companion.INSTANCE
+import com.android.quickstep.SystemDecorationChangeObserver.DisplayDecorationListener
 import java.io.PrintWriter
 
 /** data model for managing resources with lifecycles that match that of the connected display */
-abstract class DisplayModel<RESOURCE_TYPE : DisplayResource>(val context: Context) {
+abstract class DisplayModel<RESOURCE_TYPE : DisplayResource>(val context: Context) :
+    DisplayDecorationListener {
 
     companion object {
         private const val TAG = "DisplayModel"
@@ -34,19 +37,20 @@ abstract class DisplayModel<RESOURCE_TYPE : DisplayResource>(val context: Contex
     }
 
     private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+    private var systemDecorationChangeObserver: SystemDecorationChangeObserver? = null
     protected val displayResourceArray = SparseArray<RESOURCE_TYPE>()
 
-    fun onDisplayAddSystemDecorations(displayId: Int) {
+    override fun onDisplayAddSystemDecorations(displayId: Int) {
         if (DEBUG) Log.d(TAG, "onDisplayAdded: displayId=$displayId")
         storeDisplayResource(displayId)
     }
 
-    fun onDisplayRemoved(displayId: Int) {
+    override fun onDisplayRemoved(displayId: Int) {
         if (DEBUG) Log.d(TAG, "onDisplayRemoved: displayId=$displayId")
         deleteDisplayResource(displayId)
     }
 
-    fun onDisplayRemoveSystemDecorations(displayId: Int) {
+    override fun onDisplayRemoveSystemDecorations(displayId: Int) {
         if (DEBUG) Log.d(TAG, "onDisplayRemoveSystemDecorations: displayId=$displayId")
         deleteDisplayResource(displayId)
     }
@@ -54,12 +58,16 @@ abstract class DisplayModel<RESOURCE_TYPE : DisplayResource>(val context: Contex
     protected abstract fun createDisplayResource(display: Display): RESOURCE_TYPE
 
     protected fun initializeDisplays() {
+        systemDecorationChangeObserver = INSTANCE[context]
+        systemDecorationChangeObserver?.registerDisplayDecorationListener(this)
         displayManager.displays
             .filter { getDisplayResource(it.displayId) == null }
             .forEach { storeDisplayResource(it.displayId) }
     }
 
     fun destroy() {
+        systemDecorationChangeObserver?.unregisterDisplayDecorationListener(this)
+        systemDecorationChangeObserver = null
         displayResourceArray.valueIterator().forEach { displayResource ->
             displayResource.cleanup()
         }
