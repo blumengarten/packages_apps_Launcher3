@@ -504,7 +504,7 @@ public class RecentTasksList implements WindowManagerProxy.DesktopVisibilityList
             for (TaskInfo taskInfo : recentTaskInfo.getTaskInfoList()) {
                 Task task = createTask(taskInfo, minimizedTaskIds);
                 List<Task> tasks = perDisplayTasks.computeIfAbsent(
-                        ExternalDisplaysKt.getDisplayId(task),
+                        ExternalDisplaysKt.getSafeDisplayId(task),
                         k -> new ArrayList<>());
                 tasks.add(task);
             }

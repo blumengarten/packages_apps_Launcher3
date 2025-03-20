@@ -97,8 +97,8 @@ import com.android.quickstep.util.BorderAnimator.Companion.createSimpleBorderAni
 import com.android.quickstep.util.RecentsOrientedState
 import com.android.quickstep.util.TaskCornerRadius
 import com.android.quickstep.util.TaskRemovedDuringLaunchListener
-import com.android.quickstep.util.displayId
 import com.android.quickstep.util.isExternalDisplay
+import com.android.quickstep.util.safeDisplayId
 import com.android.quickstep.views.IconAppChipView.AppChipStatus
 import com.android.quickstep.views.OverviewActionsView.DISABLED_NO_THUMBNAIL
 import com.android.quickstep.views.OverviewActionsView.DISABLED_ROTATED
@@ -155,7 +155,7 @@ constructor(
         get() = this === recentsView?.selectedTaskView
 
     open val displayId: Int
-        get() = taskContainers.firstOrNull()?.task.displayId
+        get() = taskContainers.firstOrNull()?.task.safeDisplayId
 
     val isExternalDisplay: Boolean
         get() = displayId.isExternalDisplay

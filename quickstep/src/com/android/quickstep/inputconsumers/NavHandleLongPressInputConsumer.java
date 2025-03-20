@@ -214,7 +214,7 @@ public class NavHandleLongPressInputConsumer extends DelegateInputConsumer {
                 && !mDeepPressLogged) {
             // Log deep press even if feature is disabled.
             String runningPackage = mTopTaskTracker.getCachedTopTask(
-                    /* filterOnlyVisibleRecents */ true).getPackageName();
+                    /* filterOnlyVisibleRecents */ true, getDisplayId()).getPackageName();
             mStatsLogManager.logger().withPackageName(runningPackage).log(
                     mNavHandle.isNavHandleStashedTaskbar() ? LAUNCHER_DEEP_PRESS_STASHED_TASKBAR
                             : LAUNCHER_DEEP_PRESS_NAVBAR);
@@ -233,12 +233,13 @@ public class NavHandleLongPressInputConsumer extends DelegateInputConsumer {
             Log.d(TAG, "triggerLongPress");
         }
         String runningPackage = mTopTaskTracker.getCachedTopTask(
-                /* filterOnlyVisibleRecents */ true).getPackageName();
+                /* filterOnlyVisibleRecents */ true, getDisplayId()).getPackageName();
         mStatsLogManager.logger().withPackageName(runningPackage).log(
                 mNavHandle.isNavHandleStashedTaskbar() ? LAUNCHER_LONG_PRESS_STASHED_TASKBAR
                         : LAUNCHER_LONG_PRESS_NAVBAR);
 
-        Runnable longPressRunnable = mNavHandleLongPressHandler.getLongPressRunnable(mNavHandle);
+        Runnable longPressRunnable = mNavHandleLongPressHandler.getLongPressRunnable(mNavHandle,
+                getDisplayId());
         if (longPressRunnable == null) {
             return;
         }

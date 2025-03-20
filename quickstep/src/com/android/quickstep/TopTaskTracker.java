@@ -22,8 +22,10 @@ import static android.content.Intent.ACTION_CHOOSER;
 import static android.content.Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS;
 import static android.view.Display.DEFAULT_DISPLAY;
 
+import static com.android.launcher3.Flags.enableOverviewOnConnectedDisplays;
 import static com.android.launcher3.util.SplitConfigurationOptions.STAGE_POSITION_TOP_OR_LEFT;
 import static com.android.launcher3.util.SplitConfigurationOptions.STAGE_TYPE_A;
+import static com.android.quickstep.fallback.window.RecentsWindowFlags.enableOverviewOnConnectedDisplays;
 import static com.android.wm.shell.Flags.enableShellTopTaskTracking;
 import static com.android.wm.shell.Flags.enableFlexibleSplit;
 import static com.android.wm.shell.shared.GroupedTaskInfo.TYPE_SPLIT;
@@ -47,6 +49,7 @@ import com.android.launcher3.util.SplitConfigurationOptions.StageType;
 import com.android.launcher3.util.TraceHelper;
 import com.android.quickstep.dagger.QuickstepBaseAppComponent;
 import com.android.quickstep.util.DesksUtils;
+import com.android.quickstep.util.ExternalDisplaysKt;
 import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.recents.model.Task.TaskKey;
 import com.android.systemui.shared.system.ActivityManagerWrapper;
@@ -316,21 +319,26 @@ public class TopTaskTracker extends ISplitScreenListener.Stub implements TaskSta
      */
     @NonNull
     @UiThread
-    public CachedTaskInfo getCachedTopTask(boolean filterOnlyVisibleRecents) {
+    public CachedTaskInfo getCachedTopTask(boolean filterOnlyVisibleRecents, int displayId) {
         if (enableShellTopTaskTracking()) {
             // TODO(346588978): Currently ignore filterOnlyVisibleRecents, but perhaps make this an
             //  explicit filter For things to ignore (ie. PIP/Bubbles/Assistant/etc/so that this is
             //  explicit)
-            // TODO(346588978): This assumes default display as gesture nav is only supported there
-            return new CachedTaskInfo(mVisibleTasks.get(DEFAULT_DISPLAY));
+            return new CachedTaskInfo(mVisibleTasks.get(displayId));
         } else {
             if (filterOnlyVisibleRecents) {
                 // Since we only know about the top most task, any filtering may not be applied on
                 // the cache. The second to top task may change while the top task is still the
                 // same.
-                RunningTaskInfo[] tasks = TraceHelper.allowIpcs("getCachedTopTask.true", () ->
+                TaskInfo[] tasks = TraceHelper.allowIpcs("getCachedTopTask.true", () ->
                         ActivityManagerWrapper.getInstance().getRunningTasks(true));
-                return new CachedTaskInfo(Arrays.asList(tasks));
+                if (enableOverviewOnConnectedDisplays()) {
+                    return new CachedTaskInfo(Arrays.stream(tasks).filter(
+                            info -> ExternalDisplaysKt.getSafeDisplayId(info)
+                                    == displayId).toList());
+                } else {
+                    return new CachedTaskInfo(Arrays.asList(tasks));
+                }
             }
 
             if (mOrderedTaskList.isEmpty()) {
@@ -344,7 +352,12 @@ public class TopTaskTracker extends ISplitScreenListener.Stub implements TaskSta
             // Strip the pinned task and recents task
             tasks.removeIf(t -> t.taskId == mPinnedTaskId || isRecentsTask(t)
                     ||  DesksUtils.isDesktopWallpaperTask(t));
-            return new CachedTaskInfo(tasks);
+            if (enableOverviewOnConnectedDisplays()) {
+                return new CachedTaskInfo(tasks.stream().filter(
+                        info -> ExternalDisplaysKt.getSafeDisplayId(info) == displayId).toList());
+            } else {
+                return new CachedTaskInfo(tasks);
+            }
         }
     }
 

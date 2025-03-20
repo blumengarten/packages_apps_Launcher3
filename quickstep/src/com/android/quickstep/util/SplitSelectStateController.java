@@ -195,7 +195,7 @@ public class SplitSelectStateController {
         mRecentTasksModel = recentsModel;
         mActivityBackCallback = activityBackCallback;
         mSplitAnimationController = new SplitAnimationController(this);
-        mAppPairsController = new AppPairsController(mContainer.asContext(), this, statsLogManager);
+        mAppPairsController = new AppPairsController(mContainer, this, statsLogManager);
         mSplitSelectDataHolder = new SplitSelectDataHolder(mContainer.asContext());
     }
 

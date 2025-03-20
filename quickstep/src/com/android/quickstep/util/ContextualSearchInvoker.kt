@@ -87,7 +87,8 @@ internal constructor(
             if (success) {
                 val runningPackage =
                     TopTaskTracker.INSTANCE[context].getCachedTopTask(
-                            /* filterOnlyVisibleRecents */ true
+                            /* filterOnlyVisibleRecents */ true,
+                            DEFAULT_DISPLAY,
                         )
                         .getPackageName()
                 statsLogManager
