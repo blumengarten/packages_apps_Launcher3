@@ -20,6 +20,7 @@ import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
 import com.android.launcher3.BuildConfig.WIDGET_ON_FIRST_SCREEN
+import com.android.launcher3.GridType.Companion.GRID_TYPE_ANY
 import com.android.launcher3.InvariantDeviceProfile.GRID_NAME_PREFS_KEY
 import com.android.launcher3.InvariantDeviceProfile.NON_FIXED_LANDSCAPE_GRID_NAME_PREFS_KEY
 import com.android.launcher3.LauncherFiles.DEVICE_PREFERENCES_KEY
@@ -265,6 +266,9 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
             )
         @JvmField
         val DB_FILE = backedUpItem(DeviceGridState.KEY_DB_FILE, "", EncryptionType.ENCRYPTED)
+        @JvmField
+        val GRID_TYPE =
+            backedUpItem(DeviceGridState.KEY_GRID_TYPE, GRID_TYPE_ANY, EncryptionType.ENCRYPTED)
         @JvmField
         val SHOULD_SHOW_SMARTSPACE =
             backedUpItem(

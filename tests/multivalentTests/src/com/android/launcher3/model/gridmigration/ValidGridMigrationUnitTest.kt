@@ -27,6 +27,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.launcher3.Flags
+import com.android.launcher3.GridType.Companion.GRID_TYPE_ANY
 import com.android.launcher3.InvariantDeviceProfile
 import com.android.launcher3.LauncherSettings.Favorites
 import com.android.launcher3.celllayout.testgenerator.ValidGridMigrationTestCaseGenerator
@@ -46,7 +47,14 @@ import org.junit.runner.RunWith
 
 private data class Grid(val tableName: String, val size: Point, val items: List<WorkspaceItem>) {
     fun toGridState(): DeviceGridState =
-        DeviceGridState(size.x, size.y, size.x, InvariantDeviceProfile.TYPE_PHONE, tableName)
+        DeviceGridState(
+            size.x,
+            size.y,
+            size.x,
+            InvariantDeviceProfile.TYPE_PHONE,
+            tableName,
+            GRID_TYPE_ANY,
+        )
 }
 
 @SmallTest
