@@ -40,8 +40,7 @@ import com.android.systemui.shared.recents.model.ThumbnailData
 class TaskContainer(
     val taskView: TaskView,
     val task: Task,
-    // TODO(b/361500574): Upon flag cleanup, use the TaskContentView type and remove the getter
-    val taskContentView: View,
+    val taskContentView: TaskContentView,
     val snapshotView: View,
     val iconView: TaskViewIcon,
     /**
@@ -63,10 +62,8 @@ class TaskContainer(
 
     init {
         if (enableRefactorTaskThumbnail()) {
-            require(taskContentView is TaskContentView)
             require(snapshotView is TaskThumbnailView)
         } else {
-            require(taskContentView is TaskThumbnailViewDeprecated)
             require(snapshotView is TaskThumbnailViewDeprecated)
         }
     }
@@ -177,7 +174,7 @@ class TaskContainer(
         clickCloseListener: OnClickListener?,
     ) =
         traceSection("TaskContainer.setState") {
-            (taskContentView as TaskContentView).setState(
+            taskContentView.setState(
                 TaskUiStateMapper.toTaskHeaderState(state, hasHeader, clickCloseListener),
                 TaskUiStateMapper.toTaskThumbnailUiState(state, liveTile),
                 state?.taskId,
