@@ -1062,7 +1062,8 @@ public class TouchInteractionService extends Service {
 
     private boolean isHoverActionWithoutConsumer(MotionEvent event) {
         // Only process these events when taskbar is present.
-        TaskbarActivityContext tac = mTaskbarManager.getCurrentActivityContext();
+        int displayId = event.getDisplayId();
+        TaskbarActivityContext tac = mTaskbarManager.getTaskbarForDisplay(displayId);
         boolean isTaskbarPresent = tac != null && tac.getDeviceProfile().isTaskbarPresent
                 && !tac.isPhoneMode();
         return event.isHoverEvent() && (mUncheckedConsumer.getType() & TYPE_CURSOR_HOVER) == 0

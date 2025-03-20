@@ -138,6 +138,7 @@ public class TaskbarManager {
             Settings.Secure.NAV_BAR_KIDS_MODE);
 
     private final Context mBaseContext;
+    private final int mPrimaryDisplayId;
     private final TaskbarNavButtonCallbacks mNavCallbacks;
     // TODO: Remove this during the connected displays lifecycle refactor.
     private final Context mPrimaryWindowContext;
@@ -434,21 +435,21 @@ public class TaskbarManager {
             TaskbarNavButtonCallbacks navCallbacks,
             RecentsDisplayModel recentsDisplayModel) {
         mBaseContext = context;
+        mPrimaryDisplayId = mBaseContext.getDisplayId();
         mAllAppsActionManager = allAppsActionManager;
         mNavCallbacks = navCallbacks;
         mRecentsDisplayModel = recentsDisplayModel;
 
         // Set up primary display.
-        int primaryDisplayId = getDefaultDisplayId();
         debugPrimaryTaskbar("TaskbarManager constructor");
-        mPrimaryWindowContext = createWindowContext(primaryDisplayId);
+        mPrimaryWindowContext = createWindowContext(getDefaultDisplayId());
         mPrimaryWindowManager = mPrimaryWindowContext.getSystemService(WindowManager.class);
         DesktopVisibilityController.INSTANCE.get(
                 mPrimaryWindowContext).registerTaskbarDesktopModeListener(
                 mTaskbarDesktopModeListener);
-        createTaskbarRootLayout(primaryDisplayId);
-        createNavButtonController(primaryDisplayId);
-        createAndRegisterComponentCallbacks(primaryDisplayId);
+        createTaskbarRootLayout(getDefaultDisplayId());
+        createNavButtonController(getDefaultDisplayId());
+        createAndRegisterComponentCallbacks(getDefaultDisplayId());
 
         SettingsCache.INSTANCE.get(mPrimaryWindowContext)
                 .register(USER_SETUP_COMPLETE_URI, mOnSettingsChangeListener);
@@ -1667,7 +1668,7 @@ public class TaskbarManager {
     }
 
     private int getDefaultDisplayId() {
-        return mBaseContext.getDisplayId();
+        return mPrimaryDisplayId;
     }
 
     /**
