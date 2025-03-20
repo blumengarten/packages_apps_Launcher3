@@ -570,12 +570,7 @@ constructor(
 
     private fun updateRecentsViewFocus(command: CommandInfo) {
         val recentsView: RecentsView<*, *> = getVisibleRecentsView(command.displayId) ?: return
-        if (
-            command.type != KEYBOARD_INPUT &&
-                command.type != HIDE &&
-                command.type != SHOW &&
-                command.type != TOGGLE
-        ) {
+        if (command.type != KEYBOARD_INPUT && command.type != HIDE && command.type != SHOW) {
             return
         }
 
