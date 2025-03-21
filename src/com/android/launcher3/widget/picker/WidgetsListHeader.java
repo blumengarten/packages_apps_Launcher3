@@ -131,6 +131,14 @@ public final class WidgetsListHeader extends LinearLayout implements ItemInfoUpd
     public void setExpanded(boolean isExpanded) {
         this.mIsExpanded = isExpanded;
         refreshDrawableState();
+        refreshTextAppearance(isExpanded);
+    }
+
+    private void refreshTextAppearance(boolean isExpanded) {
+        mTitle.setTextAppearance(isExpanded ? R.style.WidgetListHeader_Title_Selected
+                : R.style.WidgetListHeader_Title);
+        mSubtitle.setTextAppearance(isExpanded ? R.style.WidgetListHeader_SubTitle_Selected
+                : R.style.WidgetListHeader_SubTitle);
     }
 
     /** @return true if this header is expanded. */
