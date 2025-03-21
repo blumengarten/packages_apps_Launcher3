@@ -575,6 +575,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     }
 
     protected void rebindAdapters(boolean force) {
+        Log.d(TAG, "rebindAdapters: force: " + force);
         if (mSearchTransitionController.isRunning()) {
             mRebindAdaptersAfterSearchAnimation = true;
             return;
@@ -583,6 +584,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
 
         boolean showTabs = shouldShowTabs();
         if (showTabs == mUsingTabs && !force) {
+            Log.d(TAG, "rebindAdapters: Not needed.");
             return;
         }
 
@@ -678,6 +680,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     }
 
     private void replaceAppsRVContainer(boolean showTabs) {
+        Log.d(TAG, "replaceAppsRVContainer: showTabs: " + showTabs);
         for (int i = AdapterHolder.MAIN; i <= AdapterHolder.WORK; i++) {
             AdapterHolder adapterHolder = mAH.get(i);
             if (adapterHolder.mRecyclerView != null) {
@@ -711,7 +714,6 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
 
             mWorkManager.reset();
             post(() -> mAH.get(AdapterHolder.WORK).applyPadding());
-
         } else {
             mWorkManager.detachWorkUtilityViews();
             mViewPager = null;
@@ -1017,6 +1019,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
 
     @VisibleForTesting
     public void onAppsUpdated() {
+        Log.d(TAG, "onAppsUpdated; number of apps: " + mAllAppsStore.getApps().length);
         mHasWorkApps = Stream.of(mAllAppsStore.getApps())
                 .anyMatch(mWorkManager.getItemInfoMatcher());
         mHasPrivateApps = Stream.of(mAllAppsStore.getApps())
