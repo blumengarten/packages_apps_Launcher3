@@ -131,8 +131,7 @@
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"Тұсқағаз және стиль"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"Негізгі экранды өзгерту"</string>
     <string name="settings_button_text" msgid="8873672322605444408">"Негізгі экран параметрлері"</string>
-    <!-- no translation found for all_apps_home_screen (8658178652647896497) -->
-    <skip />
+    <string name="all_apps_home_screen" msgid="8658178652647896497">"Қолданбалар"</string>
     <string name="msg_disabled_by_admin" msgid="6898038085516271325">"Әкімші өшірді"</string>
     <string name="allow_rotation_title" msgid="7222049633713050106">"Негізгі экранды бұруға рұқсат ету"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"Телефон бұрылғанда"</string>
@@ -186,10 +185,8 @@
     <string name="action_decrease_height" msgid="282377193880900022">"Биіктігін азайту"</string>
     <string name="widget_resized" msgid="9130327887929620">"Виджет өлшемінің ені <xliff:g id="NUMBER_0">%1$s</xliff:g>, биіктігі <xliff:g id="NUMBER_1">%2$s</xliff:g> болып өзгертілді"</string>
     <string name="action_deep_shortcut" msgid="4766835855579976045">"Жылдам пәрмен мәзірі"</string>
-    <!-- no translation found for widget_frame_name (8782828448471444270) -->
-    <skip />
-    <!-- no translation found for action_close (1077760267194136901) -->
-    <skip />
+    <string name="widget_frame_name" msgid="8782828448471444270">"<xliff:g id="STRING">%1$s</xliff:g> үшін виджет өлшемін өзгерту"</string>
+    <string name="action_close" msgid="1077760267194136901">"Жабу"</string>
     <string name="action_dismiss_notification" msgid="5909461085055959187">"Бас тарту"</string>
     <string name="accessibility_close" msgid="2277148124685870734">"Жабу"</string>
     <string name="all_apps_personal_tab" msgid="4190252696685155002">"Жеке"</string>
@@ -220,6 +217,5 @@
     <string name="ps_container_transition" msgid="8667331812048014412">"Жеке бөлмеге өту"</string>
     <string name="ps_add_button_label" msgid="8127988716897128773">"Орнату"</string>
     <string name="ps_add_button_content_description" msgid="3254274107740952556">"Қолданбаларды \"Құпия кеңістікке\" орнатыңыз."</string>
-    <!-- no translation found for ps_app_content_description (1129133475892816226) -->
-    <skip />
+    <string name="ps_app_content_description" msgid="1129133475892816226">"Құпия кеңістікке файлдар мен басқа да элементтерді қосыңыз"</string>
 </resources>

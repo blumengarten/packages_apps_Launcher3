@@ -217,6 +217,5 @@
     <string name="ps_container_transition" msgid="8667331812048014412">"प्राइवेट स्पेस की सेटिंग में बदलाव किया जा रहा है"</string>
     <string name="ps_add_button_label" msgid="8127988716897128773">"इंस्टॉल करें"</string>
     <string name="ps_add_button_content_description" msgid="3254274107740952556">"प्राइवेट स्पेस में ऐप्लिकेशन इंस्टॉल करें"</string>
-    <!-- no translation found for ps_app_content_description (1129133475892816226) -->
-    <skip />
+    <string name="ps_app_content_description" msgid="1129133475892816226">"प्राइवेट स्पेस में फ़ाइलें और अन्य चीज़ें जोड़ें"</string>
 </resources>
