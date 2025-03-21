@@ -34,6 +34,7 @@ import androidx.annotation.Nullable;
 
 import com.android.internal.jank.Cuj;
 import com.android.launcher3.DeviceProfile;
+import com.android.launcher3.Flags;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.anim.AnimatorListeners;
@@ -118,6 +119,10 @@ public class KeyboardQuickSwitchViewController {
         mOnDesktop = onDesktop;
         mWasDesktopTaskFilteredOut = wasDesktopTaskFilteredOut;
         mWasOpenedFromTaskbar = wasOpenedFromTaskbar;
+
+        if (Flags.taskbarOverflow() && wasOpenedFromTaskbar) {
+            mKeyboardQuickSwitchView.enableScrollArrowSupport();
+        }
 
         mKeyboardQuickSwitchView.applyLoadPlan(
                 mOverlayContext,
