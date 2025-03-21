@@ -45,6 +45,7 @@ import androidx.annotation.VisibleForTesting;
 import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherModel;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherSettings.Favorites;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.Workspace;
@@ -421,7 +422,8 @@ public class LoaderCursor extends CursorWrapper {
     ) {
         boolean isPreArchived = Flags.enableSupportForArchiving()
                 && Flags.restoreArchivedAppIconsFromDb()
-                && info.isInactiveArchive();
+                && info.isInactiveArchive()
+                && LauncherPrefs.get(mContext).get(LauncherPrefs.IS_FIRST_LOAD_AFTER_RESTORE);
         boolean preArchivedIconNotFound = isPreArchived && !loadIconFromDb(info);
         if (preArchivedIconNotFound) {
             Log.d(TAG, "loadIconFromDb failed for pre-archived icon, loading from cache."
