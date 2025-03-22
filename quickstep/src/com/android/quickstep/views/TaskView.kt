@@ -89,7 +89,6 @@ import com.android.quickstep.recents.domain.usecase.ThumbnailPosition
 import com.android.quickstep.recents.ui.viewmodel.TaskData
 import com.android.quickstep.recents.ui.viewmodel.TaskTileUiState
 import com.android.quickstep.recents.ui.viewmodel.TaskViewModel
-import com.android.quickstep.task.thumbnail.TaskContentView
 import com.android.quickstep.util.ActiveGestureErrorDetector
 import com.android.quickstep.util.ActiveGestureLog
 import com.android.quickstep.util.BorderAnimator
@@ -97,8 +96,8 @@ import com.android.quickstep.util.BorderAnimator.Companion.createSimpleBorderAni
 import com.android.quickstep.util.RecentsOrientedState
 import com.android.quickstep.util.TaskCornerRadius
 import com.android.quickstep.util.TaskRemovedDuringLaunchListener
-import com.android.quickstep.util.displayId
 import com.android.quickstep.util.isExternalDisplay
+import com.android.quickstep.util.safeDisplayId
 import com.android.quickstep.views.IconAppChipView.AppChipStatus
 import com.android.quickstep.views.OverviewActionsView.DISABLED_NO_THUMBNAIL
 import com.android.quickstep.views.OverviewActionsView.DISABLED_ROTATED
@@ -155,7 +154,7 @@ constructor(
         get() = this === recentsView?.selectedTaskView
 
     open val displayId: Int
-        get() = taskContainers.firstOrNull()?.task.displayId
+        get() = taskContainers.firstOrNull()?.task.safeDisplayId
 
     val isExternalDisplay: Boolean
         get() = displayId.isExternalDisplay
@@ -767,10 +766,13 @@ constructor(
     }
 
     protected open fun inflateViewStubs() {
-        findViewById<ViewStub>(R.id.task_content_view)
-            ?.apply { layoutResource = R.layout.task_content_view }
+        findViewById<ViewStub>(R.id.snapshot)
+            ?.apply {
+                layoutResource =
+                    if (enableRefactorTaskThumbnail()) R.layout.task_thumbnail
+                    else R.layout.task_thumbnail_deprecated
+            }
             ?.inflate()
-
         findViewById<ViewStub>(R.id.icon)
             ?.apply {
                 layoutResource =
@@ -917,7 +919,6 @@ constructor(
             listOf(
                 createTaskContainer(
                     task,
-                    R.id.task_content_view,
                     R.id.snapshot,
                     R.id.icon,
                     R.id.show_windows,
@@ -952,9 +953,9 @@ constructor(
             taskContainers.forEach { container ->
                 container.bind()
                 if (enableRefactorTaskThumbnail()) {
-                    container.taskContentView.cornerRadius =
+                    container.thumbnailView.cornerRadius =
                         thumbnailFullscreenParams.currentCornerRadius
-                    container.taskContentView.doOnSizeChange { width, height ->
+                    container.thumbnailView.doOnSizeChange { width, height ->
                         updateThumbnailValidity(container)
                         val thumbnailPosition = updateThumbnailMatrix(container, width, height)
                         container.refreshOverlay(thumbnailPosition)
@@ -981,7 +982,6 @@ constructor(
 
     protected fun createTaskContainer(
         task: Task,
-        @IdRes taskContentViewId: Int,
         @IdRes thumbnailViewId: Int,
         @IdRes iconViewId: Int,
         @IdRes showWindowViewId: Int,
@@ -991,12 +991,10 @@ constructor(
     ): TaskContainer =
         traceSection("TaskView.createTaskContainer") {
             val iconView = findViewById<View>(iconViewId) as TaskViewIcon
-            val taskContentView = findViewById<TaskContentView>(taskContentViewId)
             return TaskContainer(
                 this,
                 task,
-                taskContentView,
-                taskContentView.findViewById(thumbnailViewId),
+                findViewById(thumbnailViewId),
                 iconView,
                 TransformingTouchDelegate(iconView.asView()),
                 stagePosition,
@@ -1085,7 +1083,7 @@ constructor(
     protected open fun updateThumbnailSize() {
         // TODO(b/271468547), we should default to setting translations only on the snapshot instead
         //  of a hybrid of both margins and translations
-        firstTaskContainer?.taskContentView?.updateLayoutParams<LayoutParams> {
+        firstTaskContainer?.snapshotView?.updateLayoutParams<LayoutParams> {
             topMargin = container.deviceProfile.overviewTaskThumbnailTopMarginPx
         }
         taskContainers.forEach { it.digitalWellBeingToast?.setupLayout() }
@@ -1099,11 +1097,11 @@ constructor(
             val thumbnailBounds = Rect()
             if (relativeToDragLayer) {
                 container.dragLayer.getDescendantRectRelativeToSelf(
-                    it.taskContentView,
+                    it.snapshotView,
                     thumbnailBounds,
                 )
             } else {
-                thumbnailBounds.set(it.taskContentView)
+                thumbnailBounds.set(it.snapshotView)
             }
             bounds.union(thumbnailBounds)
         }
@@ -1817,7 +1815,7 @@ constructor(
         updateFullscreenParams(thumbnailFullscreenParams)
         taskContainers.forEach {
             if (enableRefactorTaskThumbnail()) {
-                it.taskContentView.cornerRadius = thumbnailFullscreenParams.currentCornerRadius
+                it.thumbnailView.cornerRadius = thumbnailFullscreenParams.currentCornerRadius
             } else {
                 it.thumbnailViewDeprecated.setFullscreenParams(thumbnailFullscreenParams)
             }

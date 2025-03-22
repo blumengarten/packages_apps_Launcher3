@@ -314,32 +314,25 @@ public class TouchInteractionService extends Service {
         @BinderThread
         @Override
         public void onDisplayAddSystemDecorations(int displayId) {
-            executeForTaskbarManager(taskbarManager ->
-                    taskbarManager.onDisplayAddSystemDecorations(displayId));
-
-            executeForRecentsDisplayModel(displayModel ->
-                    displayModel.onDisplayAddSystemDecorations(displayId));
+            executeForTouchInteractionService(tis ->
+                    tis.mSystemDecorationChangeObserver.notifyAddSystemDecorations(displayId));
         }
 
         @BinderThread
         @Override
         public void onDisplayRemoved(int displayId) {
-            executeForTaskbarManager(taskbarManager ->
-                    taskbarManager.onDisplayRemoved(displayId));
             executeForTouchInteractionService(tis -> {
+                tis.mSystemDecorationChangeObserver.notifyOnDisplayRemoved(displayId);
                 tis.mDeviceState.clearSysUIStateFlagsForDisplay(displayId);
             });
-            executeForRecentsDisplayModel(displayModel ->
-                    displayModel.onDisplayRemoved(displayId));
         }
 
         @BinderThread
         @Override
         public void onDisplayRemoveSystemDecorations(int displayId) {
-            executeForTaskbarManager(taskbarManager ->
-                    taskbarManager.onDisplayRemoveSystemDecorations(displayId));
-            executeForRecentsDisplayModel(displayModel ->
-                    displayModel.onDisplayRemoveSystemDecorations(displayId));
+            executeForTouchInteractionService(tis -> {
+                tis.mSystemDecorationChangeObserver.notifyDisplayRemoveSystemDecorations(displayId);
+            });
         }
 
         @BinderThread
@@ -448,15 +441,6 @@ public class TouchInteractionService extends Service {
                 TaskbarManager taskbarManager = tis.mTaskbarManager;
                 if (taskbarManager == null) return;
                 taskbarManagerConsumer.accept(taskbarManager);
-            }));
-        }
-
-        private void executeForRecentsDisplayModel(
-                @NonNull Consumer<RecentsDisplayModel> recentsDisplayModelConsumer) {
-            MAIN_EXECUTOR.execute(() -> executeForTouchInteractionService(tis -> {
-                RecentsDisplayModel recentsDisplayModel = tis.mRecentsDisplayModel;
-                if (recentsDisplayModel == null) return;
-                recentsDisplayModelConsumer.accept(recentsDisplayModel);
             }));
         }
 
@@ -596,6 +580,8 @@ public class TouchInteractionService extends Service {
 
     private RecentsDisplayModel mRecentsDisplayModel;
 
+    private SystemDecorationChangeObserver mSystemDecorationChangeObserver;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -607,6 +593,7 @@ public class TouchInteractionService extends Service {
         mDeviceState = RecentsAnimationDeviceState.INSTANCE.get(this);
         mRotationTouchHelper = RotationTouchHelper.INSTANCE.get(this);
         mRecentsDisplayModel = RecentsDisplayModel.getINSTANCE().get(this);
+        mSystemDecorationChangeObserver = SystemDecorationChangeObserver.getINSTANCE().get(this);
         mAllAppsActionManager = new AllAppsActionManager(
                 this, UI_HELPER_EXECUTOR, this::createAllAppsPendingIntent);
         mTrackpadsConnected = new ActiveTrackpadList(this, () -> {
@@ -1061,7 +1048,8 @@ public class TouchInteractionService extends Service {
 
     private boolean isHoverActionWithoutConsumer(MotionEvent event) {
         // Only process these events when taskbar is present.
-        TaskbarActivityContext tac = mTaskbarManager.getCurrentActivityContext();
+        int displayId = event.getDisplayId();
+        TaskbarActivityContext tac = mTaskbarManager.getTaskbarForDisplay(displayId);
         boolean isTaskbarPresent = tac != null && tac.getDeviceProfile().isTaskbarPresent
                 && !tac.isPhoneMode();
         return event.isHoverEvent() && (mUncheckedConsumer.getType() & TYPE_CURSOR_HOVER) == 0
@@ -1088,7 +1076,7 @@ public class TouchInteractionService extends Service {
             // previousTaskInfo can be null iff previousGestureState == GestureState.DEFAULT_STATE
             taskInfo = previousTaskInfo != null
                     ? previousTaskInfo
-                    : TopTaskTracker.INSTANCE.get(this).getCachedTopTask(false);
+                    : TopTaskTracker.INSTANCE.get(this).getCachedTopTask(false, displayId);
             gestureState.updateRunningTask(taskInfo);
             gestureState.updateLastStartedTaskIds(previousGestureState.getLastStartedTaskIds());
             gestureState.updatePreviouslyAppearedTaskIds(
@@ -1098,7 +1086,7 @@ public class TouchInteractionService extends Service {
                     mOverviewComponentObserver,
                     displayId,
                     ActiveGestureLog.INSTANCE.incrementLogId());
-            taskInfo = TopTaskTracker.INSTANCE.get(this).getCachedTopTask(false);
+            taskInfo = TopTaskTracker.INSTANCE.get(this).getCachedTopTask(false, displayId);
             gestureState.updateRunningTask(taskInfo);
         }
         gestureState.setTrackpadGestureType(trackpadGestureType);

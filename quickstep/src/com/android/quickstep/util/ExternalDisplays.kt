@@ -16,6 +16,7 @@
 
 package com.android.quickstep.util
 
+import android.app.TaskInfo
 import android.view.Display.DEFAULT_DISPLAY
 import android.view.Display.INVALID_DISPLAY
 import com.android.systemui.shared.recents.model.Task
@@ -24,10 +25,9 @@ import com.android.systemui.shared.recents.model.Task
 val Int.isExternalDisplay
     get() = this != DEFAULT_DISPLAY
 
-/** Returns displayId of this [Task], default to [DEFAULT_DISPLAY] */
-val Task?.displayId
+val Int?.safeDisplayId
     get() =
-        this?.key?.displayId.let { displayId ->
+        this.let { displayId ->
             when (displayId) {
                 null -> DEFAULT_DISPLAY
                 INVALID_DISPLAY -> DEFAULT_DISPLAY
@@ -35,6 +35,14 @@ val Task?.displayId
             }
         }
 
+/** Returns displayId of this [Task], default to [DEFAULT_DISPLAY] */
+val Task?.safeDisplayId
+    get() = this?.key?.displayId.safeDisplayId
+
 /** Returns if this task belongs tto [DEFAULT_DISPLAY] */
 val Task?.isExternalDisplay
-    get() = displayId.isExternalDisplay
+    get() = safeDisplayId.isExternalDisplay
+
+/** Returns displayId of this [TaskInfo], default to [DEFAULT_DISPLAY] */
+val TaskInfo?.safeDisplayId
+    get() = this?.displayId.safeDisplayId

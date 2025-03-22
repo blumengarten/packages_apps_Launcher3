@@ -47,7 +47,6 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.android.app.animation.Interpolators;
 import com.android.internal.jank.Cuj;
-import com.android.launcher3.Flags;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.anim.AnimatedFloat;
@@ -179,17 +178,6 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
                 R.dimen.keyboard_quick_switch_task_view_radius);
 
         mIsRtl = Utilities.isRtl(resources);
-
-        if (Flags.taskbarOverflow()) {
-            initializeScrollArrows();
-
-            if (mIsRtl) {
-                mStartScrollArrow.setContentDescription(
-                        resources.getString(R.string.quick_switch_scroll_arrow_right));
-                mEndScrollArrow.setContentDescription(
-                        resources.getString(R.string.quick_switch_scroll_arrow_left));
-            }
-        }
 
         TypefaceUtils.setTypeface(
                 mNoRecentItemsPane.findViewById(R.id.no_recent_items_text),
@@ -359,8 +347,20 @@ public class KeyboardQuickSwitchView extends ConstraintLayout {
                 });
     }
 
-    private void initializeScrollArrows() {
+
+    void enableScrollArrowSupport() {
+        if (mSupportsScrollArrows) {
+            return;
+        }
         mSupportsScrollArrows = true;
+
+        if (mIsRtl) {
+            mStartScrollArrow.setContentDescription(
+                    getResources().getString(R.string.quick_switch_scroll_arrow_right));
+            mEndScrollArrow.setContentDescription(
+                    getResources().getString(R.string.quick_switch_scroll_arrow_left));
+        }
+
 
         mStartScrollArrow.setOnClickListener(new OnClickListener() {
             @Override

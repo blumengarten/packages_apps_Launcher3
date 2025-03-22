@@ -18,33 +18,23 @@ package com.android.quickstep.views
 
 import android.content.Context
 import android.util.AttributeSet
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.isGone
 import com.android.launcher3.R
-import com.android.quickstep.task.thumbnail.TaskHeaderUiState
+import com.android.quickstep.task.thumbnail.TaskThumbnailUiState.ThumbnailHeader
 
-class TaskHeaderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
-    ConstraintLayout(context, attrs) {
+class TaskThumbnailViewHeader
+@JvmOverloads
+constructor(context: Context, attrs: AttributeSet? = null) : FrameLayout(context, attrs) {
 
     private val headerTitleView: TextView by lazy { findViewById(R.id.header_app_title) }
     private val headerIconView: ImageView by lazy { findViewById(R.id.header_app_icon) }
     private val headerCloseButton: ImageButton by lazy { findViewById(R.id.header_close_button) }
 
-    fun setState(taskHeaderState: TaskHeaderUiState) {
-        when (taskHeaderState) {
-            is TaskHeaderUiState.ShowHeader -> {
-                setHeader(taskHeaderState.header)
-                isGone = false
-            }
-            TaskHeaderUiState.HideHeader -> isGone = true
-        }
-    }
-
-    private fun setHeader(header: TaskHeaderUiState.ThumbnailHeader) {
-        headerTitleView.text = header.title
+    fun setHeader(header: ThumbnailHeader) {
+        headerTitleView.setText(header.title)
         headerIconView.setImageDrawable(header.icon)
         headerCloseButton.setOnClickListener(header.clickCloseListener)
     }

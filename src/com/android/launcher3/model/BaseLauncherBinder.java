@@ -323,8 +323,10 @@ public class BaseLauncherBinder {
             Executor pendingExecutor = pendingTasks::add;
 
             RunnableList onCompleteSignal = new RunnableList();
+            onCompleteSignal.add(() -> Log.d(TAG, "Calling onCompleteSignal"));
 
             if (enableWorkspaceInflation() && inflater != null) {
+                Log.d(TAG, "Starting async inflation");
                 MODEL_EXECUTOR.execute(() ->  {
                     inflateAsyncAndBind(otherWorkspaceItems, inflater, pendingExecutor);
                     inflateAsyncAndBind(otherAppWidgets, inflater, pendingExecutor);
@@ -335,6 +337,7 @@ public class BaseLauncherBinder {
                     MAIN_EXECUTOR.execute(onCompleteSignal::executeAllAndDestroy);
                 });
             } else {
+                Log.d(TAG, "Starting sync inflation");
                 bindItemsInChunks(otherWorkspaceItems, ITEMS_CHUNK, pendingExecutor);
                 bindItemsInChunks(otherAppWidgets, 1, pendingExecutor);
                 setupPendingBind(currentScreenIds, pendingExecutor);

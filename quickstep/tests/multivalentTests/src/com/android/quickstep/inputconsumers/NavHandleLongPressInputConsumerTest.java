@@ -36,6 +36,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -105,11 +106,12 @@ public class NavHandleLongPressInputConsumerTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        when(mTopTaskTracker.getCachedTopTask(anyBoolean())).thenReturn(mTaskInfo);
+        when(mTopTaskTracker.getCachedTopTask(anyBoolean(), anyInt())).thenReturn(mTaskInfo);
         when(mDeviceState.getSquaredTouchSlop()).thenReturn(SQUARED_TOUCH_SLOP);
         when(mDelegate.allowInterceptByParent()).thenReturn(true);
         mLongPressTriggered.set(false);
-        when(mNavHandleLongPressHandler.getLongPressRunnable(any())).thenReturn(mLongPressRunnable);
+        when(mNavHandleLongPressHandler.getLongPressRunnable(any(), anyInt())).thenReturn(
+                mLongPressRunnable);
         when(mStatsLogger.withPackageName(any())).thenReturn(mStatsLogger);
         when(mStatsLatencyLogger.withInstanceId(any())).thenReturn(mStatsLatencyLogger);
         when(mStatsLatencyLogger.withLatency(anyLong())).thenReturn(mStatsLatencyLogger);

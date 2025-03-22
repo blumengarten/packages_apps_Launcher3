@@ -131,6 +131,12 @@ interface BubbleStashController {
      */
     fun stashBubbleBar()
 
+    /**
+     * Animates the bubble bar to the handle at provided location. Does not update bubble bar
+     * location.
+     */
+    fun stashBubbleBarToLocation(fromLocation: BubbleBarLocation, toLocation: BubbleBarLocation) {}
+
     /** Shows the bubble bar, and expands bubbles depending on [expandBubbles]. */
     fun showBubbleBar(expandBubbles: Boolean) {
         showBubbleBar(expandBubbles = expandBubbles, bubbleBarGesture = false)
@@ -143,6 +149,9 @@ interface BubbleStashController {
      * bar.
      */
     fun showBubbleBar(expandBubbles: Boolean, bubbleBarGesture: Boolean)
+
+    /** Animates the bubble bar at the provided location. Does not update bubble bar location. */
+    fun showBubbleBarAtLocation(fromLocation: BubbleBarLocation, toLocation: BubbleBarLocation) {}
 
     // TODO(b/354218264): Move to BubbleBarViewAnimator
     /**

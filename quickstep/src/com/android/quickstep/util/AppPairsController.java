@@ -32,7 +32,6 @@ import static com.android.wm.shell.shared.split.SplitScreenConstants.SNAP_TO_NON
 import static com.android.wm.shell.shared.split.SplitScreenConstants.getIndex;
 import static com.android.wm.shell.shared.split.SplitScreenConstants.isPersistentSnapPosition;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.LauncherApps;
 import android.util.Log;
@@ -93,10 +92,10 @@ public class AppPairsController {
     private static final int BITMASK_SIZE = 16;
     private static final int BITMASK_FOR_SNAP_POSITION = (1 << BITMASK_SIZE) - 1;
 
-    private Context mContext;
+    private ActivityContext mContext;
     private final SplitSelectStateController mSplitSelectStateController;
     private final StatsLogManager mStatsLogManager;
-    public AppPairsController(Context context,
+    public AppPairsController(ActivityContext context,
             SplitSelectStateController splitSelectStateController,
             StatsLogManager statsLogManager) {
         mContext = context;
@@ -208,7 +207,7 @@ public class AppPairsController {
         }
         AppPairInfo newAppPair = new AppPairInfo(apps);
 
-        IconCache iconCache = LauncherAppState.getInstance(mContext).getIconCache();
+        IconCache iconCache = LauncherAppState.getInstance(mContext.asContext()).getIconCache();
         MODEL_EXECUTOR.execute(() -> {
             newAppPair.getAppContents().forEach(member -> {
                 member.title = "";
@@ -216,8 +215,8 @@ public class AppPairsController {
                 iconCache.getTitleAndIcon(member, member.getMatchingLookupFlag());
             });
             MAIN_EXECUTOR.execute(() -> {
-                LauncherAccessibilityDelegate delegate =
-                        QuickstepLauncher.getLauncher(mContext).getAccessibilityDelegate();
+                LauncherAccessibilityDelegate delegate = QuickstepLauncher.getLauncher(
+                        mContext.asContext()).getAccessibilityDelegate();
                 if (delegate != null) {
                     delegate.addToWorkspace(newAppPair, true, (success) -> {
                         if (success) {
@@ -300,7 +299,7 @@ public class AppPairsController {
      */
     @Nullable
     private AppInfo resolveAppInfoByComponent(@NonNull ComponentKey key) {
-        AllAppsStore appsStore = ActivityContext.lookupContext(mContext)
+        AllAppsStore appsStore = ActivityContext.lookupContext(mContext.asContext())
                 .getAppsView().getAppsStore();
 
         // First look up the app info in order of:
@@ -326,7 +325,7 @@ public class AppPairsController {
         if (appInfo == null) {
             return null;
         }
-        return appInfo.makeWorkspaceItem(mContext);
+        return appInfo.makeWorkspaceItem(mContext.asContext());
     }
 
     /**
@@ -418,7 +417,7 @@ public class AppPairsController {
         } else {
             // Tapped an app pair while in a single app
             final TopTaskTracker.CachedTaskInfo runningTask = topTaskTracker
-                    .getCachedTopTask(false /* filterOnlyVisibleRecents */);
+                    .getCachedTopTask(false /* filterOnlyVisibleRecents */, context.getDisplayId());
 
             mSplitSelectStateController.findLastActiveTasksAndRunCallback(
                     componentKeys,
@@ -548,6 +547,6 @@ public class AppPairsController {
      */
     @VisibleForTesting
     public TopTaskTracker getTopTaskTracker() {
-        return TopTaskTracker.INSTANCE.get(mContext);
+        return TopTaskTracker.INSTANCE.get(mContext.asContext());
     }
 }

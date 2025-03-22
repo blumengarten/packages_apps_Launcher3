@@ -316,43 +316,6 @@ class BubbleBarViewAnimatorTest {
     }
 
     @Test
-    fun animateBubbleInForStashed_showAnimationCanceled() {
-        setUpBubbleBar()
-
-        val handle = View(context)
-        val handleAnimator = PhysicsAnimator.getInstance(handle)
-        bubbleStashController.handleAnimator = handleAnimator
-
-        val animator =
-            BubbleBarViewAnimator(
-                bubbleBarView,
-                bubbleStashController,
-                flyoutController,
-                bubbleBarParentViewController,
-                onExpanded = emptyRunnable,
-                onBubbleBarVisible = emptyRunnable,
-                animatorScheduler,
-            )
-
-        InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            animator.animateBubbleInForStashed(bubble, isExpanding = false)
-        }
-
-        // wait for the animation to start
-        InstrumentationRegistry.getInstrumentation().runOnMainSync {}
-        PhysicsAnimatorTestUtils.blockUntilFirstAnimationFrameWhereTrue(handleAnimator) { true }
-
-        handleAnimator.assertIsRunning()
-        assertThat(animator.isAnimating).isTrue()
-        assertThat(animatorScheduler.delayedBlock).isNotNull()
-
-        handleAnimator.cancel()
-        handleAnimator.assertIsNotRunning()
-        assertThat(animator.isAnimating).isFalse()
-        assertThat(animatorScheduler.delayedBlock).isNull()
-    }
-
-    @Test
     fun animateBubbleInForStashed_autoExpanding() {
         setUpBubbleBar()
 

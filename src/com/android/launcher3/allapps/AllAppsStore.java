@@ -20,6 +20,7 @@ import static com.android.launcher3.model.data.AppInfo.EMPTY_ARRAY;
 
 import android.content.Context;
 import android.os.UserHandle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -53,6 +54,7 @@ import java.util.function.Predicate;
  */
 public class AllAppsStore<T extends Context & ActivityContext> {
 
+    private static final String TAG = "AllAppsStore";
     // Defer updates flag used to defer all apps updates to the next draw.
     public static final int DEFER_UPDATES_NEXT_DRAW = 1 << 0;
     // Defer updates flag used to defer all apps updates by a test's request.
@@ -102,6 +104,7 @@ public class AllAppsStore<T extends Context & ActivityContext> {
     public void setApps(@Nullable AppInfo[] apps, int flags, Map<PackageUserKey, Integer> map,
             boolean shouldPreinflate) {
         mApps = apps == null ? EMPTY_ARRAY : apps;
+        Log.d(TAG, "setApps: apps.length=" + mApps.length);
         mModelFlags = flags;
         notifyUpdate();
         mPackageUserKeytoUidMap = map;
@@ -159,10 +162,12 @@ public class AllAppsStore<T extends Context & ActivityContext> {
 
     public void enableDeferUpdates(int flag) {
         mDeferUpdatesFlags |= flag;
+        Log.d(TAG, "enableDeferUpdates: " + flag + " mDeferUpdatesFlags=" + mDeferUpdatesFlags);
     }
 
     public void disableDeferUpdates(int flag) {
         mDeferUpdatesFlags &= ~flag;
+        Log.d(TAG, "disableDeferUpdates: " + flag + " mDeferUpdatesFlags=" + mDeferUpdatesFlags);
         if (mDeferUpdatesFlags == 0 && mUpdatePending) {
             notifyUpdate();
             mUpdatePending = false;
@@ -171,6 +176,9 @@ public class AllAppsStore<T extends Context & ActivityContext> {
 
     public void disableDeferUpdatesSilently(int flag) {
         mDeferUpdatesFlags &= ~flag;
+        Log.d(TAG, "disableDeferUpdatesSilently: " + flag
+                + " mDeferUpdatesFlags=" + mDeferUpdatesFlags);
+
     }
 
     public int getDeferUpdatesFlags() {
@@ -179,9 +187,11 @@ public class AllAppsStore<T extends Context & ActivityContext> {
 
     private void notifyUpdate() {
         if (mDeferUpdatesFlags != 0) {
+            Log.d(TAG, "notifyUpdate: deferring update");
             mUpdatePending = true;
             return;
         }
+        Log.d(TAG, "notifyUpdate: notifying listeners");
         for (OnUpdateListener listener : mUpdateListeners) {
             listener.onAppsUpdated();
         }

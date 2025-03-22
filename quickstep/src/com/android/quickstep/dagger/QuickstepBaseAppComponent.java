@@ -25,6 +25,7 @@ import com.android.quickstep.RecentsAnimationDeviceState;
 import com.android.quickstep.RecentsModel;
 import com.android.quickstep.RotationTouchHelper;
 import com.android.quickstep.SimpleOrientationTouchTransformer;
+import com.android.quickstep.SystemDecorationChangeObserver;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.TopTaskTracker;
 import com.android.quickstep.fallback.window.RecentsDisplayModel;
@@ -71,4 +72,5 @@ public interface QuickstepBaseAppComponent extends LauncherBaseAppComponent {
 
     SimpleOrientationTouchTransformer getSimpleOrientationTouchTransformer();
 
+    SystemDecorationChangeObserver getSystemDecorationChangeObserver();
 }

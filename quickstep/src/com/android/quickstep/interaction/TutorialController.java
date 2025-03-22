@@ -30,8 +30,11 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Outline;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.RippleDrawable;
+import android.os.SystemProperties;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -56,11 +59,12 @@ import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.anim.AnimatorListeners;
+import com.android.launcher3.util.SettingsCache;
 import com.android.launcher3.views.ClipIconView;
 import com.android.quickstep.interaction.EdgeBackGestureHandler.BackGestureAttemptCallback;
 import com.android.quickstep.interaction.NavBarGestureHandler.NavBarGestureAttemptCallback;
 import com.android.systemui.shared.system.QuickStepContract;
-import com.android.wm.shell.shared.TypefaceUtils;
+import com.android.wm.shell.Flags;
 import com.android.wm.shell.shared.TypefaceUtils.FontFamily;
 
 import com.airbnb.lottie.LottieAnimationView;
@@ -79,6 +83,10 @@ abstract class TutorialController implements BackGestureAttemptCallback,
 
     private static final String PIXEL_TIPS_APP_PACKAGE_NAME = "com.google.android.apps.tips";
     private static final CharSequence DEFAULT_PIXEL_TIPS_APP_NAME = "Pixel Tips";
+
+    private static final String SUW_THEME_SYSTEM_PROPERTY = "setupwizard.theme";
+    private static final String GLIF_EXPRESSIVE_THEME = "glif_expressive";
+    private static final String GLIF_EXPRESSIVE_LIGHT_THEME = "glif_expressive_light";
 
     private static final int FEEDBACK_ANIMATION_MS = 133;
     private static final int SUBTITLE_ANNOUNCE_DELAY_MS = 3000;
@@ -115,6 +123,7 @@ abstract class TutorialController implements BackGestureAttemptCallback,
     protected View mExitingAppView;
     protected int mExitingAppRadius;
     private final AlertDialog mSkipTutorialDialog;
+    private final boolean mIsExpressiveThemeEnabledInSUW;
 
     private boolean mGestureCompleted = false;
     protected LottieAnimationView mAnimatedGestureDemonstration;
@@ -172,7 +181,11 @@ abstract class TutorialController implements BackGestureAttemptCallback,
 
         mFeedbackTitleView.setText(getIntroductionTitle());
         mFeedbackSubtitleView.setText(getIntroductionSubtitle());
-        setTitleTypefaces();
+
+        String SUWTheme = SystemProperties.get(SUW_THEME_SYSTEM_PROPERTY, "");
+        mIsExpressiveThemeEnabledInSUW = SUWTheme.equals(GLIF_EXPRESSIVE_THEME) || SUWTheme.equals(
+                GLIF_EXPRESSIVE_LIGHT_THEME);
+        maybeSetTitleTypefaces();
 
         mExitingAppView.setClipToOutline(true);
         mExitingAppView.setOutlineProvider(new ViewOutlineProvider() {
@@ -406,12 +419,21 @@ abstract class TutorialController implements BackGestureAttemptCallback,
 
         mFeedbackTitleView.setText(titleResId);
         mFeedbackSubtitleView.setText(subtitleResId);
+
+        boolean isUserSetupComplete = SettingsCache.INSTANCE.get(mContext).getValue(
+                Settings.Secure.getUriFor(Settings.Secure.USER_SETUP_COMPLETE), 0);
+        boolean userSetupNotCompleteAndExpressiveThemeEnabled =
+                !isUserSetupComplete && mIsExpressiveThemeEnabledInSUW;
+        boolean userSetupCompleteAndNewFontsEnabled = isUserSetupComplete && Flags.enableGsf();
+
         if (isGestureSuccessful) {
             if (mTutorialFragment.isAtFinalStep()) {
-                TypefaceUtils.setTypeface(
-                        mDoneButton,
-                        FontFamily.GSF_LABEL_LARGE
-                );
+                if (userSetupCompleteAndNewFontsEnabled
+                        || userSetupNotCompleteAndExpressiveThemeEnabled) {
+                    mDoneButton.setTypeface(
+                            Typeface.create(FontFamily.GSF_LABEL_LARGE.getValue(),
+                                    Typeface.NORMAL));
+                }
                 showActionButton();
             }
 
@@ -437,7 +459,7 @@ abstract class TutorialController implements BackGestureAttemptCallback,
         mCheckmarkAnimation.setVisibility(View.VISIBLE);
         mCheckmarkAnimation.playAnimation();
         mFeedbackTitleView.setTextAppearance(getSuccessTitleTextAppearance());
-        setTitleTypefaces();
+        maybeSetTitleTypefaces();
     }
 
     public boolean isGestureCompleted() {
@@ -492,7 +514,7 @@ abstract class TutorialController implements BackGestureAttemptCallback,
         mFeedbackTitleView.setTextAppearance(getTitleTextAppearance());
         mDoneButton.setTextAppearance(getDoneButtonTextAppearance());
 
-        setTitleTypefaces();
+        maybeSetTitleTypefaces();
         mDoneButton.getBackground().setTint(getDoneButtonColor());
         mCheckmarkAnimation.setAnimation(mTutorialFragment.isAtFinalStep()
                 ? R.raw.checkmark_animation_end
@@ -514,16 +536,15 @@ abstract class TutorialController implements BackGestureAttemptCallback,
     /**
      * Apply expressive typefaces to the feedback title and subtitle views.
      */
-    private void setTitleTypefaces() {
-        TypefaceUtils.setTypeface(
-                mFeedbackTitleView,
-                mTutorialFragment.isLargeScreen()
-                        ? FontFamily.GSF_DISPLAY_MEDIUM_EMPHASIZED
-                        : FontFamily.GSF_DISPLAY_SMALL_EMPHASIZED);
-        TypefaceUtils.setTypeface(
-                mFeedbackSubtitleView,
-                FontFamily.GSF_BODY_LARGE
-        );
+    private void maybeSetTitleTypefaces() {
+        if (mIsExpressiveThemeEnabledInSUW || Flags.enableGsf()) {
+            mFeedbackTitleView.setTypeface(Typeface.create(mTutorialFragment.isLargeScreen()
+                            ? FontFamily.GSF_DISPLAY_MEDIUM_EMPHASIZED.getValue()
+                            : FontFamily.GSF_DISPLAY_SMALL_EMPHASIZED.getValue(),
+                    Typeface.NORMAL));
+            mFeedbackSubtitleView.setTypeface(
+                    Typeface.create(FontFamily.GSF_BODY_LARGE.getValue(), Typeface.NORMAL));
+        }
     }
 
     protected void resetViewsForBackGesture() {
