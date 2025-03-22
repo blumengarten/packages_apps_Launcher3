@@ -257,7 +257,8 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
         if (mRunningOverHome) {
             if (DisplayController.getNavigationMode(mContext).hasGestures) {
                 mRecentsView.onGestureAnimationStartOnHome(
-                        mGestureState.getRunningTask().getPlaceholderTasks());
+                        mGestureState.getRunningTask().getPlaceholderGroupedTaskInfo(
+                                /* splitTaskIds = */ null));
             }
         } else {
             super.notifyGestureAnimationStartToRecents();
@@ -283,7 +284,7 @@ public class RecentsWindowSwipeHandler extends AbsSwipeUpHandler<RecentsWindowMa
         private final AnimatedFloat mHomeAlpha = new AnimatedFloat(this::updateAppTransforms);
         private final AnimatedFloat mVerticalShiftForScale =
                 new AnimatedFloat(this::updateAppTransforms);
-        private final AnimatedFloat mRecentsAlpha = new AnimatedFloat(this:: updateAppTransforms);
+        private final AnimatedFloat mRecentsAlpha = new AnimatedFloat(this::updateAppTransforms);
 
         private final RectF mTargetRect = new RectF();
         private SurfaceControl mSurfaceControl;

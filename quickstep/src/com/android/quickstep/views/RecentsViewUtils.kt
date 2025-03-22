@@ -39,7 +39,9 @@ import com.android.quickstep.util.DesktopTask
 import com.android.quickstep.util.GroupTask
 import com.android.quickstep.util.isExternalDisplay
 import com.android.quickstep.views.RecentsView.RUNNING_TASK_ATTACH_ALPHA
+import com.android.systemui.shared.recents.model.Task
 import com.android.systemui.shared.recents.model.ThumbnailData
+import com.android.wm.shell.shared.GroupedTaskInfo
 import java.util.function.BiConsumer
 import kotlin.math.min
 import kotlin.reflect.KMutableProperty1
@@ -457,6 +459,22 @@ class RecentsViewUtils(private val recentsView: RecentsView<*, *>) {
             newSelectedTaskView.modalScale = modalScale
             newSelectedTaskView.modalPivot = modalPivot
         }
+    }
+
+    /**
+     * Creates a [DesktopTaskView] for the currently active desk on this display, which contains the
+     * tasks with the given [groupedTaskInfo].
+     */
+    fun createDesktopTaskViewForActiveDesk(groupedTaskInfo: GroupedTaskInfo): DesktopTaskView {
+        val desktopTaskView =
+            recentsView.getTaskViewFromPool(TaskViewType.DESKTOP) as DesktopTaskView
+        val tasks: List<Task> = groupedTaskInfo.taskInfoList.map { taskInfo -> Task.from(taskInfo) }
+        desktopTaskView.bind(
+            DesktopTask(groupedTaskInfo.deskId, groupedTaskInfo.deskDisplayId, tasks),
+            recentsView.mOrientationState,
+            recentsView.mTaskOverlayFactory,
+        )
+        return desktopTaskView
     }
 
     companion object {

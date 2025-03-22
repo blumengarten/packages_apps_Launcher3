@@ -161,7 +161,6 @@ import com.android.quickstep.views.TaskView;
 import com.android.quickstep.views.TaskViewType;
 import com.android.systemui.animation.TransitionAnimator;
 import com.android.systemui.contextualeducation.GestureType;
-import com.android.systemui.shared.recents.model.Task;
 import com.android.systemui.shared.recents.model.ThumbnailData;
 import com.android.systemui.shared.system.ActivityManagerWrapper;
 import com.android.systemui.shared.system.InputConsumerController;
@@ -170,6 +169,7 @@ import com.android.systemui.shared.system.SysUiStatsLog;
 import com.android.systemui.shared.system.TaskStackChangeListener;
 import com.android.systemui.shared.system.TaskStackChangeListeners;
 import com.android.wm.shell.Flags;
+import com.android.wm.shell.shared.GroupedTaskInfo;
 import com.android.wm.shell.shared.TransactionPool;
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 import com.android.wm.shell.shared.startingsurface.SplashScreenExitAnimationUtils;
@@ -182,7 +182,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Consumer;
@@ -693,26 +692,23 @@ public abstract class AbsSwipeUpHandler<
     }
 
     protected void notifyGestureAnimationStartToRecents() {
-        Task[] runningTasks;
-        TopTaskTracker.CachedTaskInfo cachedTaskInfo = mGestureState.getRunningTask();
-        if (mIsSwipeForSplit) {
-            int[] splitTaskIds = TopTaskTracker.INSTANCE.get(mContext).getRunningSplitTaskIds();
-            runningTasks = cachedTaskInfo.getSplitPlaceholderTasks(splitTaskIds);
-        } else {
-            runningTasks = cachedTaskInfo.getPlaceholderTasks();
-        }
+        int[] splitTaskIds = mIsSwipeForSplit
+                ? TopTaskTracker.INSTANCE.get(mContext).getRunningSplitTaskIds()
+                : null;
+        GroupedTaskInfo groupedTaskInfo =
+                mGestureState.getRunningTask().getPlaceholderGroupedTaskInfo(splitTaskIds);
 
         // Safeguard against any null tasks being sent to recents view, happens when quickswitching
         // very quickly w/ split tasks because TopTaskTracker provides stale information compared to
         // actual running tasks in the recents animation.
         // TODO(b/236226779), Proper fix (ag/22237143)
-        if (Arrays.stream(runningTasks).anyMatch(Objects::isNull)) {
+        if (groupedTaskInfo == null) {
             return;
         }
         if (mRecentsView == null) {
             return;
         }
-        mRecentsView.onGestureAnimationStart(runningTasks);
+        mRecentsView.onGestureAnimationStart(groupedTaskInfo);
         TaskView currentPageTaskView = mRecentsView.getCurrentPageTaskView();
         if (currentPageTaskView != null) {
             mPreviousTaskViewType = currentPageTaskView.getType();
