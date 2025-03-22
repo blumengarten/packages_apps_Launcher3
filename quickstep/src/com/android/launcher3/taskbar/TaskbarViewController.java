@@ -496,7 +496,7 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
 
         float finalScale;
         TaskbarSharedState sharedState = mControllers.getSharedState();
-        if (sharedState != null || mControllers.getSharedState().startTaskbarVariantIsTransient) {
+        if (sharedState != null && sharedState.startTaskbarVariantIsTransient) {
             finalScale = mapRange(scale, 1f, ((float) mPersistentIconSize / mTransientIconSize));
         } else {
             finalScale = mapRange(scale, ((float) mTransientIconSize / mPersistentIconSize), 1f);
