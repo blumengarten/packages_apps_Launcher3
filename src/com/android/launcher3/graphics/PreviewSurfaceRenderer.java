@@ -20,12 +20,18 @@ import static android.content.res.Configuration.UI_MODE_NIGHT_NO;
 import static android.content.res.Configuration.UI_MODE_NIGHT_YES;
 import static android.view.Display.DEFAULT_DISPLAY;
 
+import static com.android.launcher3.Flags.extendibleThemeManager;
 import static com.android.launcher3.LauncherPrefs.GRID_NAME;
+import static com.android.launcher3.WorkspaceLayoutManager.FIRST_SCREEN_ID;
+import static com.android.launcher3.WorkspaceLayoutManager.SECOND_SCREEN_ID;
 import static com.android.launcher3.graphics.ThemeManager.PREF_ICON_SHAPE;
+import static com.android.launcher3.provider.LauncherDbUtils.selectionForWorkspaceScreen;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
+import static com.android.launcher3.widget.LauncherWidgetHolder.APPWIDGET_HOST_ID;
 
 import android.app.WallpaperColors;
+import android.appwidget.AppWidgetHost;
 import android.appwidget.AppWidgetProviderInfo;
 import android.content.Context;
 import android.content.res.Configuration;
@@ -33,6 +39,7 @@ import android.database.Cursor;
 import android.hardware.display.DisplayManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseArray;
@@ -56,7 +63,6 @@ import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherSettings;
-import com.android.launcher3.Workspace;
 import com.android.launcher3.dagger.LauncherComponentProvider;
 import com.android.launcher3.graphics.LauncherPreviewRenderer.PreviewAppComponent;
 import com.android.launcher3.graphics.LauncherPreviewRenderer.PreviewContext;
@@ -89,18 +95,22 @@ public class PreviewSurfaceRenderer {
     private static final String KEY_COLOR_RESOURCE_IDS = "color_resource_ids";
     private static final String KEY_COLOR_VALUES = "color_values";
     private static final String KEY_DARK_MODE = "use_dark_mode";
+    private static final String KEY_LAYOUT_XML = "layout_xml";
     public static final String KEY_SKIP_ANIMATIONS = "skip_animations";
 
     private final Context mContext;
     private SparseIntArray mPreviewColorOverride;
     private String mGridName;
     private String mShapeKey;
+    private String mLayoutXml;
 
     @Nullable private Boolean mDarkMode;
     private boolean mDestroyed = false;
     private boolean mHideQsb;
     @Nullable private FrameLayout mViewRoot = null;
+    private boolean mDeletingHostOnExit = false;
 
+    private final int mCallingPid;
     private final IBinder mHostToken;
     private final int mWidth;
     private final int mHeight;
@@ -111,11 +121,11 @@ public class PreviewSurfaceRenderer {
     private final RunnableList mLifeCycleTracker;
     private final SurfaceControlViewHost mSurfaceControlViewHost;
 
-
-    public PreviewSurfaceRenderer(
-            Context context, RunnableList lifecycleTracker, Bundle bundle) throws Exception {
+    public PreviewSurfaceRenderer(Context context, RunnableList lifecycleTracker, Bundle bundle,
+            int callingPid) throws Exception {
         mContext = context;
         mLifeCycleTracker = lifecycleTracker;
+        mCallingPid = callingPid;
         mGridName = bundle.getString("name");
         bundle.remove("name");
         if (mGridName == null) {
@@ -135,6 +145,7 @@ public class PreviewSurfaceRenderer {
         mDisplayId = bundle.getInt(KEY_DISPLAY_ID);
         mDisplay = context.getSystemService(DisplayManager.class)
                 .getDisplay(mDisplayId);
+        mLayoutXml = bundle.getString(KEY_LAYOUT_XML);
         if (mDisplay == null) {
             throw new IllegalArgumentException("Display ID does not match any displays.");
         }
@@ -335,12 +346,28 @@ public class PreviewSurfaceRenderer {
     private void loadModelData() {
         final Context inflationContext = getPreviewContext();
         if (!mGridName.equals(LauncherPrefs.INSTANCE.get(mContext).get(GRID_NAME))
-                || !mShapeKey.equals(LauncherPrefs.INSTANCE.get(mContext).get(PREF_ICON_SHAPE))) {
+                || !mShapeKey.equals(LauncherPrefs.INSTANCE.get(mContext).get(PREF_ICON_SHAPE))
+                || !TextUtils.isEmpty(mLayoutXml)) {
+
+            boolean isCustomLayout = extendibleThemeManager() &&  !TextUtils.isEmpty(mLayoutXml);
+            int widgetHostId = isCustomLayout ? APPWIDGET_HOST_ID + mCallingPid : APPWIDGET_HOST_ID;
+
             // Start the migration
-            PreviewContext previewContext =
-                    new PreviewContext(inflationContext, mGridName, mShapeKey);
+            PreviewContext previewContext = new PreviewContext(
+                    inflationContext, mGridName, mShapeKey, widgetHostId, mLayoutXml);
             PreviewAppComponent appComponent =
                     (PreviewAppComponent) LauncherComponentProvider.get(previewContext);
+
+            if (extendibleThemeManager() && isCustomLayout && !mDeletingHostOnExit) {
+                mDeletingHostOnExit = true;
+                mLifeCycleTracker.add(() -> {
+                    AppWidgetHost host = new AppWidgetHost(mContext, widgetHostId);
+                    // Start listening here, so that any previous active host is disabled
+                    host.startListening();
+                    host.stopListening();
+                    host.deleteHost();
+                });
+            }
 
             LoaderTask task = appComponent.getLoaderTaskFactory().newLoaderTask(
                     appComponent.getBaseLauncherBinderFactory().createBinder(new Callbacks[0]),
@@ -348,28 +375,23 @@ public class PreviewSurfaceRenderer {
 
             InvariantDeviceProfile idp = appComponent.getIDP();
             DeviceProfile deviceProfile = idp.getDeviceProfile(previewContext);
-            String query =
-                    LauncherSettings.Favorites.SCREEN + " = " + Workspace.FIRST_SCREEN_ID
-                            + " or " + LauncherSettings.Favorites.CONTAINER + " = "
-                            + LauncherSettings.Favorites.CONTAINER_HOTSEAT;
-            if (deviceProfile.isTwoPanels) {
-                query += " or " + LauncherSettings.Favorites.SCREEN + " = "
-                        + Workspace.SECOND_SCREEN_ID;
-            }
-
+            String query = deviceProfile.isTwoPanels
+                    ? selectionForWorkspaceScreen(FIRST_SCREEN_ID, SECOND_SCREEN_ID)
+                    : selectionForWorkspaceScreen(FIRST_SCREEN_ID);
             Map<ComponentKey, AppWidgetProviderInfo> widgetProviderInfoMap = new HashMap<>();
             task.loadWorkspaceForPreview(query, widgetProviderInfoMap);
             final SparseArray<Size> spanInfo = getLoadedLauncherWidgetInfo();
             MAIN_EXECUTOR.execute(() -> {
-                renderView(previewContext, appComponent.getDataModel(), widgetProviderInfoMap,
-                        spanInfo, idp);
+                renderView(previewContext, appComponent.getDataModel(), widgetHostId,
+                        widgetProviderInfoMap, spanInfo, idp);
                 mLifeCycleTracker.add(previewContext::onDestroy);
             });
         } else {
             LauncherAppState.getInstance(inflationContext).getModel().loadAsync(dataModel -> {
                 if (dataModel != null) {
-                    MAIN_EXECUTOR.execute(() -> renderView(inflationContext, dataModel, null,
-                            null, LauncherAppState.getIDP(inflationContext)));
+                    MAIN_EXECUTOR.execute(() -> renderView(inflationContext, dataModel,
+                            APPWIDGET_HOST_ID, null, null,
+                            LauncherAppState.getIDP(inflationContext)));
                 } else {
                     Log.e(TAG, "Model loading failed");
                 }
@@ -378,7 +400,7 @@ public class PreviewSurfaceRenderer {
     }
 
     @UiThread
-    private void renderView(Context inflationContext, BgDataModel dataModel,
+    private void renderView(Context inflationContext, BgDataModel dataModel, int widgetHostId,
             Map<ComponentKey, AppWidgetProviderInfo> widgetProviderInfoMap,
             @Nullable final SparseArray<Size> launcherWidgetSpanInfo, InvariantDeviceProfile idp) {
         if (mDestroyed) {
@@ -386,10 +408,10 @@ public class PreviewSurfaceRenderer {
         }
         LauncherPreviewRenderer renderer;
         if (Flags.newCustomizationPickerUi()) {
-            renderer = new LauncherPreviewRenderer(inflationContext, idp, mPreviewColorOverride,
-                    mWallpaperColors, launcherWidgetSpanInfo);
+            renderer = new LauncherPreviewRenderer(inflationContext, idp, widgetHostId,
+                    mPreviewColorOverride, mWallpaperColors, launcherWidgetSpanInfo);
         } else {
-            renderer = new LauncherPreviewRenderer(inflationContext, idp,
+            renderer = new LauncherPreviewRenderer(inflationContext, idp, widgetHostId,
                     mWallpaperColors, launcherWidgetSpanInfo);
         }
         renderer.hideBottomRow(mHideQsb);

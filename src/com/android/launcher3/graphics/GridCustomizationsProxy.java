@@ -27,6 +27,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder.DeathRecipient;
@@ -313,7 +314,7 @@ public class GridCustomizationsProxy implements ProxyProvider {
         RunnableList lifeCycleTracker = new RunnableList();
         try {
             PreviewSurfaceRenderer renderer = new PreviewSurfaceRenderer(
-                    mContext, lifeCycleTracker, request);
+                    mContext, lifeCycleTracker, request, Binder.getCallingPid());
             PreviewLifecycleObserver observer =
                     new PreviewLifecycleObserver(lifeCycleTracker, renderer);
 
