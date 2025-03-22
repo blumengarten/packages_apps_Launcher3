@@ -101,7 +101,8 @@ public abstract class AbsSwipeUpHandlerTestCase<
     protected final ActivityManager.RunningTaskInfo mRunningTaskInfo =
             new ActivityManager.RunningTaskInfo();
     protected final TopTaskTracker.CachedTaskInfo mCachedTaskInfo =
-            new TopTaskTracker.CachedTaskInfo(Collections.singletonList(mRunningTaskInfo));
+            new TopTaskTracker.CachedTaskInfo(
+                    Collections.singletonList(mRunningTaskInfo), /* canEnterDesktopMode = */ false);
     protected final RemoteAnimationTarget mRemoteAnimationTarget = new RemoteAnimationTarget(
             /* taskId= */ 0,
             /* mode= */ RemoteAnimationTarget.MODE_CLOSING,

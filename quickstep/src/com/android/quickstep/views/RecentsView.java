@@ -87,7 +87,6 @@ import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
-import android.app.WindowConfiguration;
 import android.content.Context;
 import android.content.Intent;
 import android.content.LocusId;
@@ -234,6 +233,7 @@ import com.android.quickstep.util.TransformParams;
 import com.android.quickstep.util.VibrationConstants;
 import com.android.systemui.plugins.ResourceProvider;
 import com.android.systemui.shared.recents.model.Task;
+import com.android.systemui.shared.recents.model.Task.TaskKey;
 import com.android.systemui.shared.recents.model.ThumbnailData;
 import com.android.systemui.shared.system.ActivityManagerWrapper;
 import com.android.systemui.shared.system.InteractionJankMonitorWrapper;
@@ -241,6 +241,7 @@ import com.android.systemui.shared.system.PackageManagerWrapper;
 import com.android.systemui.shared.system.TaskStackChangeListener;
 import com.android.systemui.shared.system.TaskStackChangeListeners;
 import com.android.wm.shell.common.pip.IPipAnimationListener;
+import com.android.wm.shell.shared.GroupedTaskInfo;
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 import com.android.wm.shell.shared.desktopmode.DesktopModeTransitionSource;
 
@@ -567,10 +568,10 @@ public abstract class RecentsView<
     private DesktopVisibilityController mDesktopVisibilityController = null;
 
     /**
-     * Reflects if Recents is currently in the middle of a gesture, and if so, which tasks are
-     * running. If a gesture is not in progress, this will be null.
+     * Reflects if Recents is currently in the middle of a gesture, and if so, which related
+     * [GroupedTaskInfo] is running. If a gesture is not in progress, this will be null.
      */
-    private @Nullable Task[] mActiveGestureRunningTasks;
+    private @Nullable GroupedTaskInfo mActiveGestureGroupedTaskInfo;
 
     // Keeps track of the previously known visible tasks for purposes of loading/unloading task data
     private final SparseBooleanArray mHasVisibleTaskData = new SparseBooleanArray();
@@ -582,7 +583,7 @@ public abstract class RecentsView<
     private final ViewPool<GroupedTaskView> mGroupedTaskViewPool;
     private final ViewPool<DesktopTaskView> mDesktopTaskViewPool;
 
-    private final TaskOverlayFactory mTaskOverlayFactory;
+    protected final TaskOverlayFactory mTaskOverlayFactory;
 
     protected boolean mDisallowScrollToClearAll;
     // True if it is not allowed to scroll to [AddDesktopButton].
@@ -671,7 +672,7 @@ public abstract class RecentsView<
                 return;
             }
             Log.d(TAG, "onTaskRemoved: " + taskId);
-            Task.TaskKey taskKey = taskContainer.getTask().key;
+            TaskKey taskKey = taskContainer.getTask().key;
             UI_HELPER_EXECUTOR.execute(new CancellableTask<>(
                     () -> PackageManagerWrapper.getInstance()
                             .getActivityInfo(taskKey.getComponent(), taskKey.userId) == null,
@@ -2100,12 +2101,12 @@ public abstract class RecentsView<
         if (newRunningTaskView != null) {
             setRunningTaskViewId(newRunningTaskView.getTaskViewId());
         } else {
-            if (mActiveGestureRunningTasks != null) {
+            if (mActiveGestureGroupedTaskInfo != null) {
                 // This will update mRunningTaskViewId and create a stub view if necessary.
                 // We try to avoid this because it can cause a scroll jump, but it is needed
                 // for cases where the running task isn't included in this load plan (e.g. if
                 // the current running task is excludedFromRecents.)
-                showCurrentTask(mActiveGestureRunningTasks, "applyLoadPlan");
+                showCurrentTask(mActiveGestureGroupedTaskInfo, "applyLoadPlan");
                 newRunningTaskView = getRunningTaskView();
             } else {
                 setRunningTaskViewId(INVALID_TASK_ID);
@@ -2826,7 +2827,7 @@ public abstract class RecentsView<
      * Handle the edge case where Recents could increment task count very high over long
      * period of device usage. Probably will never happen, but meh.
      */
-    private TaskView getTaskViewFromPool(TaskViewType type) {
+    protected TaskView getTaskViewFromPool(TaskViewType type) {
         TaskView taskView;
         switch (type) {
             case GROUPED:
@@ -2880,10 +2881,9 @@ public abstract class RecentsView<
      */
     // TODO: b/401582344 - Implement a way to exclude the `DesktopWallpaperActivity` from being
     //  considered in Overview.
-    public void onGestureAnimationStart(Task[] runningTasks) {
-        Log.d(TAG, "onGestureAnimationStart - runningTasks: " + Arrays.toString(runningTasks));
-        mActiveGestureRunningTasks = runningTasks;
-
+    public void onGestureAnimationStart(GroupedTaskInfo groupedTaskInfo) {
+        Log.d(TAG, "onGestureAnimationStart - groupedTaskInfo: " + groupedTaskInfo);
+        mActiveGestureGroupedTaskInfo = groupedTaskInfo;
 
         // This needs to be called before the other states are set since it can create the task view
         if (mOrientationState.setGestureActive(true)) {
@@ -2893,7 +2893,7 @@ public abstract class RecentsView<
             updateSizeAndPadding();
         }
 
-        showCurrentTask(mActiveGestureRunningTasks, "onGestureAnimationStart");
+        showCurrentTask(groupedTaskInfo, "onGestureAnimationStart");
         setEnableFreeScroll(false);
         setEnableDrawingLiveTile(false);
         setRunningTaskHidden(true);
@@ -2908,7 +2908,7 @@ public abstract class RecentsView<
     }
 
     private boolean isGestureActive() {
-        return mActiveGestureRunningTasks != null;
+        return mActiveGestureGroupedTaskInfo != null;
     }
 
     /**
@@ -3046,7 +3046,7 @@ public abstract class RecentsView<
      * Called when a gesture from an app has finished, and the animation to the target has ended.
      */
     public void onGestureAnimationEnd() {
-        mActiveGestureRunningTasks = null;
+        mActiveGestureGroupedTaskInfo = null;
         if (mOrientationState.setGestureActive(false)) {
             updateOrientationHandler(/* forceRecreateDragLayerControllers = */ false);
         }
@@ -3085,10 +3085,17 @@ public abstract class RecentsView<
     /**
      * Returns true if we should add a stub taskView for the running task id
      */
-    protected boolean shouldAddStubTaskView(Task[] runningTasks) {
-        int[] runningTaskIds = Arrays.stream(runningTasks).mapToInt(task -> task.key.id).toArray();
+    protected boolean shouldAddStubTaskView(GroupedTaskInfo groupedTaskInfo) {
+        int[] runningTaskIds;
+        if (groupedTaskInfo != null) {
+            runningTaskIds = groupedTaskInfo.getTaskInfoList().stream().mapToInt(
+                    taskInfo -> taskInfo.taskId).toArray();
+        } else {
+            runningTaskIds = new int[0];
+        }
         TaskView matchingTaskView = null;
-        if (hasDesktopTask(runningTasks) && runningTaskIds.length == 1) {
+        if (groupedTaskInfo != null && groupedTaskInfo.isBaseType(GroupedTaskInfo.TYPE_DESK)
+                && runningTaskIds.length == 1) {
             // TODO(b/342635213): Unsure if it's expected, desktop runningTasks only have a single
             // taskId, therefore we match any DesktopTaskView that contains the runningTaskId.
             TaskView taskview = getTaskViewByTaskId(runningTaskIds[0]);
@@ -3102,53 +3109,36 @@ public abstract class RecentsView<
     }
 
     /**
-     * Creates a `DesktopTaskView` for the currently active desk on this display, which contains the
-     * gievn `runningTasks`.
-     */
-    private DesktopTaskView createDesktopTaskViewForActiveDesk(Task[] runningTasks) {
-        final int activeDeskId = mUtils.getActiveDeskIdOnThisDisplay();
-        final var desktopTaskView = (DesktopTaskView) getTaskViewFromPool(TaskViewType.DESKTOP);
-
-        // TODO: b/401582344 - Implement a way to exclude the `DesktopWallpaperActivity`.
-        desktopTaskView.bind(
-                new DesktopTask(activeDeskId, mContainer.getDisplayId(),
-                        Arrays.asList(runningTasks)),
-                mOrientationState, mTaskOverlayFactory);
-        return desktopTaskView;
-    }
-
-    /**
-     * Creates a task view (if necessary) to represent the task with the {@param runningTaskId}.
+     * Creates a task view (if necessary) to represent the tasks with the {@param groupedTaskInfo}.
      *
      * All subsequent calls to reload will keep the task as the first item until {@link #reset()}
      * is called.  Also scrolls the view to this task.
      */
-    private void showCurrentTask(Task[] runningTasks, String caller) {
-        Log.d(TAG, "showCurrentTask(" + caller + ") - runningTasks: "
-                + Arrays.toString(runningTasks));
-        if (runningTasks.length == 0) {
+    private void showCurrentTask(GroupedTaskInfo groupedTaskInfo, String caller) {
+        Log.d(TAG, "showCurrentTask(" + caller + ") - groupedTaskInfo: " + groupedTaskInfo);
+        if (groupedTaskInfo == null) {
             return;
         }
 
         int runningTaskViewId = -1;
-        if (shouldAddStubTaskView(runningTasks)) {
+        if (shouldAddStubTaskView(groupedTaskInfo)) {
             boolean wasEmpty = getChildCount() == 0;
             // Add an empty view for now until the task plan is loaded and applied
             final TaskView taskView;
-            final boolean needGroupTaskView = runningTasks.length > 1;
-            final boolean needDesktopTask = hasDesktopTask(runningTasks);
-            if (needDesktopTask) {
-                taskView = createDesktopTaskViewForActiveDesk(runningTasks);
-            } else if (needGroupTaskView) {
+            if (groupedTaskInfo.isBaseType(GroupedTaskInfo.TYPE_DESK)) {
+                taskView = mUtils.createDesktopTaskViewForActiveDesk(groupedTaskInfo);
+            } else if (groupedTaskInfo.isBaseType(GroupedTaskInfo.TYPE_SPLIT)) {
                 taskView = getTaskViewFromPool(TaskViewType.GROUPED);
                 // When we create a placeholder task view mSplitBoundsConfig will be null, but with
                 // the actual app running we won't need to show the thumbnail until all the tasks
                 // load later anyways
-                ((GroupedTaskView) taskView).bind(runningTasks[0], runningTasks[1],
-                        mOrientationState, mTaskOverlayFactory, mSplitBoundsConfig);
+                ((GroupedTaskView) taskView).bind(Task.from(groupedTaskInfo.getTaskInfo1()),
+                        Task.from(groupedTaskInfo.getTaskInfo2()), mOrientationState,
+                        mTaskOverlayFactory, mSplitBoundsConfig);
             } else {
                 taskView = getTaskViewFromPool(TaskViewType.SINGLE);
-                taskView.bind(runningTasks[0], mOrientationState, mTaskOverlayFactory);
+                taskView.bind(Task.from(groupedTaskInfo.getTaskInfo1()), mOrientationState,
+                        mTaskOverlayFactory);
             }
             if (mAddDesktopButton != null && wasEmpty) {
                 addView(mAddDesktopButton);
@@ -3165,7 +3155,7 @@ public abstract class RecentsView<
                     makeMeasureSpec(getMeasuredHeight(), EXACTLY));
             layout(getLeft(), getTop(), getRight(), getBottom());
         } else {
-            var runningTaskView = getTaskViewByTaskId(runningTasks[0].key.id);
+            var runningTaskView = getTaskViewByTaskId(groupedTaskInfo.getTaskInfo1().taskId);
             if (runningTaskView != null) {
                 runningTaskViewId = runningTaskView.getTaskViewId();
             }
@@ -3196,22 +3186,6 @@ public abstract class RecentsView<
 
         // Reload the task list
         reloadIfNeeded();
-    }
-
-    private boolean hasDesktopTask(Task[] runningTasks) {
-        if (!DesktopModeStatus.canEnterDesktopMode(mContext)) {
-            return false;
-        }
-        for (Task task : runningTasks) {
-            if (task.key.windowingMode == WindowConfiguration.WINDOWING_MODE_FREEFORM) {
-                return true;
-            }
-        }
-
-        // A running empty desk will have a single running app for the `DesktopWallpaperActivity`.
-        // TODO: b/401582344 - Implement a way to exclude the `DesktopWallpaperActivity`.
-
-        return false;
     }
 
     /**
