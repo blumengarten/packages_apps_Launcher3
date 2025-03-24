@@ -26,6 +26,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.graphics.Point;
 import android.platform.test.annotations.PlatinumTest;
+import android.platform.test.rule.ScreenRecordRule;
 import android.util.Log;
 
 import com.android.launcher3.Launcher;
@@ -107,6 +108,7 @@ public class TaplUninstallRemoveTest extends AbstractLauncherUiTest<Launcher> {
     @Test
     @PortraitLandscape
     @PlatinumTest(focusArea = "launcher")
+    @ScreenRecordRule.ScreenRecord // b/386231522
     public void testUninstallFromAllApps() throws Exception {
         // Ensure no existing app icons on the workspace cause scroll to all apps interruptions
         mLauncher.clearLauncherData();
