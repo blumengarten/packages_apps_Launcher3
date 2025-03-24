@@ -22,7 +22,6 @@ import static com.android.launcher3.Flags.enableScalingRevealHomeAnimation;
 import static com.android.launcher3.logging.StatsLogManager.LAUNCHER_STATE_OVERVIEW;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.SystemProperties;
 
@@ -162,7 +161,7 @@ public class OverviewState extends LauncherState {
     @Override
     public int getWorkspaceScrimColor(Launcher launcher) {
         return enableOverviewBackgroundWallpaperBlur() && BlurUtils.supportsBlursOnWindows()
-                ? Color.TRANSPARENT
+                ? Themes.getAttrColor(launcher, R.attr.overviewScrimColorOverBlur)
                 : Themes.getAttrColor(launcher, R.attr.overviewScrimColor);
     }
 
