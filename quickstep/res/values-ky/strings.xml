@@ -164,5 +164,5 @@
     <string name="header_default_app_title" msgid="8308052350689531566">"Колдонмонун аталышы"</string>
     <string name="header_close_icon_description" msgid="5400033616675911319">"Жабуу баскычы"</string>
     <string name="pin_to_taskbar" msgid="6607778046321626950">"Тапшырмалар панелине кадоо"</string>
-    <string name="unpin_from_taskbar" msgid="2178811773165572676">"Тапшырмалар панелинен алып коюу"</string>
+    <string name="unpin_from_taskbar" msgid="2178811773165572676">"Тапшырмалар панелинен алуу"</string>
 </resources>
