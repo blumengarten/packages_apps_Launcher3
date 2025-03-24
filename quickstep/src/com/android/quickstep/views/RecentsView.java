@@ -7016,6 +7016,8 @@ public abstract class RecentsView<
             return;
         }
 
+        TaskView currentTaskView = getTaskViewAt(mCurrentPage);
+
         // We assume that a newly added desk is always empty and gets added to the left of the
         // `AddNewDesktopButton`.
         DesktopTaskView desktopTaskView =
@@ -7029,9 +7031,12 @@ public abstract class RecentsView<
 
         updateTaskSize();
         mUtils.updateChildTaskOrientations();
+        updateScrollSynchronously();
 
-        // TODO: b/401002178 - Recalculate the new current page such that the addition of the new
-        //  desk does not result in a change in the current scroll page.
+        // Set Current Page based on the stored TaskView.
+        if (currentTaskView != null) {
+            setCurrentPage(indexOfChild(currentTaskView));
+        }
     }
 
     @Override
