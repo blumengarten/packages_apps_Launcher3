@@ -18,6 +18,7 @@ package com.android.quickstep;
 import static android.app.WindowConfiguration.ACTIVITY_TYPE_UNDEFINED;
 import static android.app.WindowConfiguration.WINDOWING_MODE_PINNED;
 import static android.view.Display.DEFAULT_DISPLAY;
+import static android.app.ActivityTaskManager.INVALID_TASK_ID;
 
 import static com.android.launcher3.MotionEventsUtils.isTrackpadScroll;
 import static com.android.launcher3.util.DisplayController.CHANGE_ALL;
@@ -342,6 +343,9 @@ public class RecentsAnimationDeviceState implements DisplayInfoChangeListener, E
      * @return whether the given running task info matches the gesture-blocked task.
      */
     public boolean isGestureBlockedTask(CachedTaskInfo taskInfo) {
+        if (mGestureBlockingTaskId == INVALID_TASK_ID) {
+            return false;
+        }
         if (com.android.wm.shell.Flags.enableShellTopTaskTracking()) {
             return taskInfo != null && taskInfo.topGroupedTaskContainsTask(mGestureBlockingTaskId);
         } else {
