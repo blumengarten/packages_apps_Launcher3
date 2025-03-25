@@ -964,4 +964,15 @@ public final class Utilities {
             return null;
         }
     }
+
+    /**
+     * Logs with DEBUG priority if the current device is a debug device.
+     *
+     * <p>Debug devices by default include -eng and -userdebug builds, but not -user builds.
+     */
+    public static void debugLog(String tag, String message) {
+        if (BuildConfig.IS_DEBUG_DEVICE) {
+            Log.d(tag, message);
+        }
+    }
 }

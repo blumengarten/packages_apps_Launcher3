@@ -217,6 +217,5 @@
     <string name="ps_container_transition" msgid="8667331812048014412">"Private Space-н шилжилт"</string>
     <string name="ps_add_button_label" msgid="8127988716897128773">"Суулгах"</string>
     <string name="ps_add_button_content_description" msgid="3254274107740952556">"Хувийн орон зайд аппууд суулгана уу"</string>
-    <!-- no translation found for ps_app_content_description (1129133475892816226) -->
-    <skip />
+    <string name="ps_app_content_description" msgid="1129133475892816226">"Хаалттай орон зайд файл болон бусад зүйлийг нэмэх"</string>
 </resources>

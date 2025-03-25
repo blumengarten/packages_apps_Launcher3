@@ -26,6 +26,7 @@ import static com.android.launcher3.BaseActivity.INVISIBLE_ALL;
 import static com.android.launcher3.BaseActivity.INVISIBLE_BY_PENDING_FLAGS;
 import static com.android.launcher3.BaseActivity.PENDING_INVISIBLE_BY_WALLPAPER_ANIMATION;
 import static com.android.window.flags.Flags.predictiveBackThreeButtonNav;
+import static com.android.window.flags.Flags.removeDepartTargetFromMotion;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -121,6 +122,7 @@ public class LauncherBackAnimationController {
     private final SurfaceControl.Transaction mTransaction = new SurfaceControl.Transaction();
     private float mBackProgress = 0;
     private boolean mBackInProgress = false;
+    private boolean mWaitStartTransition = false;
     private OnBackInvokedCallbackStub mBackCallback;
     private IRemoteAnimationFinishedCallback mAnimationFinishedCallback;
     private final BackProgressAnimator mProgressAnimator = new BackProgressAnimator();
@@ -158,7 +160,8 @@ public class LauncherBackAnimationController {
         mBackCallback = new OnBackInvokedCallbackStub(handler, mProgressAnimator,
                 mProgressInterpolator, this);
         SystemUiProxy.INSTANCE.get(mLauncher).setBackToLauncherCallback(mBackCallback,
-                new RemoteAnimationRunnerStub(this));
+                new RemoteAnimationRunnerStub(this,
+                        removeDepartTargetFromMotion() ? handler : null));
     }
 
     private static class OnBackInvokedCallbackStub extends IOnBackInvokedCallback.Stub {
@@ -195,7 +198,14 @@ public class LauncherBackAnimationController {
             mHandler.post(() -> {
                 LauncherBackAnimationController controller = mControllerRef.get();
                 if (controller != null) {
-                    controller.startTransition();
+                    if (!removeDepartTargetFromMotion()) {
+                        controller.startTransition();
+                    } else {
+                        controller.mWaitStartTransition = true;
+                        if (controller.mBackTarget != null && controller.mBackInProgress) {
+                            controller.startTransition();
+                        }
+                    }
                 }
                 mProgressAnimator.reset();
             });
@@ -220,7 +230,8 @@ public class LauncherBackAnimationController {
             mHandler.post(() -> {
                 LauncherBackAnimationController controller = mControllerRef.get();
                 if (controller != null) {
-                    controller.startBack(backEvent);
+                    controller.initBackMotion(backEvent);
+                    controller.tryStartBackAnimation();
                     mProgressAnimator.onBackStarted(backEvent, event -> {
                         float backProgress = event.getProgress();
                         controller.mBackProgress =
@@ -248,9 +259,12 @@ public class LauncherBackAnimationController {
         // LauncherBackAnimationController has strong reference to Launcher activity, the binder
         // callback should not hold strong reference to it to avoid memory leak.
         private WeakReference<LauncherBackAnimationController> mControllerRef;
+        private final Handler mHandler;
 
-        private RemoteAnimationRunnerStub(LauncherBackAnimationController controller) {
+        private RemoteAnimationRunnerStub(LauncherBackAnimationController controller,
+                Handler handler) {
             mControllerRef = new WeakReference<>(controller);
+            mHandler = handler;
         }
 
         @Override
@@ -261,15 +275,29 @@ public class LauncherBackAnimationController {
             if (controller == null) {
                 return;
             }
-            for (final RemoteAnimationTarget target : apps) {
-                if (MODE_CLOSING == target.mode) {
-                    controller.mBackTarget = target;
+            final Runnable r = () -> {
+                for (final RemoteAnimationTarget target : apps) {
+                    if (MODE_CLOSING == target.mode) {
+                        controller.mBackTarget = target;
+                    }
+                    if (MODE_OPENING == target.mode) {
+                        controller.mLauncherTarget = target;
+                    }
                 }
-                if (MODE_OPENING == target.mode) {
-                    controller.mLauncherTarget = target;
+                controller.mAnimationFinishedCallback = finishedCallback;
+                if (!removeDepartTargetFromMotion()) {
+                    return;
                 }
+                controller.tryStartBackAnimation();
+                if (controller.mWaitStartTransition) {
+                    controller.startTransition();
+                }
+            };
+            if (mHandler != null) {
+                mHandler.post(r);
+            } else {
+                r.run();
             }
-            controller.mAnimationFinishedCallback = finishedCallback;
         }
 
         @Override
@@ -294,34 +322,39 @@ public class LauncherBackAnimationController {
         mBackCallback = null;
     }
 
-    private void startBack(BackMotionEvent backEvent) {
+    private void initBackMotion(BackMotionEvent backEvent) {
         // in case we're still animating an onBackCancelled event, let's remove the finish-
         // callback from the progress animator to prevent calling finishAnimation() before
         // restarting a new animation
-        // Side note: startBack is never called during the post-commit phase if the back gesture
-        // was committed (not cancelled). BackAnimationController prevents that. Therefore we
-        // don't have to handle that case.
+        // Side note: initBackMotion is never called during the post-commit phase if the back
+        // gesture was committed (not cancelled). BackAnimationController prevents that. Therefore
+        // we don't have to handle that case.
         mProgressAnimator.removeOnBackCancelledFinishCallback();
 
+        if (!removeDepartTargetFromMotion()) {
+            RemoteAnimationTarget appTarget = backEvent.getDepartingAnimationTarget();
+            if (appTarget == null || appTarget.leash == null || !appTarget.leash.isValid()) {
+                return;
+            }
+            mBackTarget = appTarget;
+        }
         mBackInProgress = true;
-        RemoteAnimationTarget appTarget = backEvent.getDepartingAnimationTarget();
-
-        if (appTarget == null || appTarget.leash == null || !appTarget.leash.isValid()) {
+        mInitialTouchPos.set(backEvent.getTouchX(), backEvent.getTouchY());
+    }
+    private void tryStartBackAnimation() {
+        if (mBackTarget == null || (removeDepartTargetFromMotion() && !mBackInProgress)) {
             return;
         }
 
         mTransaction
-                .show(appTarget.leash)
+                .show(mBackTarget.leash)
                 .setAnimationTransaction();
-        mBackTarget = appTarget;
-        mInitialTouchPos.set(backEvent.getTouchX(), backEvent.getTouchY());
-
-        mStartRect.set(appTarget.windowConfiguration.getMaxBounds());
+        mStartRect.set(mBackTarget.windowConfiguration.getMaxBounds());
 
         // inset bottom in case of taskbar being present
         if (!predictiveBackThreeButtonNav() || mLauncher.getDeviceProfile().isTaskbarPresent
                 || DisplayController.getNavigationMode(mLauncher) == NavigationMode.NO_BUTTON) {
-            mStartRect.inset(0, 0, 0, appTarget.contentInsets.bottom);
+            mStartRect.inset(0, 0, 0, mBackTarget.contentInsets.bottom);
         }
 
         mLauncherTargetView = mQuickstepTransitionManager.findLauncherView(
@@ -466,10 +499,14 @@ public class LauncherBackAnimationController {
     }
 
     private void startTransition() {
-        if (mBackTarget == null) {
-            // Trigger transition system instead of custom transition animation.
-            finishAnimation();
-            return;
+        if (!removeDepartTargetFromMotion()) {
+            if (mBackTarget == null) {
+                // Trigger transition system instead of custom transition animation.
+                finishAnimation();
+                return;
+            }
+        } else {
+            mWaitStartTransition = false;
         }
         if (mLauncher.isDestroyed()) {
             return;

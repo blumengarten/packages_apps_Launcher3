@@ -40,6 +40,7 @@
     <attr name="iconOnlyShortcutColor" format="color" />
     <attr name="eduHalfSheetBGColor" format="color" />
     <attr name="overviewScrimColor" format="color" />
+    <attr name="overviewScrimColorOverBlur" format="color" />
     <attr name="popupNotificationDotColor" format="color" />
     <attr name="notificationDotColor" format="color" />
     <attr name="focusOutlineColor" format="color" />

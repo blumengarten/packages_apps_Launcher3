@@ -21,6 +21,7 @@ import static android.app.WindowConfiguration.ACTIVITY_TYPE_RECENTS;
 import static android.content.Intent.ACTION_CHOOSER;
 import static android.content.Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS;
 import static android.view.Display.DEFAULT_DISPLAY;
+import static android.view.Display.INVALID_DISPLAY;
 
 import static com.android.launcher3.Flags.enableOverviewOnConnectedDisplays;
 import static com.android.launcher3.util.SplitConfigurationOptions.STAGE_POSITION_TOP_OR_LEFT;
@@ -332,7 +333,7 @@ public class TopTaskTracker extends ISplitScreenListener.Stub implements TaskSta
             // TODO(346588978): Currently ignore filterOnlyVisibleRecents, but perhaps make this an
             //  explicit filter For things to ignore (ie. PIP/Bubbles/Assistant/etc/so that this is
             //  explicit)
-            return new CachedTaskInfo(mVisibleTasks.get(displayId), mCanEnterDesktopMode);
+            return new CachedTaskInfo(mVisibleTasks.get(displayId));
         } else {
             if (filterOnlyVisibleRecents) {
                 // Since we only know about the top most task, any filtering may not be applied on
@@ -343,9 +344,10 @@ public class TopTaskTracker extends ISplitScreenListener.Stub implements TaskSta
                 if (enableOverviewOnConnectedDisplays()) {
                     return new CachedTaskInfo(Arrays.stream(tasks).filter(
                             info -> ExternalDisplaysKt.getSafeDisplayId(info)
-                                    == displayId).toList(), mCanEnterDesktopMode);
+                                    == displayId).toList(), mCanEnterDesktopMode, displayId);
                 } else {
-                    return new CachedTaskInfo(Arrays.asList(tasks), mCanEnterDesktopMode);
+                    return new CachedTaskInfo(Arrays.asList(tasks), mCanEnterDesktopMode,
+                            displayId);
                 }
             }
 
@@ -363,9 +365,9 @@ public class TopTaskTracker extends ISplitScreenListener.Stub implements TaskSta
             if (enableOverviewOnConnectedDisplays()) {
                 return new CachedTaskInfo(tasks.stream().filter(
                         info -> ExternalDisplaysKt.getSafeDisplayId(info) == displayId).toList(),
-                        mCanEnterDesktopMode);
+                        mCanEnterDesktopMode, displayId);
             } else {
-                return new CachedTaskInfo(tasks, mCanEnterDesktopMode);
+                return new CachedTaskInfo(tasks, mCanEnterDesktopMode, displayId);
             }
         }
     }
@@ -385,8 +387,8 @@ public class TopTaskTracker extends ISplitScreenListener.Stub implements TaskSta
      * during the lifecycle of the task.
      */
     public static class CachedTaskInfo {
-        // TODO: b/402362465 - Provide a valid value while tracking top task per display.
-        private final int mDisplayId = DEFAULT_DISPLAY;
+        // Only used when enableShellTopTaskTracking() is disabled.
+        private int mDisplayId = INVALID_DISPLAY;
         // Only used when enableShellTopTaskTracking() is disabled
         @Nullable
         private final TaskInfo mTopTask;
@@ -397,22 +399,23 @@ public class TopTaskTracker extends ISplitScreenListener.Stub implements TaskSta
         @Nullable
         private final GroupedTaskInfo mVisibleTasks;
 
-        private final boolean mCanEnterDesktopMode;
+        private boolean mCanEnterDesktopMode = false;
 
         // Only used when enableShellTopTaskTracking() is enabled
-        CachedTaskInfo(@Nullable GroupedTaskInfo visibleTasks, boolean canEnterDesktopMode) {
+        CachedTaskInfo(@Nullable GroupedTaskInfo visibleTasks) {
             mAllCachedTasks = null;
             mTopTask = null;
             mVisibleTasks = visibleTasks;
-            mCanEnterDesktopMode = canEnterDesktopMode;
         }
 
         // Only used when enableShellTopTaskTracking() is disabled
-        CachedTaskInfo(@NonNull List<TaskInfo> allCachedTasks, boolean canEnterDesktopMode) {
+        CachedTaskInfo(@NonNull List<TaskInfo> allCachedTasks, boolean canEnterDesktopMode,
+                int displayId) {
             mVisibleTasks = null;
             mAllCachedTasks = allCachedTasks;
             mTopTask = allCachedTasks.isEmpty() ? null : allCachedTasks.get(0);
             mCanEnterDesktopMode = canEnterDesktopMode;
+            mDisplayId = displayId;
         }
 
         /**
@@ -522,7 +525,7 @@ public class TopTaskTracker extends ISplitScreenListener.Stub implements TaskSta
                             && t.getActivityType() != ACTIVITY_TYPE_RECENTS)
                     .toList();
             return visibleNonExcludedTasks.isEmpty() ? null
-                    : new CachedTaskInfo(visibleNonExcludedTasks, mCanEnterDesktopMode);
+                    : new CachedTaskInfo(visibleNonExcludedTasks, mCanEnterDesktopMode, mDisplayId);
         }
 
         /**
@@ -555,7 +558,6 @@ public class TopTaskTracker extends ISplitScreenListener.Stub implements TaskSta
 
         // TODO(346588978): Update this to return more than a single task once the callers
         //  are refactored.
-
         /**
          * Returns a {@link GroupedTaskInfo} which can be used as a placeholder until the true
          * object is loaded by the model.

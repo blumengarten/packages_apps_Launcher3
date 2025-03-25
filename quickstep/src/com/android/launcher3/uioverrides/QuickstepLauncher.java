@@ -86,7 +86,6 @@ import android.os.Trace;
 import android.os.UserHandle;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Display;
 import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
@@ -225,7 +224,6 @@ import java.util.stream.Stream;
 
 public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         SystemShortcut.BubbleActivityStarter {
-    private static final String TAG = "QuickstepLauncher";
     private static final boolean TRACE_LAYOUTS =
             SystemProperties.getBoolean("persist.debug.trace_layouts", false);
     private static final String TRACE_RELAYOUT_CLASS =
@@ -562,35 +560,20 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
     @Override
     public void onDestroy() {
-        // wrap non-trivial clean up blocks in try-catch to avoid stopping clean up of rest of
-        // objects
-
         if (mAppTransitionManager != null) {
-            try {
-                mAppTransitionManager.onActivityDestroyed();
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to destroy mAppTransitionManager", e);
-            }
+            mAppTransitionManager.onActivityDestroyed();
         }
         mAppTransitionManager = null;
         mIsPredictiveBackToHomeInProgress = false;
 
         if (mUnfoldTransitionProgressProvider != null) {
-            try {
-                SystemUiProxy.INSTANCE.get(this).setUnfoldAnimationListener(null);
-                mUnfoldTransitionProgressProvider.destroy();
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to destroy mUnfoldTransitionProgressProvider", e);
-            }
+            SystemUiProxy.INSTANCE.get(this).setUnfoldAnimationListener(null);
+            mUnfoldTransitionProgressProvider.destroy();
         }
 
         OverviewComponentObserver.INSTANCE.get(this)
                 .removeOverviewChangeListener(mOverviewChangeListener);
-        try {
-            mTISBindHelper.onDestroy();
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to destroy mTISBindHelper", e);
-        }
+        mTISBindHelper.onDestroy();
 
         if (mLauncherUnfoldAnimationController != null) {
             mLauncherUnfoldAnimationController.onDestroy();
@@ -600,22 +583,15 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
             mSplitSelectStateController.onDestroy();
         }
 
-        try {
-            RecentsView recentsView = getOverviewPanel();
-            if (recentsView != null) {
-                recentsView.destroy();
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to destroy RecentsView", e);
+        RecentsView recentsView = getOverviewPanel();
+        if (recentsView != null) {
+            recentsView.destroy();
         }
 
-        try {
-            super.onDestroy();
-        } finally { // trivial close operations in finally.
-            mHotseatPredictionController.destroy();
-            if (mViewCapture != null) mViewCapture.close();
-            removeBackAnimationCallback(mSplitSelectStateController.getSplitBackHandler());
-        }
+        super.onDestroy();
+        mHotseatPredictionController.destroy();
+        if (mViewCapture != null) mViewCapture.close();
+        removeBackAnimationCallback(mSplitSelectStateController.getSplitBackHandler());
     }
 
     @Override

@@ -217,6 +217,5 @@
     <string name="ps_container_transition" msgid="8667331812048014412">"ব্যক্তিগত স্পেস ট্রানজিট করা"</string>
     <string name="ps_add_button_label" msgid="8127988716897128773">"ইনস্টল করুন"</string>
     <string name="ps_add_button_content_description" msgid="3254274107740952556">"প্রাইভেট স্পেসে অ্যাপ ইনস্টল করুন"</string>
-    <!-- no translation found for ps_app_content_description (1129133475892816226) -->
-    <skip />
+    <string name="ps_app_content_description" msgid="1129133475892816226">"প্রাইভেট স্পেসে ফাইল ও আরও অনেক কিছু যোগ করুন"</string>
 </resources>

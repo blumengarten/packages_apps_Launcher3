@@ -22,9 +22,11 @@ import static com.android.quickstep.InputConsumerUtils.newConsumer;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.kotlin.StubberKt.doCallRealMethod;
 
 import android.annotation.NonNull;
 import android.os.Looper;
@@ -303,6 +305,16 @@ public class InputConsumerUtilsTest {
         when(mDeviceState.isGestureBlockedTask(any())).thenReturn(true);
 
         assertEqualsDefaultInputConsumer(this::createBaseInputConsumer);
+    }
+
+    @Test
+    public void testNewBaseConsumer_noGestureBlockedTask_returnsOtherActivityInputConsumer() {
+        doCallRealMethod().when(mDeviceState).setGestureBlockingTaskId(anyInt());
+        mDeviceState.setGestureBlockingTaskId(-1);
+        when(mDeviceState.isGestureBlockedTask(any())).thenCallRealMethod();
+
+        assertCorrectInputConsumer(this::createBaseInputConsumer, OtherActivityInputConsumer.class,
+                InputConsumer.TYPE_OTHER_ACTIVITY);
     }
 
     @Test

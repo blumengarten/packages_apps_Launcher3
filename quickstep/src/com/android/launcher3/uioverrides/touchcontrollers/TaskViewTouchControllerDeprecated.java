@@ -17,6 +17,7 @@ package com.android.launcher3.uioverrides.touchcontrollers;
 
 import static com.android.launcher3.AbstractFloatingView.TYPE_TOUCH_CONTROLLER_NO_INTERCEPT;
 import static com.android.launcher3.LauncherAnimUtils.SUCCESS_TRANSITION_PROGRESS;
+import static com.android.launcher3.Utilities.debugLog;
 import static com.android.launcher3.touch.SingleAxisSwipeDetector.DIRECTION_BOTH;
 
 import android.animation.Animator;
@@ -56,6 +57,7 @@ import com.android.quickstep.views.TaskView;
 public class TaskViewTouchControllerDeprecated<
         CONTAINER extends Context & RecentsViewContainer> extends AnimatorListenerAdapter
         implements TouchController, SingleAxisSwipeDetector.Listener {
+    private static final String TAG = "TaskViewTouchControllerDeprecated";
 
     private static final float ANIMATION_PROGRESS_FRACTION_MIDPOINT = 0.5f;
     private static final long MIN_TASK_DISMISS_ANIMATION_DURATION = 300;
@@ -110,6 +112,7 @@ public class TaskViewTouchControllerDeprecated<
             if (mCurrentAnimation != null) {
                 mCurrentAnimation.getAnimationPlayer().end();
             }
+            debugLog(TAG, "Not intercepting edge swipe on nav bar.");
             return false;
         }
         if (mCurrentAnimation != null) {
@@ -121,6 +124,7 @@ public class TaskViewTouchControllerDeprecated<
         }
         if (AbstractFloatingView.getTopOpenViewWithType(
                 mContainer, TYPE_TOUCH_CONTROLLER_NO_INTERCEPT) != null) {
+            debugLog(TAG, "Not intercepting, open floating view blocking touch.");
             return false;
         }
         return mTaskViewRecentsTouchContext.isRecentsInteractive();
@@ -142,6 +146,7 @@ public class TaskViewTouchControllerDeprecated<
         if (ev.getAction() == MotionEvent.ACTION_DOWN) {
             mNoIntercept = !canInterceptTouch(ev);
             if (mNoIntercept) {
+                debugLog(TAG, "Not intercepting touch.");
                 return false;
             }
 
@@ -186,6 +191,7 @@ public class TaskViewTouchControllerDeprecated<
                 }
                 if (mTaskBeingDragged == null) {
                     mNoIntercept = true;
+                    debugLog(TAG, "Not intercepting touch, no task to drag.");
                     return false;
                 }
             }
@@ -195,6 +201,7 @@ public class TaskViewTouchControllerDeprecated<
         }
 
         if (mNoIntercept) {
+            debugLog(TAG, "Not intercepting touch.");
             return false;
         }
 
@@ -266,6 +273,7 @@ public class TaskViewTouchControllerDeprecated<
     @Override
     public void onDragStart(boolean start, float startDisplacement) {
         if (!mDraggingEnabled) return;
+        debugLog(TAG, "Handling touch.");
 
         RecentsPagedOrientationHandler orientationHandler =
                 mRecentsView.getPagedOrientationHandler();
