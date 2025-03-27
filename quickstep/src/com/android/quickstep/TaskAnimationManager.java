@@ -425,22 +425,29 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
     public void finishRunningRecentsAnimation(boolean toHome) {
         finishRunningRecentsAnimation(toHome, false /* forceFinish */, null /* forceFinishCb */);
     }
+    public void finishRunningRecentsAnimation(
+            boolean toHome, boolean forceFinish, Runnable forceFinishCb) {
+        finishRunningRecentsAnimation(toHome, forceFinish, forceFinishCb, mController);
+    }
 
     /**
      * Finishes the running recents animation.
      * @param forceFinish will synchronously finish the controller
      */
-    public void finishRunningRecentsAnimation(boolean toHome, boolean forceFinish,
-            Runnable forceFinishCb) {
-        if (mController != null) {
+    public void finishRunningRecentsAnimation(
+            boolean toHome,
+            boolean forceFinish,
+            @Nullable Runnable forceFinishCb,
+            @Nullable RecentsAnimationController controller) {
+        if (controller != null) {
             ActiveGestureProtoLogProxy.logFinishRunningRecentsAnimation(toHome);
             if (forceFinish) {
-                mController.finishController(toHome, forceFinishCb, false /* sendUserLeaveHint */,
+                controller.finishController(toHome, forceFinishCb, false /* sendUserLeaveHint */,
                         true /* forceFinish */);
             } else {
                 Utilities.postAsyncCallback(MAIN_EXECUTOR.getHandler(), toHome
-                        ? mController::finishAnimationToHome
-                        : mController::finishAnimationToApp);
+                        ? controller::finishAnimationToHome
+                        : controller::finishAnimationToApp);
             }
         }
     }
@@ -463,6 +470,29 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
      */
     public boolean isRecentsAnimationRunning() {
         return mController != null;
+    }
+
+    void onLauncherDestroyed() {
+        if (!mRecentsAnimationStartPending) {
+            return;
+        }
+        if (mCallbacks == null) {
+            return;
+        }
+        ActiveGestureProtoLogProxy.logQueuingForceFinishRecentsAnimation();
+        mCallbacks.addListener(new RecentsAnimationCallbacks.RecentsAnimationListener() {
+            @Override
+            public void onRecentsAnimationStart(
+                    RecentsAnimationController controller,
+                    RecentsAnimationTargets targets,
+                    @Nullable TransitionInfo transitionInfo) {
+                finishRunningRecentsAnimation(
+                        /* toHome= */ false,
+                        /* forceFinish= */ true,
+                        /* forceFinishCb= */ null,
+                        controller);
+            }
+        });
     }
 
     /**

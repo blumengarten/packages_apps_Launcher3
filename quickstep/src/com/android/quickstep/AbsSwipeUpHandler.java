@@ -221,15 +221,6 @@ public abstract class AbsSwipeUpHandler<
     // The previous task view type before the user quick switches between tasks
     private TaskViewType mPreviousTaskViewType;
 
-    private final Runnable mLauncherOnDestroyCallback = () -> {
-        ActiveGestureProtoLogProxy.logLauncherDestroyed();
-        mRecentsView.removeOnScrollChangedListener(mOnRecentsScrollListener);
-        mRecentsView = null;
-        mContainer = null;
-        mStateCallback.clearState(STATE_LAUNCHER_PRESENT);
-        mRecentsAnimationStartCallbacks.clear();
-    };
-
     private static int FLAG_COUNT = 0;
     private static int getNextStateFlag(String name) {
         if (DEBUG_STATES) {
@@ -355,6 +346,16 @@ public abstract class AbsSwipeUpHandler<
     //  can try to have RectFSpringAnim evaluate multiple rects at once
     private final SwipePipToHomeAnimator[] mSwipePipToHomeAnimators =
             new SwipePipToHomeAnimator[2];
+
+    private final Runnable mLauncherOnDestroyCallback = () -> {
+        ActiveGestureProtoLogProxy.logLauncherDestroyed();
+        mRecentsView.removeOnScrollChangedListener(mOnRecentsScrollListener);
+        mRecentsView = null;
+        mContainer = null;
+        mStateCallback.clearState(STATE_LAUNCHER_PRESENT);
+        mRecentsAnimationStartCallbacks.clear();
+        mTaskAnimationManager.onLauncherDestroyed();
+    };
 
     // Interpolate RecentsView scale from start of quick switch scroll until this scroll threshold
     private final float mQuickSwitchScaleScrollThreshold;

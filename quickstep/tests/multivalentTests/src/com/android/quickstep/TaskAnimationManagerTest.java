@@ -19,18 +19,29 @@ package com.android.quickstep;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import android.app.ActivityManager;
 import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
+import android.graphics.Rect;
+import android.os.Bundle;
 import android.view.Display;
+import android.view.RemoteAnimationTarget;
+import android.view.SurfaceControl;
+import android.window.TransitionInfo;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
 import androidx.test.platform.app.InstrumentationRegistry;
+
+import com.android.systemui.shared.system.RecentsAnimationControllerCompat;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -78,6 +89,56 @@ public class TaskAnimationManagerTest {
                 .startRecentsActivity(any(), optionsCaptor.capture(), any(), anyBoolean());
         assertEquals(ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOW_ALWAYS,
                 optionsCaptor.getValue().getPendingIntentBackgroundActivityStartMode());
+    }
+
+    @Test
+    public void testLauncherDestroyed_whileRecentsAnimationStartPending_finishesAnimation() {
+        final GestureState gestureState = mock(GestureState.class);
+        final ArgumentCaptor<RecentsAnimationCallbacks> listenerCaptor =
+                ArgumentCaptor.forClass(RecentsAnimationCallbacks.class);
+        final RecentsAnimationControllerCompat controllerCompat =
+                mock(RecentsAnimationControllerCompat.class);
+        final RemoteAnimationTarget remoteAnimationTarget = new RemoteAnimationTarget(
+                /* taskId= */ 0,
+                /* mode= */ RemoteAnimationTarget.MODE_CLOSING,
+                /* leash= */ new SurfaceControl(),
+                /* isTranslucent= */ false,
+                /* clipRect= */ null,
+                /* contentInsets= */ null,
+                /* prefixOrderIndex= */ 0,
+                /* position= */ null,
+                /* localBounds= */ null,
+                /* screenSpaceBounds= */ null,
+                new Configuration().windowConfiguration,
+                /* isNotInRecents= */ false,
+                /* startLeash= */ null,
+                /* startBounds= */ null,
+                /* taskInfo= */ new ActivityManager.RunningTaskInfo(),
+                /* allowEnterPip= */ false);
+
+        doReturn(mock(LauncherActivityInterface.class)).when(gestureState).getContainerInterface();
+        when(mSystemUiProxy
+                .startRecentsActivity(any(), any(), listenerCaptor.capture(), anyBoolean()))
+                .thenReturn(true);
+        when(gestureState.getRunningTaskIds(anyBoolean())).thenReturn(new int[0]);
+
+        runOnMainSync(() -> {
+            mTaskAnimationManager.startRecentsAnimation(
+                    gestureState,
+                    new Intent(),
+                    mock(RecentsAnimationCallbacks.RecentsAnimationListener.class));
+            mTaskAnimationManager.onLauncherDestroyed();
+            listenerCaptor.getValue().onAnimationStart(
+                    controllerCompat,
+                    new RemoteAnimationTarget[] { remoteAnimationTarget },
+                    new RemoteAnimationTarget[] { remoteAnimationTarget },
+                    new Rect(),
+                    new Rect(),
+                    new Bundle(),
+                    new TransitionInfo(0, 0));
+        });
+        runOnMainSync(() -> verify(controllerCompat)
+                .finish(/* toHome= */ eq(false), anyBoolean(), any()));
     }
 
     protected static void runOnMainSync(Runnable runnable) {
