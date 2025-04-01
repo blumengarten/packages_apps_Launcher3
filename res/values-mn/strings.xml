@@ -29,6 +29,7 @@
     <string name="home_screen" msgid="5629429142036709174">"Нүүр"</string>
     <string name="set_default_home_app" msgid="5808906607627586381">"<xliff:g id="LAUNCHER_NAME">%1$s</xliff:g>-г Тохиргоонд өгөгдмөл үндсэн аппаар тохируулна уу"</string>
     <string name="recent_task_option_split_screen" msgid="6690461455618725183">"Дэлгэцийг хуваах"</string>
+    <string name="recent_task_option_aspect_ratio" msgid="7008605516391096989">"Аспектын харьцааг өөрчлөх"</string>
     <string name="split_app_info_accessibility" msgid="5475288491241414932">"%1$s-н аппын мэдээлэл"</string>
     <string name="split_app_usage_settings" msgid="7214375263347964093">"%1$s-н ашиглалтын тохиргоо"</string>
     <string name="new_window_option_taskbar" msgid="6448780542727767211">"Шинэ цонх"</string>
@@ -131,7 +132,6 @@
     <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"Дэлгэцийн зураг, загвар"</string>
     <string name="edit_home_screen" msgid="8947858375782098427">"Үндсэн нүүрийг засах"</string>
     <string name="settings_button_text" msgid="8873672322605444408">"Нүүр хуудасны тохиргоо"</string>
-    <string name="all_apps_home_screen" msgid="8658178652647896497">"Апп"</string>
     <string name="msg_disabled_by_admin" msgid="6898038085516271325">"Таны админ идэвхгүй болгосон"</string>
     <string name="allow_rotation_title" msgid="7222049633713050106">"Үндсэн нүүрийг эргүүлэхийг зөвшөөрөх"</string>
     <string name="allow_rotation_desc" msgid="8662546029078692509">"Утсыг эргүүлсэн үед"</string>
