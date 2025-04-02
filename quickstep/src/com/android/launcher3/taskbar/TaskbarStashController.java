@@ -426,6 +426,10 @@ public class TaskbarStashController implements TaskbarControllers.LoggableTaskba
         return mIsStashed;
     }
 
+    public boolean isDeviceLocked() {
+        return hasAnyFlag(FLAG_STASHED_DEVICE_LOCKED);
+    }
+
     /**
      * Sets the hotseat stashed.
      * b/373429249 - we might change this behavior if we remove the scrim, that's why we're keeping

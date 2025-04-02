@@ -948,11 +948,13 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
                 launcherDp.numShownHotseatIcons);
 
         boolean isToHome = mControllers.uiController.isIconAlignedWithHotseat();
+        boolean isDeviceLocked = mControllers.taskbarStashController.isDeviceLocked();
         // If Hotseat is not the top element, Taskbar should maintain in-app state as it fades out,
         // or fade in while already in in-app state.
         Interpolator interpolator = mIsHotseatIconOnTopWhenAligned ? LINEAR : FINAL_FRAME;
 
-        int offsetY = taskbarDp.getTaskbarOffsetY();
+        int offsetY =
+                isDeviceLocked ? taskbarDp.getTaskbarOffsetY() : launcherDp.getTaskbarOffsetY();
         setter.setFloat(mTaskbarIconTranslationYForHome, VALUE, -offsetY, interpolator);
         setter.setFloat(mTaskbarNavButtonTranslationY, VALUE, -offsetY, interpolator);
         setter.setFloat(mTaskbarNavButtonTranslationYForInAppDisplay, VALUE, offsetY, interpolator);
