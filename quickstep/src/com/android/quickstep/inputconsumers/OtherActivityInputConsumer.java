@@ -521,6 +521,8 @@ public class OtherActivityInputConsumer extends ContextWrapper implements InputC
             mVelocityTracker = null;
         }
         mMotionPauseDetector.clear();
+        // Clear ref to recents view and launcher activity on action up or cancel to avoid leak
+        mRecentsViewDispatcher.clearConsumer();
     }
 
     @Override
