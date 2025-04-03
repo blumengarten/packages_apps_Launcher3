@@ -147,8 +147,6 @@ public class TaskbarNavButtonController implements TaskbarControllers.LoggableTa
             // prevent interactions with other buttons while back button is pressed
             return;
         }
-        // Provide the same haptic feedback that the system offers for virtual keys.
-        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
         switch (buttonType) {
             case BUTTON_BACK:
                 executeBack(/* keyEvent */ null);
