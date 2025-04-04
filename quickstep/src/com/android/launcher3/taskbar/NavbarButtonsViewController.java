@@ -478,8 +478,9 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         if (!mContext.isPhoneMode()) {
             mPropertyHolders.add(new StatePropertyHolder(
                     mBackButton, flags -> mContext.isUserSetupComplete()
-                            && ((flags & FLAG_ONLY_BACK_FOR_BOUNCER_VISIBLE) != 0
-                                    || (flags & FLAG_KEYGUARD_VISIBLE) != 0),
+                        && ((flags & FLAG_ONLY_BACK_FOR_BOUNCER_VISIBLE) != 0
+                            || (flags & FLAG_KEYGUARD_VISIBLE) != 0)
+                        && (!shouldShowHomeButtonInLockscreen(flags)),
                     VIEW_TRANSLATE_X, navButtonSize * (isRtl ? -2 : 2), 0));
         }
 
@@ -489,19 +490,8 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         mHomeButtonAlpha = new MultiValueAlpha(mHomeButton, NUM_ALPHA_CHANNELS);
         mHomeButtonAlpha.setUpdateVisibility(true);
         mPropertyHolders.add(
-                new StatePropertyHolder(mHomeButtonAlpha.get(
-                        ALPHA_INDEX_KEYGUARD_OR_DISABLE),
-                        flags -> {
-                            /* when the keyguard is visible hide home button. Anytime we are
-                             * occluded we want to show the home button for apps over keyguard.
-                             * however we don't want to show when not occluded/visible.
-                             * (visible false || occluded true) && disable false && not gnav
-                             */
-                            return ((flags & FLAG_KEYGUARD_VISIBLE) == 0
-                                    || (flags & FLAG_KEYGUARD_OCCLUDED) != 0)
-                                    && (flags & FLAG_DISABLE_HOME) == 0
-                                    && !mContext.isGestureNav();
-                        }));
+                new StatePropertyHolder(mHomeButtonAlpha.get(ALPHA_INDEX_KEYGUARD_OR_DISABLE),
+                        this::shouldShowHomeButtonInLockscreen));
 
         // Recents button
         mRecentsButton = addButton(R.drawable.ic_sysbar_recent, BUTTON_RECENTS,
@@ -532,6 +522,21 @@ public class NavbarButtonsViewController implements TaskbarControllers.LoggableT
         mSpace.setOnClickListener(view -> navButtonController.onButtonClick(BUTTON_SPACE, view));
         mSpace.setOnLongClickListener(view ->
                 navButtonController.onButtonLongClick(BUTTON_SPACE, view));
+    }
+
+    /**
+     * Method to determine whether to show the home button in lockscreen
+     *
+     * When the keyguard is visible hide home button. Anytime we are
+     * occluded we want to show the home button for apps over keyguard.
+     * however we don't want to show when not occluded/visible.
+     * (visible false || occluded true) && disable false && not gnav
+     */
+    private boolean shouldShowHomeButtonInLockscreen(int flags) {
+        return ((flags & FLAG_KEYGUARD_VISIBLE) == 0
+                || (flags & FLAG_KEYGUARD_OCCLUDED) != 0)
+                && (flags & FLAG_DISABLE_HOME) == 0
+                && !mContext.isGestureNav();
     }
 
     private void parseSystemUiFlags(@SystemUiStateFlags long sysUiStateFlags) {
