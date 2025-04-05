@@ -1218,6 +1218,7 @@ public class TaskbarViewController implements TaskbarControllers.LoggableTaskbar
     public void commitRunningAppsToUI() {
         mModelCallbacks.commitRunningAppsToUI();
         if (ENABLE_TASKBAR_RECENTS_LAYOUT_TRANSITION.isTrue()
+                && !mActivity.isTransientTaskbar()
                 && mTaskbarView.getLayoutTransition() == null) {
             // Set up after the first commit so that the initial recents do not animate (janky).
             mTaskbarView.setLayoutTransition(createLayoutTransitionForRunningApps());
