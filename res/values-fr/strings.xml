@@ -138,7 +138,7 @@
     <string name="landscape_mode_title" msgid="5138814555934843926">"Mode Paysage"</string>
     <string name="landscape_mode_desc" msgid="7372569859592816793">"Paramétrer le téléphone en mode Paysage"</string>
     <string name="notification_dots_title" msgid="9062440428204120317">"Pastilles de notification"</string>
-    <string name="notification_dots_desc_on" msgid="1679848116452218908">"Activées"</string>
+    <string name="notification_dots_desc_on" msgid="1679848116452218908">"Activé"</string>
     <string name="notification_dots_desc_off" msgid="1760796511504341095">"Désactivées"</string>
     <string name="title_missing_notification_access" msgid="7503287056163941064">"Accès aux notifications requis"</string>
     <string name="msg_missing_notification_access" msgid="281113995110910548">"Pour afficher les pastilles de notification, activez les notifications de l\'application <xliff:g id="NAME">%1$s</xliff:g>"</string>
