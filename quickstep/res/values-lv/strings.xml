@@ -68,7 +68,7 @@
     <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"Jūs sekmīgi veicāt sākuma ekrāna atvēršanas žestu."</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"Vilkšana, lai pārietu uz sākumu"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"Velciet augšup no ekrāna apakšdaļas. Ar šo žestu vienmēr varat atvērt sākuma ekrānu."</string>
-    <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Doties uz sākuma ekrānu"</string>
+    <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"Došanās uz sākuma ekrānu"</string>
     <string name="home_gesture_tutorial_subtitle" msgid="7245995490408668778">"Velciet augšup no ekrāna apakšdaļas."</string>
     <string name="home_gesture_tutorial_success" msgid="1736295017642244751">"Lieliski!"</string>
     <string name="overview_gesture_feedback_swipe_too_far_from_edge" msgid="6402349235265407385">"Jāvelk augšup no ekrāna apakšmalas."</string>

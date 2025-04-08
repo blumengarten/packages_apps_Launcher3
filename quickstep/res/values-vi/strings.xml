@@ -60,7 +60,7 @@
     <string name="back_gesture_intro_title" msgid="19551256430224428">"Vuốt để quay lại"</string>
     <string name="back_gesture_intro_subtitle" msgid="7912576483031802797">"Để quay lại màn hình gần đây nhất, hãy vuốt từ mép trái hoặc mép phải tới chính giữa màn hình."</string>
     <string name="back_gesture_tutorial_title" msgid="1944737946101059789">"Quay lại"</string>
-    <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"Hãy vuốt từ mép trái hoặc mép phải tới giữa màn hình"</string>
+    <string name="back_gesture_tutorial_subtitle" msgid="6639993416000920142">"Vuốt từ mép trái hoặc mép phải tới giữa màn hình"</string>
     <string name="home_gesture_feedback_swipe_too_far_from_edge" msgid="4816365433160895458">"Hãy vuốt lên từ mép dưới cùng của màn hình"</string>
     <string name="home_gesture_feedback_overview_detected" msgid="5177627157303895077">"Hãy nhớ không được dừng trước khi nhấc ngón tay"</string>
     <string name="home_gesture_feedback_wrong_swipe_direction" msgid="8328465201424027148">"Hãy vuốt thẳng lên"</string>

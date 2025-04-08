@@ -54,7 +54,7 @@
     <string name="back_gesture_feedback_cancelled" msgid="762621530959111290">"স্ক্রিনের ডান বা বাঁদিকের প্রান্ত থেকে মাঝখান পর্যন্ত সোয়াইপ করেছেন কিনা দেখে নিয়ে আঙুল তুলে নিন"</string>
     <string name="back_gesture_feedback_complete_with_overview_follow_up" msgid="9176400654037014471">"ফিরে যেতে, কীভাবে ডানদিক থেকে সোয়াইপ করতে হয় তা আপনি শিখেছেন। এরপর, একটি অ্যাপ থেকে অন্য অ্যাপে কীভাবে যাবেন জেনে নিন।"</string>
     <string name="back_gesture_feedback_complete_with_follow_up" msgid="8653374779579748392">"আপনি ফিরে যাওয়ার জেসচার সম্পর্কে জেনেছেন। এরপর, একটি অ্যাপ থেকে অন্য অ্যাপে কীভাবে যাবেন জেনে নিন।"</string>
-    <string name="back_gesture_feedback_complete_without_follow_up" msgid="197189945858268342">"আপনি জেনেছেন হাতের জেসচার ব্যবহার করে আগের স্ক্রিনে কীভাবে ফিরে যাওয়া যায়"</string>
+    <string name="back_gesture_feedback_complete_without_follow_up" msgid="197189945858268342">"আপনি ফিরে যাওয়ার জেসচার শেখা সম্পূর্ণ করেছেন"</string>
     <string name="back_gesture_feedback_swipe_in_nav_bar" msgid="9157480023651452969">"স্ক্রিনের নিচের প্রান্তের খুব কাছে পর্যন্ত যাতে সোয়াইপ না করেন সেটি ভাল করে দেখে নিন"</string>
     <string name="back_gesture_tutorial_confirm_subtitle" msgid="5181305411668713250">"ফিরে যাওয়ার জেসচারের সেন্সিটিভিটি পরিবর্তন করতে, সেটিংসে যান"</string>
     <string name="back_gesture_intro_title" msgid="19551256430224428">"ফিরে যেতে সোয়াইপ করুন"</string>
@@ -65,7 +65,7 @@
     <string name="home_gesture_feedback_overview_detected" msgid="5177627157303895077">"আঙুল তুলে নেওয়ার আগে আপনি যাতে পজ না করেন সেটি ভাল করে দেখে নিন"</string>
     <string name="home_gesture_feedback_wrong_swipe_direction" msgid="8328465201424027148">"আপনি উপরের দিকে সোজাসুজি সোয়াইপ করেছেন কিনা ভাল করে দেখে নিন"</string>
     <string name="home_gesture_feedback_complete_with_follow_up" msgid="8766981412895888417">"আপনি জেনেছেন হাতের জেসচার ব্যবহার করে হোম স্ক্রিনে কীভাবে যাওয়া যায়। এরপর, ফিরে কীভাবে যাবেন তা জেনে নিন।"</string>
-    <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"আপনি জেনেছেন হাতের জেসচার ব্যবহার করে হোম স্ক্রিনে কীভাবে যাওয়া যায়"</string>
+    <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"জেসচার ব্যবহার করে কীভাবে হোমে ফিরে যাওয়া যায় সেই সম্পর্কে শেখা আপনি সম্পূর্ণ করেছেন"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"হোম স্ক্রিনে যেতে সোয়াইপ করুন"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"স্ক্রিনের নিচের প্রান্ত থেকে উপরের দিকে সোয়াইপ করুন। এটি করলে, আপনি সবসময় হোম স্ক্রিনে যেতে পারবেন।"</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"হোম স্ক্রিনে যান"</string>
@@ -75,7 +75,7 @@
     <string name="overview_gesture_feedback_home_detected" msgid="663432226180397138">"চেষ্টা করুন যাতে আঙুল সরিয়ে নেওয়ার আগে উইন্ডো বেশ কিছুক্ষণ প্রেস করে রাখা যায়"</string>
     <string name="overview_gesture_feedback_wrong_swipe_direction" msgid="1191055451018584958">"আপনি উপরের দিকে সোজাসুজি সোয়াইপ করেছেন কিনা ভাল করে দেখে নিয়ে তারপর পজ করুন"</string>
     <string name="overview_gesture_feedback_complete_with_follow_up" msgid="3544611727467765026">"জেসচার কীভাবে ব্যবহার করতে হয় আপনি তা শিখে ফেলেছেন। জেসচার বন্ধ করতে, সেটিংসে যান।"</string>
-    <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"আপনি জেনেছেন যে হাতের জেসচার ব্যবহার করে একটি অ্যাপ থেকে অন্য অ্যাপে কীভাবে যাওয়া যায়"</string>
+    <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"জেসচার ব্যবহার করে একটি অ্যাপ থেকে অন্য অ্যাপে কীভাবে যাওয়া যায় সেটি শেখা আপনি সম্পূর্ণ করেছেন"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"একটি অ্যাপ থেকে অন্য অ্যাপে যেতে সোয়াইপ করুন"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"একটি অ্যাপ থেকে অন্যটিতে পাল্টাতে, স্ক্রিনের নিচ থেকে উপরে সোয়াইপ করে ধরে রাখুন, তারপরে ছেড়ে দিন।"</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"অ্যাপ পরিবর্তন করুন"</string>

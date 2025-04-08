@@ -79,7 +79,7 @@
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Deslize rapidamente com o dedo para alternar entre apps"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"Para alternar entre apps, deslize para cima sem soltar a partir da parte inferior do ecrã e solte."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Mude de app"</string>
-    <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Deslize para cima a partir da parte inferior do ecrã , detenha o gesto e solte"</string>
+    <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Deslize para cima a partir da parte inferior do ecrã, detenha o gesto e solte"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"Muito bem!"</string>
     <string name="gesture_tutorial_confirm_title" msgid="6201516182040074092">"Está tudo pronto"</string>
     <string name="gesture_tutorial_action_button_label" msgid="6249846312991332122">"Concluído"</string>

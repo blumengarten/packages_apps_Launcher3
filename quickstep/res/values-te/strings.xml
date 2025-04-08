@@ -75,7 +75,7 @@
     <string name="overview_gesture_feedback_home_detected" msgid="663432226180397138">"వేలిని రిలీజ్ చేయడానికి ముందు విండోను ఎక్కువసేపు నొక్కి, పట్టుకోవడానికి ట్రై చేయండి"</string>
     <string name="overview_gesture_feedback_wrong_swipe_direction" msgid="1191055451018584958">"స్క్రీన్‌పై నేరుగా పైకి స్వైప్ చేసి, ఆపై పాజ్ చేయండి"</string>
     <string name="overview_gesture_feedback_complete_with_follow_up" msgid="3544611727467765026">"మీరు సంజ్ఞలను ఎలా ఉపయోగించాలో నేర్చుకున్నారు. సంజ్ఞలను ఆఫ్ చేయడానికి, సెట్టింగ్‌లకు వెళ్లండి."</string>
-    <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"మీరు \'యాప్‌ల మధ్య మార్పు\' సంజ్ఞను పూర్తి చేశారు"</string>
+    <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"మీరు \'యాప్‌ల మధ్య మారేందుకు సంజ్ఞ\' ట్యుటోరియల్‌ను పూర్తి చేశారు"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"యాప్‌ల మధ్య మార్చడం కోసం స్వైప్ చేయండి"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"యాప్‌ల మధ్య మారడానికి, మీ స్క్రీన్ కింది వైపు నుండి పైకి స్వైప్ చేసి, పట్టుకుని, తర్వాత వదలండి."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"యాప్‌ల మధ్య స్విచ్ అవ్వండి"</string>
