@@ -78,7 +78,7 @@
     <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"Gest przełączania aplikacji został opanowany"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"Przesuń palcem, aby przełączać aplikacje"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"Aby przełączać się między aplikacjami, przesuń palcem od dołu do góry ekranu, przytrzymaj i puść."</string>
-    <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Przełącz aplikację"</string>
+    <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"Przełączanie aplikacji"</string>
     <string name="overview_gesture_tutorial_subtitle" msgid="5253549754058973071">"Przesuń palcem z dołu ekranu w górę, przytrzymaj i puść"</string>
     <string name="overview_gesture_tutorial_success" msgid="1910267697807973076">"Brawo!"</string>
     <string name="gesture_tutorial_confirm_title" msgid="6201516182040074092">"Wszystko gotowe"</string>

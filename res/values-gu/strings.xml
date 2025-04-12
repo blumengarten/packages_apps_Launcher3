@@ -115,7 +115,7 @@
     <string name="folder_hint_text" msgid="5174843001373488816">"નામમાં ફેરફાર કરો"</string>
     <string name="disabled_app_label" msgid="6673129024321402780">"<xliff:g id="APP_NAME">%1$s</xliff:g> અક્ષમ કરી"</string>
     <string name="dotted_app_label" msgid="1865617679843363410">"{count,plural, =1{{app_name}ના # નોટિફિકેશન છે}one{{app_name}ના # નોટિફિકેશન છે}other{{app_name}ના # નોટિફિકેશન છે}}"</string>
-    <string name="default_scroll_format" msgid="7475544710230993317">"%2$d માંથી %1$d પૃષ્ઠ"</string>
+    <string name="default_scroll_format" msgid="7475544710230993317">"%2$dમાંથી %1$d પેજ"</string>
     <string name="workspace_scroll_format" msgid="8458889198184077399">"%2$d માંથી %1$d હોમ સ્ક્રીન"</string>
     <string name="workspace_new_page" msgid="257366611030256142">"નવું હોમ સ્ક્રીન પેજ"</string>
     <string name="app_running_state_description" msgid="5645053189564740904">"સક્રિય"</string>
@@ -137,7 +137,7 @@
     <string name="allow_rotation_desc" msgid="8662546029078692509">"જ્યારે ફોન ફેરવવામાં આવે ત્યારે"</string>
     <string name="landscape_mode_title" msgid="5138814555934843926">"લૅન્ડસ્કેપ મોડ"</string>
     <string name="landscape_mode_desc" msgid="7372569859592816793">"ફોનને લૅન્ડસ્કેપ મોડમાં સેટ કરો"</string>
-    <string name="notification_dots_title" msgid="9062440428204120317">"નોટિફિકેશન માટેના ચિહ્નો"</string>
+    <string name="notification_dots_title" msgid="9062440428204120317">"નોટિફિકેશન ડૉટ"</string>
     <string name="notification_dots_desc_on" msgid="1679848116452218908">"ચાલુ છે"</string>
     <string name="notification_dots_desc_off" msgid="1760796511504341095">"બંધ છે"</string>
     <string name="title_missing_notification_access" msgid="7503287056163941064">"નોટિફિકેશનનો ઍક્સેસની જરૂરી છે"</string>

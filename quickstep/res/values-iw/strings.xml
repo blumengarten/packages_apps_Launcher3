@@ -65,7 +65,7 @@
     <string name="home_gesture_feedback_overview_detected" msgid="5177627157303895077">"חשוב שלא לחכות לפני שחרור האצבע"</string>
     <string name="home_gesture_feedback_wrong_swipe_direction" msgid="8328465201424027148">"חשוב להחליק ישר למעלה"</string>
     <string name="home_gesture_feedback_complete_with_follow_up" msgid="8766981412895888417">"השלמת את תנועת המעבר למסך הבית. בשלב הבא נראה איך לחזור למסך הקודם."</string>
-    <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"השלמת את תנועת המעבר למסך הבית"</string>
+    <string name="home_gesture_feedback_complete_without_follow_up" msgid="2978063221383413443">"הבנת איך עושים את תנועת המעבר למסך הבית"</string>
     <string name="home_gesture_intro_title" msgid="836590312858441830">"יש להחליק כדי לעבור למסך הבית"</string>
     <string name="home_gesture_intro_subtitle" msgid="2632238748497975326">"החלקה למעלה מתחתית המסך תמיד תעביר אותך למסך הבית."</string>
     <string name="home_gesture_tutorial_title" msgid="3126834347496917376">"מעבר למסך הבית"</string>
@@ -75,7 +75,7 @@
     <string name="overview_gesture_feedback_home_detected" msgid="663432226180397138">"כדאי לנסות להחזיק את החלון זמן רב יותר לפני שחרור האצבע"</string>
     <string name="overview_gesture_feedback_wrong_swipe_direction" msgid="1191055451018584958">"חשוב להחליק למעלה בקו ישר ואז לעצור"</string>
     <string name="overview_gesture_feedback_complete_with_follow_up" msgid="3544611727467765026">"למדת איך להשתמש בתנועות. אפשר להשבית את התנועות ב\'הגדרות\'."</string>
-    <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"השלמת את תנועת המעבר בין האפליקציות"</string>
+    <string name="overview_gesture_feedback_complete_without_follow_up" msgid="2903050864432331629">"הבנת איך עושים את תנועת המעבר בין אפליקציות"</string>
     <string name="overview_gesture_intro_title" msgid="2902054412868489378">"יש להחליק כדי לעבור בין אפליקציות"</string>
     <string name="overview_gesture_intro_subtitle" msgid="4968091015637850859">"כדי לעבור בין אפלקציות, יש להחליק למעלה מתחתית המסך, להחזיק ולאחר מכן לשחרר."</string>
     <string name="overview_gesture_tutorial_title" msgid="4125835002668708720">"מעבר בין אפליקציות"</string>

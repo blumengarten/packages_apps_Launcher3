@@ -137,7 +137,7 @@
     <string name="allow_rotation_desc" msgid="8662546029078692509">"फोन फिरवला जातो तेव्हा"</string>
     <string name="landscape_mode_title" msgid="5138814555934843926">"लँडस्केप मोड"</string>
     <string name="landscape_mode_desc" msgid="7372569859592816793">"फोन लँडस्केप मोडमध्ये सेट करा"</string>
-    <string name="notification_dots_title" msgid="9062440428204120317">"नोटिफिकेशन डॉट"</string>
+    <string name="notification_dots_title" msgid="9062440428204120317">"नोटिफिकेशन बिंदू"</string>
     <string name="notification_dots_desc_on" msgid="1679848116452218908">"सुरू"</string>
     <string name="notification_dots_desc_off" msgid="1760796511504341095">"बंद"</string>
     <string name="title_missing_notification_access" msgid="7503287056163941064">"सूचनांच्या अ‍ॅक्सेसची आवश्यकता आहे"</string>
